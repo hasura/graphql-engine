@@ -203,9 +203,9 @@ test-native-queries: build-postgres-agent
 test-native-queries-postgres: build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres
-	HSPEC_MATCH=NativeQueries make test-unit
+	HSPEC_MATCH=${HSPEC_MATCH:-"NativeQueries"}
+	make test-unit
 	HASURA_TEST_BACKEND_TYPE=Postgres \
-		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
@@ -226,8 +226,8 @@ test-native-queries-sqlserver: remove-tix-file build-postgres-agent
 test-native-queries-bigquery: remove-tix-file build-postgres-agent
 	cabal build exe:graphql-engine-pro
 	docker compose up --build --detach --wait postgres
+	HSPEC_MATCH=${HSPEC_MATCH:-"NativeQueries"}
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
-		HSPEC_MATCH=NativeQueries \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)

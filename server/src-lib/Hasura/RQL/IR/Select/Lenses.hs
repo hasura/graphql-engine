@@ -18,6 +18,7 @@ module Hasura.RQL.IR.Select.Lenses
     aarAnnSelect,
     aarColumnMapping,
     aarRelationshipName,
+    aarNullable,
     anosSupportsNestedObjects,
     anosColumn,
     anosFields,

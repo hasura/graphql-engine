@@ -14,11 +14,11 @@ import {
   Oas2,
   Oas3,
   createGraphQLSchema,
-} from 'openapi-to-graphql';
+} from '@dancamma/openapi-to-graphql';
 import {
   ReferenceObject,
   SchemaObject,
-} from 'openapi-to-graphql/dist/types/oas3';
+} from '@dancamma/openapi-to-graphql/dist/types/oas3';
 import { Microfiber } from 'microfiber';
 import { formatSdl } from 'format-graphql';
 import { getActionRequestSampleInput } from '../../../../components/Services/Actions/Add/utils';
@@ -517,7 +517,7 @@ const applyWorkarounds = (properties: (SchemaObject | ReferenceObject)[]) => {
   }
 };
 
-const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
+export const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
   const oasCopy = JSON.parse(JSON.stringify(oas)) as Oas3;
   if (oasCopy.components?.schemas) {
     applyWorkarounds(Object.values(oasCopy.components?.schemas));
@@ -538,6 +538,18 @@ const parseOas = async (oas: Oas2 | Oas3): Promise<Result> => {
     oasValidatorOptions: {
       warnOnly: true,
     },
+    softValidation: true,
+    report: {
+      validationErrors: [],
+      warnings: [],
+      numOps: 0,
+      numOpsQuery: 0,
+      numOpsMutation: 0,
+      numOpsSubscription: 0,
+      numQueriesCreated: 0,
+      numMutationsCreated: 0,
+      numSubscriptionsCreated: 0,
+    },
   });
 };
 
@@ -548,11 +560,6 @@ export const generateAction = async (
   const graphqlSchema = await parseOas(oas);
   const operation = graphqlSchema.data.operations[operationId];
   return translateAction(graphqlSchema, operation);
-};
-
-export const getOperations = async (oas: Oas2 | Oas3): Promise<Operation[]> => {
-  const graphqlSchema = await parseOas(oas);
-  return Object.values(graphqlSchema.data.operations);
 };
 
 type ActionState = {

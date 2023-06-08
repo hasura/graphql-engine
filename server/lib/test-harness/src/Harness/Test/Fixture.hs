@@ -282,7 +282,7 @@ setupTestEnvironment name globalTestEnvironment options = do
             permissions = Admin,
             _options = options,
             _postgraphqlInternal = postGraphqlInternal,
-            _shouldReturnYamlFInternal = \testEnv -> shouldReturnYamlFInternal (_options testEnv),
+            _shouldReturnYamlFInternal = \testEnv -> withFrozenCallStack $ shouldReturnYamlFInternal (_options testEnv),
             _getSchemaNameInternal = getSchemaNameInternal
           }
 

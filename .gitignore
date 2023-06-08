@@ -65,3 +65,7 @@ test_runs/
 
 # dependencies
 node_modules
+
+# ticky profiles, e.g. from dev.sh --prof-ticky
+*.ticky
+*.ticky.modules

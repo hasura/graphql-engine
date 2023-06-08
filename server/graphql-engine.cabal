@@ -726,14 +726,15 @@ library
                      , Hasura.LogicalModelResolver.Schema
                      , Hasura.LogicalModelResolver.Types
 
-                     , Hasura.NativeQuery.IR
+                     , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Cache
+                     , Hasura.NativeQuery.IR
+                     , Hasura.NativeQuery.InterpolatedQuery
                      , Hasura.NativeQuery.Lenses
                      , Hasura.NativeQuery.Metadata
-                     , Hasura.NativeQuery.API
                      , Hasura.NativeQuery.Schema
                      , Hasura.NativeQuery.Types
-                     , Hasura.NativeQuery.InterpolatedQuery
+                     , Hasura.NativeQuery.Validation
 
                      , Hasura.StoredProcedure.IR
                      , Hasura.StoredProcedure.Cache
@@ -1134,6 +1135,7 @@ test-suite graphql-engine-tests
     , vector
     , yaml
     , shakespeare
+    , temporary
 
   if !flag(ghci-load-test-with-lib)
     build-depends: graphql-engine
@@ -1220,6 +1222,7 @@ test-suite graphql-engine-tests
     Hasura.Server.VersionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
+    Hasura.Server.ResourceCheckerSpec
     Hasura.SessionSpec
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec

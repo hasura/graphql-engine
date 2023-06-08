@@ -174,6 +174,13 @@ insertOneIntoTable backendInsertAction scenario tableInfo fieldName description 
 -- >    ] ...
 -- >  ) ...
 -- > }
+--
+-- TODO: When there are no columns to insert, accessible to a role,
+-- this function may generate an empty input object. The GraphQL spec
+-- mandates that an input object type must define one or more input fields.
+-- In this case, when there are no columns that are accessible to a role,
+-- we should disallow generating the `insert_<table>` and the `insert_<table>_one`
+-- altogether.
 tableFieldsInput ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
@@ -272,7 +279,7 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts relationshipInfo 
 -- When inserting objects into tables, we allow insertions through
 -- relationships. This function creates the parser for an object that represents
 -- the insertion object across an object relationship; it is co-recursive with
--- 'tableFieldsInput'.
+-- 'tableFieldsInput'
 objectRelationshipInput ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>

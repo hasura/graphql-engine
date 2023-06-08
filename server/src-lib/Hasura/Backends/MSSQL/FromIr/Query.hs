@@ -204,6 +204,7 @@ fromRemoteRelationFieldsG existingJoins joinColumns (IR.FieldName name, field) =
       IR.AnnRelationSelectG
         (IR.RelName $ mkNonEmptyTextUnsafe name)
         joinColumns
+        IR.Nullable
         annotatedRelationship
 
 -- | Top/root-level 'Select'. All descendent/sub-translations are collected to produce a root TSQL.Select.
@@ -341,8 +342,7 @@ fromNativeQuery :: IR.NativeQuery 'MSSQL Expression -> FromIr TSQL.From
 fromNativeQuery nativeQuery = do
   let nativeQueryName = IR.nqRootFieldName nativeQuery
       nativeQuerySql = IR.nqInterpolatedQuery nativeQuery
-      cteName = T.toTxt (getNativeQueryName nativeQueryName)
-  tellCTE (Aliased nativeQuerySql cteName)
+  cteName <- tellCTE nativeQueryName nativeQuerySql
   pure $ TSQL.FromIdentifier cteName
 
 fromStoredProcedure :: IR.StoredProcedure 'MSSQL Expression -> FromIr TSQL.From
@@ -733,6 +733,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty) fields)
   let selectProjections = map fieldSourceProjections fieldSources
+
   joinJoinAlias <-
     do
       fieldName <- lift (fromRelName _aarRelationshipName)
@@ -742,15 +743,37 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
           { joinAliasEntity = alias,
             joinAliasField = pure jsonFieldName
           }
+
   let selectFor =
         JsonFor ForJson {jsonCardinality = JsonSingleton, jsonRoot = NoRoot}
+
   filterExpression <- local (const entityAlias) (fromGBoolExp tableFilter)
+
+  -- if the object select should be non-nullable we push an extra 'where'
+  -- for the outer `select` that checks the value is not `null`
+  let joinWhere = case nullable of
+        IR.Nullable -> mempty
+        IR.NotNullable ->
+          Where
+            [ IsNotNullExpression
+                ( JsonQueryExpression
+                    ( ColumnExpression
+                        ( FieldName
+                            { fieldName = jsonFieldName,
+                              fieldNameEntity = joinAliasEntity joinJoinAlias
+                            }
+                        )
+                    )
+                )
+            ]
+
   case eitherAliasOrFrom of
     Right selectFrom -> do
       foreignKeyConditions <- fromMapping selectFrom mapping
       pure
         Join
           { joinJoinAlias,
+            joinWhere,
             joinSource =
               JoinSelect
                 emptySelect
@@ -769,6 +792,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
       pure
         Join
           { joinJoinAlias,
+            joinWhere,
             joinSource =
               JoinReselect
                 Reselect
@@ -786,7 +810,8 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
     IR.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL Void Expression
+        _aarAnnSelect = annObjectSelectG :: IR.AnnObjectSelectG 'MSSQL Void Expression,
+        _aarNullable = nullable
       } = annRelationSelectG
 
 lookupTableFrom ::
@@ -833,6 +858,7 @@ fromArrayAggregateSelectG annRelationSelectG = do
             { joinAliasEntity = alias,
               joinAliasField = pure jsonFieldName
             },
+        joinWhere = mempty,
         joinSource = JoinSelect joinSelect
       }
   where
@@ -859,6 +885,7 @@ fromArrayRelationSelectG annRelationSelectG = do
             { joinAliasEntity = alias,
               joinAliasField = pure jsonFieldName
             },
+        joinWhere = mempty,
         joinSource = JoinSelect joinSelect
       }
   where
@@ -1011,6 +1038,7 @@ unfurlAnnotatedOrderByElement =
                                 selectOrderBy = Nothing,
                                 selectOffset = Nothing
                               },
+                        joinWhere = mempty,
                         joinJoinAlias =
                           JoinAlias {joinAliasEntity, joinAliasField = Nothing}
                       },
@@ -1053,6 +1081,7 @@ unfurlAnnotatedOrderByElement =
                               selectOrderBy = Nothing,
                               selectOffset = Nothing
                             },
+                      joinWhere = mempty,
                       joinJoinAlias =
                         JoinAlias {joinAliasEntity, joinAliasField = Nothing}
                     },

@@ -38,6 +38,8 @@ export const SetRootLevelPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -56,6 +58,8 @@ export const SetExistsPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -95,6 +99,8 @@ export const SetMultilevelExistsPermission: StoryObj<
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -142,6 +148,8 @@ export const SetAndPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -176,6 +184,8 @@ export const SetMultilevelAndPermission: StoryObj<typeof RowPermissionsInput> =
         table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={{}}
       />
     ),
@@ -218,6 +228,8 @@ export const SetNotPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -244,6 +256,8 @@ export const SetOrPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -276,6 +290,8 @@ export const SetMultilevelOrPermission: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -317,6 +333,8 @@ export const Empty: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{}}
     />
   ),
@@ -329,6 +347,8 @@ export const Exists: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _exists: {
           _table: {},
@@ -347,6 +367,8 @@ export const SetDisabledExistsPermission: StoryObj<typeof RowPermissionsInput> =
         table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={{
           _exists: {
             _table: {},
@@ -378,6 +400,8 @@ export const ExistsWhere: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _exists: {
           _table: { dataset: 'bigquery_sample', name: 'sample_table' },
@@ -400,6 +424,8 @@ export const EmptyExists: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _exists: {
           _table: {},
@@ -417,6 +443,8 @@ export const And: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _and: [
           { STATUS: { _eq: 'X-Hasura-User-Id' } },
@@ -434,6 +462,8 @@ export const EmptyAnd: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _and: [{}],
       }}
@@ -448,6 +478,8 @@ export const Not: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _not: { STATUS: { _eq: 'X-Hasura-User-Id' } },
       }}
@@ -462,6 +494,8 @@ export const EmptyNot: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _not: {},
       }}
@@ -476,6 +510,8 @@ export const Relationships: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ Author: { name: { _eq: '' } } }}
     />
   ),
@@ -488,6 +524,8 @@ export const RelationshipsColumns: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ Label: { id: { _eq: '' } } }}
     />
   ),
@@ -500,6 +538,8 @@ export const ColumnTypes: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ Series_reference: { _eq: '' } }}
     />
   ),
@@ -512,6 +552,8 @@ export const BooleanArrayType: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ Author: { _ceq: ['name'] } }}
     />
   ),
@@ -536,6 +578,8 @@ export const BooleanArrayTypeRoot: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         Author: {
           _ceq: [
@@ -589,6 +633,8 @@ export const StringObjectType: StoryObj<typeof RowPermissionsInput> = {
       table={{ name: 'user_location', schema: 'public' }}
       tables={tableWithGeolocationSupport}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         location: {
           _st_d_within: {
@@ -619,6 +665,8 @@ export const NumericValue: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ id: { _eq: '' } }}
     />
   ),
@@ -638,6 +686,8 @@ export const NumericIntValue: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ id: { _eq: 0 } }}
     />
   ),
@@ -650,6 +700,8 @@ export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
       table={['Album']}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{ id: { _eq: 0.9 } }}
     />
   ),
@@ -657,7 +709,7 @@ export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
 
 export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -670,6 +722,8 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
         table={{ schema: 'public', name: 'Stuff' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={{ jason: { _contained_in: { a: 'b' } } }}
       />
     );
@@ -697,7 +751,7 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
 
 export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -710,6 +764,8 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
         table={{ schema: 'public', name: 'Stuff' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={{ jason: { _has_keys_all: [''] } }}
       />
     );
@@ -721,7 +777,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({
       name: { _eq: '' },
     });
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -737,6 +793,8 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
         table={{ schema: 'public', name: 'Stuff' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={permissions}
       />
     );
@@ -752,13 +810,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     // Write a number in the input
     await userEvent.type(canvas.getByTestId('name._eq-value-input'), '1337');
 
-    const onPermissionsChangeMock = args.onPermissionsChange as jest.Mock;
-
-    const latestPermissions =
-      onPermissionsChangeMock?.mock.calls[
-        onPermissionsChangeMock?.mock.calls.length - 1
-      ][0];
-    expect(latestPermissions).toEqual({
+    expect(args.onPermissionsChange).toHaveBeenCalledWith({
       name: {
         _eq: 1337,
       },
@@ -771,7 +823,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({
       id: { _eq: '1234' },
     });
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -787,6 +839,8 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
         table={{ schema: 'public', name: 'Stuff' }}
         tables={tables}
         comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={permissions}
       />
     );
@@ -802,13 +856,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
     // // Write a number in the input
     await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
 
-    const onPermissionsChangeMock = args.onPermissionsChange as jest.Mock;
-
-    const latestPermissions =
-      onPermissionsChangeMock?.mock.calls[
-        onPermissionsChangeMock?.mock.calls.length - 1
-      ][0];
-    expect(latestPermissions).toEqual({
+    expect(args.onPermissionsChange).toHaveBeenCalledWith({
       id: {
         _eq: 12341337,
       },
@@ -823,6 +871,8 @@ export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
       table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
       tables={tables}
       comparators={comparators}
+      logicalModel={undefined}
+      logicalModels={[]}
       permissions={{
         _not: { STATUS: { _eq: 'X-Hasura-User-Id' } },
       }}

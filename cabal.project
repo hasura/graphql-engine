@@ -16,14 +16,48 @@
 --
 -- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 
-with-compiler: ghc-9.2.5
--- TODO WHEN WE NEXT UPGRADE GHC: move `-split-sections/--gc-sections` from ci.project.local into this file
+with-compiler: ghc-9.4.5
+-- Work around bugs not yet fixed in 9.4.5. These are only enabled with O2
+-- which we don't currently use, but disable these defensively
+-- https://gitlab.haskell.org/ghc/ghc/-/merge_requests/10282
+package *
+  ghc-options:
+    -fno-dicts-strict
+    -fno-spec-constr
+     
 
 -- package-level parallelism:
 jobs: $ncpus
 
 packages: server
 packages: server/lib/*/*.cabal
+packages: server/forks/*/*.cabal
+
+-- TODO remove these when we are able:
+allow-newer: ekg-core:base
+allow-newer: ekg-core:ghc-prim
+allow-newer: ekg-core:inspection-testing
+allow-newer: ekg-core:text
+allow-newer: ekg-json:base
+allow-newer: ekg-json:text
+allow-newer: ekg-prometheus:base
+allow-newer: ekg-prometheus:text
+allow-newer: ekg-prometheus:bytestring
+-- Migrating to 0.25+ looks like it will be a real pain... :(
+-- https://github.com/morpheusgraphql/morpheus-graphql/pull/766
+allow-newer: morpheus-graphql:text
+allow-newer: morpheus-graphql-app:text
+allow-newer: morpheus-graphql-code-gen:text
+allow-newer: morpheus-graphql-code-gen-utils:text
+allow-newer: morpheus-graphql-core:text
+allow-newer: morpheus-graphql-server:text
+allow-newer: morpheus-graphql-client:text
+allow-newer: morpheus-graphql-subscriptions:text
+
+-- https://gitlab.haskell.org/ghc/ghc-debug/-/merge_requests/27
+allow-newer: ghc-debug-stub:ghc-prim
+-- https://github.com/mokus0/th-extras/pull/20
+allow-newer: th-extras:template-haskell
 
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,
@@ -38,6 +72,14 @@ package *
   haddock-hyperlink-source: true
   haddock-quickjump: true
   haddock-internal: true
+  -- -----------------------------------------------------------
+  -- Allow for dead-code elimination at link-time, to reduce binary size
+  ghc-options: -split-sections
+if(os(linux))
+ package *
+  -- ld on M1 OSX does not recognise this:
+  ld-options: -Wl,--gc-sections
+  -- -----------------------------------------------------------
 
 package graphql-engine
   ghc-options: -j
@@ -51,16 +93,13 @@ source-repository-package
   location: https://github.com/hasura/kriti-lang.git
   tag: c8fd863d359876af3a0fce47db8a5393dc556667
 
-source-repository-package
-  type: git
-  location: https://github.com/hasura/ci-info-hs.git
-  tag: be578a01979fc95137cc2c84827f9fafb99df60f
-
 -- This is an unrelesaed version of "odbc"
+-- For text v2 support
+-- WIP/FIXME: review change, maybe upstream PR
 source-repository-package
   type: git
-  location: https://github.com/fpco/odbc.git
-  tag: 38e04349fe28a91f189e44bd7783220956d18aae
+  location: https://github.com/hasura/odbc.git
+  tag: 662268ba4d968a23e67dfd13b1ec9d4d90481493
 
 package odbc
   ghc-options: -Wwarn
@@ -82,24 +121,7 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/hasura/ekg-json.git
-  tag: 1fab6837e1dd98317a3c2f5bf9deedf4dfcac51b
-
--- This is v1.2.5.0 with https://github.com/haskell/text/pull/348
--- cherry-picked.
--- These changes are in version 2.0,  but hopefully they can get backported:
---   https://github.com/haskell/text/issues/452
-source-repository-package
-  type: git
-  location: https://github.com/hasura/text.git
-  tag: ba0fd2bf256c996a6c85dbdc8590a6fcde41b8f8
-
--- This is a version of Sandwich 0.1.2.0 but including
--- this PR https://github.com/codedownio/sandwich/pull/69
--- which adds the ability to skip tests from the command line
-source-repository-package
-  type: git
-  location: https://github.com/hasura/sandwich.git
-  tag: v0.1.2.0-incl-skipping.0
-  subdir: sandwich
+  location: https://github.com/snoyberg/yaml.git
+  tag: c1aa7b3991e669e4c6a977712b495d40a54cf819
+  subdir: yaml
 

@@ -6,7 +6,8 @@
   grid-template-columns: 159px 1fr;
   grid-gap: 6%;
   padding: 35px 32px;
-  background: #ffef93;
+  background: #111927;
+  border: 1px solid transparent;
   // background-image: url('@site/static/img/hasura-con-banner-light-bg.svg');
   // background-repeat: no-repeat;
   // background-size: cover;
@@ -100,7 +101,7 @@
   .hasura-con-23-title {
     font-size: 20px;
     font-weight: 800;
-    color: #1f2a37;
+    color: var(--color-gray-0);
     line-height: 1.25;
     letter-spacing: -0.02em;
     // max-width: 220px;
@@ -127,6 +128,7 @@
 }
 html[data-theme='dark'] {
   .hasura-con-banner {
+    border: 1px solid #384250;
     .hasura-con-brand {
       .brand-light {
         display: block;

@@ -41,16 +41,16 @@
             name: x-hasura-admin-secret
             schema:
               type: string
-          - description: _"last_name" is required (enter it either in parameters or
-              request body)_
-            in: query
-            name: last_name
-            schema:
-              type: string
           - description: _"first_name" is required (enter it either in parameters
               or request body)_
             in: query
             name: first_name
+            schema:
+              type: string
+          - description: _"last_name" is required (enter it either in parameters or
+              request body)_
+            in: query
+            name: last_name
             schema:
               type: string
           requestBody:
@@ -78,7 +78,6 @@
                     properties:
                       test_table:
                         items:
-                          title: test_table
                           description: columns and relationships of "test_table"
                           nullable: false
                           properties:
@@ -90,6 +89,7 @@
                               nullable: true
                               title: String
                               type: string
+                          title: test_table
                           type: object
                         nullable: false
                         type: array

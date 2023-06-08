@@ -24,7 +24,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
@@ -78,7 +77,7 @@ class
     ( ArrowChoice arr,
       Inc.ArrowCache m arr,
       Inc.ArrowDistribute arr,
-      ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+      ArrowWriter (Seq CollectItem) arr,
       MonadIO m,
       MonadBaseControl IO m,
       ProvidesNetwork m

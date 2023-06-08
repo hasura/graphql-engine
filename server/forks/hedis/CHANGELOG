@@ -1,0 +1,271 @@
+# Changelog for Hedis
+
+## 0.15.2
+* PR #14. Updated with hedis upstream
+* PR #13. Added timeout for commands
+* PR #11. Send the command to another node while exception occurred on running the query.
+
+## 0.15.1
+
+* PR #181. Add MonadUnliftIO instance
+
+## 0.15.0
+
+* PR #174, Issue #173. Hedis fails to decode xstreamInfo response in case when the stream is empty
+
+## 0.14.3
+
+* PR #171. Support GHC 9
+
+## 0.14.2
+
+* PR #163. support for redis 6.0 COMMAND format
+* PR #164. remove invalid tests for Redis Cluster
+
+## 0.14.1
+
+* PR #162. Improved documentation for EVALSHA
+
+## 0.14.0
+
+* PR #157. Clustering support
+
+## 0.13.1
+
+* PR #158. Upgrade to Redis 6.0.9 & Fix auth test
+* PR #160. Fix GHC 8.0.1 compat
+
+## 0.13.0
+
+* PR #159. Issue #152. Make HSET return integer instead of bool
+
+## 0.12.15
+
+* PR #154. Implement Redis Sentinel support
+
+## 0.12.14
+
+* PR #153. Publicly expose ConnectTimeout exception
+
+## 0.12.13
+
+* PR #150, Issue #143. Leaking sockets when connection fails
+
+## 0.12.12
+
+* PR #149. Make withConnect friendly to transformer stack
+
+## 0.12.11
+
+* Expose `withCheckedConnect`, `withConnect`
+
+## 0.12.9
+
+* Expose the `Database.Redis.Core.Internal` module (see https://github.com/informatikr/hedis/issues/144 )
+
+## 0.12.8
+
+* PR #140. Added support of +/- inf redis argument
+
+## 0.12.7
+
+* PR #139.  fix MonadFail instance
+
+## 0.12.6
+
+* PR #138, Issue #137. Derive MonadFail for the Redis monad
+
+## 0.12.5
+
+Issue #136 fix slowlog parsing
+
+## 0.12.4
+
+* Add upper bound on network package
+
+## 0.12.3
+
+* Issue #135. Upper the base bound
+
+## 0.12.2
+
+* PR #134. Fix some asynchronous exception safety problems
+
+## 0.12.1
+
+* PR #133. Fixes to stream commands
+
+## 0.12.0
+
+* PR #130. Bring back ability to connect via a Unix Socket
+
+## 0.11.1
+
+* PR #129. Fix tests
+
+## 0.11.0
+
+* PR #126. Fixes for network 2.8 and 3.0
+
+## 0.10.10
+
+* Only disable warnings for GHC 8.6, fix build
+
+## 0.10.9
+
+* Remove deprecation warnings
+
+## 0.10.8
+
+* PR #121. make xgroupCreate return Status
+
+## 0.10.7
+
+* PR #121. Fix streaming on redis 5.0.2
+* PR #121. Get rid of slave-thread
+
+## 0.10.6
+
+* PR #120. Add withConnect, withCheckedConnect
+
+## 0.10.5
+
+* PR #XXX Fix CI builds with updated Redis version
+
+## 0.10.4
+
+* PR #112. Implement streams commands
+
+## 0.10.3
+
+* PR #110. Add disconnect which destroys all (idle) resources in the pool
+
+## 0.10.2
+
+* PR #108. Add TLS support
+
+## 0.10.1
+
+* PR #104. Add a Semigroup instance (fix GHC 8.4)
+
+## 0.10.0
+
+* PR #102. Return list from srandmemberN
+* PR #103. Add spopN
+* PR #101. Add parseConnectInfo
+* PR #100, Issue #99. Throw error when AUTH or SELECT fails on connect
+
+## 0.9.12
+
+* PR #98. Added `connectTimeout` option
+
+## 0.9.11
+
+* PR #94. Refactor fix for issue #92 - (Connection to Unix sockets is broken)
+
+## 0.9.10
+
+* PR #93, Issue #92. Connection to Unix sockets is broken
+
+## 0.9.9
+
+* PR #90. set SO_KEEPALIVE option on underlying connection socket 
+
+## 0.9.8
+
+* Fix syntax errors from redis when using scanOpts to specify match
+  pattern or count options (see PR #88)
+
+## 0.9.7
+
+* Expose returnDecode method of RedisCtx (see issue #83)
+
+## 0.9.6
+
+* Export Condition constructors (see PR #86)
+
+## 0.9.2
+
+* Added multithreaded pub/sub message processing (see PR #77)
+
+## 0.9.0
+
+* Merge in a fresh commands.json and a set of new commands
+  implemented. See PR #52 for more info
+
+## 0.8.3
+
+* Export MonadRedis methods
+
+## 0.8.1
+
+* Export unRedis/reRedis internalish functions which let you define
+  MonadCatch instance easily (see PR #73)
+
+## 0.8.0
+
+* Major speed improvement by using non-backtracking parser (PR #69)
+
+## 0.7.10
+
+* Improved performance (PR #64)
+
+## 0.7.7
+
+* Close connection handle on error
+
+## 0.7.2
+
+* Improve speed, rewrite internal logic (PR #56)
+
+## 0.7.1
+
+* Add NFData instances
+
+## 0.7.0
+
+* Enforce all replies being recieved in runRedis. Pipelining between runRedis 
+  calls doesn't work now.
+
+## 0.6.10
+
+* Add HyperLogLog support
+
+## 0.6.4
+
+* New connection option to automatically SELECT a database.
+
+## 0.5 -> 0.6
+
+* Changed return type of HDEL from Bool to Integer.
+* Some documentation updates.
+
+## 0.5 -> 0.5.1
+
+* New commands: DUMP, RESTORE, BITOP, BITCOUNT.
+* Removed the dependency on stm.
+* Improved performance of Queued in long transactions.
+* Minor documentation updates.
+
+
+## 0.4.1 -> 0.5
+
+* Added new Redis 2.6 commands, including Lua scripting support.
+* A transaction context is now created by using the 'multiExec' function.
+  The functions 'multi', 'exec' and 'discard' are no longer available
+  individually.
+* Inside of a transaction, commands return their results wrapped in a
+  composable /future/, called 'Queued'.
+* The 'getType' command (the Redis TYPE command) now has a custom return
+  type 'RedisType'.
+* Minor improvements and fixes to the documentation.
+
+
+## 0.3.2 -> 0.4.1
+
+* The following commands got a 'Maybe' added to their return type, to
+  properly handle Redis returning `nil`-replies: `brpoplpush`, `lindex`, `lpop`,
+  `objectEncoding`, `randomkey`, `rpop`, `rpoplpush`, `spop`, `srandmember`,
+  `zrank`, `zrevrank`, `zscore`.
+* Updated dependencies on `bytestring-lexing` and `stm`.
+* Minor improvements and fixes to the documentation.

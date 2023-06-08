@@ -37,21 +37,12 @@ module Harness.Schema
     runSQL,
     addSource,
     getSchemaName,
-    nativeQuery,
-    nativeQueryColumn,
-    trackNativeQuery,
-    untrackNativeQuery,
-    trackNativeQueryCommand,
-    untrackNativeQueryCommand,
-    storedProcedure,
-    storedProcedureColumn,
-    trackStoredProcedure,
-    untrackStoredProcedure,
-    trackStoredProcedureCommand,
-    untrackStoredProcedureCommand,
+    bulkAtomicCommand,
     module Harness.Schema.Table,
     module Harness.Schema.Name,
     module Harness.Schema.LogicalModel,
+    module Harness.Schema.NativeQuery,
+    module Harness.Schema.StoredProcedure,
   )
 where
 
@@ -508,3 +499,10 @@ addSource sourceName sourceConfig testEnvironment = do
         name: #{ sourceName }
         configuration: #{ sourceConfig }
       |]
+
+bulkAtomicCommand :: [Value] -> Value
+bulkAtomicCommand subCommands =
+  [yaml|
+      type: bulk_atomic
+      args: *subCommands
+    |]

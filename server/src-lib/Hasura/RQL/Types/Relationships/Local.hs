@@ -359,6 +359,8 @@ data RelTarget b
 
 deriving instance (Backend b) => Eq (RelTarget b)
 
+deriving instance (Backend b) => Ord (RelTarget b)
+
 deriving instance (Backend b) => Show (RelTarget b)
 
 instance (Backend b) => NFData (RelTarget b)
@@ -386,6 +388,8 @@ data RelInfo (b :: BackendType) = RelInfo
 deriving instance (Backend b) => Show (RelInfo b)
 
 deriving instance (Backend b) => Eq (RelInfo b)
+
+deriving instance (Backend b) => Ord (RelInfo b)
 
 instance (Backend b) => NFData (RelInfo b)
 

@@ -1,6 +1,6 @@
 module Hasura.GraphQL.Parser.MonadParseSpec (spec) where
 
-import Data.Aeson.Internal
+import Data.Aeson.Types
 import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.ErrorCode

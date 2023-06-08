@@ -66,7 +66,7 @@ resolveDatabaseMetadata ::
   m (Either QErr (DBObjectsIntrospection 'MSSQL))
 resolveDatabaseMetadata config = runExceptT do
   dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
-  pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty
+  pure $ DBObjectsIntrospection dbTablesMetadata mempty mempty mempty
   where
     MSSQLSourceConfig _connString mssqlExecCtx _numReadReplicas = config
 

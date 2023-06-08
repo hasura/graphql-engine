@@ -34,6 +34,7 @@ import Hasura.RQL.IR qualified as Ir
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as Rql
 import Hasura.RQL.Types.Common qualified as Rql
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 import Hasura.RQL.Types.Relationships.Local qualified as Rql
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -659,7 +660,8 @@ unfurlAnnotatedOrderByElement =
                       joinOn,
                       joinProvenance = OrderByJoinProvenance,
                       joinFieldName = tableNameText tableName, -- TODO: not needed.
-                      joinExtractPath = Nothing
+                      joinExtractPath = Nothing,
+                      joinType = LeftOuter
                     },
                 unfurledObjectTableAlias = Just (tableName, joinAliasEntity)
               }
@@ -731,7 +733,8 @@ unfurlAnnotatedOrderByElement =
                         joinAlias = joinAlias,
                         joinOn,
                         joinFieldName = tableNameText tableName, -- TODO: not needed.
-                        joinExtractPath = Nothing
+                        joinExtractPath = Nothing,
+                        joinType = LeftOuter
                       },
                   unfurledObjectTableAlias = Nothing
                 }
@@ -1290,7 +1293,8 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
             -- Above: Needed by DataLoader to determine the type of
             -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Nothing
+        joinExtractPath = Nothing,
+        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
       }
   where
     Ir.AnnObjectSelectG
@@ -1301,7 +1305,8 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression
+        _aarAnnSelect = annObjectSelectG :: Ir.AnnObjectSelectG 'BigQuery Void Expression,
+        _aarNullable = nullable
       } = annRelationSelectG
 
 -- We're not using existingJoins at the moment, which was used to
@@ -1437,13 +1442,15 @@ fromArrayAggregateSelectG annRelationSelectG = do
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Nothing
+        joinExtractPath = Nothing,
+        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
       }
   where
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annSelectG
+        _aarAnnSelect = annSelectG,
+        _aarNullable = nullable
       } = annRelationSelectG
 
 -- | Produce a join for an array relation.
@@ -1641,13 +1648,15 @@ fromArrayRelationSelectG annRelationSelectG = do
         -- Above: Needed by DataLoader to determine the type of
         -- Haskell-native join to perform.
         joinFieldName,
-        joinExtractPath = Just aggFieldName
+        joinExtractPath = Just aggFieldName,
+        joinType = case nullable of Nullable -> LeftOuter; NotNullable -> Inner
       }
   where
     Ir.AnnRelationSelectG
       { _aarRelationshipName,
         _aarColumnMapping = mapping :: HashMap ColumnName ColumnName,
-        _aarAnnSelect = annSelectG
+        _aarAnnSelect = annSelectG,
+        _aarNullable = nullable
       } = annRelationSelectG
 
 -- | For entity projections, convert any entity aliases to their field

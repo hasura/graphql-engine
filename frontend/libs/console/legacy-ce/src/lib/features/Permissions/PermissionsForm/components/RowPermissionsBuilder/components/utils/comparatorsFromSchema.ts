@@ -8,6 +8,7 @@ import { Table } from '../../../../../../hasura-metadata-types';
 import { useContext } from 'react';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
 import { sourceDataTypes, SourceDataTypes } from './sourceDataTypes';
+import { rootTableContext } from '../RootTableProvider';
 
 function columnOperators(): Array<Operator> {
   return Object.keys(columnOperatorsInfo).reduce((acc, key) => {
@@ -136,7 +137,8 @@ export const mapScalarDataType = (
 };
 
 export function useOperators({ path }: { path: string[] }) {
-  const { comparators, tables } = useContext(rowPermissionsContext);
+  const { comparators } = useContext(rowPermissionsContext);
+  const { tables } = useContext(rootTableContext);
   const { columns, table } = useContext(tableContext);
 
   const columnName = path[path.length - 2];

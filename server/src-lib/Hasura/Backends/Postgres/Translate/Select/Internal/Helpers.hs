@@ -14,7 +14,6 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     encodeBase64,
     fromTableRowArgs,
     fromTableRowArgsDon'tAddBase,
-    selectFromToFromItem,
     functionToIdentifier,
     withJsonBuildObj,
     withForceAggregation,
@@ -44,11 +43,8 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.Function.Cache
-import Hasura.NativeQuery.IR (NativeQuery (..))
 import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
-import Hasura.RQL.IR
-import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (FieldName)
 import Hasura.SQL.Types (ToSQL (toSQL))
 
@@ -131,24 +127,9 @@ fromTableRowArgsDon'tAddBase prefix = toFunctionArgs . fmap toSQLExp
         (S.SERowIdentifier (tableIdentifierToIdentifier prefix))
         (S.mkQIdenExp prefix . Identifier)
 
-selectFromToFromItem :: TableIdentifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
-selectFromToFromItem prefix = \case
-  FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
-  FromFunction qf args defListM ->
-    S.FIFunc
-      $ S.FunctionExp qf (fromTableRowArgs prefix args)
-      $ Just
-      $ S.mkFunctionAlias
-        qf
-        (fmap (fmap (first S.toColumnAlias)) defListM)
-  FromStoredProcedure {} -> error "selectFromToFromItem: FromStoredProcedure"
-  FromNativeQuery lm ->
-    S.FIIdentifier (S.tableAliasToIdentifier $ nativeQueryNameToAlias (nqRootFieldName lm))
-
 -- | Given a @NativeQueryName@, what should we call the CTE generated for it?
-nativeQueryNameToAlias :: NativeQueryName -> S.TableAlias
-nativeQueryNameToAlias nqName = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName))
+nativeQueryNameToAlias :: NativeQueryName -> Int -> S.TableAlias
+nativeQueryNameToAlias nqName freshId = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName) <> "_" <> tshow freshId)
 
 -- | Converts a function name to an 'Identifier'.
 --

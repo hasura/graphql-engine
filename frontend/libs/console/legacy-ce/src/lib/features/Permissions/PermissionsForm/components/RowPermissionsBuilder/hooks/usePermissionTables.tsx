@@ -8,7 +8,7 @@ export const usePermissionTables = ({
   dataSourceName,
 }: {
   dataSourceName: string;
-}): Tables => {
+}): { isLoading: boolean; tables: Tables | null } => {
   const { data: sources, isLoading: isLoadingSources } = useSources();
   const { data: tables, isLoading: isLoadingTables } = useTablesWithColumns({
     dataSourceName,
@@ -22,20 +22,22 @@ export const usePermissionTables = ({
     });
 
   if (isLoadingTables || isLoadingSuggestedRelationships || isLoadingSources)
-    return [];
+    return { isLoading: true, tables: null };
 
-  return (
-    tables?.map(({ metadataTable, columns }) => {
-      return {
-        table: metadataTable.table,
-        dataSource: sources?.find(source => source.name === dataSourceName),
-        relationships: getAllTableRelationships(
-          metadataTable,
-          dataSourceName,
-          suggestedRelationships
-        ),
-        columns,
-      };
-    }) ?? []
-  );
+  return {
+    isLoading: false,
+    tables:
+      tables?.map(({ metadataTable, columns }) => {
+        return {
+          table: metadataTable.table,
+          dataSource: sources?.find(source => source.name === dataSourceName),
+          relationships: getAllTableRelationships(
+            metadataTable,
+            dataSourceName,
+            suggestedRelationships
+          ),
+          columns,
+        };
+      }) ?? [],
+  };
 };

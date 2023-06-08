@@ -344,6 +344,8 @@ deriving newtype instance (Backend b) => Show (FunctionOverloads b)
 
 deriving newtype instance (FromJSON (RawFunctionInfo b)) => FromJSON (FunctionOverloads b)
 
+deriving newtype instance (ToJSON (RawFunctionInfo b)) => ToJSON (FunctionOverloads b)
+
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],
     _faeNamed :: (HashMap.HashMap Text a)

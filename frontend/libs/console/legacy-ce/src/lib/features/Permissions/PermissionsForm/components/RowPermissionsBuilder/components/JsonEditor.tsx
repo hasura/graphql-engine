@@ -3,11 +3,11 @@ import { useContext } from 'react';
 
 import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { rowPermissionsContext } from './RowPermissionsProvider';
+import { rootTableContext } from './RootTableProvider';
 
 export const JsonEditor = () => {
-  const { permissions, table, setPermissions } = useContext(
-    rowPermissionsContext
-  );
+  const { permissions, setPermissions } = useContext(rowPermissionsContext);
+  const { table } = useContext(rootTableContext);
   return (
     <div className="p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
       <AceEditor

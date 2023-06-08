@@ -8,6 +8,8 @@ module Harness.GlobalTestEnvironment
     Server (..),
     TestingMode (..),
     serverUrl,
+    GlobalFlags (..),
+    defaultGlobalFlags,
   )
 where
 
@@ -26,6 +28,7 @@ import Network.WebSockets qualified as WS
 data GlobalTestEnvironment = GlobalTestEnvironment
   { -- | shared function to log information from tests
     logger :: Logger,
+    globalFlags :: GlobalFlags,
     -- | the mode in which we're running the tests. See 'TestingMode' for
     -- details'.
     testingMode :: TestingMode,
@@ -122,3 +125,15 @@ instance Show Server where
 -- @
 serverUrl :: Server -> String
 serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
+
+-- | Persistent flags throughout the program.
+data GlobalFlags = GlobalFlags
+  { -- | Trace commands sent via graphql.
+    gfTraceCommands :: Bool
+  }
+
+defaultGlobalFlags :: GlobalFlags
+defaultGlobalFlags =
+  GlobalFlags
+    { gfTraceCommands = False
+    }

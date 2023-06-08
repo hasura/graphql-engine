@@ -21,14 +21,14 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 This guide explains how to connect a new
 [Azure Cosmos DB for PostgreSQL](https://learn.microsoft.com/en-us/azure/cosmos-db/postgresql/introduction) to a Hasura
-instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
 [self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Azure Cosmos DB for PostgreSQL,
 check out their [docs](https://azure.microsoft.com/en-us/products/cosmos-db/#overview) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-azure).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-azure).
 
 :::
 
@@ -41,21 +41,21 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
 
 After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
 
 On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for a
 Postgres Database URL. We'll create this in the next step and then come back here.
 
-<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src="/img/cloud-dbs/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
 
 ## Step 3: Create a Cosmos DB on Azure {#create-pg-db-azure}
 
 You can start a free trial with [Azure Cosmos DB](https://cosmos.azure.com/try/). Select Azure Cosmos DB for PostgreSQL
 and click `Create`:
 
-<Thumbnail src='/img/cloud-dbs/azure-cosmos/cosmos-create.png' alt='Create Azure Cosmos' width='1000px' />
+<Thumbnail src="/img/cloud-dbs/azure-cosmos/cosmos-create.png" alt="Create Azure Cosmos" width="1000px" />
 
 After signing up, you're redirected to your database's home on your Azure portal.
 
@@ -76,31 +76,31 @@ of the page.
 
 Click `Connection strings` in the side navigation:
 
-<Thumbnail src='/img/cloud-dbs/azure-cosmos/cosmos-dashboard.png' alt='Azure Cosmos DB Dashboard' />
+<Thumbnail src="/img/cloud-dbs/azure-cosmos/cosmos-dashboard.png" alt="Azure Cosmos DB Dashboard" />
 
 Copy the value labeled as `PostgreSQL connection URL`.
 
-<Thumbnail src='/img/cloud-dbs/azure-cosmos/cosmos-connection-url.png' alt='Connection strings for the database' />
+<Thumbnail src="/img/cloud-dbs/azure-cosmos/cosmos-connection-url.png" alt="Connection strings for the database" />
 
 ## Step 5: Finish connecting the database
 
 Back on the Hasura Console, enter the database URL that we retrieved in [step 4](#get-db-url-azure-cosmos):
 
-<Thumbnail src='/img/cloud-dbs/azure-cosmos/cosmos-connect.png' alt='Database setup' width='600px' />
+<Thumbnail src="/img/cloud-dbs/azure-cosmos/cosmos-connect.png" alt="Database setup" width="600px" />
 
 Then click `Connect Database`.
 
 :::info Note
 
 For security reasons, it is recommended to set database URLs as
-[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
-of the raw database URLs.
+[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the
+databases in place of the raw database URLs.
 
 :::
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
 
 ## Next steps
 
@@ -112,7 +112,7 @@ Voilà. You are ready to start developing.
   [env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) or
   [custom domains](/hasura-cloud/projects/domains.mdx#manage-project-domains)).
 
-<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
 
 :::info Note
 

@@ -38,6 +38,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Monoid (Any (..))
 import Data.Text qualified as T
+import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
@@ -90,6 +91,7 @@ import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, attachMetadata)
+import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Types qualified as HTTP
 import Network.Wai.Extended qualified as Wai
@@ -311,7 +313,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType)) <- withElapsedTime $ do
-    (reqParsed, runLimits, queryParts) <- observeGQLQueryError gqlMetrics Nothing $ do
+    (reqParsed, runLimits, queryParts) <- Tracing.newSpan "Parse GraphQL" $ observeGQLQueryError gqlMetrics Nothing $ do
       -- 1. Run system authorization on the 'reqUnparsed :: GQLReqUnparsed' query.
       reqParsed <-
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
@@ -378,8 +380,6 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
       m AnnotatedResponse
     executePlan reqParsed runLimits execPlan = case execPlan of
       E.QueryExecutionPlan queryPlans asts dirMap -> do
-        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-        attachMetadata [("graphql.operation.type", "query")]
         let cachedDirective = runIdentity <$> DM.lookup cached dirMap
         -- Attempt to lookup a cached response in the query cache.
         (cachingHeaders, cachedValue) <- liftEitherM $ cacheLookup queryPlans asts cachedDirective reqParsed userInfo reqHeaders
@@ -424,8 +424,6 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
                  in -- 4. Return the response.
                     pure $ result {arResponse = addHttpResponseHeaders headers response}
       E.MutationExecutionPlan mutationPlans -> runLimits $ do
-        -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-        attachMetadata [("graphql.operation.type", "mutation")]
         {- Note [Backwards-compatible transaction optimisation]
 
            For backwards compatibility, we perform the following optimisation: if all mutation steps
@@ -528,7 +526,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
         _all <- traverse (executeQueryStep fieldName) lst
         pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse _all)) []
 
-    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = do
+    runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
         doQErr $ E.execRemoteGQ env userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName resultCustomizer resp
@@ -676,7 +674,7 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError
-    doGQExecError = withExceptT Left . throwError . GQExecError
+    doGQExecError = withExceptT Left . throwError . GQExecError . fmap J.toEncoding
 
 buildRaw :: (Applicative m) => JO.Value -> m AnnotatedResponsePart
 buildRaw json = do
@@ -742,7 +740,7 @@ runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logg
           removeHeaders =
             flip HttpResponse []
               . encJFromList
-              . map (either (encJFromJValue . encodeGQErr includeInternal) _hrBody)
+              . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
       responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =

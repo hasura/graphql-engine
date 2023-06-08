@@ -28,18 +28,20 @@ Streaming subscriptions are supported in Hasura GraphQL Engine versions `v2.7.0-
 
 In streaming subscriptions, the server maintains a cursor value with a subscription and after streaming each batch, the
 value of the cursor is updated. Ideally, the cursor chosen should represent unique and sortable values so that each row
-is sent exactly once to a subscriber.
+is sent exactly once to a subscriber. **Hasura does not require sticky sessions for streaming subscriptions**.
 
 Streaming subscriptions work well with other Hasura features like
 [permissions](/auth/authorization/permissions/row-level-permissions.mdx) and
 [relationships](/schema/postgres/table-relationships/index.mdx#table-relationships) and also leverage the power of
 [subscriptions multiplexing](/subscriptions/postgres/livequery/execution.mdx#subscription-multiplexing).
 
-:::info Note
+:::info Confguration details
 
 In the case of streaming subscriptions, the multiplexed batch size can be configured via
 `HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE` and the refetch interval can be configured via
 `HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`.
+
+:::
 
 ## Use cases
 

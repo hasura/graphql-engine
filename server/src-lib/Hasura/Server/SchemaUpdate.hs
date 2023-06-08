@@ -289,7 +289,9 @@ refreshSchemaCache
         rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
         let dynamicConfig = buildCacheDynamicConfig appContext
-        (msg, cache, _) <-
+        -- the instance which triggered the schema sync event would have stored
+        -- the source introspection, hence we can ignore it here
+        (msg, cache, _, _sourcesIntrospection) <-
           runCacheRWT dynamicConfig rebuildableCache $ do
             schemaCache <- askSchemaCache
             let engineResourceVersion = scMetadataResourceVersion schemaCache

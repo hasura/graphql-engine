@@ -54,7 +54,7 @@ tests = do
 
       helloWorldNativeQuery :: Schema.NativeQuery
       helloWorldNativeQuery =
-        (Schema.nativeQuery "hello_world_function" query "hello_world_return_type")
+        (Schema.nativeQuery "hello_world_function" (const query) "hello_world_return_type")
 
   describe "Testing Native Queries" $ do
     it "We cannot even set up a Logical Model in OSS" $ \testEnvironment -> do

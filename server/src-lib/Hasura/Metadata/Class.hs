@@ -21,7 +21,6 @@ import Data.Aeson
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
-import Hasura.RQL.DDL.Schema.Cache.Common (StoredIntrospection)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.EECredentials
 import Hasura.RQL.Types.EventTrigger

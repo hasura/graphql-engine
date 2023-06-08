@@ -124,7 +124,7 @@ runQuery appContext schemaCache rqlQuery = do
 
   let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
-  ((result, updatedMetadata), updatedCache, invalidations) <-
+  ((result, updatedMetadata), updatedCache, invalidations, sourcesIntrospection) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query
       & runMetadataT metadata (acMetadataDefaults appContext)
@@ -137,6 +137,11 @@ runQuery appContext schemaCache rqlQuery = do
           Tracing.newSpan "setMetadata"
             $ liftEitherM
             $ setMetadata currentResourceVersion updatedMetadata
+
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
+
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM

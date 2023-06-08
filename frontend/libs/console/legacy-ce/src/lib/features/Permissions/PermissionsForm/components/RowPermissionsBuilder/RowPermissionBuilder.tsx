@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { RowPermissionsInput } from './components';
 import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
+import Skeleton from 'react-loading-skeleton';
 
 interface Props {
   permissionsKey: 'check' | 'filter';
@@ -23,13 +24,13 @@ export const RowPermissionBuilder = ({
 
   const value = watch(permissionsKey);
 
-  const tables = usePermissionTables({
+  const { tables, isLoading } = usePermissionTables({
     dataSourceName,
   });
 
   const comparators = usePermissionComparators();
 
-  if (!tables) return <>Loading</>;
+  if (isLoading || !tables) return <Skeleton />;
   return (
     <div
       data-testid="row-permission-builder"
@@ -41,6 +42,8 @@ export const RowPermissionBuilder = ({
         }}
         table={table}
         tables={tables}
+        logicalModel={undefined}
+        logicalModels={[]}
         permissions={value}
         comparators={comparators}
       />

@@ -59,6 +59,7 @@ mkConnectionSelect connectionSelect = do
         SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}
         ) =
           runWriter
+            $ flip evalStateT initialNativeQueryFreshIdStore
             $ flip runReaderT strfyNum
             $ processConnectionSelect
               sourcePrefixes

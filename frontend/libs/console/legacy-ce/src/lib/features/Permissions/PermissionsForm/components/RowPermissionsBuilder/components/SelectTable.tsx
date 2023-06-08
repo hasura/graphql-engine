@@ -4,6 +4,7 @@ import { Table } from '../../../../../hasura-metadata-types';
 import { getTableDisplayName } from '../../../../../DatabaseRelationships';
 import { tableContext } from './TableProvider';
 import { rowPermissionsContext } from './RowPermissionsProvider';
+import { rootTableContext } from './RootTableProvider';
 
 export function SelectTable({
   componentLevelId,
@@ -16,7 +17,8 @@ export function SelectTable({
 }) {
   const comparatorName = path[path.length - 1];
   const { table, setTable, setComparator } = useContext(tableContext);
-  const { setValue, tables } = useContext(rowPermissionsContext);
+  const { setValue } = useContext(rowPermissionsContext);
+  const { tables } = useContext(rootTableContext);
   const stringifiedTable = JSON.stringify(table);
   // Sync table name with ColumnsContext table value
   useEffect(() => {

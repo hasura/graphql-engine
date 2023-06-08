@@ -32,7 +32,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 addNonColumnFields ::
   forall b m.
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
@@ -129,7 +129,7 @@ addNonColumnFields allSources sourceName sourceConfig rawTableInfos columns remo
       These (_, thisMetadata) (_, thatMetadata) -> do
         tell
           $ Seq.singleton
-          $ Left
+          $ CollectInconsistentMetadata
           $ ConflictingObjects
             ("conflicting definitions for field " <>> fieldName)
             [thisMetadata, thatMetadata]
@@ -175,7 +175,7 @@ mkRelationshipMetadataObject relType source table relDef =
    in MetadataObject objectId $ toJSON $ WithTable @b source table relDef
 
 buildObjectRelationship ::
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
@@ -189,7 +189,7 @@ buildObjectRelationship fkeysMap sourceName sourceConfig table relDef = do
   buildRelationship sourceName table buildRelInfo ObjRel relDef
 
 buildArrayRelationship ::
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   HashMap (TableName b) (HashSet (ForeignKey b)) ->
@@ -204,7 +204,7 @@ buildArrayRelationship fkeysMap sourceName sourceConfig table relDef = do
 
 buildRelationship ::
   forall m b a.
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     ToJSON a,
     Backend b
   ) =>
@@ -247,7 +247,7 @@ mkComputedFieldMetadataObject source table ComputedFieldMetadata {..} =
 
 buildComputedField ::
   forall b m.
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   HashSet (TableName b) ->
@@ -268,7 +268,6 @@ buildComputedField trackedTableNames tableColumns source pgFunctions table cf@Co
         onNothing
           (HashMap.lookup function pgFunctions)
           (throw400 NotExists $ "no such function exists: " <>> function)
-
       rawfi <- getSingleUniqueFunctionOverload @b (computedFieldFunction @b _cfmDefinition) funcDefs
       buildComputedFieldInfo trackedTableNames table tableColumns _cfmName _cfmDefinition rawfi _cfmComment
 
@@ -294,7 +293,7 @@ mkRemoteRelationshipMetadataObject source table RemoteRelationship {..} =
 -- dependencies on the remote relationship on the LHS entity are computed here
 buildRemoteRelationship ::
   forall b m.
-  ( MonadWriter (Seq (Either InconsistentMetadata MetadataDependency)) m,
+  ( MonadWriter (Seq CollectItem) m,
     BackendMetadata b
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->

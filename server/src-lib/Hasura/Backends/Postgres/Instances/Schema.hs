@@ -450,7 +450,7 @@ columnParser columnType nullability = case columnType of
                   `onLeft` (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError)
         }
   ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
-    case nonEmpty (HashMap.toList enumValues) of
+    case nonEmpty . sortOn fst $ HashMap.toList enumValues of
       Just enumValuesList ->
         peelWithOrigin
           . fmap (ColumnValue columnType)
@@ -851,7 +851,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
     mkListParameter :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> IR.UnpreparedValue ('Postgres pgKind)
     mkListParameter columnType columnValues = do
       let scalarType = unsafePGColumnToBackend columnType
-      IR.UVParameter IR.Unknown
+      IR.UVParameter IR.FreshVar
         $ ColumnValue
           (ColumnScalar $ Postgres.PGArray scalarType)
           (Postgres.PGValArray $ cvValue <$> columnValues)

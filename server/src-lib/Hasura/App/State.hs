@@ -326,6 +326,7 @@ buildCacheStaticConfig AppEnv {..} =
     { _cscMaintenanceMode = appEnvEnableMaintenanceMode,
       _cscEventingMode = appEnvEventingMode,
       _cscReadOnlyMode = appEnvEnableReadOnlyMode,
+      _cscLogger = _lsLogger appEnvLoggers,
       _cscAreNativeQueriesEnabled = False,
       _cscAreStoredProceduresEnabled = False
     }

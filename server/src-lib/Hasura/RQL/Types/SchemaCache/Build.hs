@@ -31,6 +31,9 @@ module Hasura.RQL.Types.SchemaCache.Build
     throwOnInconsistencies,
     withNewInconsistentObjsCheck,
     getInconsistentQueryCollections,
+    StoredIntrospection (..),
+    StoredIntrospectionItem (..),
+    CollectItem (..),
   )
 where
 
@@ -51,6 +54,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
+import Hasura.EncJSON
 import Hasura.GraphQL.Analyse
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
@@ -75,22 +79,22 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- * Inconsistencies
 
 recordInconsistencies ::
-  (ArrowWriter (Seq (Either InconsistentMetadata md)) arr, Functor f, Foldable f) => ((Maybe Value, f MetadataObject), Text) `arr` ()
+  (ArrowWriter (Seq CollectItem) arr, Functor f, Foldable f) => ((Maybe Value, f MetadataObject), Text) `arr` ()
 recordInconsistencies = proc ((val, mo), reason) ->
-  tellA -< Seq.fromList $ toList $ fmap (Left . InconsistentObject reason val) mo
+  tellA -< Seq.fromList $ toList $ fmap (CollectInconsistentMetadata . InconsistentObject reason val) mo
 
 recordInconsistencyM ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => Maybe Value -> MetadataObject -> Text -> m ()
+  (MonadWriter (Seq CollectItem) m) => Maybe Value -> MetadataObject -> Text -> m ()
 recordInconsistencyM val mo reason = recordInconsistenciesM' [(val, mo)] reason
 
 recordInconsistenciesM ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [MetadataObject] -> Text -> m ()
+  (MonadWriter (Seq CollectItem) m) => [MetadataObject] -> Text -> m ()
 recordInconsistenciesM metadataObjects reason = recordInconsistenciesM' ((Nothing,) <$> metadataObjects) reason
 
 recordInconsistenciesM' ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
+  (MonadWriter (Seq CollectItem) m) => [(Maybe Value, MetadataObject)] -> Text -> m ()
 recordInconsistenciesM' metadataObjects reason =
-  tell $ Seq.fromList $ map (Left . uncurry (InconsistentObject reason)) metadataObjects
+  tell $ Seq.fromList $ map (CollectInconsistentMetadata . uncurry (InconsistentObject reason)) metadataObjects
 
 -- * Dependencies
 
@@ -100,28 +104,28 @@ data MetadataDependency
       MetadataObject
       SchemaObjId
       SchemaDependency
-  deriving (Eq)
+  deriving (Eq, Show)
 
 recordDependencies ::
-  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
+  (ArrowWriter (Seq CollectItem) arr) =>
   (MetadataObject, SchemaObjId, Seq SchemaDependency) `arr` ()
 recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
-  tellA -< Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
+  tellA -< CollectMetadataDependency . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 recordDependenciesM ::
-  (MonadWriter (Seq (Either im MetadataDependency)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   MetadataObject ->
   SchemaObjId ->
   Seq SchemaDependency ->
   m ()
 recordDependenciesM metadataObject schemaObjectId dependencies = do
-  tell $ Right . MetadataDependency metadataObject schemaObjectId <$> dependencies
+  tell $ CollectMetadataDependency . MetadataDependency metadataObject schemaObjectId <$> dependencies
 
 -- * Helpers
 
 -- | Monadic version of 'withRecordInconsistency'
 withRecordInconsistencyM ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   MetadataObject ->
   ExceptT QErr m a ->
   m (Maybe a)
@@ -146,8 +150,8 @@ withRecordInconsistencyM metadataObject f = do
     Right v -> return $ Just v
 
 recordInconsistenciesWith ::
-  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
-  ((ArrowWriter (Seq (Either InconsistentMetadata md)) arr) => ((Maybe Value, mo), Text) `arr` ()) ->
+  (ArrowChoice arr, ArrowWriter (Seq CollectItem) arr) =>
+  ((ArrowWriter (Seq CollectItem) arr) => ((Maybe Value, mo), Text) `arr` ()) ->
   ErrorA QErr arr (e, s) a ->
   arr (e, (mo, s)) (Maybe a)
 recordInconsistenciesWith recordInconsistency' f = proc (e, (metadataObject, s)) -> do
@@ -173,7 +177,7 @@ recordInconsistenciesWith recordInconsistency' f = proc (e, (metadataObject, s))
 
 -- | Record any errors resulting from a computation as inconsistencies
 withRecordInconsistency ::
-  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
+  (ArrowChoice arr, ArrowWriter (Seq CollectItem) arr) =>
   ErrorA QErr arr (e, s) a ->
   arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistency err = proc (e, (mo, s)) ->
@@ -181,7 +185,7 @@ withRecordInconsistency err = proc (e, (mo, s)) ->
 {-# INLINEABLE withRecordInconsistency #-}
 
 withRecordInconsistencies ::
-  (ArrowChoice arr, ArrowWriter (Seq (Either InconsistentMetadata md)) arr) =>
+  (ArrowChoice arr, ArrowWriter (Seq CollectItem) arr) =>
   ErrorA QErr arr (e, s) a ->
   arr (e, ([MetadataObject], s)) (Maybe a)
 withRecordInconsistencies = recordInconsistenciesWith recordInconsistencies
@@ -195,7 +199,8 @@ class (CacheRM m) => CacheRWM m where
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> m ()
-buildSchemaCacheWithOptions buildReason cacheInvalidation metadata = tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
+buildSchemaCacheWithOptions buildReason cacheInvalidation metadata =
+  tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
 
 data BuildReason
   = -- | The build was triggered by an update this instance made to the catalog (in the
@@ -487,3 +492,52 @@ getInconsistentQueryCollections rs qcs lqToMetadataObj restEndpoints allowLst =
       -- perform the validation
       for_ (diagnoseGraphQLQuery rs singleOperation) \errors ->
         throwError (lqToMetadataObj eMeta, formatError eMeta errors)
+
+data StoredIntrospection = StoredIntrospection
+  { -- Just catalog introspection - not including enums
+    siBackendIntrospection :: HashMap SourceName EncJSON,
+    siRemotes :: HashMap RemoteSchemaName EncJSON
+  }
+  deriving stock (Generic)
+
+-- Note that we don't want to introduce an `Eq EncJSON` instance, as this is a
+-- bit of a footgun. But for Stored Introspection purposes, it's fine: the
+-- worst-case effect of a semantically inaccurate `Eq` instance is that we
+-- rebuild the Schema Cache too often.
+--
+-- However, this does mean that we have to spell out this instance a bit.
+instance Eq StoredIntrospection where
+  StoredIntrospection bs1 rs1 == StoredIntrospection bs2 rs2 =
+    (encJToLBS <$> bs1) == (encJToLBS <$> bs2) && (encJToLBS <$> rs1) == (encJToLBS <$> rs2)
+
+instance FromJSON StoredIntrospection where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON StoredIntrospection where
+  toJSON = genericToJSON hasuraJSON
+
+-- | Represents remote schema or source introspection data to be persisted in a storage (database).
+data StoredIntrospectionItem
+  = SourceIntrospectionItem SourceName EncJSON
+  | RemoteSchemaIntrospectionItem RemoteSchemaName EncJSON
+
+-- The same comment as above for `Eq StoredIntrospection` applies here as well: our refusal to have an `Eq EncJSON` instance means that we can't `stock`-derive this instance.
+instance Eq StoredIntrospectionItem where
+  SourceIntrospectionItem lSource lIntrospection == SourceIntrospectionItem rSource rIntrospection =
+    (lSource == rSource) && (encJToLBS lIntrospection) == (encJToLBS rIntrospection)
+  RemoteSchemaIntrospectionItem lRemoteSchema lIntrospection == RemoteSchemaIntrospectionItem rRemoteSchema rIntrospection =
+    (lRemoteSchema == rRemoteSchema) && (encJToLBS lIntrospection) == (encJToLBS rIntrospection)
+  _ == _ = False
+
+instance Show StoredIntrospectionItem where
+  show = \case
+    SourceIntrospectionItem sourceName _ -> "introspection data of source " ++ show sourceName
+    RemoteSchemaIntrospectionItem remoteSchemaName _ -> "introspection data of source " ++ show remoteSchemaName
+
+-- | Items to be collected while building schema cache
+-- See @'buildSchemaCacheRule' for more details.
+data CollectItem
+  = CollectInconsistentMetadata InconsistentMetadata
+  | CollectMetadataDependency MetadataDependency
+  | CollectStoredIntrospection StoredIntrospectionItem
+  deriving (Show, Eq)

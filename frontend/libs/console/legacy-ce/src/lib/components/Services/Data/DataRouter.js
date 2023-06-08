@@ -1,4 +1,4 @@
-import { IndexRedirect, IndexRoute, Route } from 'react-router';
+import { IndexRedirect, IndexRoute, Redirect, Route } from 'react-router';
 
 import { SERVER_CONSOLE_MODE } from '../../../constants';
 import globals from '../../../Globals';
@@ -37,9 +37,14 @@ import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
-import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/AddNativeQueryRoute';
+
 import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidget.route';
+import { LogicalModelPermissionsRoute } from '../../../features/Data/LogicalModels/LogicalModelPermissions/LogicalModelPermissionsPage';
 import { ManageFunction } from '../../../features/Data/ManageFunction/ManageFunction';
+import {
+  UpdateNativeQueryRoute,
+  AddNativeQueryRoute,
+} from '../../../features/Data/LogicalModels/AddNativeQuery';
 
 const makeDataRouter = (
   connect,
@@ -82,7 +87,20 @@ const makeDataRouter = (
       <Route path="native-queries">
         <IndexRoute component={NativeQueries} />
         <Route path="create" component={AddNativeQueryRoute} />
-        <Route path="logical-models" component={NativeQueries} />
+        <Route
+          path="native-query/:source/:name"
+          component={UpdateNativeQueryRoute}
+        />
+        <Route path="logical-models">
+          <IndexRoute component={NativeQueries} />
+          <Redirect from=":source" to="/data/native-queries/logical-models" />
+          <Route path=":source">
+            <Route
+              path=":name/permissions"
+              component={LogicalModelPermissionsRoute}
+            />
+          </Route>
+        </Route>
         <Route path="stored-procedures" component={NativeQueries} />
         <Route
           path="stored-procedures/track"

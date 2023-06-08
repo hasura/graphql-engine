@@ -90,6 +90,7 @@ initSubscriptionsState pollHook =
     <*> pure pollHook
     <*> TMap.new
 
+-- | For dev debugging, output subject to change.
 dumpSubscriptionsState :: Bool -> LiveQueriesOptions -> StreamQueriesOptions -> SubscriptionsState -> IO J.Value
 dumpSubscriptionsState extended liveQOpts streamQOpts (SubscriptionsState lqMap streamMap _ _) = do
   lqMapJ <- dumpPollerMap extended lqMap

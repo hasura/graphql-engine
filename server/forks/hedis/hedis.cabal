@@ -1,0 +1,189 @@
+name:               hedis
+version:            0.15.2
+synopsis:
+    Client library for the Redis datastore: supports full command set,
+    pipelining.
+Description:
+    Redis is an open source, advanced key-value store. It is often referred to
+    as a data structure server since keys can contain strings, hashes, lists,
+    sets and sorted sets. This library is a Haskell client for the Redis
+    datastore. Compared to other Haskell client libraries it has some
+    advantages:
+    .
+    [Compatibility with Latest Stable Redis:] Hedis is intended
+        to be used with the latest stable version of Redis (currently 5.0).
+    Most redis commands (<http://redis.io/commands>) are available as
+    haskell functions, although MONITOR and SYNC are intentionally
+    omitted. Additionally, a low-level API is
+        exposed that  makes it easy for the library user to implement further
+        commands, such as new commands from an experimental Redis version.
+    .
+    [Automatic Optimal Pipelining:] Commands are pipelined
+        (<http://redis.io/topics/pipelining>) as much as possible without any
+        work by the user. See
+        <http://informatikr.com/2012/redis-pipelining.html> for a
+        technical explanation of automatic optimal pipelining.
+    .
+    [Enforced Pub\/Sub semantics:] When subscribed to the Redis Pub\/Sub server
+        (<http://redis.io/topics/pubsub>), clients are not allowed to issue
+        commands other than subscribing to or unsubscribing from channels. This
+        library uses the type system to enforce the correct behavior.
+    .
+    [Connect via TCP or Unix Domain Socket:] TCP sockets are the default way to
+        connect to a Redis server. For connections to a server on the same
+        machine, Unix domain sockets offer higher performance than the standard
+        TCP connection.
+    .
+    For detailed documentation, see the "Database.Redis" module.
+    .
+license:            BSD3
+license-file:       LICENSE
+author:             Falko Peters <falko.peters@gmail.com>
+maintainer:         Kostiantyn Rybnikov <k-bx@k-bx.com>
+copyright:          Copyright (c) 2011 Falko Peters
+category:           Database
+build-type:         Simple
+cabal-version:      >=1.10
+homepage:           https://github.com/informatikr/hedis
+bug-reports:        https://github.com/informatikr/hedis/issues
+extra-source-files: CHANGELOG
+
+source-repository head
+  type:     git
+  location: https://github.com/informatikr/hedis
+
+flag dev
+  description: enable this for local development -Werror and profiling options
+  default: False
+  manual: True
+
+library
+  default-language: Haskell2010
+  hs-source-dirs:   src
+  ghc-options:      -Wall -fwarn-tabs
+  if impl(ghc >= 8.6.0)
+    ghc-options:    -Wno-warnings-deprecations
+  if flag(dev)
+    ghc-options:    -Werror
+  if flag(dev)
+    ghc-prof-options: -auto-all
+  exposed-modules:  Database.Redis
+                  , Database.Redis.Sentinel
+                  , Database.Redis.Core.Internal
+  build-depends:    scanner >= 0.2,
+                    async >= 2.1,
+                    base >= 4.8 && < 5,
+                    bytestring >= 0.9,
+                    bytestring-lexing >= 0.5,
+                    exceptions,
+                    unordered-containers,
+                    containers,
+                    text,
+                    deepseq,
+                    mtl >= 2,
+                    network >= 2 && < 3.2,
+                    resource-pool >= 0.2,
+                    stm,
+                    time,
+                    tls >= 1.3,
+                    vector >= 0.9,
+                    HTTP,
+                    errors,
+                    network-uri,
+                    unliftio-core,
+                    random
+  if !impl(ghc >= 8.0)
+    build-depends:
+      semigroups >= 0.11 && < 0.19
+
+  other-modules:    Database.Redis.Core,
+                    Database.Redis.Connection,
+                    Database.Redis.Cluster,
+                    Database.Redis.Cluster.HashSlot,
+                    Database.Redis.Cluster.Command,
+                    Database.Redis.ProtocolPipelining,
+                    Database.Redis.Protocol,
+                    Database.Redis.PubSub,
+                    Database.Redis.Transactions,
+                    Database.Redis.Types
+                    Database.Redis.Commands,
+                    Database.Redis.ManualCommands,
+                    Database.Redis.URL,
+                    Database.Redis.ConnectionContext
+  other-extensions: StrictData
+
+benchmark hedis-benchmark
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    main-is: benchmark/Benchmark.hs
+    build-depends:
+        base == 4.*,
+        mtl >= 2.0,
+        hedis,
+        time >= 1.2
+    ghc-options: -O2 -Wall -rtsopts
+    if flag(dev)
+      ghc-options: -Werror
+    if flag(dev)
+      ghc-prof-options: -auto-all
+
+test-suite hedis-test
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    hs-source-dirs: test
+    main-is: Main.hs
+    other-modules: PubSubTest
+                   Tests
+    build-depends:
+        base == 4.*,
+        bytestring >= 0.10,
+        hedis,
+        HUnit,
+        async,
+        stm,
+        text,
+        mtl == 2.*,
+        test-framework,
+        test-framework-hunit,
+        time
+    -- We use -O0 here, since GHC takes *very* long to compile so many constants
+    ghc-options: -O0 -Wall -rtsopts -fno-warn-unused-do-bind
+    if flag(dev)
+      ghc-options: -Werror
+    if flag(dev)
+      ghc-prof-options: -auto-all
+
+test-suite hedis-test-cluster
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    hs-source-dirs: test
+    main-is: ClusterMain.hs
+    other-modules: PubSubTest
+                   Tests
+    build-depends:
+        base == 4.*,
+        bytestring >= 0.10,
+        hedis,
+        HUnit,
+        async,
+        stm,
+        text,
+        mtl == 2.*,
+        test-framework,
+        test-framework-hunit,
+        time
+    -- We use -O0 here, since GHC takes *very* long to compile so many constants
+    ghc-options: -O0 -Wall -rtsopts -fno-warn-unused-do-bind
+    if flag(dev)
+      ghc-options: -Werror
+    if flag(dev)
+      ghc-prof-options: -auto-all
+
+test-suite doctest
+    default-language: Haskell2010
+    type: exitcode-stdio-1.0
+    main-is: DocTest.hs
+    ghc-options: -O0 -rtsopts
+    build-depends:
+        base == 4.*,
+        doctest

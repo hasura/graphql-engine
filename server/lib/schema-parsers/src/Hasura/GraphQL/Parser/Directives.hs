@@ -46,7 +46,7 @@ import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
+import Type.Reflection (Typeable, typeRep)
 import Witherable (catMaybes)
 import Prelude
 

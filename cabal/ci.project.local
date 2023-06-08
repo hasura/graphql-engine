@@ -10,12 +10,6 @@ package *
     -j2
     -- For performance, with `-j`:
     +RTS -A64m -n2m -RTS
-  -- -----------------------------------------------------------
-  -- Allow for dead-code elimination at link-time, to reduce binary size
-  -- TODO WHEN WE NEXT UPGRADE GHC: move this into cabal.project
-  ghc-options: -split-sections
-  ld-options: -Wl,--gc-sections
-  -- -----------------------------------------------------------
 
 -- Enable optimizations in all local (hasura) packages:
 flags: +optimize-hasura

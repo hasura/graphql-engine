@@ -19,10 +19,10 @@ import Harness.GraphqlEngine (startServerThread)
 import Harness.Logging
 import Harness.Services.Composed (mkTestServicesConfig, teardownServices)
 import Harness.Test.BackendType (BackendType (..))
-import Harness.TestEnvironment (GlobalTestEnvironment (..), Protocol (..), TestingMode (..), stopServer)
+import Harness.TestEnvironment (GlobalFlags (..), GlobalTestEnvironment (..), Protocol (..), TestingMode (..), defaultGlobalFlags, stopServer)
 import Hasura.Prelude
 import System.Directory
-import System.Environment (getEnvironment)
+import System.Environment (getEnvironment, lookupEnv)
 import System.FilePath
 import System.IO.Unsafe (unsafePerformIO)
 import System.Log.FastLogger qualified as FL
@@ -76,6 +76,9 @@ setupTestEnvironment :: TestingMode -> Logger -> IO GlobalTestEnvironment
 setupTestEnvironment testingMode logger = do
   server <- startServerThread
   servicesConfig <- mkTestServicesConfig logger
+  globalFlags <- do
+    gfTraceCommands <- maybe False read <$> lookupEnv "TRACE_COMMANDS"
+    pure defaultGlobalFlags {gfTraceCommands}
   pure GlobalTestEnvironment {requestProtocol = HTTP, ..}
 
 -- | tear down the shared server and services.

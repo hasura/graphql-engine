@@ -91,7 +91,7 @@ import Hasura.HTTP
 import Hasura.Logging (Hasura, LogLevel (..), Logger (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Roles (RoleName, mkRoleName)
-import Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseHmacKey, parseRsaKey)
+import Hasura.Server.Auth.JWT.Internal (parseEdDSAKey, parseEsKey, parseHmacKey, parseRsaKey)
 import Hasura.Server.Auth.JWT.Logging
 import Hasura.Server.Utils
   ( executeJSONPath,
@@ -837,7 +837,10 @@ instance J.FromJSON JWTConfig where
           "RS384" -> runEither $ parseRsaKey rawKey
           "RS512" -> runEither $ parseRsaKey rawKey
           "Ed25519" -> runEither $ parseEdDSAKey rawKey
-          -- TODO(from master): support ES256, ES384, ES512, PS256, PS384, Ed448 (JOSE doesn't support it as of now)
+          "ES256" -> runEither $ parseEsKey rawKey
+          "ES384" -> runEither $ parseEsKey rawKey
+          "ES512" -> runEither $ parseEsKey rawKey
+          -- TODO(from master): support PS256, PS384, Ed448 (JOSE doesn't support it as of now)
           _ -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return

@@ -18,12 +18,14 @@ import Hasura.Session (SessionVariable)
 
 -- | Where did this variable come from?
 data Provenance
-  = -- | We don't know / it isn't important
-    Unknown
-  | -- | A GraphQL variable (e.g. a query parameter)
-    FromGraphQL VariableInfo
-  | -- | An internal source (e.g. a native query argument)
+  = FromGraphQL VariableInfo
+  | -- | An internal source
     FromInternal Text
+  | -- | A unique, fresh occurrence of a variable.
+    -- E.g. a native query argument, or generated
+    -- values that benefit from being prepared rather
+    -- than inlined.
+    FreshVar
   deriving stock (Eq, Show)
 
 data UnpreparedValue (b :: BackendType)
@@ -62,4 +64,4 @@ mkParameter :: ValueWithOrigin (ColumnValue b) -> UnpreparedValue b
 mkParameter (ValueWithOrigin valInfo columnValue) =
   UVParameter (FromGraphQL valInfo) columnValue
 mkParameter (ValueNoOrigin columnValue) =
-  UVParameter Unknown columnValue
+  UVParameter FreshVar columnValue

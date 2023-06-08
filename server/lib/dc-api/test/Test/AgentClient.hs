@@ -36,6 +36,7 @@ import Data.Text qualified as Text
 import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client qualified as HttpClient
+import Network.HTTP.Client.Internal qualified as HttpClient
 import Network.HTTP.Types (HeaderName, Method, Status (..), statusIsSuccessful)
 import Servant.API (NamedRoutes)
 import Servant.Client (BaseUrl, Client, Response, defaultMakeClientRequest, hoistClient, mkClientEnv, runClientM)
@@ -68,7 +69,8 @@ mkHttpClientManager sensitiveOutputHandling agentAuthKey =
    in liftIO $ HttpClient.newManager settings
 
 addLicenseKeyHeader :: AgentAuthKey -> HttpClient.Request -> HttpClient.Request
-addLicenseKeyHeader (AgentAuthKey eeKey) r = r {HttpClient.requestHeaders = (eeLicenseKeyHeader, eeKey) : HttpClient.requestHeaders r}
+addLicenseKeyHeader (AgentAuthKey eeKey) r =
+  r {HttpClient.requestHeaders = (eeLicenseKeyHeader, eeKey) : filter (\(h, _) -> h /= eeLicenseKeyHeader) (HttpClient.requestHeaders r)}
 
 addHeaderRedaction :: SensitiveOutputHandling -> HttpClient.Request -> HttpClient.Request
 addHeaderRedaction sensitiveOutputHandling request =
@@ -154,7 +156,10 @@ runRequestAcceptStatus' acceptStatus request = do
   let clientRequest = addHeaderRedaction _accSensitiveOutputHandling $ defaultMakeClientRequest _accBaseUrl request
 
   testFolder <- getCurrentFolder
-  for_ testFolder $ HttpFile.writeRequest _accBaseUrl clientRequest filenamePrefix
+  -- HttpClient modifies the request with settings from the Manager before it sends it. To log these modifications
+  -- correctly, we'll manually perform them and then record the modified request
+  (_, modifiedRequest) <- liftIO $ HttpClient.getModifiedRequestManager _accHttpManager clientRequest
+  for_ testFolder $ HttpFile.writeRequest _accBaseUrl modifiedRequest filenamePrefix
   incrementRequestCounter
 
   let redactResponseBody =

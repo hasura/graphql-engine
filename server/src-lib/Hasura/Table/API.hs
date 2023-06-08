@@ -50,6 +50,7 @@ import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Enum (resolveEnumReferences)
@@ -690,7 +691,7 @@ buildTableCache ::
   forall arr m b.
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata MetadataDependency)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Inc.ArrowCache m arr,
     MonadIO m,
     MonadBaseControl IO m,
@@ -788,8 +789,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciCustomConfig = config,
               _tciDescription = description,
               _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable,
-              _tciApolloFederationConfig = apolloFedConfig,
-              _tciCustomObjectTypes = fromMaybe mempty $ _ptmiCustomObjectTypes metadataTable
+              _tciApolloFederationConfig = apolloFedConfig
             }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -891,7 +891,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                   { _noiSupportsNestedObjects = supportsNestedObjects,
                     _noiColumn = pgCol,
                     _noiName = applyFieldNameCaseIdentifier tCase name,
-                    _noiType = objectTypeName,
+                    _noiType = LogicalModelName objectTypeName,
                     _noiIsNullable = isNullable,
                     _noiDescription = description,
                     _noiMutability = rciMutability rawInfo

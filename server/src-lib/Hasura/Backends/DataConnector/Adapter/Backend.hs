@@ -25,7 +25,7 @@ import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw40
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
-import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
+import Hasura.RQL.Types.BackendType (BackendSourceKind (DataConnectorKind), BackendType (DataConnector))
 import Hasura.RQL.Types.Column (ColumnType (..))
 import Hasura.RQL.Types.ResizePool
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -79,7 +79,6 @@ instance Backend 'DataConnector where
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
   type XNestedObjects 'DataConnector = XEnable
-  type XNestedArrays 'DataConnector = XEnable
 
   type HealthCheckTest 'DataConnector = Void
 
@@ -169,6 +168,7 @@ instance HasSourceConfiguration 'DataConnector where
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
   sourceConfigNumReadReplicas = const 0 -- not supported
   sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigBackendSourceKind DC.SourceConfig {..} = DataConnectorKind _scDataConnectorName
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,

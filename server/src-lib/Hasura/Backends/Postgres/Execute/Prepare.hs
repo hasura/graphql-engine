@@ -93,7 +93,7 @@ prepareWithPlan userInfo = \case
     argNum <- case provenance of
       FromInternal name -> getVarArgNum (Internal name)
       FromGraphQL varInfo -> getVarArgNum (External (getName varInfo))
-      Unknown -> getNextArgNum
+      FreshVar -> getNextArgNum
     addPrepArg argNum (binEncoder cvValue, cvValue)
     return $ toPrepParam argNum (unsafePGColumnToBackend cvType)
   UVSessionVar ty sessVar -> do

@@ -1,8 +1,8 @@
 import { useState, useContext, useEffect, createContext } from 'react';
-import { areTablesEqual } from '../../../../../hasura-metadata-api';
 import { Table } from '../../../../../hasura-metadata-types';
-import { rowPermissionsContext } from './RowPermissionsProvider';
 import { Columns, Relationships, TableContext } from './types';
+import { rootTableContext } from './RootTableProvider';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 export const tableContext = createContext<TableContext>({
   table: {},
@@ -26,7 +26,7 @@ export const TableProvider = ({
   const [comparator, setComparator] = useState<string | undefined>();
   const [columns, setColumns] = useState<Columns>([]);
   const [relationships, setRelationships] = useState<Relationships>([]);
-  const { tables } = useContext(rowPermissionsContext);
+  const { tables } = useContext(rootTableContext);
   //  Stringify values to get a stable value for useEffect
   const stringifiedTable = JSON.stringify(table);
   const stringifiedTables = JSON.stringify(tables);

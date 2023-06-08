@@ -366,7 +366,8 @@ data Projection
 
 data Join = Join
   { joinSource :: JoinSource,
-    joinJoinAlias :: JoinAlias
+    joinJoinAlias :: JoinAlias,
+    joinWhere :: Where
   }
 
 data JoinSource

@@ -135,7 +135,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           then emptyMetadataDefaults
           else acMetadataDefaults appContext
   let dynamicConfig = buildCacheDynamicConfig appContext
-  ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
+  ((r, modMetadata), modSchemaCache, cacheInvalidations, sourcesIntrospection) <-
     runMetadataQueryM
       (acEnvironment appContext)
       appEnvCheckFeatureFlag
@@ -165,6 +165,10 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           $ "Successfully inserted new metadata in storage with resource version: "
           <> showMetadataResourceVersion newResourceVersion
 
+        -- save sources introspection to stored-introspection DB
+        Tracing.newSpan "storeSourcesIntrospection"
+          $ saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM
@@ -175,7 +179,7 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           $ "Inserted schema cache sync notification at resource version:"
           <> showMetadataResourceVersion newResourceVersion
 
-        (_, modSchemaCache', _) <-
+        (_, modSchemaCache', _, _) <-
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
@@ -231,6 +235,7 @@ queryModifiesMetadata = \case
       RMDropSelectLogicalModelPermission _ -> True
       RMBulk qs -> any queryModifiesMetadata qs
       RMBulkKeepGoing qs -> any queryModifiesMetadata qs
+      RMBulkAtomic qs -> any queryModifiesMetadata qs
       -- We used to assume that the fallthrough was True,
       -- but it is better to be explicit here to warn when new constructors are added.
       RMAddSource _ -> True
@@ -541,13 +546,8 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
           `catchError` \qerr -> pure (encJFromJValue qerr)
 
     pure (encJFromList results)
+  RMBulkAtomic commands -> runBulkAtomic env commands
   where
-    dispatchMetadata ::
-      (forall b. (BackendMetadata b) => i b -> a) ->
-      AnyBackend i ->
-      a
-    dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
-
     dispatchEventTrigger :: (forall b. (BackendEventTrigger b) => i b -> a) -> AnyBackend i -> a
     dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
 
@@ -556,6 +556,41 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
       AnyBackend i ->
       a
     dispatchMetadataAndEventTrigger f x = dispatchAnyBackendWithTwoConstraints @BackendMetadata @BackendEventTrigger x f
+
+dispatchMetadata ::
+  (forall b. (BackendMetadata b) => i b -> a) ->
+  AnyBackend i ->
+  a
+dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
+
+-- | the atomic commands work slightly differently
+-- each one just returns the metadata modifier, we then chain them all and
+-- run the schema cache validation once. This allows us to combine drop and
+-- re-add commands to do edits, or add two interdependent items at once.
+runBulkAtomic ::
+  ( HasFeatureFlagChecker m,
+    MonadIO m,
+    MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
+  ) =>
+  Env.Environment ->
+  [RQLMetadataRequest] ->
+  m EncJSON
+runBulkAtomic env cmds = do
+  -- get the metadata modifiers for all our commands
+  results <- traverse getMetadataModifierForCommand cmds
+  -- build the schema cache using the combined modifiers
+  buildSchemaCache (foldMap snd results)
+  -- nothing broke, great!
+  pure successMsg
+  where
+    getMetadataModifierForCommand = \case
+      RMV1 v -> case v of
+        RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.execTrackNativeQuery env) q
+        RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.execUntrackNativeQuery q
+        _ -> throw500 "Bulk atomic does not support this command"
+      RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 
 runMetadataQueryV2M ::
   ( MonadIO m,

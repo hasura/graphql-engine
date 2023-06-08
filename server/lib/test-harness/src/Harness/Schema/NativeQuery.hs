@@ -44,14 +44,13 @@ nativeQueryColumn name colType =
 data NativeQuery = NativeQuery
   { nativeQueryName :: Text,
     nativeQueryLogicalModel :: Text,
-    nativeQueryQuery :: Text,
+    nativeQueryQuery :: BackendType.BackendType -> Text,
     nativeQueryArguments :: [NativeQueryColumn],
     nativeQueryArrayRelationships :: [J.Value],
     nativeQueryObjectRelationships :: [J.Value]
   }
-  deriving (Show, Eq)
 
-nativeQuery :: Text -> Text -> Text -> NativeQuery
+nativeQuery :: Text -> (BackendType.BackendType -> Text) -> Text -> NativeQuery
 nativeQuery nativeQueryName query returnType =
   NativeQuery
     { nativeQueryName,
@@ -85,16 +84,16 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
 
       arguments = argsToJson nativeQueryArguments
 
-      backendType = BackendType.backendTypeString backendTypeConfig
+      requestType = BackendType.backendTypeString backendTypeConfig <> "_track_native_query"
 
-      requestType = backendType <> "_track_native_query"
+      query = nativeQueryQuery (BackendType.backendType backendTypeConfig)
    in [yaml|
         type: *requestType
         args:
           type: query
           source: *sourceName
           root_field_name: *nativeQueryName
-          code: *nativeQueryQuery
+          code: *query
           arguments: *arguments
           array_relationships: *nativeQueryArrayRelationships
           object_relationships: *nativeQueryObjectRelationships
@@ -102,10 +101,10 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
       |]
 
 trackNativeQuery :: (HasCallStack) => String -> NativeQuery -> TestEnvironment -> IO ()
-trackNativeQuery sourceName logMod testEnvironment = do
+trackNativeQuery sourceName naqu testEnvironment = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
 
-  let command = trackNativeQueryCommand sourceName backendTypeMetadata logMod
+  let command = trackNativeQueryCommand sourceName backendTypeMetadata naqu
 
   GraphqlEngine.postMetadata_ testEnvironment command
 

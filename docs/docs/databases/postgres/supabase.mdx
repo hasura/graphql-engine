@@ -19,15 +19,15 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 ## Introduction
 
 This guide explains how to connect a new or existing [Supabase Postgres database](https://supabase.com/database) to a
-Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io) or via one of our
+Hasura instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
 [self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Supabase Postgres and are
 interested in migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://supabase.com/docs/guides/migrations/heroku) before continuing below.
 
 :::info Note
 
-If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura instance and
-already have a project running, skip to [step 3](#create-pg-db-supabase).
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-supabase).
 
 :::
 
@@ -155,8 +155,8 @@ Then click `Connect Database`.
 :::info Note
 
 For security reasons, it is recommended to set database URLs as
-[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
-of the raw database URLs.
+[env vars](/hasura-cloud/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the
+databases in place of the raw database URLs.
 
 :::
 

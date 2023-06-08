@@ -8,6 +8,8 @@ module Hasura.NativeQuery.API
     runGetNativeQuery,
     runTrackNativeQuery,
     runUntrackNativeQuery,
+    execTrackNativeQuery,
+    execUntrackNativeQuery,
     dropNativeQueryInMetadata,
     module Hasura.NativeQuery.Types,
   )
@@ -169,6 +171,17 @@ runGetNativeQuery ::
 runGetNativeQuery q = do
   throwIfFeatureDisabled
 
+  maybe
+    ( throw400 NotFound
+        $ "Source '"
+        <> sourceNameToText (gnqSource q)
+        <> "' of kind "
+        <> toTxt (reify (backendTag @b))
+        <> " not found."
+    )
+    (const $ pure ())
+    . preview (metaSources . ix (gnqSource q) . toSourceMetadata @b)
+    =<< getMetadata
   metadata <- getMetadata
 
   let nativeQuery :: Maybe (NativeQueries b)
@@ -192,6 +205,25 @@ runTrackNativeQuery ::
   TrackNativeQuery b ->
   m EncJSON
 runTrackNativeQuery env trackNativeQueryRequest = do
+  (obj, modifier) <- execTrackNativeQuery env trackNativeQueryRequest
+  buildSchemaCacheFor obj modifier
+  pure successMsg
+
+-- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery b'
+-- (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
+-- compatibility) is defined in 'class NativeQueryMetadata'.
+execTrackNativeQuery ::
+  forall b m.
+  ( BackendMetadata b,
+    MonadError QErr m,
+    MonadIO m,
+    MetadataM m,
+    HasFeatureFlagChecker m
+  ) =>
+  Env.Environment ->
+  TrackNativeQuery b ->
+  m (MetadataObjId, MetadataModifier)
+execTrackNativeQuery env trackNativeQueryRequest = do
   throwIfFeatureDisabled
 
   sourceMetadata <-
@@ -221,12 +253,12 @@ runTrackNativeQuery env trackNativeQueryRequest = do
   when (fieldName `elem` existingNativeQueries) do
     throw400 AlreadyTracked $ "Native query '" <> toTxt fieldName <> "' is already tracked."
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
-    %~ InsOrdHashMap.insert fieldName metadata
+  let metadataModifier =
+        MetadataModifier
+          $ (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
+          %~ InsOrdHashMap.insert fieldName metadata
 
-  pure successMsg
+  pure (metadataObj, metadataModifier)
   where
     source = tnqSource trackNativeQueryRequest
 
@@ -263,7 +295,20 @@ runUntrackNativeQuery ::
   ) =>
   UntrackNativeQuery b ->
   m EncJSON
-runUntrackNativeQuery q = do
+runUntrackNativeQuery untrackNativeQueryRequest = do
+  (obj, modifier) <- execUntrackNativeQuery untrackNativeQueryRequest
+  buildSchemaCacheFor obj modifier
+  pure successMsg
+
+execUntrackNativeQuery ::
+  forall b m.
+  ( BackendMetadata b,
+    MonadError QErr m,
+    MetadataM m
+  ) =>
+  UntrackNativeQuery b ->
+  m (MetadataObjId, MetadataModifier)
+execUntrackNativeQuery q = do
   -- we do not check for feature flag here as we always want users to be able
   -- to remove native queries if they'd like
   assertNativeQueryExists @b source fieldName
@@ -273,10 +318,7 @@ runUntrackNativeQuery q = do
           $ AB.mkAnyBackend
           $ SMONativeQuery @b fieldName
 
-  buildSchemaCacheFor metadataObj
-    $ dropNativeQueryInMetadata @b source fieldName
-
-  pure successMsg
+  pure (metadataObj, dropNativeQueryInMetadata @b source fieldName)
   where
     source = utnqSource q
     fieldName = utnqRootFieldName q

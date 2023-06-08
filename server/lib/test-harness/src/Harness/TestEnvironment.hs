@@ -5,6 +5,7 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     GlobalTestEnvironment (..),
+    GlobalFlags (..),
     Protocol (..),
     Server (..),
     TestingMode (..),
@@ -25,13 +26,18 @@ module Harness.TestEnvironment
     testLogHarness,
     getSchemaName,
     getSchemaNameInternal,
+    defaultGlobalFlags,
+    traceIf,
   )
 where
 
 import Control.Concurrent.Async qualified as Async
-import Data.Aeson (Value)
+import Data.Aeson (ToJSON, Value)
+import Data.Aeson.Encode.Pretty (encodePretty)
 import Data.Has
 import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Debug.Trace
 import Harness.Constants qualified as Constants
 import Harness.GlobalTestEnvironment
 import Harness.Logging.Messages
@@ -249,3 +255,11 @@ getSchemaNameInternal testEnv = getSchemaNameByTestIdAndBackendType (fmap backen
     getSchemaNameByTestIdAndBackendType (Just Cockroach) _ = SchemaName Constants.cockroachDb
     getSchemaNameByTestIdAndBackendType (Just (DataConnector "sqlite")) _ = SchemaName "main"
     getSchemaNameByTestIdAndBackendType (Just (DataConnector _)) _ = SchemaName $ T.pack Constants.dataConnectorDb
+
+-- | trace if flag is set in the test environment.
+traceIf :: (ToJSON a) => (Show a) => TestEnvironment -> a -> a
+traceIf testEnv value
+  | gfTraceCommands (globalFlags (globalEnvironment testEnv)) =
+      let pretty = TL.unpack (pShow (encodePretty value))
+       in trace (show (uniqueTestId testEnv) <> ":\n" <> pretty) value
+  | otherwise = value

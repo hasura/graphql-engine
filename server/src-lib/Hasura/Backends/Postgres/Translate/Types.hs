@@ -9,10 +9,12 @@ module Hasura.Backends.Postgres.Translate.Types
     ArrayRelationSource (ArrayRelationSource),
     ComputedFieldTableSetSource (ComputedFieldTableSetSource),
     CustomSQLCTEs (..),
+    NativeQueryFreshIdStore (..),
+    initialNativeQueryFreshIdStore,
     DistinctAndOrderByExpr (ASorting),
     JoinTree (..),
     MultiRowSelectNode (..),
-    ObjectRelationSource (ObjectRelationSource),
+    ObjectRelationSource (..),
     ObjectSelectSource (ObjectSelectSource, _ossPrefix),
     PermissionLimitSubQuery (..),
     SelectNode (SelectNode),
@@ -38,6 +40,7 @@ import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.Local (Nullable)
 
 data SourcePrefixes = SourcePrefixes
   { -- | Current source prefix
@@ -133,7 +136,7 @@ applySortingAndSlicing SortingAndSlicing {..} =
               ApplySortingAndSlicing (Nothing, noSlicing, Nothing) (Just nodeOrderBy, _sasSlicing, nodeDistinctOn)
 
 data SelectNode = SelectNode
-  { _snExtractors :: HashMap.HashMap Postgres.ColumnAlias Postgres.SQLExp,
+  { _snExtractors :: InsOrdHashMap Postgres.ColumnAlias Postgres.SQLExp,
     _snJoinTree :: JoinTree
   }
   deriving stock (Eq, Show)
@@ -169,7 +172,8 @@ objectSelectSourceToSelectSource ObjectSelectSource {..} =
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,
     _orsRelationMapping :: HashMap.HashMap Postgres.PGCol Postgres.PGCol,
-    _orsSelectSource :: ObjectSelectSource
+    _orsSelectSource :: ObjectSelectSource,
+    _orsNullable :: Nullable
   }
   deriving (Generic, Show)
 
@@ -272,3 +276,11 @@ instance Semigroup SelectWriter where
 
 instance Monoid SelectWriter where
   mempty = SelectWriter mempty mempty
+
+----
+
+newtype NativeQueryFreshIdStore = NativeQueryFreshIdStore {nqNextFreshId :: Int}
+  deriving newtype (Eq, Show, Enum)
+
+initialNativeQueryFreshIdStore :: NativeQueryFreshIdStore
+initialNativeQueryFreshIdStore = NativeQueryFreshIdStore 0

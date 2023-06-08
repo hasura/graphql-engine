@@ -33,6 +33,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column (ColumnType, fromCol)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.Local (Nullable (..))
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
@@ -197,11 +198,11 @@ convertRemoteSourceRelationship
 
       relationshipField = case relationship of
         SourceRelationshipObject s ->
-          AFObjectRelation $ AnnRelationSelectG relName columnMapping s
+          AFObjectRelation $ AnnRelationSelectG relName columnMapping Nullable s
         SourceRelationshipArray s ->
-          AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping s
+          AFArrayRelation $ ASSimple $ AnnRelationSelectG relName columnMapping Nullable s
         SourceRelationshipArrayAggregate s ->
-          AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping s
+          AFArrayRelation $ ASAggregate $ AnnRelationSelectG relName columnMapping Nullable s
 
       argumentIdField =
         ( fromCol @b argumentIdColumn,

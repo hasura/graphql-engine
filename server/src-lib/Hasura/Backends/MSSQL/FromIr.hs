@@ -30,10 +30,11 @@ import Control.Monad.Writer.Strict
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Text qualified as T
+import Data.Text.Extended qualified as T
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error (QErr, throw500)
-import Hasura.NativeQuery.Metadata (InterpolatedQuery)
+import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryName (getNativeQueryName))
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.BackendType
@@ -43,6 +44,12 @@ data IRWriter = IRWriter
   { irwBefore :: [TempTableDDL],
     irwAfter :: [TempTableDDL],
     irwCTEs :: Maybe With
+  }
+
+-- | Unique name counter
+data IRState = IRState
+  { irsCounter :: Int,
+    irsMap :: Map Text Int
   }
 
 instance Semigroup IRWriter where
@@ -61,9 +68,18 @@ tellAfter :: TempTableDDL -> FromIr ()
 tellAfter step =
   tell (IRWriter {irwBefore = mempty, irwAfter = [step], irwCTEs = Nothing})
 
-tellCTE :: Aliased (InterpolatedQuery Expression) -> FromIr ()
-tellCTE cte =
-  tell (IRWriter {irwBefore = mempty, irwAfter = mempty, irwCTEs = Just (With $ pure $ CTEUnsafeRawSQL <$> cte)})
+tellCTE :: NativeQueryName -> InterpolatedQuery Expression -> FromIr Text
+tellCTE name cte = do
+  counter <- irsCounter <$> get
+  modify' \s -> s {irsCounter = (counter + 1)}
+  let alias = T.toTxt (getNativeQueryName name) <> tshow counter
+  tell
+    IRWriter
+      { irwBefore = mempty,
+        irwAfter = mempty,
+        irwCTEs = Just (With $ pure $ CTEUnsafeRawSQL <$> Aliased cte alias)
+      }
+  pure alias
 
 -- | The central Monad used throughout for all conversion functions.
 --
@@ -84,11 +100,18 @@ tellCTE cte =
 newtype FromIr a = FromIr
   { unFromIr :: WriterT IRWriter FromIrInner a
   }
-  deriving (Functor, Applicative, Monad, MonadValidate (NonEmpty Error), MonadWriter IRWriter)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadValidate (NonEmpty Error),
+      MonadWriter IRWriter,
+      MonadState IRState
+    )
 
 -- | We extract the state and validate parts of FromIr so we can peel off
 --   the writer part of 'FromIr' for queries and report errors in the process if needed.
-type FromIrInner = StateT (Map Text Int) (Validate (NonEmpty Error))
+type FromIrInner = StateT IRState (Validate (NonEmpty Error))
 
 -- | Run a 'FromIr' action, throwing errors that have been collected using the
 -- supplied action, and attach CTEs created from native queries to the select query.
@@ -113,7 +136,7 @@ runFromIr :: (Traversable t, MonadError QErr m) => ((a, IRWriter) -> FromIrInner
 runFromIr toResult =
   flip onLeft (throw500 . tshow)
     . V.runValidate
-    . flip evalStateT mempty
+    . flip evalStateT (IRState 0 mempty)
     . (traverse toResult =<<)
     . traverse (runWriterT . unFromIr)
 
@@ -174,8 +197,8 @@ data NameTemplate
 -- >   "t_users_1"     <- generateAlias (TableTemplate "users")
 generateAlias :: NameTemplate -> FromIr Text
 generateAlias template = do
-  FromIr (modify' (M.insertWith (+) rendered 1))
-  occurrence <- M.findWithDefault 1 rendered <$> FromIr get
+  FromIr (modify' (\s -> s {irsMap = M.insertWith (+) rendered 1 (irsMap s)}))
+  occurrence <- M.findWithDefault 1 rendered . irsMap <$> FromIr get
   pure (rendered <> tshow occurrence)
   where
     rendered = T.take 20

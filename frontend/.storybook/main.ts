@@ -27,6 +27,7 @@ export default {
           fs: false,
           os: false,
           http: false,
+          https: require.resolve('https-browserify'),
           path: require.resolve('path-browserify'),
           crypto: false,
           util: require.resolve('util/'),

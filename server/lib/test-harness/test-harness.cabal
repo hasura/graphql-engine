@@ -39,6 +39,7 @@ library
     , lifted-base
     , managed
     , morpheus-graphql
+    , morpheus-graphql-server
     , mtl
     , network
     , odbc

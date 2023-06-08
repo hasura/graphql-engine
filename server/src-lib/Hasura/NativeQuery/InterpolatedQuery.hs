@@ -7,6 +7,7 @@ module Hasura.NativeQuery.InterpolatedQuery
     InterpolatedItem (..),
     InterpolatedQuery (..),
     parseInterpolatedQuery,
+    getUniqueVariables,
     module Hasura.LogicalModel.NullableScalarType,
   )
 where
@@ -15,6 +16,8 @@ import Autodocodec
 import Autodocodec qualified as AC
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Bifunctor (first)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..), nullableScalarTypeMapCodec)
 import Hasura.LogicalModelResolver.Types (ArgumentName (..))
@@ -121,3 +124,10 @@ parseInterpolatedQuery =
             ('}' : '}' : rest) ->
               (IIVariable (ArgumentName $ T.pack beforeCloseCurly) :) <$> consumeString rest
             _ -> Left "Found '{{' without a matching closing '}}'"
+
+-- | Get a set of all arguments used in an interpolated query.
+getUniqueVariables :: (Ord var) => InterpolatedQuery var -> Set var
+getUniqueVariables (InterpolatedQuery items) =
+  flip foldMap items \case
+    IIText _ -> mempty
+    IIVariable variable -> Set.singleton variable

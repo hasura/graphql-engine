@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const addLogicalModelValidationSchema = z.object({
-  dataSourceName: z.string(),
+  dataSourceName: z.string().min(1, 'Source is required'),
   name: z.string().min(1, 'Name is a required field'),
   fields: z
     .object({

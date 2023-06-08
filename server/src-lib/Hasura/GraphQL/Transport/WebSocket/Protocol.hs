@@ -181,7 +181,7 @@ data DataMsg = DataMsg
 
 data ErrorMsg = ErrorMsg
   { _emId :: !OperationId,
-    _emPayload :: !J.Value
+    _emPayload :: !J.Encoding
   }
   deriving (Show, Eq)
 
@@ -260,7 +260,7 @@ encodeServerMsg msg =
       SMErr (ErrorMsg opId payload) ->
         [ encTy SMT_GQL_ERROR,
           ("id", encJFromJValue opId),
-          ("payload", encJFromJValue payload)
+          ("payload", encJFromJEncoding payload)
         ]
       SMComplete compMsg ->
         [ encTy SMT_GQL_COMPLETE,

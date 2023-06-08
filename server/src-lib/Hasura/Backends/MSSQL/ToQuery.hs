@@ -539,6 +539,7 @@ dropTempTableQuery tempTableName =
 fromSelect :: Select -> Printer
 fromSelect Select {..} = fmap fromWith selectWith ?<+> result
   where
+    allWheres = selectWhere <> mconcat (joinWhere <$> selectJoins)
     result =
       SepByPrinter
         NewlinePrinter
@@ -566,7 +567,7 @@ fromSelect Select {..} = fmap fromWith selectWith ?<+> result
                    )
                    selectJoins
                ),
-             fromWhere selectWhere,
+             fromWhere allWheres,
              fromOrderBys selectTop selectOffset selectOrderBy,
              fromFor selectFor
            ]

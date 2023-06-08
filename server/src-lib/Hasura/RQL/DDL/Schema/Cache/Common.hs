@@ -13,7 +13,6 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
     InvalidationKeys (..),
-    StoredIntrospection (..),
     ikMetadata,
     ikRemoteSchemas,
     ikSources,
@@ -40,6 +39,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     runCacheBuild,
     runCacheBuildM,
     withRecordDependencies,
+    SourcesIntrospectionStatus (..),
   )
 where
 
@@ -47,13 +47,11 @@ import Control.Arrow.Extended
 import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson.Extended
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.EncJSON
 import Hasura.Incremental qualified as Inc
 import Hasura.LogicalModel.Types (LogicalModelName)
 import Hasura.Prelude
@@ -131,29 +129,6 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
       BackendInvalidationKeysWrapper $ foldl' (flip invalidate) invalidationKeys ciDataConnectors
-
-data StoredIntrospection = StoredIntrospection
-  { -- Just catalog introspection - not including enums
-    siBackendIntrospection :: HashMap SourceName EncJSON,
-    siRemotes :: HashMap RemoteSchemaName EncJSON
-  }
-  deriving stock (Generic)
-
--- Note that we don't want to introduce an `Eq EncJSON` instance, as this is a
--- bit of a footgun. But for Stored Introspection purposes, it's fine: the
--- worst-case effect of a semantically inaccurate `Eq` instance is that we
--- rebuild the Schema Cache too often.
---
--- However, this does mean that we have to spell out this instance a bit.
-instance Eq StoredIntrospection where
-  StoredIntrospection bs1 rs1 == StoredIntrospection bs2 rs2 =
-    (encJToLBS <$> bs1) == (encJToLBS <$> bs2) && (encJToLBS <$> rs1) == (encJToLBS <$> rs2)
-
-instance FromJSON StoredIntrospection where
-  parseJSON = genericParseJSON hasuraJSON
-
-instance ToJSON StoredIntrospection where
-  toJSON = genericToJSON hasuraJSON
 
 data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
@@ -286,14 +261,23 @@ runCacheBuildM m = do
       <*> askCacheStaticConfig
   runCacheBuild params m
 
+-- | The status of collection of stored introspections of remote schemas and data sources.
+data SourcesIntrospectionStatus
+  = -- | A full introspection collection of all available remote schemas and data sources.
+    SourcesIntrospectionChangedFull StoredIntrospection
+  | -- | A partial introspection collection. Does not include all configured remote schemas and data sources, because they were not available.
+    SourcesIntrospectionChangedPartial StoredIntrospection
+  | -- | None of remote schemas or data sources introspection is refetched.
+    SourcesIntrospectionUnchanged
+
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, SourcesIntrospectionStatus)
   }
 
 withRecordDependencies ::
-  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
+  (ArrowWriter (Seq CollectItem) arr) =>
   WriterA (Seq SchemaDependency) arr (e, s) a ->
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
@@ -303,7 +287,7 @@ withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
 {-# INLINEABLE withRecordDependencies #-}
 
 noDuplicates ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   (a -> MetadataObject) ->
   [a] ->
   m (Maybe a)
@@ -313,7 +297,7 @@ noDuplicates mkMetadataObject = \case
   values@(value : _) -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
-    tell $ Seq.singleton $ Left (DuplicateObjects objectId definitions)
+    tell $ Seq.singleton $ CollectInconsistentMetadata (DuplicateObjects objectId definitions)
     return Nothing
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
@@ -321,7 +305,7 @@ noDuplicates mkMetadataObject = \case
 buildInfoMap ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -345,7 +329,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
 {-# INLINEABLE buildInfoMap #-}
 
 buildInfoMapM ::
-  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+  ( MonadWriter (Seq CollectItem) m,
     Hashable k
   ) =>
   (a -> k) ->
@@ -369,7 +353,7 @@ buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
 buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -385,7 +369,7 @@ buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
 
 buildInfoMapPreservingMetadataM ::
-  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+  ( MonadWriter (Seq CollectItem) m,
     Hashable k
   ) =>
   (a -> k) ->

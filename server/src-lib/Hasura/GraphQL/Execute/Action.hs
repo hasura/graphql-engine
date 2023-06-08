@@ -373,7 +373,7 @@ resolveAsyncActionQuery userInfo annAction =
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
-                    IR.UVParameter IR.Unknown
+                    IR.UVParameter IR.FreshVar
                       $ ColumnValue (ColumnScalar PGJSONB)
                       $ PGValJSONB
                       $ PG.JSONB
@@ -425,7 +425,7 @@ resolveAsyncActionQuery userInfo annAction =
                 ciMutability = ColumnMutability False False
               }
           sessionVarValue =
-            IR.UVParameter IR.Unknown
+            IR.UVParameter IR.FreshVar
               $ ColumnValue (ColumnScalar PGJSONB)
               $ PGValJSONB
               $ PG.JSONB

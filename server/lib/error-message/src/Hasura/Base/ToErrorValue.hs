@@ -8,11 +8,14 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as J.Key
 import Data.Aeson.Text qualified as J
+import Data.Foldable (fold)
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
 import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text.Lazy qualified as Text.Lazy
 import Data.Void (Void, absurd)
 import Hasura.Base.ErrorMessage
@@ -40,7 +43,7 @@ instance ToErrorValue () where
 instance (ToErrorValue a) => ToErrorValue [a] where
   toErrorValue values = "[" <> commaSeparatedValues <> "]"
     where
-      commaSeparatedValues = foldr1 (<>) $ List.intersperse (toErrorMessage ", ") (map toErrorValue values)
+      commaSeparatedValues = fold $ List.intersperse (toErrorMessage ", ") (map toErrorValue values)
 
 -- | Will be printed as a list
 instance (ToErrorValue a) => ToErrorValue (NonEmpty a) where
@@ -49,6 +52,10 @@ instance (ToErrorValue a) => ToErrorValue (NonEmpty a) where
 -- | Will be printed as a list
 instance (ToErrorValue a) => ToErrorValue (HashSet a) where
   toErrorValue = toErrorValue . HashSet.toList
+
+-- | Will be printed as a list
+instance (ToErrorValue a) => ToErrorValue (Set a) where
+  toErrorValue = toErrorValue . Set.toList
 
 -- | Will be printed with single quotes surrounding it
 instance ToErrorValue G.Name where

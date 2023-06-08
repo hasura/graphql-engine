@@ -320,7 +320,7 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
               </div>
             )}
             {isCustomGqlRootSupported && (
-              <div className="w-full sm:w-6/12 mb-md">
+              <div className="w-full sm:w-8/12 mb-md">
                 <RootFields tableSchema={table} />
               </div>
             )}

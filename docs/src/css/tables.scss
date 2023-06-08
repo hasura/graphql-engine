@@ -1,0 +1,44 @@
+.db-tables {
+  table {
+    td:first-child {
+      width: 40%;
+    }
+  }
+}
+
+.server-reference-tables {
+  h3 {
+    margin-top: 4rem;
+  }
+  table {
+    td:nth-child(2) {
+      width: 84%;
+    }
+  }
+}
+
+.pricing-table {
+  td:first-child {
+    width: 20%;
+  }
+  td:last-child {
+    width: 30%;
+  }
+}
+
+.feature-matrix-tables {
+  //width: 100%;
+  table {
+    display: table !important;
+    width: 70%;
+    tr:first-child {
+      font-weight: bold;
+    }
+    td:first-child {
+      width: 20%;
+    }
+    td:last-child {
+      width: 30%;
+    }
+  }
+}

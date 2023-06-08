@@ -247,7 +247,7 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
   | -- | Nested object.
     AFNestedObject (AnnNestedObjectSelectG b r v) -- TODO(dmoverton): move XNestedObject to a field in AFNestedObject constructor for consistency with AFNestedArray
   | -- | Nested array
-    AFNestedArray (XNestedArrays b) (AnnNestedArraySelectG b r v)
+    AFNestedArray (XNestedObjects b) (AnnNestedArraySelectG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance

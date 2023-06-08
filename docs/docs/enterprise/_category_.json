@@ -1,6 +1,6 @@
 {
   "label": "Hasura Enterprise",
-  "position": 210,
+  "position": 92,
   "className": "enterprise-icon",
   "customProps": {
     "sidebar_pathname": "enterprise"

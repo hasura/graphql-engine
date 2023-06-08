@@ -5,12 +5,13 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy
 where
 
 import Control.Lens ((^?))
-import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
     PGCol (..),
+    QualifiedFunction,
     TableIdentifier (..),
     qualifiedObjectToText,
     tableIdentifierToIdentifier,
@@ -31,16 +32,15 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     mkAggregateOrderByExtractorAndFields,
   )
-import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
-  ( fromTableRowArgs,
-    selectFromToFromItem,
-  )
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   ( withWriteArrayRelation,
     withWriteComputedFieldTableSet,
     withWriteObjectRelation,
   )
 import Hasura.Backends.Postgres.Translate.Types
+import Hasura.Backends.Postgres.Types.Function (ArgumentExp)
+import Hasura.Function.Cache (FunctionArgsExpG (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
@@ -130,10 +130,10 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                       (tableIdentifierToIdentifier relSourcePrefix)
                       (S.FISimple relTable Nothing)
                       (toSQLBoolExp (S.QualTable relTable) relFilter)
-                  relSource = ObjectRelationSource relName colMapping selectSource
+                  relSource = ObjectRelationSource relName colMapping selectSource Nullable
               pure
                 ( relSource,
-                  HashMap.singleton relOrderByAlias relOrdByExp,
+                  InsOrdHashMap.singleton relOrderByAlias relOrdByExp,
                   S.mkQIdenExp relSourcePrefix relOrderByAlias
                 )
         AOCArrayAggregation relInfo relFilter aggOrderBy -> withWriteArrayRelation $ do
@@ -160,7 +160,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure
                 ( relSource,
                   topExtractor,
-                  HashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps relSourcePrefix fields,
                   S.mkQIdenExp relSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
         AOCComputedField ComputedFieldOrderBy {..} ->
@@ -174,8 +174,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                   computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
                   (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
                   fromItem =
-                    selectFromToFromItem sourcePrefix
-                      $ FromFunction _cfobFunction _cfobFunctionArgsExp Nothing
+                    functionToFromItem sourcePrefix _cfobFunction _cfobFunctionArgsExp
                   functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing
                   selectSource =
                     SelectSource
@@ -187,9 +186,16 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
               pure
                 ( source,
                   topExtractor,
-                  HashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
+                  InsOrdHashMap.fromList $ aggregateFieldsToExtractorExps computedFieldSourcePrefix fields,
                   S.mkQIdenExp computedFieldSourcePrefix (mkAggregateOrderByAlias aggOrderBy)
                 )
+
+    functionToFromItem :: TableIdentifier -> QualifiedFunction -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FromItem
+    functionToFromItem prefix qf args =
+      S.FIFunc
+        $ S.FunctionExp qf (fromTableRowArgs prefix args)
+        $ Just
+        $ S.mkFunctionAlias qf Nothing
 
     generateSorting ::
       NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))) ->

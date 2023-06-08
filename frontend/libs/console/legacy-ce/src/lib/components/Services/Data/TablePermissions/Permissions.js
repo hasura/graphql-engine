@@ -1984,7 +1984,16 @@ class Permissions extends Component {
 
     return (
       <>
-        <RightContainer>
+        <RightContainer
+          style={
+            // Remove overflow for the new UI because it causes a double scrollbar and broken layout
+            this.props.showNewUI
+              ? {
+                  overflow: 'unset',
+                }
+              : undefined
+          }
+        >
           <Analytics name="Permissions" {...REDACT_EVERYTHING}>
             <div className={clsx(styles.container, 'bootstrap-jail')}>
               {getHeader(currentTableSchema)}
@@ -2072,7 +2081,7 @@ const PermissionsWrapper = props => {
   const { data: source, isLoading: isLoadingMetadata } = useMetadata(
     MetadataSelectors.findSource(props.currentSource)
   );
-  const isBigQuery = source.kind === 'bigquery';
+  const isBigQuery = source?.kind === 'bigquery';
 
   if (isFeatureFlagsLoading || isLoadingMetadata) return <div>Loading...</div>;
 

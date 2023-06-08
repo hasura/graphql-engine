@@ -11,7 +11,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
 import Hasura.RQL.Types.Instances ()
-import Language.GraphQL.Draft.Syntax qualified as Syntax
 import Test.Backend.Postgres.Misc qualified as P
 import Test.Hspec
 import Test.Parser.Expectation
@@ -79,12 +78,13 @@ spec = do
                   }
                 |]
             }
+
     describe "update many" do
       it "one update" do
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
+              utsColumns = [P.idColumnBuilder, P.nameColumnBuilder, P.descColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
@@ -117,7 +117,7 @@ spec = do
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
+              utsColumns = [P.idColumnBuilder, P.nameColumnBuilder, P.descColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
@@ -157,7 +157,7 @@ spec = do
         runUpdateFieldTest
           UpdateTestSetup
             { utsTable = "artist",
-              utsColumns = [P.nameColumnBuilder, P.descColumnBuilder, P.idColumnBuilder],
+              utsColumns = [P.idColumnBuilder, P.nameColumnBuilder, P.descColumnBuilder],
               utsExpect =
                 UpdateExpectationBuilder
                   { utbOutput = MOutMultirowFields [("affected_rows", MCount)],

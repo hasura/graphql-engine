@@ -211,7 +211,7 @@ runQuery appContext sc query = do
   let dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
-  ((result, updatedMetadata), updatedCache, invalidations) <-
+  ((result, updatedMetadata), updatedCache, invalidations, sourcesIntrospection) <-
     runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
@@ -222,6 +222,8 @@ runQuery appContext sc query = do
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
+        -- save sources introspection to stored-introspection DB
+        saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
         -- notify schema cache sync
         liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
       MaintenanceModeEnabled () ->

@@ -3,6 +3,7 @@ import { parse } from 'graphql';
 import globals from '../../../../Globals';
 import { AllowedRESTMethods } from '../../../../metadata/types';
 import { VariableState } from './LivePreview/state';
+import { isJsonString } from '../../../Common/utils/export.utils';
 
 // getCurrentPageHost can be used within all components
 // that are showing the REST endpoint that will be generated
@@ -290,6 +291,11 @@ const getValueWithType = (variableData: VariableState) => {
 
   if (supportedNumericTypes.includes(variableData.type)) {
     return Number(variableData.value);
+  }
+
+  // NOTE: bool_exp are of JSON type, so pass it as JSON object (issue: https://github.com/hasura/graphql-engine/issues/9671)
+  if (variableData.type.endsWith('_exp') && isJsonString(variableData.value)) {
+    return JSON.parse(variableData.value);
   }
 
   return variableData.value?.trim()?.toString();

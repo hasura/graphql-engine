@@ -47,7 +47,7 @@ module.exports =
         jsonwebtoken deps (jwa && jws)
          */
           stream: require.resolve('stream-browserify'),
-
+          https: require.resolve('https-browserify'),
           url: require.resolve('url/'),
         },
       },

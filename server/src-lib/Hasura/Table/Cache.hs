@@ -27,9 +27,6 @@ module Hasura.Table.Cache
     TableCoreInfoG (..),
     TableCustomRootFields (..),
     TableInfo (..),
-    TableObjectType (..),
-    TableObjectFieldDefinition (..),
-    TableObjectFieldType (..),
     UniqueConstraint (..),
     UpdPermInfo (..),
     ViewInfo (..),
@@ -74,7 +71,6 @@ module Hasura.Table.Cache
     tciCustomConfig,
     tciDescription,
     tciApolloFederationConfig,
-    tciCustomObjectTypes,
     tciEnumValues,
     tciExtraTableMetadata,
     tciFieldInfoMap,
@@ -998,64 +994,6 @@ instance (Backend b) => ToJSON (ForeignKey b) where
 instance (Backend b) => FromJSON (ForeignKey b) where
   parseJSON = genericParseJSON hasuraJSON
 
-data TableObjectType (b :: BackendType) = TableObjectType
-  { _totName :: G.Name,
-    _totDescription :: Maybe G.Description,
-    _totFields :: NonEmpty (TableObjectFieldDefinition b)
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Eq (TableObjectType b)
-
-deriving stock instance (Backend b) => Show (TableObjectType b)
-
-instance (Backend b) => NFData (TableObjectType b)
-
-instance (Backend b) => ToJSON (TableObjectType b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (TableObjectType b) where
-  parseJSON = genericParseJSON hasuraJSON
-
-data TableObjectFieldDefinition (b :: BackendType) = TableObjectFieldDefinition
-  { _tofdColumn :: Column b,
-    _tofdName :: G.Name,
-    _tofdDescription :: Maybe G.Description,
-    _tofdGType :: GraphQLType,
-    _tofdFieldType :: TableObjectFieldType b
-  }
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Eq (TableObjectFieldDefinition b)
-
-deriving stock instance (Backend b) => Show (TableObjectFieldDefinition b)
-
-instance (Backend b) => NFData (TableObjectFieldDefinition b)
-
-instance (Backend b) => ToJSON (TableObjectFieldDefinition b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (TableObjectFieldDefinition b) where
-  parseJSON = genericParseJSON hasuraJSON
-
-data TableObjectFieldType (b :: BackendType)
-  = TOFTScalar G.Name (ScalarType b)
-  | TOFTObject G.Name
-  | TOFTArray (XNestedArrays b) (TableObjectFieldType b) Bool -- isNullable
-  deriving stock (Generic)
-
-deriving stock instance (Backend b) => Eq (TableObjectFieldType b)
-
-deriving stock instance (Backend b) => Show (TableObjectFieldType b)
-
-instance (Backend b) => NFData (TableObjectFieldType b)
-
-instance (Backend b) => ToJSON (TableObjectFieldType b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (TableObjectFieldType b) where
-  parseJSON = genericParseJSON hasuraJSON
-
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
@@ -1070,8 +1008,7 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
     _tciExtraTableMetadata :: ExtraTableMetadata b,
-    _tciApolloFederationConfig :: Maybe ApolloFederationConfig,
-    _tciCustomObjectTypes :: HashMap G.Name (TableObjectType b)
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Generic)
 
@@ -1178,6 +1115,16 @@ instance (Backend b) => FromJSON (ForeignKeyMetadata b) where
                 $ NE.zip columns foreignColumns
           }
 
+instance (Backend b) => ToJSON (ForeignKeyMetadata b) where
+  toJSON (ForeignKeyMetadata (ForeignKey constraint foreignTable columnMapping)) =
+    let (columns, foreignColumns) = NE.unzip $ NEHashMap.toList columnMapping
+     in object
+          [ "constraint" .= constraint,
+            "foreign_table" .= foreignTable,
+            "columns" .= columns,
+            "foreign_columns" .= foreignColumns
+          ]
+
 -- | Metadata of any Backend table which is being extracted from source database
 data DBTableMetadata (b :: BackendType) = DBTableMetadata
   { _ptmiOid :: OID,
@@ -1188,8 +1135,7 @@ data DBTableMetadata (b :: BackendType) = DBTableMetadata
     _ptmiForeignKeys :: HashSet (ForeignKeyMetadata b),
     _ptmiViewInfo :: Maybe ViewInfo,
     _ptmiDescription :: Maybe Postgres.PGDescription,
-    _ptmiExtraTableMetadata :: ExtraTableMetadata b,
-    _ptmiCustomObjectTypes :: Maybe (HashMap G.Name (TableObjectType b))
+    _ptmiExtraTableMetadata :: ExtraTableMetadata b
   }
   deriving (Generic)
 
@@ -1201,6 +1147,9 @@ instance (Backend b) => NFData (DBTableMetadata b)
 
 instance (Backend b) => FromJSON (DBTableMetadata b) where
   parseJSON = genericParseJSON hasuraJSON
+
+instance (Backend b) => ToJSON (DBTableMetadata b) where
+  toJSON = genericToJSON hasuraJSON
 
 type DBTablesMetadata b = HashMap (TableName b) (DBTableMetadata b)
 

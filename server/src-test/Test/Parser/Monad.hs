@@ -12,7 +12,7 @@ module Test.Parser.Monad
 where
 
 import Control.Monad.Memoize
-import Data.Aeson.Internal (JSONPathElement)
+import Data.Aeson.Types (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import GHC.Stack

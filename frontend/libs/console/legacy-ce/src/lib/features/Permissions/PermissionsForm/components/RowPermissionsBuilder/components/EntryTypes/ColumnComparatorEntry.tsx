@@ -3,8 +3,8 @@ import { isComparator } from '../utils/helpers';
 import { tableContext } from '../TableProvider';
 import { typesContext } from '../TypesProvider';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { areTablesEqual } from '../../../../../../hasura-metadata-api';
 import { createWrapper } from './utils';
+import { rootTableContext } from '../RootTableProvider';
 
 export function ColumnComparatorEntry({
   k,
@@ -107,9 +107,9 @@ function RootColumnsSelect({
   v: any;
   path: string[];
 }) {
-  const { table, tables, setValue } = useContext(rowPermissionsContext);
+  const { setValue } = useContext(rowPermissionsContext);
   const value = v.find((v: any) => v !== '$');
-  const rootTable = tables.find(t => areTablesEqual(t.table, table));
+  const { rootTable } = useContext(rootTableContext);
   const testId = `${path.join('.')}-root-column-comparator-entry`;
   return (
     <select

@@ -227,6 +227,7 @@ multiplexRootReselect variables rootReselect =
       selectJoins =
         [ Join
             { joinSource = JoinReselect rootReselect,
+              joinWhere = mempty,
               joinJoinAlias =
                 JoinAlias
                   { joinAliasEntity = resultAlias,

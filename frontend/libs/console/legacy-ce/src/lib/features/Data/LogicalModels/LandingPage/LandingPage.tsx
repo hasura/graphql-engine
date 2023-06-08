@@ -1,30 +1,28 @@
+import React, { useEffect, useState } from 'react';
+import { InjectedRouter, Link, withRouter } from 'react-router';
+import { useDestructiveAlert } from '../../../../new-components/Alert';
+import { Button } from '../../../../new-components/Button';
 import { Tabs } from '../../../../new-components/Tabs';
-import { useMetadata } from '../../../hasura-metadata-api';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import {
+  useInvalidateMetadata,
+  useMetadata,
+} from '../../../hasura-metadata-api';
+import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
+import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
+import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
+
+import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
 import { ListLogicalModels } from './components/ListLogicalModels';
 import { ListNativeQueries } from './components/ListNativeQueries';
-import { extractModelsAndQueriesFromMetadata } from '../utils';
-import {
-  useDestructiveAlert,
-  useHasuraAlert,
-} from '../../../../new-components/Alert';
-import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
-import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
-import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { useState } from 'react';
-import { InjectedRouter, Link, withRouter } from 'react-router';
-import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
-import { Button } from '../../../../new-components/Button';
-import { RouteWrapper } from '../components/RouteWrapper';
 import { ListStoredProcedures } from './components/ListStoredProcedures';
+import { NATIVE_QUERY_ROUTES } from '../constants';
+import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
+import { RouteWrapper } from '../components/RouteWrapper';
 
-export const LandingPage = ({
-  push,
-  pathname,
-}: {
-  pathname: string | undefined;
-  push?: (to: string) => void;
-}) => {
+export const LandingPage = ({ pathname }: { pathname: string }) => {
+  const push = usePushRoute();
   const { data, isLoading } = useMetadata(m =>
     extractModelsAndQueriesFromMetadata(m)
   );
@@ -38,13 +36,22 @@ export const LandingPage = ({
       )
       .flat()
   );
+
+  const invalidateMetadata = useInvalidateMetadata();
+  useEffect(() => {
+    /**
+     * Workaround to avoid that a metadata migration that happened in the legacy part of the Console (i.e. Run SQL)
+     * might affect the metadata migrations in the child components of this page,
+     * resulting in the error "metadata resource version referenced (x) did not match current version"
+     */
+    invalidateMetadata();
+  }, []);
+
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     useState(false);
-
-  const { hasuraAlert } = useHasuraAlert();
 
   const { destructiveConfirm } = useDestructiveAlert();
 
@@ -133,12 +140,10 @@ export const LandingPage = ({
                   <ListNativeQueries
                     nativeQueries={nativeQueries}
                     isLoading={isLoading}
-                    onEditClick={() => {
-                      hasuraAlert({
-                        title: 'Not Implemented',
-                        message:
-                          'Editing is not implemented in the alpha release',
-                      });
+                    onEditClick={query => {
+                      push?.(
+                        `data/native-queries/native-query/${query.source.name}/${query.root_field_name}`
+                      );
                     }}
                     onRemoveClick={handleRemoveNativeQuery}
                   />
@@ -158,8 +163,10 @@ export const LandingPage = ({
                   <ListLogicalModels
                     logicalModels={logicalModels}
                     isLoading={isLoading}
-                    onEditClick={() => {
-                      push?.('/data/native-queries/logical-models/permissions');
+                    onEditClick={model => {
+                      push?.(
+                        `/data/native-queries/logical-models/${model.source.name}/${model.name}/permissions`
+                      );
                     }}
                     onRemoveClick={handleRemoveLogicalModel}
                   />
@@ -202,8 +209,8 @@ export const LandingPageRoute = withRouter<{
   router: InjectedRouter;
 }>(({ location, router }) => {
   return (
-    <RouteWrapper pathname={location.pathname} push={router.push}>
-      <LandingPage pathname={location.pathname} push={router.push} />
+    <RouteWrapper route={location.pathname as keyof typeof NATIVE_QUERY_ROUTES}>
+      <LandingPage pathname={location.pathname} />
     </RouteWrapper>
   );
 });

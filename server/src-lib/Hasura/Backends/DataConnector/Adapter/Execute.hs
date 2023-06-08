@@ -21,7 +21,7 @@ import Hasura.Backends.DataConnector.Plan.MutationPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.QueryPlan qualified as Plan
 import Hasura.Backends.DataConnector.Plan.RemoteRelationshipPlan qualified as Plan
 import Hasura.Base.Error (Code (..), QErr, throw400)
-import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
+import Hasura.EncJSON (EncJSON, encJFromJEncoding, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..), OnBaseMonad (..), withNoStatistics)
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing qualified as Tracing
 
 data DataConnectorPreparedQuery
   = QueryRequest API.QueryRequest
@@ -112,8 +113,8 @@ instance BackendExecute 'DataConnector where
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.QueryRequest API.QueryResponse -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} Plan {..} = do
   queryResponse <- Client.query sourceName _scConfig _pRequest
-  reshapedResponse <- _pResponseReshaper queryResponse
-  pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  reshapedResponse <- Tracing.newSpan "QueryResponse reshaping" $ _pResponseReshaper queryResponse
+  pure $ encJFromJEncoding reshapedResponse
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
 -- otherwise, returns the IR sent to the agent.
@@ -136,6 +137,6 @@ toExplainPlan fieldName queryRequest =
 
 buildMutationAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> Plan API.MutationRequest API.MutationResponse -> AgentClientT m EncJSON
 buildMutationAction sourceName SourceConfig {..} Plan {..} = do
-  queryResponse <- Client.mutation sourceName _scConfig _pRequest
-  reshapedResponse <- _pResponseReshaper queryResponse
-  pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  mutationResponse <- Client.mutation sourceName _scConfig _pRequest
+  reshapedResponse <- Tracing.newSpan "MutationResponse reshaping" $ _pResponseReshaper mutationResponse
+  pure $ encJFromJEncoding reshapedResponse

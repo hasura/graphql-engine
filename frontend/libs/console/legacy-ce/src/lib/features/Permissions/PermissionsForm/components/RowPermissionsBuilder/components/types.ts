@@ -46,8 +46,6 @@ export type RowPermissionsState = {
   operators: Operators;
   permissions: Permissions;
   comparators: Comparators;
-  table: Table;
-  tables: Tables;
   setValue: (path: string[], value: any) => void;
   setKey: (props: { path: string[]; key: any; type: PermissionType }) => void;
   setPermissions: (permissions: Permissions) => void;

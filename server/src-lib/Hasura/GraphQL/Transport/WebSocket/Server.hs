@@ -320,7 +320,7 @@ data WSActions a = WSActions
     _wsaKeepAliveAction :: !(WSKeepAliveMessageAction a),
     _wsaGetDataMessageType :: !(DataMsg -> ServerMsg),
     _wsaAcceptRequest :: !WS.AcceptRequest,
-    _wsaErrorMsgFormat :: !([J.Value] -> J.Value)
+    _wsaErrorMsgFormat :: !([J.Encoding] -> J.Encoding)
   }
 
 data WSErrorMessage = ClientMessageParseFailed | ConnInitFailed

@@ -179,7 +179,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig =
           scalar <- Set.toList pgScalars
           name <- afold @(Either QErr) $ mkScalarTypeName scalar
           pure (name, scalar)
-    pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap)
+    pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap) mempty
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]

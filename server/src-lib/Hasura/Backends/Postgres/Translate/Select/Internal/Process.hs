@@ -24,10 +24,12 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Process
 where
 
 import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
+import Data.Text.NonEmpty qualified as TNE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier), PGCol (..), QualifiedObject (..), QualifiedTable, SchemaName (getSchemaTxt), TableIdentifier (..), identifierToTableIdentifier, qualifiedObjectToText, tableIdentifierToIdentifier)
+import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
@@ -57,7 +59,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     hasPreviousPageIdentifier,
     nativeQueryNameToAlias,
     pageInfoSelectAliasIdentifier,
-    selectFromToFromItem,
     startCursorIdentifier,
     withForceAggregation,
   )
@@ -86,6 +87,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 processSelectParams ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
+    MonadState NativeQueryFreshIdStore m,
     MonadWriter SelectWriter m,
     Backend ('Postgres pgKind)
   ) =>
@@ -111,9 +113,9 @@ processSelectParams
   tableArgs = do
     (additionalExtrs, selectSorting, cursorExp) <-
       processOrderByItems (identifierToTableIdentifier thisSourcePrefix) fieldAlias similarArrFields distM orderByM
-    whereSource <- selectFromToQual selectFrom
-    let fromItem = selectFromToFromItem (identifierToTableIdentifier $ _pfBase sourcePrefixes) selectFrom
-        finalWhere =
+    let prefix = identifierToTableIdentifier $ _pfBase sourcePrefixes
+    (whereSource, fromItem) <- selectFromToQual prefix selectFrom
+    let finalWhere =
           toSQLBoolExp whereSource
             $ maybe permFilter (andAnnBoolExps permFilter) whereM
         sortingAndSlicing = SortingAndSlicing selectSorting selectSlicing
@@ -147,36 +149,55 @@ processSelectParams
           (Nothing, permLim) -> permLim
           (Just inp, Just perm) -> Just (min inp perm)
 
-      -- You should be able to retrieve this information
-      -- from the FromItem generated with selectFromToFromItem
-      -- however given from S.FromItem is modelled, it is not
-      -- possible currently.
-      --
-      -- More precisely, 'selectFromToFromItem' is injective but not surjective, so
-      -- any S.FromItem -> S.Qual function would have to be partial.
-      selectFromToQual :: SelectFrom ('Postgres pgKind) -> m S.Qual
-      selectFromToQual = \case
-        FromTable table -> pure $ S.QualTable table
-        FromIdentifier i -> pure $ S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
-        FromFunction qf _ _ -> pure $ S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
+      selectFromToQual :: TableIdentifier -> SelectFrom ('Postgres pgKind) -> m (S.Qual, S.FromItem)
+      selectFromToQual prefix = \case
+        FromTable table -> pure $ (S.QualTable table, S.FISimple table Nothing)
+        FromIdentifier i -> do
+          let ti = TableIdentifier $ unFIIdentifier i
+          pure $ (S.QualifiedIdentifier ti Nothing, S.FIIdentifier ti)
+        FromFunction qf args defListM -> do
+          let fi =
+                S.FIFunc
+                  $ S.FunctionExp qf (fromTableRowArgs prefix args)
+                  $ Just
+                  $ S.mkFunctionAlias
+                    qf
+                    (fmap (fmap (first S.toColumnAlias)) defListM)
+          pure $ (S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing, fi)
         FromStoredProcedure {} -> error "selectFromToQual: FromStoredProcedure"
         FromNativeQuery nq -> do
-          -- we are going to cram our SQL in a CTE, and this is what we will call it
-          let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
+          cteName <- fromNativeQuery nq
+          let ta = S.tableAliasToIdentifier cteName
+          pure $ (S.QualifiedIdentifier ta Nothing, S.FIIdentifier ta)
 
-          -- emit the query itself to the Writer
-          tell
-            $ mempty
-              { _swCustomSQLCTEs =
-                  CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery nq))
-              }
+fromNativeQuery ::
+  forall pgKind m.
+  ( MonadWriter SelectWriter m,
+    MonadState NativeQueryFreshIdStore m
+  ) =>
+  NativeQuery ('Postgres pgKind) S.SQLExp ->
+  m S.TableAlias
+fromNativeQuery nq = do
+  freshId <- nqNextFreshId <$> get
+  modify succ
 
-          pure $ S.QualifiedIdentifier (S.tableAliasToIdentifier cteName) Nothing
+  -- we are going to cram our SQL in a CTE, and this is what we will call it
+  let cteName = nativeQueryNameToAlias (nqRootFieldName nq) freshId
+
+  -- emit the query itself to the Writer
+  tell
+    $ mempty
+      { _swCustomSQLCTEs =
+          CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery nq))
+      }
+
+  return cteName
 
 processAnnAggregateSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
     MonadWriter SelectWriter m,
+    MonadState NativeQueryFreshIdStore m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -185,7 +206,7 @@ processAnnAggregateSelect ::
   AnnAggregateSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HashMap.HashMap S.ColumnAlias S.SQLExp,
+      InsOrdHashMap S.ColumnAlias S.SQLExp,
       S.Extractor
     )
 processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
@@ -208,7 +229,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
               aggregateFieldToExp thisSourcePrefix aggFields strfyNum
             )
         TAFNodes _ annFields -> do
-          annFieldExtr <- processAnnFields thisSourcePrefix fieldName similarArrayFields annFields tCase
+          annFieldExtr <- processAnnFields thisSourcePrefix fieldName annFields tCase
           pure
             ( [annFieldExtr],
               withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource)
@@ -227,7 +248,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
           $ flip concatMap (map (second snd) processedFields)
           $ \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
       nodeExtractors =
-        HashMap.fromList
+        InsOrdHashMap.fromList
           $ concatMap (fst . snd) processedFields
           <> orderByAndDistinctExtrs
 
@@ -274,16 +295,16 @@ processAnnFields ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
     MonadWriter SelectWriter m,
+    MonadState NativeQueryFreshIdStore m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
   TableIdentifier ->
   FieldName ->
-  SimilarArrayFields ->
   AnnFields ('Postgres pgKind) ->
   Maybe NamingCase ->
   m (S.ColumnAlias, S.SQLExp)
-processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
+processAnnFields sourcePrefix fieldAlias annFields tCase = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
     (fieldName,)
       <$> case field of
@@ -291,51 +312,47 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
         AFNodeId _ sn tn pKeys -> pure $ mkNodeId sn tn pKeys
         AFColumn c -> toSQLCol c
         AFObjectRelation objSel -> withWriteObjectRelation $ do
-          let AnnRelationSelectG relName relMapping annObjSel = objSel
+          let AnnRelationSelectG relName relMapping nullable annObjSel = objSel
               AnnObjectSelectG objAnnFields target targetFilter = annObjSel
-              objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
-              sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
-          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HashMap.empty objAnnFields tCase
-          case target of
+          (objRelSourcePrefix, ident, filterExp) <- case target of
             FromNativeQuery nq -> do
-              let cteName = nativeQueryNameToAlias (nqRootFieldName nq)
+              cteName <- fromNativeQuery nq
+              let nativeQueryIdentifier = S.tableAliasToIdentifier cteName
 
-                  nativeQueryIdentifier = S.tableAliasToIdentifier cteName
-
-              -- emit the query itself to the Writer
-              tell
-                $ mempty
-                  { _swCustomSQLCTEs =
-                      CustomSQLCTEs (HashMap.singleton cteName (nqInterpolatedQuery nq))
-                  }
-
-              let selectSource =
-                    ObjectSelectSource
-                      (_pfThis sourcePrefixes)
-                      (S.FIIdentifier nativeQueryIdentifier)
-                      (toSQLBoolExp (S.QualifiedIdentifier nativeQueryIdentifier Nothing) targetFilter)
-                  objRelSource = ObjectRelationSource relName relMapping selectSource
               pure
-                ( objRelSource,
-                  HashMap.fromList [annFieldsExtr],
-                  S.mkQIdenExp objRelSourcePrefix fieldName
+                ( mkObjectRelationTableAlias
+                    sourcePrefix
+                    ( relName
+                        { getRelTxt =
+                            getRelTxt relName
+                              <> TNE.mkNonEmptyTextUnsafe
+                                ( getIdenTxt
+                                    $ S.getTableAlias cteName
+                                )
+                        }
+                    ),
+                  S.FIIdentifier nativeQueryIdentifier,
+                  toSQLBoolExp (S.QualifiedIdentifier nativeQueryIdentifier Nothing) targetFilter
                 )
             FromTable tableFrom -> do
-              let selectSource =
-                    ObjectSelectSource
-                      (_pfThis sourcePrefixes)
-                      (S.FISimple tableFrom Nothing)
-                      (toSQLBoolExp (S.QualTable tableFrom) targetFilter)
-                  objRelSource = ObjectRelationSource relName relMapping selectSource
               pure
-                ( objRelSource,
-                  HashMap.fromList [annFieldsExtr],
-                  S.mkQIdenExp objRelSourcePrefix fieldName
+                ( mkObjectRelationTableAlias sourcePrefix relName,
+                  S.FISimple tableFrom Nothing,
+                  toSQLBoolExp (S.QualTable tableFrom) targetFilter
                 )
             other -> error $ "processAnnFields: " <> show other
+          let sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
+              selectSource = ObjectSelectSource (_pfThis sourcePrefixes) ident filterExp
+              objRelSource = ObjectRelationSource relName relMapping selectSource nullable
+          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName objAnnFields tCase
+          pure
+            ( objRelSource,
+              uncurry InsOrdHashMap.singleton annFieldsExtr,
+              S.mkQIdenExp objRelSourcePrefix fieldName
+            )
         AFArrayRelation arrSel -> do
-          let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias similarArrFields fieldName
-              arrRelAlias = mkArrayRelationAlias fieldAlias similarArrFields fieldName
+          let arrRelSourcePrefix = mkArrayRelationSourcePrefix sourcePrefix fieldAlias HashMap.empty fieldName
+              arrRelAlias = mkArrayRelationAlias fieldAlias HashMap.empty fieldName
           processArrayRelation (mkSourcePrefixes arrRelSourcePrefix) fieldName arrRelAlias arrSel tCase
           pure $ S.mkQIdenExp arrRelSourcePrefix fieldName
         AFComputedField _ _ (CFSScalar scalar caseBoolExpMaybe) -> do
@@ -484,6 +501,7 @@ processArrayRelation ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
     MonadWriter SelectWriter m,
+    MonadState NativeQueryFreshIdStore m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -496,7 +514,7 @@ processArrayRelation ::
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
   case arrSel of
     ASSimple annArrRel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping sel = annArrRel
+      let AnnRelationSelectG _ colMapping _ sel = annArrRel
           permLimitSubQuery =
             maybe PLSQNotRequired PLSQRequired $ _tpLimit $ _asnPerm sel
       (source, nodeExtractors) <-
@@ -514,7 +532,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
           ()
         )
     ASAggregate aggSel -> withWriteArrayRelation $ do
-      let AnnRelationSelectG _ colMapping sel = aggSel
+      let AnnRelationSelectG _ colMapping _ sel = aggSel
       (source, nodeExtractors, topExtr) <-
         processAnnAggregateSelect sourcePrefixes fieldAlias sel
       pure
@@ -524,7 +542,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel _tCase =
           ()
         )
     ASConnection connSel -> withWriteArrayConnection $ do
-      let AnnRelationSelectG _ colMapping sel = connSel
+      let AnnRelationSelectG _ colMapping _ sel = connSel
       (source, topExtractor, nodeExtractors) <-
         processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping sel
       pure
@@ -573,6 +591,7 @@ aggregateFieldToExp sourcePrefix aggFlds strfyNum = jsonRow
 processAnnSimpleSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
+    MonadState NativeQueryFreshIdStore m,
     MonadWriter SelectWriter m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -583,7 +602,7 @@ processAnnSimpleSelect ::
   AnnSimpleSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HashMap.HashMap S.ColumnAlias S.SQLExp
+      InsOrdHashMap S.ColumnAlias S.SQLExp
     )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
@@ -599,10 +618,9 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
     processAnnFields
       (identifierToTableIdentifier $ _pfThis sourcePrefixes)
       fieldAlias
-      similarArrayFields
       annSelFields
       tCase
-  let allExtractors = HashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
+  let allExtractors = InsOrdHashMap.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
     AnnSelectG annSelFields tableFrom tablePermissions tableArgs _ tCase = annSimpleSel
@@ -613,6 +631,7 @@ processConnectionSelect ::
   forall pgKind m.
   ( MonadReader Options.StringifyNumbers m,
     MonadWriter SelectWriter m,
+    MonadState NativeQueryFreshIdStore m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
@@ -624,7 +643,7 @@ processConnectionSelect ::
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HashMap.HashMap S.ColumnAlias S.SQLExp
+      InsOrdHashMap S.ColumnAlias S.SQLExp
     )
 processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
   (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
@@ -646,7 +665,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
   (topExtractorExp, exps) <- flip runStateT [] $ processFields selectSource
   let topExtractor = S.Extractor topExtractorExp $ Just $ S.toColumnAlias fieldIdentifier
-      allExtractors = HashMap.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
+      allExtractors = InsOrdHashMap.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource =
         ArrayConnectionSource
           relAlias
@@ -726,10 +745,14 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
        in S.SEFnApp "coalesce" [jsonAggExp, S.SELit "[]"] Nothing
 
     processFields ::
-      forall n.
-      ( MonadReader Options.StringifyNumbers n,
-        MonadWriter SelectWriter n,
-        MonadState [(S.ColumnAlias, S.SQLExp)] n
+      forall n n' t.
+      ( MonadState [(S.ColumnAlias, S.SQLExp)] n,
+        -- Constraints for 'processAnnFields':
+        n ~ (t n'),
+        MonadTrans t,
+        MonadState NativeQueryFreshIdStore n',
+        MonadWriter SelectWriter n',
+        MonadReader Options.StringifyNumbers n'
       ) =>
       SelectSource ->
       n S.SQLExp
@@ -760,7 +783,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
                                   <> "."
                                   <> edgeText
                               edgeFieldIdentifier = toIdentifier edgeFieldName
-                          annFieldsExtrExp <- processAnnFields thisPrefix edgeFieldName similarArrayFields annFields tCase
+                          annFieldsExtrExp <- lift $ processAnnFields thisPrefix edgeFieldName annFields tCase
                           modify' (<> [annFieldsExtrExp])
                           pure $ S.SEIdentifier edgeFieldIdentifier
 

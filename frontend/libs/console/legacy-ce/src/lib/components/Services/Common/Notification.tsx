@@ -58,6 +58,13 @@ export const showNotification = (
       toast.remove();
     }
 
+    if (options?.action && options?.action?.callback) {
+      toastProps.button = {
+        label: options.action.label,
+        onClick: options.action.callback,
+      };
+    }
+
     if (options.alternateActionButtonProps) {
       toastProps.button = {
         label: options.alternateActionButtonProps.label,
@@ -70,13 +77,13 @@ export const showNotification = (
       }
     }
 
-    if (typeof options?.title === 'object' && toastProps?.children) {
+    if (typeof options?.title === 'object') {
       titleAsNode = options.title;
     } else if (typeof options?.title === 'string') {
       toastProps.title = options.title;
     }
 
-    if (typeof options?.message === 'object' && toastProps?.children) {
+    if (typeof options?.message === 'object') {
       messageAsNode = options.message;
     } else if (typeof options?.message === 'string') {
       toastProps.message = options.message;

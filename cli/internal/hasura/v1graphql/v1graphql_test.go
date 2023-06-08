@@ -67,9 +67,9 @@ func TestClient_GetIntrospectionSchema(t *testing.T) {
 				require.Equal(tt, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
 				require.EqualError(tt, err.Err, ` getIntrospectionSchema : 404 
 {
-  "code": "not-found",
   "error": "resource does not exist",
-  "path": "$"
+  "path": "$",
+  "code": "not-found"
 }`)
 			}),
 		},

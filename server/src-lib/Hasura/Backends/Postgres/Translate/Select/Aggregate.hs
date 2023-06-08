@@ -15,7 +15,7 @@ import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnAggregateSelect)
-import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNode (MultiRowSelectNode), SelectNode (SelectNode), SelectWriter (..), SourcePrefixes (SourcePrefixes))
+import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNode (MultiRowSelectNode), SelectNode (SelectNode), SelectWriter (..), SourcePrefixes (SourcePrefixes), initialNativeQueryFreshIdStore)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (AnnAggregateSelect, AnnSelectG (_asnStrfyNum))
 import Hasura.RQL.Types.Backend (Backend)
@@ -52,6 +52,7 @@ mkAggregateSelect annAggSel = do
         ) =
           runWriter
             $ flip runReaderT strfyNum
+            $ flip evalStateT initialNativeQueryFreshIdStore
             $ processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
       -- select the relevant columns and subquery we want to aggregate
       selectNode = SelectNode nodeExtractors joinTree

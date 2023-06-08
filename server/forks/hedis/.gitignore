@@ -1,0 +1,13 @@
+/dist-newstyle/
+/redis/
+/dist/
+/cabal-dev/
+/.ghc.environment.*
+dump.rdb
+appendonly.aof
+*.prof
+/.hpc
+.stack-work
+TAGS
+stack*.yaml.lock
+.vscode

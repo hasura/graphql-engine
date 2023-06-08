@@ -5,7 +5,7 @@
 
 import: cabal/dev-sh-optimized.project.local
 
+-- Apply to all local packages (consider an additional mode that recompiles libraries too)
 program-options
     ghc-options: -ticky
-    -- TODO doesn't seem to work with -ticky??:
     ghc-options: -ddump-stg-final -ddump-to-file

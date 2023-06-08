@@ -8,9 +8,11 @@ import {
   useConsoleForm,
 } from '../../../../new-components/Form';
 // import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
+import Skeleton from 'react-loading-skeleton';
 import { Driver, drivers } from '../../../../dataSources';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { Feature } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
@@ -21,16 +23,15 @@ import { SqlEditorField } from './components/SqlEditorField';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { transformFormOutputToMetadata } from './utils';
-import Skeleton from 'react-loading-skeleton';
 
 type AddNativeQueryProps = {
   defaultFormValues?: Partial<NativeQueryForm>;
-  push?: (path: string) => void;
+  mode?: 'create' | 'update';
 };
 
 export const AddNativeQuery = ({
   defaultFormValues,
-  push,
+  mode = 'create',
 }: AddNativeQueryProps) => {
   const {
     Form,
@@ -39,6 +40,8 @@ export const AddNativeQuery = ({
     schema,
     options: { defaultValues: defaultFormValues },
   });
+
+  const push = usePushRoute();
 
   const {
     data: sources,
@@ -59,7 +62,7 @@ export const AddNativeQuery = ({
     s => s.name === selectedSource
   )?.logical_models;
 
-  const { trackNativeQuery } = useTrackNativeQuery();
+  const { trackNativeQuery, isLoading: isSaving } = useTrackNativeQuery();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     React.useState(false);
@@ -77,7 +80,7 @@ export const AddNativeQuery = ({
           toastOptions: { duration: 3000 },
         });
         // Go to list
-        push?.('/data/native-queries');
+        push('/data/native-queries');
       },
       onError: err => {
         hasuraToast({
@@ -127,91 +130,107 @@ export const AddNativeQuery = ({
     );
 
   return (
-    <Form onSubmit={handleFormSubmit}>
-      {/* <FormDebugWindow /> */}
-      <div className="max-w-xl flex flex-col">
-        <GraphQLSanitizedInputField
-          name="root_field_name"
-          label="Native Query Name"
-          placeholder="Name that exposes this model in GraphQL API"
-          hideTips
-        />
-        <InputField
-          name="comment"
-          label="Comment"
-          placeholder="A description of this logical model"
-        />
-        <Select
-          name="source"
-          label="Database"
-          // saving prop for future update
-          //noOptionsMessage="No databases found."
-          loading={isSourcesLoading}
-          options={(sources ?? []).map(m => ({
-            label: m.name,
-            value: m.name,
-          }))}
-          placeholder="Select a database..."
-        />
-      </div>
-      {isIntrospectionLoading ? (
-        <div>
-          <Skeleton />
-          <Skeleton />
-        </div>
-      ) : (
-        <ArgumentsField types={typeOptions} />
+    <div>
+      {mode === 'update' && (
+        <IndicatorCard status="info">
+          The current release does not support editing Native Queries. This
+          feature will be available in a future release. You can still edit
+          directly by modifying the Metadata.
+        </IndicatorCard>
       )}
-      <SqlEditorField />
-      <div className="flex w-full">
-        {/* Logical Model Dropdown */}
-        <Select
-          name="returns"
-          selectClassName="max-w-xl"
-          // saving prop for future update
-          // noOptionsMessage={
-          //   !selectedSource ? 'Select a database first.' : 'No models found.'
-          // }
-          // force component re-init on source change
-          //key={selectedSource}
-          label="Query Return Type"
-          placeholder={logicalModelSelectPlaceholder()}
-          loading={isSourcesLoading}
-          options={(logicalModels ?? []).map(m => ({
-            label: m.name,
-            value: m.name,
-          }))}
-        />
-        <Button
-          icon={<FaPlusCircle />}
-          onClick={() => {
-            setIsLogicalModelsDialogOpen(true);
-          }}
-        >
-          Add Logical Model
-        </Button>
-      </div>
-      {isLogicalModelsDialogOpen ? (
-        <LogicalModelWidget
-          onCancel={() => {
-            setIsLogicalModelsDialogOpen(false);
-          }}
-          onSubmit={() => {
-            setIsLogicalModelsDialogOpen(false);
-          }}
-          asDialog
-        />
-      ) : null}
-      <div className="flex flex-row justify-end gap-2">
-        {/* 
+      <Form onSubmit={handleFormSubmit}>
+        <fieldset disabled={mode === 'update'}>
+          {/* <FormDebugWindow /> */}
+          <div className="max-w-xl flex flex-col">
+            <GraphQLSanitizedInputField
+              name="root_field_name"
+              label="Native Query Name"
+              placeholder="Name that exposes this model in GraphQL API"
+              hideTips
+            />
+            <InputField
+              name="comment"
+              label="Comment"
+              placeholder="A description of this logical model"
+            />
+            <Select
+              name="source"
+              label="Database"
+              // saving prop for future update
+              //noOptionsMessage="No databases found."
+              loading={isSourcesLoading}
+              options={(sources ?? []).map(m => ({
+                label: m.name,
+                value: m.name,
+              }))}
+              placeholder="Select a database..."
+            />
+          </div>
+          {isIntrospectionLoading ? (
+            <div>
+              <Skeleton />
+              <Skeleton />
+            </div>
+          ) : (
+            <ArgumentsField types={typeOptions} />
+          )}
+          <SqlEditorField />
+          <div className="flex w-full">
+            {/* Logical Model Dropdown */}
+            <Select
+              name="returns"
+              selectClassName="max-w-xl"
+              // saving prop for future update
+              // noOptionsMessage={
+              //   !selectedSource ? 'Select a database first.' : 'No models found.'
+              // }
+              // force component re-init on source change
+              //key={selectedSource}
+              label="Query Return Type"
+              placeholder={logicalModelSelectPlaceholder()}
+              loading={isSourcesLoading}
+              options={(logicalModels ?? []).map(m => ({
+                label: m.name,
+                value: m.name,
+              }))}
+            />
+            <Button
+              icon={<FaPlusCircle />}
+              onClick={e => {
+                setIsLogicalModelsDialogOpen(true);
+              }}
+            >
+              Add Logical Model
+            </Button>
+          </div>
+          {isLogicalModelsDialogOpen ? (
+            <LogicalModelWidget
+              onCancel={() => {
+                setIsLogicalModelsDialogOpen(false);
+              }}
+              onSubmit={() => {
+                setIsLogicalModelsDialogOpen(false);
+              }}
+              asDialog
+            />
+          ) : null}
+          <div className="flex flex-row justify-end gap-2">
+            {/*
               Validate Button will remain hidden until we have more information about how to handle standalone validation
               Slack thread: https://hasurahq.slack.com/archives/C04LV93JNSH/p1682965503376129
           */}
-        {/* <Button icon={<FaPlay />}>Validate</Button> */}
-        <Button type="submit" icon={<FaSave />} mode="primary">
-          Save
-        </Button>
-      </div>
-    </Form>
+            {/* <Button icon={<FaPlay />}>Validate</Button> */}
+            <Button
+              type="submit"
+              icon={<FaSave />}
+              mode="primary"
+              isLoading={isSaving}
+            >
+              Save
+            </Button>
+          </div>
+        </fieldset>
+      </Form>
+    </div>
   );
 };

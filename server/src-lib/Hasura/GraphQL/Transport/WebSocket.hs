@@ -26,6 +26,7 @@ import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.TH qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -38,6 +39,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
+import Data.Text.Extended ((<>>))
 import Data.Time.Clock
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
@@ -355,7 +357,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
           (HTTP.statusCode $ qeStatus qErr)
           (HTTP.statusMessage $ qeStatus qErr)
           []
-          (LBS.toStrict $ J.encode $ encodeGQLErr False qErr)
+          (LBS.toStrict $ J.encodingToLazyByteString $ encodeGQLErr False qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return (ERTLegacy, E.QueryHasura)
@@ -469,10 +471,13 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   sqlGenCtx <- liftIO $ acSQLGenCtx <$> getAppContext appStateRef
   enableAL <- liftIO $ acEnableAllowlist <$> getAppContext appStateRef
 
-  reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
-  reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
-  queryPartsE <- runExceptT $ getSingleOperation reqParsed
-  queryParts <- onLeft queryPartsE (withComplete . preExecErr requestId Nothing)
+  (reqParsed, queryParts) <- Tracing.newSpan "Parse GraphQL" $ do
+    reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
+    reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
+    queryPartsE <- runExceptT $ getSingleOperation reqParsed
+    queryParts <- onLeft queryPartsE (withComplete . preExecErr requestId Nothing)
+    pure (reqParsed, queryParts)
+
   let gqlOpType = G._todType queryParts
       maybeOperationName = _unOperationName <$> _grOperationName reqParsed
   for_ maybeOperationName $ \nm ->
@@ -500,8 +505,6 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts dirMap -> do
-      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-      Tracing.attachMetadata [("graphql.operation.type", "query")]
       let cachedDirective = runIdentity <$> DM.lookup cached dirMap
 
       -- We ignore the response headers (containing TTL information) because
@@ -571,8 +574,6 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
-      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-      Tracing.attachMetadata [("graphql.operation.type", "mutation")]
       -- See Note [Backwards-compatible transaction optimisation]
       case coalescePostgresMutations mutationPlan of
         -- we are in the aforementioned case; we circumvent the normal process
@@ -643,8 +644,6 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.SubscriptionExecutionPlan subExec -> do
-      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
-      Tracing.attachMetadata [("graphql.operation.type", "subscription")]
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
@@ -782,7 +781,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       GQLReqOutgoing ->
       Maybe RJ.RemoteJoins ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
-    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr

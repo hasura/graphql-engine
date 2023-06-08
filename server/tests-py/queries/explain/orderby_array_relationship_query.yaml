@@ -19,11 +19,11 @@ response:
     .\"articles\" AS \"articles\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT\
     \  *  FROM \"public\".\"author\"  WHERE ('true')     ) AS \"_root.base\" LEFT\
     \ OUTER JOIN LATERAL (SELECT  coalesce(json_agg(\"articles\" ORDER BY \"root.ar.root.articles.pg.id\"\
-    \ DESC NULLS FIRST), '[]' ) AS \"articles\" FROM  (SELECT  \"_root.ar.root.articles.base\"\
-    .\"id\" AS \"root.ar.root.articles.pg.id\", row_to_json((SELECT  \"_e\"  FROM\
-    \  (SELECT  \"_root.ar.root.articles.base\".\"title\" AS \"title\"       ) AS\
-    \ \"_e\"      ) ) AS \"articles\" FROM  (SELECT  *  FROM \"public\".\"article\"\
-    \  WHERE ((\"_root.base\".\"id\") = (\"author_id\"))   ORDER BY \"id\" DESC NULLS\
-    \ FIRST  ) AS \"_root.ar.root.articles.base\"    ORDER BY \"root.ar.root.articles.pg.id\"\
+    \ DESC NULLS FIRST), '[]' ) AS \"articles\" FROM  (SELECT  row_to_json((SELECT\
+    \  \"_e\"  FROM  (SELECT  \"_root.ar.root.articles.base\".\"title\" AS \"title\"\
+    \       ) AS \"_e\"      ) ) AS \"articles\", \"_root.ar.root.articles.base\"\
+    .\"id\" AS \"root.ar.root.articles.pg.id\" FROM  (SELECT  *  FROM \"public\".\"\
+    article\"  WHERE ((\"_root.base\".\"id\") = (\"author_id\"))   ORDER BY \"id\"\
+    \ DESC NULLS FIRST  ) AS \"_root.ar.root.articles.base\"    ORDER BY \"root.ar.root.articles.pg.id\"\
     \ DESC NULLS FIRST  ) AS \"_root.ar.root.articles\"      ) AS \"_root.ar.root.articles\"\
     \ ON ('true')      ) AS \"_root\"      "

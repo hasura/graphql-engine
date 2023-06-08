@@ -41,3 +41,5 @@ class
   -- | Whether the source configuration specifies the use of a connection
   -- template
   sourceConfigConnectonTemplateEnabled :: SourceConfig b -> Bool
+
+  sourceConfigBackendSourceKind :: SourceConfig b -> BackendSourceKind b

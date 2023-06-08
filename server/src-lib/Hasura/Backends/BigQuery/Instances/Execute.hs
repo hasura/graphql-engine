@@ -27,7 +27,7 @@ import Hasura.QueryTags
   )
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Value qualified as IR (Provenance (Unknown))
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
@@ -225,7 +225,7 @@ bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
 
     rowsArgument :: UnpreparedValue 'BigQuery
     rowsArgument =
-      UVParameter IR.Unknown
+      UVParameter IR.FreshVar
         $ ColumnValue (ColumnScalar BigQuery.StringScalarType)
         $ BigQuery.StringValue
         . LT.toStrict

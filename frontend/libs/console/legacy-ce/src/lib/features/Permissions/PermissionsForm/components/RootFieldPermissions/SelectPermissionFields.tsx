@@ -1,4 +1,5 @@
 import React from 'react';
+import { Checkbox } from '../../../../../new-components/Form';
 import { PermissionRootType } from './types';
 
 type Props = {
@@ -19,15 +20,14 @@ export const SelectPermissionFields: React.FC<Props> = ({
   <div className="mr-sm">
     <div className="checkbox">
       <label title={title}>
-        <input
-          type="checkbox"
-          className="legacy-input-fix disabled:bg-gray-100 disabled:cursor-not-allowed"
+        <Checkbox
           checked={checked}
-          value={permission}
-          onChange={() => onPermissionChange(permission)}
           disabled={disabled}
-        />
-        <i>{permission}</i>
+          name={permission}
+          onCheckedChange={() => onPermissionChange(permission)}
+        >
+          {permission}
+        </Checkbox>
       </label>
     </div>
   </div>
