@@ -17,7 +17,7 @@
 </span><span id="line-17"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.ODBC.SQLServer</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.SQLServer.html"><span class="hs-identifier">Database.ODBC.SQLServer</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Types.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Instances.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TSQL</span></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
@@ -28,7 +28,7 @@
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
-</span><span class="hs-identifier hs-var">ODBC.BoolValue</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#BoolValue"><span class="hs-identifier hs-var">ODBC.BoolValue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#nullExpression"><span class="hs-identifier hs-type">nullExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
@@ -37,7 +37,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;null&quot;</span></span><span>
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#emptyArrayExpression"><span class="hs-identifier hs-type">emptyArrayExpression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
@@ -46,25 +46,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;[]&quot;</span></span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier hs-type">jsonFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-34"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier hs-type">jsonFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-35"></span><span id="jsonFieldName"><span class="annot"><span class="annottext">jsonFieldName :: Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#jsonFieldName"><span class="hs-identifier hs-var hs-var">jsonFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;json&quot;</span></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier hs-type">aggSubselectName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier hs-type">aggSubselectName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-38"></span><span id="aggSubselectName"><span class="annot"><span class="annottext">aggSubselectName :: Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggSubselectName"><span class="hs-identifier hs-var hs-var">aggSubselectName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;agg_sub&quot;</span></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-type">existsFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-type">existsFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-41"></span><span id="existsFieldName"><span class="annot"><span class="annottext">existsFieldName :: Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#existsFieldName"><span class="hs-identifier hs-var hs-var">existsFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;exists_placeholder&quot;</span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier hs-type">aggFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-43"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier hs-type">aggFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-44"></span><span id="aggFieldName"><span class="annot"><span class="annottext">aggFieldName :: Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#aggFieldName"><span class="hs-identifier hs-var hs-var">aggFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;agg&quot;</span></span><span>

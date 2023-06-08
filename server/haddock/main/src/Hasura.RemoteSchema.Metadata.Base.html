@@ -3,10 +3,10 @@
 </span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-4"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-5"></span><span>
-</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Autodocodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">HasCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">codec</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">dimapCodec</span></span><span class="hs-special">)</span><span>
-</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Extended</span></span><span>
-</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.NonEmpty</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier">dimapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-12"></span><span>
@@ -17,9 +17,9 @@
 </span><span id="line-17"></span><span class="hs-comment">-- mangling needs to happen.</span><span>
 </span><span id="line-18"></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-special">{</span><span id="unRemoteSchemaName"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; NonEmptyText
-</span><a href="Hasura.RemoteSchema.Metadata.Base.html#unRemoteSchemaName"><span class="hs-identifier hs-var hs-var">unRemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmptyText</span></span><span class="hs-special">}</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Base.html#unRemoteSchemaName"><span class="hs-identifier hs-var hs-var">unRemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-21"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621686762494"><span id="local-6989586621686762500"><span id="local-6989586621686762504"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; ShowS
+</span><span id="line-21"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621686791001"><span id="local-6989586621686791007"><span id="local-6989586621686791011"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; ShowS
 [RemoteSchemaName] -&gt; ShowS
 RemoteSchemaName -&gt; String
 (Int -&gt; RemoteSchemaName -&gt; ShowS)
@@ -35,7 +35,7 @@ show :: RemoteSchemaName -&gt; String
 $cshowList :: [RemoteSchemaName] -&gt; ShowS
 showList :: [RemoteSchemaName] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-22"></span><span>      </span><span id="local-6989586621686762508"><span id="local-6989586621686762513"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
+</span><span id="line-22"></span><span>      </span><span id="local-6989586621686791015"><span id="local-6989586621686791020"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 (RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool)
 -&gt; (RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool)
 -&gt; Eq RemoteSchemaName
@@ -45,7 +45,7 @@ $c== :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 $c/= :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 /= :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-23"></span><span>      </span><span id="local-6989586621686762521"><span id="local-6989586621686762526"><span id="local-6989586621686762530"><span id="local-6989586621686762534"><span id="local-6989586621686762538"><span id="local-6989586621686762542"><span id="local-6989586621686762546"><span class="annot"><span class="annottext">Eq RemoteSchemaName
+</span><span id="line-23"></span><span>      </span><span id="local-6989586621686791028"><span id="local-6989586621686791033"><span id="local-6989586621686791037"><span id="local-6989586621686791041"><span id="local-6989586621686791045"><span id="local-6989586621686791049"><span id="local-6989586621686791053"><span class="annot"><span class="annottext">Eq RemoteSchemaName
 Eq RemoteSchemaName
 -&gt; (RemoteSchemaName -&gt; RemoteSchemaName -&gt; Ordering)
 -&gt; (RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool)
@@ -83,7 +83,7 @@ max :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; RemoteSchemaName
 $cmin :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; RemoteSchemaName
 min :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; RemoteSchemaName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-24"></span><span>      </span><span id="local-6989586621686762554"><span id="local-6989586621686762559"><span class="annot"><span class="annottext">Eq RemoteSchemaName
+</span><span id="line-24"></span><span>      </span><span id="local-6989586621686791061"><span id="local-6989586621686791066"><span class="annot"><span class="annottext">Eq RemoteSchemaName
 Eq RemoteSchemaName
 -&gt; (Int -&gt; RemoteSchemaName -&gt; Int)
 -&gt; (RemoteSchemaName -&gt; Int)
@@ -95,8 +95,8 @@ $chashWithSalt :: Int -&gt; RemoteSchemaName -&gt; Int
 hashWithSalt :: Int -&gt; RemoteSchemaName -&gt; Int
 $chash :: RemoteSchemaName -&gt; Int
 hash :: RemoteSchemaName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-25"></span><span>      </span><span id="local-6989586621686762565"><span id="local-6989586621686762570"><span id="local-6989586621686762574"><span id="local-6989586621686762578"><span class="annot"><span class="annottext">[RemoteSchemaName] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>      </span><span id="local-6989586621686791072"><span id="local-6989586621686791077"><span id="local-6989586621686791081"><span id="local-6989586621686791085"><span class="annot"><span class="annottext">[RemoteSchemaName] -&gt; Value
 [RemoteSchemaName] -&gt; Encoding
 RemoteSchemaName -&gt; Value
 RemoteSchemaName -&gt; Encoding
@@ -119,8 +119,8 @@ $ctoJSONList :: [RemoteSchemaName] -&gt; Value
 toJSONList :: [RemoteSchemaName] -&gt; Value
 $ctoEncodingList :: [RemoteSchemaName] -&gt; Encoding
 toEncodingList :: [RemoteSchemaName] -&gt; Encoding
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-26"></span><span>      </span><span id="local-6989586621686762584"><span id="local-6989586621686762589"><span class="annot"><span class="annottext">ToJSONKeyFunction [RemoteSchemaName]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>      </span><span id="local-6989586621686791091"><span id="local-6989586621686791096"><span class="annot"><span class="annottext">ToJSONKeyFunction [RemoteSchemaName]
 ToJSONKeyFunction RemoteSchemaName
 ToJSONKeyFunction RemoteSchemaName
 -&gt; ToJSONKeyFunction [RemoteSchemaName]
@@ -131,8 +131,8 @@ $ctoJSONKey :: ToJSONKeyFunction RemoteSchemaName
 toJSONKey :: ToJSONKeyFunction RemoteSchemaName
 $ctoJSONKeyList :: ToJSONKeyFunction [RemoteSchemaName]
 toJSONKeyList :: ToJSONKeyFunction [RemoteSchemaName]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-27"></span><span>      </span><span id="local-6989586621686762595"><span id="local-6989586621686762600"><span class="annot"><span class="annottext">Value -&gt; Parser [RemoteSchemaName]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>      </span><span id="local-6989586621686791102"><span id="local-6989586621686791107"><span class="annot"><span class="annottext">Value -&gt; Parser [RemoteSchemaName]
 Value -&gt; Parser RemoteSchemaName
 (Value -&gt; Parser RemoteSchemaName)
 -&gt; (Value -&gt; Parser [RemoteSchemaName])
@@ -143,8 +143,8 @@ $cparseJSON :: Value -&gt; Parser RemoteSchemaName
 parseJSON :: Value -&gt; Parser RemoteSchemaName
 $cparseJSONList :: Value -&gt; Parser [RemoteSchemaName]
 parseJSONList :: Value -&gt; Parser [RemoteSchemaName]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>      </span><span id="local-6989586621686762606"><span id="local-6989586621686762611"><span class="annot"><span class="annottext">FromJSONKeyFunction [RemoteSchemaName]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621686791113"><span id="local-6989586621686791118"><span class="annot"><span class="annottext">FromJSONKeyFunction [RemoteSchemaName]
 FromJSONKeyFunction RemoteSchemaName
 FromJSONKeyFunction RemoteSchemaName
 -&gt; FromJSONKeyFunction [RemoteSchemaName]
@@ -155,33 +155,33 @@ $cfromJSONKey :: FromJSONKeyFunction RemoteSchemaName
 fromJSONKey :: FromJSONKeyFunction RemoteSchemaName
 $cfromJSONKeyList :: FromJSONKeyFunction [RemoteSchemaName]
 fromJSONKeyList :: FromJSONKeyFunction [RemoteSchemaName]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>      </span><span id="local-6989586621686762617"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; PrepArg
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621686791124"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; PrepArg
 (RemoteSchemaName -&gt; PrepArg) -&gt; ToPrepArg RemoteSchemaName
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 $ctoPrepVal :: RemoteSchemaName -&gt; PrepArg
 toPrepVal :: RemoteSchemaName -&gt; PrepArg
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html#ToPrepArg"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621686762624"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RemoteSchemaName
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621686791131"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RemoteSchemaName
 (Maybe ByteString -&gt; Either Text RemoteSchemaName)
 -&gt; FromCol RemoteSchemaName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 $cfromCol :: Maybe ByteString -&gt; Either Text RemoteSchemaName
 fromCol :: Maybe ByteString -&gt; Either Text RemoteSchemaName
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Class.html#FromCol"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621686762631"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; Text
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621686791138"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; Text
 (RemoteSchemaName -&gt; Text) -&gt; ToTxt RemoteSchemaName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 $ctoTxt :: RemoteSchemaName -&gt; Text
 toTxt :: RemoteSchemaName -&gt; Text
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621686762638"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; ()
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621686791145"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; ()
 (RemoteSchemaName -&gt; ()) -&gt; NFData RemoteSchemaName
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: RemoteSchemaName -&gt; ()
 rnf :: RemoteSchemaName -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621686762645"><span id="local-6989586621686762647"><span class="annot"><span class="annottext">(forall x. RemoteSchemaName -&gt; Rep RemoteSchemaName x)
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621686791152"><span id="local-6989586621686791154"><span class="annot"><span class="annottext">(forall x. RemoteSchemaName -&gt; Rep RemoteSchemaName x)
 -&gt; (forall x. Rep RemoteSchemaName x -&gt; RemoteSchemaName)
 -&gt; Generic RemoteSchemaName
 forall x. Rep RemoteSchemaName x -&gt; RemoteSchemaName
@@ -195,9 +195,9 @@ to :: forall x. Rep RemoteSchemaName x -&gt; RemoteSchemaName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686762652"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-37"></span><span>  </span><span id="local-6989586621686762658"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; RemoteSchemaName)
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686791159"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621686791165"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; RemoteSchemaName)
 -&gt; (RemoteSchemaName -&gt; NonEmptyText)
 -&gt; Codec Value NonEmptyText NonEmptyText
 -&gt; JSONCodec RemoteSchemaName
@@ -206,9 +206,9 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; (newInput -&gt; oldInput)
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
-</span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; RemoteSchemaName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; RemoteSchemaName
 </span><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; NonEmptyText
 </span><a href="Hasura.RemoteSchema.Metadata.Base.html#unRemoteSchemaName"><span class="hs-identifier hs-var">unRemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value NonEmptyText NonEmptyText
 forall value. HasCodec value =&gt; JSONCodec value
-</span><span class="hs-identifier hs-var">codec</span></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
 </span><span id="line-38"></span></pre></body></html>
