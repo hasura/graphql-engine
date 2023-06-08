@@ -52,8 +52,9 @@ X-Hasura-Role: admin
 }
 ```
 
-The type of each field can be any valid [PostgreSQL data type](/schema/postgres/postgresql-types.mdx), and each field
-can be marked as nullable or not.
+The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 ### Args syntax {#metadata-pg-track-logical-model-syntax}
 

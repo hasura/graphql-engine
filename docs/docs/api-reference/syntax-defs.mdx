@@ -1251,12 +1251,36 @@ via [Custom Types](/api-reference/metadata-api/custom-types.mdx)
 
 ## LogicalModelField {#logicalmodelfield}
 
+| Key         | Required | Schema                                   | Description                                                                                     |
+| ----------- | -------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------|
+| name        | true     | `String`                                 | The name of the Logical Model field                                                             |
+| type        | true     | [Logical Model Type](#logicalmodeltype)  | A Logical Model field type                                                                      |
+| description | false    | `String`                                 | An extended description of the field                                                            |
+
+## LogicalModelType {#logicalmodeltype}
+
+A Logical Model type is one of either:
+
+A scalar:
+
 | Key         | Required | Schema    | Description                                                                                     |
 | ----------- | -------- | --------- | ------------------------------------------------------------------------------------------------|
-| name        | true     | `String`  | The name of the logical model field                                                             |
-| type        | true     | `String`  | The type of the exposed column, according to the underlying data source                         |
+| scalar      | true     | `String`  | The type of the exposed column, according to the underlying data source                         |
 | nullable    | false    | `Boolean` | True if the field should be exposed over the GraphQL API as a nullable field (default: `false`) |
-| description | false    | `String`  | An extended description of the field                                                            |
+
+An array:
+
+| Key         | Required | Schema                                   | Description                                                                                     |
+| ----------- | -------- | ---------                                | ------------------------------------------------------------------------------------------------|
+| array       | true     | [Logical Model Type](#logicalmodeltype)  | A Logical Model type, which this denotes an array of                                            |
+| nullable    | false    | `Boolean`                                | True if the field should be exposed over the GraphQL API as a nullable field (default: `false`) |
+
+A reference to another logical model:
+
+| Key           | Required | Schema                                   | Description                                                                                            |
+| -----------   | -------- | ---------                                | -------------------------------------------------------------------------------------------------------|
+| logical_model | true     | [Logical Model Type](#logicalmodeltype)  | A Logical Model type, which this refers to. Recursive and mutually recursive references are permitted. |
+| nullable      | false    | `Boolean`                                | True if the field should be exposed over the GraphQL API as a nullable field (default: `false`)        |
 
 ## NativeQueryArgument {#nativequeryargument}
 
@@ -1265,6 +1289,13 @@ via [Custom Types](/api-reference/metadata-api/custom-types.mdx)
 | type        | true     | `String`  | The type of the column, according to the underlying data source |
 | nullable    | false    | `Boolean` | True if the underlying column is nullable (default: `false`)    |
 | description | false    | `String`  | An extended description of the argument                         |
+
+## NativeQueryRelationship {#nativequeryrelationship}
+
+| Key                 | Required | Schema                                | Description                                                      |
+| ---------------     | -------- | ------------------------------------- | ---------------------------------------------------------------- |
+| remote_native_query | true     | `String`                              | The Native Query to which the relationship has to be established |
+| column_mapping      | true     | Object (local-column : remote-column) | Mapping of columns from current table to remote table            |
 
 ## Stored Procedure Argument {#stored-procedure-argument}
 

@@ -22,7 +22,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 :::tip Supported from
 
-Native queries are supported from `v2.26.0`.
+Logical Models are supported from `v2.26.0`.
 
 :::
 
@@ -62,7 +62,7 @@ X-Hasura-Role: admin
     "fields": [
       {
         "name": "<field name>",
-        "type": "<PostgreSQL field type>",
+        "type": "<PostgreSQL Logical Model type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -75,8 +75,9 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-The type of each field can be any valid [PostgreSQL data type](/schema/postgres/postgresql-types.mdx), and each field
-can be marked as nullable or not.
+The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 For example, we could track a representation of an article as follows:
 
@@ -96,24 +97,39 @@ X-Hasura-Role: admin
     "fields": [
       {
         "name": "id",
-        "type": "integer"
+        "type":
+          {
+            "scalar": "integer"
+          }
       },
       {
         "name": "title",
-        "type": "text"
+        "type":
+          {
+            "scalar": "text"
+          }
       },
       {
         "name": "contents",
-        "type": "text"
+        "type":
+          {
+            "scalar": "text"
+          }
       },
       {
         "name": "published_date",
-        "type": "published_date",
-        "nullable": true
+        "type":
+          {
+            "scalar": "date",
+            "nullable": true
+          },
       },
       {
         "name": "is_published",
-        "type": "boolean"
+        "type":
+          {
+            "scalar": "boolean"
+          }
       }
     ]
   }
@@ -170,6 +186,110 @@ X-Hasura-Role: admin
     "source": "default",
     "name": "article"
   }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Referencing other logical models {#referencing-other-logical-models}
+
+Logical Model fields are allowed to refer to other Logical Models, even recursively, allowing nested data types.
+
+Object or array relationships between Native Queries are an example use of this.
+
+To elaborate on the "article" example above, we can include authors in the data model:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk",
+  "args":
+  [
+    {
+      "type": "pg_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "article",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "title",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "contents",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "author_id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "author",
+            "type":
+              {
+                "logical_model": "author",
+              },
+          }
+        ]
+      }
+    },
+    {
+      "type": "pg_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "author",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "name",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "articles",
+            "type":
+              {
+                "array":
+                  {
+                    "logical_model": "article"
+                  }
+              }
+          }
+        ]
+      }
+    }
+  ]
 }
 ```
 
@@ -278,7 +398,3 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
-
-## Relationships
-
-Currently, Logical Models do not support relationships. They will be supported in a future release.
