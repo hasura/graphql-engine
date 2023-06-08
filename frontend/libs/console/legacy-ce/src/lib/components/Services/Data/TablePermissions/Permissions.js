@@ -1984,7 +1984,16 @@ class Permissions extends Component {
 
     return (
       <>
-        <RightContainer>
+        <RightContainer
+          style={
+            // Remove overflow for the new UI because it causes a double scrollbar and broken layout
+            this.props.showNewUI
+              ? {
+                  overflow: 'unset',
+                }
+              : undefined
+          }
+        >
           <Analytics name="Permissions" {...REDACT_EVERYTHING}>
             <div className={clsx(styles.container, 'bootstrap-jail')}>
               {getHeader(currentTableSchema)}
