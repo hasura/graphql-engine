@@ -387,11 +387,11 @@ buildSourcesIntrospectionStatus sourcesMetadata remoteSchemasMetadata = \case
       [(RemoteSchemaName, remoteSchemaIntrospection)] ->
       Bool
     allSourcesAndRemoteSchemasCollected sources remoteSchemas =
-      allPresent sourcesMetadata (map fst sources)
-        && allPresent remoteSchemasMetadata (map fst remoteSchemas)
+      allPresent (map fst sources) sourcesMetadata
+        && allPresent (map fst remoteSchemas) remoteSchemasMetadata
 
-    allPresent :: (Hashable a) => InsOrdHashMap a b -> [a] -> Bool
-    allPresent hashMap = all (`InsOrdHashMap.member` hashMap)
+    allPresent :: (Hashable a) => [a] -> InsOrdHashMap a b -> Bool
+    allPresent list = all (`elem` list) . InsOrdHashMap.keys
 
 {- Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
