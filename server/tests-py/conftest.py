@@ -642,6 +642,8 @@ def jwt_configuration(
             configuration = fixtures.jwt.init_rsa(tmp_path, configuration)
         case 'ed25519':
             configuration = fixtures.jwt.init_ed25519(tmp_path, configuration)
+        case 'es':
+            configuration = fixtures.jwt.init_es256(tmp_path, configuration)
         case _:
             raise Exception(f'Unsupported JWT configuration: {marker.args!r}')
 

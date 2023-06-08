@@ -350,6 +350,11 @@ class TestJwtBasicWithEd25519(AbstractTestJwtBasic):
     pass
 
 
+@pytest.mark.jwt('es')
+class TestJwtBasicWithEs(AbstractTestJwtBasic):
+    pass
+
+
 @pytest.mark.jwt('rsa', {
     'header': {'type': 'Cookie', 'name': 'hasura_user'},
 })
@@ -361,6 +366,13 @@ class TestJwtBasicWithRsaAndCookie(AbstractTestJwtBasic):
     'header': {'type': 'Cookie', 'name': 'hasura_user'},
 })
 class TestJwtBasicWithEd25519AndCookie(AbstractTestJwtBasic):
+    pass
+
+
+@pytest.mark.jwt('es', {
+    'header': {'type': 'Cookie', 'name': 'hasura_user'},
+})
+class TestJwtBasicWithEsAndCookie(AbstractTestJwtBasic):
     pass
 
 
@@ -378,6 +390,13 @@ class TestJwtBasicWithEd25519AndStringifiedJsonClaims(AbstractTestJwtBasic):
     pass
 
 
+@pytest.mark.jwt('es', {
+    'claims_format': 'stringified_json',
+})
+class TestJwtBasicWithEsAndStringifiedJsonClaims(AbstractTestJwtBasic):
+    pass
+
+
 @pytest.mark.jwt('rsa', {
     'claims_namespace_path': '$',
 })
@@ -389,6 +408,13 @@ class TestJwtBasicWithRsaAndClaimsNamespacePathAtRoot(AbstractTestJwtBasic):
     'claims_namespace_path': '$',
 })
 class TestJwtBasicWithEd25519AndClaimsNamespacePathAtRoot(AbstractTestJwtBasic):
+    pass
+
+
+@pytest.mark.jwt('es', {
+    'claims_namespace_path': '$',
+})
+class TestJwtBasicWithEsAndClaimsNamespacePathAtRoot(AbstractTestJwtBasic):
     pass
 
 
@@ -406,6 +432,13 @@ class TestJwtBasicWithEd25519AndClaimsNamespacePathAtOneLevelOfNesting(AbstractT
     pass
 
 
+@pytest.mark.jwt('es', {
+    'claims_namespace_path': '$.hasura_claims',
+})
+class TestJwtBasicWithEsAndClaimsNamespacePathAtOneLevelOfNesting(AbstractTestJwtBasic):
+    pass
+
+
 @pytest.mark.jwt('rsa', {
     'claims_namespace_path': '$.hasura.claims',
 })
@@ -420,6 +453,13 @@ class TestJwtBasicWithEd25519AndClaimsNamespacePathAtTwoLevelsOfNesting(Abstract
     pass
 
 
+@pytest.mark.jwt('es', {
+    'claims_namespace_path': '$.hasura.claims',
+})
+class TestJwtBasicWithEsAndClaimsNamespacePathAtTwoLevelsOfNesting(AbstractTestJwtBasic):
+    pass
+
+
 @pytest.mark.jwt('rsa', {
     'claims_namespace_path': '$.hasura[\'claims%\']',
 })
@@ -431,6 +471,13 @@ class TestJwtBasicWithRsaAndClaimsNamespacePathWithSpecialCharacters(AbstractTes
     'claims_namespace_path': '$.hasura[\'claims%\']',
 })
 class TestJwtBasicWithEd25519AndClaimsNamespacePathWithSpecialCharacters(AbstractTestJwtBasic):
+    pass
+
+
+@pytest.mark.jwt('es', {
+    'claims_namespace_path': '$.hasura[\'claims%\']',
+})
+class TestJwtBasicWithEsAndClaimsNamespacePathWithSpecialCharacters(AbstractTestJwtBasic):
     pass
 
 
@@ -503,6 +550,13 @@ class TestJwtExpirySkewWithEd25519(AbstractTestJwtExpirySkew):
     pass
 
 
+@pytest.mark.jwt('es', {
+    'allowed_skew': 60,
+})
+class TestJwtExpirySkewWithEs(AbstractTestJwtExpirySkew):
+    pass
+
+
 @pytest.mark.admin_secret
 class AbstractTestSubscriptionJwtExpiry:
     def test_jwt_expiry(self, hge_key, jwt_configuration, ws_client):
@@ -537,6 +591,11 @@ class TestSubscriptionJwtExpiryWithRsa(AbstractTestSubscriptionJwtExpiry):
 
 @pytest.mark.jwt('ed25519')
 class TestSubscriptionJwtExpiryWithEd25519(AbstractTestSubscriptionJwtExpiry):
+    pass
+
+
+@pytest.mark.jwt('es')
+class TestSubscriptionJwtExpiryWithEs(AbstractTestSubscriptionJwtExpiry):
     pass
 
 
@@ -620,6 +679,13 @@ class TestJwtAudienceCheckWithEd25519AndSingleAudience(AbstractTestJwtAudienceCh
     pass
 
 
+@pytest.mark.jwt('es', {
+    'audience': 'myapp-1234',
+})
+class TestJwtAudienceCheckWithEsAndSingleAudience(AbstractTestJwtAudienceCheck):
+    pass
+
+
 @pytest.mark.jwt('rsa', {
     'audience': ['myapp-1234', 'myapp-9876'],
 })
@@ -631,6 +697,13 @@ class TestJwtAudienceCheckWithRsaAndListOfAudiences(AbstractTestJwtAudienceCheck
     'audience': ['myapp-1234', 'myapp-9876'],
 })
 class TestJwtAudienceCheckWithEd25519AndListOfAudiences(AbstractTestJwtAudienceCheck):
+    pass
+
+
+@pytest.mark.jwt('es', {
+    'audience': ['myapp-1234', 'myapp-9876'],
+})
+class TestJwtAudienceCheckWithEsAndListOfAudiences(AbstractTestJwtAudienceCheck):
     pass
 
 
@@ -711,4 +784,11 @@ class TestJwtIssuerCheckWithRsa(AbstractTestJwtIssuerCheck):
     'issuer': 'https://hasura.com',
 })
 class TestJwtIssuerCheckWithEd25519(AbstractTestJwtIssuerCheck):
+    pass
+
+
+@pytest.mark.jwt('es', {
+    'issuer': 'https://hasura.com',
+})
+class TestJwtIssuerCheckWithEs(AbstractTestJwtIssuerCheck):
     pass
