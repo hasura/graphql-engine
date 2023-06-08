@@ -18,7 +18,7 @@ spec:
         fsGroup: 1001
         runAsUser: 1001
       containers:
-        - image: hasura/graphql-engine:v2.26.0
+        - image: hasura/graphql-engine:v2.27.0
           imagePullPolicy: IfNotPresent
           name: hasura
           readinessProbe:
