@@ -1,0 +1,269 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Defines the Tracing API.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- The 'MonadTrace' class defines the &quot;public API&quot; of this component.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Tracing.Class</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#newTrace"><span class="hs-identifier">newTrace</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier">newSpan</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Morph</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier">Control.Monad.Trans.Maybe</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html"><span class="hs-identifier">Hasura.Tracing.Context</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html"><span class="hs-identifier">Hasura.Tracing.Sampling</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html"><span class="hs-identifier">Hasura.Tracing.TraceId</span></a></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- MonadTrace</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadTrace"><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-var">MonadTrace</span></a></span></span><span> </span><span id="local-6989586621691149782"><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-comment">-- | Trace the execution of a block of code, attaching a human-readable</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-comment">-- name. This starts a new trace and its corresponding root span, to which</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-comment">-- subsequent spans will be attached.</span><span>
+</span><span id="line-25"></span><span>  </span><span id="newTraceWith"><span class="annot"><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-type">newTraceWith</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621691149777"><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149777"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149777"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-comment">-- | Starts a new span within the current trace. No-op if there's no current</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-comment">-- trace.</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-comment">-- TODO: we could rewrite this to start a new trace if there isn't one, using</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-comment">-- the default reporter and policy? This would guarantee that no span is ever</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-comment">-- lost, but would also risk reporting undesired spans.</span><span>
+</span><span id="line-38"></span><span>  </span><span id="newSpanWith"><span class="annot"><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-type">newSpanWith</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621691149775"><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149775"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149775"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-comment">-- | Ask for the current tracing context, so that we can provide it to any</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-comment">-- downstream services, e.g. in HTTP headers. Returns 'Nothing' if we're not</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-comment">-- currently tracing anything.</span><span>
+</span><span id="line-47"></span><span>  </span><span id="currentContext"><span class="annot"><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-type">currentContext</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-comment">-- | Log some arbitrary metadata to be attached to the current span, if any.</span><span>
+</span><span id="line-50"></span><span>  </span><span id="attachMetadata"><span class="annot"><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-type">attachMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceMetadata"><span class="hs-identifier hs-type">TraceMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691149782"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691149767"><span id="local-6989586621691149768"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149768"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ReaderT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149767"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149768"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621691149684"><span class="annot"><span class="annottext">newTraceWith :: forall a.
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; ReaderT r m a -&gt; ReaderT r m a
+</span><a href="#local-6989586621691149684"><span class="hs-identifier hs-var hs-var hs-var hs-var">newTraceWith</span></a></span></span><span> </span><span id="local-6989586621691149683"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149683"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621691149682"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149682"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621691149681"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149681"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a (n :: * -&gt; *) b r.
+(m a -&gt; n b) -&gt; ReaderT r m a -&gt; ReaderT r n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapReaderT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var">newTraceWith</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149683"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149682"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149681"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621691149678"><span class="annot"><span class="annottext">newSpanWith :: forall a. SpanId -&gt; Text -&gt; ReaderT r m a -&gt; ReaderT r m a
+</span><a href="#local-6989586621691149678"><span class="hs-identifier hs-var hs-var hs-var hs-var">newSpanWith</span></a></span></span><span> </span><span id="local-6989586621691149677"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149677"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621691149676"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149676"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a (n :: * -&gt; *) b r.
+(m a -&gt; n b) -&gt; ReaderT r m a -&gt; ReaderT r n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapReaderT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-var">newSpanWith</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149677"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149676"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621691149671"><span class="annot"><span class="annottext">currentContext :: ReaderT r m (Maybe TraceContext)
+</span><a href="#local-6989586621691149671"><span class="hs-identifier hs-var hs-var hs-var hs-var">currentContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; m (Maybe TraceContext)
+</span><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-var">currentContext</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621691149666"><span class="annot"><span class="annottext">attachMetadata :: TraceMetadata -&gt; ReaderT r m ()
+</span><a href="#local-6989586621691149666"><span class="hs-identifier hs-var hs-var hs-var hs-var">attachMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
+</span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691149747"><span id="local-6989586621691149748"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149748"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">StateT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149747"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149748"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621691149653"><span class="annot"><span class="annottext">newTraceWith :: forall a.
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; StateT e m a -&gt; StateT e m a
+</span><a href="#local-6989586621691149653"><span class="hs-identifier hs-var hs-var hs-var hs-var">newTraceWith</span></a></span></span><span> </span><span id="local-6989586621691149652"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149652"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621691149651"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149651"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621691149650"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149650"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a s (n :: * -&gt; *) b.
+(m (a, s) -&gt; n (b, s)) -&gt; StateT s m a -&gt; StateT s n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapStateT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var">newTraceWith</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149652"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149651"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149650"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621691149647"><span class="annot"><span class="annottext">newSpanWith :: forall a. SpanId -&gt; Text -&gt; StateT e m a -&gt; StateT e m a
+</span><a href="#local-6989586621691149647"><span class="hs-identifier hs-var hs-var hs-var hs-var">newSpanWith</span></a></span></span><span> </span><span id="local-6989586621691149646"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149646"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621691149645"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149645"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a s (n :: * -&gt; *) b.
+(m (a, s) -&gt; n (b, s)) -&gt; StateT s m a -&gt; StateT s n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapStateT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-var">newSpanWith</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149646"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149645"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621691149640"><span class="annot"><span class="annottext">currentContext :: StateT e m (Maybe TraceContext)
+</span><a href="#local-6989586621691149640"><span class="hs-identifier hs-var hs-var hs-var hs-var">currentContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; m (Maybe TraceContext)
+</span><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-var">currentContext</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621691149636"><span class="annot"><span class="annottext">attachMetadata :: TraceMetadata -&gt; StateT e m ()
+</span><a href="#local-6989586621691149636"><span class="hs-identifier hs-var hs-var hs-var hs-var">attachMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
+</span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691149734"><span id="local-6989586621691149735"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149735"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149734"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149735"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621691149624"><span class="annot"><span class="annottext">newTraceWith :: forall a.
+TraceContext
+-&gt; SamplingPolicy -&gt; Text -&gt; ExceptT e m a -&gt; ExceptT e m a
+</span><a href="#local-6989586621691149624"><span class="hs-identifier hs-var hs-var hs-var hs-var">newTraceWith</span></a></span></span><span> </span><span id="local-6989586621691149623"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149623"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621691149622"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149622"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621691149621"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149621"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a (n :: * -&gt; *) e' b.
+(m (Either e a) -&gt; n (Either e' b))
+-&gt; ExceptT e m a -&gt; ExceptT e' n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapExceptT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var">newTraceWith</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149623"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149622"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149621"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621691149618"><span class="annot"><span class="annottext">newSpanWith :: forall a. SpanId -&gt; Text -&gt; ExceptT e m a -&gt; ExceptT e m a
+</span><a href="#local-6989586621691149618"><span class="hs-identifier hs-var hs-var hs-var hs-var">newSpanWith</span></a></span></span><span> </span><span id="local-6989586621691149617"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149617"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621691149616"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149616"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a (n :: * -&gt; *) e' b.
+(m (Either e a) -&gt; n (Either e' b))
+-&gt; ExceptT e m a -&gt; ExceptT e' n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapExceptT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-var">newSpanWith</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149617"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149616"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621691149611"><span class="annot"><span class="annottext">currentContext :: ExceptT e m (Maybe TraceContext)
+</span><a href="#local-6989586621691149611"><span class="hs-identifier hs-var hs-var hs-var hs-var">currentContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; m (Maybe TraceContext)
+</span><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-var">currentContext</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621691149607"><span class="annot"><span class="annottext">attachMetadata :: TraceMetadata -&gt; ExceptT e m ()
+</span><a href="#local-6989586621691149607"><span class="hs-identifier hs-var hs-var hs-var hs-var">attachMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
+</span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691149723"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149723"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">MaybeT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149723"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621691149595"><span class="annot"><span class="annottext">newTraceWith :: forall a.
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; MaybeT m a -&gt; MaybeT m a
+</span><a href="#local-6989586621691149595"><span class="hs-identifier hs-var hs-var hs-var hs-var">newTraceWith</span></a></span></span><span> </span><span id="local-6989586621691149594"><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149594"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621691149593"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149593"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621691149592"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149592"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a (n :: * -&gt; *) b.
+(m (Maybe a) -&gt; n (Maybe b)) -&gt; MaybeT m a -&gt; MaybeT n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapMaybeT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var">newTraceWith</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149594"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149593"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149592"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621691149589"><span class="annot"><span class="annottext">newSpanWith :: forall a. SpanId -&gt; Text -&gt; MaybeT m a -&gt; MaybeT m a
+</span><a href="#local-6989586621691149589"><span class="hs-identifier hs-var hs-var hs-var hs-var">newSpanWith</span></a></span></span><span> </span><span id="local-6989586621691149588"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149588"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621691149587"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149587"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a (n :: * -&gt; *) b.
+(m (Maybe a) -&gt; n (Maybe b)) -&gt; MaybeT m a -&gt; MaybeT n b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">mapMaybeT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-var">newSpanWith</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149588"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149587"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621691149582"><span class="annot"><span class="annottext">currentContext :: MaybeT m (Maybe TraceContext)
+</span><a href="#local-6989586621691149582"><span class="hs-identifier hs-var hs-var hs-var hs-var">currentContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; m (Maybe TraceContext)
+</span><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-var">currentContext</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621691149578"><span class="annot"><span class="annottext">attachMetadata :: TraceMetadata -&gt; MaybeT m ()
+</span><a href="#local-6989586621691149578"><span class="hs-identifier hs-var hs-var hs-var hs-var">attachMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
+</span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-77"></span><span class="hs-comment">-- Trace helpers</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- | Create a new trace using a randomly-generated context.</span><span>
+</span><span id="line-80"></span><span id="local-6989586621691149716"><span id="local-6989586621691149718"><span class="annot"><a href="Hasura.Tracing.Class.html#newTrace"><span class="hs-identifier hs-type">newTrace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149718"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149718"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691149718"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149716"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691149718"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149716"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-81"></span><span id="newTrace"><span class="annot"><span class="annottext">newTrace :: forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTrace"><span class="hs-identifier hs-var hs-var">newTrace</span></a></span></span><span> </span><span id="local-6989586621691149568"><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149568"><span class="hs-identifier hs-var">policy</span></a></span></span><span> </span><span id="local-6989586621691149567"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149567"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621691149566"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621691149566"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621691149565"><span class="annot"><span class="annottext">TraceId
+</span><a href="#local-6989586621691149565"><span class="hs-identifier hs-var">traceId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadIO m =&gt; m TraceId
+</span><a href="Hasura.Tracing.TraceId.html#randomTraceId"><span class="hs-identifier hs-var">randomTraceId</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621691149563"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149563"><span class="hs-identifier hs-var">spanId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadIO m =&gt; m SpanId
+</span><a href="Hasura.Tracing.TraceId.html#randomSpanId"><span class="hs-identifier hs-var">randomSpanId</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621691149561"><span class="annot"><span class="annottext">context :: TraceContext
+</span><a href="#local-6989586621691149561"><span class="hs-identifier hs-var hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceId -&gt; SpanId -&gt; Maybe SpanId -&gt; SamplingState -&gt; TraceContext
+</span><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-var">TraceContext</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
+</span><a href="#local-6989586621691149565"><span class="hs-identifier hs-var">traceId</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149563"><span class="hs-identifier hs-var">spanId</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+TraceContext -&gt; SamplingPolicy -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newTraceWith"><span class="hs-identifier hs-var">newTraceWith</span></a></span><span> </span><span class="annot"><span class="annottext">TraceContext
+</span><a href="#local-6989586621691149561"><span class="hs-identifier hs-var">context</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingPolicy
+</span><a href="#local-6989586621691149568"><span class="hs-identifier hs-var">policy</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149567"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621691149566"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- | Create a new span with a randomly-generated id.</span><span>
+</span><span id="line-88"></span><span id="local-6989586621691149706"><span id="local-6989586621691149707"><span class="annot"><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-type">newSpan</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149707"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149707"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691149707"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149706"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621691149707"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691149706"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-89"></span><span id="newSpan"><span class="annot"><span class="annottext">newSpan :: forall (m :: * -&gt; *) a.
+(MonadIO m, MonadTrace m) =&gt;
+Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var hs-var">newSpan</span></a></span></span><span> </span><span id="local-6989586621691149552"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149552"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621691149551"><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621691149551"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621691149550"><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149550"><span class="hs-identifier hs-var">spanId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadIO m =&gt; m SpanId
+</span><a href="Hasura.Tracing.TraceId.html#randomSpanId"><span class="hs-identifier hs-var">randomSpanId</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+SpanId -&gt; Text -&gt; m a -&gt; m a
+</span><a href="Hasura.Tracing.Class.html#newSpanWith"><span class="hs-identifier hs-var">newSpanWith</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
+</span><a href="#local-6989586621691149550"><span class="hs-identifier hs-var">spanId</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691149552"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621691149551"><span class="hs-identifier hs-var">body</span></a></span><span>
+</span><span id="line-92"></span></pre></body></html>

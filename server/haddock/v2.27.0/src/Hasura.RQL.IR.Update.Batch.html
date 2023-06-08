@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Contains types that can be used by backends to structure updates</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- to batches of rows in a table</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Update.Batch</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier">UpdateBatch</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#updateBatchIsEmpty"><span class="hs-identifier">updateBatchIsEmpty</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | Represents a set of update operations ('_ubOperations') applied to a batch of rows selected</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- from a table by filtering it with a boolean expression ('_ubWhere').</span><span>
+</span><span id="line-19"></span><span class="hs-comment">--</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- This type may be used by specific backends as a part their 'UpdateVariant'.</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- See 'Hasura.Backends.Postgres.Types.Update.PgUpdateVariant' for an example.</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- The actual operators used to affect changes against columns in '_ubOperations' are abstract</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- here and are specified by the specific backends based on what they actually support</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">data</span><span> </span><span id="UpdateBatch"><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-var">UpdateBatch</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691107939"><span class="annot"><a href="#local-6989586621691107939"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621691107938"><span class="annot"><a href="#local-6989586621691107938"><span class="hs-identifier hs-type">updateOperators</span></a></span></span><span> </span><span id="local-6989586621691107937"><span class="annot"><a href="#local-6989586621691107937"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UpdateBatch"><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-var">UpdateBatch</span></a></span></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ubOperations"><span class="annot"><span class="annottext">forall (b :: BackendType) (updateOperators :: * -&gt; *) v.
+UpdateBatch b updateOperators v
+-&gt; HashMap (Column b) (updateOperators v)
+</span><a href="Hasura.RQL.IR.Update.Batch.html#_ubOperations"><span class="hs-identifier hs-var hs-var">_ubOperations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107939"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691107938"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107937"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span id="_ubWhere"><span class="annot"><span class="annottext">forall (b :: BackendType) (updateOperators :: * -&gt; *) v.
+UpdateBatch b updateOperators v -&gt; AnnBoolExp b v
+</span><a href="Hasura.RQL.IR.Update.Batch.html#_ubWhere"><span class="hs-identifier hs-var hs-var">_ubWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107939"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107937"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691107771"><span id="local-6989586621691107780"><span class="annot"><span class="annottext">forall a b.
+a
+-&gt; UpdateBatch b updateOperators b
+-&gt; UpdateBatch b updateOperators a
+forall a b.
+(a -&gt; b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; UpdateBatch b updateOperators b
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Functor updateOperators) =&gt;
+a
+-&gt; UpdateBatch b updateOperators b
+-&gt; UpdateBatch b updateOperators a
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Functor updateOperators) =&gt;
+(a -&gt; b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; UpdateBatch b updateOperators b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: forall a b.
+a
+-&gt; UpdateBatch b updateOperators b
+-&gt; UpdateBatch b updateOperators a
+$c&lt;$ :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Functor updateOperators) =&gt;
+a
+-&gt; UpdateBatch b updateOperators b
+-&gt; UpdateBatch b updateOperators a
+fmap :: forall a b.
+(a -&gt; b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; UpdateBatch b updateOperators b
+$cfmap :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Functor updateOperators) =&gt;
+(a -&gt; b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; UpdateBatch b updateOperators b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691107710"><span id="local-6989586621691107712"><span id="local-6989586621691107714"><span id="local-6989586621691107716"><span id="local-6989586621691107718"><span id="local-6989586621691107720"><span id="local-6989586621691107726"><span id="local-6989586621691107728"><span id="local-6989586621691107730"><span id="local-6989586621691107732"><span id="local-6989586621691107734"><span id="local-6989586621691107736"><span id="local-6989586621691107738"><span id="local-6989586621691107744"><span id="local-6989586621691107746"><span id="local-6989586621691107761"><span id="local-6989586621691107763"><span class="annot"><span class="annottext">forall a. UpdateBatch b updateOperators a -&gt; Bool
+forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Eq a) =&gt;
+a -&gt; UpdateBatch b updateOperators a -&gt; Bool
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Num a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Ord a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+forall (b :: BackendType) (updateOperators :: * -&gt; *) m.
+(Backend b, Foldable updateOperators, Monoid m) =&gt;
+UpdateBatch b updateOperators m -&gt; m
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; Bool
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; Int
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; [a]
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; a -&gt; a) -&gt; UpdateBatch b updateOperators a -&gt; a
+forall (b :: BackendType) (updateOperators :: * -&gt; *) m a.
+(Backend b, Foldable updateOperators, Monoid m) =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+forall (b :: BackendType) (updateOperators :: * -&gt; *) b a.
+(Backend b, Foldable updateOperators) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: forall a. Num a =&gt; UpdateBatch b updateOperators a -&gt; a
+$cproduct :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Num a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+sum :: forall a. Num a =&gt; UpdateBatch b updateOperators a -&gt; a
+$csum :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Num a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+minimum :: forall a. Ord a =&gt; UpdateBatch b updateOperators a -&gt; a
+$cminimum :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Ord a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+maximum :: forall a. Ord a =&gt; UpdateBatch b updateOperators a -&gt; a
+$cmaximum :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Ord a) =&gt;
+UpdateBatch b updateOperators a -&gt; a
+elem :: forall a. Eq a =&gt; a -&gt; UpdateBatch b updateOperators a -&gt; Bool
+$celem :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators, Eq a) =&gt;
+a -&gt; UpdateBatch b updateOperators a -&gt; Bool
+length :: forall a. UpdateBatch b updateOperators a -&gt; Int
+$clength :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; Int
+null :: forall a. UpdateBatch b updateOperators a -&gt; Bool
+$cnull :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; Bool
+toList :: forall a. UpdateBatch b updateOperators a -&gt; [a]
+$ctoList :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+UpdateBatch b updateOperators a -&gt; [a]
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateBatch b updateOperators a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; a -&gt; a) -&gt; UpdateBatch b updateOperators a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateBatch b updateOperators a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; a -&gt; a) -&gt; UpdateBatch b updateOperators a -&gt; a
+foldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+$cfoldl' :: forall (b :: BackendType) (updateOperators :: * -&gt; *) b a.
+(Backend b, Foldable updateOperators) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+foldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+$cfoldl :: forall (b :: BackendType) (updateOperators :: * -&gt; *) b a.
+(Backend b, Foldable updateOperators) =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+foldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+$cfoldr' :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+foldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+$cfoldr :: forall (b :: BackendType) (updateOperators :: * -&gt; *) a b.
+(Backend b, Foldable updateOperators) =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateBatch b updateOperators a -&gt; b
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) (updateOperators :: * -&gt; *) m a.
+(Backend b, Foldable updateOperators, Monoid m) =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+foldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+$cfoldMap :: forall (b :: BackendType) (updateOperators :: * -&gt; *) m a.
+(Backend b, Foldable updateOperators, Monoid m) =&gt;
+(a -&gt; m) -&gt; UpdateBatch b updateOperators a -&gt; m
+fold :: forall m. Monoid m =&gt; UpdateBatch b updateOperators m -&gt; m
+$cfold :: forall (b :: BackendType) (updateOperators :: * -&gt; *) m.
+(Backend b, Foldable updateOperators, Monoid m) =&gt;
+UpdateBatch b updateOperators m -&gt; m
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691107684"><span id="local-6989586621691107686"><span id="local-6989586621691107688"><span id="local-6989586621691107703"><span class="annot"><span class="annottext">forall {b :: BackendType} {updateOperators :: * -&gt; *}.
+(Backend b, Traversable updateOperators) =&gt;
+Functor (UpdateBatch b updateOperators)
+forall {b :: BackendType} {updateOperators :: * -&gt; *}.
+(Backend b, Traversable updateOperators) =&gt;
+Foldable (UpdateBatch b updateOperators)
+forall (b :: BackendType) (updateOperators :: * -&gt; *) (m :: * -&gt; *)
+       a.
+(Backend b, Traversable updateOperators, Monad m) =&gt;
+UpdateBatch b updateOperators (m a)
+-&gt; m (UpdateBatch b updateOperators a)
+forall (b :: BackendType) (updateOperators :: * -&gt; *) (f :: * -&gt; *)
+       a.
+(Backend b, Traversable updateOperators, Applicative f) =&gt;
+UpdateBatch b updateOperators (f a)
+-&gt; f (UpdateBatch b updateOperators a)
+forall (b :: BackendType) (updateOperators :: * -&gt; *) (m :: * -&gt; *)
+       a b.
+(Backend b, Traversable updateOperators, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; m (UpdateBatch b updateOperators b)
+forall (b :: BackendType) (updateOperators :: * -&gt; *) (f :: * -&gt; *)
+       a b.
+(Backend b, Traversable updateOperators, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; f (UpdateBatch b updateOperators b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; f (UpdateBatch b updateOperators b)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateBatch b updateOperators (m a)
+-&gt; m (UpdateBatch b updateOperators a)
+$csequence :: forall (b :: BackendType) (updateOperators :: * -&gt; *) (m :: * -&gt; *)
+       a.
+(Backend b, Traversable updateOperators, Monad m) =&gt;
+UpdateBatch b updateOperators (m a)
+-&gt; m (UpdateBatch b updateOperators a)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; m (UpdateBatch b updateOperators b)
+$cmapM :: forall (b :: BackendType) (updateOperators :: * -&gt; *) (m :: * -&gt; *)
+       a b.
+(Backend b, Traversable updateOperators, Monad m) =&gt;
+(a -&gt; m b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; m (UpdateBatch b updateOperators b)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateBatch b updateOperators (f a)
+-&gt; f (UpdateBatch b updateOperators a)
+$csequenceA :: forall (b :: BackendType) (updateOperators :: * -&gt; *) (f :: * -&gt; *)
+       a.
+(Backend b, Traversable updateOperators, Applicative f) =&gt;
+UpdateBatch b updateOperators (f a)
+-&gt; f (UpdateBatch b updateOperators a)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; f (UpdateBatch b updateOperators b)
+$ctraverse :: forall (b :: BackendType) (updateOperators :: * -&gt; *) (f :: * -&gt; *)
+       a b.
+(Backend b, Traversable updateOperators, Applicative f) =&gt;
+(a -&gt; f b)
+-&gt; UpdateBatch b updateOperators a
+-&gt; f (UpdateBatch b updateOperators b)
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span id="local-6989586621691107672"><span id="local-6989586621691107674"><span id="local-6989586621691107681"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691107867"><span id="local-6989586621691107868"><span id="local-6989586621691107869"><span class="annot"><a href="#local-6989586621691107867"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107869"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107868"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691107867"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107868"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107868"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107869"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107867"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107868"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621691107664"><span id="local-6989586621691107669"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621691107861"><span id="local-6989586621691107862"><span id="local-6989586621691107863"><span class="annot"><a href="#local-6989586621691107861"><span class="hs-keyword hs-type hs-type hs-type">stock</span></a></span></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107863"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107862"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621691107861"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107862"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107862"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107863"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107861"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107862"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- | Are we actually updating anything in the batch?</span><span>
+</span><span id="line-48"></span><span id="local-6989586621691107858"><span id="local-6989586621691107859"><span id="local-6989586621691107860"><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#updateBatchIsEmpty"><span class="hs-identifier hs-type">updateBatchIsEmpty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107860"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107859"><span class="hs-identifier hs-type">updateOperators</span></a></span><span> </span><span class="annot"><a href="#local-6989586621691107858"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span></span></span></span><span>
+</span><span id="line-49"></span><span id="updateBatchIsEmpty"><span class="annot"><span class="annottext">updateBatchIsEmpty :: forall (b :: BackendType) (updateOperators :: * -&gt; *) v.
+UpdateBatch b updateOperators v -&gt; Bool
+</span><a href="Hasura.RQL.IR.Update.Batch.html#updateBatchIsEmpty"><span class="hs-identifier hs-var hs-var">updateBatchIsEmpty</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.Batch.html#UpdateBatch"><span class="hs-identifier hs-type">UpdateBatch</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621691107661"><span id="local-6989586621691107662"><span class="annot"><span class="annottext">HashMap (Column b) (updateOperators v)
+AnnBoolExp b v
+_ubWhere :: AnnBoolExp b v
+_ubOperations :: HashMap (Column b) (updateOperators v)
+_ubWhere :: forall (b :: BackendType) (updateOperators :: * -&gt; *) v.
+UpdateBatch b updateOperators v -&gt; AnnBoolExp b v
+_ubOperations :: forall (b :: BackendType) (updateOperators :: * -&gt; *) v.
+UpdateBatch b updateOperators v
+-&gt; HashMap (Column b) (updateOperators v)
+</span><a href="#local-6989586621691107661"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
+</span><span class="hs-identifier hs-var">HashMap.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (updateOperators v)
+</span><a href="#local-6989586621691107662"><span class="hs-identifier hs-var">_ubOperations</span></a></span><span>
+</span><span id="line-51"></span></pre></body></html>

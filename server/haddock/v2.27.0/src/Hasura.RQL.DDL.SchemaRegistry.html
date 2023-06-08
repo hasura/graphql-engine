@@ -1,0 +1,600 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.SchemaRegistry</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaProjectId"><span class="hs-identifier">SchemaProjectId</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#IsMetadataInconsistent"><span class="hs-identifier">IsMetadataInconsistent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaSDL"><span class="hs-identifier">SchemaSDL</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier">SchemaHash</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#ProjectGQLSchemaInformation"><span class="hs-identifier">ProjectGQLSchemaInformation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfig"><span class="hs-identifier">SchemaRegistryConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier">SchemaRegistryDetails</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier">GQLSchemaInformation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryContext"><span class="hs-identifier">SchemaRegistryContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryControlRole"><span class="hs-identifier">SchemaRegistryControlRole</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryMap"><span class="hs-identifier">SchemaRegistryMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetailsList"><span class="hs-identifier">SchemaRegistryDetailsList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryAction"><span class="hs-identifier">SchemaRegistryAction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfigRaw"><span class="hs-identifier">SchemaRegistryConfigRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#calculateSchemaSDLHash"><span class="hs-identifier">calculateSchemaSDLHash</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#selectNowQuery"><span class="hs-identifier">selectNowQuery</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier">Control.Concurrent.STM</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">Data.Time</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">UTCTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SQLTypes</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Hasura.Base.Error</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html"><span class="hs-identifier">Hasura.RQL.Types.Roles</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier">MetadataResourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">{-
+  SchemaRegistry
+
+  About:
+    The schema registry is a feature that is currently meant for
+    our users of Hasura Cloud. This feature will help users track
+    the evolution of their GraphQL schema across all Hasura roles.
+    Additional functionality around tagging schemas and viewing
+    the diff of the GraphQL schema across different versions of the
+    schema.
+
+    All of the types and other functions that are required for the
+    functionality provided by the Hasura server pertaining to this
+    feature are present in this file.
+
+  Intended Current Functionality:
+    1) Every time the `buildGQLContext` function is run to rebuild
+       the GraphQL schema(s), the changes are captured and sent to
+       the Hasura PRO server via a TQueue
+
+    2) On the Hasura PRO server, a thread is always maintained to
+       read from the aforementioned TQueue for new changes.
+
+    3) The changes that are captured are then processed (more notes
+       on this present on `HasuraPro.App` module) and a request with
+       all relevant data is sent towards the schema_registry service.
+
+  NOTE: The timestamp recorded as soon as the schema is rebuilt is
+        obtained from the Metadata DB. This is done in order to
+        make sure that we have only one source for the time to avoid
+        clock-skew.
+
+-}</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span id="local-6989586621691234296"><span id="local-6989586621691234297"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SchemaProjectId"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaProjectId"><span class="hs-identifier hs-var">SchemaProjectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaProjectId"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaProjectId"><span class="hs-identifier hs-var">SchemaProjectId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_spiProjectId"><span class="annot"><span class="annottext">SchemaProjectId -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_spiProjectId"><span class="hs-identifier hs-var hs-var">_spiProjectId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234288"><span id="local-6989586621691234292"><span class="annot"><span class="annottext">SchemaProjectId -&gt; SchemaProjectId -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaProjectId -&gt; SchemaProjectId -&gt; Bool
+$c/= :: SchemaProjectId -&gt; SchemaProjectId -&gt; Bool
+== :: SchemaProjectId -&gt; SchemaProjectId -&gt; Bool
+$c== :: SchemaProjectId -&gt; SchemaProjectId -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234277"><span id="local-6989586621691234279"><span id="local-6989586621691234285"><span class="annot"><span class="annottext">Int -&gt; SchemaProjectId -&gt; ShowS
+[SchemaProjectId] -&gt; ShowS
+SchemaProjectId -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaProjectId] -&gt; ShowS
+$cshowList :: [SchemaProjectId] -&gt; ShowS
+show :: SchemaProjectId -&gt; String
+$cshow :: SchemaProjectId -&gt; String
+showsPrec :: Int -&gt; SchemaProjectId -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaProjectId -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SchemaProjectId x -&gt; SchemaProjectId
+forall x. SchemaProjectId -&gt; Rep SchemaProjectId x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SchemaProjectId x -&gt; SchemaProjectId
+$cfrom :: forall x. SchemaProjectId -&gt; Rep SchemaProjectId x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234265"><span id="local-6989586621691234267"><span id="local-6989586621691234269"><span id="local-6989586621691234271"><span class="annot"><span class="annottext">[SchemaProjectId] -&gt; Value
+[SchemaProjectId] -&gt; Encoding
+SchemaProjectId -&gt; Value
+SchemaProjectId -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [SchemaProjectId] -&gt; Encoding
+$ctoEncodingList :: [SchemaProjectId] -&gt; Encoding
+toJSONList :: [SchemaProjectId] -&gt; Value
+$ctoJSONList :: [SchemaProjectId] -&gt; Value
+toEncoding :: SchemaProjectId -&gt; Encoding
+$ctoEncoding :: SchemaProjectId -&gt; Encoding
+toJSON :: SchemaProjectId -&gt; Value
+$ctoJSON :: SchemaProjectId -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234260"><span id="local-6989586621691234262"><span class="annot"><span class="annottext">Value -&gt; Parser [SchemaProjectId]
+Value -&gt; Parser SchemaProjectId
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [SchemaProjectId]
+$cparseJSONList :: Value -&gt; Parser [SchemaProjectId]
+parseJSON :: Value -&gt; Parser SchemaProjectId
+$cparseJSON :: Value -&gt; Parser SchemaProjectId
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621691234257"><span id="local-6989586621691234258"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="IsMetadataInconsistent"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#IsMetadataInconsistent"><span class="hs-identifier hs-var">IsMetadataInconsistent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IsMetadataInconsistent"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#IsMetadataInconsistent"><span class="hs-identifier hs-var">IsMetadataInconsistent</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_isMdInconsistent"><span class="annot"><span class="annottext">IsMetadataInconsistent -&gt; Bool
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_isMdInconsistent"><span class="hs-identifier hs-var hs-var">_isMdInconsistent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234249"><span id="local-6989586621691234253"><span class="annot"><span class="annottext">IsMetadataInconsistent -&gt; IsMetadataInconsistent -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: IsMetadataInconsistent -&gt; IsMetadataInconsistent -&gt; Bool
+$c/= :: IsMetadataInconsistent -&gt; IsMetadataInconsistent -&gt; Bool
+== :: IsMetadataInconsistent -&gt; IsMetadataInconsistent -&gt; Bool
+$c== :: IsMetadataInconsistent -&gt; IsMetadataInconsistent -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234240"><span id="local-6989586621691234242"><span id="local-6989586621691234247"><span class="annot"><span class="annottext">Int -&gt; IsMetadataInconsistent -&gt; ShowS
+[IsMetadataInconsistent] -&gt; ShowS
+IsMetadataInconsistent -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [IsMetadataInconsistent] -&gt; ShowS
+$cshowList :: [IsMetadataInconsistent] -&gt; ShowS
+show :: IsMetadataInconsistent -&gt; String
+$cshow :: IsMetadataInconsistent -&gt; String
+showsPrec :: Int -&gt; IsMetadataInconsistent -&gt; ShowS
+$cshowsPrec :: Int -&gt; IsMetadataInconsistent -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep IsMetadataInconsistent x -&gt; IsMetadataInconsistent
+forall x. IsMetadataInconsistent -&gt; Rep IsMetadataInconsistent x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep IsMetadataInconsistent x -&gt; IsMetadataInconsistent
+$cfrom :: forall x. IsMetadataInconsistent -&gt; Rep IsMetadataInconsistent x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234230"><span id="local-6989586621691234232"><span id="local-6989586621691234234"><span id="local-6989586621691234236"><span class="annot"><span class="annottext">[IsMetadataInconsistent] -&gt; Value
+[IsMetadataInconsistent] -&gt; Encoding
+IsMetadataInconsistent -&gt; Value
+IsMetadataInconsistent -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [IsMetadataInconsistent] -&gt; Encoding
+$ctoEncodingList :: [IsMetadataInconsistent] -&gt; Encoding
+toJSONList :: [IsMetadataInconsistent] -&gt; Value
+$ctoJSONList :: [IsMetadataInconsistent] -&gt; Value
+toEncoding :: IsMetadataInconsistent -&gt; Encoding
+$ctoEncoding :: IsMetadataInconsistent -&gt; Encoding
+toJSON :: IsMetadataInconsistent -&gt; Value
+$ctoJSON :: IsMetadataInconsistent -&gt; Value
+</span><a href="#local-6989586621691234230"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234226"><span id="local-6989586621691234228"><span class="annot"><span class="annottext">Value -&gt; Parser [IsMetadataInconsistent]
+Value -&gt; Parser IsMetadataInconsistent
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [IsMetadataInconsistent]
+$cparseJSONList :: Value -&gt; Parser [IsMetadataInconsistent]
+parseJSON :: Value -&gt; Parser IsMetadataInconsistent
+$cparseJSON :: Value -&gt; Parser IsMetadataInconsistent
+</span><a href="#local-6989586621691234226"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621691234224"><span id="local-6989586621691234225"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SchemaSDL"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaSDL"><span class="hs-identifier hs-var">SchemaSDL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaSDL"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaSDL"><span class="hs-identifier hs-var">SchemaSDL</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_sdl"><span class="annot"><span class="annottext">SchemaSDL -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_sdl"><span class="hs-identifier hs-var hs-var">_sdl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234217"><span id="local-6989586621691234220"><span class="annot"><span class="annottext">SchemaSDL -&gt; SchemaSDL -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaSDL -&gt; SchemaSDL -&gt; Bool
+$c/= :: SchemaSDL -&gt; SchemaSDL -&gt; Bool
+== :: SchemaSDL -&gt; SchemaSDL -&gt; Bool
+$c== :: SchemaSDL -&gt; SchemaSDL -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234209"><span id="local-6989586621691234211"><span id="local-6989586621691234215"><span class="annot"><span class="annottext">Int -&gt; SchemaSDL -&gt; ShowS
+[SchemaSDL] -&gt; ShowS
+SchemaSDL -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaSDL] -&gt; ShowS
+$cshowList :: [SchemaSDL] -&gt; ShowS
+show :: SchemaSDL -&gt; String
+$cshow :: SchemaSDL -&gt; String
+showsPrec :: Int -&gt; SchemaSDL -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaSDL -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SchemaSDL x -&gt; SchemaSDL
+forall x. SchemaSDL -&gt; Rep SchemaSDL x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SchemaSDL x -&gt; SchemaSDL
+$cfrom :: forall x. SchemaSDL -&gt; Rep SchemaSDL x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234199"><span id="local-6989586621691234201"><span id="local-6989586621691234203"><span id="local-6989586621691234205"><span class="annot"><span class="annottext">[SchemaSDL] -&gt; Value
+[SchemaSDL] -&gt; Encoding
+SchemaSDL -&gt; Value
+SchemaSDL -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [SchemaSDL] -&gt; Encoding
+$ctoEncodingList :: [SchemaSDL] -&gt; Encoding
+toJSONList :: [SchemaSDL] -&gt; Value
+$ctoJSONList :: [SchemaSDL] -&gt; Value
+toEncoding :: SchemaSDL -&gt; Encoding
+$ctoEncoding :: SchemaSDL -&gt; Encoding
+toJSON :: SchemaSDL -&gt; Value
+$ctoJSON :: SchemaSDL -&gt; Value
+</span><a href="#local-6989586621691234199"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234195"><span id="local-6989586621691234197"><span class="annot"><span class="annottext">Value -&gt; Parser [SchemaSDL]
+Value -&gt; Parser SchemaSDL
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [SchemaSDL]
+$cparseJSONList :: Value -&gt; Parser [SchemaSDL]
+parseJSON :: Value -&gt; Parser SchemaSDL
+$cparseJSON :: Value -&gt; Parser SchemaSDL
+</span><a href="#local-6989586621691234195"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span id="local-6989586621691234193"><span id="local-6989586621691234194"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="SchemaHash"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-var">SchemaHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaHash"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-var">SchemaHash</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_schemaHash"><span class="annot"><span class="annottext">SchemaHash -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_schemaHash"><span class="hs-identifier hs-var hs-var">_schemaHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-82"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234186"><span id="local-6989586621691234189"><span class="annot"><span class="annottext">SchemaHash -&gt; SchemaHash -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaHash -&gt; SchemaHash -&gt; Bool
+$c/= :: SchemaHash -&gt; SchemaHash -&gt; Bool
+== :: SchemaHash -&gt; SchemaHash -&gt; Bool
+$c== :: SchemaHash -&gt; SchemaHash -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234178"><span id="local-6989586621691234180"><span id="local-6989586621691234184"><span class="annot"><span class="annottext">Int -&gt; SchemaHash -&gt; ShowS
+[SchemaHash] -&gt; ShowS
+SchemaHash -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaHash] -&gt; ShowS
+$cshowList :: [SchemaHash] -&gt; ShowS
+show :: SchemaHash -&gt; String
+$cshow :: SchemaHash -&gt; String
+showsPrec :: Int -&gt; SchemaHash -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaHash -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SchemaHash x -&gt; SchemaHash
+forall x. SchemaHash -&gt; Rep SchemaHash x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SchemaHash x -&gt; SchemaHash
+$cfrom :: forall x. SchemaHash -&gt; Rep SchemaHash x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234168"><span id="local-6989586621691234170"><span id="local-6989586621691234172"><span id="local-6989586621691234174"><span class="annot"><span class="annottext">[SchemaHash] -&gt; Value
+[SchemaHash] -&gt; Encoding
+SchemaHash -&gt; Value
+SchemaHash -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [SchemaHash] -&gt; Encoding
+$ctoEncodingList :: [SchemaHash] -&gt; Encoding
+toJSONList :: [SchemaHash] -&gt; Value
+$ctoJSONList :: [SchemaHash] -&gt; Value
+toEncoding :: SchemaHash -&gt; Encoding
+$ctoEncoding :: SchemaHash -&gt; Encoding
+toJSON :: SchemaHash -&gt; Value
+$ctoJSON :: SchemaHash -&gt; Value
+</span><a href="#local-6989586621691234168"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234164"><span id="local-6989586621691234166"><span class="annot"><span class="annottext">Value -&gt; Parser [SchemaHash]
+Value -&gt; Parser SchemaHash
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [SchemaHash]
+$cparseJSONList :: Value -&gt; Parser [SchemaHash]
+parseJSON :: Value -&gt; Parser SchemaHash
+$cparseJSON :: Value -&gt; Parser SchemaHash
+</span><a href="#local-6989586621691234164"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">type</span><span> </span><span id="SchemaRegistryMap"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryMap"><span class="hs-identifier hs-var">SchemaRegistryMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-type">GQLSchemaInformation</span></a></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">type</span><span> </span><span id="SchemaRegistryAction"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryAction"><span class="hs-identifier hs-var">SchemaRegistryAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span id="local-6989586621691234162"><span id="local-6989586621691234163"></span></span><span class="hs-keyword">data</span><span> </span><span id="GQLSchemaInformation"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-var">GQLSchemaInformation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLSchemaInformation"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-var">GQLSchemaInformation</span></a></span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_gsiSchemaSDL"><span class="annot"><span class="annottext">GQLSchemaInformation -&gt; SchemaSDL
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_gsiSchemaSDL"><span class="hs-identifier hs-var hs-var">_gsiSchemaSDL</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaSDL"><span class="hs-identifier hs-type">SchemaSDL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span id="_gsiSchemaHash"><span class="annot"><span class="annottext">GQLSchemaInformation -&gt; SchemaHash
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_gsiSchemaHash"><span class="hs-identifier hs-var hs-var">_gsiSchemaHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-type">SchemaHash</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234153"><span id="local-6989586621691234157"><span class="annot"><span class="annottext">GQLSchemaInformation -&gt; GQLSchemaInformation -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: GQLSchemaInformation -&gt; GQLSchemaInformation -&gt; Bool
+$c/= :: GQLSchemaInformation -&gt; GQLSchemaInformation -&gt; Bool
+== :: GQLSchemaInformation -&gt; GQLSchemaInformation -&gt; Bool
+$c== :: GQLSchemaInformation -&gt; GQLSchemaInformation -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234144"><span id="local-6989586621691234146"><span id="local-6989586621691234151"><span class="annot"><span class="annottext">Int -&gt; GQLSchemaInformation -&gt; ShowS
+[GQLSchemaInformation] -&gt; ShowS
+GQLSchemaInformation -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [GQLSchemaInformation] -&gt; ShowS
+$cshowList :: [GQLSchemaInformation] -&gt; ShowS
+show :: GQLSchemaInformation -&gt; String
+$cshow :: GQLSchemaInformation -&gt; String
+showsPrec :: Int -&gt; GQLSchemaInformation -&gt; ShowS
+$cshowsPrec :: Int -&gt; GQLSchemaInformation -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep GQLSchemaInformation x -&gt; GQLSchemaInformation
+forall x. GQLSchemaInformation -&gt; Rep GQLSchemaInformation x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep GQLSchemaInformation x -&gt; GQLSchemaInformation
+$cfrom :: forall x. GQLSchemaInformation -&gt; Rep GQLSchemaInformation x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234138"><span id="local-6989586621691234140"><span class="annot"><span class="annottext">Value -&gt; Parser [GQLSchemaInformation]
+Value -&gt; Parser GQLSchemaInformation
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [GQLSchemaInformation]
+$cparseJSONList :: Value -&gt; Parser [GQLSchemaInformation]
+parseJSON :: Value -&gt; Parser GQLSchemaInformation
+$cparseJSON :: Value -&gt; Parser GQLSchemaInformation
+</span><a href="#local-6989586621691234138"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691234131"><span id="local-6989586621691234133"><span id="local-6989586621691234135"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-type">GQLSchemaInformation</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621691234124"><span class="annot"><span class="annottext">toJSON :: GQLSchemaInformation -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-type">GQLSchemaInformation</span></a></span><span> </span><span id="local-6989586621691234122"><span class="annot"><span class="annottext">SchemaSDL
+</span><a href="#local-6989586621691234122"><span class="hs-identifier hs-var">schemaSdl</span></a></span></span><span> </span><span id="local-6989586621691234121"><span class="annot"><span class="annottext">SchemaHash
+</span><a href="#local-6989586621691234121"><span class="hs-identifier hs-var">schemaHash</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;schema_sdl&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaSDL -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_sdl"><span class="hs-identifier hs-var">_sdl</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaSDL
+</span><a href="#local-6989586621691234122"><span class="hs-identifier hs-var">schemaSdl</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;schema_hash&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaHash -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_schemaHash"><span class="hs-identifier hs-var">_schemaHash</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaHash
+</span><a href="#local-6989586621691234121"><span class="hs-identifier hs-var">schemaHash</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621691234117"><span id="local-6989586621691234118"></span></span><span class="hs-keyword">data</span><span> </span><span id="ProjectGQLSchemaInformation"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#ProjectGQLSchemaInformation"><span class="hs-identifier hs-var">ProjectGQLSchemaInformation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ProjectGQLSchemaInformation"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#ProjectGQLSchemaInformation"><span class="hs-identifier hs-var">ProjectGQLSchemaInformation</span></a></span></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pgsiSchemaRegistryMap"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; SchemaRegistryMap
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_pgsiSchemaRegistryMap"><span class="hs-identifier hs-var hs-var">_pgsiSchemaRegistryMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryMap"><span class="hs-identifier hs-type">SchemaRegistryMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span id="_pgsiIsMetadataInconsistent"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; IsMetadataInconsistent
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_pgsiIsMetadataInconsistent"><span class="hs-identifier hs-var hs-var">_pgsiIsMetadataInconsistent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#IsMetadataInconsistent"><span class="hs-identifier hs-type">IsMetadataInconsistent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="_pgsiAdminSchemaHash"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; SchemaHash
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_pgsiAdminSchemaHash"><span class="hs-identifier hs-var hs-var">_pgsiAdminSchemaHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-type">SchemaHash</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span id="_pgsiMetadataResourceVersion"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; MetadataResourceVersion
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_pgsiMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">_pgsiMetadataResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span id="_pgsiChangeRecordedAt"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; UTCTime
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_pgsiChangeRecordedAt"><span class="hs-identifier hs-var hs-var">_pgsiChangeRecordedAt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234097"><span id="local-6989586621691234109"><span class="annot"><span class="annottext">ProjectGQLSchemaInformation -&gt; ProjectGQLSchemaInformation -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ProjectGQLSchemaInformation -&gt; ProjectGQLSchemaInformation -&gt; Bool
+$c/= :: ProjectGQLSchemaInformation -&gt; ProjectGQLSchemaInformation -&gt; Bool
+== :: ProjectGQLSchemaInformation -&gt; ProjectGQLSchemaInformation -&gt; Bool
+$c== :: ProjectGQLSchemaInformation -&gt; ProjectGQLSchemaInformation -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234080"><span id="local-6989586621691234082"><span id="local-6989586621691234095"><span class="annot"><span class="annottext">Int -&gt; ProjectGQLSchemaInformation -&gt; ShowS
+[ProjectGQLSchemaInformation] -&gt; ShowS
+ProjectGQLSchemaInformation -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ProjectGQLSchemaInformation] -&gt; ShowS
+$cshowList :: [ProjectGQLSchemaInformation] -&gt; ShowS
+show :: ProjectGQLSchemaInformation -&gt; String
+$cshow :: ProjectGQLSchemaInformation -&gt; String
+showsPrec :: Int -&gt; ProjectGQLSchemaInformation -&gt; ShowS
+$cshowsPrec :: Int -&gt; ProjectGQLSchemaInformation -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x.
+Rep ProjectGQLSchemaInformation x -&gt; ProjectGQLSchemaInformation
+forall x.
+ProjectGQLSchemaInformation -&gt; Rep ProjectGQLSchemaInformation x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x.
+Rep ProjectGQLSchemaInformation x -&gt; ProjectGQLSchemaInformation
+$cfrom :: forall x.
+ProjectGQLSchemaInformation -&gt; Rep ProjectGQLSchemaInformation x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234073"><span id="local-6989586621691234075"><span class="annot"><span class="annottext">Value -&gt; Parser [ProjectGQLSchemaInformation]
+Value -&gt; Parser ProjectGQLSchemaInformation
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [ProjectGQLSchemaInformation]
+$cparseJSONList :: Value -&gt; Parser [ProjectGQLSchemaInformation]
+parseJSON :: Value -&gt; Parser ProjectGQLSchemaInformation
+$cparseJSON :: Value -&gt; Parser ProjectGQLSchemaInformation
+</span><a href="#local-6989586621691234073"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234065"><span id="local-6989586621691234067"><span id="local-6989586621691234069"><span id="local-6989586621691234071"><span class="annot"><span class="annottext">[ProjectGQLSchemaInformation] -&gt; Value
+[ProjectGQLSchemaInformation] -&gt; Encoding
+ProjectGQLSchemaInformation -&gt; Value
+ProjectGQLSchemaInformation -&gt; Encoding
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [ProjectGQLSchemaInformation] -&gt; Encoding
+$ctoEncodingList :: [ProjectGQLSchemaInformation] -&gt; Encoding
+toJSONList :: [ProjectGQLSchemaInformation] -&gt; Value
+$ctoJSONList :: [ProjectGQLSchemaInformation] -&gt; Value
+toEncoding :: ProjectGQLSchemaInformation -&gt; Encoding
+$ctoEncoding :: ProjectGQLSchemaInformation -&gt; Encoding
+toJSON :: ProjectGQLSchemaInformation -&gt; Value
+$ctoJSON :: ProjectGQLSchemaInformation -&gt; Value
+</span><a href="#local-6989586621691234065"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">data</span><span> </span><span id="SchemaRegistryConfig"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfig"><span class="hs-identifier hs-var">SchemaRegistryConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRegistryConfig"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfig"><span class="hs-identifier hs-var">SchemaRegistryConfig</span></a></span></span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srcSchemaRegistryWebhook"><span class="annot"><span class="annottext">SchemaRegistryConfig -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srcSchemaRegistryWebhook"><span class="hs-identifier hs-var hs-var">_srcSchemaRegistryWebhook</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>    </span><span id="_srcSchemaRegistryAccessKey"><span class="annot"><span class="annottext">SchemaRegistryConfig -&gt; Maybe Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srcSchemaRegistryAccessKey"><span class="hs-identifier hs-var hs-var">_srcSchemaRegistryAccessKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234055"><span id="local-6989586621691234060"><span class="annot"><span class="annottext">SchemaRegistryConfig -&gt; SchemaRegistryConfig -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaRegistryConfig -&gt; SchemaRegistryConfig -&gt; Bool
+$c/= :: SchemaRegistryConfig -&gt; SchemaRegistryConfig -&gt; Bool
+== :: SchemaRegistryConfig -&gt; SchemaRegistryConfig -&gt; Bool
+$c== :: SchemaRegistryConfig -&gt; SchemaRegistryConfig -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234045"><span id="local-6989586621691234047"><span id="local-6989586621691234053"><span class="annot"><span class="annottext">Int -&gt; SchemaRegistryConfig -&gt; ShowS
+[SchemaRegistryConfig] -&gt; ShowS
+SchemaRegistryConfig -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaRegistryConfig] -&gt; ShowS
+$cshowList :: [SchemaRegistryConfig] -&gt; ShowS
+show :: SchemaRegistryConfig -&gt; String
+$cshow :: SchemaRegistryConfig -&gt; String
+showsPrec :: Int -&gt; SchemaRegistryConfig -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaRegistryConfig -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="SchemaRegistryConfigRaw"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfigRaw"><span class="hs-identifier hs-var">SchemaRegistryConfigRaw</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRegistryConfigRaw"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryConfigRaw"><span class="hs-identifier hs-var">SchemaRegistryConfigRaw</span></a></span></span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srcrSchemaRegistryWebhook"><span class="annot"><span class="annottext">SchemaRegistryConfigRaw -&gt; Maybe Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srcrSchemaRegistryWebhook"><span class="hs-identifier hs-var hs-var">_srcrSchemaRegistryWebhook</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span id="_srcrSchemaRegistryAccessKey"><span class="annot"><span class="annottext">SchemaRegistryConfigRaw -&gt; Maybe Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srcrSchemaRegistryAccessKey"><span class="hs-identifier hs-var hs-var">_srcrSchemaRegistryAccessKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234035"><span id="local-6989586621691234040"><span class="annot"><span class="annottext">SchemaRegistryConfigRaw -&gt; SchemaRegistryConfigRaw -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaRegistryConfigRaw -&gt; SchemaRegistryConfigRaw -&gt; Bool
+$c/= :: SchemaRegistryConfigRaw -&gt; SchemaRegistryConfigRaw -&gt; Bool
+== :: SchemaRegistryConfigRaw -&gt; SchemaRegistryConfigRaw -&gt; Bool
+$c== :: SchemaRegistryConfigRaw -&gt; SchemaRegistryConfigRaw -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234025"><span id="local-6989586621691234027"><span id="local-6989586621691234033"><span class="annot"><span class="annottext">Int -&gt; SchemaRegistryConfigRaw -&gt; ShowS
+[SchemaRegistryConfigRaw] -&gt; ShowS
+SchemaRegistryConfigRaw -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaRegistryConfigRaw] -&gt; ShowS
+$cshowList :: [SchemaRegistryConfigRaw] -&gt; ShowS
+show :: SchemaRegistryConfigRaw -&gt; String
+$cshow :: SchemaRegistryConfigRaw -&gt; String
+showsPrec :: Int -&gt; SchemaRegistryConfigRaw -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaRegistryConfigRaw -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span id="local-6989586621691234023"><span id="local-6989586621691234024"></span></span><span class="hs-keyword">data</span><span> </span><span id="SchemaRegistryDetails"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier hs-var">SchemaRegistryDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRegistryDetails"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier hs-var">SchemaRegistryDetails</span></a></span></span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srdlSchemaRole"><span class="annot"><span class="annottext">SchemaRegistryDetails -&gt; RoleName
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srdlSchemaRole"><span class="hs-identifier hs-var hs-var">_srdlSchemaRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span id="_srdlSchemaInfo"><span class="annot"><span class="annottext">SchemaRegistryDetails -&gt; GQLSchemaInformation
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srdlSchemaInfo"><span class="hs-identifier hs-var hs-var">_srdlSchemaInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#GQLSchemaInformation"><span class="hs-identifier hs-type">GQLSchemaInformation</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691234014"><span id="local-6989586621691234018"><span class="annot"><span class="annottext">SchemaRegistryDetails -&gt; SchemaRegistryDetails -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaRegistryDetails -&gt; SchemaRegistryDetails -&gt; Bool
+$c/= :: SchemaRegistryDetails -&gt; SchemaRegistryDetails -&gt; Bool
+== :: SchemaRegistryDetails -&gt; SchemaRegistryDetails -&gt; Bool
+$c== :: SchemaRegistryDetails -&gt; SchemaRegistryDetails -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691234005"><span id="local-6989586621691234007"><span id="local-6989586621691234012"><span class="annot"><span class="annottext">Int -&gt; SchemaRegistryDetails -&gt; ShowS
+[SchemaRegistryDetails] -&gt; ShowS
+SchemaRegistryDetails -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaRegistryDetails] -&gt; ShowS
+$cshowList :: [SchemaRegistryDetails] -&gt; ShowS
+show :: SchemaRegistryDetails -&gt; String
+$cshow :: SchemaRegistryDetails -&gt; String
+showsPrec :: Int -&gt; SchemaRegistryDetails -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaRegistryDetails -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SchemaRegistryDetails x -&gt; SchemaRegistryDetails
+forall x. SchemaRegistryDetails -&gt; Rep SchemaRegistryDetails x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SchemaRegistryDetails x -&gt; SchemaRegistryDetails
+$cfrom :: forall x. SchemaRegistryDetails -&gt; Rep SchemaRegistryDetails x
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691233999"><span id="local-6989586621691234001"><span class="annot"><span class="annottext">Value -&gt; Parser [SchemaRegistryDetails]
+Value -&gt; Parser SchemaRegistryDetails
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [SchemaRegistryDetails]
+$cparseJSONList :: Value -&gt; Parser [SchemaRegistryDetails]
+parseJSON :: Value -&gt; Parser SchemaRegistryDetails
+$cparseJSON :: Value -&gt; Parser SchemaRegistryDetails
+</span><a href="#local-6989586621691233999"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621691233992"><span id="local-6989586621691233994"><span id="local-6989586621691233996"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier hs-type">SchemaRegistryDetails</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621691233984"><span class="annot"><span class="annottext">toJSON :: SchemaRegistryDetails -&gt; Value
+</span><a href="#local-6989586621691233984"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier hs-type">SchemaRegistryDetails</span></a></span><span> </span><span id="local-6989586621691233983"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621691233983"><span class="hs-identifier hs-var">schemaRole</span></a></span></span><span> </span><span id="local-6989586621691233982"><span class="annot"><span class="annottext">GQLSchemaInformation
+</span><a href="#local-6989586621691233982"><span class="hs-identifier hs-var">schemaInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-135"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;hasura_schema_role&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621691233983"><span class="hs-identifier hs-var">schemaRole</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>        </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;schema_info&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">GQLSchemaInformation
+</span><a href="#local-6989586621691233982"><span class="hs-identifier hs-var">schemaInfo</span></a></span><span>
+</span><span id="line-137"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="hs-keyword">type</span><span> </span><span id="SchemaRegistryDetailsList"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetailsList"><span class="hs-identifier hs-var">SchemaRegistryDetailsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryDetails"><span class="hs-identifier hs-type">SchemaRegistryDetails</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- | Context required to upate schema registry everytime the schema is updated</span><span>
+</span><span id="line-142"></span><span class="hs-keyword">data</span><span> </span><span id="SchemaRegistryContext"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryContext"><span class="hs-identifier hs-var">SchemaRegistryContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRegistryContext"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryContext"><span class="hs-identifier hs-var">SchemaRegistryContext</span></a></span></span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srpaSchemaRegistryTQueueRef"><span class="annot"><span class="annottext">SchemaRegistryContext -&gt; TQueue ProjectGQLSchemaInformation
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srpaSchemaRegistryTQueueRef"><span class="hs-identifier hs-var hs-var">_srpaSchemaRegistryTQueueRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/stm-2.5.0.2/src"><span class="hs-identifier hs-type">STM.TQueue</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#ProjectGQLSchemaInformation"><span class="hs-identifier hs-type">ProjectGQLSchemaInformation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span id="_srpaMetadataDbPoolRef"><span class="annot"><span class="annottext">SchemaRegistryContext -&gt; PGPool
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#_srpaMetadataDbPoolRef"><span class="hs-identifier hs-var hs-var">_srpaMetadataDbPoolRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="hs-keyword">newtype</span><span> </span><span id="SchemaRegistryControlRole"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryControlRole"><span class="hs-identifier hs-var">SchemaRegistryControlRole</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SchemaRegistryControlRole"><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaRegistryControlRole"><span class="hs-identifier hs-var">SchemaRegistryControlRole</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSchemaRegistryControlRole"><span class="annot"><span class="annottext">SchemaRegistryControlRole -&gt; Text
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#unSchemaRegistryControlRole"><span class="hs-identifier hs-var hs-var">unSchemaRegistryControlRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621691233972"><span id="local-6989586621691233975"><span class="annot"><span class="annottext">SchemaRegistryControlRole -&gt; SchemaRegistryControlRole -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SchemaRegistryControlRole -&gt; SchemaRegistryControlRole -&gt; Bool
+$c/= :: SchemaRegistryControlRole -&gt; SchemaRegistryControlRole -&gt; Bool
+== :: SchemaRegistryControlRole -&gt; SchemaRegistryControlRole -&gt; Bool
+$c== :: SchemaRegistryControlRole -&gt; SchemaRegistryControlRole -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621691233964"><span id="local-6989586621691233966"><span id="local-6989586621691233970"><span class="annot"><span class="annottext">Int -&gt; SchemaRegistryControlRole -&gt; ShowS
+[SchemaRegistryControlRole] -&gt; ShowS
+SchemaRegistryControlRole -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SchemaRegistryControlRole] -&gt; ShowS
+$cshowList :: [SchemaRegistryControlRole] -&gt; ShowS
+show :: SchemaRegistryControlRole -&gt; String
+$cshow :: SchemaRegistryControlRole -&gt; String
+showsPrec :: Int -&gt; SchemaRegistryControlRole -&gt; ShowS
+$cshowsPrec :: Int -&gt; SchemaRegistryControlRole -&gt; ShowS
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#selectNowQuery"><span class="hs-identifier hs-type">selectNowQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">QErr</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span>
+</span><span id="line-151"></span><span id="selectNowQuery"><span class="annot"><span class="annottext">selectNowQuery :: TxE QErr UTCTime
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#selectNowQuery"><span class="hs-identifier hs-var hs-var">selectNowQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-152"></span><span>  </span><span class="annot"><span class="annottext">forall a. Identity a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-identifier hs-var">runIdentity</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. SingleRow a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getRow</span></a></span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a r e.
+(MonadIO m, FromRes a, ToPrepArgs r) =&gt;
+(PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.withQE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">SQLTypes.defaultTxErrorHandler</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Query
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.fromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SELECT now();&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#calculateSchemaSDLHash"><span class="hs-identifier hs-type">calculateSchemaSDLHash</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-type">SchemaHash</span></a></span><span>
+</span><span id="line-157"></span><span id="calculateSchemaSDLHash"><span class="annot"><span class="annottext">calculateSchemaSDLHash :: Text -&gt; RoleName -&gt; SchemaHash
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#calculateSchemaSDLHash"><span class="hs-identifier hs-var hs-var">calculateSchemaSDLHash</span></a></span></span><span> </span><span id="local-6989586621691233956"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691233956"><span class="hs-identifier hs-var">sdl</span></a></span></span><span> </span><span id="local-6989586621691233955"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621691233955"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SchemaHash
+</span><a href="Hasura.RQL.DDL.SchemaRegistry.html#SchemaHash"><span class="hs-identifier hs-var">SchemaHash</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621691233953"><span class="hs-identifier hs-var">hash</span></a></span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-159"></span><span>    </span><span id="local-6989586621691233953"><span class="annot"><span class="annottext">hash :: ByteString
+</span><a href="#local-6989586621691233953"><span class="hs-identifier hs-var hs-var">hash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
+</span><a href="Hasura.Server.Utils.html#cryptoHash"><span class="hs-identifier hs-var">cryptoHash</span></a></span><span>
+</span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.5/share/doc/ghc-9.2.5/html/libraries/base-4.16.4.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">J.object</span></span><span>
+</span><span id="line-162"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;schema_sdl&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621691233956"><span class="hs-identifier hs-var">sdl</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;role&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text
+</span><a href="Hasura.RQL.Types.Roles.html#roleNameToTxt"><span class="hs-identifier hs-var">roleNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621691233955"><span class="hs-keyword hs-var">role</span></a></span><span>
+</span><span id="line-164"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-165"></span></pre></body></html>
