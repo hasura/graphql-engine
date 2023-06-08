@@ -1,14 +1,17 @@
 {-# HLINT ignore "Use onLeft" #-}
+{-# LANGUAGE ImportQualifiedPost #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module CI.TH
   ( getVendors,
   )
 where
 
-import qualified CI.Types as Types
-import qualified Data.Aeson as J
-import qualified Language.Haskell.TH as TH
-import qualified Language.Haskell.TH.Syntax as TH
+import CI.Types qualified as Types
+import Data.Aeson qualified as J
+import Language.Haskell.TH qualified as TH
+import Language.Haskell.TH.Syntax qualified as TH
+import Prelude
 
 getVendors :: TH.Q TH.Exp
 getVendors = TH.runIO readVendors >>= TH.lift

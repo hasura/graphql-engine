@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -13,16 +16,17 @@ module CI.Types
   )
 where
 
-import qualified Data.Aeson as J
-import qualified Data.Aeson.Casing as J
-import qualified Data.Aeson.TH as J
+import Data.Aeson qualified as J
+import Data.Aeson.Casing qualified as J
+import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict (HashMap)
-import qualified Data.HashMap.Strict as HashMap
+import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Instances.TH.Lift ()
-import qualified Language.Haskell.TH.Syntax as TH
+import Language.Haskell.TH.Syntax qualified as TH
+import Prelude
 
 data CI
   = CI_APPVEYOR -- http://www.appveyor.com/
@@ -54,7 +58,7 @@ data CI
   | CI_TEAMCITY -- https://www.jetbrains.com/teamcity/
   | CI_TRAVIS -- http://travis-ci.org/
   | CI_UNKNOWN_VENDOR
-  deriving (Eq, Show, TH.Lift)
+  deriving stock (Eq, Show, TH.Lift)
 
 $( J.deriveJSON
      J.defaultOptions {J.constructorTagModifier = drop $ T.length "CI_"}
@@ -62,25 +66,26 @@ $( J.deriveJSON
  )
 
 newtype EnvVarName = EnvVarName {unEnvVarName :: Text}
-  deriving
+  deriving stock (TH.Lift)
+  deriving newtype
     ( Eq,
       Hashable,
       Show,
       J.FromJSON,
       J.FromJSONKey,
       J.ToJSON,
-      J.ToJSONKey,
-      TH.Lift
+      J.ToJSONKey
     )
 
 newtype EnvVarValue = EnvVarValue {unEnvVarValue :: Text}
-  deriving (Eq, Show, J.FromJSON, J.ToJSON, TH.Lift)
+  deriving stock (TH.Lift)
+  deriving newtype (Eq, Show, J.FromJSON, J.ToJSON)
 
 data VendorEnv
   = VendorEnvString !EnvVarName
   | VendorEnvList ![EnvVarName]
   | VendorEnvObject !(HashMap EnvVarName EnvVarValue)
-  deriving (Eq, Show)
+  deriving stock (Eq, Show)
 
 instance TH.Lift VendorEnv where
   liftTyped (VendorEnvString n) = [||VendorEnvString $$(TH.liftTyped n)||]
@@ -103,14 +108,15 @@ instance J.ToJSON VendorEnv where
     VendorEnvList list -> J.toJSON list
     VendorEnvObject object -> J.toJSON object
 
-newtype VendorName = VendorName {unVendorName :: Text}
-  deriving (Eq, Show, J.FromJSON, J.ToJSON, TH.Lift)
+newtype VendorName = VendorName {_unVendorName :: Text}
+  deriving stock (TH.Lift)
+  deriving newtype (Eq, Show, J.FromJSON, J.ToJSON)
 
 data Vendor = Vendor
   { vendorName :: !VendorName,
     vendorConstant :: !CI,
     vendorEnv :: !VendorEnv
   }
-  deriving (Eq, Show, TH.Lift)
+  deriving stock (Eq, Show, TH.Lift)
 
 $(J.deriveJSON (J.aesonPrefix J.snakeCase) ''Vendor)
