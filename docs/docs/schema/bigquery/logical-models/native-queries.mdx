@@ -275,6 +275,19 @@ X-Hasura-Role: admin
         "description": "<optional field description>"
       }
     },
+    "array_relationships": [
+      {
+        "name": "<relationship name>",
+        "using": {
+          "column_mapping": {
+            "<local column>": "<remote column>"
+          },
+          "remote_native_query: "<remote native query name>"
+        }
+      }
+    ],
+    "object_relationships": <same as array_relationships>,
+    "description": "<text>",
     "code": "<SQL query>",
     "returns": "<logical model name>"
   }
@@ -342,3 +355,129 @@ A future release will allow mutations to be specified using native queries.
 Native queries will inherit the permissions of the Logical Model that they return. See the
 [documentation on Logical Models](/schema/bigquery/logical-models/index.mdx) for an explanation of how to add
 permissions.
+
+## Relationships
+
+Relationships are supported between Native Queries.
+This is how Native Queries may implement object and array fields of their referenced Logical Model.
+
+Unlike tables, relationships for a Native Query have to be given as part of
+tracking the Native Query: The schema of a Native Query is defined by its
+Logical Model, and the Native Query needs to implement all the fields of the
+Logical Model in order to be tracked successfully.
+
+Currently relationships are only supported between Native Queries residing in the same source.
+
+As an example, consider the following Native Queries which implement the data
+model of articles and authors given in the section on [Logical Model references](/schema/bigquery/logical-models/index.mdx#referencing-other-logical-models):
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk_atomic",
+  "args":
+  [
+    { "args": {
+        "arguments": {
+          "length": {
+            "nullable": false,
+            "type": "integer"
+          }
+        },
+        "array_relationships": [],
+        "code": "
+          SELECT
+            id,
+            title,
+            (substring(content, 1, {{length}}) ||
+              (CASE WHEN length(content) < {{length}}
+               THEN '' ELSE '...' END))
+               AS contents,
+            date
+          FROM article",
+        "object_relationships": [
+          {
+            "name": "author",
+            "using": {
+              "column_mapping": {
+                "author_id": "id"
+              },
+              "remote_native_query": "get_authors"
+            }
+          }
+        ],
+        "returns": "article",
+        "root_field_name": "get_articles",
+        "source": "bigquery",
+        "type": "query"
+      },
+      "type": "bigquery_track_native_query"
+    },
+    ,{ "args": {
+        "arguments": {},
+        "array_relationships": [
+          {
+            "name": "articles",
+            "using": {
+              "column_mapping": {
+                "id": "author_id"
+              },
+              "remote_native_query": "get_articles"
+            }
+          }
+         ],
+        "code": "SELECT * FROM authors",
+        "object_relationships": [],
+        "returns": "author",
+        "root_field_name": "get_authors",
+        "source": "bigquery",
+        "type": "query"
+      },
+      "type": "bigquery_track_native_query"
+    }
+  ]
+}
+```
+
+:::info Wrap calls in `bulk_atomic`
+
+Similar to Logical Models, tracking the Native Queries one-by-one would fail,
+since `get_articles` refers to `get_authors`, which is not yet defined.
+
+Tracking the Native Queries in one atomic operation postpones coherency checks
+until all models are tracked, which allows for mutual references.
+
+:::
+
+</TabItem>
+<TabItem value="query" label="Query">
+The Native Queries in this example enable queries like:
+
+```graphql
+query {
+  get_authors
+  {
+    name
+
+    short_excerpt: articles(args: {length: 10})
+    {
+      title
+      contents
+    }
+
+    long_excerpt: articles(args: {length: 100})
+    {
+      title
+      contents
+    }
+  }
+}
+```
+</TabItem>
+</Tabs>
