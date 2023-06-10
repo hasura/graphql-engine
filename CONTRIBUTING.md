@@ -50,7 +50,7 @@ For all contributions, a CLA (Contributor License Agreement) needs to be signed 
 
 We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
 
-You find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
+You can find all issues suitable for first time contributors [here](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
 
 <a name="areas"></a>
 
@@ -76,7 +76,7 @@ Since we launched our [learn page](https://hasura.io/learn/), we are happy about
 
 - Fix errors in existing learn tutorials
 
-- Add new tutorials (please reach out to us if you have ideas to avoid duplicate word)
+- Add new tutorials (please reach out to us if you have ideas to avoid duplicate wordings)
 
 The README of the learn repository can be found [here](https://github.com/hasura/learn-graphql).
 
@@ -125,7 +125,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 - Please make sure there is an issue associated with the work that you're doing.
 
-- If you're working on an issue, please comment that you are doing so to prevent duplicate work by others also.
+- If you're working on an issue, please comment that you are doing so to prevent duplicate work by others.
 
 - Squash your commits and refer to the issue using `fix #<issue-no>` or `close #<issue-no>` in the commit message, at the end.
   For example: `resolve answers to everything (fix #42)` or `resolve answers to everything, fix #42`
