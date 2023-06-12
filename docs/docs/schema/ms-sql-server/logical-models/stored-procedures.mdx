@@ -1,13 +1,13 @@
 ---
-sidebar_label: Stored Procedures
-sidebar_position: 5
-description: Customize the Hasura GraphQL schema with Stored Procedures
+sidebar_label: Stored procedures
+sidebar_position: 6
+description: Customize the Hasura GraphQL schema with stored procedures
 keywords:
   - hasura
   - docs
   - ms sql server
   - schema
-  - logical models
+  - Logical Models
   - stored procedures
 sidebar_class_name: alpha-tag
 ---
@@ -16,51 +16,54 @@ import ProductBadge from '@site/src/components/ProductBadge';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# MS SQL Server: Stored Procedures
+# MS SQL Server: stored procedures
 
 <div className="badge-container">
   <ProductBadge standard pro ee self />
   <div className="badge badge-gray heading-badge">Alpha</div>
 </div>
 
-## What are Stored Procedures?
+## What are stored procedures?
 
 :::tip Supported from
 
-Stored Procedures are supported from `v2.26.0`.
+stored procedures are supported from `v2.26.0`.
 
 :::
 
-Stored Procedures can be used to track MS SQL Server
+stored procedures can be used to track MS SQL Server
 [stored procedures](https://learn.microsoft.com/en-us/sql/relational-databases/stored-procedures/stored-procedures-database-engine)
 and execute them via the Hasura GraphQL Engine.
 
-SQL Server stored procedures are built-in or user-defined Transact-SQL statements that can be used to
-encapsulate some custom business logic or extend the built-in SQL functions and operators.
+SQL Server stored procedures are built-in or user-defined Transact-SQL statements that can be used to encapsulate some
+custom business logic or extend the built-in SQL functions and operators.
 
-Stored Procedures support is a Cloud and Enterprise feature of Hasura.
+stored procedures support is a Cloud and Enterprise feature of Hasura.
 
 :::info Supported features
 
-Currently, only read-only stored procedures are supported, and Hasura aggregations or relationships are not supported at this time.
+Currently, only read-only stored procedures are supported, and Hasura aggregations or relationships are not supported at
+this time.
 
 :::
 
 ## Example: Execute a built-in stored procedure
 
-We’ll start with an example. Let’s use this new feature to execute a built-in stored procedure from our Hasura API.
-If you’d like some reference documentation, scroll down, and also take a look at the
+We’ll start with an example. Let’s use this new feature to execute a built-in stored procedure from our Hasura API. If
+you’d like some reference documentation, scroll down, and also take a look at the
 [Logical Models documentation](/schema/ms-sql-server/logical-models/index.mdx).
 
-For our case, we would like to get some information about our database. Specifically, which tables are currently defined in the database.
-On SQL Server we can do that by executing the
-[`sp_tables`](https://learn.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-tables-transact-sql) stored procedure.
+For our case, we would like to get some information about our database. Specifically, which tables are currently defined
+in the database. On SQL Server we can do that by executing the
+[`sp_tables`](https://learn.microsoft.com/en-us/sql/relational-databases/system-stored-procedures/sp-tables-transact-sql)
+stored procedure.
 
 We can create a Logical Model representing the results set:
 
 :::info Only creatable via the API
 
-Currently, Stored Procedures can only be created using the API. Console and CLI support will be added in a future release.
+Currently, stored procedures can only be created using the API. Console and CLI support will be added in a future
+release.
 
 :::
 
@@ -111,16 +114,15 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-We can then track a stored procedure that returns that result set. Additionally, we can add arguments
-which can be passed to the stored procedure from the GraphQL API. We'll include the `table_type`
-arguments which can be used to filter tables, system tables, and views.
+We can then track a stored procedure that returns that result set. Additionally, we can add arguments which can be
+passed to the stored procedure from the GraphQL API. We'll include the `table_type` arguments which can be used to
+filter tables, system tables, and views.
 
 :::info Validation during tracking is not currently supported
 
-Currently, Stored Procedures are not checked against the Logical Model to validate that they
-return the expected result set or that the arguments match with the stored procedure's arguments.
-This means that if there's a mismatch between the database stored procedure and the Logical Model
-or the arguments, an error will be thrown when running a query.
+Currently, stored procedures are not checked against the Logical Model to validate that they return the expected result
+set or that the arguments match with the stored procedure's arguments. This means that if there's a mismatch between the
+database stored procedure and the Logical Model or the arguments, an error will be thrown when running a query.
 
 :::
 
@@ -153,17 +155,11 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-All that’s left is for us to make a GraphQL query to select the tables which are currently
-defined in the database:
+All that’s left is for us to make a GraphQL query to select the tables which are currently defined in the database:
 
 ```graphql
 query sp {
-  sp_tables(
-    args: {
-      table_type: "'TABLE'"
-    }
-    limit: 3
-  ) {
+  sp_tables(args: { table_type: "'TABLE'" }, limit: 3) {
     TABLE_QUALIFIER
     TABLE_OWNER
     TABLE_NAME
@@ -211,9 +207,8 @@ In order to represent the structure of the data returned by the query, we first 
 
 :::info Permissions and Logical Models
 
-Note that this Logical Model has no attached permissions and therefore will only be available to the admin account. See
-the [Logical Model documentation](/schema/ms-sql-server/logical-models/index.mdx) for information on attaching
-permissions.
+Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See the
+[Logical Model documentation](/schema/ms-sql-server/logical-models/index.mdx) for information on attaching permissions.
 
 :::
 
@@ -284,12 +279,11 @@ X-Hasura-Role: admin
 
 #### Arguments
 
-The Stored Procedure can take arguments, which are specified in the metadata.
-When making a GraphQL query, the arguments are specified using the `args` parameter of the query root field.
-If the Stored Procedure does not take arguments, the `args` parameter should be omitted from the GraphQL
-query.
+The stored procedure can take arguments, which are specified in the metadata. When making a GraphQL query, the arguments
+are specified using the `args` parameter of the query root field. If the stored procedure does not take arguments, the
+`args` parameter should be omitted from the GraphQL query.
 
-## Using the Stored Procedure
+## Using the stored procedure
 
 You can make a GraphQL request using the specified root field name just as you would any other GraphQL query. When
 making a query, the arguments are specified using the `args` parameter of the query root field.
@@ -309,26 +303,26 @@ query {
 }
 ```
 
-Currently running a Stored Procedure has the following caveats:
+Currently running a stored procedure has the following caveats:
 
 - The stored procedure must currently be read-only.
 - The return type of the query must match with the Logical Model.
 
 ## Query functionality
 
-Just like tables, Stored Procedures generate GraphQL types with the ability to further break down the data. You can find
+Just like tables, stored procedures generate GraphQL types with the ability to further break down the data. You can find
 more information in the relevant documentation for [filtering](/queries/ms-sql-server/query-filters.mdx),
 [sorting](/queries/ms-sql-server/sorting.mdx), and [pagination](/queries/ms-sql-server/pagination.mdx).
 
 ## Mutations
 
-Currently, only read-only stored procedures are supported. All stored procedures are run in a read-only
-transaction where supported to enforce this constraint.
+Currently, only read-only stored procedures are supported. All stored procedures are run in a read-only transaction
+where supported to enforce this constraint.
 
-A future release will allow mutations to be specified using Stored Procedures.
+A future release will allow mutations to be specified using stored procedures.
 
 ## Permissions
 
-Stored Procedures will inherit the permissions of the Logical Model that they return. See the
+stored procedures will inherit the permissions of the Logical Model that they return. See the
 [documentation on Logical Models](/schema/ms-sql-server/logical-models/index.mdx) for an explanation of how to add
 permissions.
