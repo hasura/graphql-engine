@@ -1,24 +1,16 @@
-import { InputField, useConsoleForm } from '../../../../new-components/Form';
-import { Button } from '../../../../new-components/Button';
-import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomization';
+import { useConsoleForm } from '../../../../new-components/Form';
 import { getDefaultValues, PostgresConnectionSchema, schema } from './schema';
-import { ReadReplicas } from './parts/ReadReplicas';
 import { useManageDatabaseConnection } from '../../hooks/useManageDatabaseConnection';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { generatePostgresRequestPayload } from './utils/generateRequests';
-import { DatabaseUrl } from './parts/DatabaseUrl';
-import { PoolSettings } from './parts/PoolSettings';
-import { IsolationLevel } from './parts/IsolationLevel';
-import { UsePreparedStatements } from './parts/UsePreparedStatements';
-import { SslSettings } from './parts/SslSettings';
-import { Collapsible } from '../../../../new-components/Collapsible';
-import { ExtensionSchema } from './parts/ExtensionSchema';
 import { useEffect, useState } from 'react';
 import { LimitedFeatureWrapper } from '../LimitedFeatureWrapper/LimitedFeatureWrapper';
 import { DynamicDBRouting } from './parts/DynamicDBRouting';
 import { Tabs } from '../../../../new-components/Tabs';
 import { DisplayToastErrorMessage } from '../Common/DisplayToastErrorMessage';
+import { ConnectPostgresForm } from './parts/ConnectPostgresForm';
+import { Button } from '../../../../new-components/Button';
 
 interface ConnectPostgresWidgetProps {
   dataSourceName?: string;
@@ -130,101 +122,7 @@ export const ConnectPostgresWidget = (props: ConnectPostgresWidgetProps) => {
             content: (
               <div className="mt-sm">
                 <Form onSubmit={handleSubmit}>
-                  <InputField
-                    name="name"
-                    label="Database name"
-                    placeholder="Database name"
-                  />
-
-                  <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-4">
-                    <DatabaseUrl
-                      name="configuration.connectionInfo.databaseUrl"
-                      hideOptions={hiddenOptions}
-                    />
-                  </div>
-
-                  <div className="mt-sm">
-                    <Collapsible
-                      triggerChildren={
-                        <div className="font-semibold text-muted">
-                          Advanced Settings
-                        </div>
-                      }
-                    >
-                      <PoolSettings
-                        name={`configuration.connectionInfo.poolSettings`}
-                      />
-                      <IsolationLevel
-                        name={`configuration.connectionInfo.isolationLevel`}
-                      />
-                      <UsePreparedStatements
-                        name={`configuration.connectionInfo.usePreparedStatements`}
-                      />
-                      <ExtensionSchema name="configuration.extensionSchema" />
-                      <LimitedFeatureWrapper
-                        title="Looking to add SSL Settings?"
-                        id="db-ssl-settings"
-                        description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
-                      >
-                        <div className="mt-sm">
-                          <Collapsible
-                            triggerChildren={
-                              <div className="font-semibold text-muted">
-                                SSL Certificates Settings
-                                <span className="px-1.5 italic font-light">
-                                  (Certificates will be loaded from{' '}
-                                  <a href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database">
-                                    environment variables
-                                  </a>
-                                  )
-                                </span>
-                              </div>
-                            }
-                          >
-                            <SslSettings
-                              name={`configuration.connectionInfo.sslSettings`}
-                            />
-                          </Collapsible>
-                        </div>
-                      </LimitedFeatureWrapper>
-                    </Collapsible>
-                  </div>
-
-                  <div className="mt-sm">
-                    <Collapsible
-                      triggerChildren={
-                        <div className="font-semibold text-muted">
-                          GraphQL Customization
-                        </div>
-                      }
-                    >
-                      <GraphQLCustomization name="customization" />
-                    </Collapsible>
-                  </div>
-
-                  <div className="mt-sm">
-                    <LimitedFeatureWrapper
-                      id="read-replicas"
-                      title="Improve performance and handle increased traffic with read replicas"
-                      description="Scale your database by offloading read queries to
-            read-only replicas, allowing for better performance
-            and availability for users."
-                    >
-                      <Collapsible
-                        triggerChildren={
-                          <div className="font-semibold text-muted">
-                            Read Replicas
-                          </div>
-                        }
-                      >
-                        <ReadReplicas
-                          name="configuration.readReplicas"
-                          hideOptions={hiddenOptions}
-                        />
-                      </Collapsible>
-                    </LimitedFeatureWrapper>
-                  </div>
-
+                  <ConnectPostgresForm hiddenOptions={hiddenOptions} />
                   <div className="flex justify-end mt-sm">
                     <Button
                       type="submit"
