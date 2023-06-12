@@ -6,18 +6,16 @@ keywords:
   - docs
   - ms sql server
   - schema
-  - logical models
-  - native queries
-  - stored procedures
+  - Logical Models
+  - Native Queries
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import ProductBadge from '@site/src/components/ProductBadge';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # MS SQL Server: Logical Models
-
-<ProductBadge standard pro ee self />
 
 ## Introduction
 
@@ -34,19 +32,27 @@ Logical Models are a new approach from Hasura and are currently used by the
 [Stored Procedures](/schema/ms-sql-server/logical-models/stored-procedures.mdx) features to automatically create a
 GraphQL API for a native database query.
 
-You can find examples of how to use logical models in the
+You can find examples of how to use Logical Models in the
 [Native Queries](/schema/ms-sql-server/logical-models/native-queries.mdx) documentation. For a more detailed explanation
 of Logical Models themselves, read on.
 
 ## Tracking a Logical Model
 
-:::info Only creatable via the API
+:::info Only creatable via the Console and API
 
-Currently, Logical Models can only be created via the API. Console and CLI support will be added in a future release.
+Currently, Logical Models can only be created via the API and the Console. CLI support will be added in a future
+release.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 You create a logical model through the metadata API:
@@ -84,6 +90,13 @@ or references to other Logical Models, and each field can be marked as nullable 
 For example, we could track a representation of an article as follows:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -144,6 +157,13 @@ X-Hasura-Role: admin
 ## Untracking a Logical Model
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/delete-logical-model.png"
+  alt="Delete Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 You can remove a Logical Model the same way:
@@ -175,6 +195,13 @@ will fail. You must remove the Native Query first.
 To untrack the above "article" Logical Model, we would run the following:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/delete-logical-model.png"
+  alt="Delete Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -309,6 +336,11 @@ The permissions consist of a list of columns that the role can access, and a fil
 can receive.
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/create-permissions.png" alt="Create Logical Model Permissions" width="800px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
@@ -347,6 +379,11 @@ could use the following permission to limit the accessible rows to those where `
 that column from the list (by specifying all other columns).
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/permissions-with-check.png" alt="Permissions with check" width="800px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -381,6 +418,9 @@ X-Hasura-Role: admin
 You can also drop permissions:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+  <Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -389,7 +429,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "mssql_drop_logical_model_select_permission",
+  "type": "bigquery_drop_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",
@@ -399,4 +439,5 @@ X-Hasura-Role: admin
 ```
 
 </TabItem>
+
 </Tabs>

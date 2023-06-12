@@ -1,20 +1,21 @@
 ---
 sidebar_label: Native Queries
 sidebar_position: 4
-description: Customize the Hasura GraphQL schema with native queries
+description: Customize the Hasura GraphQL schema with Native Queries
 keywords:
   - hasura
   - docs
   - postgres
   - schema
-  - logical models
-  - native queries
+  - Logical Models
+  - Native Queries
 sidebar_class_name: beta-tag
 ---
 
 import ProductBadge from '@site/src/components/ProductBadge';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Postgres: Native Queries
 
@@ -88,13 +89,29 @@ INSERT INTO article(title, date, content) VALUES
 When listing these articles in an index, we probably want to truncate the text to, let’s say, 20 characters. So let’s
 create a Logical Model representing the excerpted article:
 
-:::info Only creatable via the API
+:::info Only creatable via the Console and API
 
-Currently, Native Queries can only be created using the API. Console and CLI support will be added in a future release.
+Currently, Native Queries can be created using the Console and the API. CLI support will be added in a future
+release.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Logical Models` tab, and on the `Add Logical Model` button.
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
+
+Once the modal is open, fill in the form.
+
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -139,6 +156,33 @@ decide whether we should use an ellipsis.
 We use `{{max_length}}` to refer to the argument. We need it twice, so we simply use the argument twice.
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Native Queries` tab and `Create Native Query` button.
+
+<Thumbnail src="/img/native-queries/native-query-create.png" alt="Create Native Query" width="1146px" />
+
+Fill in the form with the data required:
+
+- Native Query name `article_with_excerpt`
+- The database to be used
+- The input parameter `max_length`
+- The Native Query statement
+
+```sql
+SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN '' else '...' END)) AS excerpt, date
+FROM article
+```
+
+- The query return type, the Logical Model previously created `article_excerpt`
+
+<Thumbnail
+  src="/img/native-queries/create-native-query-excerpt-example.png"
+  alt="Create Native Query Form"
+  width="1146px"
+/>
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -217,12 +261,31 @@ In order to represent the structure of the data returned by the query, we first 
 
 :::info Permissions and Logical Models
 
-Note that this Logical Model has no attached permissions and therefore will only be available to the admin account. See
+Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See
 the [Logical Model documentation](/schema/postgres/logical-models/index.mdx) for information on attaching permissions.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+To get started choose `Native Queries` from the sidebar in the `Data` tab:
+
+<Thumbnail src="/img/native-queries/native-queries-menu.png" alt="Create Logical Model" width="750px" />
+
+Click on the `Logical Models` tab, and on the `Add Logical Model` button.
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
+
+Once the modal is open, fill in the forms with:
+
+- The database to use as source
+- The Logical Model name
+- The optional input fields
+
+<Thumbnail src="/img/native-queries/logical-model-modal.png" alt="Create Logical Model" width="800px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -256,6 +319,24 @@ X-Hasura-Role: admin
 Once the Logical Model is defined, we can use it to define the query:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Native Queries` tab and `Create Native Query` button.
+
+<Thumbnail src="/img/native-queries/native-query-create.png" alt="Create Native Query" width="1146px" />
+
+Fill in the form with the data required:
+
+- Native Query name
+- An optional comment
+- The database to be used
+- Optional input parameters to be send to the Native Query
+- The Native Query statement
+- The query return type (the Logical Model previously created)
+
+<Thumbnail src="/img/native-queries/create-native-query.png" alt="Create Native Query Form" width="1146px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -308,14 +389,22 @@ You can use any SQL that you could potentially use in a parameterized query, wit
 #### Arguments
 
 The query can take arguments, which are specified in the metadata. These arguments can be used in the SQL using the
-syntax `{{argument_name}}`. This syntax resembles popular string templating languages such as Mustache, but does not use
-string interpolation. Instead, it works in exactly the same way as prepared statements in the database, and so arguments
-do not need escaping or quoting in the SQL itself. They will be treated as variables of the correct type.
+syntax `{{argument_name}}`. This syntax resembles popular string templating languages such as Mustache, but **does not
+use string interpolation**. Instead, it works in exactly the same way as prepared statements in the database, and so
+arguments do not need escaping or quoting in the SQL itself. They will be treated as variables of the correct type.
 
 This does mean that arguments cannot be used for elements of the SQL that deal with structure. For example, you cannot
 use an argument to specify the name of the table in a `FROM` clause.
 
 When making a query, the arguments are specified using the `args` parameter of the query root field.
+
+##### Example: `LIKE` operator
+
+A commonly used operator is the `LIKE`. When used in a `WHERE` condition, it's usually written with this syntax
+`WHERE Title LIKE '%word%'`.
+
+In order to use it with Native Query arguments, you need to use this syntax `LIKE ('%' || {{searchTitle}} || '%')`,
+where `searchTitle` is the Native Query parameter.
 
 ## Using the Native Query
 
@@ -339,7 +428,7 @@ query {
 
 ## Query functionality
 
-Just like tables, native queries generate GraphQL types with the ability to further break down the data. You can find
+Just like tables, Native Queries generate GraphQL types with the ability to further break down the data. You can find
 more information in the relevant documentation for [filtering](/queries/postgres/query-filters.mdx),
 [sorting](/queries/postgres/sorting.mdx), [distinct queries](/queries/postgres/distinct-queries.mdx), and
 [pagination](/queries/postgres/pagination.mdx).
@@ -351,7 +440,7 @@ Subscriptions (live queries) are also supported as usual, but streaming subscrip
 Currently, only read-only queries are supported. All queries are run in a read-only transaction where supported to
 enforce this constraint.
 
-A future release will allow mutations to be specified using native queries.
+A future release will allow mutations to be specified using Native Queries.
 
 ## Permissions
 
