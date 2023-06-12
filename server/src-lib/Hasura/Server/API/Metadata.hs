@@ -589,6 +589,8 @@ runBulkAtomic env cmds = do
       RMV1 v -> case v of
         RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.execTrackNativeQuery env) q
         RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.execUntrackNativeQuery q
+        RMTrackLogicalModel q -> dispatchMetadata LogicalModel.execTrackLogicalModel q
+        RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.execUntrackLogicalModel q
         _ -> throw500 "Bulk atomic does not support this command"
       RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 
