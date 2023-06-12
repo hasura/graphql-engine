@@ -22995,6 +22995,12 @@ getCustomTypes :: forall b. Backend b => SourceName -> Traversal' Metadata (Logi
 --   defined in 'class LogicalModelMetadata'.
 runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m) => TrackLogicalModel b -> m EncJSON
 
+-- | Handler for the <tt>track_logical_model</tt> endpoint. The type
+--   'TrackLogicalModel b' (appearing here in wrapped as
+--   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
+--   defined in 'class LogicalModelMetadata'.
+execTrackLogicalModel :: forall b m. (BackendMetadata b, MetadataM m) => TrackLogicalModel b -> m (MetadataObjId, MetadataModifier)
+
 -- | API payload for the <tt>untrack_logical_model</tt> endpoint.
 data UntrackLogicalModel (b :: BackendType)
 UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b :: BackendType)
@@ -23002,7 +23008,10 @@ UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b 
 [utlmName] :: UntrackLogicalModel (b :: BackendType) -> LogicalModelName
 
 -- | Handler for the <tt>untrack_logical_model</tt> endpoint.
-runUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => UntrackLogicalModel b -> m EncJSON
+runUntrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MonadError QErr m, MetadataM m) => UntrackLogicalModel b -> m EncJSON
+
+-- | Handler for the <tt>untrack_logical_model</tt> endpoint.
+execUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, MetadataM m) => UntrackLogicalModel b -> m (MetadataObjId, MetadataModifier)
 
 -- | A permission for logical models is tied to a specific name and source.
 --   This wrapper adds both of those things to the JSON object that
@@ -24337,22 +24346,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) TriggerOnReplication
-cteqCleanupConfig :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe Text)
-cetqWebhook :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe InputWebhook)
-cetqUpdate :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe (SubscribeOpSpec b_arkra))
-cetqTable :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (TableName b_arkra)
-cetqSource :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) SourceName
-cetqRetryConf :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe RequestTransform)
-cetqReplace :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) Bool
-cetqName :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) TriggerName
-cetqInsert :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe (SubscribeOpSpec b_arkra))
-cetqHeaders :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe Bool)
-cetqDelete :: forall b_arkra. Lens' (CreateEventTriggerQuery b_arkra) (Maybe (SubscribeOpSpec b_arkra))
+cteqTriggerOnReplication :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) TriggerOnReplication
+cteqCleanupConfig :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe Text)
+cetqWebhook :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe InputWebhook)
+cetqUpdate :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe (SubscribeOpSpec b_arkY1))
+cetqTable :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (TableName b_arkY1)
+cetqSource :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) SourceName
+cetqRetryConf :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe RequestTransform)
+cetqReplace :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) Bool
+cetqName :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) TriggerName
+cetqInsert :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe (SubscribeOpSpec b_arkY1))
+cetqHeaders :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe Bool)
+cetqDelete :: forall b_arkY1. Lens' (CreateEventTriggerQuery b_arkY1) (Maybe (SubscribeOpSpec b_arkY1))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
