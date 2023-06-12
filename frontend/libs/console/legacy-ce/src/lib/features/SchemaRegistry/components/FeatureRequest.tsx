@@ -3,6 +3,7 @@ import { Button } from '../../../new-components/Button';
 import { GraphQLError } from 'graphql';
 import { hasuraToast } from '../../../new-components/Toasts';
 import { useSubmitSchemaRegistryFeatureRequest } from '../hooks/useSubmitSchemaRegistryFeatureRequest';
+import { SCHEMA_REGISTRY_REF_URL } from '../constants';
 
 export const FeatureRequest = () => {
   const onSuccess = () => {
@@ -46,7 +47,11 @@ export const FeatureRequest = () => {
         schema changes more reliable, prevent breaking changes in your schema
         and make collaboration across large teams, micro services and roles much
         more manageable and predictable.{' '}
-        <a href="" target="_blank" rel="noreferrer noopener">
+        <a
+          href={SCHEMA_REGISTRY_REF_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+        >
           {' '}
           Read more.
         </a>

@@ -7,3 +7,8 @@ export const FETCH_REGISTRY_SCHEMA_QUERY_NAME =
 export const SCHEMA_REGISTRY_REFRESH_TIME = 5 * 60 * 1000;
 
 export const SCHEMA_REGISTRY_FEATURE_NAME = 'GraphQLSchemaRegistry';
+
+export const SCHEMA_REGISTRY_REF_URL =
+  'https://github.com/hasura/graphql-engine/issues/9574';
+
+export const SCHEMA_LIST_FETCH_BATCH_SIZE = 10;

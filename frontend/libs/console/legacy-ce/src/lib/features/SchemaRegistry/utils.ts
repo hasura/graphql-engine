@@ -9,6 +9,7 @@ import {
   SiblingSchema,
   GetRegistrySchemaResponseWithError,
 } from './types';
+import moment from 'moment';
 
 export const CapitalizeFirstLetter = (str: string) => {
   return str[0].toUpperCase() + str.slice(1);
@@ -29,19 +30,24 @@ export const schemaRegsitryControlPlaneClient = createControlPlaneClient(
 );
 
 export const schemaListTransformFn = (
-  fetchedData: NonNullable<GetSchemaListResponseWithError['data']>
+  dumps: NonNullable<
+    GetSchemaListResponseWithError['data']
+  >['schema_registry_dumps']
 ) => {
-  const dumps = fetchedData.schema_registry_dumps || [];
-
   const schemaList: Schema[] = [];
 
   dumps.forEach((dump: SchemaRegistryDumpWithSiblingSchema) => {
     const roleBasedSchemas: RoleBasedSchema[] = [];
 
     dump.sibling_schemas.forEach((childSchema: SiblingSchema) => {
-      const changes: SchemaChange[] = [
-        ...(childSchema.diff_with_previous_schema?.[0]?.schema_diff_data || []),
-      ];
+      const prevSchemaDiff = childSchema.diff_with_previous_schema;
+      let changes: SchemaChange[] | undefined = [];
+
+      if (prevSchemaDiff?.length > 0) {
+        changes = [...(prevSchemaDiff[0]?.schema_diff_data || [])];
+      } else {
+        changes = undefined;
+      }
 
       const roleBasedSchema: RoleBasedSchema = {
         raw: childSchema.schema_sdl,
@@ -75,9 +81,14 @@ export const schemaTransformFn = (
 
   const roleBasedSchemas: RoleBasedSchema[] = [];
 
-  const changes = [
-    ...(data.diff_with_previous_schema?.[0]?.schema_diff_data || []),
-  ];
+  const prevSchemaDiff = data.diff_with_previous_schema;
+  let changes: SchemaChange[] | undefined = [];
+
+  if (prevSchemaDiff?.length > 0) {
+    changes = [...(prevSchemaDiff[0]?.schema_diff_data || [])];
+  } else {
+    changes = undefined;
+  }
 
   const roleBasedSchema: RoleBasedSchema = {
     id: data.id,
@@ -99,4 +110,9 @@ export const schemaTransformFn = (
   };
 
   return schema;
+};
+
+export const getPublishTime = (isoStringTs: string) => {
+  const published = moment(isoStringTs);
+  return published.format('DD/MM/YYYY HH:mm:ss');
 };
