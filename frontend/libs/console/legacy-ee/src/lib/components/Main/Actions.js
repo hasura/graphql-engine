@@ -527,7 +527,7 @@ const idTokenReceived =
           privileges: decodedToken.payload.collaborator_privileges || [],
           metricsFQDN: decodedToken.payload.metrics_fqdn,
           plan_name: project?.plan_name,
-          is_enterprise_user: project?.enterprise_users?.is_active,
+          is_enterprise_user: project?.owner?.enterprise_user?.is_active,
           entitlements: project?.entitlements,
         },
       });
@@ -640,6 +640,9 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
             owner {
               id
               email
+              enterprise_user {
+                is_active
+              }
             }
             name
             collaborators {
@@ -658,9 +661,6 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
               }
             }
             plan_name
-            enterprise_users {
-              is_active
-            }
           }
         }
       `,
@@ -704,7 +704,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
             ).map(p => p.privilege_slug),
         metricsFQDN: project.tenant?.region_info?.metrics_fqdn || '',
         plan_name: project?.plan_name,
-        is_enterprise_user: project?.enterprise_users?.is_active,
+        is_enterprise_user: project?.owner?.enterprise_user?.is_active,
         entitlements: project?.entitlements,
       };
 
