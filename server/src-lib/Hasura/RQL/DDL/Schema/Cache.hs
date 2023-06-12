@@ -248,7 +248,7 @@ loadStoredIntrospection ::
 loadStoredIntrospection logger metadataVersion = do
   fetchSourceIntrospection metadataVersion `onLeftM` \err -> do
     unLogger logger
-      $ StoredIntrospectionLog "Could not load stored-introspection. Continuing without it" err
+      $ StoredIntrospectionStorageLog "Could not load stored-introspection. Continuing without it" err
     pure Nothing
 
 saveSourcesIntrospection ::
@@ -265,7 +265,7 @@ saveSourcesIntrospection logger sourcesIntrospection metadataVersion = do
     SourcesIntrospectionChangedPartial _ -> pure ()
     SourcesIntrospectionChangedFull introspection ->
       storeSourceIntrospection introspection metadataVersion `onLeftM` \err ->
-        unLogger logger $ StoredIntrospectionLog "Could not save sources introspection" err
+        unLogger logger $ StoredIntrospectionStorageLog "Could not save source introspection" err
 
 instance
   ( MonadIO m,
@@ -688,6 +688,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           ]
                   -- Still record inconsistency to notify the user obout the usage of stored stale data
                   recordInconsistencies -< ((Just $ toJSON (qeInternal databaseError), [metadataObj]), inconsistencyMessage)
+                  bindA -< unLogger logger $ StoredIntrospectionLog ("Using stored introspection for database source " <>> sourceName) databaseError
                   returnA -< Just (sourceConfig, storedMetadata)
 
     -- impl notes (swann):
@@ -1089,7 +1090,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), InsOrdHashMap.elems remoteSchemas)
+      remoteSchemaMap <- buildRemoteSchemas logger env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), InsOrdHashMap.elems remoteSchemas)
       let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
           !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
