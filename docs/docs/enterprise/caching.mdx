@@ -65,9 +65,9 @@ HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME="redishostname"
 You can tune the various caching parameters according to your use-case. For example, you can configure the maximum
 TTL allowed, the max entry size in the cache etc.
 
-| Env var                               | Flag                           | Description                                                                                                                                                 |
-|---------------------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL`  | `--query-cache-max-ttl`        | Maximum TTL allowed in seconds. Clients can request TTL via the `@cached` directive. But an upper limit can be set using this setting. Default: 600 seconds |
-| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE` | `--query-cache-max-entry-size` | Maximum size of the response that is allowed to be cached (in MB). default: 1 MB                                                                            |
-| `HASURA_GRAPHQL_CACHE_BUCKET_RATE`    | `--query-cache-bucket-rate`    | Recharge rate for the Query Response Cache token bucket. Default: 100,000 bytes/second                                                                      |
-| `HASURA_GRAPHQL_CACHE_BUCKET_SIZE`    | `--query-cache-bucket-size`    | Maximum capacity in bytes for the Query Response Cache token bucket algorithm. See https://hasura.io/docs/latest/queries/response-caching for more info. Default: 10000000000 bytes (1gb) |
+| Env var                               | Flag                           | Description                                                                                                                                                  |
+|---------------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_TTL`  | `--query-cache-max-ttl`        | Maximum TTL allowed in seconds. Clients can request TTL via the `@cached` directive. But an upper limit can be set using this setting. Default: 3600 seconds |
+| `HASURA_GRAPHQL_CACHE_MAX_ENTRY_SIZE` | `--query-cache-max-entry-size` | Maximum size of the response that is allowed to be cached (in MB). default: 1000 MB                                                                          |
+| `HASURA_GRAPHQL_CACHE_BUCKET_RATE`    | `--query-cache-bucket-rate`    | Recharge rate for the Query Response Cache token bucket. Default: 10,000,000 bytes/second (10 MB/s)                                                          |
+| `HASURA_GRAPHQL_CACHE_BUCKET_SIZE`    | `--query-cache-bucket-size`    | Maximum capacity in bytes for the Query Response Cache token bucket algorithm. See https://hasura.io/docs/latest/queries/response-caching for more info. Default: 1000000000 bytes (1 GB) |

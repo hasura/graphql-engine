@@ -143,7 +143,7 @@ const HasuraConBanner = props => {
       <div className={styles['hasura-con-brand']}>
         <img
           className={styles['hasuracon23-img']}
-          src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1683727035/main-web/Group_2608664_c10sky.png"
+          src="https://res.cloudinary.com/dh8fp23nd/image/upload/v1686154570/hasura-con-2023/has-con-light-date_r2a2ud.png"
           alt="Hasura Con"
         />
       </div>

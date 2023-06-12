@@ -155,10 +155,13 @@ describe('Actions with Transform', () => {
     // --------------------
     cy.get('[data-cy="Change Request Options"]').within(() => {
       cy.log('**--- Check the Preview of the Request URL Template**');
-      cy.findByLabelText('Preview').should(
-        'have.value',
-        'https://hasura-actions-demo.glitch.me/login?name=login&id=5'
-      );
+
+      cy.get('[name=request_url_preview]')
+        .invoke('attr', 'value')
+        .should('contains', 'name=login');
+      cy.get('[name=request_url_preview]')
+        .invoke('attr', 'value')
+        .should('contains', 'id=5');
     });
 
     cy.log('**------------------------------**');

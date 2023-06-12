@@ -709,7 +709,7 @@ export const NumericFloatValue: StoryObj<typeof RowPermissionsInput> = {
 
 export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -751,7 +751,7 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
 
 export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -777,7 +777,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({
       name: { _eq: '' },
     });
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 
@@ -823,7 +823,7 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({
       id: { _eq: '1234' },
     });
-    const tables = usePermissionTables({
+    const { tables } = usePermissionTables({
       dataSourceName: 'default',
     });
 

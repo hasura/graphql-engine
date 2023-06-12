@@ -1,0 +1,364 @@
+---
+sidebar_label: Docker
+sidebar_position: 2
+description: Hasura with Docker for MongoDB
+keywords:
+  - hasura
+  - docs
+  - databases
+  - mongodb
+  - docker
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Docker (Hasura & MongoDB)
+
+## Introduction
+
+This guide will help you get set up with the [Enterprise Edition](/enterprise/overview.mdx) of Hasura GraphQL Engine
+with our MongoDB integration using Docker Compose. This is the easiest way to set up Hasura Enterprise Edition and the
+MongoDB GraphQL Data Connector.
+
+:::info Supported versions:
+
+Hasura GraphQL Engine `v2.27.0` onwards
+
+:::
+
+:::tip Supported features
+
+Currently, Hasura supports read-only queries on MongoDB.<br/> Other limitations which are actively on the roadmap and
+will be supported soon include:
+
+- Embedded document queries and permissions.
+- Cross-Collection relationships (executed within the database).
+- Logical Models to support schema customization (removing the MongoDB validation schema as a dependency) and bespoke
+  query execution.
+
+:::
+
+## Deploying Hasura Enterprise with Docker
+
+### Prerequisites
+
+This tutorial assumes that the following prerequisites have been met:
+
+- You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+  working on your machine.
+- You have [MongoDB Compass](https://www.mongodb.com/products/compass) installed on your machine.
+
+### Step 1: Get the Docker Compose file
+
+The [install manifests](https://github.com/hasura/graphql-engine/tree/master/install-manifests) repo contains all
+installation manifests required to deploy Hasura anywhere. The Docker Compose manifest also contains a Postgres database
+in order to store the Hasura metadata and a Redis instance for caching.
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mongodb/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/enterprise/mongodb/docker-compose.yaml -o docker-compose.yml
+```
+
+:::info Four containers are created
+
+When you use these to launch the services, you'll see four containers running. The first two are Hasura GraphQL Engine
+and a Postgres Database for storing Hasura's metadata. The third container is the MongoDB GraphQL Connector agent. The
+forth container is a copy of [MongoDB Community Edition](https://hub.docker.com/_/mongo).
+
+:::
+
+### Step 2: Set the Hasura Enterprise Edition license key and the admin secret
+
+Edit the downloaded `docker-compose.yaml` and set the license key and admin secret. If you've been provided a license
+key by the Hasura team, you can enter it according to the directions below.
+
+```yaml {5-6}
+---
+graphql-engine:
+  image: hasura/graphql-engine:v2.27.0
+  environment:
+    HASURA_GRAPHQL_EE_LICENSE_KEY: <license key>
+    HASURA_GRAPHQL_ADMIN_SECRET: <your secretkey>
+```
+
+An [admin secret key](/deployment/securing-graphql-endpoint.mdx) is required to make sure that your GraphQL endpoint and
+the Hasura Console are not publicly accessible.
+
+:::info I don't have a license key
+
+If you don't already have a license key and are interested in trying out Hasura Enterprise Edition with MongoDB, you can
+start a free 30-day trial. Leave the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable commented out we'll return to
+this in Step 6.
+
+:::
+
+:::caution Secure the admin secret
+
+The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
+the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/overview.mdx) for
+information on setting up auth in Hasura.
+
+:::
+
+### Step 3: Run the containers
+
+The following command will create and run the containers in the Docker Compose manifest:
+
+```bash
+docker compose up -d
+```
+
+### Step 4: Create a MongoDB database
+
+:::info I already have a MongoDB database
+
+This guide assumes you don't have a MongoDB instance already set up. If you do, you can skip to
+[Step 6](#step-6-load-the-hasura-console).
+
+:::
+
+Open MongoDB Compass and create a new connection using this connection string:
+
+```
+mongodb://mongouser:mongopassword@localhost:27017/?authMechanism=DEFAULT
+```
+
+Create a new database called demo using the MongoShell at the bottom of the MongoDB compass screen by entering the
+command:
+
+```
+use demo;
+```
+
+Via MongoShell, create a new `users` collection:
+
+```javascript
+db.createCollection('users', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['name', 'age'],
+      properties: {
+        name: {
+          bsonType: 'string',
+        },
+        age: {
+          bsonType: 'int',
+          minimum: 18,
+        },
+        email: {
+          bsonType: 'string',
+          pattern: '^.+@.+$',
+        },
+        user_meta: {
+          bsonType: 'object',
+          properties: {
+            user_role: {
+              bsonType: 'string',
+            },
+            email_verified: {
+              bsonType: 'bool',
+            },
+          },
+        },
+      },
+    },
+  },
+});
+```
+
+:::info Why do I need a validation schema in my Collection?
+
+Currently, Hasura uses the validation schema to build your GraphQL schema.
+
+Future versions of the Hasura MongoDB connector will allow on-the-fly editing of the GraphQL schema, will continue to
+work with the MongoDB validation schema, but will not have it as a dependency.
+
+Read more about the
+[MongoDB validation schema](https://www.mongodb.com/docs/manual/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+and how to set it up for your database.
+
+:::
+
+If you don't see your changes, you can refresh your databases on the left-hand sidebar. Once applied, you can view the
+`users` Collection in MongoDB Compass:
+
+<Thumbnail
+  src="/img/databases/mongodb/mongo-collection.png"
+  alt="Creating your first MongoDB Collection."
+  width="1000px"
+/>
+
+### Step 5: Insert your first sample Documents
+
+Insert a few sample documents to query on afterwards.
+
+```javascript
+db.users.insertMany([
+  {
+    name: 'John',
+    age: 44,
+    email: 'john@example.com',
+    user_meta: {
+      user_role: 'user',
+      email_verified: true,
+    },
+  },
+  {
+    name: 'Jane',
+    age: 24,
+    email: 'jane@example.com',
+    user_meta: {
+      user_role: 'user',
+      email_verified: true,
+    },
+  },
+  {
+    name: 'Emma',
+    age: 36,
+    email: 'emma@example.com',
+    user_meta: {
+      user_role: 'manager',
+      email_verified: true,
+    },
+  },
+  {
+    name: 'Liam',
+    age: 64,
+    email: 'liam@example.com',
+    user_meta: {
+      user_role: 'manager',
+      email_verified: true,
+    },
+  },
+]);
+```
+
+You should see an output similar to this:
+
+<Thumbnail
+  src="/img/databases/mongodb/mongo-documents.png"
+  alt="Inserting your sample Documents in MongoDB."
+  width="1000px"
+/>
+
+### Step 6: Load the Hasura Console
+
+Open the Hasura Console by navigating to `http://localhost:8080/console`. You will need to input your admin secret key
+as set in your Docker Compose file to log in.
+
+:::info 30-day free trial
+
+If you don't already have a license key, you can start a 30-day free trial by clicking the `ENTERPRISE` button in the
+top navigation. You can read more details [here](/enterprise/try-hasura-enterprise-edition.mdx).
+
+<Thumbnail
+  src="/img/enterprise/Trials_Register_Button.png"
+  alt="Enterprise Edition Trial register button"
+  width="1146px"
+/>
+
+:::
+
+### Step 7: Connect to MongoDB
+
+Visit `Data` > `Manage` to connect your MongoDB database. **If you've connected using the Docker guide above, your
+MongoDB data connector should be pre-connected to your Hasura instance.** Select the `Connect Database` button and
+follow head to [Step 8](#step-8-tracking-collections).
+
+You can check this by selecting the `Data Connector Agents` dropdown from the Data Manager:
+
+If it is not connected and you're using the `docker-compose.yml` file above, you can use the following details to
+connect to your agent as in the screenshot below:
+
+- Agent Name: `mongodb`
+- URL: `http://mongo-data-connector:3000`
+
+Then click, `Connect`:
+
+<Thumbnail src="/img/databases/mongodb/data-connector.png" alt="Connecting to MongoDB - Connector" width="1000px" />
+
+Connect your database using the following details:
+
+- Database Name: `mongodb`
+- Connection: `mongodb://mongouser:mongopassword@mongodb:27017`
+- db: `demo`
+
+<Thumbnail src="/img/databases/mongodb/connecting.gif" alt="Connecting to MongoDB - Connections" width="1000px" />
+
+If you're using a MongoDB instance hosted on MongoDB Atlas or elsewhere, simply add the connection details for your
+instance and click `Connect Database`.
+
+### Step 8: Tracking Collections
+
+Once your database has been connected, select the database name from the left-hand sidebar.
+
+You should see your `users` Collection listed here. Select it, and select `Track Selected`.
+
+<Thumbnail src="/img/databases/mongodb/track-table.png" alt="Connecting to MongoDB - Track Tables." width="1000px" />
+
+Your `users` Collection is now added to your GraphQL API! 🎉
+
+:::info Make your Collection available to other roles
+
+By default, this Collection is only available to `admin` users. To make it available for more user groups, select the
+Collection name from the left-hand sidebar, and select `Permissions` to setup permission rules for the Collection. You
+can read more about permissions [here](/auth/authorization/index.mdx).
+
+:::
+
+### Step 9: Running your first query
+
+Select API from your header, this will take you to GraphiQL, our API testing utility.
+
+Entering the following query and running will return all your users:
+
+```graphql
+query allUsers {
+  users {
+    _id
+    age
+    email
+    name
+    user_meta {
+      email_verified
+      user_role
+    }
+  }
+}
+```
+
+<Thumbnail
+  src="/img/databases/mongodb/gql-query.png"
+  alt="Connecting to MongoDB - Making a GraphQL query."
+  width="1000px"
+/>
+
+Entering the following will only return users with the names 'John' or 'Jane':
+
+```graphql
+query userFiltered {
+  users(where: { name: { _in: ["John", "Jane"] } }) {
+    _id
+    age
+    email
+    name
+    user_meta {
+      email_verified
+      user_role
+    }
+  }
+}
+```
+
+## Keep up to date
+
+Please watch this space to get the latest docs on how you can try these features out via the Console or by manipulating
+Metadata in JSON/YAML directly.
+
+If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
-import { FETCH_REGSITRY_SCHEMA_QUERY } from '../queries';
+import { FETCH_REGISTRY_SCHEMA_QUERY } from '../queries';
 import { GetRegistrySchemaResponseWithError } from '../types';
 import {
   FETCH_REGISTRY_SCHEMA_QUERY_NAME,
@@ -26,7 +26,7 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
     return schemaRegsitryControlPlaneClient.query<
       GetRegistrySchemaResponseWithError,
       { schemaId: string }
-    >(FETCH_REGSITRY_SCHEMA_QUERY, {
+    >(FETCH_REGISTRY_SCHEMA_QUERY, {
       schemaId: schemaId,
     });
   };

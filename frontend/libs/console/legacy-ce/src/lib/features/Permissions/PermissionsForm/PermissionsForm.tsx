@@ -27,6 +27,7 @@ import { useListAllTableColumns } from '../../Data';
 import { useMetadataSource } from '../../MetadataAPI';
 import useScrollIntoView from './hooks/useScrollIntoView';
 import { getAllowedFilterKeys } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
+import Skeleton from 'react-loading-skeleton';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -285,7 +286,7 @@ export const PermissionsForm = (props: PermissionsFormProps) => {
     !metadataSource ||
     !data.defaultValues
   ) {
-    return <IndicatorCard status="info">Loading...</IndicatorCard>;
+    return <Skeleton width={'100%'} height={300} />;
   }
 
   return <Component data={data} {...props} />;

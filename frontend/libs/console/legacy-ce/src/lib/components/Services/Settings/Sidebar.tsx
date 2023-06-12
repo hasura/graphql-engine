@@ -47,14 +47,17 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     items: [],
   };
 
-  if (isCloudConsole(globals)) {
+  if (
+    isCloudConsole(globals) &&
+    (globals.userRole === 'admin' || globals.userRole === 'owner')
+  ) {
     sectionsData.graphql = {
       key: 'graphql',
       label: 'GraphQL',
       items: [
         {
           key: 'schema-registry',
-          label: 'Schema Registry',
+          label: 'Schema Registry (Beta)',
           route: '/settings/schema-registry',
           dataTestVal: 'metadata-schema-registry-link',
         },

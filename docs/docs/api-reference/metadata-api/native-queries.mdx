@@ -47,6 +47,8 @@ X-Hasura-Role: admin
         "description": "<optional field description>"
       }
     },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
     "code": "<SQL query>",
     "returns": "<logical model name>"
   }
@@ -63,6 +65,10 @@ X-Hasura-Role: admin
 | arguments       | false    | Mapping from String to [NativeQueryArgument](/api-reference/syntax-defs.mdx#nativequeryargument) | Configuration for each argument                             |
 | code            | true     | String                                                                                           | The SQL to run on request                                   |
 | returns         | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                              | Name of the logical model representing the resulting schema |
+
+### Native Query relationships
+
+See [Native Query relationship](/api-reference/syntax-defs.mdx#nativequeryrelationship).
 
 ## pg_untrack_native_query {#metadata-pg-untrack-native-query}
 
@@ -108,11 +114,13 @@ X-Hasura-Role: admin
     "type": "query",
     "arguments": {
       "<name>": {
-        "type": "<postgres field type>",
+        "type": "<mssql field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       }
     },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
     "code": "<SQL query>",
     "returns": "<logical model name>"
   }
@@ -174,11 +182,13 @@ X-Hasura-Role: admin
     "type": "query",
     "arguments": {
       "<name>": {
-        "type": "<postgres field type>",
+        "type": "<bigquery field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       }
     },
+    "array_relationships": <Native Query relationship>,
+    "object_relationshps": <Native Query relationship>,
     "code": "<SQL query>",
     "returns": "<logical model name>"
   }

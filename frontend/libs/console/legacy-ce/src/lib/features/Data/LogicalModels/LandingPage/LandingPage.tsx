@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InjectedRouter, Link, withRouter } from 'react-router';
 import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
 import { Tabs } from '../../../../new-components/Tabs';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { useMetadata } from '../../../hasura-metadata-api';
+import {
+  useInvalidateMetadata,
+  useMetadata,
+} from '../../../hasura-metadata-api';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
@@ -33,6 +36,17 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
       )
       .flat()
   );
+
+  const invalidateMetadata = useInvalidateMetadata();
+  useEffect(() => {
+    /**
+     * Workaround to avoid that a metadata migration that happened in the legacy part of the Console (i.e. Run SQL)
+     * might affect the metadata migrations in the child components of this page,
+     * resulting in the error "metadata resource version referenced (x) did not match current version"
+     */
+    invalidateMetadata();
+  }, []);
+
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];
 

@@ -7,7 +7,9 @@ module Hasura.LogicalModel.API
     UntrackLogicalModel (..),
     runGetLogicalModel,
     runTrackLogicalModel,
+    execTrackLogicalModel,
     runUntrackLogicalModel,
+    execUntrackLogicalModel,
     dropLogicalModelInMetadata,
     CreateLogicalModelPermission (..),
     DropLogicalModelPermission (..),
@@ -41,6 +43,7 @@ import Hasura.RQL.Types.Permission (PermDef (_pdRole), SelPerm)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.StoredProcedure.Metadata (StoredProcedureMetadata (..))
 
 -- | Default implementation of the 'track_logical_model' request payload.
 data TrackLogicalModel (b :: BackendType) = TrackLogicalModel
@@ -158,11 +161,37 @@ runTrackLogicalModel ::
   TrackLogicalModel b ->
   m EncJSON
 runTrackLogicalModel trackLogicalModelRequest = do
+  -- validation
   sourceMetadata <-
     maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
       . preview (metaSources . ix source . toSourceMetadata @b)
       =<< getMetadata
 
+  let (metadata :: LogicalModelMetadata b) = logicalModelTrackToMetadata trackLogicalModelRequest
+      fieldName = _lmmName metadata
+      existingLogicalModels = InsOrdHashMap.keys (_smLogicalModels sourceMetadata)
+
+  when (fieldName `elem` existingLogicalModels) do
+    throw400 AlreadyTracked $ "Logical model '" <> toTxt fieldName <> "' is already tracked."
+
+  -- operation
+  (obj, modifier) <- execTrackLogicalModel trackLogicalModelRequest
+  buildSchemaCacheFor obj modifier
+  pure successMsg
+  where
+    source = tlmSource trackLogicalModelRequest
+
+-- | Handler for the 'track_logical_model' endpoint. The type 'TrackLogicalModel b'
+-- (appearing here in wrapped as 'BackendTrackLogicalModel b' for 'AnyBackend'
+-- compatibility) is defined in 'class LogicalModelMetadata'.
+execTrackLogicalModel ::
+  forall b m.
+  ( BackendMetadata b,
+    MetadataM m
+  ) =>
+  TrackLogicalModel b ->
+  m (MetadataObjId, MetadataModifier)
+execTrackLogicalModel trackLogicalModelRequest = do
   let (metadata :: LogicalModelMetadata b) = logicalModelTrackToMetadata trackLogicalModelRequest
 
   let fieldName = _lmmName metadata
@@ -170,17 +199,13 @@ runTrackLogicalModel trackLogicalModelRequest = do
         MOSourceObjId source
           $ AB.mkAnyBackend
           $ SMOLogicalModel @b fieldName
-      existingLogicalModels = InsOrdHashMap.keys (_smLogicalModels sourceMetadata)
 
-  when (fieldName `elem` existingLogicalModels) do
-    throw400 AlreadyTracked $ "Logical model '" <> toTxt fieldName <> "' is already tracked."
+  let metadataModifier =
+        MetadataModifier
+          $ (metaSources . ix source . toSourceMetadata @b . smLogicalModels)
+          %~ InsOrdHashMap.insert fieldName metadata
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ (metaSources . ix source . toSourceMetadata @b . smLogicalModels)
-    %~ InsOrdHashMap.insert fieldName metadata
-
-  pure successMsg
+  pure (metadataObj, metadataModifier)
   where
     source = tlmSource trackLogicalModelRequest
 
@@ -211,26 +236,21 @@ instance ToJSON (UntrackLogicalModel b) where
 runUntrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
     CacheRWM m,
+    MonadError QErr m,
     MetadataM m
   ) =>
   UntrackLogicalModel b ->
   m EncJSON
 runUntrackLogicalModel q = do
-  -- we do not check for feature flag here as we always want users to be able
-  -- to remove logical models if they'd like
-  assertLogicalModelExists @b source fieldName
-
-  let metadataObj =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOLogicalModel @b fieldName
-
+  -- validation
   metadata <- getMetadata
 
   let nativeQueries :: [NativeQueryMetadata b]
       nativeQueries = metadata ^.. metaSources . ix source . toSourceMetadata @b . smNativeQueries . traversed
+
+  let storedProcedures :: [StoredProcedureMetadata b]
+      storedProcedures = metadata ^.. metaSources . ix source . toSourceMetadata @b . smStoredProcedures . traversed
 
   case find ((== fieldName) . _nqmReturns) nativeQueries of
     Just NativeQueryMetadata {_nqmRootFieldName} ->
@@ -242,10 +262,44 @@ runUntrackLogicalModel q = do
         <<> "."
     Nothing -> pure ()
 
-  buildSchemaCacheFor metadataObj
-    $ dropLogicalModelInMetadata @b source fieldName
+  case find ((== fieldName) . _spmReturns) storedProcedures of
+    Just StoredProcedureMetadata {_spmStoredProcedure} ->
+      throw400 ConstraintViolation
+        $ "Logical model "
+        <> fieldName
+        <<> " still being used by stored procedure "
+        <> _spmStoredProcedure
+        <<> "."
+    Nothing -> pure ()
 
+  -- operation
+  (obj, modifier) <- execUntrackLogicalModel q
+  buildSchemaCacheFor obj modifier
   pure successMsg
+  where
+    source = utlmSource q
+    fieldName = utlmName q
+
+-- | Handler for the 'untrack_logical_model' endpoint.
+execUntrackLogicalModel ::
+  forall b m.
+  ( BackendMetadata b,
+    MonadError QErr m,
+    MetadataM m
+  ) =>
+  UntrackLogicalModel b ->
+  m (MetadataObjId, MetadataModifier)
+execUntrackLogicalModel q = do
+  -- we do not check for feature flag here as we always want users to be able
+  -- to remove logical models if they'd like
+  assertLogicalModelExists @b source fieldName
+
+  let metadataObj =
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOLogicalModel @b fieldName
+
+  pure (metadataObj, dropLogicalModelInMetadata @b source fieldName)
   where
     source = utlmSource q
     fieldName = utlmName q
