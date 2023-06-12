@@ -19,18 +19,16 @@ import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
 import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
-import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
 import Hasura.LogicalModelResolver.Codec (nativeQueryRelationshipsCodec)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType)
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend, SourceConnConfiguration)
+import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
@@ -105,38 +103,23 @@ deriving via
 -- | Validate a native query and extract the native query info from the request.
 nativeQueryTrackToMetadata ::
   forall b m.
-  ( BackendMetadata b,
-    MonadError QErr m,
-    MonadIO m,
-    MetadataM m
+  ( MonadError QErr m
   ) =>
-  Env.Environment ->
-  SourceConnConfiguration b ->
   TrackNativeQuery b ->
   m (NativeQueryMetadata b)
-nativeQueryTrackToMetadata env sourceConnConfig TrackNativeQuery {..} = do
+nativeQueryTrackToMetadata TrackNativeQuery {..} = do
   code <- parseInterpolatedQuery tnqCode `onLeft` \e -> throw400 ParseFailed e
 
-  let nativeQueryMetadata =
-        NativeQueryMetadata
-          { _nqmRootFieldName = tnqRootFieldName,
-            _nqmCode = code,
-            _nqmReturns = tnqReturns,
-            _nqmArguments = tnqArguments,
-            _nqmArrayRelationships = tnqArrayRelationships,
-            _nqmObjectRelationships = tnqObjectRelationships,
-            _nqmDescription = tnqDescription
-          }
-
-  metadata <- getMetadata
-
-  -- lookup logical model in existing metadata
-  case metadata ^? getCustomTypes tnqSource . ix tnqReturns of
-    Just logicalModel ->
-      validateNativeQuery @b env sourceConnConfig logicalModel nativeQueryMetadata
-    Nothing -> throw400 NotFound ("Logical model " <> tnqReturns <<> " not found.")
-
-  pure nativeQueryMetadata
+  pure
+    NativeQueryMetadata
+      { _nqmRootFieldName = tnqRootFieldName,
+        _nqmCode = code,
+        _nqmReturns = tnqReturns,
+        _nqmArguments = tnqArguments,
+        _nqmArrayRelationships = tnqArrayRelationships,
+        _nqmObjectRelationships = tnqObjectRelationships,
+        _nqmDescription = tnqDescription
+      }
 
 -- | API payload for the 'get_native_query' endpoint.
 data GetNativeQuery (b :: BackendType) = GetNativeQuery
@@ -196,16 +179,14 @@ runTrackNativeQuery ::
   forall b m.
   ( BackendMetadata b,
     MonadError QErr m,
-    MonadIO m,
     CacheRWM m,
     MetadataM m,
     HasFeatureFlagChecker m
   ) =>
-  Env.Environment ->
   TrackNativeQuery b ->
   m EncJSON
-runTrackNativeQuery env trackNativeQueryRequest = do
-  (obj, modifier) <- execTrackNativeQuery env trackNativeQueryRequest
+runTrackNativeQuery trackNativeQueryRequest = do
+  (obj, modifier) <- execTrackNativeQuery trackNativeQueryRequest
   buildSchemaCacheFor obj modifier
   pure successMsg
 
@@ -216,14 +197,12 @@ execTrackNativeQuery ::
   forall b m.
   ( BackendMetadata b,
     MonadError QErr m,
-    MonadIO m,
     MetadataM m,
     HasFeatureFlagChecker m
   ) =>
-  Env.Environment ->
   TrackNativeQuery b ->
   m (MetadataObjId, MetadataModifier)
-execTrackNativeQuery env trackNativeQueryRequest = do
+execTrackNativeQuery trackNativeQueryRequest = do
   throwIfFeatureDisabled
 
   sourceMetadata <-
@@ -238,10 +217,9 @@ execTrackNativeQuery env trackNativeQueryRequest = do
       pure
       . preview (metaSources . ix source . toSourceMetadata @b)
       =<< getMetadata
-  let sourceConnConfig = _smConfiguration sourceMetadata
 
   (metadata :: NativeQueryMetadata b) <- do
-    nativeQueryTrackToMetadata @b env sourceConnConfig trackNativeQueryRequest
+    nativeQueryTrackToMetadata @b trackNativeQueryRequest
 
   let fieldName = _nqmRootFieldName metadata
       metadataObj =

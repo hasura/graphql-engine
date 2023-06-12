@@ -12,6 +12,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.NativeQueries
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude hiding (first)
@@ -66,12 +67,12 @@ spec = do
       parseInterpolatedQuery rawSQL `shouldBe` Left "Found '{{' without a matching closing '}}'"
 
   describe "Validation" do
-    let lmm =
-          LogicalModelMetadata
-            { _lmmName = LogicalModelName (G.unsafeMkName "logical_model_name"),
-              _lmmFields = mempty,
-              _lmmDescription = Nothing,
-              _lmmSelectPermissions = mempty
+    let lmi =
+          LogicalModelInfo
+            { _lmiName = LogicalModelName (G.unsafeMkName "logical_model_name"),
+              _lmiFields = mempty,
+              _lmiDescription = Nothing,
+              _lmiPermissions = mempty
             }
 
         nqm =
@@ -87,7 +88,7 @@ spec = do
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmm nqm {_nqmCode = code}
+      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmi nqm {_nqmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -99,7 +100,7 @@ spec = do
             fmap snd
               $ runExcept
               $ nativeQueryToPreparedStatement
-                lmm
+                lmi
                 nqm
                   { _nqmCode = code,
                     _nqmArguments =
@@ -119,7 +120,7 @@ spec = do
             fmap snd
               $ runExcept
               $ nativeQueryToPreparedStatement
-                lmm
+                lmi
                 nqm
                   { _nqmCode = code,
                     _nqmArguments =

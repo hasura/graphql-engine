@@ -430,7 +430,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
   RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
-  RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.runTrackNativeQuery env) q
+  RMTrackNativeQuery q -> dispatchMetadata NativeQueries.runTrackNativeQuery q
   RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
   RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
   RMTrackStoredProcedure q -> dispatchMetadata (StoredProcedures.runTrackStoredProcedure env) q
@@ -546,7 +546,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
           `catchError` \qerr -> pure (encJFromJValue qerr)
 
     pure (encJFromList results)
-  RMBulkAtomic commands -> runBulkAtomic env commands
+  RMBulkAtomic commands -> runBulkAtomic commands
   where
     dispatchEventTrigger :: (forall b. (BackendEventTrigger b) => i b -> a) -> AnyBackend i -> a
     dispatchEventTrigger f x = dispatchAnyBackend @BackendEventTrigger x f
@@ -569,15 +569,13 @@ dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
 -- re-add commands to do edits, or add two interdependent items at once.
 runBulkAtomic ::
   ( HasFeatureFlagChecker m,
-    MonadIO m,
     MonadError QErr m,
     CacheRWM m,
     MetadataM m
   ) =>
-  Env.Environment ->
   [RQLMetadataRequest] ->
   m EncJSON
-runBulkAtomic env cmds = do
+runBulkAtomic cmds = do
   -- get the metadata modifiers for all our commands
   results <- traverse getMetadataModifierForCommand cmds
   -- build the schema cache using the combined modifiers
@@ -587,7 +585,7 @@ runBulkAtomic env cmds = do
   where
     getMetadataModifierForCommand = \case
       RMV1 v -> case v of
-        RMTrackNativeQuery q -> dispatchMetadata (NativeQueries.execTrackNativeQuery env) q
+        RMTrackNativeQuery q -> dispatchMetadata NativeQueries.execTrackNativeQuery q
         RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.execUntrackNativeQuery q
         RMTrackLogicalModel q -> dispatchMetadata LogicalModel.execTrackLogicalModel q
         RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.execUntrackLogicalModel q

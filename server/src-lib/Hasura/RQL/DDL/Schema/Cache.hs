@@ -770,6 +770,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         ArrowWriter (Seq CollectItem) arr,
         MonadError QErr m,
         HasCacheStaticConfig m,
+        MonadIO m,
         BackendMetadata b,
         GetAggregationPredicatesDeps b
       ) =>
@@ -906,7 +907,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           logicalModelsCache = mapFromL _lmiName (catMaybes logicalModelCacheMaybes)
 
       nativeQueryCacheMaybes <-
-        interpretWriter
+        interpretWriterT
           -< for
             (InsOrdHashMap.elems nativeQueries)
             \nqm@NativeQueryMetadata {..} -> do
@@ -943,6 +944,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                   onNothing
                     (HashMap.lookup _nqmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _nqmReturns <> " could not be found"))
+
+                validateNativeQuery @b env (_smConfiguration sourceMetadata) logicalModel NativeQueryMetadata {..}
 
                 recordDependenciesM metadataObject schemaObjId
                   $ Seq.singleton dependency
