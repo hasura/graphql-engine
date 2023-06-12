@@ -76,6 +76,7 @@ instance Hashable TableMetadataObjId
 -- | Identifiers for logical model elements within the metadata structure.
 data LogicalModelMetadataObjId
   = LMMOPerm RoleName PermType
+  | LMMOInnerLogicalModel LogicalModelName
   deriving (Show, Eq, Ord, Generic)
 
 instance Hashable LogicalModelMetadataObjId
@@ -161,9 +162,10 @@ moiTypeName = \case
       SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
         NQMORel _ relType -> relTypeToTxt relType <> "_relation"
       SMOStoredProcedure _ -> "stored_procedure"
-      SMOLogicalModel _ -> "custom_type"
+      SMOLogicalModel _ -> "logical_model"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
         LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
+        LMMOInnerLogicalModel name -> "inner_logical_model_" <> toTxt name
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -225,6 +227,7 @@ moiName objectId =
         let objectName :: Text
             objectName = case logicalModelObjectId of
               LMMOPerm name _ -> toTxt name
+              LMMOInnerLogicalModel name -> toTxt name
 
             sourceObjectId :: MetadataObjId
             sourceObjectId =

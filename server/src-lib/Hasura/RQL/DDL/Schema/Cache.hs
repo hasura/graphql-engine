@@ -50,6 +50,7 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelType (..), LogicalModelTypeArray (..), LogicalModelTypeReference (..))
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
@@ -894,6 +895,33 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 logicalModelPermissions <-
                   buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
+
+                let recurseLogicalModelDependencies = \case
+                      LogicalModelTypeScalar _ -> pure ()
+                      LogicalModelTypeArray (LogicalModelTypeArrayC ltmaArray _) ->
+                        recurseLogicalModelDependencies ltmaArray
+                      LogicalModelTypeReference (LogicalModelTypeReferenceC lmtrr _) -> do
+                        let metadataObject =
+                              MetadataObject
+                                ( MOSourceObjId sourceName
+                                    $ AB.mkAnyBackend
+                                    $ SMOLogicalModelObj @b _lmmName
+                                    $ LMMOInnerLogicalModel lmtrr
+                                )
+                                ( toJSON lmm
+                                )
+
+                        let sourceObject :: SchemaObjId
+                            sourceObject =
+                              SOSourceObj sourceName
+                                $ AB.mkAnyBackend
+                                $ SOILogicalModelObj @b _lmmName
+                                $ LMOInnerLogicalModel lmtrr
+
+                        recordDependenciesM metadataObject sourceObject
+                          $ Seq.singleton (SchemaDependency sourceObject DRInnerLogicalModel)
+
+                mapM_ (recurseLogicalModelDependencies . lmfType) _lmmFields
 
                 pure
                   LogicalModelInfo
