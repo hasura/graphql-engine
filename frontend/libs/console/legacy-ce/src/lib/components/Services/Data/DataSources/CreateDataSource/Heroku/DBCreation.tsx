@@ -59,7 +59,8 @@ const DBCreation: React.FC<Props> = ({
       const dbName = allDataSources.length ? `herokuapp-${appName}` : 'default';
       setIsSettingEnvVar(true);
       setDBURLInEnvVars(dbURL)
-        .then(envVar => {
+        .then(data => {
+          const { envVar } = data;
           setIsSettingEnvVar(false);
           setCreatedEnvVar(envVar);
           dispatch(
