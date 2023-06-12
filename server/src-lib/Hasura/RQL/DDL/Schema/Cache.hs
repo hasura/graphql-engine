@@ -1183,7 +1183,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                     -> do
                       let PartiallyResolvedSource sourceMetadata sourceConfig introspection tablesInfo eventTriggers = partiallyResolvedSource
                       so <-
-                        Inc.cache buildSource
+                        buildSource
                           -<
                             ( dynamicConfig,
                               allResolvedSources,
