@@ -11,6 +11,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Hasura.Backends.BigQuery.DDL (scalarTypeFromColumnType)
 import Hasura.Backends.BigQuery.Name
 import Hasura.Backends.BigQuery.Parser.Scalars qualified as BQP
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
@@ -261,7 +262,16 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
       mkListLiteral :: [ColumnValue 'BigQuery] -> IR.UnpreparedValue 'BigQuery
       mkListLiteral =
-        IR.UVLiteral . BigQuery.ListExpression . fmap (BigQuery.ValueExpression . cvValue)
+        IR.UVLiteral
+          . BigQuery.ListExpression
+          . fmap
+            ( \columnValue ->
+                BigQuery.ValueExpression
+                  ( BigQuery.TypedValue
+                      (scalarTypeFromColumnType (cvType columnValue))
+                      (cvValue columnValue)
+                  )
+            )
   pure
     $ P.object name (Just desc)
     $ fmap catMaybes
