@@ -54,9 +54,15 @@ export const AddNativeQuery = ({
   const selectedSource = watch('source');
 
   React.useEffect(() => {
-    // if source changes, reset value for logical model since any previously selected value would be invalid because it's not a diff database
-    setValue('returns', '');
-  }, [selectedSource]);
+    const subscription = watch((value, { name, type }) => {
+      if (name === 'source' && type === 'change') {
+        // onChange fired for the source field
+        // reset the "returns" value if the source changes
+        setValue('returns', '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const logicalModels = sources?.find(
     s => s.name === selectedSource
