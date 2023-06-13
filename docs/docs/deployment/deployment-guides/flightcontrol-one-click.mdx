@@ -1,26 +1,114 @@
 ---
-description: Deploy Hasura GraphQL Engine on AWS with Flightcontrol
+description: One-Click Deploy for Hasura GraphQL Engine on Nhost
 keywords:
   - hasura
   - docs
   - guide
   - deployment
-  - flightcontrol
-  - postgresql
-sidebar_position: 10
-sidebar_label: Using Flightcontrol (one-click)
+  - flightcontrol 
+  - postgreSQL
+sidebar_position: 11
+sidebar_label: Using Nhost (one-click)
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import {Tab, Tabs} from "nextra-theme-docs"
 
-# Deploying Hasura GraphQL Engine on Flightcontrol
+# Hasura GraphQL Engine One-click App on Flightcontrol 
 
 ## Introduction
 
-This guide shows how to deploy the Hasura GraphQL Engine on [Flightcontrol](https://www.flightcontrol.dev?ref=docs-hasura).
+This guide shows how to deploy the Hasura GraphQL Engine on [Flightcontrol](hhttps://www.flightcontrol.dev/ref=docs-hasura).
+At the end of this tutorial we will have a Hasura GraphQL Engine running on AWS Elastic Container Service (ECS) Fargate and an AWS Relational Database Service (RDS) database. This web application will be running on resources within your AWS account, and will have a public accessible URL.
 
-## One-click deploy on Flightcontrol
+## Deploying Hasura on Flightcontrol
 
-:::info Note
+Flightcontrol provides two options to deploy your web applications:
 
-Make sure to [create an Flightcontrol account](https://app.flightcontrol.dev/signup?ref=docs-hasura) first. Flightcontrol offers a free plan.
+<Tabs items={['Dashboard', 'Code']}>
+  <Tab> 
+      1. Upload your Hasura project to Github
+      2. Connect your project on Flightcontrol using GitHub
+      3. Select a GUI config type
+      4. Select your environment
+      5. Add a service for Web fargate and a Postgres Database
+      6. Configure the following settings in Web fargate
+        - Build System:
+          - Build Type: Pull from Image Registry
+          - Image Repository: Use Hasura's Image Repository on Docker Hub 
+          - Image Tag: Set the Image Tag to your preferred version or latest
+        - Port: 8080
+        - Health Check Path: /healthz
+      7. Set the `Env Variable Name for Connection String` in Database settings to be `HASURA_GRAPHQL_DATABASE_URL`
+      8. Select an AWS region
+      9. Click "Create Project" and complete any required steps (like linking your AWS account).
+  </Tab>
+  <Tab>
+
+Use the flightcontrol.json configuration for the project
+
+Below is an example of a `flightcontrol.json` configuration file for a [Hasura](https://hasura.io/) project.
+
+```json filename="flightcontrol.json"
+{
+  "$schema": "https://app.flightcontrol.dev/schema.json",
+  "environments": [
+    {
+      "id": "production",
+      "name": "Production",
+      "region": "us-west-2",
+      "source": {
+        "branch": "main"
+      },
+      "services": [
+        {
+          "id": "hasura",
+          "name": "Hasura",
+          "type": "fargate",
+          "buildType": "fromRepository",
+          "containerImage": {
+            "registryId": "docker-hub-vaf0ui0",
+            "tag": "latest",
+            "repository": "hasura/graphql-engine"
+          },
+          "cpu": 0.25,
+          "memory": 0.5,
+          "domain": "hasura.yourapp.com",
+          "port": 8080,
+          "minInstances": 1,
+          "maxInstances": 1,
+          "envVariables": {
+            "healthCheckPath": "/healthz"
+            "HASURA_GRAPHQL_DATABASE_URL": {
+              "fromService": {
+                "id": "hasura-db",
+                "value": "dbConnectionString"
+              }
+            }
+          }
+        },
+        {
+          "id": "hasura-db",
+          "name": "HASURA_GRAPHQL_DATABASE_URL",
+          "type": "rds",
+          "engine": "postgres",
+          "engineVersion": "13",
+          "instanceSize": "db.t4g.micro",
+          "storage": 20,
+          "private": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+Click "Create Project"
+
+  </Tab>
+</Tabs>
+
+## Troubleshooting
+
+- [Flightcontrol Documentation](https://www.flightcontrol.dev/docs?ref=docs-hasura)
+- [Troubleshooting](https://www.flightcontrol.dev/docs/troubleshooting)
