@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { programmaticallyTraceError } from '../../../../../../features/Analytics';
 import { Dispatch } from '../../../../../../types';
 import {
@@ -12,6 +12,11 @@ import {
   connectionTypes,
   getDefaultState,
 } from '../../../DataSources/state';
+import Globals from '../../../../../../Globals';
+import {
+  controlPlaneClient,
+  FETCH_CONFIG_STATUS,
+} from '../../../../../../features/ControlPlane';
 
 type HasuraDBCreationPayload = {
   envVar: string;
@@ -105,7 +110,8 @@ export function useCreateHasuraCloudDatasource(
 
       // This sets the database URL of the given Hasura project as an env var in Hasura Cloud project
       setDBURLInEnvVars(dbUrl)
-        .then(envVar => {
+        .then(data => {
+          const { envVar, oldConfigHash } = data;
           setState({
             status: 'adding-data-source',
             payload: {
@@ -113,38 +119,19 @@ export function useCreateHasuraCloudDatasource(
               dataSourceName,
             },
           });
-          /*
-            There's a downtime after env var updation.
-            So we verify the project health and attempt connecting datasource only after project is up
-            We start verifying the project health after a timeout of 5000 seconds,
-            because it could 2-3 seconds for the project to go down after the environment variable update
-          */
-          setTimeout(() => {
-            verifyProjectHealthAndConnectDataSource(
+
+          const successCallback = () => {
+            executeConnect(
+              envVar,
+              // set success status when the data source gets added successfully
               () => {
-                executeConnect(
-                  envVar,
-                  // set success status when the data source gets added successfully
-                  () => {
-                    setState({
-                      status: 'success',
-                      payload: {
-                        envVar,
-                        dataSourceName,
-                      },
-                    });
+                setState({
+                  status: 'success',
+                  payload: {
+                    envVar,
+                    dataSourceName,
                   },
-                  // set error status when the data source gets added successfully
-                  () => {
-                    setState({
-                      status: 'adding-data-source-failed',
-                      payload: {
-                        envVar,
-                        dataSourceName,
-                      },
-                    });
-                  }
-                );
+                });
               },
               // set error status if creating env var failed
               () => {
@@ -157,7 +144,61 @@ export function useCreateHasuraCloudDatasource(
                 });
               }
             );
-          }, 5000);
+          };
+          const errorCallback = () => {
+            setState({
+              status: 'adding-data-source-failed',
+              payload: {
+                envVar,
+                dataSourceName,
+              },
+            });
+          };
+
+          /**
+           * Getting a success response on adding an env var for a tenant on lux does not
+           * mean that the change has propagated to all workers of that tenant.
+           *
+           * If the change has not propagated to a worker to which the `pg_add_source` request is routed to,
+           * the server would throw an `inconsistent_object` error as the new env var will not be found.
+           *
+           * To handle this, we wait for the changes to be propagated to all
+           * workers of a tenant before attempting to connect the DB.
+           *
+           * We do that by verifying that the new config hash has been set
+           * for all workers of the tenant using the `config_status` table.
+           *
+           * Additionally add a timeout interval with retries as an additional
+           * redundancy since it throws CORS error locally
+           */
+          const { unsubscribe } = controlPlaneClient.subscribe(
+            FETCH_CONFIG_STATUS,
+            {
+              tenantId: Globals.hasuraCloudTenantId,
+            },
+            data => {
+              if (
+                // check if all workers are successfully configured with the new hash
+                data.config_status.every(
+                  (config: { hash: string; message: string }) =>
+                    config.message === 'Service configured successfully' &&
+                    config.hash !== oldConfigHash
+                )
+              ) {
+                setTimeout(() => {
+                  verifyProjectHealthAndConnectDataSource(
+                    successCallback,
+                    errorCallback
+                  );
+                }, 1000);
+                unsubscribe();
+              }
+            },
+            error => {
+              errorCallback();
+              unsubscribe();
+            }
+          );
         })
         .catch(error => {
           // if adding env var fails unexpectedly, set the error state
@@ -189,7 +230,7 @@ export function useCreateHasuraCloudDatasource(
           });
         });
     }
-  }, [dbUrl, dataSourceName, state]);
+  }, [dbUrl, dataSourceName, executeConnect]);
 
   return {
     state,
