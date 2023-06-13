@@ -11,6 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
 import Data.Has (Has)
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.App.State
@@ -587,9 +588,15 @@ runBulkAtomic ::
 runBulkAtomic cmds = do
   -- get the metadata modifiers for all our commands
   results <- traverse getMetadataModifierForCommand cmds
-  -- build the schema cache using the combined modifiers
-  buildSchemaCache (foldMap snd results)
-  -- nothing broke, great!
+
+  -- Try building the schema cache using the combined modifiers. If we run into
+  -- any inconsistencies, we should fail and roll back.
+  inconsistencies <- tryBuildSchemaCache (foldMap snd results)
+
+  unless (null inconsistencies)
+    $ throw400WithDetail BadRequest "Schema inconsistency"
+    $ toJSON (HashMap.elems inconsistencies)
+
   pure successMsg
   where
     getMetadataModifierForCommand = \case
