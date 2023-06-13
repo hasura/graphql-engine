@@ -18,6 +18,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
 import Hasura.Function.API qualified as Functions
+import Hasura.GraphQL.Transport.WebSocket qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.LogicalModel.API qualified as LogicalModel
 import Hasura.Metadata.Class
@@ -105,9 +106,10 @@ runMetadataQuery ::
   ) =>
   AppContext ->
   RebuildableSchemaCache ->
+  WS.WebsocketCloseOnMetadataChangeAction ->
   RQLMetadata ->
   m (EncJSON, RebuildableSchemaCache)
-runMetadataQuery appContext schemaCache RQLMetadata {..} = do
+runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetadata {..} = do
   AppEnv {..} <- askAppEnv
   let logger = _lsLogger appEnvLoggers
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
@@ -183,6 +185,13 @@ runMetadataQuery appContext schemaCache RQLMetadata {..} = do
           Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
             $ setMetadataResourceVersionInSchemaCache newResourceVersion
             & runCacheRWT dynamicConfig modSchemaCache
+
+        -- Close all subscriptions with 1012 code (subscribers should reconnect)
+        -- and close poller threads
+        when ((_cdcCloseWebsocketsOnMetadataChangeStatus dynamicConfig) == CWMCEnabled)
+          $ Tracing.newSpan "closeWebsocketsOnMetadataChange"
+          $ liftIO
+          $ WS.runWebsocketCloseOnMetadataChangeAction closeWebsocketsOnMetadataChange
 
         pure (r, modSchemaCache')
       (MaintenanceModeEnabled (), ReadOnlyModeDisabled) ->

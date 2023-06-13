@@ -90,7 +90,8 @@ serveOptions =
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults,
-      soApolloFederationStatus = ApolloFederationDisabled
+      soApolloFederationStatus = ApolloFederationDisabled,
+      soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

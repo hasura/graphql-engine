@@ -72,6 +72,7 @@ data CacheDynamicConfig = CacheDynamicConfig
     _cdcExperimentalFeatures :: HashSet ExperimentalFeature,
     _cdcDefaultNamingConvention :: NamingCase,
     _cdcMetadataDefaults :: MetadataDefaults,
-    _cdcApolloFederationStatus :: ApolloFederationStatus
+    _cdcApolloFederationStatus :: ApolloFederationStatus,
+    _cdcCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
   }
   deriving (Eq)

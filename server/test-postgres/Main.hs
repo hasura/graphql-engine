@@ -126,6 +126,7 @@ main = do
                 (_default defaultNamingConventionOption)
                 emptyMetadataDefaults
                 ApolloFederationDisabled
+                (_default closeWebsocketsOnMetadataChangeOption)
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver staticConfig
 
         (_appInit, appEnv) <-

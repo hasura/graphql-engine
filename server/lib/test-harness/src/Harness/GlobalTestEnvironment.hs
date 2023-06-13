@@ -22,7 +22,6 @@ import Harness.Logging.Messages
 import Harness.Services.Composed qualified as Services
 import Harness.Test.BackendType
 import Hasura.Prelude
-import Network.WebSockets qualified as WS
 
 -- | static information across an entire test suite run
 data GlobalTestEnvironment = GlobalTestEnvironment
@@ -88,7 +87,7 @@ instance Show GlobalTestEnvironment where
 
 -- | How should we make requests to `graphql-engine`? Both WebSocket- and HTTP-
 -- based requests are supported.
-data Protocol = HTTP | WebSocket WS.Connection
+data Protocol = HTTP | WebSocket
 
 -- | Credentials for our testing modes. See 'SpecHook.setupTestingMode' for the
 -- practical consequences of this type.

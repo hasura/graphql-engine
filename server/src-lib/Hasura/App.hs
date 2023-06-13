@@ -508,6 +508,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
           soDefaultNamingConvention
           soMetadataDefaults
           soApolloFederationStatus
+          soCloseWebsocketsOnMetadataChangeStatus
 
   -- Create the schema cache
   rebuildableSchemaCache <-

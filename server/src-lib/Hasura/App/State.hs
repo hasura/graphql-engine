@@ -158,7 +158,8 @@ data AppContext = AppContext
     acEnableTelemetry :: TelemetryStatus,
     acEventEngineCtx :: EventEngineCtx,
     acAsyncActionsFetchInterval :: OptionalInterval,
-    acApolloFederationStatus :: ApolloFederationStatus
+    acApolloFederationStatus :: ApolloFederationStatus,
+    acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -268,7 +269,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
           acEnableTelemetry = soEnableTelemetry,
           acEventEngineCtx = eventEngineCtx,
           acAsyncActionsFetchInterval = soAsyncActionsFetchInterval,
-          acApolloFederationStatus = soApolloFederationStatus
+          acApolloFederationStatus = soApolloFederationStatus,
+          acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus
         }
   where
     buildSqlGenCtx = Inc.cache proc (experimentalFeatures, stringifyNum, dangerousBooleanCollapse) -> do
@@ -340,5 +342,6 @@ buildCacheDynamicConfig AppContext {..} = do
       _cdcExperimentalFeatures = acExperimentalFeatures,
       _cdcDefaultNamingConvention = acDefaultNamingConvention,
       _cdcMetadataDefaults = acMetadataDefaults,
-      _cdcApolloFederationStatus = acApolloFederationStatus
+      _cdcApolloFederationStatus = acApolloFederationStatus,
+      _cdcCloseWebsocketsOnMetadataChangeStatus = acCloseWebsocketsOnMetadataChangeStatus
     }

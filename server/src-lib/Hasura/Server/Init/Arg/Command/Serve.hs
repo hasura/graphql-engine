@@ -60,6 +60,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     parseMetadataDefaults,
     metadataDefaultsOption,
     apolloFederationStatusOption,
+    closeWebsocketsOnMetadataChangeOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -146,6 +147,7 @@ serveCommandParser =
     <*> parseExtensionsSchema
     <*> parseMetadataDefaults
     <*> parseApolloFederationStatus
+    <*> parseEnableCloseWebsocketsOnMetadataChange
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1158,6 +1160,22 @@ parseApolloFederationStatus =
           <> Opt.help (Config._helpMessage apolloFederationStatusOption)
       )
 
+closeWebsocketsOnMetadataChangeOption :: Config.Option (Types.CloseWebsocketsOnMetadataChangeStatus)
+closeWebsocketsOnMetadataChangeOption =
+  Config.Option
+    { Config._default = Types.CWMCEnabled,
+      Config._envVar = "HASURA_GRAPHQL_CLOSE_WEBSOCKETS_ON_METADATA_CHANGE",
+      Config._helpMessage = "Close all the websocket connections (with error code 1012) on metadata change (default: true)."
+    }
+
+parseEnableCloseWebsocketsOnMetadataChange :: Opt.Parser (Maybe Types.CloseWebsocketsOnMetadataChangeStatus)
+parseEnableCloseWebsocketsOnMetadataChange =
+  (bool Nothing (Just Types.CWMCDisabled))
+    <$> Opt.switch
+      ( Opt.long "disable-close-websockets-on-metadata-change"
+          <> Opt.help (Config._helpMessage closeWebsocketsOnMetadataChangeOption)
+      )
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1256,6 +1274,7 @@ serveCmdFooter =
         Config.optionPP enableMetadataQueryLoggingOption,
         Config.optionPP defaultNamingConventionOption,
         Config.optionPP metadataDBExtensionsSchemaOption,
-        Config.optionPP apolloFederationStatusOption
+        Config.optionPP apolloFederationStatusOption,
+        Config.optionPP closeWebsocketsOnMetadataChangeOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

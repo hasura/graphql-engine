@@ -206,6 +206,20 @@ for JSON encoding-decoding.
 | **Default**         | `false`                                        |
 | **Supported in**    | CE, Enterprise Edition                         |
 
+### Close WebSocket connections on metadata change
+
+When metadata changes, close all WebSocket connections (with error code `1012`). This is useful when you want to ensure
+that all clients reconnect to the latest metadata.
+
+|                     |                                                       |
+| ------------------- | ----------------------------------------------------- |
+| **Flag**            | `--disable-close-websockets-on-metadata-change`      |
+| **Env var**         | `HASURA_GRAPHQL_CLOSE_WEBSOCKETS_ON_METADATA_CHANGE` |
+| **Accepted values** | Boolean                                               |
+| **Options**         | `true` or `false`                                     |
+| **Default**         | `true`                                                |
+| **Supported in**    | CE, Enterprise Edition, Cloud                         |
+
 ### Connections per Read-Replica
 
 The maximum number of Postgres connections per [read-replica](databases/database-config/read-replicas.mdx) that can be

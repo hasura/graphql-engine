@@ -24,6 +24,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     sendMsgAndCloseConn,
     createServerApp,
     createWSServer,
+    closeAllConnectionsWithReason,
     getData,
     getRawWebSocketConnection,
     getWSId,
@@ -278,6 +279,22 @@ closeAllWith ::
 closeAllWith closer msg conns =
   void $ A.mapConcurrently (closer msg . snd) conns
 
+closeAllConnectionsWithReason ::
+  WSServer a ->
+  String ->
+  BL.ByteString ->
+  (SecuritySensitiveUserConfig -> SecuritySensitiveUserConfig) ->
+  IO ()
+closeAllConnectionsWithReason (WSServer (L.Logger writeLog) userConfRef serverStatus) logMsg reason updateConf = do
+  writeLog
+    $ WSReaperThreadLog
+    $ fromString
+    $ logMsg
+  conns <- STM.atomically $ do
+    STM.modifyTVar' userConfRef updateConf
+    flushConnMap serverStatus
+  closeAllWith (flip forceConnReconnect) reason conns
+
 -- | Resets the current connections map to an empty one if the server is
 -- running and returns the list of connections that were in the map
 -- before flushing it.
@@ -354,7 +371,7 @@ data WSHandlers m a = WSHandlers
 -- stringify big query numeric, experimental features and invalidates/closes all
 -- connections if there are any changes.
 websocketConnectionReaper :: IO (AuthMode, AllowListStatus, CorsPolicy, SQLGenCtx, Set.HashSet ExperimentalFeature, NamingCase) -> IO SchemaCache -> WSServer a -> IO Void
-websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger writeLog) userConfRef serverStatus) =
+websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConfRef _) =
   forever $ do
     (currAuthMode, currEnableAllowlist, currCorsPolicy, currSqlGenCtx, currExperimentalFeatures, currDefaultNamingCase) <- getLatestConfig
     currAllowlist <- scAllowlist <$> getSchemaCache
@@ -370,21 +387,6 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
       (currDefaultNamingCase, prevDefaultNamingCase)
     sleep $ seconds 1
   where
-    closeAllConnectionsWithReason ::
-      String ->
-      BL.ByteString ->
-      (SecuritySensitiveUserConfig -> SecuritySensitiveUserConfig) ->
-      IO ()
-    closeAllConnectionsWithReason logMsg reason updateConf = do
-      writeLog
-        $ WSReaperThreadLog
-        $ fromString
-        $ logMsg
-      conns <- STM.atomically $ do
-        STM.modifyTVar' userConfRef updateConf
-        flushConnMap serverStatus
-      closeAllWith (flip forceConnReconnect) reason conns
-
     -- Close all connections based on -
     -- if CorsPolicy changed -> close
     -- if AuthMode changed -> close
@@ -419,12 +421,14 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
           -- if CORS policy has changed, close all connections
           | hasCorsPolicyChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the cors policy changed"
                 "cors policy changed"
                 (\conf -> conf {ssucCorsPolicy = currCorsPolicy})
           -- if any auth config has changed, close all connections
           | hasAuthModeChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the auth mode changed"
                 "auth mode changed"
                 (\conf -> conf {ssucAuthMode = currAuthMode})
@@ -434,6 +438,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
           -- connections.
           | hasAllowlistEnabled ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as allow list is enabled"
                 "allow list enabled"
                 (\conf -> conf {ssucEnableAllowlist = currEnableAllowlist})
@@ -441,42 +446,49 @@ websocketConnectionReaper getLatestConfig getSchemaCache (WSServer (L.Logger wri
           -- allowlist, we need to close all the connections.
           | hasAllowlistUpdated ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the allow list has been updated"
                 "allow list updated"
                 (\conf -> conf {ssucAllowlist = currAllowlist})
           -- if HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES has changed, close all connections
           | hasStringifyNumChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES setting changed"
                 "HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES env var changed"
                 (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
           -- if HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE has changed, close all connections
           | hasDangerousBooleanCollapseChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE setting changed"
                 "HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE env var changed"
                 (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
           -- if 'bigquery_string_numeric_input' option added/removed from experimental features, close all connections
           | hasBigqueryStringNumericInputChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the 'bigquery_string_numeric_input' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
                 "'bigquery_string_numeric_input' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
                 (\conf -> conf {ssucSQLGenCtx = currSqlGenCtx})
           -- if 'hide_aggregation_predicates' option added/removed from experimental features, close all connections
           | hasHideAggregationPredicatesChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the 'hide-aggregation-predicates' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
                 "'hide-aggregation-predicates' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
                 (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
           -- if 'hide_stream_fields' option added/removed from experimental features, close all connections
           | hasHideStreamFieldsChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the 'hide-stream-fields' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES"
                 "'hide-stream-fields' removed/added in HASURA_GRAPHQL_EXPERIMENTAL_FEATURES env var"
                 (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures})
           -- if naming convention has been changed, close all connections
           | hasDefaultNamingCaseChanged ->
               closeAllConnectionsWithReason
+                ws
                 "closing all websocket connections as the 'naming_convention' option has been added/removed from HASURA_GRAPHQL_EXPERIMENTAL_FEATURES and the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION has changed"
                 "naming convention has been changed"
                 (\conf -> conf {ssucExperimentalFeatures = currExperimentalFeatures, ssucDefaultNamingCase = currDefaultNamingCase})
