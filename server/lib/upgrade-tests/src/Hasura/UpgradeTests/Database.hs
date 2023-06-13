@@ -1,7 +1,7 @@
 -- | Starts a database in a Docker container.
 module Hasura.UpgradeTests.Database
   ( Database,
-    DatabaseSchema (..),
+    DatabaseSchema (databaseSchemaUrlForContainer, databaseSchemaUrlForHost),
     dbContainer,
     newSchema,
     runSql,
@@ -22,25 +22,34 @@ type Url = String
 type Sql = Text
 
 -- | Represents a running database.
-newtype Database = Database Url
-  deriving newtype (Show)
+data Database = Database
+  { -- | The connection URL for the database, inside the Docker network.
+    databaseUrlForContainer :: Url,
+    -- | The connection URL for the database, from the host network.
+    databaseUrlForHost :: Url
+  }
+  deriving stock (Show)
 
 -- | Represents an initialized schema on a running database.
-newtype DatabaseSchema = DatabaseSchema
-  { -- | The connection URL for the schema.
-    databaseSchemaUrl :: Url
+data DatabaseSchema = DatabaseSchema
+  { -- | The connection URL for the schema, inside the Docker network.
+    databaseSchemaUrlForContainer :: Url,
+    -- | The connection URL for the schema, from the host network.
+    databaseSchemaUrlForHost :: Url
   }
-  deriving newtype (Show)
+  deriving stock (Show)
 
 -- | This starts a database in a test Docker container.
 --
 -- The database will be cleaned up when leaving the 'TC.TestContainer' monad.
-dbContainer :: TC.TestContainer Database
-dbContainer = do
+dbContainer :: TC.Network -> TC.TestContainer Database
+dbContainer network = do
   container <-
     TC.run
       $ TC.containerRequest (TC.fromTag ("postgis/postgis:15-3.3-alpine"))
       & TC.setSuffixedName "hge-test-upgrade-db"
+      & TC.withNetwork network
+      & TC.withNetworkAlias "db"
       & TC.setCmd ["-F"]
       & TC.setEnv [("POSTGRES_PASSWORD", "password")]
       & TC.setExpose [5432]
@@ -49,16 +58,24 @@ dbContainer = do
   -- shuts it down, then starts it again, so waiting for the port is not enough.
   liftIO $ sleep 5
   -- We provide a URL that can be used from the host.
-  pure . Database $ "postgresql://postgres:password@localhost:" <> show (TC.containerPort container 5432)
+  pure
+    $ Database
+      { databaseUrlForContainer = "postgresql://postgres:password@db",
+        databaseUrlForHost = "postgresql://postgres:password@localhost:" <> show (TC.containerPort container 5432)
+      }
 
 -- | This creates a new, randomly-named schema on the given database.
 --
 -- It is assumed that the schema will be cleaned up when the database is.
 newSchema :: Database -> IO DatabaseSchema
-newSchema (Database url) = do
+newSchema database = do
   schemaName <- replicateM 16 $ randomRIO ('a', 'z')
-  runSql url $ "CREATE DATABASE \"" <> Text.pack schemaName <> "\""
-  pure . DatabaseSchema $ url <> "/" <> schemaName
+  runSql (databaseUrlForHost database) $ "CREATE DATABASE \"" <> Text.pack schemaName <> "\""
+  pure
+    $ DatabaseSchema
+      { databaseSchemaUrlForContainer = databaseUrlForContainer database <> "/" <> schemaName,
+        databaseSchemaUrlForHost = databaseUrlForHost database <> "/" <> schemaName
+      }
 
 -- | Run arbitrary SQL on a given connection URL.
 --
