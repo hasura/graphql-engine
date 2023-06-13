@@ -15,7 +15,6 @@ module Hasura.LogicalModel.API
     DropLogicalModelPermission (..),
     runCreateSelectLogicalModelPermission,
     runDropSelectLogicalModelPermission,
-    getCustomTypes,
     module Hasura.LogicalModel.Types,
   )
 where
@@ -140,12 +139,12 @@ runGetLogicalModel q = do
   metadata <- getMetadata
 
   let logicalModels :: Maybe (LogicalModels b)
-      logicalModels = metadata ^? getCustomTypes (glmSource q)
+      logicalModels = metadata ^? getLogicalModels (glmSource q)
 
   pure (encJFromJValue (InsOrdHashMap.elems <$> logicalModels))
 
-getCustomTypes :: forall b. (Backend b) => SourceName -> Traversal' Metadata (LogicalModels b)
-getCustomTypes sourceName =
+getLogicalModels :: forall b. (Backend b) => SourceName -> Traversal' Metadata (LogicalModels b)
+getLogicalModels sourceName =
   metaSources . ix sourceName . toSourceMetadata . smLogicalModels @b
 
 -- | Handler for the 'track_logical_model' endpoint. The type 'TrackLogicalModel b'

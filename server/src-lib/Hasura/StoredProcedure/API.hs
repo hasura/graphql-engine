@@ -17,15 +17,13 @@ import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
 import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
-import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModel.API (getCustomTypes)
 import Hasura.LogicalModel.Metadata (LogicalModelName)
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend, FunctionName, SourceConnConfiguration)
+import Hasura.RQL.Types.Backend (Backend, FunctionName)
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
@@ -91,38 +89,6 @@ deriving via
 
 -- Configuration
 
--- | Validate a stored procedure and extract the stored procedure info from the request.
-storedProcedureTrackToMetadata ::
-  forall b m.
-  ( BackendMetadata b,
-    MonadError QErr m,
-    MonadIO m,
-    MetadataM m
-  ) =>
-  Env.Environment ->
-  SourceConnConfiguration b ->
-  TrackStoredProcedure b ->
-  m (StoredProcedureMetadata b)
-storedProcedureTrackToMetadata env sourceConnConfig TrackStoredProcedure {..} = do
-  let storedProcedureMetadata =
-        StoredProcedureMetadata
-          { _spmStoredProcedure = tspStoredProcedure,
-            _spmConfig = tspConfig,
-            _spmReturns = tspReturns,
-            _spmArguments = tspArguments,
-            _spmDescription = tspDescription
-          }
-
-  metadata <- getMetadata
-
-  -- lookup logical model in existing metadata
-  case metadata ^? getCustomTypes tspSource . ix tspReturns of
-    Just logicalModel ->
-      validateStoredProcedure @b env sourceConnConfig logicalModel storedProcedureMetadata
-    Nothing -> throw400 NotFound ("Logical model " <> tspReturns <<> " not found.")
-
-  pure storedProcedureMetadata
-
 -- | API payload for the 'get_stored_procedure' endpoint.
 data GetStoredProcedure (b :: BackendType) = GetStoredProcedure
   { gspSource :: SourceName
@@ -170,37 +136,40 @@ runTrackStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
     MonadError QErr m,
-    MonadIO m,
     CacheRWM m,
     MetadataM m,
     HasFeatureFlagChecker m
   ) =>
-  Env.Environment ->
   TrackStoredProcedure b ->
   m EncJSON
-runTrackStoredProcedure env trackStoredProcedureRequest = do
+runTrackStoredProcedure TrackStoredProcedure {..} = do
   throwIfFeatureDisabled
 
   sourceMetadata <-
     maybe
       ( throw400 NotFound
           $ "Source '"
-          <> sourceNameToText source
+          <> sourceNameToText tspSource
           <> "' of kind "
           <> toTxt (reify (backendTag @b))
           <> " not found."
       )
       pure
-      . preview (metaSources . ix source . toSourceMetadata @b)
+      . preview (metaSources . ix tspSource . toSourceMetadata @b)
       =<< getMetadata
-  let sourceConnConfig = _smConfiguration sourceMetadata
 
-  (metadata :: StoredProcedureMetadata b) <- do
-    storedProcedureTrackToMetadata @b env sourceConnConfig trackStoredProcedureRequest
+  let metadata =
+        StoredProcedureMetadata
+          { _spmStoredProcedure = tspStoredProcedure,
+            _spmConfig = tspConfig,
+            _spmReturns = tspReturns,
+            _spmArguments = tspArguments,
+            _spmDescription = tspDescription
+          }
 
   let storedProcedure = _spmStoredProcedure metadata
       metadataObj =
-        MOSourceObjId source
+        MOSourceObjId tspSource
           $ AB.mkAnyBackend
           $ SMOStoredProcedure @b storedProcedure
       existingStoredProcedures = InsOrdHashMap.keys (_smStoredProcedures sourceMetadata)
@@ -209,12 +178,10 @@ runTrackStoredProcedure env trackStoredProcedureRequest = do
 
   buildSchemaCacheFor metadataObj
     $ MetadataModifier
-    $ (metaSources . ix source . toSourceMetadata @b . smStoredProcedures)
+    $ (metaSources . ix tspSource . toSourceMetadata @b . smStoredProcedures)
     %~ InsOrdHashMap.insert storedProcedure metadata
 
   pure successMsg
-  where
-    source = tspSource trackStoredProcedureRequest
 
 -- | API payload for the 'untrack_stored_procedure' endpoint.
 data UntrackStoredProcedure (b :: BackendType) = UntrackStoredProcedure

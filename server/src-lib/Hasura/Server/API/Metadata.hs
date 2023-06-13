@@ -443,7 +443,7 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMTrackNativeQuery q -> dispatchMetadata NativeQueries.runTrackNativeQuery q
   RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
   RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
-  RMTrackStoredProcedure q -> dispatchMetadata (StoredProcedures.runTrackStoredProcedure env) q
+  RMTrackStoredProcedure q -> dispatchMetadata StoredProcedures.runTrackStoredProcedure q
   RMUntrackStoredProcedure q -> dispatchMetadata StoredProcedures.runUntrackStoredProcedure q
   RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
   RMTrackLogicalModel q -> dispatchMetadata LogicalModel.runTrackLogicalModel q

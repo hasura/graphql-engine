@@ -13,7 +13,6 @@ import Hasura.Function.Cache
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -248,7 +247,7 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    LogicalModelMetadata b ->
+    LogicalModelInfo b ->
     StoredProcedureMetadata b ->
     m ()
   validateStoredProcedure _ _ _ _ =

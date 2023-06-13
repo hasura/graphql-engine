@@ -1013,7 +1013,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           nativeQueryCache = mapFromL _nqiRootFieldName (catMaybes nativeQueryCacheMaybes)
 
       storedProcedureCacheMaybes <-
-        interpretWriter
+        interpretWriterT
           -< for
             (InsOrdHashMap.elems storedProcedures)
             \spm@StoredProcedureMetadata {..} -> do
@@ -1050,6 +1050,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                   onNothing
                     (HashMap.lookup _spmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _spmReturns <> " could not be found"))
+
+                validateStoredProcedure @b env (_smConfiguration sourceMetadata) logicalModel spm
 
                 recordDependenciesM metadataObject schemaObjId
                   $ Seq.singleton dependency
