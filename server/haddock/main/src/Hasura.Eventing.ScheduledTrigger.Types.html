@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ScheduledTriggerInternalErr"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-var">ScheduledTriggerInternalErr</span></a></span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962275"><span id="local-6989586621686962280"><span class="annot"><span class="annottext">ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962162"><span id="local-6989586621686962167"><span class="annot"><span class="annottext">ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
 (ScheduledTriggerInternalErr
  -&gt; ScheduledTriggerInternalErr -&gt; Bool)
 -&gt; (ScheduledTriggerInternalErr
@@ -40,16 +40,16 @@ $c/= :: ScheduledTriggerInternalErr -&gt; ScheduledTriggerInternalErr -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621686962293"><span class="annot"><span class="annottext">toEngineLog :: ScheduledTriggerInternalErr
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621686962180"><span class="annot"><span class="annottext">toEngineLog :: ScheduledTriggerInternalErr
 -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="#local-6989586621686962293"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span id="local-6989586621686962295"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621686962295"><span class="hs-identifier hs-var">qerr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621686962180"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledTriggerInternalErr"><span class="hs-identifier hs-type">ScheduledTriggerInternalErr</span></a></span><span> </span><span id="local-6989586621686962182"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621686962182"><span class="hs-identifier hs-var">qerr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">L.LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-var">L.scheduledTriggerLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621686962295"><span class="hs-identifier hs-var">qerr</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686962182"><span class="hs-identifier hs-var">qerr</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">data</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CronTriggerStats"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-var">CronTriggerStats</span></a></span></span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ctsName"><span class="annot"><span class="annottext">CronTriggerStats -&gt; TriggerName
@@ -59,7 +59,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span id="line-38"></span><span>    </span><span id="_ctsMaxScheduledTime"><span class="annot"><span class="annottext">CronTriggerStats -&gt; UTCTime
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_ctsMaxScheduledTime"><span class="hs-identifier hs-var hs-var">_ctsMaxScheduledTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962301"><span id="local-6989586621686962309"><span class="annot"><span class="annottext">CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962188"><span id="local-6989586621686962196"><span class="annot"><span class="annottext">CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
 (CronTriggerStats -&gt; CronTriggerStats -&gt; Bool)
 -&gt; (CronTriggerStats -&gt; CronTriggerStats -&gt; Bool)
 -&gt; Eq CronTriggerStats
@@ -68,7 +68,7 @@ $c== :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
 == :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
 $c/= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
 /= :: CronTriggerStats -&gt; CronTriggerStats -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962313"><span id="local-6989586621686962315"><span class="annot"><span class="annottext">(forall x. CronTriggerStats -&gt; Rep CronTriggerStats x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962200"><span id="local-6989586621686962202"><span class="annot"><span class="annottext">(forall x. CronTriggerStats -&gt; Rep CronTriggerStats x)
 -&gt; (forall x. Rep CronTriggerStats x -&gt; CronTriggerStats)
 -&gt; Generic CronTriggerStats
 forall x. Rep CronTriggerStats x -&gt; CronTriggerStats
@@ -81,16 +81,16 @@ $cto :: forall x. Rep CronTriggerStats x -&gt; CronTriggerStats
 to :: forall x. Rep CronTriggerStats x -&gt; CronTriggerStats
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962321"><span id="local-6989586621686962325"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-type">CronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621686962444"><span class="annot"><span class="annottext">toJSON :: CronTriggerStats -&gt; Value
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962208"><span id="local-6989586621686962212"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronTriggerStats"><span class="hs-identifier hs-type">CronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621686962331"><span class="annot"><span class="annottext">toJSON :: CronTriggerStats -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; CronTriggerStats -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621686962530"><span class="annot"><span class="annottext">toEncoding :: CronTriggerStats -&gt; Encoding
-</span><a href="#local-6989586621686962530"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; CronTriggerStats -&gt; Encoding
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621686962417"><span class="annot"><span class="annottext">toEncoding :: CronTriggerStats -&gt; Encoding
+</span><a href="#local-6989586621686962417"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; CronTriggerStats -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
@@ -103,7 +103,7 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-48"></span><span>    </span><span id="_fctsNumFetches"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; Int
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fctsNumFetches"><span class="hs-identifier hs-var hs-var">_fctsNumFetches</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962537"><span id="local-6989586621686962543"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962424"><span id="local-6989586621686962430"><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
 (FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool)
 -&gt; (FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool)
 -&gt; Eq FetchedCronTriggerStats
@@ -112,7 +112,7 @@ $c== :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
 == :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
 $c/= :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
 /= :: FetchedCronTriggerStats -&gt; FetchedCronTriggerStats -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962547"><span id="local-6989586621686962549"><span class="annot"><span class="annottext">(forall x.
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962434"><span id="local-6989586621686962436"><span class="annot"><span class="annottext">(forall x.
  FetchedCronTriggerStats -&gt; Rep FetchedCronTriggerStats x)
 -&gt; (forall x.
     Rep FetchedCronTriggerStats x -&gt; FetchedCronTriggerStats)
@@ -127,15 +127,15 @@ $cto :: forall x. Rep FetchedCronTriggerStats x -&gt; FetchedCronTriggerStats
 to :: forall x. Rep FetchedCronTriggerStats x -&gt; FetchedCronTriggerStats
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962554"><span id="local-6989586621686962558"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621686962625"><span class="annot"><span class="annottext">toJSON :: FetchedCronTriggerStats -&gt; Value
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962441"><span id="local-6989586621686962445"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621686962512"><span class="annot"><span class="annottext">toJSON :: FetchedCronTriggerStats -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FetchedCronTriggerStats -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621686962688"><span class="annot"><span class="annottext">toEncoding :: FetchedCronTriggerStats -&gt; Encoding
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621686962575"><span class="annot"><span class="annottext">toEncoding :: FetchedCronTriggerStats -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FetchedCronTriggerStats -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
@@ -144,37 +144,37 @@ Options -&gt; a -&gt; Encoding
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621686962694"><span class="annot"><span class="annottext">toEngineLog :: FetchedCronTriggerStats -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621686962695"><span class="annot"><span class="annottext">FetchedCronTriggerStats
-</span><a href="#local-6989586621686962695"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621686962581"><span class="annot"><span class="annottext">toEngineLog :: FetchedCronTriggerStats -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621686962582"><span class="annot"><span class="annottext">FetchedCronTriggerStats
+</span><a href="#local-6989586621686962582"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-58"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#cronEventGeneratorProcessType"><span class="hs-identifier hs-var">L.cronEventGeneratorProcessType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FetchedCronTriggerStats -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">FetchedCronTriggerStats
-</span><a href="#local-6989586621686962695"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686962582"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962700"><span id="local-6989586621686962704"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621686962713"><span class="annot"><span class="annottext">[CronTriggerStats]
-</span><a href="#local-6989586621686962713"><span class="hs-identifier hs-var">lTriggers</span></a></span></span><span> </span><span id="local-6989586621686962714"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686962714"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686962715"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedCronTriggerStats
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962587"><span id="local-6989586621686962591"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621686962600"><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621686962600"><span class="hs-identifier hs-var">lTriggers</span></a></span></span><span> </span><span id="local-6989586621686962601"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686962601"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686962602"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedCronTriggerStats
 -&gt; FetchedCronTriggerStats -&gt; FetchedCronTriggerStats
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621686962716"><span class="annot"><span class="annottext">[CronTriggerStats]
-</span><a href="#local-6989586621686962716"><span class="hs-identifier hs-var">rTriggers</span></a></span></span><span> </span><span id="local-6989586621686962717"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686962717"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span><span> </span><span id="local-6989586621686962603"><span class="annot"><span class="annottext">[CronTriggerStats]
+</span><a href="#local-6989586621686962603"><span class="hs-identifier hs-var">rTriggers</span></a></span></span><span> </span><span id="local-6989586621686962604"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686962604"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; Int -&gt; FetchedCronTriggerStats
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[CronTriggerStats]
-</span><a href="#local-6989586621686962713"><span class="hs-identifier hs-var">lTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; [CronTriggerStats] -&gt; [CronTriggerStats]
+</span><a href="#local-6989586621686962600"><span class="hs-identifier hs-var">lTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; [CronTriggerStats] -&gt; [CronTriggerStats]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats]
-</span><a href="#local-6989586621686962716"><span class="hs-identifier hs-var">rTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686962714"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621686962603"><span class="hs-identifier hs-var">rTriggers</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686962601"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686962717"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686962604"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962723"><span id="local-6989586621686962727"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621686962732"><span class="annot"><span class="annottext">mempty :: FetchedCronTriggerStats
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962610"><span id="local-6989586621686962614"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-type">FetchedCronTriggerStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621686962619"><span class="annot"><span class="annottext">mempty :: FetchedCronTriggerStats
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats] -&gt; Int -&gt; FetchedCronTriggerStats
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedCronTriggerStats"><span class="hs-identifier hs-var">FetchedCronTriggerStats</span></a></span><span> </span><span class="annot"><span class="annottext">[CronTriggerStats]
 forall a. Monoid a =&gt; a
@@ -189,7 +189,7 @@ forall a. Monoid a =&gt; a
 </span><span id="line-71"></span><span>    </span><span id="_rctxConf"><span class="annot"><span class="annottext">RetryContext -&gt; STRetryConf
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_rctxConf"><span class="hs-identifier hs-var hs-var">_rctxConf</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#STRetryConf"><span class="hs-identifier hs-type">STRetryConf</span></a></span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962736"><span id="local-6989586621686962741"><span class="annot"><span class="annottext">RetryContext -&gt; RetryContext -&gt; Bool
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962623"><span id="local-6989586621686962628"><span class="annot"><span class="annottext">RetryContext -&gt; RetryContext -&gt; Bool
 (RetryContext -&gt; RetryContext -&gt; Bool)
 -&gt; (RetryContext -&gt; RetryContext -&gt; Bool) -&gt; Eq RetryContext
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -223,7 +223,7 @@ $c/= :: RetryContext -&gt; RetryContext -&gt; Bool
 </span><span id="line-89"></span><span>    </span><span id="sewpResponseTransform"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload -&gt; Maybe MetadataResponseTransform
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#sewpResponseTransform"><span class="hs-identifier hs-var hs-var">sewpResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962749"><span id="local-6989586621686962769"><span id="local-6989586621686962773"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686962636"><span id="local-6989586621686962656"><span id="local-6989586621686962660"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS
 [ScheduledEventWebhookPayload] -&gt; ShowS
 ScheduledEventWebhookPayload -&gt; String
 (Int -&gt; ScheduledEventWebhookPayload -&gt; ShowS)
@@ -238,7 +238,7 @@ $cshow :: ScheduledEventWebhookPayload -&gt; String
 show :: ScheduledEventWebhookPayload -&gt; String
 $cshowList :: [ScheduledEventWebhookPayload] -&gt; ShowS
 showList :: [ScheduledEventWebhookPayload] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962781"><span id="local-6989586621686962783"><span class="annot"><span class="annottext">(forall x.
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962668"><span id="local-6989586621686962670"><span class="annot"><span class="annottext">(forall x.
  ScheduledEventWebhookPayload -&gt; Rep ScheduledEventWebhookPayload x)
 -&gt; (forall x.
     Rep ScheduledEventWebhookPayload x -&gt; ScheduledEventWebhookPayload)
@@ -257,7 +257,7 @@ $cto :: forall x.
 Rep ScheduledEventWebhookPayload x -&gt; ScheduledEventWebhookPayload
 to :: forall x.
 Rep ScheduledEventWebhookPayload x -&gt; ScheduledEventWebhookPayload
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962786"><span id="local-6989586621686962803"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686962673"><span id="local-6989586621686962690"><span class="annot"><span class="annottext">ScheduledEventWebhookPayload
 -&gt; ScheduledEventWebhookPayload -&gt; Bool
 (ScheduledEventWebhookPayload
  -&gt; ScheduledEventWebhookPayload -&gt; Bool)
@@ -275,30 +275,30 @@ $c/= :: ScheduledEventWebhookPayload
 -&gt; ScheduledEventWebhookPayload -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962812"><span id="local-6989586621686962816"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-type">ScheduledEventWebhookPayload</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621686962985"><span class="annot"><span class="annottext">toJSON :: ScheduledEventWebhookPayload -&gt; Value
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686962699"><span id="local-6989586621686962703"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventWebhookPayload"><span class="hs-identifier hs-type">ScheduledEventWebhookPayload</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621686962872"><span class="annot"><span class="annottext">toJSON :: ScheduledEventWebhookPayload -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ScheduledEventWebhookPayload -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621686962986"><span class="hs-identifier hs-var">J.omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621686962873"><span class="hs-identifier hs-var">J.omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621686963134"><span class="annot"><span class="annottext">toEncoding :: ScheduledEventWebhookPayload -&gt; Encoding
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621686963021"><span class="annot"><span class="annottext">toEncoding :: ScheduledEventWebhookPayload -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ScheduledEventWebhookPayload -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">omitNothingFields :: Bool
-</span><a href="#local-6989586621686962986"><span class="hs-identifier hs-var">J.omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621686962873"><span class="hs-identifier hs-var">J.omitNothingFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="hs-keyword">data</span><span> </span><span id="ScheduledEventOp"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#ScheduledEventOp"><span class="hs-identifier hs-var">ScheduledEventOp</span></a></span></span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SEOpRetry"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpRetry"><span class="hs-identifier hs-var">SEOpRetry</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SEOpStatus"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#SEOpStatus"><span class="hs-identifier hs-var">SEOpStatus</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventStatus"><span class="hs-identifier hs-type">ScheduledEventStatus</span></a></span><span>
-</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963138"><span id="local-6989586621686963145"><span id="local-6989586621686963149"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventOp -&gt; ShowS
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963025"><span id="local-6989586621686963032"><span id="local-6989586621686963036"><span class="annot"><span class="annottext">Int -&gt; ScheduledEventOp -&gt; ShowS
 [ScheduledEventOp] -&gt; ShowS
 ScheduledEventOp -&gt; String
 (Int -&gt; ScheduledEventOp -&gt; ShowS)
@@ -313,7 +313,7 @@ $cshow :: ScheduledEventOp -&gt; String
 show :: ScheduledEventOp -&gt; String
 $cshowList :: [ScheduledEventOp] -&gt; ShowS
 showList :: [ScheduledEventOp] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963152"><span id="local-6989586621686963157"><span class="annot"><span class="annottext">ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963039"><span id="local-6989586621686963044"><span class="annot"><span class="annottext">ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
 (ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool)
 -&gt; (ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool)
 -&gt; Eq ScheduledEventOp
@@ -326,7 +326,7 @@ $c/= :: ScheduledEventOp -&gt; ScheduledEventOp -&gt; Bool
 </span><span id="line-101"></span><span>
 </span><span id="line-102"></span><span class="hs-keyword">newtype</span><span> </span><span id="CronEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-var">CronEventsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CronEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#CronEventsCount"><span class="hs-identifier hs-var">CronEventsCount</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCronEventsCount"><span class="annot"><span class="annottext">CronEventsCount -&gt; Int
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#unCronEventsCount"><span class="hs-identifier hs-var hs-var">unCronEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-103"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963163"><span id="local-6989586621686963167"><span class="annot"><span class="annottext">CronEventsCount -&gt; CronEventsCount -&gt; Bool
+</span><span id="line-103"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963050"><span id="local-6989586621686963054"><span class="annot"><span class="annottext">CronEventsCount -&gt; CronEventsCount -&gt; Bool
 (CronEventsCount -&gt; CronEventsCount -&gt; Bool)
 -&gt; (CronEventsCount -&gt; CronEventsCount -&gt; Bool)
 -&gt; Eq CronEventsCount
@@ -335,7 +335,7 @@ $c== :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
 == :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
 $c/= :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
 /= :: CronEventsCount -&gt; CronEventsCount -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963172"><span id="local-6989586621686963177"><span id="local-6989586621686963181"><span class="annot"><span class="annottext">Int -&gt; CronEventsCount -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963059"><span id="local-6989586621686963064"><span id="local-6989586621686963068"><span class="annot"><span class="annottext">Int -&gt; CronEventsCount -&gt; ShowS
 [CronEventsCount] -&gt; ShowS
 CronEventsCount -&gt; String
 (Int -&gt; CronEventsCount -&gt; ShowS)
@@ -350,7 +350,7 @@ $cshow :: CronEventsCount -&gt; String
 show :: CronEventsCount -&gt; String
 $cshowList :: [CronEventsCount] -&gt; ShowS
 showList :: [CronEventsCount] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963184"><span id="local-6989586621686963188"><span id="local-6989586621686963192"><span id="local-6989586621686963196"><span class="annot"><span class="annottext">[CronEventsCount] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963071"><span id="local-6989586621686963075"><span id="local-6989586621686963079"><span id="local-6989586621686963083"><span class="annot"><span class="annottext">[CronEventsCount] -&gt; Value
 [CronEventsCount] -&gt; Encoding
 CronEventsCount -&gt; Value
 CronEventsCount -&gt; Encoding
@@ -373,7 +373,7 @@ $ctoJSONList :: [CronEventsCount] -&gt; Value
 toJSONList :: [CronEventsCount] -&gt; Value
 $ctoEncodingList :: [CronEventsCount] -&gt; Encoding
 toEncodingList :: [CronEventsCount] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963201"><span id="local-6989586621686963206"><span class="annot"><span class="annottext">Value -&gt; Parser [CronEventsCount]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963088"><span id="local-6989586621686963093"><span class="annot"><span class="annottext">Value -&gt; Parser [CronEventsCount]
 Value -&gt; Parser CronEventsCount
 (Value -&gt; Parser CronEventsCount)
 -&gt; (Value -&gt; Parser [CronEventsCount]) -&gt; FromJSON CronEventsCount
@@ -383,7 +383,7 @@ $cparseJSON :: Value -&gt; Parser CronEventsCount
 parseJSON :: Value -&gt; Parser CronEventsCount
 $cparseJSONList :: Value -&gt; Parser [CronEventsCount]
 parseJSONList :: Value -&gt; Parser [CronEventsCount]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963212"><span id="local-6989586621686963216"><span id="local-6989586621686963220"><span id="local-6989586621686963224"><span id="local-6989586621686963228"><span id="local-6989586621686963232"><span id="local-6989586621686963236"><span class="annot"><span class="annottext">Integer -&gt; CronEventsCount
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963099"><span id="local-6989586621686963103"><span id="local-6989586621686963107"><span id="local-6989586621686963111"><span id="local-6989586621686963115"><span id="local-6989586621686963119"><span id="local-6989586621686963123"><span class="annot"><span class="annottext">Integer -&gt; CronEventsCount
 CronEventsCount -&gt; CronEventsCount
 CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
 (CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount)
@@ -421,7 +421,7 @@ fromInteger :: Integer -&gt; CronEventsCount
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="hs-keyword">newtype</span><span> </span><span id="OneOffScheduledEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-var">OneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OneOffScheduledEventsCount"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#OneOffScheduledEventsCount"><span class="hs-identifier hs-var">OneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unOneOffScheduledEventsCount"><span class="annot"><span class="annottext">OneOffScheduledEventsCount -&gt; Int
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#unOneOffScheduledEventsCount"><span class="hs-identifier hs-var hs-var">unOneOffScheduledEventsCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">}</span><span>
-</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963244"><span id="local-6989586621686963248"><span class="annot"><span class="annottext">OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963131"><span id="local-6989586621686963135"><span class="annot"><span class="annottext">OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
 (OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool)
 -&gt; (OneOffScheduledEventsCount
     -&gt; OneOffScheduledEventsCount -&gt; Bool)
@@ -431,7 +431,7 @@ $c== :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
 == :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
 $c/= :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
 /= :: OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963253"><span id="local-6989586621686963257"><span id="local-6989586621686963261"><span class="annot"><span class="annottext">Int -&gt; OneOffScheduledEventsCount -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963140"><span id="local-6989586621686963144"><span id="local-6989586621686963148"><span class="annot"><span class="annottext">Int -&gt; OneOffScheduledEventsCount -&gt; ShowS
 [OneOffScheduledEventsCount] -&gt; ShowS
 OneOffScheduledEventsCount -&gt; String
 (Int -&gt; OneOffScheduledEventsCount -&gt; ShowS)
@@ -446,7 +446,7 @@ $cshow :: OneOffScheduledEventsCount -&gt; String
 show :: OneOffScheduledEventsCount -&gt; String
 $cshowList :: [OneOffScheduledEventsCount] -&gt; ShowS
 showList :: [OneOffScheduledEventsCount] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963264"><span id="local-6989586621686963268"><span id="local-6989586621686963272"><span id="local-6989586621686963276"><span class="annot"><span class="annottext">[OneOffScheduledEventsCount] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963151"><span id="local-6989586621686963155"><span id="local-6989586621686963159"><span id="local-6989586621686963163"><span class="annot"><span class="annottext">[OneOffScheduledEventsCount] -&gt; Value
 [OneOffScheduledEventsCount] -&gt; Encoding
 OneOffScheduledEventsCount -&gt; Value
 OneOffScheduledEventsCount -&gt; Encoding
@@ -469,7 +469,7 @@ $ctoJSONList :: [OneOffScheduledEventsCount] -&gt; Value
 toJSONList :: [OneOffScheduledEventsCount] -&gt; Value
 $ctoEncodingList :: [OneOffScheduledEventsCount] -&gt; Encoding
 toEncodingList :: [OneOffScheduledEventsCount] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963281"><span id="local-6989586621686963285"><span class="annot"><span class="annottext">Value -&gt; Parser [OneOffScheduledEventsCount]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963168"><span id="local-6989586621686963172"><span class="annot"><span class="annottext">Value -&gt; Parser [OneOffScheduledEventsCount]
 Value -&gt; Parser OneOffScheduledEventsCount
 (Value -&gt; Parser OneOffScheduledEventsCount)
 -&gt; (Value -&gt; Parser [OneOffScheduledEventsCount])
@@ -480,7 +480,7 @@ $cparseJSON :: Value -&gt; Parser OneOffScheduledEventsCount
 parseJSON :: Value -&gt; Parser OneOffScheduledEventsCount
 $cparseJSONList :: Value -&gt; Parser [OneOffScheduledEventsCount]
 parseJSONList :: Value -&gt; Parser [OneOffScheduledEventsCount]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963290"><span id="local-6989586621686963294"><span id="local-6989586621686963298"><span id="local-6989586621686963302"><span id="local-6989586621686963306"><span id="local-6989586621686963310"><span id="local-6989586621686963314"><span class="annot"><span class="annottext">Integer -&gt; OneOffScheduledEventsCount
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963177"><span id="local-6989586621686963181"><span id="local-6989586621686963185"><span id="local-6989586621686963189"><span id="local-6989586621686963193"><span id="local-6989586621686963197"><span id="local-6989586621686963201"><span class="annot"><span class="annottext">Integer -&gt; OneOffScheduledEventsCount
 OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
 OneOffScheduledEventsCount
 -&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
@@ -535,7 +535,7 @@ fromInteger :: Integer -&gt; OneOffScheduledEventsCount
 </span><span id="line-112"></span><span>    </span><span id="_fsesNumFetches"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; Int
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#_fsesNumFetches"><span class="hs-identifier hs-var hs-var">_fsesNumFetches</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963323"><span id="local-6989586621686963328"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
+</span><span id="line-114"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686963210"><span id="local-6989586621686963215"><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
 (FetchedScheduledEventsStats
  -&gt; FetchedScheduledEventsStats -&gt; Bool)
 -&gt; (FetchedScheduledEventsStats
@@ -546,7 +546,7 @@ $c== :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
 == :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
 $c/= :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
 /= :: FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963332"><span id="local-6989586621686963334"><span class="annot"><span class="annottext">(forall x.
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963219"><span id="local-6989586621686963221"><span class="annot"><span class="annottext">(forall x.
  FetchedScheduledEventsStats -&gt; Rep FetchedScheduledEventsStats x)
 -&gt; (forall x.
     Rep FetchedScheduledEventsStats x -&gt; FetchedScheduledEventsStats)
@@ -565,7 +565,7 @@ $cto :: forall x.
 Rep FetchedScheduledEventsStats x -&gt; FetchedScheduledEventsStats
 to :: forall x.
 Rep FetchedScheduledEventsStats x -&gt; FetchedScheduledEventsStats
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963337"><span id="local-6989586621686963343"><span id="local-6989586621686963347"><span class="annot"><span class="annottext">Int -&gt; FetchedScheduledEventsStats -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686963224"><span id="local-6989586621686963230"><span id="local-6989586621686963234"><span class="annot"><span class="annottext">Int -&gt; FetchedScheduledEventsStats -&gt; ShowS
 [FetchedScheduledEventsStats] -&gt; ShowS
 FetchedScheduledEventsStats -&gt; String
 (Int -&gt; FetchedScheduledEventsStats -&gt; ShowS)
@@ -582,15 +582,15 @@ $cshowList :: [FetchedScheduledEventsStats] -&gt; ShowS
 showList :: [FetchedScheduledEventsStats] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-115"></span><span>
-</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963352"><span id="local-6989586621686963356"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-117"></span><span>  </span><span id="local-6989586621686963435"><span class="annot"><span class="annottext">toJSON :: FetchedScheduledEventsStats -&gt; Value
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963239"><span id="local-6989586621686963243"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621686963322"><span class="annot"><span class="annottext">toJSON :: FetchedScheduledEventsStats -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FetchedScheduledEventsStats -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621686963510"><span class="annot"><span class="annottext">toEncoding :: FetchedScheduledEventsStats -&gt; Encoding
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621686963397"><span class="annot"><span class="annottext">toEncoding :: FetchedScheduledEventsStats -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FetchedScheduledEventsStats -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
@@ -599,46 +599,46 @@ Options -&gt; a -&gt; Encoding
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">L.ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-121"></span><span>  </span><span id="local-6989586621686963516"><span class="annot"><span class="annottext">toEngineLog :: FetchedScheduledEventsStats
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621686963403"><span class="annot"><span class="annottext">toEngineLog :: FetchedScheduledEventsStats
 -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621686963517"><span class="annot"><span class="annottext">FetchedScheduledEventsStats
-</span><a href="#local-6989586621686963517"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621686963404"><span class="annot"><span class="annottext">FetchedScheduledEventsStats
+</span><a href="#local-6989586621686963404"><span class="hs-identifier hs-var">stats</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-122"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">L.LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#scheduledTriggerProcessLogType"><span class="hs-identifier hs-var">L.scheduledTriggerProcessLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FetchedScheduledEventsStats -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">FetchedScheduledEventsStats
-</span><a href="#local-6989586621686963517"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686963404"><span class="hs-identifier hs-var">stats</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963521"><span id="local-6989586621686963525"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621686963532"><span class="annot"><span class="annottext">CronEventsCount
-</span><a href="#local-6989586621686963532"><span class="hs-identifier hs-var">lCron</span></a></span></span><span> </span><span id="local-6989586621686963533"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
-</span><a href="#local-6989586621686963533"><span class="hs-identifier hs-var">lOneOff</span></a></span></span><span> </span><span id="local-6989586621686963534"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686963534"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686963535"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedScheduledEventsStats
+</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963408"><span id="local-6989586621686963412"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621686963419"><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621686963419"><span class="hs-identifier hs-var">lCron</span></a></span></span><span> </span><span id="local-6989586621686963420"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621686963420"><span class="hs-identifier hs-var">lOneOff</span></a></span></span><span> </span><span id="local-6989586621686963421"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686963421"><span class="hs-identifier hs-var">lFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686963422"><span class="annot"><span class="annottext">&lt;&gt; :: FetchedScheduledEventsStats
 -&gt; FetchedScheduledEventsStats -&gt; FetchedScheduledEventsStats
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621686963536"><span class="annot"><span class="annottext">CronEventsCount
-</span><a href="#local-6989586621686963536"><span class="hs-identifier hs-var">rCron</span></a></span></span><span> </span><span id="local-6989586621686963537"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
-</span><a href="#local-6989586621686963537"><span class="hs-identifier hs-var">rOneOff</span></a></span></span><span> </span><span id="local-6989586621686963538"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686963538"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span><span> </span><span id="local-6989586621686963423"><span class="annot"><span class="annottext">CronEventsCount
+</span><a href="#local-6989586621686963423"><span class="hs-identifier hs-var">rCron</span></a></span></span><span> </span><span id="local-6989586621686963424"><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621686963424"><span class="hs-identifier hs-var">rOneOff</span></a></span></span><span> </span><span id="local-6989586621686963425"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686963425"><span class="hs-identifier hs-var">rFetches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">CronEventsCount
 -&gt; OneOffScheduledEventsCount -&gt; Int -&gt; FetchedScheduledEventsStats
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CronEventsCount
-</span><a href="#local-6989586621686963532"><span class="hs-identifier hs-var">lCron</span></a></span><span> </span><span class="annot"><span class="annottext">CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
+</span><a href="#local-6989586621686963419"><span class="hs-identifier hs-var">lCron</span></a></span><span> </span><span class="annot"><span class="annottext">CronEventsCount -&gt; CronEventsCount -&gt; CronEventsCount
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">CronEventsCount
-</span><a href="#local-6989586621686963536"><span class="hs-identifier hs-var">rCron</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
-</span><a href="#local-6989586621686963533"><span class="hs-identifier hs-var">lOneOff</span></a></span><span> </span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621686963423"><span class="hs-identifier hs-var">rCron</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
+</span><a href="#local-6989586621686963420"><span class="hs-identifier hs-var">lOneOff</span></a></span><span> </span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
 -&gt; OneOffScheduledEventsCount -&gt; OneOffScheduledEventsCount
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">OneOffScheduledEventsCount
-</span><a href="#local-6989586621686963537"><span class="hs-identifier hs-var">rOneOff</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686963534"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621686963424"><span class="hs-identifier hs-var">rOneOff</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686963421"><span class="hs-identifier hs-var">lFetches</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686963538"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686963425"><span class="hs-identifier hs-var">rFetches</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963543"><span id="local-6989586621686963547"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-129"></span><span>  </span><span id="local-6989586621686963549"><span class="annot"><span class="annottext">mempty :: FetchedScheduledEventsStats
+</span><span id="line-128"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686963430"><span id="local-6989586621686963434"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-type">FetchedScheduledEventsStats</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span id="local-6989586621686963436"><span class="annot"><span class="annottext">mempty :: FetchedScheduledEventsStats
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CronEventsCount
 -&gt; OneOffScheduledEventsCount -&gt; Int -&gt; FetchedScheduledEventsStats
 </span><a href="Hasura.Eventing.ScheduledTrigger.Types.html#FetchedScheduledEventsStats"><span class="hs-identifier hs-var">FetchedScheduledEventsStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; CronEventsCount
