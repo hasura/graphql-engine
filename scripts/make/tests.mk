@@ -129,7 +129,6 @@ test-postgres-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-citus-pro
@@ -138,7 +137,6 @@ test-citus-pro: build-pro build-postgres-agent start-api-tests-pro-backends remo
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
@@ -147,7 +145,6 @@ test-cockroach-pro: build-pro build-postgres-agent start-api-tests-pro-backends 
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-sqlserver-pro
@@ -156,7 +153,6 @@ test-sqlserver-pro: build-pro build-postgres-agent start-api-tests-pro-backends 
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
@@ -165,7 +161,6 @@ test-bigquery-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-unit
@@ -260,19 +255,20 @@ upgrade-tests:
 #   2. Bring up the PostgreSQL container.
 #   3. Run the agent on port 8889, and wait a second for it to start.
 #   4. Ensure we clean up after ourselves.
-#   5. Get the port of the PostgreSQL container.
-#   6. Run the tests, pointing to the correct port for the DB.
+#   6. Run the tests
 test-dc-postgres-agent: build-postgres-agent
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
-	@ echo 'cabal run postgres-agent:exe:postgres-agent'; \
-		cabal run postgres-agent:exe:postgres-agent -- --port 8889 & trap "kill $$!" EXIT; \
+	  echo 'cabal run postgres-agent:exe:postgres-agent'; \
+		cabal run postgres-agent:exe:postgres-agent -- \
+			--port 8889 \
+			--admin-connection-string $(DC_AGENT_POSTGRES_URL) \
+			& trap "kill $$!" EXIT; \
 		sleep 1; \
-		PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
 		echo 'cabal run test:tests-dc-api -- test'; \
 		cabal run test:tests-dc-api -- \
 			test \
 			--agent-base-url 'http://localhost:8889' \
-			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			--agent-config "{\"connection\": \"$(DC_AGENT_POSTGRES_URL)\"}" \
 			sandwich
 
 .PHONY: test-dc-postgres-agent-only
@@ -281,9 +277,8 @@ test-dc-postgres-agent-only:
 	# See above for an explanation.
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
 	@ echo 'cabal run test:tests-dc-api -- test'
-	@ PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
 		cabal run test:tests-dc-api -- \
 			test \
 			--agent-base-url "http://localhost:8888" \
-			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			--agent-config "{\"connection\": \"$(DC_AGENT_POSTGRES_URL)\"}" \
 			sandwich --tui

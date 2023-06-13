@@ -88,7 +88,7 @@ postgresMetadataPort = 65002
 
 postgresqlMetadataConnectionString :: String
 postgresqlMetadataConnectionString =
-  "postgres://"
+  "postgresql://"
     <> postgresMetadataUser
     <> ":"
     <> postgresMetadataPassword
@@ -142,7 +142,7 @@ citusPort = 65004
 
 citusConnectionString :: UniqueTestId -> Text
 citusConnectionString uniqueTestId =
-  "postgres://"
+  "postgresql://"
     <> citusUser
     <> ":"
     <> citusPassword
@@ -155,7 +155,7 @@ citusConnectionString uniqueTestId =
 
 defaultCitusConnectionString :: Text
 defaultCitusConnectionString =
-  "postgres://"
+  "postgresql://"
     <> citusUser
     <> ":"
     <> citusPassword
