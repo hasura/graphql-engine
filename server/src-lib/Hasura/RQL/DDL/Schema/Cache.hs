@@ -938,7 +938,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         interpretWriterT
           -< for
             (InsOrdHashMap.elems nativeQueries)
-            \nqm@NativeQueryMetadata {..} -> do
+            \preValidationNativeQuery@NativeQueryMetadata {_nqmRootFieldName, _nqmReturns, _nqmArguments, _nqmDescription} -> do
               let metadataObject :: MetadataObject
                   metadataObject =
                     MetadataObject
@@ -946,7 +946,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           $ AB.mkAnyBackend
                           $ SMONativeQuery @b _nqmRootFieldName
                       )
-                      (toJSON nqm)
+                      (toJSON preValidationNativeQuery)
 
                   schemaObjId :: SchemaObjId
                   schemaObjId =
@@ -973,7 +973,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                     (HashMap.lookup _nqmReturns logicalModelsCache)
                     (throw400 InvalidConfiguration ("The logical model " <> toTxt _nqmReturns <> " could not be found"))
 
-                validateNativeQuery @b env (_smConfiguration sourceMetadata) logicalModel NativeQueryMetadata {..}
+                nqmCode <- validateNativeQuery @b env (_smConfiguration sourceMetadata) logicalModel preValidationNativeQuery
 
                 recordDependenciesM metadataObject schemaObjId
                   $ Seq.singleton dependency
@@ -981,12 +981,12 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 arrayRelationships <-
                   traverse
                     (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ArrRel)
-                    _nqmArrayRelationships
+                    (_nqmArrayRelationships preValidationNativeQuery)
 
                 objectRelationships <-
                   traverse
                     (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ObjRel)
-                    _nqmObjectRelationships
+                    (_nqmObjectRelationships preValidationNativeQuery)
 
                 let sourceObject =
                       SOSourceObj sourceName
@@ -1002,7 +1002,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 pure
                   NativeQueryInfo
                     { _nqiRootFieldName = _nqmRootFieldName,
-                      _nqiCode = _nqmCode,
+                      _nqiCode = nqmCode,
                       _nqiReturns = logicalModel,
                       _nqiArguments = _nqmArguments,
                       _nqiRelationships = fst <$> (arrayRelationships <> objectRelationships),

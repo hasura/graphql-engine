@@ -8,12 +8,14 @@ module Hasura.NativeQuery.InterpolatedQuery
     InterpolatedQuery (..),
     parseInterpolatedQuery,
     getUniqueVariables,
+    trimQueryEnd,
     module Hasura.LogicalModel.NullableScalarType,
   )
 where
 
 import Autodocodec
 import Autodocodec qualified as AC
+import Control.Lens (over, _last)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Bifunctor (first)
 import Data.Set (Set)
@@ -131,3 +133,19 @@ getUniqueVariables (InterpolatedQuery items) =
   flip foldMap items \case
     IIText _ -> mempty
     IIVariable variable -> Set.singleton variable
+
+-- | Remove spaces and semicolon from the end of a query and add a newline, for sql backends.
+trimQueryEnd :: InterpolatedQuery var -> InterpolatedQuery var
+trimQueryEnd (InterpolatedQuery parts) =
+  InterpolatedQuery
+    $ over _last dropIt parts
+    -- if the user has a comment on the last line, this will make sure it doesn't interrupt the rest of the query
+    <> [IIText "\n"]
+  where
+    dropIt = \case
+      IIText txt ->
+        IIText
+          . T.dropWhileEnd (== ';')
+          . T.dropWhileEnd (\c -> c == ' ' || c == '\t' || c == '\n')
+          $ txt
+      IIVariable v -> IIVariable v

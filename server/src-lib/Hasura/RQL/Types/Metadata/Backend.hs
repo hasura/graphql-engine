@@ -13,7 +13,7 @@ import Hasura.Function.Cache
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache (LogicalModelInfo)
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
+import Hasura.NativeQuery.Metadata (ArgumentName, InterpolatedQuery, NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -239,7 +239,7 @@ class
     SourceConnConfiguration b ->
     LogicalModelInfo b ->
     NativeQueryMetadata b ->
-    m ()
+    m (InterpolatedQuery ArgumentName)
   validateNativeQuery _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 

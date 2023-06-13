@@ -188,7 +188,7 @@ fromSelect Select {..} = finalExpression
       AsStruct -> "AS STRUCT"
       NoAsStruct -> ""
     interpolatedQuery = \case
-      IIText t -> UnsafeTextPrinter t <+> NewlinePrinter
+      IIText t -> UnsafeTextPrinter t
       IIVariable v -> fromExpression v
     fromWith = \case
       Just (With expressions) -> do

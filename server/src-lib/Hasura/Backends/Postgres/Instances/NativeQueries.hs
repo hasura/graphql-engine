@@ -28,6 +28,7 @@ import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..), pgScalarTypeToText
 import Hasura.Base.Error
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Common (columnsFromFields)
+import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
 import Hasura.NativeQuery.Metadata
   ( ArgumentName,
     InterpolatedItem (..),
@@ -48,14 +49,17 @@ validateNativeQuery ::
   PG.PostgresConnConfiguration ->
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
-  m ()
-validateNativeQuery pgTypeOidMapping env connConf logicalModel model = do
-  validateArgumentDeclaration model
+  m (InterpolatedQuery ArgumentName)
+validateNativeQuery pgTypeOidMapping env connConf logicalModel nq = do
+  validateArgumentDeclaration nq
+  let nqmCode = trimQueryEnd (_nqmCode nq)
+      model = nq {_nqmCode = nqmCode}
   (prepname, preparedQuery) <- nativeQueryToPreparedStatement logicalModel model
   description <- runCheck prepname (PG.fromText preparedQuery)
   let returnColumns = bimap toTxt nstType <$> InsOrdHashMap.toList (columnsFromFields $ _lmiFields logicalModel)
 
   for_ (toList returnColumns) (matchTypes description)
+  pure nqmCode
   where
     -- Run stuff against the database.
     --
