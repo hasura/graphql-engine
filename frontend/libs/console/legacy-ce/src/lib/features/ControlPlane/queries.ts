@@ -263,3 +263,17 @@ export const ADD_SCHEMA_REGISTRY_FEATURE_REQUEST = gql(`
     }
   }
 `);
+
+export const FETCH_CONFIG_STATUS = gql(`
+  subscription FetchConfigStatus($tenantId: uuid!) {
+    config_status(
+      where: {
+        tenant_id: { _eq: $tenantId }
+        is_active: { _eq: true }
+      }
+    ) {
+      hash
+      message
+    }
+  }
+`);
