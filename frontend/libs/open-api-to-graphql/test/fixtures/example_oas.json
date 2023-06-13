@@ -1,0 +1,1666 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Erik Wittern",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3001"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/users": {
+      "get": {
+        "operationId": "getUsers",
+        "description": "Return a list of users.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Limit of the number of users to return."
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A list of users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postUser",
+        "description": "Create a new user in the system.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/user"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The posted user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/user"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{username}": {
+      "get": {
+        "operationId": "getUserByUsername",
+        "description": "Returns a user from the system.",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of a user."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A user represents a natural person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/user"
+                }
+              }
+            },
+            "links": {
+              "employerCompany": {
+                "$ref": "#/components/links/EmployerCompany"
+              },
+              "author": {
+                "$ref": "#/components/links/Author"
+              },
+              "friends": {
+                "$ref": "#/components/links/Friends"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{username}/car": {
+      "get": {
+        "operationId": "getUserCar",
+        "description": "Returns a car to test nesting of sub operations",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of a user."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A car of a user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/car"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{username}/friends": {
+      "get": {
+        "operationId": "getUserFriends",
+        "description": "Returns a user's friends to test pagination",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of a user."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user's friends.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/user"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assets/{companyId}": {
+      "get": {
+        "operationId": "getAllAssets",
+        "description": "Returns all company assets",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A company's assets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/car"
+                      },
+                      {
+                        "$ref": "#/components/schemas/user"
+                      },
+                      {
+                        "$ref": "#/components/schemas/trashcan"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cars": {
+      "get": {
+        "operationId": "getAllCars",
+        "description": "Returns information about all employee cars",
+        "responses": {
+          "200": {
+            "description": "Everyone's cars",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/car"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/companies/{id}": {
+      "get": {
+        "operationId": "getCompanyById",
+        "description": "Returns the profile of a company with the given ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A company profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/company"
+                }
+              }
+            },
+            "links": {
+              "ceoUser": {
+                "$ref": "#/components/links/CeoUser"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cookie": {
+      "get": {
+        "operationId": "getCookie",
+        "description": "Used to test cookies.",
+        "parameters": [
+          {
+            "name": "cookie_type",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["chocolate chip", "oatmeal raisin", "sugar"]
+            }
+          },
+          {
+            "name": "cookie_size",
+            "in": "cookie",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["bite-sized", "regular", "mega-sized"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "You got a cookie!",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "description": "Used to test generation of object types with matching schema.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/coffeeLocation": {
+      "get": {
+        "operationId": "getNearestCoffeeMachine",
+        "description": "Used to find the nearest coffee machine based on the user's coordinates. Used to test the content field in parameter objects.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "long",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Coordinates of nearest coffee machine.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/coordinates"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/copier": {
+      "get": {
+        "operationId": "getCopier",
+        "description": "Used to test link parameters with variables",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success!",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "links": {
+              "basicLink": {
+                "$ref": "#/components/links/BasicLink"
+              },
+              "constantLink": {
+                "$ref": "#/components/links/ConstantLink"
+              },
+              "variableLink": {
+                "$ref": "#/components/links/VariableLink"
+              },
+              "everythingLink": {
+                "$ref": "#/components/links/EverythingLink"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cleanDesks": {
+      "get": {
+        "operationId": "getNumberOfCleanDesks",
+        "description": "Used to test generation of object types with matching schema.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Number of clean desks.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dirtyDesks": {
+      "get": {
+        "operationId": "getNumberOfDirtyDesks",
+        "description": "Used to test generation of object types with matching schema.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Number of dirty desks.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bonuses": {
+      "get": {
+        "operationId": "getBonuses",
+        "description": "Used to test empty responses",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Used to test empty responses"
+          }
+        }
+      }
+    },
+    "/offices": {
+      "get": {
+        "x-graphql-field-name": "fetchAllOfficesWithFormStyleAndExplodeTrue",
+        "operationId": "returnAllOffices",
+        "description": "Used to test query parameters with form style and explode",
+        "parameters": [
+          {
+            "name": "parameters",
+            "in": "query",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "limit": {
+                  "type": "integer"
+                },
+                "offset": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/office"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offices/{id}": {
+      "get": {
+        "operationId": "getOffice",
+        "description": "Return an office.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Office ID"
+          },
+          {
+            "name": "accept",
+            "in": "header",
+            "description": "Describes the format of the return values. By default, the return type is `text/plain` and the return value is the two-letter language code for the identified language, for example, `en` for English or `es` for Spanish. To retrieve a JSON object that contains a ranking of identified languages with confidence scores, set the accept header parameter to `application/json`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["application/json", "text/plain"],
+              "default": "text/plain"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An office.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/office"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "links": {
+              "owner": {
+                "$ref": "#/components/links/Employee"
+              },
+              "company": {
+                "$ref": "#/components/links/EmployerCompany"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/papers": {
+      "get": {
+        "operationId": "getPapers",
+        "description": "Return a list of papers. Endpoint to test 2XX status code.",
+        "responses": {
+          "2XX": {
+            "description": "A list of papers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/paper"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postPaper",
+        "description": "Create a new paper in the system. Endpoint to test non-application/json request and response bodies.",
+        "requestBody": {
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The posted paper.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "post": {
+        "operationId": "post-product-with-id",
+        "description": "Endpoint to test unsanitized parameters and data.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/product-with-id"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "A product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/product-with-id"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{product-id}": {
+      "get": {
+        "operationId": "get-product-with-id",
+        "description": "Another endpoint to test unsanitized parameters and data.",
+        "parameters": [
+          {
+            "name": "product-id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product-tag",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/product-with-id"
+                }
+              }
+            },
+            "links": {
+              "reviews": {
+                "$ref": "#/components/links/Reviews"
+              },
+              "reviewsWithOperationRef": {
+                "$ref": "#/components/links/ReviewsWithOperationRef"
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/products/{id}/reviews": {
+      "get": {
+        "operationId": "getProductReviews",
+        "description": "Obtain reviews for a product.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product-tag",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "sport"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of review texts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patents/{patent-id}": {
+      "get": {
+        "operationId": "get-patent-with-id",
+        "description": "An endpoint to test authentication.",
+        "parameters": [
+          {
+            "name": "patent-id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/patent-with-id"
+                }
+              }
+            },
+            "links": {
+              "inventor": {
+                "$ref": "#/components/links/Inventor"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "example_api_key_protocol_2": []
+          },
+          {
+            "example_api_key_protocol_3": []
+          },
+          {
+            "example_api_basic_protocol": []
+          },
+          {
+            "example_api_bearer_protocol": []
+          }
+        ]
+      }
+    },
+    "/projects": {
+      "post": {
+        "operationId": "post-project-with-id",
+        "description": "An endpoint to test authenticated POST requests.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/project-with-id"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "A product.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/project-with-id"
+                }
+              }
+            },
+            "links": {
+              "ProjectLead": {
+                "$ref": "#/components/links/ProjectLead"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "example_api_key_protocol": []
+          },
+          {
+            "example_api_key_protocol_2": []
+          }
+        ]
+      }
+    },
+    "/projects/{project-id}": {
+      "get": {
+        "operationId": "get-project-with-id",
+        "description": "Another endpoint to test authentication.",
+        "parameters": [
+          {
+            "name": "project-id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/project-with-id"
+                }
+              }
+            },
+            "links": {
+              "projectLead": {
+                "$ref": "#/components/links/ProjectLead"
+              },
+              "patent": {
+                "$ref": "#/components/links/Patent"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "example_api_key_protocol": []
+          },
+          {
+            "example_api_key_protocol_2": []
+          },
+          {
+            "example_api_key_protocol_3": []
+          }
+        ]
+      }
+    },
+    "/scanner": {
+      "get": {
+        "operationId": "getScanner",
+        "description": "Used to test link parameters with variables",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success!",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "links": {
+              "basicLink": {
+                "$ref": "#/components/links/BasicLink"
+              },
+              "constantLink": {
+                "$ref": "#/components/links/ConstantLink"
+              },
+              "variableLink": {
+                "$ref": "#/components/links/VariableLink"
+              },
+              "everythingLink": {
+                "$ref": "#/components/links/EverythingLink"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scanner/{path}": {
+      "post": {
+        "operationId": "postScanner",
+        "description": "Used to test link parameters with variables",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success!",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "body": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "links": {
+              "basicLink": {
+                "$ref": "#/components/links/BasicLink"
+              },
+              "constantLink": {
+                "$ref": "#/components/links/ConstantLink"
+              },
+              "variableLink": {
+                "$ref": "#/components/links/VariableLink"
+              },
+              "everythingLink": {
+                "$ref": "#/components/links/EverythingLink"
+              },
+              "everythingLink2": {
+                "$ref": "#/components/links/EverythingLink2"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/snack": {
+      "get": {
+        "operationId": "getSnack",
+        "description": "Endpoint to test sending of headers.",
+        "parameters": [
+          {
+            "name": "snack_type",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["chips", "soda"]
+            }
+          },
+          {
+            "name": "snack_size",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["large", "small"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status message.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "What snack is offered."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "operationId": "get-Status",
+        "description": "Endpoint to test sending of options.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status message.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "What the status is."
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Endpoint to test placeholder objects to wrap response objects.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hello": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Status message.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/GlobalQuery"
+        }
+      ]
+    },
+    "/secure": {
+      "get": {
+        "operationId": "getSecure",
+        "description": "Used to test OAuth token being present in header.",
+        "responses": {
+          "200": {
+            "description": "Secure message.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "A secure message."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trashcans": {
+      "get": {
+        "operationId": "getAllTrashCans",
+        "description": "Returns the (contents of a) trashcan from a specific office",
+        "responses": {
+          "200": {
+            "description": "Many trashcans",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/trashcan"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/trashcans/{username}": {
+      "get": {
+        "operationId": "getOfficeTrashCan",
+        "description": "Returns the (contents of a) trashcan from a specific owner",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of a user."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A trashcan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trashcan"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "postOfficeTrashCan",
+        "description": "Add new contents to the trashcan of a specific owner",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Identifier of a user."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A trashcan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/trashcan"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mystery": {
+      "get": {
+        "description": "It could be anything!",
+        "responses": {
+          "200": {
+            "description": "Mystery object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "common_attribute": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "different_attribute": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/random": {
+      "get": {
+        "description": "Returns an arbitrary JSON object",
+        "responses": {
+          "200": {
+            "description": "Random object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "address": {
+        "type": "object",
+        "description": "The legal address of a user",
+        "properties": {
+          "street": {
+            "type": "string",
+            "description": "The street a user lives in"
+          },
+          "city": {
+            "type": "string",
+            "description": "The city a user lives in"
+          }
+        }
+      },
+      "car": {
+        "type": "object",
+        "description": "A car",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "The model of the car."
+          },
+          "color": {
+            "type": "string",
+            "description": "The color of the car."
+          },
+          "features": {
+            "properties": {}
+          },
+          "tags": {
+            "$ref": "#/components/schemas/tags"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["SEDAN", "SUV", "MINIVAN", "LIMOSINE", "RACE_CAR"]
+          },
+          "rating": {
+            "type": "number",
+            "enum": [100, 101, 200],
+            "description": "The rating of the car."
+          }
+        }
+      },
+      "company": {
+        "type": "object",
+        "description": "A company is the employer of many users",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The identifier of a company",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "description": "The legal name of a company"
+          },
+          "legalForm": {
+            "type": "string",
+            "description": "The legal form of a company"
+          },
+          "ceoUsername": {
+            "type": "string",
+            "description": "The identifier of the user who is CEO of the company"
+          },
+          "offices": {
+            "type": "array",
+            "description": "The offices of a company",
+            "items": {
+              "$ref": "#/components/schemas/address"
+            }
+          }
+        }
+      },
+      "coordinates": {
+        "type": "object",
+        "required": ["lat", "long"],
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "long": {
+            "type": "number"
+          }
+        }
+      },
+      "familyObject": {
+        "type": "object",
+        "allOf": [
+          {
+            "properties": {
+              "family": {
+                "$ref": "#/components/schemas/familyString"
+              }
+            },
+            "required": ["family"]
+          },
+          {
+            "properties": {
+              "familyCircular": {
+                "$ref": "#/components/schemas/familyObject"
+              }
+            }
+          }
+        ]
+      },
+      "familyString": {
+        "type": "string"
+      },
+      "office": {
+        "description": "An office",
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "description": "The owner ID of the office",
+            "type": "string"
+          },
+          "room number": {
+            "description": "The room number of the office",
+            "type": "integer"
+          },
+          "employerId": {
+            "type": "string",
+            "description": "The identifier of the company a user works for"
+          }
+        }
+      },
+      "paper": {
+        "description": "A research paper",
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the paper",
+            "type": "string"
+          },
+          "published": {
+            "description": "Whether the paper is published",
+            "type": "boolean"
+          }
+        }
+      },
+      "patent-with-id": {
+        "type": "object",
+        "description": "A patent",
+        "properties": {
+          "patent-id": {
+            "type": "string",
+            "description": "The id of the patent",
+            "format": "specialIdFormat"
+          },
+          "inventor-id": {
+            "type": "string",
+            "description": "The id of the inventor"
+          }
+        },
+        "required": ["patent-name", "patent-id"]
+      },
+      "product-with-id": {
+        "type": "object",
+        "description": "A product",
+        "properties": {
+          "product-name": {
+            "type": "string",
+            "description": "The name of the product"
+          },
+          "product-id": {
+            "type": "string",
+            "description": "The id of the product"
+          },
+          "product-tag": {
+            "type": "string",
+            "description": "A tag associated with the product"
+          }
+        }
+      },
+      "project-with-id": {
+        "type": "object",
+        "description": "A project",
+        "properties": {
+          "project-id": {
+            "type": "integer",
+            "description": "The id of the project"
+          },
+          "lead-id": {
+            "type": "string",
+            "description": "The id of the lead"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the project is active"
+          },
+          "patentId": {
+            "type": "string",
+            "description": "The patent associated with a project if applicable"
+          }
+        }
+      },
+      "trashcan": {
+        "type": "object",
+        "properties": {
+          "brand": {
+            "type": "object"
+          },
+          "contents": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "tags": {
+        "type": "object",
+        "title": "Tags",
+        "description": "Arbitrary (string) tags describing an entity.",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "suborderObject": {
+        "type": "object",
+        "properties": {
+          "suborder": {
+            "type": "string"
+          }
+        }
+      },
+      "user": {
+        "type": "object",
+        "description": "A user represents a natural person",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          },
+          "address": {
+            "$ref": "#/components/schemas/address"
+          },
+          "address2": {
+            "$ref": "#/components/schemas/address"
+          },
+          "employerId": {
+            "type": "string",
+            "description": "The identifier of the company a user works for"
+          },
+          "hobbies": {
+            "type": "array",
+            "description": "The hobbies of this user",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": ["staff", "contractor", "alumni"]
+          },
+          "nomenclature": {
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/suborderObject"
+              },
+              {
+                "$ref": "#/components/schemas/familyObject"
+              },
+              {
+                "properties": {
+                  "genus": {
+                    "type": "string"
+                  }
+                }
+              }
+            ],
+            "properties": {
+              "species": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": ["name", "address", "employerId", "hobbies"]
+      }
+    },
+    "links": {
+      "Author": {
+        "operationRef": "Example API 3#/paths/~1authors~1{authorId}/get",
+        "parameters": {
+          "authorId": "$request.path.username"
+        },
+        "description": "Link between two different APIs"
+      },
+      "Employee": {
+        "operationId": "getUserByUsername",
+        "parameters": {
+          "username": "$response.body#/employeeId"
+        },
+        "description": "Allows to fetch the user who invented a product."
+      },
+      "EmployerCompany": {
+        "operationId": "getCompanyById",
+        "parameters": {
+          "id": "$response.body#/employerId"
+        },
+        "description": "Allows to fetch the user's employer company."
+      },
+      "Friends": {
+        "operationId": "getUserFriends",
+        "parameters": {
+          "username": "$request.query.username"
+        },
+        "description": "Allows to fetch the user's friends."
+      },
+      "CeoUser": {
+        "operationId": "getUserByUsername",
+        "parameters": {
+          "username": "$response.body#/ceoUsername"
+        },
+        "description": "Allows to fetch the company's CEO user."
+      },
+      "ProjectLead": {
+        "operationId": "getUserByUsername",
+        "parameters": {
+          "username": "$response.body#/leadId"
+        },
+        "description": "Allows to fetch the user leading a project."
+      },
+      "Patent": {
+        "operationId": "get-patent-with-id",
+        "parameters": {
+          "patent-id": "$response.body#/patentId"
+        },
+        "description": "Allows to fetch a patent."
+      },
+      "Inventor": {
+        "operationId": "getUserByUsername",
+        "parameters": {
+          "username": "$response.body#/inventorId"
+        },
+        "description": "Allows to fetch the user who invented a product."
+      },
+      "BasicLink": {
+        "operationId": "getCopier",
+        "parameters": {
+          "query": "$request.query.query"
+        }
+      },
+      "ConstantLink": {
+        "operationId": "getCopier",
+        "parameters": {
+          "query": "123"
+        }
+      },
+      "VariableLink": {
+        "operationId": "getCopier",
+        "parameters": {
+          "query": "_{$request.query.query}_{$request.query.query}{$request.query.query}abc{$request.query.query}123"
+        }
+      },
+      "EverythingLink": {
+        "operationId": "getCopier",
+        "parameters": {
+          "query": "{$url}_{$method}_{$statusCode}_{$request.query.query}_{$request.header.accept}_{$response.header.connection}"
+        }
+      },
+      "EverythingLink2": {
+        "operationId": "getCopier",
+        "parameters": {
+          "query": "{$url}_{$method}_{$statusCode}_{$request.body}_{$request.query.query}_{$request.path.path}_{$request.header.accept}_{$response.body#/body}_{$response.query.query}_{$response.path.path}_{$response.header.connection}"
+        }
+      },
+      "Reviews": {
+        "operationId": "getProductReviews",
+        "parameters": {
+          "id": "$request.path.product-id",
+          "product-tag": "$request.query.product-tag"
+        }
+      },
+      "ReviewsWithOperationRef": {
+        "operationRef": "#/paths/~1products~1{id}~1reviews/get",
+        "parameters": {
+          "id": "$request.path.product-id",
+          "product-tag": "$request.query.product-tag"
+        }
+      }
+    },
+    "securitySchemes": {
+      "example_api_key_protocol": {
+        "in": "header",
+        "name": "access_token",
+        "type": "apiKey"
+      },
+      "example_api_key_protocol_2": {
+        "in": "query",
+        "name": "access_token",
+        "type": "apiKey"
+      },
+      "example_api_key_protocol_3": {
+        "in": "cookie",
+        "name": "access_token",
+        "type": "apiKey"
+      },
+      "example_api_basic_protocol": {
+        "type": "http",
+        "scheme": "basic"
+      },
+      "example_api_bearer_protocol": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "parameters": {
+      "GlobalQuery": {
+        "name": "globalquery",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "security": []
+}

@@ -1,0 +1,244 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API 3",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Erik Wittern",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3003"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/authors/{authorId}": {
+      "get": {
+        "operationId": "author",
+        "description": "Return an author.",
+        "parameters": [
+          {
+            "name": "authorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A author.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/author"
+                }
+              }
+            },
+            "links": {
+              "masterpiece": {
+                "operationId": "book",
+                "parameters": {
+                  "bookId": "$response.body#/masterpieceTitle"
+                },
+                "description": "Fetches the masterpiece"
+              },
+              "nextWork": {
+                "operationId": "nextWork",
+                "parameters": {
+                  "authorId": "$request.path.authorId"
+                },
+                "description": "Fetches the author's next work"
+              },
+              "employee": {
+                "$ref": "#/components/links/Employee"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books/{bookId}": {
+      "get": {
+        "operationId": "book",
+        "description": "Return a book.",
+        "parameters": [
+          {
+            "name": "bookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "A book.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/book"
+                }
+              }
+            },
+            "links": {
+              "author": {
+                "operationId": "author",
+                "parameters": {
+                  "authorId": "$response.body#/authorName"
+                },
+                "description": "Fetches the author"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nextWorks/{authorId}": {
+      "get": {
+        "operationId": "nextWork",
+        "description": "Return the author's next work.",
+        "parameters": [
+          {
+            "name": "authorId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "An upcoming book.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/nextWork"
+                }
+              }
+            },
+            "links": {
+              "author": {
+                "operationId": "author",
+                "parameters": {
+                  "authorId": "$request.path.authorId"
+                },
+                "description": "Fetches the author"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "example_api3_key_protocol": []
+          },
+          {
+            "example_api3_basic_protocol": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "book": {
+        "type": "object",
+        "description": "A book",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the book"
+          },
+          "authorName": {
+            "type": "string",
+            "description": "The author of the book"
+          }
+        }
+      },
+      "nextWork": {
+        "type": "object",
+        "description": "A book",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the book"
+          },
+          "authorName": {
+            "type": "string",
+            "description": "The author of the book"
+          }
+        }
+      },
+      "author": {
+        "type": "object",
+        "description": "An author",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the author"
+          },
+          "masterpieceTitle": {
+            "type": "string",
+            "description": "The artist's bestseller"
+          }
+        }
+      }
+    },
+    "links": {
+      "Employee": {
+        "operationRef": "Example API#/paths/~1users~1{username}/get",
+        "parameters": {
+          "username": "$request.path.authorId"
+        },
+        "description": "Link between two different APIs"
+      }
+    },
+    "securitySchemes": {
+      "example_api3_key_protocol": {
+        "in": "header",
+        "name": "access_token",
+        "type": "apiKey"
+      },
+      "example_api3_key_protocol_2": {
+        "in": "query",
+        "name": "access_token",
+        "type": "apiKey"
+      },
+      "example_api3_basic_protocol": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": []
+}

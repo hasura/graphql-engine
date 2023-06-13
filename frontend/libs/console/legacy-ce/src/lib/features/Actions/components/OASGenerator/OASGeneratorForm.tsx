@@ -8,7 +8,7 @@ import { FaExclamationTriangle, FaFilter, FaSearch } from 'react-icons/fa';
 import { trackCustomEvent } from '../../../Analytics';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { Badge, BadgeColor } from '../../../../new-components/Badge';
-import { Oas3 } from '@dancamma/openapi-to-graphql';
+import { Oas3 } from '@hasura/open-api-to-graphql';
 import { useIsUnmounted } from '../../../../components/Services/Data/Common/tsUtils';
 import { useFormContext } from 'react-hook-form';
 import { useMetadata } from '../../../MetadataAPI';

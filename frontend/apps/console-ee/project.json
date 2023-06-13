@@ -24,6 +24,7 @@
         "outputPath": "dist/apps/console-ee",
         "index": "apps/console-ee/src/index.html",
         "baseHref": "/",
+        "buildLibsFromSource": false,
         "main": "apps/console-ee/src/main.tsx",
         "polyfills": "apps/console-ee/src/polyfills.ts",
         "tsConfig": "apps/console-ee/tsconfig.app.json",
