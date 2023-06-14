@@ -55,8 +55,9 @@ import Hasura.RQL.DDL.SourceKinds
 import Hasura.RQL.DDL.Webhook.Transform.Validation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.Metadata (Metadata, MetadataModifier (MetadataModifier), emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Object (MetadataObjId)
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.Schema.Options qualified as Options
@@ -440,14 +441,14 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMDropComputedField q -> dispatchMetadata runDropComputedField q
   RMTestConnectionTemplate q -> dispatchMetadata runTestConnectionTemplate q
   RMGetNativeQuery q -> dispatchMetadata NativeQueries.runGetNativeQuery q
-  RMTrackNativeQuery q -> dispatchMetadata NativeQueries.runTrackNativeQuery q
-  RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.runUntrackNativeQuery q
+  RMTrackNativeQuery q -> dispatchMetadata (runSingleExec NativeQueries.execTrackNativeQuery) q
+  RMUntrackNativeQuery q -> dispatchMetadata (runSingleExec NativeQueries.execUntrackNativeQuery) q
   RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
   RMTrackStoredProcedure q -> dispatchMetadata StoredProcedures.runTrackStoredProcedure q
   RMUntrackStoredProcedure q -> dispatchMetadata StoredProcedures.runUntrackStoredProcedure q
   RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
-  RMTrackLogicalModel q -> dispatchMetadata LogicalModel.runTrackLogicalModel q
-  RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.runUntrackLogicalModel q
+  RMTrackLogicalModel q -> dispatchMetadata (runSingleExec LogicalModel.execTrackLogicalModel) q
+  RMUntrackLogicalModel q -> dispatchMetadata (runSingleExec LogicalModel.execUntrackLogicalModel) q
   RMCreateSelectLogicalModelPermission q -> dispatchMetadata LogicalModel.runCreateSelectLogicalModelPermission q
   RMDropSelectLogicalModelPermission q -> dispatchMetadata LogicalModel.runDropSelectLogicalModelPermission q
   RMCreateEventTrigger q ->
@@ -587,11 +588,19 @@ runBulkAtomic ::
   m EncJSON
 runBulkAtomic cmds = do
   -- get the metadata modifiers for all our commands
-  results <- traverse getMetadataModifierForCommand cmds
+  (mdModifiers :: [Metadata -> m Metadata]) <- do
+    (mods :: [Metadata -> m (MetadataObjId, MetadataModifier)]) <- traverse getMetadataModifierForCommand cmds
+    pure
+      $ map
+        ( \checker metadata -> do
+            MetadataModifier modifier <- snd <$> checker metadata
+            pure $ modifier metadata
+        )
+        mods
 
   -- Try building the schema cache using the combined modifiers. If we run into
   -- any inconsistencies, we should fail and roll back.
-  inconsistencies <- tryBuildSchemaCache (foldMap snd results)
+  inconsistencies <- tryBuildSchemaCacheWithModifiers mdModifiers
 
   unless (null inconsistencies)
     $ throw400WithDetail BadRequest "Schema inconsistency"
@@ -599,12 +608,14 @@ runBulkAtomic cmds = do
 
   pure successMsg
   where
+    getMetadataModifierForCommand ::
+      (HasFeatureFlagChecker m, MonadError QErr m) => RQLMetadataRequest -> m (Metadata -> m (MetadataObjId, MetadataModifier))
     getMetadataModifierForCommand = \case
       RMV1 v -> case v of
-        RMTrackNativeQuery q -> dispatchMetadata NativeQueries.execTrackNativeQuery q
-        RMUntrackNativeQuery q -> dispatchMetadata NativeQueries.execUntrackNativeQuery q
-        RMTrackLogicalModel q -> dispatchMetadata LogicalModel.execTrackLogicalModel q
-        RMUntrackLogicalModel q -> dispatchMetadata LogicalModel.execUntrackLogicalModel q
+        RMTrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execTrackNativeQuery q
+        RMUntrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execUntrackNativeQuery q
+        RMTrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execTrackLogicalModel q
+        RMUntrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execUntrackLogicalModel q
         _ -> throw500 "Bulk atomic does not support this command"
       RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 
@@ -626,3 +637,18 @@ runMetadataQueryV2M ::
 runMetadataQueryV2M currentResourceVersion = \case
   RMV2ReplaceMetadata q -> runReplaceMetadataV2 q
   RMV2ExportMetadata q -> runExportMetadataV2 currentResourceVersion q
+
+runSingleExec ::
+  forall m request.
+  ( MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
+  ) =>
+  (request -> Metadata -> m (MetadataObjId, MetadataModifier)) ->
+  request ->
+  m EncJSON
+runSingleExec exec request = do
+  metadata <- getMetadata
+  (obj, modifier) <- exec request metadata
+  buildSchemaCacheFor obj modifier
+  pure successMsg

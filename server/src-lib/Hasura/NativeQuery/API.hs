@@ -6,8 +6,6 @@ module Hasura.NativeQuery.API
     TrackNativeQuery (..),
     UntrackNativeQuery (..),
     runGetNativeQuery,
-    runTrackNativeQuery,
-    runUntrackNativeQuery,
     execTrackNativeQuery,
     execUntrackNativeQuery,
     dropNativeQueryInMetadata,
@@ -35,13 +33,11 @@ import Hasura.RQL.Types.Common
   ( RelName,
     SourceName,
     sourceNameToText,
-    successMsg,
   )
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualNativeQueryConfig)
-import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
 
 -- | Default implementation of the 'track_native_query' request payload.
@@ -170,32 +166,15 @@ runGetNativeQuery q = do
 -- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery b'
 -- (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
 -- compatibility) is defined in 'class NativeQueryMetadata'.
-runTrackNativeQuery ::
-  forall b m.
-  ( BackendMetadata b,
-    MonadError QErr m,
-    CacheRWM m,
-    MetadataM m
-  ) =>
-  TrackNativeQuery b ->
-  m EncJSON
-runTrackNativeQuery trackNativeQueryRequest = do
-  (obj, modifier) <- execTrackNativeQuery trackNativeQueryRequest
-  buildSchemaCacheFor obj modifier
-  pure successMsg
-
--- | Handler for the 'track_native_query' endpoint. The type 'TrackNativeQuery b'
--- (appearing here in wrapped as 'BackendTrackNativeQuery b' for 'AnyBackend'
--- compatibility) is defined in 'class NativeQueryMetadata'.
 execTrackNativeQuery ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
-    MetadataM m
+    MonadError QErr m
   ) =>
   TrackNativeQuery b ->
+  Metadata ->
   m (MetadataObjId, MetadataModifier)
-execTrackNativeQuery trackNativeQueryRequest = do
+execTrackNativeQuery trackNativeQueryRequest metadata = do
   sourceMetadata <-
     maybe
       ( throw400 NotFound
@@ -207,12 +186,12 @@ execTrackNativeQuery trackNativeQueryRequest = do
       )
       pure
       . preview (metaSources . ix source . toSourceMetadata @b)
-      =<< getMetadata
+      $ metadata
 
-  (metadata :: NativeQueryMetadata b) <- do
+  (nqMetadata :: NativeQueryMetadata b) <- do
     nativeQueryTrackToMetadata @b trackNativeQueryRequest
 
-  let fieldName = _nqmRootFieldName metadata
+  let fieldName = _nqmRootFieldName nqMetadata
       metadataObj =
         MOSourceObjId source
           $ AB.mkAnyBackend
@@ -225,7 +204,7 @@ execTrackNativeQuery trackNativeQueryRequest = do
   let metadataModifier =
         MetadataModifier
           $ (metaSources . ix source . toSourceMetadata @b . smNativeQueries)
-          %~ InsOrdHashMap.insert fieldName metadata
+          %~ InsOrdHashMap.insert fieldName nqMetadata
 
   pure (metadataObj, metadataModifier)
   where
@@ -255,32 +234,18 @@ instance ToJSON (UntrackNativeQuery b) where
       ]
 
 -- | Handler for the 'untrack_native_query' endpoint.
-runUntrackNativeQuery ::
-  forall b m.
-  ( BackendMetadata b,
-    MonadError QErr m,
-    CacheRWM m,
-    MetadataM m
-  ) =>
-  UntrackNativeQuery b ->
-  m EncJSON
-runUntrackNativeQuery untrackNativeQueryRequest = do
-  (obj, modifier) <- execUntrackNativeQuery untrackNativeQueryRequest
-  buildSchemaCacheFor obj modifier
-  pure successMsg
-
 execUntrackNativeQuery ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
-    MetadataM m
+    MonadError QErr m
   ) =>
   UntrackNativeQuery b ->
+  Metadata ->
   m (MetadataObjId, MetadataModifier)
-execUntrackNativeQuery q = do
+execUntrackNativeQuery q metadata = do
   -- we do not check for feature flag here as we always want users to be able
   -- to remove native queries if they'd like
-  assertNativeQueryExists @b source fieldName
+  assertNativeQueryExists @b source fieldName metadata
 
   let metadataObj =
         MOSourceObjId source
@@ -303,10 +268,9 @@ dropNativeQueryInMetadata source rootFieldName = do
 
 -- | Check whether a native query with the given root field name exists for
 -- the given source.
-assertNativeQueryExists :: forall b m. (Backend b, MetadataM m, MonadError QErr m) => SourceName -> NativeQueryName -> m ()
-assertNativeQueryExists sourceName rootFieldName = do
-  metadata <- getMetadata
-
+assertNativeQueryExists ::
+  forall b m. (Backend b, MonadError QErr m) => SourceName -> NativeQueryName -> Metadata -> m ()
+assertNativeQueryExists sourceName rootFieldName metadata = do
   let sourceMetadataTraversal :: Traversal' Metadata (SourceMetadata b)
       sourceMetadataTraversal = metaSources . ix sourceName . toSourceMetadata @b
 
