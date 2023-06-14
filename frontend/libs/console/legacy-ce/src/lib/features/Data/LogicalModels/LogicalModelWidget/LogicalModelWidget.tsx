@@ -1,12 +1,11 @@
 import Skeleton from 'react-loading-skeleton';
 import { CreateBooleanMap } from '../../../../components/Common/utils/tsUtils';
-import { Driver, drivers } from '../../../../dataSources';
 import { Button } from '../../../../new-components/Button';
 import { Dialog } from '../../../../new-components/Dialog';
 import { useConsoleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { Feature } from '../../../DataSource';
+import { Feature, nativeDrivers } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
@@ -20,6 +19,7 @@ import {
   AddLogicalModelFormData,
   addLogicalModelValidationSchema,
 } from './validationSchema';
+import { useEnvironmentState } from '../../../ConnectDBRedesign/hooks';
 
 export type AddLogicalModelDialogProps = {
   defaultValues?: AddLogicalModelFormData;
@@ -46,8 +46,9 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
       defaultValues: props.defaultValues,
     },
   });
-
+  const { consoleType } = useEnvironmentState();
   const selectedDataSource = watch('dataSourceName');
+  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
 
   /**
    * Options for the data sources
@@ -58,7 +59,7 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
     isLoading: isMetadataLoading,
   } = useMetadata(m =>
     m.metadata.sources
-      .filter(s => drivers.includes(s.kind as Driver))
+      .filter(s => allowedDrivers.includes(s.kind))
       .map(source => ({
         value: source.name,
         label: source.name,

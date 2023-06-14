@@ -4,7 +4,10 @@ import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
 import { Tabs } from '../../../../new-components/Tabs';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import {
+  useEnvironmentState,
+  usePushRoute,
+} from '../../../ConnectDBRedesign/hooks';
 import {
   useInvalidateMetadata,
   useMetadata,
@@ -49,6 +52,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
 
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];
+  const { consoleType } = useEnvironmentState();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     useState(false);
@@ -183,20 +187,26 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                 </div>
               ),
             },
-            {
-              value: '/data/native-queries/stored-procedures',
-              label: `Stored Procedures (${storedProcedures.length})`,
-              content: (
-                <div className="mt-md">
-                  <ListStoredProcedures />
-                  <div className="flex justify-end mt-sm">
-                    <Link to="/data/native-queries/stored-procedures/track">
-                      <Button mode="primary">Track Stored Procedure</Button>
-                    </Link>
-                  </div>
-                </div>
-              ),
-            },
+            ...(consoleType !== 'oss'
+              ? [
+                  {
+                    value: '/data/native-queries/stored-procedures',
+                    label: `Stored Procedures (${storedProcedures.length})`,
+                    content: (
+                      <div className="mt-md">
+                        <ListStoredProcedures />
+                        <div className="flex justify-end mt-sm">
+                          <Link to="/data/native-queries/stored-procedures/track">
+                            <Button mode="primary">
+                              Track Stored Procedure
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>

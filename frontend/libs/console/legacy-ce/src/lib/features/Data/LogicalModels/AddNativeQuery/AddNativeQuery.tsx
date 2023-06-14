@@ -9,11 +9,13 @@ import {
 } from '../../../../new-components/Form';
 // import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
 import Skeleton from 'react-loading-skeleton';
-import { Driver, drivers } from '../../../../dataSources';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { Feature } from '../../../DataSource';
+import {
+  useEnvironmentState,
+  usePushRoute,
+} from '../../../ConnectDBRedesign/hooks';
+import { Feature, nativeDrivers } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
@@ -43,12 +45,15 @@ export const AddNativeQuery = ({
 
   const push = usePushRoute();
 
+  const { consoleType } = useEnvironmentState();
+  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
+
   const {
     data: sources,
     isLoading: isSourcesLoading,
     error: sourcesError,
   } = useMetadata(s => {
-    return s.metadata.sources.filter(s => drivers.includes(s.kind as Driver));
+    return s.metadata.sources.filter(s => allowedDrivers.includes(s.kind));
   });
 
   const selectedSource = watch('source');
