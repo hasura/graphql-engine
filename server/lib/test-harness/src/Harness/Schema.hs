@@ -17,6 +17,7 @@ module Harness.Schema
     NativeQueryColumn (..),
     StoredProcedure (..),
     StoredProcedureColumn (..),
+    enableOpenTelemetryCommand,
     resolveTableSchema,
     trackTable,
     trackTables,
@@ -505,4 +506,31 @@ bulkAtomicCommand subCommands =
   [yaml|
       type: bulk_atomic
       args: *subCommands
+    |]
+
+-- | metadata command to enable sending OTel traces
+-- this will be ignored in OSS
+-- `4318` is the "standard" port for an OTel receiver
+-- a batch size of `3` is unusually low, but if we go higher
+-- then we tend to miss traces when running single tests
+-- we can re-address this if this is tanking test performance
+enableOpenTelemetryCommand :: Value
+enableOpenTelemetryCommand =
+  [yaml|
+      type: set_opentelemetry_config
+      args:
+        status: "enabled"
+        data_types:
+          - "traces"
+        exporter_otlp:
+          headers:
+            - name: "header_value"
+              value: "value"
+          otlp_traces_endpoint: "http://localhost:4318/v1/traces"
+          protocol: "http/protobuf"
+          resource_attributes:
+            - name: "attribute-name"
+              value: "attribute-value"
+        batch_span_processor:
+          max_export_batch_size: 3
     |]
