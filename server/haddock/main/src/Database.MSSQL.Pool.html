@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span class="annot"><span class="hs-comment">-- | ODBC connection string for MSSQL server</span></span><span>
 </span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="ConnectionString"><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-var">ConnectionString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnectionString"><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-var">ConnectionString</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unConnectionString"><span class="annot"><span class="annottext">ConnectionString -&gt; Text
 </span><a href="Database.MSSQL.Pool.html#unConnectionString"><span class="hs-identifier hs-var hs-var">unConnectionString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686768798"><span id="local-6989586621686768804"><span id="local-6989586621686768808"><span class="annot"><span class="annottext">Int -&gt; ConnectionString -&gt; ShowS
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686768800"><span id="local-6989586621686768806"><span id="local-6989586621686768810"><span class="annot"><span class="annottext">Int -&gt; ConnectionString -&gt; ShowS
 [ConnectionString] -&gt; ShowS
 ConnectionString -&gt; String
 (Int -&gt; ConnectionString -&gt; ShowS)
@@ -41,7 +41,7 @@ $cshow :: ConnectionString -&gt; String
 show :: ConnectionString -&gt; String
 $cshowList :: [ConnectionString] -&gt; ShowS
 showList :: [ConnectionString] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768812"><span id="local-6989586621686768817"><span class="annot"><span class="annottext">ConnectionString -&gt; ConnectionString -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768814"><span id="local-6989586621686768819"><span class="annot"><span class="annottext">ConnectionString -&gt; ConnectionString -&gt; Bool
 (ConnectionString -&gt; ConnectionString -&gt; Bool)
 -&gt; (ConnectionString -&gt; ConnectionString -&gt; Bool)
 -&gt; Eq ConnectionString
@@ -50,7 +50,7 @@ $c== :: ConnectionString -&gt; ConnectionString -&gt; Bool
 == :: ConnectionString -&gt; ConnectionString -&gt; Bool
 $c/= :: ConnectionString -&gt; ConnectionString -&gt; Bool
 /= :: ConnectionString -&gt; ConnectionString -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768823"><span id="local-6989586621686768828"><span id="local-6989586621686768832"><span id="local-6989586621686768836"><span class="annot"><span class="annottext">[ConnectionString] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768825"><span id="local-6989586621686768830"><span id="local-6989586621686768834"><span id="local-6989586621686768838"><span class="annot"><span class="annottext">[ConnectionString] -&gt; Value
 [ConnectionString] -&gt; Encoding
 ConnectionString -&gt; Value
 ConnectionString -&gt; Encoding
@@ -73,7 +73,7 @@ $ctoJSONList :: [ConnectionString] -&gt; Value
 toJSONList :: [ConnectionString] -&gt; Value
 $ctoEncodingList :: [ConnectionString] -&gt; Encoding
 toEncodingList :: [ConnectionString] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768842"><span id="local-6989586621686768847"><span class="annot"><span class="annottext">Value -&gt; Parser [ConnectionString]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768844"><span id="local-6989586621686768849"><span class="annot"><span class="annottext">Value -&gt; Parser [ConnectionString]
 Value -&gt; Parser ConnectionString
 (Value -&gt; Parser ConnectionString)
 -&gt; (Value -&gt; Parser [ConnectionString])
@@ -84,7 +84,7 @@ $cparseJSON :: Value -&gt; Parser ConnectionString
 parseJSON :: Value -&gt; Parser ConnectionString
 $cparseJSONList :: Value -&gt; Parser [ConnectionString]
 parseJSONList :: Value -&gt; Parser [ConnectionString]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768853"><span id="local-6989586621686768855"><span class="annot"><span class="annottext">(forall x. ConnectionString -&gt; Rep ConnectionString x)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768855"><span id="local-6989586621686768857"><span class="annot"><span class="annottext">(forall x. ConnectionString -&gt; Rep ConnectionString x)
 -&gt; (forall x. Rep ConnectionString x -&gt; ConnectionString)
 -&gt; Generic ConnectionString
 forall x. Rep ConnectionString x -&gt; ConnectionString
@@ -97,8 +97,8 @@ $cto :: forall x. Rep ConnectionString x -&gt; ConnectionString
 to :: forall x. Rep ConnectionString x -&gt; ConnectionString
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686768860"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">ConnectionString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621686768866"><span class="annot"><span class="annottext">codec :: JSONCodec ConnectionString
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686768862"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">ConnectionString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621686768868"><span class="annot"><span class="annottext">codec :: JSONCodec ConnectionString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ConnectionString)
 -&gt; (ConnectionString -&gt; Text)
 -&gt; Codec Value Text Text
@@ -122,7 +122,7 @@ forall value. HasCodec value =&gt; JSONCodec value
 </span><span id="line-36"></span><span>    </span><span id="_coIdleTime"><span class="annot"><span class="annottext">ConnectionOptions -&gt; Int
 </span><a href="Database.MSSQL.Pool.html#_coIdleTime"><span class="hs-identifier hs-var hs-var">_coIdleTime</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686768872"><span id="local-6989586621686768879"><span id="local-6989586621686768883"><span class="annot"><span class="annottext">Int -&gt; ConnectionOptions -&gt; ShowS
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686768874"><span id="local-6989586621686768881"><span id="local-6989586621686768885"><span class="annot"><span class="annottext">Int -&gt; ConnectionOptions -&gt; ShowS
 [ConnectionOptions] -&gt; ShowS
 ConnectionOptions -&gt; String
 (Int -&gt; ConnectionOptions -&gt; ShowS)
@@ -137,7 +137,7 @@ $cshow :: ConnectionOptions -&gt; String
 show :: ConnectionOptions -&gt; String
 $cshowList :: [ConnectionOptions] -&gt; ShowS
 showList :: [ConnectionOptions] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768886"><span id="local-6989586621686768892"><span class="annot"><span class="annottext">ConnectionOptions -&gt; ConnectionOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686768888"><span id="local-6989586621686768894"><span class="annot"><span class="annottext">ConnectionOptions -&gt; ConnectionOptions -&gt; Bool
 (ConnectionOptions -&gt; ConnectionOptions -&gt; Bool)
 -&gt; (ConnectionOptions -&gt; ConnectionOptions -&gt; Bool)
 -&gt; Eq ConnectionOptions
@@ -157,8 +157,8 @@ $c/= :: ConnectionOptions -&gt; ConnectionOptions -&gt; Bool
 </span><span id="line-46"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionOptions"><span class="hs-identifier hs-type">ConnectionOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span>
 </span><span id="line-48"></span><span id="initMSSQLPool"><span class="annot"><span class="annottext">initMSSQLPool :: ConnectionString -&gt; ConnectionOptions -&gt; IO MSSQLPool
-</span><a href="Database.MSSQL.Pool.html#initMSSQLPool"><span class="hs-identifier hs-var hs-var">initMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">ConnectionString</span></a></span><span> </span><span id="local-6989586621686768896"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686768896"><span class="hs-identifier hs-var">connString</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionOptions"><span class="hs-identifier hs-type">ConnectionOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686768897"><span id="local-6989586621686768898"><span id="local-6989586621686768899"><span class="annot"><span class="annottext">Int
+</span><a href="Database.MSSQL.Pool.html#initMSSQLPool"><span class="hs-identifier hs-var hs-var">initMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionString"><span class="hs-identifier hs-type">ConnectionString</span></a></span><span> </span><span id="local-6989586621686768898"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621686768898"><span class="hs-identifier hs-var">connString</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#ConnectionOptions"><span class="hs-identifier hs-type">ConnectionOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686768899"><span id="local-6989586621686768900"><span id="local-6989586621686768901"><span class="annot"><span class="annottext">Int
 _coConnections :: ConnectionOptions -&gt; Int
 _coStripes :: ConnectionOptions -&gt; Int
 _coIdleTime :: ConnectionOptions -&gt; Int
@@ -184,40 +184,40 @@ IO a
 </span><span id="line-51"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; IO Connection
 forall (m :: * -&gt; *). MonadIO m =&gt; Text -&gt; m Connection
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#connect"><span class="hs-identifier hs-var">ODBC.connect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686768896"><span class="hs-identifier hs-var">connString</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686768898"><span class="hs-identifier hs-var">connString</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">Connection -&gt; IO ()
 forall (m :: * -&gt; *). MonadIO m =&gt; Connection -&gt; m ()
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#close"><span class="hs-identifier hs-var">ODBC.close</span></a></span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686768898"><span class="hs-identifier hs-var">_coStripes</span></a></span><span>
+</span><a href="#local-6989586621686768900"><span class="hs-identifier hs-var">_coStripes</span></a></span><span>
 </span><span id="line-54"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; NominalDiffTime
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686768899"><span class="hs-identifier hs-var">_coIdleTime</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686768901"><span class="hs-identifier hs-var">_coIdleTime</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686768897"><span class="hs-identifier hs-var">_coConnections</span></a></span><span>
+</span><a href="#local-6989586621686768899"><span class="hs-identifier hs-var">_coConnections</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="annot"><span class="hs-comment">-- | Destroy all pool resources</span></span><span>
 </span><span id="line-58"></span><span class="annot"><a href="Database.MSSQL.Pool.html#drainMSSQLPool"><span class="hs-identifier hs-type">drainMSSQLPool</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span id="drainMSSQLPool"><span class="annot"><span class="annottext">drainMSSQLPool :: MSSQLPool -&gt; IO ()
-</span><a href="Database.MSSQL.Pool.html#drainMSSQLPool"><span class="hs-identifier hs-var hs-var">drainMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768904"><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768904"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Database.MSSQL.Pool.html#drainMSSQLPool"><span class="hs-identifier hs-var hs-var">drainMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768906"><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621686768906"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">Pool Connection -&gt; IO ()
 forall a. Pool a -&gt; IO ()
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/resource-pool-0.2.3.2/opt/doc/html/resource-pool/src/Data.Pool.html#destroyAllResources"><span class="hs-identifier hs-var">Pool.destroyAllResources</span></a></span><span> </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768904"><span class="hs-identifier hs-var">pool</span></a></span><span>
+</span><a href="#local-6989586621686768906"><span class="hs-identifier hs-var">pool</span></a></span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span id="local-6989586621686768759"><span id="local-6989586621686768761"><span class="annot"><a href="Database.MSSQL.Pool.html#withMSSQLPool"><span class="hs-identifier hs-type">withMSSQLPool</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621686768759"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-62"></span><span id="local-6989586621686768761"><span id="local-6989586621686768763"><span class="annot"><a href="Database.MSSQL.Pool.html#withMSSQLPool"><span class="hs-identifier hs-type">withMSSQLPool</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621686768761"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-64"></span><span>  </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#Connection"><span class="hs-identifier hs-type">ODBC.Connection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686768759"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686768761"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621686768759"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#ODBCException"><span class="hs-identifier hs-type">ODBC.ODBCException</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686768761"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#Connection"><span class="hs-identifier hs-type">ODBC.Connection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686768761"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686768763"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621686768761"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-3c7d85d816fece4c90be8de8848356fffc50fc0342725979614c93a5073dbb54/share/doc/html/src/Database.ODBC.Internal.html#ODBCException"><span class="hs-identifier hs-type">ODBC.ODBCException</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686768763"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-67"></span><span id="withMSSQLPool"><span class="annot"><span class="annottext">withMSSQLPool :: forall (m :: * -&gt; *) a.
 MonadBaseControl IO m =&gt;
 MSSQLPool -&gt; (Connection -&gt; m a) -&gt; m (Either ODBCException a)
-</span><a href="Database.MSSQL.Pool.html#withMSSQLPool"><span class="hs-identifier hs-var hs-var">withMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768911"><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768911"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686768912"><span class="annot"><span class="annottext">Connection -&gt; m a
-</span><a href="#local-6989586621686768912"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Database.MSSQL.Pool.html#withMSSQLPool"><span class="hs-identifier hs-var hs-var">withMSSQLPool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768913"><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621686768913"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686768914"><span class="annot"><span class="annottext">Connection -&gt; m a
+</span><a href="#local-6989586621686768914"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">m a -&gt; m (Either ODBCException a)
 forall (m :: * -&gt; *) e a.
 (MonadBaseControl IO m, Exception e) =&gt;
@@ -230,34 +230,34 @@ forall (m :: * -&gt; *) a b.
 MonadBaseControl IO m =&gt;
 Pool a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/resource-pool-0.2.3.2/opt/doc/html/resource-pool/src/Data.Pool.html#withResource"><span class="hs-identifier hs-var">Pool.withResource</span></a></span><span> </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768911"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; m a
-</span><a href="#local-6989586621686768912"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><a href="#local-6989586621686768913"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">Connection -&gt; m a
+</span><a href="#local-6989586621686768914"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="annot"><span class="hs-comment">-- | Resize a pool</span></span><span>
 </span><span id="line-71"></span><span class="annot"><a href="Database.MSSQL.Pool.html#resizePool"><span class="hs-identifier hs-type">resizePool</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span id="resizePool"><span class="annot"><span class="annottext">resizePool :: MSSQLPool -&gt; Int -&gt; IO ()
-</span><a href="Database.MSSQL.Pool.html#resizePool"><span class="hs-identifier hs-var hs-var">resizePool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768915"><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768915"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686768916"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686768916"><span class="hs-identifier hs-var">resizeTo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Database.MSSQL.Pool.html#resizePool"><span class="hs-identifier hs-var hs-var">resizePool</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768917"><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621686768917"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621686768918"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686768918"><span class="hs-identifier hs-var">resizeTo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-comment">-- Resize the pool max resources</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">Pool Connection -&gt; Int -&gt; IO ()
 forall a. Pool a -&gt; Int -&gt; IO ()
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/resource-pool-0.2.3.2/opt/doc/html/resource-pool/src/Data.Pool.html#resizePool"><span class="hs-identifier hs-var">Pool.resizePool</span></a></span><span> </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768915"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686768916"><span class="hs-identifier hs-var">resizeTo</span></a></span><span>
+</span><a href="#local-6989586621686768917"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686768918"><span class="hs-identifier hs-var">resizeTo</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-comment">-- Trim pool by destroying excess resources, if any</span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">Pool Connection -&gt; IO ()
 forall a. Pool a -&gt; IO ()
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/resource-pool-0.2.3.2/opt/doc/html/resource-pool/src/Data.Pool.html#tryTrimPool"><span class="hs-identifier hs-var">Pool.tryTrimPool</span></a></span><span> </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768915"><span class="hs-identifier hs-var">pool</span></a></span><span>
+</span><a href="#local-6989586621686768917"><span class="hs-identifier hs-var">pool</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="annot"><a href="Database.MSSQL.Pool.html#getInUseConnections"><span class="hs-identifier hs-type">getInUseConnections</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-79"></span><span id="getInUseConnections"><span class="annot"><span class="annottext">getInUseConnections :: MSSQLPool -&gt; IO Int
-</span><a href="Database.MSSQL.Pool.html#getInUseConnections"><span class="hs-identifier hs-var hs-var">getInUseConnections</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768919"><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768919"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Pool Connection -&gt; IO Int
+</span><a href="Database.MSSQL.Pool.html#getInUseConnections"><span class="hs-identifier hs-var hs-var">getInUseConnections</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Database.MSSQL.Pool.html#MSSQLPool"><span class="hs-identifier hs-type">MSSQLPool</span></a></span><span> </span><span id="local-6989586621686768921"><span class="annot"><span class="annottext">Pool Connection
+</span><a href="#local-6989586621686768921"><span class="hs-identifier hs-var">pool</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Pool Connection -&gt; IO Int
 forall a. Pool a -&gt; IO Int
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/resource-pool-0.2.3.2/opt/doc/html/resource-pool/src/Data.Pool.html#getInUseResourceCount"><span class="hs-identifier hs-var">Pool.getInUseResourceCount</span></a></span><span> </span><span class="annot"><span class="annottext">(Pool Connection -&gt; IO Int) -&gt; Pool Connection -&gt; IO Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621686768919"><span class="hs-identifier hs-var">pool</span></a></span><span>
+</span><a href="#local-6989586621686768921"><span class="hs-identifier hs-var">pool</span></a></span><span>
 </span><span id="line-80"></span></pre></body></html>
