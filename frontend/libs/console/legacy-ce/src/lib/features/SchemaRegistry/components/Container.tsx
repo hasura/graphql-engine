@@ -1,19 +1,36 @@
-import * as React from 'react';
+import { useState } from 'react';
 import { SchemasList } from './SchemasList';
 import { FeatureRequest } from './FeatureRequest';
 import globals from '../../../Globals';
 import { SCHEMA_REGISTRY_FEATURE_NAME } from '../constants';
+import { FaBell } from 'react-icons/fa';
+import { IconTooltip } from '../../../new-components/Tooltip';
+import { AlertsDialog } from './AlertsDialog';
 import { Badge } from '../../../new-components/Badge';
 import { SCHEMA_REGISTRY_REF_URL } from '../constants';
 
 const Header: React.VFC = () => {
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+
   return (
     <div className="flex flex-col w-full">
-      <div className="flex w-full mb-sm">
-        <h1 className="text-xl font-semibold">GraphQL Schema Registry</h1>
-        <Badge className="mx-2" color="blue">
-          BETA
-        </Badge>
+      <div className="flex w-3/5 mb-sm justify-between">
+        <div className="flex items-center">
+          <h1 className="text-xl font-semibold">GraphQL Schema Registry</h1>
+          <Badge className="mx-2" color="blue">
+            BETA
+          </Badge>
+        </div>
+        <div
+          className="flex text-lg mt-2 mr-2 cursor-pointer"
+          role="button"
+          onClick={() => setIsAlertModalOpen(true)}
+        >
+          <IconTooltip
+            message="Alerts on GraphQL schema changes"
+            icon={<FaBell />}
+          />
+        </div>
       </div>
       <a
         className="text-muted w-auto"
@@ -23,6 +40,9 @@ const Header: React.VFC = () => {
       >
         What is Schema Registry?
       </a>
+      {isAlertModalOpen && (
+        <AlertsDialog onClose={() => setIsAlertModalOpen(false)} />
+      )}
     </div>
   );
 };
