@@ -8,8 +8,7 @@ API_TESTS_PRO=api-tests-pro:exe:api-tests-pro
 .PHONY: test-bigquery
 ## test-bigquery: run tests for BigQuery backend
 # will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
-test-bigquery: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait postgres
+test-bigquery: build remove-tix-file start-api-test-postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -17,8 +16,7 @@ test-bigquery: build remove-tix-file
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
-test-sqlserver: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-sqlserver: build remove-tix-file start-api-test-backends
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -26,8 +24,7 @@ test-sqlserver: build remove-tix-file
 
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
-test-citus: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-citus: build remove-tix-file start-api-test-backends
 	HASURA_TEST_BACKEND_TYPE=Citus \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -35,8 +32,7 @@ test-citus: build remove-tix-file
 
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
-test-data-connectors: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-data-connectors: build remove-tix-file start-api-test-backends
 	HASURA_TEST_BACKEND_TYPE=DataConnector \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -44,8 +40,7 @@ test-data-connectors: build remove-tix-file
 
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
-test-cockroach: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-cockroach: build remove-tix-file start-api-test-backends
 	HASURA_TEST_BACKEND_TYPE=Cockroach \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -55,8 +50,7 @@ test-cockroach: build remove-tix-file
 ## test-postgres: run tests for Postgres backend
 # we have a few tests labeled with 'Postgres' which test their variants, too,
 # so this also starts containers for Postgres variants
-test-postgres: build build-postgres-agent remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-postgres: build build-postgres-agent remove-tix-file start-api-test-postgres
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -125,7 +119,7 @@ test-backends-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 
 .PHONY: test-postgres-pro
 ## test-postgres-pro: run tests for HGE pro for postgres
-test-postgres-pro: build-pro build-postgres-agent start-api-tests-pro-backends remove-tix-file
+test-postgres-pro: build-pro build-postgres-agent start-api-tests-pro-postgres remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
