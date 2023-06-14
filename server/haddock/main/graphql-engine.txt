@@ -20366,6 +20366,14 @@ buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
 --   the changes to the metadata and the schema cache are abandoned.
 tryBuildSchemaCache :: (CacheRWM m, MetadataM m) => MetadataModifier -> m (HashMap MetadataObjId (NonEmpty InconsistentMetadata))
 
+-- | Rebuilds the schema cache after modifying metadata sequentially and
+--   returns any _new_ metadata inconsistencies. If there are any new
+--   inconsistencies, the changes to the metadata and the schema cache are
+--   abandoned. If the metadata modifiers run into validation issues (e.g.
+--   a native query is already tracked in the metadata), we throw these
+--   errors back without changing the metadata and schema cache.
+tryBuildSchemaCacheWithModifiers :: (CacheRWM m, MetadataM m) => [Metadata -> m Metadata] -> m (HashMap MetadataObjId (NonEmpty InconsistentMetadata))
+
 -- | Tries to modify the metadata for all the specified metadata objects.
 --   If the modification fails, any objects that directly caused a new
 --   metadata inconsistency are removed and the modification is attempted
@@ -22882,13 +22890,7 @@ runGetNativeQuery :: forall b m. (BackendMetadata b, MetadataM m, MonadError QEr
 --   'TrackNativeQuery b' (appearing here in wrapped as
 --   'BackendTrackNativeQuery b' for <tt>AnyBackend</tt> compatibility) is
 --   defined in 'class NativeQueryMetadata'.
-runTrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => TrackNativeQuery b -> m EncJSON
-
--- | Handler for the <tt>track_native_query</tt> endpoint. The type
---   'TrackNativeQuery b' (appearing here in wrapped as
---   'BackendTrackNativeQuery b' for <tt>AnyBackend</tt> compatibility) is
---   defined in 'class NativeQueryMetadata'.
-execTrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m, MetadataM m) => TrackNativeQuery b -> m (MetadataObjId, MetadataModifier)
+execTrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m) => TrackNativeQuery b -> Metadata -> m (MetadataObjId, MetadataModifier)
 
 -- | API payload for the <tt>untrack_native_query</tt> endpoint.
 data UntrackNativeQuery (b :: BackendType)
@@ -22897,8 +22899,7 @@ UntrackNativeQuery :: SourceName -> NativeQueryName -> UntrackNativeQuery (b :: 
 [utnqRootFieldName] :: UntrackNativeQuery (b :: BackendType) -> NativeQueryName
 
 -- | Handler for the <tt>untrack_native_query</tt> endpoint.
-runUntrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => UntrackNativeQuery b -> m EncJSON
-execUntrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m, MetadataM m) => UntrackNativeQuery b -> m (MetadataObjId, MetadataModifier)
+execUntrackNativeQuery :: forall b m. (BackendMetadata b, MonadError QErr m) => UntrackNativeQuery b -> Metadata -> m (MetadataObjId, MetadataModifier)
 dropNativeQueryInMetadata :: forall b. BackendMetadata b => SourceName -> NativeQueryName -> MetadataModifier
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSON (Hasura.NativeQuery.API.TrackNativeQuery b)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.ToJSON.ToJSON (Hasura.NativeQuery.API.TrackNativeQuery b)
@@ -23153,13 +23154,7 @@ runGetLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, Metadat
 --   'TrackLogicalModel b' (appearing here in wrapped as
 --   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
 --   defined in 'class LogicalModelMetadata'.
-runTrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MetadataM m, MonadError QErr m) => TrackLogicalModel b -> m EncJSON
-
--- | Handler for the <tt>track_logical_model</tt> endpoint. The type
---   'TrackLogicalModel b' (appearing here in wrapped as
---   'BackendTrackLogicalModel b' for <tt>AnyBackend</tt> compatibility) is
---   defined in 'class LogicalModelMetadata'.
-execTrackLogicalModel :: forall b m. (BackendMetadata b, MetadataM m) => TrackLogicalModel b -> m (MetadataObjId, MetadataModifier)
+execTrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m) => TrackLogicalModel b -> Metadata -> m (MetadataObjId, MetadataModifier)
 
 -- | API payload for the <tt>untrack_logical_model</tt> endpoint.
 data UntrackLogicalModel (b :: BackendType)
@@ -23168,10 +23163,7 @@ UntrackLogicalModel :: SourceName -> LogicalModelName -> UntrackLogicalModel (b 
 [utlmName] :: UntrackLogicalModel (b :: BackendType) -> LogicalModelName
 
 -- | Handler for the <tt>untrack_logical_model</tt> endpoint.
-runUntrackLogicalModel :: forall b m. (BackendMetadata b, CacheRWM m, MonadError QErr m, MetadataM m) => UntrackLogicalModel b -> m EncJSON
-
--- | Handler for the <tt>untrack_logical_model</tt> endpoint.
-execUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m, MetadataM m) => UntrackLogicalModel b -> m (MetadataObjId, MetadataModifier)
+execUntrackLogicalModel :: forall b m. (BackendMetadata b, MonadError QErr m) => UntrackLogicalModel b -> Metadata -> m (MetadataObjId, MetadataModifier)
 
 -- | A permission for logical models is tied to a specific name and source.
 --   This wrapper adds both of those things to the JSON object that
@@ -24395,22 +24387,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) TriggerOnReplication
-cteqCleanupConfig :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe Text)
-cetqWebhook :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe InputWebhook)
-cetqUpdate :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe (SubscribeOpSpec b_arn4b))
-cetqTable :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (TableName b_arn4b)
-cetqSource :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) SourceName
-cetqRetryConf :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe RequestTransform)
-cetqReplace :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) Bool
-cetqName :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) TriggerName
-cetqInsert :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe (SubscribeOpSpec b_arn4b))
-cetqHeaders :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe Bool)
-cetqDelete :: forall b_arn4b. Lens' (CreateEventTriggerQuery b_arn4b) (Maybe (SubscribeOpSpec b_arn4b))
+cteqTriggerOnReplication :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) TriggerOnReplication
+cteqCleanupConfig :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe Text)
+cetqWebhook :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe InputWebhook)
+cetqUpdate :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe (SubscribeOpSpec b_arlSy))
+cetqTable :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (TableName b_arlSy)
+cetqSource :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) SourceName
+cetqRetryConf :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe RequestTransform)
+cetqReplace :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) Bool
+cetqName :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) TriggerName
+cetqInsert :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe (SubscribeOpSpec b_arlSy))
+cetqHeaders :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe Bool)
+cetqDelete :: forall b_arlSy. Lens' (CreateEventTriggerQuery b_arlSy) (Maybe (SubscribeOpSpec b_arlSy))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
