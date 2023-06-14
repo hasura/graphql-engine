@@ -1,0 +1,58 @@
+---
+sidebar_position: 10
+sidebar_label: Pre-built Dashboards
+title: 'Pre-built Dashboards'
+description: Pre-built observability dashboards and alerting rules using Prometheus, Grafana, Alert Manager, Jeager
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - observability
+  - metrics
+  - alerts
+  - dashboards
+  - prometheus
+  - grafana
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Pre-built Dashboards
+
+<ProductBadge self />
+
+## Introduction
+
+If you're running Hasura EE yourself, you have metrics available over a Prometheus endpoint, Traces available over
+OpenTelemetry and Logs available over stdout. We have set up a
+[repository](https://github.com/hasura/ee-observability-demo) where we have configured Hasura along with:
+
+- Prometheus for metrics collector.
+- Jaeger for Traces collector.
+- Alert Manager and regular alert rules.
+- Node Exporter for system metrics.
+- Blackbox Exporter for HTTP health checks.
+- Grafana with a few sample dashboards.
+- Loki and Promtail for logging collector.
+- Hasura migrations, metadata examples and enterprise enabled services (Caching, Read Replicas, Data Connectors).
+
+<Thumbnail src="/img/observability/grafana-overview-dashboard.png" alt="Hasura Overview Dashboard" />
+
+The repository helps you quickly start and explore the latest observability feature updates, dashboards, and alert
+templates for monitoring in production.
+
+## Get Started
+
+Clone the repository to your local machine, copy the sample environment file `dotenv` to `.env`, and edit the enterprise
+license key (`HGE_EE_LICENSE_KEY`) and secrets. The demo uses [Docker Compose](https://docs.docker.com/compose/) to
+setup container services.
+
+```bash
+git clone https://github.com/hasura/ee-observability-demo.git
+cd ee-observability-demo
+cp dotenv .env
+docker-compose up -d
+```
+
+Explore Grafana Dashboards on `http://localhost:3000`.
