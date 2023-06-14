@@ -237,7 +237,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "bulk",
+  "type": "bulk_atomic",
   "args":
   [
     {
@@ -320,6 +320,15 @@ X-Hasura-Role: admin
   ]
 }
 ```
+
+:::info Wrap calls in `bulk_atomic`
+
+Tracking the Logical Models one-by-one would fail, since `article` refers to `author`, which is not yet defined.
+
+Tracking the Logical Models in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
+
+:::
 
 </TabItem>
 </Tabs>
