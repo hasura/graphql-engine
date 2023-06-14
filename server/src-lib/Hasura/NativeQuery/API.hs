@@ -43,8 +43,6 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualNativeQueryConfig)
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
-import Hasura.Server.Init.FeatureFlag qualified as FF
 
 -- | Default implementation of the 'track_native_query' request payload.
 data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
@@ -146,14 +144,11 @@ runGetNativeQuery ::
   forall b m.
   ( BackendMetadata b,
     MetadataM m,
-    HasFeatureFlagChecker m,
     MonadError QErr m
   ) =>
   GetNativeQuery b ->
   m EncJSON
 runGetNativeQuery q = do
-  throwIfFeatureDisabled
-
   maybe
     ( throw400 NotFound
         $ "Source '"
@@ -180,8 +175,7 @@ runTrackNativeQuery ::
   ( BackendMetadata b,
     MonadError QErr m,
     CacheRWM m,
-    MetadataM m,
-    HasFeatureFlagChecker m
+    MetadataM m
   ) =>
   TrackNativeQuery b ->
   m EncJSON
@@ -197,14 +191,11 @@ execTrackNativeQuery ::
   forall b m.
   ( BackendMetadata b,
     MonadError QErr m,
-    MetadataM m,
-    HasFeatureFlagChecker m
+    MetadataM m
   ) =>
   TrackNativeQuery b ->
   m (MetadataObjId, MetadataModifier)
 execTrackNativeQuery trackNativeQueryRequest = do
-  throwIfFeatureDisabled
-
   sourceMetadata <-
     maybe
       ( throw400 NotFound
@@ -309,12 +300,6 @@ dropNativeQueryInMetadata source rootFieldName = do
     . toSourceMetadata @b
     . smNativeQueries
     %~ InsOrdHashMap.delete rootFieldName
-
--- | check feature flag is enabled before carrying out any actions
-throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
-throwIfFeatureDisabled = do
-  enableNativeQueries <- checkFlag FF.nativeQueryInterface
-  unless enableNativeQueries (throw500 "NativeQueries is disabled!")
 
 -- | Check whether a native query with the given root field name exists for
 -- the given source.

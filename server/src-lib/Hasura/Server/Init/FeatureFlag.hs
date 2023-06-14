@@ -9,8 +9,6 @@ module Hasura.Server.Init.FeatureFlag
     FeatureFlags (..),
     HasFeatureFlagChecker (..),
     featureFlags,
-    nativeQueryInterface,
-    storedProceduresFlag,
   )
 where
 
@@ -55,9 +53,7 @@ featureFlags :: FeatureFlags
 featureFlags =
   FeatureFlags
     $ HashMap.fromList
-      [ ("test-flag", testFlag),
-        ("native-query-interface", nativeQueryInterface),
-        ("stored-procedures", storedProceduresFlag)
+      [ ("test-flag", testFlag)
       ]
 
 --------------------------------------------------------------------------------
@@ -83,22 +79,4 @@ testFlag =
       ffDefaultValue = False,
       ffDescription = "Testing feature flag integration",
       ffEnvVar = "HASURA_FF_TEST_FLAG"
-    }
-
-nativeQueryInterface :: FeatureFlag
-nativeQueryInterface =
-  FeatureFlag
-    { ffIdentifier = Identifier "native-query-interface",
-      ffDefaultValue = False,
-      ffDescription = "Expose custom views, permissions and advanced SQL functionality via custom queries",
-      ffEnvVar = "HASURA_FF_NATIVE_QUERY_INTERFACE"
-    }
-
-storedProceduresFlag :: FeatureFlag
-storedProceduresFlag =
-  FeatureFlag
-    { ffIdentifier = Identifier "stored-procedures",
-      ffDefaultValue = False,
-      ffDescription = "Expose stored procedures support",
-      ffEnvVar = "HASURA_FF_STORED_PROCEDURES"
     }

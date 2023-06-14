@@ -965,7 +965,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       }
 
               withRecordInconsistencyM metadataObject $ do
-                unless (_cscAreNativeQueriesEnabled cacheStaticConfig)
+                unless (_cscAreNativeQueriesEnabled cacheStaticConfig (reify $ backendTag @b))
                   $ throw400 InvalidConfiguration "The Native Queries feature is disabled"
 
                 logicalModel <-

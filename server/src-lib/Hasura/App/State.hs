@@ -38,6 +38,7 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Config
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.NamingCase
@@ -329,7 +330,10 @@ buildCacheStaticConfig AppEnv {..} =
       _cscEventingMode = appEnvEventingMode,
       _cscReadOnlyMode = appEnvEnableReadOnlyMode,
       _cscLogger = _lsLogger appEnvLoggers,
-      _cscAreNativeQueriesEnabled = False,
+      -- Native Queries are always enabled for Postgres in the OSS edition.
+      _cscAreNativeQueriesEnabled = \case
+        Postgres Vanilla -> True
+        _ -> False,
       _cscAreStoredProceduresEnabled = False
     }
 

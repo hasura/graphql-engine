@@ -16,12 +16,9 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
-featureFlagForStoredProcedures :: String
-featureFlagForStoredProcedures = "HASURA_FF_STORED_PROCEDURES"
-
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForStoredProcedures, "True")]
+  Fixture.hgeWithEnv []
     $ Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)

@@ -115,7 +115,7 @@ main = do
                 EventingEnabled
                 readOnlyMode
                 logger
-                False
+                (const False)
                 False
             dynamicConfig =
               CacheDynamicConfig

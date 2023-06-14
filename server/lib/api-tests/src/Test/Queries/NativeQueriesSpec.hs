@@ -1,11 +1,12 @@
 {-# OPTIONS_GHC -Wno-incomplete-record-updates #-}
 
--- Native Queries is a pro-only feature now, this ensures that this continues
--- to be the case
+-- Native Queries is a pro-only feature now for anything but Postgres.
+-- This test ensures that this continues to be the case.
 module Test.Queries.NativeQueriesSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
@@ -16,17 +17,19 @@ import Test.Hspec (SpecWith, describe, it)
 
 -- ** Preamble
 
-featureFlagForNativeQueries :: String
-featureFlagForNativeQueries = "HASURA_FF_NATIVE_QUERY_INTERFACE"
-
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.hgeWithEnv [(featureFlagForNativeQueries, "True")]
+  Fixture.hgeWithEnv []
     $ Fixture.runClean -- re-run fixture setup on every test
       ( NE.fromList
           [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
               { Fixture.setupTeardown = \(testEnvironment, _) ->
                   [ Postgres.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Sqlserver.setupTablesAction schema testEnvironment
                   ]
               }
           ]
@@ -57,17 +60,22 @@ tests = do
         (Schema.nativeQuery "hello_world_function" (const query) "hello_world_return_type")
 
   describe "Testing Native Queries" $ do
-    it "We cannot even set up a Logical Model in OSS" $ \testEnvironment -> do
+    it "We cannot even set up a Logical Model in non-pg OSS" $ \testEnvironment -> do
       let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+          backendName = BackendType.backendTypeString backendTypeMetadata
           source = BackendType.backendSourceName backendTypeMetadata
 
       GraphqlEngine.postMetadata_
         testEnvironment
         (Schema.trackLogicalModelCommand source backendTypeMetadata helloWorldLogicalModel)
 
-      -- we expect this to fail
+      -- we expect this to work only on Postgres
+      let expectedStatus
+            | backendName == "pg" = 200
+            | otherwise = 400
+
       void
         $ GraphqlEngine.postMetadataWithStatus
-          400
+          expectedStatus
           testEnvironment
           (Schema.trackNativeQueryCommand source backendTypeMetadata helloWorldNativeQuery)

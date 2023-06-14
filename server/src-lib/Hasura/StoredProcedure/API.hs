@@ -36,8 +36,6 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Init.FeatureFlag (HasFeatureFlagChecker (..))
-import Hasura.Server.Init.FeatureFlag qualified as FF
 import Hasura.StoredProcedure.Metadata (ArgumentName, StoredProcedureMetadata (..))
 import Hasura.StoredProcedure.Types
 
@@ -113,15 +111,11 @@ instance (Backend b) => ToJSON (GetStoredProcedure b) where
 runGetStoredProcedure ::
   forall b m.
   ( BackendMetadata b,
-    MetadataM m,
-    HasFeatureFlagChecker m,
-    MonadError QErr m
+    MetadataM m
   ) =>
   GetStoredProcedure b ->
   m EncJSON
 runGetStoredProcedure q = do
-  throwIfFeatureDisabled
-
   metadata <- getMetadata
 
   let storedProcedure :: Maybe (StoredProcedures b)
@@ -137,14 +131,11 @@ runTrackStoredProcedure ::
   ( BackendMetadata b,
     MonadError QErr m,
     CacheRWM m,
-    MetadataM m,
-    HasFeatureFlagChecker m
+    MetadataM m
   ) =>
   TrackStoredProcedure b ->
   m EncJSON
 runTrackStoredProcedure TrackStoredProcedure {..} = do
-  throwIfFeatureDisabled
-
   sourceMetadata <-
     maybe
       ( throw400 NotFound
@@ -246,12 +237,6 @@ dropStoredProcedureInMetadata source rootFieldName = do
     . toSourceMetadata @b
     . smStoredProcedures
     %~ InsOrdHashMap.delete rootFieldName
-
--- | check feature flag is enabled before carrying out any actions
-throwIfFeatureDisabled :: (HasFeatureFlagChecker m, MonadError QErr m) => m ()
-throwIfFeatureDisabled = do
-  enableStoredProcedures <- checkFlag FF.storedProceduresFlag
-  unless enableStoredProcedures (throw500 "Stored Procedures are disabled!")
 
 -- | Check whether a stored procedure exists for the given source.
 assertStoredProcedureExists ::
