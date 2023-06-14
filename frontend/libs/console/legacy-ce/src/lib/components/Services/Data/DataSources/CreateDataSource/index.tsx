@@ -11,12 +11,11 @@ import styles from './styles.module.scss';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
-import { getDataSources } from '../../../../../metadata/selector';
 import { NeonConnect } from './Neon';
 
 type Props = InjectedProps;
 
-const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
+const CreateDataSource: React.FC<Props> = ({ dispatch }) => {
   // this condition fails for everything other than a Hasura Cloud project
   if (!isCloudConsole(Globals)) {
     throw new NotFoundError();
@@ -28,10 +27,7 @@ const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
         <div className={styles.connect_db_content}>
           <div className={`${styles.container} mb-md`}>
             <div className="w-full mb-md">
-              <NeonConnect
-                allDatabases={allDataSources.map(d => d.name)}
-                dispatch={dispatch}
-              />
+              <NeonConnect dispatch={dispatch} />
             </div>
           </div>
         </div>
@@ -44,7 +40,6 @@ const mapStateToProps = (state: ReduxState) => {
   return {
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
-    allDataSources: getDataSources(state),
   };
 };
 
