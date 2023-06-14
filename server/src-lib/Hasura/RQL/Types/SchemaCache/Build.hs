@@ -142,8 +142,6 @@ withRecordInconsistencyM metadataObject f = do
           recordInconsistencyM (Just (toJSON exts)) metadataObject "withRecordInconsistency: unexpected ExtraExtensions"
         Just (ExtraInternal internal) ->
           recordInconsistencyM (Just (toJSON internal)) metadataObject (qeError err)
-        Just HideInconsistencies ->
-          pure ()
         Nothing ->
           recordInconsistencyM Nothing metadataObject (qeError err)
       return Nothing
@@ -167,8 +165,6 @@ recordInconsistenciesWith recordInconsistency' f = proc (e, (metadataObject, s))
           recordInconsistency' -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
         Just (ExtraInternal internal) ->
           recordInconsistency' -< ((Just (toJSON internal), metadataObject), qeError err)
-        Just HideInconsistencies ->
-          returnA -< ()
         Nothing ->
           recordInconsistency' -< ((Nothing, metadataObject), qeError err)
       returnA -< Nothing
