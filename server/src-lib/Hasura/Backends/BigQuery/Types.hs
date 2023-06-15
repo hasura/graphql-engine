@@ -77,7 +77,6 @@ where
 
 import Autodocodec (HasCodec (codec), dimapCodec, object, optionalField', requiredField', (.=))
 import Autodocodec qualified as AC
-import Autodocodec.Extended (boundedEnumCodec)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -101,6 +100,7 @@ import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.Function.Cache (FunctionArgName)
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.NativeQuery.Metadata (InterpolatedQuery, NativeQueryName)
 import Hasura.Prelude hiding (state)
 import Hasura.RQL.IR.BoolExp
@@ -639,25 +639,61 @@ data ScalarType
   | StructScalarType
   deriving stock (Show, Eq, Ord, Bounded, Enum, Generic, Data, Lift)
   deriving anyclass (Hashable, NFData, ToJSONKey)
-  deriving (FromJSON, ToJSON) via AC.Autodocodec ScalarType
 
+-- I do not know how to make Autodocodec case-insensitive or strip out the
+-- length stuff, so here we are
 instance HasCodec ScalarType where
-  codec = AC.named "ScalarType"
-    $ boundedEnumCodec \case
-      StringScalarType -> "STRING"
-      BytesScalarType -> "BYTES"
-      IntegerScalarType -> "INT64"
-      FloatScalarType -> "FLOAT64"
-      BoolScalarType -> "BOOL"
-      TimestampScalarType -> "TIMESTAMP"
-      DateScalarType -> "DATE"
-      TimeScalarType -> "TIME"
-      DatetimeScalarType -> "DATETIME"
-      GeographyScalarType -> "GEOGRAPHY"
-      DecimalScalarType -> "DECIMAL"
-      BigDecimalScalarType -> "BIGDECIMAL"
-      JsonScalarType -> "JSON"
-      StructScalarType -> "STRUCT"
+  codec =
+    AC.CommentCodec
+      ("A scalar type for BigQuery")
+      $ placeholderCodecViaJSON
+
+-- https://hasura.io/docs/latest/schema/bigquery/bigquery-types/
+instance FromJSON ScalarType where
+  parseJSON (J.String s) = parseScalarType (T.toLower s)
+    where
+      parseScalarType = \case
+        "string" -> pure StringScalarType
+        "bytes" -> pure BytesScalarType
+        "integer" -> pure IntegerScalarType
+        "int64" -> pure IntegerScalarType
+        "float" -> pure FloatScalarType
+        "float64" -> pure FloatScalarType
+        "bool" -> pure BoolScalarType
+        "timestamp" -> pure TimestampScalarType
+        "date" -> pure DateScalarType
+        "time" -> pure TimeScalarType
+        "datetime" -> pure DatetimeScalarType
+        "geography" -> pure GeographyScalarType
+        "decimal" -> pure DecimalScalarType
+        "numeric" -> pure DecimalScalarType
+        "bigdecimal" -> pure BigDecimalScalarType
+        "bignumeric" -> pure BigDecimalScalarType
+        "json" -> pure JsonScalarType
+        "struct" -> pure StructScalarType
+        t ->
+          -- if the type is something like `varchar(127)`, try stripping off the data length
+          if T.isInfixOf "(" t
+            then parseScalarType (T.takeWhile (\c -> c /= '(') t)
+            else fail $ "Did not recognise scalar type '" <> T.unpack t <> "'"
+  parseJSON _ = fail "expected a string"
+
+instance ToJSON ScalarType where
+  toJSON = \case
+    StringScalarType -> "STRING"
+    BytesScalarType -> "BYTES"
+    IntegerScalarType -> "INT64"
+    FloatScalarType -> "FLOAT64"
+    BoolScalarType -> "BOOL"
+    TimestampScalarType -> "TIMESTAMP"
+    DateScalarType -> "DATE"
+    TimeScalarType -> "TIME"
+    DatetimeScalarType -> "DATETIME"
+    GeographyScalarType -> "GEOGRAPHY"
+    DecimalScalarType -> "DECIMAL"
+    BigDecimalScalarType -> "BIGDECIMAL"
+    JsonScalarType -> "JSON"
+    StructScalarType -> "STRUCT"
 
 instance ToTxt ScalarType where toTxt = tshow
 
