@@ -27,7 +27,9 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 :::tip Supported from
 
-Native queries are supported from `v2.26.0`.
+- Hasura Cloud: `v2.26.0`.
+- Hasura Enterprise Edition: `v2.26.0`.
+- Hasura Community Edition: `v2.28.0`.
 
 :::
 
@@ -90,8 +92,7 @@ create a Logical Model representing the excerpted article:
 
 :::info Only creatable via the Console and API
 
-Currently, Native Queries can be created using the Console and the API. CLI support will be added in a future
-release.
+Currently, Native Queries can be created using the Console and the API. CLI support will be added in a future release.
 
 :::
 
@@ -260,8 +261,8 @@ In order to represent the structure of the data returned by the query, we first 
 
 :::info Permissions and Logical Models
 
-Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See
-the [Logical Model documentation](/schema/postgres/logical-models/index.mdx) for information on attaching permissions.
+Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See the
+[Logical Model documentation](/schema/postgres/logical-models/index.mdx) for information on attaching permissions.
 
 :::
 
@@ -449,18 +450,17 @@ permissions.
 
 ## Relationships
 
-Relationships are supported between Native Queries.
-This is how Native Queries may implement object and array fields of their referenced Logical Model.
+Relationships are supported between Native Queries. This is how Native Queries may implement object and array fields of
+their referenced Logical Model.
 
-Unlike tables, relationships for a Native Query have to be given as part of
-tracking the Native Query: The schema of a Native Query is defined by its
-Logical Model, and the Native Query needs to implement all the fields of the
-Logical Model in order to be tracked successfully.
+Unlike tables, relationships for a Native Query have to be given as part of tracking the Native Query: The schema of a
+Native Query is defined by its Logical Model, and the Native Query needs to implement all the fields of the Logical
+Model in order to be tracked successfully.
 
 Currently relationships are only supported between Native Queries residing in the same source.
 
-As an example, consider the following Native Queries which implement the data
-model of articles and authors given in the section on [Logical Model references](/schema/postgres/logical-models/index.mdx#referencing-other-logical-models):
+As an example, consider the following Native Queries which implement the data model of articles and authors given in the
+section on [Logical Model references](/schema/postgres/logical-models/index.mdx#referencing-other-logical-models):
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="api" label="API">
@@ -538,11 +538,11 @@ X-Hasura-Role: admin
 
 :::info Wrap calls in `bulk_atomic`
 
-Similar to Logical Models, tracking the Native Queries one-by-one would fail,
-since `get_articles` refers to `get_authors`, which is not yet defined.
+Similar to Logical Models, tracking the Native Queries one-by-one would fail, since `get_articles` refers to
+`get_authors`, which is not yet defined.
 
-Tracking the Native Queries in one atomic operation postpones coherency checks
-until all models are tracked, which allows for mutual references.
+Tracking the Native Queries in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
 
 :::
 
@@ -552,23 +552,21 @@ The Native Queries in this example enable queries like:
 
 ```graphql
 query {
-  get_authors
-  {
+  get_authors {
     name
 
-    short_excerpt: articles(args: {length: 10})
-    {
+    short_excerpt: articles(args: { length: 10 }) {
       title
       contents
     }
 
-    long_excerpt: articles(args: {length: 100})
-    {
+    long_excerpt: articles(args: { length: 100 }) {
       title
       contents
     }
   }
 }
 ```
+
 </TabItem>
 </Tabs>

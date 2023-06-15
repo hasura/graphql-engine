@@ -20,7 +20,9 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 :::tip Supported from
 
-Logical Models are supported from `v2.26.0`.
+- Hasura Cloud: `v2.26.0`.
+- Hasura Enterprise Edition: `v2.26.0`.
+- Hasura Community Edition: `v2.28.0`.
 
 :::
 
@@ -81,8 +83,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx)
-or references to other Logical Models, and each field can be marked as nullable or not, see
+The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx) or references to
+other Logical Models, and each field can be marked as nullable or not, see
 [LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 For example, we could track a representation of an article as follows:
