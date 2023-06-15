@@ -86,3 +86,39 @@ export type GetRegistrySchemaResponseWithError = {
 export type GetRegistrySchemaQueryResponse = {
   schema_registry_dumps: SiblingSchema[];
 };
+
+export type GetAlertConfigResponseWithError = {
+  data?: GetAlertConfigQueryResponse;
+  errors?: GraphQLError[];
+};
+
+export type GetAlertConfigQueryResponse = {
+  schema_registry_alerts: SchemaRegistryAlert[];
+};
+
+export type SchemaRegistryAlert = {
+  id: string;
+  project_id: string;
+  alert_type: string;
+  config: Record<string, boolean>;
+  slack_webhook: string;
+  meta: Record<string, any>;
+};
+
+export type SetAlertConfigResponseWithError = {
+  data?: SetAlertConfigQueryResponse;
+  errors?: GraphQLError[];
+};
+
+export type SetAlertConfigQueryResponse = {
+  schema_registry_alerts: SchemaRegistryAlert;
+};
+
+export type SetSchemaRegistryAlert = {
+  id: string;
+  project_id: string;
+  alert_type: string;
+  config: Record<string, boolean>;
+};
+
+export type ConfigKey = 'safe' | 'dangerous' | 'breaking';
