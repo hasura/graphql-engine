@@ -152,6 +152,50 @@ tests = describe "Basic Tests" $ do
               )
         )
 
+  mockAgentGraphqlTest "works with simple object query with missing field" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getAlbum {
+              albums(limit: 1) {
+                id
+                title
+              }
+            }
+          |]
+    let queryResponse =
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1)
+              ]
+            ]
+    let mockConfig = mockQueryResponse queryResponse
+
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          albums:
+            - id: 1
+              title: null
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
+                    ]
+                    & API.qLimit
+                  ?~ 1
+              )
+        )
+
   mockAgentGraphqlTest "permissions-based row limits are applied" $ \_testEnv performGraphqlRequest -> do
     let headers = [("X-Hasura-Role", testRoleName)]
     let graphqlRequest =
