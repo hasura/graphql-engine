@@ -2,7 +2,6 @@ import { NeonConnect } from '../../../../components/Services/Data/DataSources/Cr
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { useAppDispatch } from '../../../../storeHooks';
 import { DriverInfo } from '../../../DataSource';
-import { useMetadata } from '../../../hasura-metadata-api';
 import { ConnectButton } from '../../components/ConnectButton';
 
 export const Cloud = ({
@@ -12,10 +11,6 @@ export const Cloud = ({
   selectedDriver: DriverInfo;
   isDriverAvailable: boolean;
 }) => {
-  const { data: sourceNames } = useMetadata(m =>
-    m?.metadata.sources.map(s => s.name)
-  );
-
   const dispatch = useAppDispatch();
 
   return (
@@ -23,7 +18,6 @@ export const Cloud = ({
       {selectedDriver?.name === 'postgres' && (
         <div className="mt-3" data-testid="neon-connect">
           <NeonConnect
-            allDatabases={sourceNames ?? []}
             dispatch={dispatch}
             connectDbUrl={'/data/v2/manage/connect'}
           />
