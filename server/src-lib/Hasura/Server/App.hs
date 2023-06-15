@@ -96,7 +96,7 @@ import Hasura.Server.AppStateRef
   )
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
-import Hasura.Server.Init hiding (checkFeatureFlag)
+import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Middleware (corsMiddleware)
@@ -737,11 +737,10 @@ configApiGetHandler appStateRef = do
     $ do
       AppEnv {..} <- lift askAppEnv
       AppContext {..} <- liftIO $ getAppContext appStateRef
-      let (CheckFeatureFlag checkFeatureFlag) = appEnvCheckFeatureFlag
       featureFlagSettings <-
         traverse
-          (\ff -> (,) ff <$> liftIO (checkFeatureFlag ff))
-          (HashMap.elems (getFeatureFlags featureFlags))
+          (\(ff, desc) -> (ff,desc,) <$> liftIO (runCheckFeatureFlag appEnvCheckFeatureFlag ff))
+          (listKnownFeatureFlags appEnvCheckFeatureFlag)
       mkSpockAction appStateRef encodeQErr id
         $ mkGetHandler
         $ do

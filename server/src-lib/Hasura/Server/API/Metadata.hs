@@ -34,7 +34,6 @@ import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.DataConnector
 import Hasura.RQL.DDL.Endpoint
 import Hasura.RQL.DDL.EventTrigger
-import Hasura.RQL.DDL.FeatureFlag
 import Hasura.RQL.DDL.GraphqlSchemaIntrospection
 import Hasura.RQL.DDL.InheritedRoles
 import Hasura.RQL.DDL.Metadata
@@ -334,7 +333,6 @@ queryModifiesMetadata = \case
       RMSetQueryTagsConfig _ -> True
       RMSetOpenTelemetryConfig _ -> True
       RMSetOpenTelemetryStatus _ -> True
-      RMGetFeatureFlag _ -> False
   RMV2 q ->
     case q of
       RMV2ExportMetadata _ -> False
@@ -545,7 +543,6 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMSetQueryTagsConfig q -> runSetQueryTagsConfig q
   RMSetOpenTelemetryConfig q -> runSetOpenTelemetryConfig q
   RMSetOpenTelemetryStatus q -> runSetOpenTelemetryStatus q
-  RMGetFeatureFlag q -> runGetFeatureFlag checkFeatureFlag q
   RMBulk q -> encJFromList <$> indexedMapM (runMetadataQueryM env checkFeatureFlag remoteSchemaPerms currentResourceVersion) q
   RMBulkKeepGoing commands -> do
     results <-

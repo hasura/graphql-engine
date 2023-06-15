@@ -18,7 +18,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
 import Hasura.Server.Init.Config (API (METRICS), AllowListStatus)
-import Hasura.Server.Init.FeatureFlag (FeatureFlag (..), getIdentifier)
+import Hasura.Server.Init.FeatureFlag (FeatureFlag (..))
 import Hasura.Server.Types (ExperimentalFeature)
 import Hasura.Server.Version (Version, currentVersion)
 
@@ -72,7 +72,7 @@ runGetConfig ::
   Set.HashSet ExperimentalFeature ->
   Set.HashSet API ->
   NamingCase ->
-  [(FeatureFlag, Bool)] ->
+  [(FeatureFlag, Text, Bool)] ->
   ServerConfig
 runGetConfig
   functionPermsCtx
@@ -106,7 +106,13 @@ runGetConfig
       isPrometheusMetricsEnabled = METRICS `Set.member` enabledAPIs
       featureFlagSettings =
         Set.fromList
-          $ (\(FeatureFlag {ffDescription, ffIdentifier}, enabled) -> FeatureFlagInfo {ffiName = getIdentifier ffIdentifier, ffiEnabled = enabled, ffiDescription = ffDescription})
+          $ ( \(FeatureFlag {ffIdentifier}, description, enabled) ->
+                FeatureFlagInfo
+                  { ffiName = ffIdentifier,
+                    ffiEnabled = enabled,
+                    ffiDescription = description
+                  }
+            )
           <$> featureFlags
 
 isAdminSecretSet :: AuthMode -> Bool

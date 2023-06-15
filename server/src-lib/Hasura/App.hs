@@ -478,7 +478,7 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
-          appEnvCheckFeatureFlag = CheckFeatureFlag $ checkFeatureFlag env,
+          appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing
         }
@@ -666,7 +666,7 @@ instance HasAppEnv AppM where
 
 instance HasFeatureFlagChecker AppM where
   checkFlag f = AppM do
-    CheckFeatureFlag runCheckFeatureFlag <- asks appEnvCheckFeatureFlag
+    CheckFeatureFlag {runCheckFeatureFlag} <- asks appEnvCheckFeatureFlag
     liftIO $ runCheckFeatureFlag f
 
 instance HasCacheStaticConfig AppM where
