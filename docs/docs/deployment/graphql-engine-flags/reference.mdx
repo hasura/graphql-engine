@@ -194,8 +194,8 @@ Whether or not to send the request body (graphql request/variables) to the auth 
 
 Stringify certain
 [BigQuery numeric types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#numeric_types),
-specifically `bignumeric`, `float64`, `int64`, `numeric` and aliases thereof, as they don't fit into the `IEnterprise EditionE 754` spec
-for JSON encoding-decoding.
+specifically `bignumeric`, `float64`, `int64`, `numeric` and aliases thereof, as they don't fit into the
+`IEnterprise EditionE 754` spec for JSON encoding-decoding.
 
 |                     |                                                |
 | ------------------- | ---------------------------------------------- |
@@ -211,14 +211,14 @@ for JSON encoding-decoding.
 When metadata changes, close all WebSocket connections (with error code `1012`). This is useful when you want to ensure
 that all clients reconnect to the latest metadata.
 
-|                     |                                                       |
-| ------------------- | ----------------------------------------------------- |
+|                     |                                                      |
+| ------------------- | ---------------------------------------------------- |
 | **Flag**            | `--disable-close-websockets-on-metadata-change`      |
 | **Env var**         | `HASURA_GRAPHQL_CLOSE_WEBSOCKETS_ON_METADATA_CHANGE` |
-| **Accepted values** | Boolean                                               |
-| **Options**         | `true` or `false`                                     |
-| **Default**         | `true`                                                |
-| **Supported in**    | CE, Enterprise Edition, Cloud                         |
+| **Accepted values** | Boolean                                              |
+| **Options**         | `true` or `false`                                    |
+| **Default**         | `true`                                               |
+| **Supported in**    | CE, Enterprise Edition, Cloud                        |
 
 ### Connections per Read-Replica
 
@@ -355,21 +355,21 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 
 ### Enable High-cardinality Labels for Metrics
 
-Enable high-cardinality labels for [Prometheus Metrics](/enterprise/metrics.mdx). Enabling this setting will add more labels to
-some of the metrics (e.g. `operation_name` label for Graphql subscription metrics).
+Enable high-cardinality labels for [Prometheus Metrics](/observability/prometheus/metrics.mdx). Enabling this setting
+will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription metrics).
 
-|                     |                                                   |
-| ------------------- | ------------------------------------------------- |
-| **Flag**            | N/A                                               |
-| **Env var**         | `HASURA_GRAPHQL_METRICS_ENABLE_HIGH_CARDINALITY_LABELS`  |
-| **Accepted values** | Boolean                                           |
-| **Options**         | `true` or `false`                                 |
-| **Default**         | `true`                                            |
-| **Supported in**    | Enterprise Edition                                |
+|                     |                                                         |
+| ------------------- | ------------------------------------------------------- |
+| **Flag**            | N/A                                                     |
+| **Env var**         | `HASURA_GRAPHQL_METRICS_ENABLE_HIGH_CARDINALITY_LABELS` |
+| **Accepted values** | Boolean                                                 |
+| **Options**         | `true` or `false`                                       |
+| **Default**         | `true`                                                  |
+| **Supported in**    | Enterprise Edition                                      |
 
 ### Enable Log Compression
 
-Enable sending compressed logs to [metrics server](/enterprise/metrics.mdx).
+Enable sending compressed logs to [metrics server](/observability/prometheus/metrics.mdx).
 
 |                     |                                            |
 | ------------------- | ------------------------------------------ |
@@ -614,12 +614,12 @@ This variable sets the level for [Hasura's logs](/deployment/logging.mdx#logging
 
 The [maximum cache size](/enterprise/caching.mdx), measured in MB, for queries.
 
-|                     |                                                                                   |
-| ------------------- | --------------------------------------------------------------------------------- |
-| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                   |
-| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                   |
-| **Accepted values** | Integer (Representing cache size measured in MB)                                  |
-| **Default**         | `1`                                                                               |
+|                     |                                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--max-cache-size <SIZE_IN_MB>`                                                                   |
+| **Env var**         | `HASURA_GRAPHQL_MAX_CACHE_SIZE`                                                                   |
+| **Accepted values** | Integer (Representing cache size measured in MB)                                                  |
+| **Default**         | `1`                                                                                               |
 | **Supported in**    | **Enterprise Edition**, **Cloud**: Standard / Professional tier is set to `100` MB as the default |
 
 ### Metadata Database Extension Schema
@@ -873,8 +873,8 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 
 ### Redis URL
 
-The Redis URL to use for [query caching](/enterprise/caching.mdx) and [Webhook Auth
-Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
+The Redis URL to use for [query caching](/enterprise/caching.mdx) and
+[Webhook Auth Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
@@ -939,13 +939,13 @@ List of third-party identity providers to enable Single Sign-on authentication f
 Multiplexed [streaming queries](/subscriptions/postgres/streaming/index.mdx) are split into batches of the specified
 size.
 
-|                     |                                                                           |
-| ------------------- | ------------------------------------------------------------------------- |
-| **Flag**            | `--streaming-queries-multiplexed-batch-size <SIZE>`                       |
-| **Env var**         | `HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE`                 |
-| **Accepted values** | Integer                                                                   |
-| **Default**         | `100`                                                                     |
-| **Supported in**    | CE, Enterprise Edition                                                    |
+|                     |                                                           |
+| ------------------- | --------------------------------------------------------- |
+| **Flag**            | `--streaming-queries-multiplexed-batch-size <SIZE>`       |
+| **Env var**         | `HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE` |
+| **Accepted values** | Integer                                                   |
+| **Default**         | `100`                                                     |
+| **Supported in**    | CE, Enterprise Edition                                    |
 
 ### Streaming Queries Multiplexed Refetch Interval
 
@@ -1023,7 +1023,7 @@ This identifies an [unauthorized role](/auth/authentication/unauthenticated-acce
 | **Accepted values** | String                                                                                                                            |
 | **Example**         | Setting this value to `anonymous`, whenever the `Authorization` header is absent, the request's role will default to `anonymous`. |
 | **Default**         | `null`                                                                                                                            |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                     |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                     |
 
 ### Use Prepared Statements
 
