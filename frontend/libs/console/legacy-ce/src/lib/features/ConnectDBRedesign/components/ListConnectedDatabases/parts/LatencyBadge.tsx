@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { FaCheck, FaExclamationTriangle, FaMinusCircle } from 'react-icons/fa';
+import {
+  FaCheck,
+  FaExclamationCircle,
+  FaExclamationTriangle,
+  FaMinusCircle,
+} from 'react-icons/fa';
 import ToolTip from '../../../../../../lib/components/Common/Tooltip/Tooltip';
 import { Badge, BadgeColor } from '../../../../../new-components/Badge';
 import { Latency } from '../../../types';
@@ -21,44 +26,59 @@ const getMessage = (avgLatency: AvgLatency) =>
   `Latency: ${Math.ceil(avgLatency)} ms`;
 
 const getBadgeProps = (avgLatency: AvgLatency): GetBadgeProps => {
-  if (avgLatency < 100) {
-    return {
-      color: 'green',
-      icon: <FaCheck className="mr-xs" />,
-      label: 'Connection',
-    };
-  } else if (avgLatency < 200) {
-    return {
-      color: 'yellow',
-      icon: <FaMinusCircle className="mr-xs" />,
-      label: 'Acceptable',
-    };
-  } else {
+  if (avgLatency >= 200) {
     return {
       color: 'red',
       icon: <FaExclamationTriangle className="mr-xs" />,
       label: 'Elevated Latency',
     };
   }
+
+  if (avgLatency >= 100 && avgLatency < 200) {
+    return {
+      color: 'yellow',
+      icon: <FaMinusCircle className="mr-xs" />,
+      label: 'Acceptable',
+    };
+  }
+
+  if (avgLatency > 0) {
+    return {
+      color: 'green',
+      icon: <FaCheck className="mr-xs" />,
+      label: 'Connection',
+    };
+  }
+
+  return {
+    color: 'light-gray',
+    icon: <FaExclamationCircle className="mr-xs" />,
+    label: 'Failed to get latency',
+  };
 };
 
 export const LatencyBadge = ({
   latencies = [],
   dataSourceName,
 }: LatencyBadgeProps) => {
-  const currentDataSourceLatencyInfo = useMemo(
-    () =>
-      latencies.find(
-        latencyInfo => latencyInfo.dataSourceName === dataSourceName
+  const { avgLatency, hasError } = useMemo(
+    () => ({
+      avgLatency:
+        latencies.find(
+          latencyInfo => latencyInfo.dataSourceName === dataSourceName
+        )?.avgLatency || 0,
+      hasError: latencies.find(
+        latencyInfo =>
+          latencyInfo.dataSourceName === dataSourceName && !!latencyInfo.error
       ),
+    }),
     [latencies, dataSourceName]
   );
 
-  if (!currentDataSourceLatencyInfo) {
+  if (!avgLatency && !hasError) {
     return null;
   }
 
-  const { avgLatency } = currentDataSourceLatencyInfo || {};
   const message = getMessage(avgLatency);
   const badgeProps = getBadgeProps(avgLatency);
 

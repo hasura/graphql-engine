@@ -156,6 +156,14 @@ export const useDatabaseLatencyCheck = (props: QueryOptions) => {
           taskEvent => taskEvent.event_type === 'success'
         );
 
+      /**
+       * handle internal error of successful taskq job where
+       * taskq failed to connect to the project's data source
+       */
+      if (taskEvent?.public_event_data?.sources?.default?.error) {
+        throw new Error(taskEvent?.public_event_data?.sources?.default?.error);
+      }
+
       // Save this data back to lux
       insertDbLatencyMutation.mutate({
         dateDifferenceInMilliseconds: new Date().getTime() - startTime,
