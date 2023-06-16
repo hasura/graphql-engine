@@ -185,16 +185,19 @@ export function useCreateHasuraCloudDatasource(
                     config.hash !== oldConfigHash
                 )
               ) {
-                setTimeout(() => {
-                  verifyProjectHealthAndConnectDataSource(
-                    successCallback,
-                    errorCallback
-                  );
-                }, 1000);
+                verifyProjectHealthAndConnectDataSource(
+                  successCallback,
+                  errorCallback
+                );
                 unsubscribe();
               }
             },
             error => {
+              programmaticallyTraceError({
+                error:
+                  'failed subscribing to fetch_config_status while connecting neon database',
+                cause: error,
+              });
               errorCallback();
               unsubscribe();
             }
