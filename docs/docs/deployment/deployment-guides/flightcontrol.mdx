@@ -11,8 +11,6 @@ sidebar_position: 11
 sidebar_label: Using Flightcontrol 
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
-
 # Deploying Hasura GraphQL Engine on Flightcontrol 
 
 ## Introduction
@@ -29,7 +27,7 @@ To successfully follow and complete this guide, you need:
 
 ## Deploy Hasura GraphQL Engine on Flightcontrol 
 
-Flightcontrol provides two options to deploy your web applications:
+To deploy the Hasura GraphQL Engine on Flightcontrol, we use the `hasura/graphql-engine` Docker image.
 
 1. Upload your Hasura project to Github
 2. Connect your project on Flightcontrol using GitHub
@@ -39,7 +37,7 @@ Flightcontrol provides two options to deploy your web applications:
 6. Configure the following settings in Web Fargate
       - Build System:
           - Build Type: Pull from Image Registry
-          - Image Repository: Use Hasura's Image Repository on Docker Hub 
+          - Image Repository: `hasura/graphql-engine`
           - Image Tag: Set the Image Tag to your preferred version or latest
       - Port: 8080
       - Health Check Path: /healthz
