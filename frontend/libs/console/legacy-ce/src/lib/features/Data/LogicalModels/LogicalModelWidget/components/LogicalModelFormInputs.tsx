@@ -4,6 +4,7 @@ import {
   GraphQLSanitizedInputField,
   Select,
 } from '../../../../../new-components/Form';
+import { LogicalModel } from '../../../../hasura-metadata-types';
 import { AddLogicalModelFormData } from '../validationSchema';
 import { FieldsInput } from './FieldsInput';
 
@@ -11,6 +12,7 @@ export type LogicalModelFormProps = {
   sourceOptions: SelectItem[];
   typeOptions: string[];
   disabled?: CreateBooleanMap<AddLogicalModelFormData>;
+  logicalModels: LogicalModel[];
 };
 
 export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
@@ -36,6 +38,7 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
         name="fields"
         types={props.typeOptions}
         disabled={props.disabled?.fields}
+        logicalModels={props.logicalModels}
       />
     </>
   );

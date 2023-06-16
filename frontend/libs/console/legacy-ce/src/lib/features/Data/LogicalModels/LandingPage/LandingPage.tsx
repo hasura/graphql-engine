@@ -169,7 +169,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                     isLoading={isLoading}
                     onEditClick={model => {
                       push?.(
-                        `/data/native-queries/logical-models/${model.source.name}/${model.name}/permissions`
+                        `/data/native-queries/logical-models/${model.source.name}/${model.name}`
                       );
                     }}
                     onRemoveClick={handleRemoveLogicalModel}

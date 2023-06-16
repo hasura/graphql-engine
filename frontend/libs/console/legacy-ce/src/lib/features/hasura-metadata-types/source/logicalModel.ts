@@ -1,7 +1,20 @@
+export type ScalarFieldType = {
+  scalar: string;
+  nullable: boolean;
+};
+
+export type LogicalModelType = {
+  logical_model: string;
+  nullable: boolean;
+};
+
+export type ArrayLogicalModelType = {
+  array: LogicalModelType;
+};
+
 export type LogicalModelField = {
   name: string;
-  nullable: boolean;
-  type: string;
+  type: ScalarFieldType | LogicalModelType | ArrayLogicalModelType;
 };
 
 export type LogicalModel = {
