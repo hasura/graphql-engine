@@ -16,7 +16,7 @@ test-bigquery: build remove-tix-file start-api-test-postgres
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
-test-sqlserver: build remove-tix-file start-api-test-backends
+test-sqlserver: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -24,7 +24,7 @@ test-sqlserver: build remove-tix-file start-api-test-backends
 
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
-test-citus: build remove-tix-file start-api-test-backends
+test-citus: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=Citus \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -32,7 +32,7 @@ test-citus: build remove-tix-file start-api-test-backends
 
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
-test-data-connectors: build remove-tix-file start-api-test-backends
+test-data-connectors: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=DataConnector \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -40,7 +40,7 @@ test-data-connectors: build remove-tix-file start-api-test-backends
 
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
-test-cockroach: build remove-tix-file start-api-test-backends
+test-cockroach: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=Cockroach \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \

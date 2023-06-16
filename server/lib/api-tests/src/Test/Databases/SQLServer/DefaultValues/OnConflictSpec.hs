@@ -150,3 +150,36 @@ tests = do
               |]
 
       shouldReturnYaml testEnvironment actual expected
+
+    it "Upsert with no objects does not break" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                insert_hasura_somedefaults:
+                  affected_rows: 0
+                  returning: []
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_somedefaults(
+                    objects: []
+                    if_matched: {
+                      match_columns: name,
+                      update_columns: []
+                    }
+                  ) {
+                    affected_rows
+                    returning {
+                      id
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected

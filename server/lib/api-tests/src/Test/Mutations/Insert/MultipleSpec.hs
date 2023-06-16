@@ -12,6 +12,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
@@ -40,6 +41,11 @@ spec = do
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv
                 ]
             }
         ]
@@ -104,13 +110,11 @@ tests = do
                 insert_#{schemaName}_article(
                   objects: [
                     {
-                      id: 1,
                       title: "Article 1",
                       content: "Sample article content",
                       author_id: 1
                     },
                     {
-                      id: 2,
                       title: "Article 2",
                       content: "Sample article content",
                       author_id: 2
