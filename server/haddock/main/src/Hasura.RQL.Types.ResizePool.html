@@ -26,7 +26,7 @@
 </span><span id="line-26"></span><span class="hs-comment">-- with the same size as @'Int'. Useful for resize a connection pool.</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="ServerReplicas"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServerReplicas"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span></span><span> </span><span class="hs-special">{</span><span id="serverReplicaNumber"><span class="annot"><span class="annottext">ServerReplicas -&gt; Word
 </span><a href="Hasura.RQL.Types.ResizePool.html#serverReplicaNumber"><span class="hs-identifier hs-var hs-var">serverReplicaNumber</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686784561"><span id="local-6989586621686784566"><span id="local-6989586621686784570"><span class="annot"><span class="annottext">Int -&gt; ServerReplicas -&gt; ShowS
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686784559"><span id="local-6989586621686784564"><span id="local-6989586621686784568"><span class="annot"><span class="annottext">Int -&gt; ServerReplicas -&gt; ShowS
 [ServerReplicas] -&gt; ShowS
 ServerReplicas -&gt; String
 (Int -&gt; ServerReplicas -&gt; ShowS)
@@ -41,7 +41,7 @@ $cshow :: ServerReplicas -&gt; String
 show :: ServerReplicas -&gt; String
 $cshowList :: [ServerReplicas] -&gt; ShowS
 showList :: [ServerReplicas] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686784574"><span id="local-6989586621686784579"><span class="annot"><span class="annottext">ServerReplicas -&gt; ServerReplicas -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686784572"><span id="local-6989586621686784577"><span class="annot"><span class="annottext">ServerReplicas -&gt; ServerReplicas -&gt; Bool
 (ServerReplicas -&gt; ServerReplicas -&gt; Bool)
 -&gt; (ServerReplicas -&gt; ServerReplicas -&gt; Bool) -&gt; Eq ServerReplicas
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -65,11 +65,11 @@ $c/= :: ServerReplicas -&gt; ServerReplicas -&gt; Bool
 </span><span id="line-36"></span><span class="annot"><span class="hs-comment">-- | Safely build @'ServerReplicas' from non-negative and non-zero @'Int' value.</span></span><span>
 </span><span id="line-37"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier hs-type">safeServerReplicas</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span>
 </span><span id="line-38"></span><span id="safeServerReplicas"><span class="annot"><span class="annottext">safeServerReplicas :: Int -&gt; Either Text ServerReplicas
-</span><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier hs-var hs-var">safeServerReplicas</span></a></span></span><span> </span><span id="local-6989586621686784584"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621686784584"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">I#</span></span><span> </span><span id="local-6989586621686784585"><span class="annot"><span class="annottext">Int#
-</span><a href="#local-6989586621686784585"><span class="hs-identifier hs-var">i#</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier hs-var hs-var">safeServerReplicas</span></a></span></span><span> </span><span id="local-6989586621686784582"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621686784582"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">I#</span></span><span> </span><span id="local-6989586621686784583"><span class="annot"><span class="annottext">Int#
+</span><a href="#local-6989586621686784583"><span class="hs-identifier hs-var">i#</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686784584"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621686784582"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text ServerReplicas
@@ -83,7 +83,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621686784584"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621686784582"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerReplicas -&gt; Either Text ServerReplicas
 forall a b. b -&gt; Either a b
@@ -96,16 +96,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word# -&gt; Word
 </span><span class="hs-identifier hs-var">W#</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int# -&gt; Word#
 </span><span class="hs-identifier hs-var">int2Word#</span></span><span> </span><span class="annot"><span class="annottext">Int#
-</span><a href="#local-6989586621686784585"><span class="hs-identifier hs-var">i#</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686784583"><span class="hs-identifier hs-var">i#</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="annot"><span class="hs-comment">-- | Get server replic count in @'Int'</span></span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-type">getServerReplicasInt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-44"></span><span id="getServerReplicasInt"><span class="annot"><span class="annottext">getServerReplicasInt :: ServerReplicas -&gt; Int
-</span><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-var hs-var">getServerReplicasInt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span id="local-6989586621686784588"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621686784588"><span class="hs-identifier hs-var">replicaNumber</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int
+</span><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-var hs-var">getServerReplicasInt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span id="local-6989586621686784586"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621686784586"><span class="hs-identifier hs-var">replicaNumber</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621686784588"><span class="hs-identifier hs-var">replicaNumber</span></a></span><span>
+</span><a href="#local-6989586621686784586"><span class="hs-identifier hs-var">replicaNumber</span></a></span><span>
 </span><span id="line-45"></span><span>
 </span><span id="line-46"></span><span class="annot"><span class="hs-comment">-- | A strategy for resizing a pool</span></span><span>
 </span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="ResizePoolStrategy"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ResizePoolStrategy"><span class="hs-identifier hs-var">ResizePoolStrategy</span></a></span></span><span>
@@ -123,7 +123,7 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-57"></span><span>    </span><span id="_srpsConnectionSet"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; [Text]
 </span><a href="Hasura.RQL.Types.ResizePool.html#_srpsConnectionSet"><span class="hs-identifier hs-var hs-var">_srpsConnectionSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686784596"><span id="local-6989586621686784604"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686784594"><span id="local-6989586621686784602"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
 (SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool)
 -&gt; (SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool)
 -&gt; Eq SourceResizePoolSummary
@@ -132,7 +132,7 @@ $c== :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
 == :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
 $c/= :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
 /= :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686784609"><span id="local-6989586621686784618"><span id="local-6989586621686784622"><span class="annot"><span class="annottext">Int -&gt; SourceResizePoolSummary -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686784607"><span id="local-6989586621686784616"><span id="local-6989586621686784620"><span class="annot"><span class="annottext">Int -&gt; SourceResizePoolSummary -&gt; ShowS
 [SourceResizePoolSummary] -&gt; ShowS
 SourceResizePoolSummary -&gt; String
 (Int -&gt; SourceResizePoolSummary -&gt; ShowS)
