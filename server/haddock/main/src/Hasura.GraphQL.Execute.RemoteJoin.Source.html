@@ -54,10 +54,10 @@
 </span><span id="line-54"></span><span class="hs-comment">-- Executing a remote join</span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="annot"><span class="hs-comment">-- | Construct and execute a call to a source for a remote join.</span></span><span>
-</span><span id="line-57"></span><span id="local-6989586621687197012"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#makeSourceJoinCall"><span class="hs-identifier hs-type">makeSourceJoinCall</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-57"></span><span id="local-6989586621687267798"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#makeSourceJoinCall"><span class="hs-identifier hs-type">makeSourceJoinCall</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Function to dispatch a request to a source.</span></span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-type">SourceJoinCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-type">SourceJoinCall</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-comment">-- | User information.</span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Remote join information.</span></span><span>
@@ -69,7 +69,7 @@
 </span><span id="line-69"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><span class="hs-comment">-- | The resulting join index (see 'buildJoinIndex') if any.</span></span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621687197012"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IntMap.IntMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">AO.Value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621687267798"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IntMap.IntMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">AO.Value</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-73"></span><span id="makeSourceJoinCall"><span class="annot"><span class="annottext">makeSourceJoinCall :: forall (m :: * -&gt; *).
 (MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m) =&gt;
 (AnyBackend SourceJoinCall -&gt; m ByteString)
@@ -80,14 +80,14 @@
 -&gt; [Header]
 -&gt; Maybe Name
 -&gt; m (Maybe (IntMap Value))
-</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#makeSourceJoinCall"><span class="hs-identifier hs-var hs-var">makeSourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687197269"><span class="annot"><span class="annottext">AnyBackend SourceJoinCall -&gt; m ByteString
-</span><a href="#local-6989586621687197269"><span class="hs-identifier hs-var">networkFunction</span></a></span></span><span> </span><span id="local-6989586621687197270"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687197270"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687197271"><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
-</span><a href="#local-6989586621687197271"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span></span><span> </span><span id="local-6989586621687197272"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197272"><span class="hs-identifier hs-var">jaFieldName</span></a></span></span><span> </span><span id="local-6989586621687197273"><span class="annot"><span class="annottext">IntMap JoinArgument
-</span><a href="#local-6989586621687197273"><span class="hs-identifier hs-var">joinArguments</span></a></span></span><span> </span><span id="local-6989586621687197274"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687197274"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687197275"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687197275"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#makeSourceJoinCall"><span class="hs-identifier hs-var hs-var">makeSourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687268055"><span class="annot"><span class="annottext">AnyBackend SourceJoinCall -&gt; m ByteString
+</span><a href="#local-6989586621687268055"><span class="hs-identifier hs-var">networkFunction</span></a></span></span><span> </span><span id="local-6989586621687268056"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687268056"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687268057"><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
+</span><a href="#local-6989586621687268057"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span></span><span> </span><span id="local-6989586621687268058"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687268058"><span class="hs-identifier hs-var">jaFieldName</span></a></span></span><span> </span><span id="local-6989586621687268059"><span class="annot"><span class="annottext">IntMap JoinArgument
+</span><a href="#local-6989586621687268059"><span class="hs-identifier hs-var">joinArguments</span></a></span></span><span> </span><span id="local-6989586621687268060"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621687268060"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687268061"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687268061"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe (IntMap Value)) -&gt; m (Maybe (IntMap Value))
 forall (m :: * -&gt; *) a.
 (MonadIO m, MonadTrace m) =&gt;
@@ -96,24 +96,24 @@ Text -&gt; m a -&gt; m a
 </span><span class="hs-string">&quot;Remote join to data source &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687197277"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687268063"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; for field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197272"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687268058"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-75"></span><span>    </span><span class="hs-comment">-- step 1: create the SourceJoinCall</span><span>
 </span><span id="line-76"></span><span>    </span><span class="hs-comment">-- maybeSourceCall &lt;-</span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-comment">--   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) -&gt;</span><span>
 </span><span id="line-78"></span><span>    </span><span class="hs-comment">--     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc</span><span>
-</span><span id="line-79"></span><span>    </span><span id="local-6989586621687197278"><span class="annot"><span class="annottext">Maybe (AnyBackend SourceJoinCall)
-</span><a href="#local-6989586621687197278"><span class="hs-identifier hs-var">maybeSourceCall</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621687268064"><span class="annot"><span class="annottext">Maybe (AnyBackend SourceJoinCall)
+</span><a href="#local-6989586621687268064"><span class="hs-identifier hs-var">maybeSourceCall</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#BackendExecute"><span class="hs-identifier hs-type">EB.BackendExecute</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
-</span><a href="#local-6989586621687197271"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span>
+</span><a href="#local-6989586621687268057"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span>
 </span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
   BackendExecute b =&gt;
   RemoteSourceJoin b -&gt; m (Maybe (AnyBackend SourceJoinCall)))
@@ -141,11 +141,11 @@ UserInfo
 -&gt; RemoteSourceJoin b
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildSourceJoinCall"><span class="hs-identifier hs-var">buildSourceJoinCall</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687197270"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197272"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">IntMap JoinArgument
-</span><a href="#local-6989586621687197273"><span class="hs-identifier hs-var">joinArguments</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687197274"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687197275"><span class="hs-identifier hs-var">operationName</span></a></span><span>
+</span><a href="#local-6989586621687268056"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687268058"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">IntMap JoinArgument
+</span><a href="#local-6989586621687268059"><span class="hs-identifier hs-var">joinArguments</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621687268060"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687268061"><span class="hs-identifier hs-var">operationName</span></a></span><span>
 </span><span id="line-82"></span><span>    </span><span class="hs-comment">-- if there actually is a remote call:</span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Maybe (AnyBackend SourceJoinCall)
 -&gt; (AnyBackend SourceJoinCall -&gt; m (IntMap Value))
@@ -154,13 +154,13 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">Maybe (AnyBackend SourceJoinCall)
-</span><a href="#local-6989586621687197278"><span class="hs-identifier hs-var">maybeSourceCall</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687197287"><span class="annot"><span class="annottext">AnyBackend SourceJoinCall
-</span><a href="#local-6989586621687197287"><span class="hs-identifier hs-var">sourceCall</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687268064"><span class="hs-identifier hs-var">maybeSourceCall</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687268073"><span class="annot"><span class="annottext">AnyBackend SourceJoinCall
+</span><a href="#local-6989586621687268073"><span class="hs-identifier hs-var">sourceCall</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-84"></span><span>      </span><span class="hs-comment">-- step 2: send this call over the network</span><span>
-</span><span id="line-85"></span><span>      </span><span id="local-6989586621687197288"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687197288"><span class="hs-identifier hs-var">sourceResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceJoinCall -&gt; m ByteString
-</span><a href="#local-6989586621687197269"><span class="hs-identifier hs-var">networkFunction</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceJoinCall
-</span><a href="#local-6989586621687197287"><span class="hs-identifier hs-var">sourceCall</span></a></span><span>
+</span><span id="line-85"></span><span>      </span><span id="local-6989586621687268074"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687268074"><span class="hs-identifier hs-var">sourceResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceJoinCall -&gt; m ByteString
+</span><a href="#local-6989586621687268055"><span class="hs-identifier hs-var">networkFunction</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceJoinCall
+</span><a href="#local-6989586621687268073"><span class="hs-identifier hs-var">sourceCall</span></a></span><span>
 </span><span id="line-86"></span><span>      </span><span class="hs-comment">-- step 3: build the join index</span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m (IntMap Value) -&gt; m (IntMap Value)
 forall (m :: * -&gt; *) a.
@@ -176,15 +176,15 @@ forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 ByteString -&gt; m (IntMap Value)
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildJoinIndex"><span class="hs-identifier hs-var">buildJoinIndex</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687197288"><span class="hs-identifier hs-var">sourceResponse</span></a></span><span>
+</span><a href="#local-6989586621687268074"><span class="hs-identifier hs-var">sourceResponse</span></a></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621687197277"><span class="hs-identifier hs-type">sourceName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621687197277"><span class="annot"><span class="annottext">sourceName :: SourceName
-</span><a href="#local-6989586621687197277"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621687268063"><span class="hs-identifier hs-type">sourceName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621687268063"><span class="annot"><span class="annottext">sourceName :: SourceName
+</span><a href="#local-6989586621687268063"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend RemoteSourceJoin
-</span><a href="#local-6989586621687197271"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceName
+</span><a href="#local-6989586621687268057"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceName
 forall (b :: BackendType).
 Backend b =&gt;
 RemoteSourceJoin b -&gt; SourceName
@@ -196,28 +196,28 @@ forall (b :: BackendType). RemoteSourceJoin b -&gt; SourceName
 </span><span id="line-95"></span><span>
 </span><span id="line-96"></span><span class="hs-comment">-- | Intermediate type that contains all the necessary information to perform a</span><span>
 </span><span id="line-97"></span><span class="hs-comment">-- call to a database to perform a join.</span><span>
-</span><span id="line-98"></span><span class="hs-keyword">data</span><span> </span><span id="SourceJoinCall"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687197078"><span class="annot"><a href="#local-6989586621687197078"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceJoinCall"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">data</span><span> </span><span id="SourceJoinCall"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687267864"><span class="annot"><a href="#local-6989586621687267864"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceJoinCall"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_sjcRootFieldAlias"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceJoinCall b -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#_sjcRootFieldAlias"><span class="hs-identifier hs-var hs-var">_sjcRootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-100"></span><span>    </span><span id="_sjcSourceConfig"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceJoinCall b -&gt; SourceConfig b
-</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#_sjcSourceConfig"><span class="hs-identifier hs-var hs-var">_sjcSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197078"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#_sjcSourceConfig"><span class="hs-identifier hs-var hs-var">_sjcSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267864"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-101"></span><span>    </span><span id="_sjcStepInfo"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceJoinCall b -&gt; DBStepInfo b
-</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#_sjcStepInfo"><span class="hs-identifier hs-var hs-var">_sjcStepInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">EB.DBStepInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197078"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#_sjcStepInfo"><span class="hs-identifier hs-var hs-var">_sjcStepInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">EB.DBStepInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267864"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-102"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-105"></span><span class="hs-comment">-- Step 1: building the source call</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildSourceJoinCall"><span class="hs-identifier hs-type">buildSourceJoinCall</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687197069"><span class="annot"><a href="#local-6989586621687197069"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687197070"><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#BackendExecute"><span class="hs-identifier hs-type">EB.BackendExecute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197069"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687267855"><span class="annot"><a href="#local-6989586621687267855"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687267856"><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#BackendExecute"><span class="hs-identifier hs-type">EB.BackendExecute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267855"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-110"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-111"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-112"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IntMap.IntMap</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#JoinArgument"><span class="hs-identifier hs-type">JoinArgument</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-114"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197069"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="#local-6989586621687197070"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-type">SourceJoinCall</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#RemoteSourceJoin"><span class="hs-identifier hs-type">RemoteSourceJoin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267855"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="#local-6989586621687267856"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-type">SourceJoinCall</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span id="buildSourceJoinCall"><span class="annot"><span class="annottext">buildSourceJoinCall :: forall (b :: BackendType) (m :: * -&gt; *).
 (BackendExecute b, MonadQueryTags m, MonadError QErr m,
  MonadTrace m, MonadIO m) =&gt;
@@ -228,13 +228,13 @@ UserInfo
 -&gt; Maybe Name
 -&gt; RemoteSourceJoin b
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
-</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildSourceJoinCall"><span class="hs-identifier hs-var hs-var">buildSourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687197340"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687197340"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687197341"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197341"><span class="hs-identifier hs-var">jaFieldName</span></a></span></span><span> </span><span id="local-6989586621687197342"><span class="annot"><span class="annottext">IntMap JoinArgument
-</span><a href="#local-6989586621687197342"><span class="hs-identifier hs-var">joinArguments</span></a></span></span><span> </span><span id="local-6989586621687197343"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687197343"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687197344"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687197344"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span id="local-6989586621687197345"><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildSourceJoinCall"><span class="hs-identifier hs-var hs-var">buildSourceJoinCall</span></a></span></span><span> </span><span id="local-6989586621687268126"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687268126"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687268127"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687268127"><span class="hs-identifier hs-var">jaFieldName</span></a></span></span><span> </span><span id="local-6989586621687268128"><span class="annot"><span class="annottext">IntMap JoinArgument
+</span><a href="#local-6989586621687268128"><span class="hs-identifier hs-var">joinArguments</span></a></span></span><span> </span><span id="local-6989586621687268129"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621687268129"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687268130"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687268130"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span id="local-6989586621687268131"><span class="annot"><span class="annottext">RemoteSourceJoin b
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-118"></span><span>  </span><span class="annot"><span class="annottext">Text
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
@@ -243,24 +243,24 @@ forall (m :: * -&gt; *) a.
 Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var">Tracing.newSpan</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Resolve execution step for remote join field&quot;</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-119"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687197346"><span class="annot"><span class="annottext">rows :: [KeyMap Value]
-</span><a href="#local-6989586621687197346"><span class="hs-identifier hs-var hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-119"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687268132"><span class="annot"><span class="annottext">rows :: [KeyMap Value]
+</span><a href="#local-6989586621687268132"><span class="hs-identifier hs-var hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">IntMap JoinArgument -&gt; [(Key, JoinArgument)]
 forall a. IntMap a -&gt; [(Key, a)]
 </span><span class="hs-identifier hs-var">IntMap.toList</span></span><span> </span><span class="annot"><span class="annottext">IntMap JoinArgument
-</span><a href="#local-6989586621687197342"><span class="hs-identifier hs-var">joinArguments</span></a></span><span> </span><span class="annot"><span class="annottext">[(Key, JoinArgument)]
+</span><a href="#local-6989586621687268128"><span class="hs-identifier hs-var">joinArguments</span></a></span><span> </span><span class="annot"><span class="annottext">[(Key, JoinArgument)]
 -&gt; ((Key, JoinArgument) -&gt; KeyMap Value) -&gt; [KeyMap Value]
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687197349"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687197349"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687197350"><span class="annot"><span class="annottext">JoinArgument
-</span><a href="#local-6989586621687197350"><span class="hs-identifier hs-var">argument</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687268135"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687268135"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687268136"><span class="annot"><span class="annottext">JoinArgument
+</span><a href="#local-6989586621687268136"><span class="hs-identifier hs-var">argument</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-121"></span><span>            </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; KeyMap Value -&gt; KeyMap Value
 forall v. Key -&gt; v -&gt; KeyMap v -&gt; KeyMap v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.KeyMap.html#insert"><span class="hs-identifier hs-var">KM.insert</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;__argument_id__&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687197349"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268135"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>              </span><span class="annot"><span class="annottext">(KeyMap Value -&gt; KeyMap Value) -&gt; KeyMap Value -&gt; KeyMap Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; KeyMap Value
@@ -294,9 +294,9 @@ forall k v. HashMap k v -&gt; [(k, v)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JoinArgument -&gt; HashMap FieldName Value
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#unJoinArgument"><span class="hs-identifier hs-var">unJoinArgument</span></a></span><span> </span><span class="annot"><span class="annottext">JoinArgument
-</span><a href="#local-6989586621687197350"><span class="hs-identifier hs-var">argument</span></a></span><span>
-</span><span id="line-126"></span><span>        </span><span id="local-6989586621687197360"><span class="annot"><span class="annottext">rowSchema :: HashMap FieldName (Column b, ScalarType b)
-</span><a href="#local-6989586621687197360"><span class="hs-identifier hs-var hs-var">rowSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((JoinColumnAlias, (Column b, ScalarType b))
+</span><a href="#local-6989586621687268136"><span class="hs-identifier hs-var">argument</span></a></span><span>
+</span><span id="line-126"></span><span>        </span><span id="local-6989586621687268146"><span class="annot"><span class="annottext">rowSchema :: HashMap FieldName (Column b, ScalarType b)
+</span><a href="#local-6989586621687268146"><span class="hs-identifier hs-var hs-var">rowSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((JoinColumnAlias, (Column b, ScalarType b))
  -&gt; (Column b, ScalarType b))
 -&gt; HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b))
 -&gt; HashMap FieldName (Column b, ScalarType b)
@@ -311,7 +311,7 @@ forall (b :: BackendType).
 RemoteSourceJoin b
 -&gt; HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b))
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjJoinColumns"><span class="hs-identifier hs-var">_rsjJoinColumns</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">Maybe (NonEmpty (KeyMap Value))
 -&gt; (NonEmpty (KeyMap Value) -&gt; m (AnyBackend SourceJoinCall))
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
@@ -321,25 +321,25 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[KeyMap Value] -&gt; Maybe (NonEmpty (KeyMap Value))
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[KeyMap Value]
-</span><a href="#local-6989586621687197346"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((NonEmpty (KeyMap Value) -&gt; m (AnyBackend SourceJoinCall))
+</span><a href="#local-6989586621687268132"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((NonEmpty (KeyMap Value) -&gt; m (AnyBackend SourceJoinCall))
  -&gt; m (Maybe (AnyBackend SourceJoinCall)))
 -&gt; (NonEmpty (KeyMap Value) -&gt; m (AnyBackend SourceJoinCall))
 -&gt; m (Maybe (AnyBackend SourceJoinCall))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687197364"><span class="annot"><span class="annottext">NonEmpty (KeyMap Value)
-</span><a href="#local-6989586621687197364"><span class="hs-identifier hs-var">nonEmptyRows</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-128"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687197365"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
-</span><a href="#local-6989586621687197365"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceConfig b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687268150"><span class="annot"><span class="annottext">NonEmpty (KeyMap Value)
+</span><a href="#local-6989586621687268150"><span class="hs-identifier hs-var">nonEmptyRows</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-128"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687268151"><span class="annot"><span class="annottext">sourceConfig :: SourceConfig b
+</span><a href="#local-6989586621687268151"><span class="hs-identifier hs-var hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceConfig b
 forall (b :: BackendType). RemoteSourceJoin b -&gt; SourceConfig b
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjSourceConfig"><span class="hs-identifier hs-var">_rsjSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span>
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span>
 </span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (HasSourceConfiguration b, MonadTrace m) =&gt;
 SourceConfig b -&gt; m ()
-</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var">Tracing.attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687197069"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687197365"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
-</span><span id="line-130"></span><span>      </span><span id="local-6989586621687197368"><span class="annot"><span class="annottext">DBStepInfo b
-</span><a href="#local-6989586621687197368"><span class="hs-identifier hs-var">stepInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var">Tracing.attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687267855"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687268151"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><span id="line-130"></span><span>      </span><span id="local-6989586621687268154"><span class="annot"><span class="annottext">DBStepInfo b
+</span><a href="#local-6989586621687268154"><span class="hs-identifier hs-var">stepInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-131"></span><span>        </span><span class="annot"><span class="annottext">UserInfo
 -&gt; SourceName
 -&gt; SourceConfig b
@@ -379,17 +379,17 @@ UserInfo
 -&gt; m (DBStepInfo b)
 </span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBRemoteRelationshipPlan"><span class="hs-identifier hs-var">EB.mkDBRemoteRelationshipPlan</span></a></span><span>
 </span><span id="line-132"></span><span>          </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687197340"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><a href="#local-6989586621687268126"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
 </span><span id="line-133"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; SourceName
 forall (b :: BackendType). RemoteSourceJoin b -&gt; SourceName
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjSource"><span class="hs-identifier hs-var">_rsjSource</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>          </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687197365"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="#local-6989586621687268151"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">NonEmpty (KeyMap Value)
-</span><a href="#local-6989586621687197364"><span class="hs-identifier hs-var">nonEmptyRows</span></a></span><span>
+</span><a href="#local-6989586621687268150"><span class="hs-identifier hs-var">nonEmptyRows</span></a></span><span>
 </span><span id="line-136"></span><span>          </span><span class="annot"><span class="annottext">HashMap FieldName (Column b, ScalarType b)
-</span><a href="#local-6989586621687197360"><span class="hs-identifier hs-var">rowSchema</span></a></span><span>
+</span><a href="#local-6989586621687268146"><span class="hs-identifier hs-var">rowSchema</span></a></span><span>
 </span><span id="line-137"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;__argument_id__&quot;</span></span><span class="hs-special">)</span><span>
@@ -401,23 +401,23 @@ forall (b :: BackendType).
 RemoteSourceJoin b
 -&gt; SourceRelationshipSelection b Void UnpreparedValue
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjRelationship"><span class="hs-identifier hs-var">_rsjRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-139"></span><span>          </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687197343"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><a href="#local-6989586621687268129"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
 </span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687197344"><span class="hs-identifier hs-var">operationName</span></a></span><span>
+</span><a href="#local-6989586621687268130"><span class="hs-identifier hs-var">operationName</span></a></span><span>
 </span><span id="line-141"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSourceJoin b -&gt; StringifyNumbers
 forall (b :: BackendType). RemoteSourceJoin b -&gt; StringifyNumbers
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Types.html#_rsjStringifyNum"><span class="hs-identifier hs-var">_rsjStringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSourceJoin b
-</span><a href="#local-6989586621687197345"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268131"><span class="hs-identifier hs-var">remoteSourceJoin</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>      </span><span class="hs-comment">-- This should never fail, as field names in remote relationships are</span><span>
 </span><span id="line-143"></span><span>      </span><span class="hs-comment">-- validated when building the schema cache.</span><span>
-</span><span id="line-144"></span><span>      </span><span id="local-6989586621687197373"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687197373"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-144"></span><span>      </span><span id="local-6989586621687268159"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687268159"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-145"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#mkName"><span class="hs-identifier hs-var">G.mkName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197341"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268127"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>          </span><span class="annot"><span class="annottext">Maybe Name -&gt; m Name -&gt; m Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Name
@@ -427,16 +427,16 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687197341"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687268127"><span class="hs-identifier hs-var">jaFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' is not a valid GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-147"></span><span>      </span><span class="hs-comment">-- NOTE: We're making an assumption that the 'FieldName' propagated upwards</span><span>
 </span><span id="line-148"></span><span>      </span><span class="hs-comment">-- from 'collectJoinArguments' is reasonable to use for logging.</span><span>
-</span><span id="line-149"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687197377"><span class="annot"><span class="annottext">rootFieldAlias :: RootFieldAlias
-</span><a href="#local-6989586621687197377"><span class="hs-identifier hs-var hs-var">rootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; RootFieldAlias
+</span><span id="line-149"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687268163"><span class="annot"><span class="annottext">rootFieldAlias :: RootFieldAlias
+</span><a href="#local-6989586621687268163"><span class="hs-identifier hs-var hs-var">rootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687197373"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621687268159"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-150"></span><span>      </span><span class="annot"><span class="annottext">AnyBackend SourceJoinCall -&gt; m (AnyBackend SourceJoinCall)
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -458,9 +458,9 @@ forall (b :: BackendType).
 RootFieldAlias
 -&gt; SourceConfig b -&gt; DBStepInfo b -&gt; SourceJoinCall b
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#SourceJoinCall"><span class="hs-identifier hs-var">SourceJoinCall</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687197377"><span class="hs-identifier hs-var">rootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687197365"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">DBStepInfo b
-</span><a href="#local-6989586621687197368"><span class="hs-identifier hs-var">stepInfo</span></a></span><span>
+</span><a href="#local-6989586621687268163"><span class="hs-identifier hs-var">rootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687268151"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">DBStepInfo b
+</span><a href="#local-6989586621687268154"><span class="hs-identifier hs-var">stepInfo</span></a></span><span>
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-155"></span><span class="hs-comment">-- Step 3: extracting the join index</span><span>
@@ -471,33 +471,33 @@ RootFieldAlias
 </span><span id="line-160"></span><span class="hs-comment">-- result, instead of having to keep track of the path within the answer. This</span><span>
 </span><span id="line-161"></span><span class="hs-comment">-- function therefore enforces that the answer has the shape we expect, and</span><span>
 </span><span id="line-162"></span><span class="hs-comment">-- throws a 'QErr' if it doesn't.</span><span>
-</span><span id="line-163"></span><span id="local-6989586621687197075"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildJoinIndex"><span class="hs-identifier hs-type">buildJoinIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687197075"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687197075"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IntMap.IntMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-163"></span><span id="local-6989586621687267861"><span class="annot"><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildJoinIndex"><span class="hs-identifier hs-type">buildJoinIndex</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267861"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687267861"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IntMap.IntMap</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-164"></span><span id="buildJoinIndex"><span class="annot"><span class="annottext">buildJoinIndex :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 ByteString -&gt; m (IntMap Value)
-</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildJoinIndex"><span class="hs-identifier hs-var hs-var">buildJoinIndex</span></a></span></span><span> </span><span id="local-6989586621687197411"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687197411"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-165"></span><span>  </span><span id="local-6989586621687197412"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197412"><span class="hs-identifier hs-var">json</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="Hasura.GraphQL.Execute.RemoteJoin.Source.html#buildJoinIndex"><span class="hs-identifier hs-var hs-var">buildJoinIndex</span></a></span></span><span> </span><span id="local-6989586621687268197"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687268197"><span class="hs-identifier hs-var">response</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-165"></span><span>  </span><span id="local-6989586621687268198"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687268198"><span class="hs-identifier hs-var">json</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-166"></span><span>    </span><span class="annot"><span class="annottext">ByteString -&gt; Either String Value
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#eitherDecode"><span class="hs-identifier hs-var">JO.eitherDecode</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687197411"><span class="hs-identifier hs-var">response</span></a></span><span> </span><span class="annot"><span class="annottext">Either String Value -&gt; (String -&gt; m Value) -&gt; m Value
+</span><a href="#local-6989586621687268197"><span class="hs-identifier hs-var">response</span></a></span><span> </span><span class="annot"><span class="annottext">Either String Value -&gt; (String -&gt; m Value) -&gt; m Value
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687197415"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687197415"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687268201"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687268201"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-167"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m Value
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="#local-6989586621687197416"><span class="hs-identifier hs-var">throwInvalidJsonErr</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m Value) -&gt; Text -&gt; m Value
+</span><a href="#local-6989586621687268202"><span class="hs-identifier hs-var">throwInvalidJsonErr</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m Value) -&gt; Text -&gt; m Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687197415"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621687268201"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-168"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197412"><span class="hs-identifier hs-var">json</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-169"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621687197419"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687197419"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">([(Key, Value)] -&gt; IntMap Value)
+</span><a href="#local-6989586621687268198"><span class="hs-identifier hs-var">json</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-169"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Array"><span class="hs-identifier hs-type">JO.Array</span></a></span><span> </span><span id="local-6989586621687268205"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621687268205"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">([(Key, Value)] -&gt; IntMap Value)
 -&gt; m [(Key, Value)] -&gt; m (IntMap Value)
 forall a b. (a -&gt; b) -&gt; m a -&gt; m b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -514,96 +514,96 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 forall a. Vector a -&gt; [a]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621687197419"><span class="hs-identifier hs-var">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-170"></span><span>      </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621687197423"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687197423"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-171"></span><span>        </span><span id="local-6989586621687197424"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197424"><span class="hs-identifier hs-var">argumentResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687268205"><span class="hs-identifier hs-var">arr</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-170"></span><span>      </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Object"><span class="hs-identifier hs-type">JO.Object</span></a></span><span> </span><span id="local-6989586621687268209"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687268209"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-171"></span><span>        </span><span id="local-6989586621687268210"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687268210"><span class="hs-identifier hs-var">argumentResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-172"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Object -&gt; Maybe Value
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#lookup"><span class="hs-identifier hs-var">JO.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;f&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687197423"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621687268209"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-173"></span><span>            </span><span class="annot"><span class="annottext">Maybe Value -&gt; m Value -&gt; m Value
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">m Value
 forall {a}. m a
-</span><a href="#local-6989586621687197426"><span class="hs-identifier hs-var">throwMissingRelationshipDataErr</span></a></span><span>
-</span><span id="line-174"></span><span>        </span><span id="local-6989586621687197427"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197427"><span class="hs-identifier hs-var">argumentIdValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687268212"><span class="hs-identifier hs-var">throwMissingRelationshipDataErr</span></a></span><span>
+</span><span id="line-174"></span><span>        </span><span id="local-6989586621687268213"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687268213"><span class="hs-identifier hs-var">argumentIdValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-175"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Object -&gt; Maybe Value
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#lookup"><span class="hs-identifier hs-var">JO.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;__argument_id__&quot;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687197423"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621687268209"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-176"></span><span>            </span><span class="annot"><span class="annottext">Maybe Value -&gt; m Value -&gt; m Value
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">m Value
 forall {a}. m a
-</span><a href="#local-6989586621687197428"><span class="hs-identifier hs-var">throwMissingArgumentIdErr</span></a></span><span>
-</span><span id="line-177"></span><span>        </span><span id="local-6989586621687197429"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687197429"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687268214"><span class="hs-identifier hs-var">throwMissingArgumentIdErr</span></a></span><span>
+</span><span id="line-177"></span><span>        </span><span id="local-6989586621687268215"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687268215"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-178"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197427"><span class="hs-identifier hs-var">argumentIdValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-179"></span><span>            </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">JO.Number</span></a></span><span> </span><span id="local-6989586621687197431"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687197431"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687268213"><span class="hs-identifier hs-var">argumentIdValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-179"></span><span>            </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Number"><span class="hs-identifier hs-type">JO.Number</span></a></span><span> </span><span id="local-6989586621687268217"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621687268217"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-180"></span><span>              </span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Key
 forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/scientific-0.3.7.0-ed1e88239421791c2ffb0fe78f6564ed23d5b21f08e09931da9e68acc9b8d403/share/doc/html/src/Data.Scientific.html#toBoundedInteger"><span class="hs-identifier hs-var">Scientific.toBoundedInteger</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621687197431"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621687268217"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-181"></span><span>                </span><span class="annot"><span class="annottext">Maybe Key -&gt; m Key -&gt; m Key
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">m Key
 forall {a}. m a
-</span><a href="#local-6989586621687197433"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
-</span><span id="line-182"></span><span>            </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621687197435"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197435"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687268219"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
+</span><span id="line-182"></span><span>            </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#String"><span class="hs-identifier hs-type">JO.String</span></a></span><span> </span><span id="local-6989586621687268221"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687268221"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-183"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Maybe Key
 forall {a}. Integral a =&gt; Text -&gt; Maybe a
-</span><a href="#local-6989586621687197436"><span class="hs-identifier hs-var">intFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197435"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621687268222"><span class="hs-identifier hs-var">intFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687268221"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-184"></span><span>                </span><span class="annot"><span class="annottext">Maybe Key -&gt; m Key -&gt; m Key
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">m Key
 forall {a}. m a
-</span><a href="#local-6989586621687197433"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
+</span><a href="#local-6989586621687268219"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
 </span><span id="line-185"></span><span>            </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m Key
 forall {a}. m a
-</span><a href="#local-6989586621687197433"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
+</span><a href="#local-6989586621687268219"><span class="hs-identifier hs-var">throwInvalidArgumentIdValueErr</span></a></span><span>
 </span><span id="line-186"></span><span>        </span><span class="annot"><span class="annottext">(Key, Value) -&gt; m (Key, Value)
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621687197429"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687197424"><span class="hs-identifier hs-var">argumentResult</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687268215"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687268210"><span class="hs-identifier hs-var">argumentResult</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (Key, Value)
 forall {a}. m a
-</span><a href="#local-6989586621687197437"><span class="hs-identifier hs-var">throwNoNestedObjectErr</span></a></span><span>
+</span><a href="#local-6989586621687268223"><span class="hs-identifier hs-var">throwNoNestedObjectErr</span></a></span><span>
 </span><span id="line-188"></span><span>    </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (IntMap Value)
 forall {a}. m a
-</span><a href="#local-6989586621687197438"><span class="hs-identifier hs-var">throwNoListOfObjectsErr</span></a></span><span>
+</span><a href="#local-6989586621687268224"><span class="hs-identifier hs-var">throwNoListOfObjectsErr</span></a></span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>    </span><span id="local-6989586621687197436"><span class="annot"><span class="annottext">intFromText :: Text -&gt; Maybe a
-</span><a href="#local-6989586621687197436"><span class="hs-identifier hs-var hs-var">intFromText</span></a></span></span><span> </span><span id="local-6989586621687197461"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197461"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Reader a
+</span><span id="line-190"></span><span>    </span><span id="local-6989586621687268222"><span class="annot"><span class="annottext">intFromText :: Text -&gt; Maybe a
+</span><a href="#local-6989586621687268222"><span class="hs-identifier hs-var hs-var">intFromText</span></a></span></span><span> </span><span id="local-6989586621687268247"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687268247"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Reader a
 forall a. Integral a =&gt; Reader a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Read.html#decimal"><span class="hs-identifier hs-var">TR.decimal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197461"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-191"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687197463"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687197463"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687268247"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-191"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687268249"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687268249"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
 forall a. a -&gt; Maybe a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687197463"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621687268249"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-192"></span><span>      </span><span class="annot"><span class="annottext">Either String (a, Text)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-193"></span><span>    </span><span id="local-6989586621687197416"><span class="annot"><span class="annottext">throwInvalidJsonErr :: Text -&gt; m a
-</span><a href="#local-6989586621687197416"><span class="hs-identifier hs-var hs-var">throwInvalidJsonErr</span></a></span></span><span> </span><span id="local-6989586621687197474"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197474"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621687268202"><span class="annot"><span class="annottext">throwInvalidJsonErr :: Text -&gt; m a
+</span><a href="#local-6989586621687268202"><span class="hs-identifier hs-var hs-var">throwInvalidJsonErr</span></a></span></span><span> </span><span id="local-6989586621687268260"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687268260"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
@@ -614,9 +614,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687197474"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
-</span><span id="line-197"></span><span>    </span><span id="local-6989586621687197426"><span class="annot"><span class="annottext">throwMissingRelationshipDataErr :: m a
-</span><a href="#local-6989586621687197426"><span class="hs-identifier hs-var hs-var">throwMissingRelationshipDataErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687268260"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-197"></span><span>    </span><span id="local-6989586621687268212"><span class="annot"><span class="annottext">throwMissingRelationshipDataErr :: m a
+</span><a href="#local-6989586621687268212"><span class="hs-identifier hs-var hs-var">throwMissingRelationshipDataErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-198"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
@@ -625,8 +625,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot find relationship data (aliased as 'f') within the source \
           \response&quot;</span></span><span>
-</span><span id="line-201"></span><span>    </span><span id="local-6989586621687197428"><span class="annot"><span class="annottext">throwMissingArgumentIdErr :: m a
-</span><a href="#local-6989586621687197428"><span class="hs-identifier hs-var hs-var">throwMissingArgumentIdErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-201"></span><span>    </span><span id="local-6989586621687268214"><span class="annot"><span class="annottext">throwMissingArgumentIdErr :: m a
+</span><a href="#local-6989586621687268214"><span class="hs-identifier hs-var hs-var">throwMissingArgumentIdErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-202"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
@@ -634,16 +634,16 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot find '__argument_id__' within the source response&quot;</span></span><span>
-</span><span id="line-204"></span><span>    </span><span id="local-6989586621687197433"><span class="annot"><span class="annottext">throwInvalidArgumentIdValueErr :: m a
-</span><a href="#local-6989586621687197433"><span class="hs-identifier hs-var hs-var">throwInvalidArgumentIdValueErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-204"></span><span>    </span><span id="local-6989586621687268219"><span class="annot"><span class="annottext">throwInvalidArgumentIdValueErr :: m a
+</span><a href="#local-6989586621687268219"><span class="hs-identifier hs-var hs-var">throwInvalidArgumentIdValueErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-205"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m a) -&gt; Text -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected 'argument_id' to get parsed as backend integer type&quot;</span></span><span>
-</span><span id="line-206"></span><span>    </span><span id="local-6989586621687197437"><span class="annot"><span class="annottext">throwNoNestedObjectErr :: m a
-</span><a href="#local-6989586621687197437"><span class="hs-identifier hs-var hs-var">throwNoNestedObjectErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-206"></span><span>    </span><span id="local-6989586621687268223"><span class="annot"><span class="annottext">throwNoNestedObjectErr :: m a
+</span><a href="#local-6989586621687268223"><span class="hs-identifier hs-var hs-var">throwNoNestedObjectErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-207"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
@@ -652,8 +652,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected an object one level deep in the remote schema's response, \
           \but found an array/scalar value instead&quot;</span></span><span>
-</span><span id="line-210"></span><span>    </span><span id="local-6989586621687197438"><span class="annot"><span class="annottext">throwNoListOfObjectsErr :: m a
-</span><a href="#local-6989586621687197438"><span class="hs-identifier hs-var hs-var">throwNoListOfObjectsErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-210"></span><span>    </span><span id="local-6989586621687268224"><span class="annot"><span class="annottext">throwNoListOfObjectsErr :: m a
+</span><a href="#local-6989586621687268224"><span class="hs-identifier hs-var hs-var">throwNoListOfObjectsErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-211"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
