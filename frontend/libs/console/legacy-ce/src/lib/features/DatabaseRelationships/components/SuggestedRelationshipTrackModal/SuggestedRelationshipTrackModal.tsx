@@ -10,6 +10,8 @@ import {
   SuggestedRelationshipWithName,
   useSuggestedRelationships,
 } from '../SuggestedRelationships/hooks/useSuggestedRelationships';
+import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
+import { DisplayToastErrorMessage } from '../../../Data/components/DisplayErrorMessage';
 
 type SuggestedRelationshipTrackModalProps = {
   relationship: SuggestedRelationshipWithName;
@@ -20,33 +22,58 @@ type SuggestedRelationshipTrackModalProps = {
 export const SuggestedRelationshipTrackModal: React.VFC<
   SuggestedRelationshipTrackModalProps
 > = ({ relationship, dataSourceName, onClose }) => {
-  const {
-    onAddSuggestedRelationship,
-    isAddingSuggestedRelationship,
-    refetchSuggestedRelationships,
-  } = useSuggestedRelationships({
+  const { refetchSuggestedRelationships } = useSuggestedRelationships({
     dataSourceName,
     table: relationship.from.table,
     existingRelationships: [],
     isEnabled: true,
   });
 
-  const onTrackRelationship = async (relationshipName: string) => {
-    try {
-      await onAddSuggestedRelationship({
-        ...relationship,
-        constraintName: relationshipName,
-      });
+  const { createTableRelationships, isLoading } =
+    useCreateTableRelationships(dataSourceName);
 
-      refetchSuggestedRelationships();
-      onClose();
-    } catch (err: unknown) {
-      hasuraToast({
-        title: 'Error',
-        message: err instanceof Error ? err.message : 'An error occurred',
-        type: 'error',
-      });
-    }
+  const onTrackRelationship = async (relationshipName: string) => {
+    createTableRelationships({
+      data: [
+        {
+          name: relationshipName,
+          source: {
+            fromSource: dataSourceName,
+            fromTable: relationship.from.table,
+          },
+          definition: {
+            target: {
+              toSource: dataSourceName,
+              toTable: relationship.to.table,
+            },
+            type: relationship.type,
+            detail: {
+              fkConstraintOn:
+                'constraint_name' in relationship.from
+                  ? 'fromTable'
+                  : 'toTable',
+              fromColumns: relationship.from.columns,
+              toColumns: relationship.to.columns,
+            },
+          },
+        },
+      ],
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: 'Tracked Successfully',
+        });
+        refetchSuggestedRelationships();
+        onClose();
+      },
+      onError: err => {
+        hasuraToast({
+          type: 'error',
+          title: 'Failed to track',
+          children: <DisplayToastErrorMessage message={err.message} />,
+        });
+      },
+    });
   };
 
   const { Form, methods } = useConsoleForm({
@@ -85,7 +112,7 @@ export const SuggestedRelationshipTrackModal: React.VFC<
             callToDeny="Cancel"
             callToAction="Track relationship"
             onClose={onClose}
-            isLoading={isAddingSuggestedRelationship}
+            isLoading={isLoading}
           />
         </>
       </Form>
