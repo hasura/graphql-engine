@@ -27,7 +27,7 @@ To successfully follow and complete this guide, you need:
 
 ## Deploy Hasura GraphQL Engine on Flightcontrol 
 
-1. Connect [Hasura's general repository](https://github.com/hasura/graphql-example-apps) on Flightcontrol using GitHub
+1. Connect [Hasura's general repository](https://github.com/hasura/graphql-engine) on Flightcontrol using GitHub
 2. Select a GUI config type
 3. Select your environment
 4. Add a service for Web Fargate and a Postgres Database
@@ -40,7 +40,8 @@ To successfully follow and complete this guide, you need:
       - Health Check Path: /healthz
 6. Set the `Env Variable Name for Connection String` in Database settings to be `HASURA_GRAPHQL_DATABASE_URL`
 7. Select an AWS region
-8. Click "Create Project" and complete any required steps (like linking your AWS account).
+8. Set `HASURA_GRAPHQL_ENABLE_CONSOLE` to `true` in Enviroment Variable Section
+9. Click "Create Project" and complete any required steps (like linking your AWS account).
 
 
 ## Troubleshooting
