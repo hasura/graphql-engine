@@ -30,6 +30,8 @@ module Hasura.RQL.IR.Select.Lenses
     csSplit,
     csSlice,
     csSelect,
+    gbgFields,
+    gbgKeys,
     insertFunctionArg,
     mkAnnColumnField,
     mkAnnColumnFieldAsText,
@@ -48,6 +50,10 @@ module Hasura.RQL.IR.Select.Lenses
     _TAFAgg,
     _TAFNodes,
     _TAFExp,
+    _GBFGroupKey,
+    _GBFAggregate,
+    _GBFNodes,
+    _GBFExp,
     _ConnectionTypename,
     _ConnectionPageInfo,
     _ConnectionEdges,
@@ -68,9 +74,11 @@ $(makeLenses ''AnnObjectSelectG)
 $(makeLenses ''AnnNestedObjectSelectG)
 $(makeLenses ''ConnectionSelect)
 $(makeLenses ''AnnRelationSelectG)
+$(makeLenses ''GroupByG)
 
 $(makePrisms ''AnnotatedOrderByElement)
 $(makePrisms ''AnnFieldG)
 $(makePrisms ''TableAggregateFieldG)
+$(makePrisms ''GroupByField)
 $(makePrisms ''ConnectionField)
 $(makePrisms ''EdgeField)

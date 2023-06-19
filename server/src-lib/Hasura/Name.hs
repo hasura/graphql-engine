@@ -240,6 +240,17 @@ __aggregate_fields = [G.name|_aggregate_fields|]
 __fields :: G.Name
 __fields = [G.name|_fields|]
 
+-- ** Group By
+
+_group_by :: G.Name
+_group_by = [G.name|group_by|]
+
+_keys :: G.Name
+_keys = [G.name|keys|]
+
+_group_key :: G.Name
+_group_key = [G.name|group_key|]
+
 -- * JSON
 
 _path :: G.Name

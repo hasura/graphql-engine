@@ -121,6 +121,7 @@ instance
   type XEventTriggers ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
+  type XGroupBy ('Postgres pgKind) = XEnable
 
   type ResolvedConnectionTemplate ('Postgres pgKind) = Maybe Postgres.PostgresResolvedConnectionTemplate -- 'Nothing' represents no connection template configured
   type ConnectionTemplateRequestContext ('Postgres pgKind) = Postgres.RequestContext

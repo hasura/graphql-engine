@@ -86,6 +86,7 @@ data ExperimentalFeature
   | EFBigQueryStringNumericInput
   | EFHideAggregationPredicates
   | EFHideStreamFields
+  | EFGroupByAggregations
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -99,6 +100,7 @@ experimentalFeatureKey = \case
   EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
   EFHideStreamFields -> "hide_stream_fields"
+  EFGroupByAggregations -> "group_by_aggregations"
 
 instance Hashable ExperimentalFeature
 

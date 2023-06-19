@@ -216,6 +216,8 @@ class
   relayExtension :: Maybe (XRelay b)
   nodesAggExtension :: Maybe (XNodesAgg b)
   streamSubscriptionExtension :: Maybe (XStreamingSubscription b)
+  groupByExtension :: Maybe (XGroupBy b)
+  groupByExtension = Nothing
 
   -- individual components
   columnParser ::
