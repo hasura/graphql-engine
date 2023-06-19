@@ -61,6 +61,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     metadataDefaultsOption,
     apolloFederationStatusOption,
     closeWebsocketsOnMetadataChangeOption,
+    maxTotalHeaderLengthOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -148,6 +149,7 @@ serveCommandParser =
     <*> parseMetadataDefaults
     <*> parseApolloFederationStatus
     <*> parseEnableCloseWebsocketsOnMetadataChange
+    <*> parseMaxTotalHeaderLength
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1176,6 +1178,23 @@ parseEnableCloseWebsocketsOnMetadataChange =
           <> Opt.help (Config._helpMessage closeWebsocketsOnMetadataChangeOption)
       )
 
+parseMaxTotalHeaderLength :: Opt.Parser (Maybe Int)
+parseMaxTotalHeaderLength =
+  Opt.optional
+    $ Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "max-total-header-length"
+          <> Opt.help (Config._helpMessage maxTotalHeaderLengthOption)
+      )
+
+maxTotalHeaderLengthOption :: Config.Option Int
+maxTotalHeaderLengthOption =
+  Config.Option
+    { Config._default = (1024 * 1024),
+      Config._envVar = "HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH",
+      Config._helpMessage = "Max cumulative length of all headers in bytes (Default: 1MB)"
+    }
+
 --------------------------------------------------------------------------------
 -- Pretty Printer
 
@@ -1275,6 +1294,7 @@ serveCmdFooter =
         Config.optionPP defaultNamingConventionOption,
         Config.optionPP metadataDBExtensionsSchemaOption,
         Config.optionPP apolloFederationStatusOption,
-        Config.optionPP closeWebsocketsOnMetadataChangeOption
+        Config.optionPP closeWebsocketsOnMetadataChangeOption,
+        Config.optionPP maxTotalHeaderLengthOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

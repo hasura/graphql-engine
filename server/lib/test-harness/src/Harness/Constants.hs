@@ -309,7 +309,8 @@ serveOptions =
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults,
       soApolloFederationStatus = ApolloFederationDisabled,
-      soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption
+      soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption,
+      soMaxTotalHeaderLength = Init._default Init.maxTotalHeaderLengthOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

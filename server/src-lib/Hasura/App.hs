@@ -480,7 +480,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
           appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,
-          appEnvLicenseKeyCache = Nothing
+          appEnvLicenseKeyCache = Nothing,
+          appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength
         }
     )
 
@@ -939,6 +940,7 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
           . Warp.setInstallShutdownHandler shutdownHandler
           . Warp.setBeforeMainLoop (for_ startupStatusHook id)
           . setForkIOWithMetrics
+          . Warp.setMaxTotalHeaderLength appEnvMaxTotalHeaderLength
           $ Warp.defaultSettings
 
       setForkIOWithMetrics :: Warp.Settings -> Warp.Settings

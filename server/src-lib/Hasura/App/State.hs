@@ -135,7 +135,8 @@ data AppEnv = AppEnv
     -- to do it for the Enterprise version.
     appEnvSchemaPollInterval :: OptionalInterval,
     appEnvCheckFeatureFlag :: CheckFeatureFlag,
-    appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey)
+    appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
+    appEnvMaxTotalHeaderLength :: Int
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

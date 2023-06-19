@@ -340,6 +340,18 @@ subgraph in an Apollo supergraph.
 | **Default**         | `false`                                   |
 | **Supported in**    | CE, Enterprise Edition, Cloud             |
 
+### Header Size Limit
+
+Sets the maximum cumulative length of all headers in bytes.
+
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--max-total-header-length`               |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH`  |
+| **Accepted values** | Integer                                   |
+| **Default**         | `1024*1024` (1MB)                         |
+| **Supported in**    | CE, Enterprise Edition                    |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).

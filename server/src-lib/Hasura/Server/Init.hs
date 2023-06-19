@@ -216,6 +216,7 @@ mkServeOptions sor@ServeOptionsRaw {..} = do
     pure $ getApolloFederationStatus soExperimentalFeatures apolloFederationStatusOptionM
   soCloseWebsocketsOnMetadataChangeStatus <- do
     withOptionDefault rsoCloseWebsocketsOnMetadataChangeStatus closeWebsocketsOnMetadataChangeOption
+  soMaxTotalHeaderLength <- withOptionDefault rsoMaxTotalHeaderLength maxTotalHeaderLengthOption
   pure ServeOptions {..}
 
 -- | Fetch Postgres 'Query.ConnParams' components from the environment
