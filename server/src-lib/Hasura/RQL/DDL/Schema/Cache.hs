@@ -988,6 +988,20 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                     (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ObjRel)
                     (_nqmObjectRelationships preValidationNativeQuery)
 
+                let duplicates =
+                      S.intersection
+                        (S.fromList $ InsOrdHashMap.keys arrayRelationships)
+                        (S.fromList $ InsOrdHashMap.keys objectRelationships)
+
+                -- it is possible to have the same field name in both `array`
+                -- and `object`, let's stop that
+                unless (S.null duplicates)
+                  $ throw400 InvalidConfiguration
+                  $ "The native query '"
+                  <> toTxt _nqmRootFieldName
+                  <> "' has duplicate relationships: "
+                  <> T.intercalate "," (toTxt <$> S.toList duplicates)
+
                 let sourceObject =
                       SOSourceObj sourceName
                         $ AB.mkAnyBackend
