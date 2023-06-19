@@ -100,7 +100,6 @@ export function transformNeonIntegrationStatusToNeonBannerProps(
     case 'env-var-creation-success':
     case 'env-var-creation-error':
     case 'hasura-source-creation-loading':
-    case 'hasura-source-creation-error':
     case 'hasura-source-creation-success':
       neonBannerProps = {
         status: {
@@ -108,6 +107,18 @@ export function transformNeonIntegrationStatusToNeonBannerProps(
         },
         buttonText: 'Connecting to Hasura',
         onClickConnect: () => null,
+      };
+      break;
+    case 'hasura-source-creation-error':
+      neonBannerProps = {
+        status: {
+          status: 'error',
+          errorTitle: neonIntegrationStatus.title,
+          errorDescription: neonIntegrationStatus.description,
+        },
+        buttonText: 'Try again',
+        onClickConnect: neonIntegrationStatus.action,
+        icon: 'refresh',
       };
       break;
     default:
