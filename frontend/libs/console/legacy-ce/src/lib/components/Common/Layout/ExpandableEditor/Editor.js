@@ -45,6 +45,8 @@ class Editor extends React.Component {
       return null;
     }
 
+    const { dataTest } = this.props;
+
     return (
       <Button
         mode="default"
@@ -52,6 +54,7 @@ class Editor extends React.Component {
         className="mr-sm"
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
+        data-test={dataTest}
       >
         {isEditing ? collapseButtonText || 'Close' : expandButtonText || 'Edit'}
       </Button>
