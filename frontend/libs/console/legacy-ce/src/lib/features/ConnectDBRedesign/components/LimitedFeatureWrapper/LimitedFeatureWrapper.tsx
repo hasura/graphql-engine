@@ -13,7 +13,7 @@ export const LimitedFeatureWrapper = ({
   title: string;
   description: string;
   id: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   override?: boolean;
 }) => {
   const { access: eeLiteAccess } = useEELiteAccess(globals);

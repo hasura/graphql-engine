@@ -23,6 +23,7 @@ import { ListStoredProcedures } from './components/ListStoredProcedures';
 import { NATIVE_QUERY_ROUTES } from '../constants';
 import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
 import { RouteWrapper } from '../components/RouteWrapper';
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 
 export const LandingPage = ({ pathname }: { pathname: string }) => {
   const push = usePushRoute();
@@ -194,14 +195,20 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                     label: `Stored Procedures (${storedProcedures.length})`,
                     content: (
                       <div className="mt-md">
-                        <ListStoredProcedures />
-                        <div className="flex justify-end mt-sm">
-                          <Link to="/data/native-queries/stored-procedures/track">
-                            <Button mode="primary">
-                              Track Stored Procedure
-                            </Button>
-                          </Link>
-                        </div>
+                        <LimitedFeatureWrapper
+                          title="Looking to add Stored Procedures for SQL Server?"
+                          id="native-queries"
+                          description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+                        >
+                          <ListStoredProcedures />
+                          <div className="flex justify-end mt-sm">
+                            <Link to="/data/native-queries/stored-procedures/track">
+                              <Button mode="primary">
+                                Track Stored Procedure
+                              </Button>
+                            </Link>
+                          </div>
+                        </LimitedFeatureWrapper>
                       </div>
                     ),
                   },

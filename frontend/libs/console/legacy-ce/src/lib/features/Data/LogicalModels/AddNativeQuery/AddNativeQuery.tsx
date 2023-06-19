@@ -11,11 +11,8 @@ import {
 import Skeleton from 'react-loading-skeleton';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import {
-  useEnvironmentState,
-  usePushRoute,
-} from '../../../ConnectDBRedesign/hooks';
-import { Feature, nativeDrivers } from '../../../DataSource';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { Feature } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
@@ -25,6 +22,8 @@ import { SqlEditorField } from './components/SqlEditorField';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { transformFormOutputToMetadata } from './utils';
+import { useSupportedDrivesForNativeQueries } from '../hook';
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 
 type AddNativeQueryProps = {
   defaultFormValues?: Partial<NativeQueryForm>;
@@ -45,8 +44,7 @@ export const AddNativeQuery = ({
 
   const push = usePushRoute();
 
-  const { consoleType } = useEnvironmentState();
-  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
+  const allowedDrivers = useSupportedDrivesForNativeQueries();
 
   const {
     data: sources,
@@ -114,6 +112,13 @@ export const AddNativeQuery = ({
     }
   };
 
+  const { data: isThereBigQueryOrMssqlSource } = useMetadata(
+    m =>
+      !!m.metadata.sources.find(
+        s => s.kind === 'mssql' || s.kind === 'bigquery'
+      )
+  );
+
   /**
    * Options for the data source types
    */
@@ -177,6 +182,16 @@ export const AddNativeQuery = ({
               placeholder="Select a database..."
             />
           </div>
+          <div className="max-w-4xl">
+            {isThereBigQueryOrMssqlSource && (
+              <LimitedFeatureWrapper
+                title="Looking to add Native Queries for SQL Server/Big Query databases?"
+                id="native-queries"
+                description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+              />
+            )}
+          </div>
+
           {isIntrospectionLoading ? (
             <div>
               <Skeleton />

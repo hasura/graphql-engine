@@ -5,7 +5,7 @@ import { Dialog } from '../../../../new-components/Dialog';
 import { useConsoleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { Feature, nativeDrivers } from '../../../DataSource';
+import { Feature } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
@@ -19,7 +19,7 @@ import {
   AddLogicalModelFormData,
   addLogicalModelValidationSchema,
 } from './validationSchema';
-import { useEnvironmentState } from '../../../ConnectDBRedesign/hooks';
+import { useSupportedDrivesForNativeQueries } from '../hook';
 
 export type AddLogicalModelDialogProps = {
   defaultValues?: AddLogicalModelFormData;
@@ -46,9 +46,8 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
       defaultValues: props.defaultValues,
     },
   });
-  const { consoleType } = useEnvironmentState();
   const selectedDataSource = watch('dataSourceName');
-  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
+  const allowedDrivers = useSupportedDrivesForNativeQueries();
 
   /**
    * Options for the data sources
@@ -64,6 +63,13 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
         value: source.name,
         label: source.name,
       }))
+  );
+
+  const { data: isThereBigQueryOrMssqlSource } = useMetadata(
+    m =>
+      !!m.metadata.sources.find(
+        s => s.kind === 'mssql' || s.kind === 'bigquery'
+      )
   );
 
   /**
@@ -160,6 +166,7 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
               sourceOptions={sourceOptions}
               typeOptions={typeOptions}
               disabled={props.disabled}
+              isThereBigQueryOrMssqlSource={isThereBigQueryOrMssqlSource}
             />
           </Form>
         )}
