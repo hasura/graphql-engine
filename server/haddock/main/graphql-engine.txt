@@ -19284,7 +19284,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> Maybe ApolloFederationStatus -> Maybe CloseWebsocketsOnMetadataChangeStatus -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> Maybe ApolloFederationStatus -> Maybe CloseWebsocketsOnMetadataChangeStatus -> Maybe Int -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -19334,6 +19334,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoMetadataDefaults] :: ServeOptionsRaw impl -> Maybe MetadataDefaults
 [rsoApolloFederationStatus] :: ServeOptionsRaw impl -> Maybe ApolloFederationStatus
 [rsoCloseWebsocketsOnMetadataChangeStatus] :: ServeOptionsRaw impl -> Maybe CloseWebsocketsOnMetadataChangeStatus
+[rsoMaxTotalHeaderLength] :: ServeOptionsRaw impl -> Maybe Int
 
 -- | Whether or not to serve Console assets.
 data ConsoleStatus
@@ -19439,7 +19440,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ApolloFederationStatus -> CloseWebsocketsOnMetadataChangeStatus -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ApolloFederationStatus -> CloseWebsocketsOnMetadataChangeStatus -> Int -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -19488,6 +19489,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soMetadataDefaults] :: ServeOptions impl -> MetadataDefaults
 [soApolloFederationStatus] :: ServeOptions impl -> ApolloFederationStatus
 [soCloseWebsocketsOnMetadataChangeStatus] :: ServeOptions impl -> CloseWebsocketsOnMetadataChangeStatus
+[soMaxTotalHeaderLength] :: ServeOptions impl -> Int
 
 -- | <a>ResponseInternalErrorsConfig</a> represents the encoding of the
 --   internal errors in the response to the client.
@@ -19848,6 +19850,7 @@ parseMetadataDefaults :: Parser (Maybe MetadataDefaults)
 metadataDBExtensionsSchemaOption :: Option ExtensionsSchema
 apolloFederationStatusOption :: Option (Maybe ApolloFederationStatus)
 closeWebsocketsOnMetadataChangeOption :: Option CloseWebsocketsOnMetadataChangeStatus
+maxTotalHeaderLengthOption :: Option Int
 serveCmdFooter :: Doc
 
 module Hasura.Server.Init.Arg
@@ -24424,22 +24427,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) TriggerOnReplication
-cteqCleanupConfig :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe Text)
-cetqWebhook :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe InputWebhook)
-cetqUpdate :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe (SubscribeOpSpec b_arBEV))
-cetqTable :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (TableName b_arBEV)
-cetqSource :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) SourceName
-cetqRetryConf :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe RequestTransform)
-cetqReplace :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) Bool
-cetqName :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) TriggerName
-cetqInsert :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe (SubscribeOpSpec b_arBEV))
-cetqHeaders :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe Bool)
-cetqDelete :: forall b_arBEV. Lens' (CreateEventTriggerQuery b_arBEV) (Maybe (SubscribeOpSpec b_arBEV))
+cteqTriggerOnReplication :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) TriggerOnReplication
+cteqCleanupConfig :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe Text)
+cetqWebhook :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe InputWebhook)
+cetqUpdate :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe (SubscribeOpSpec b_arBSF))
+cetqTable :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (TableName b_arBSF)
+cetqSource :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) SourceName
+cetqRetryConf :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe RequestTransform)
+cetqReplace :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) Bool
+cetqName :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) TriggerName
+cetqInsert :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe (SubscribeOpSpec b_arBSF))
+cetqHeaders :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe Bool)
+cetqDelete :: forall b_arBSF. Lens' (CreateEventTriggerQuery b_arBSF) (Maybe (SubscribeOpSpec b_arBSF))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -26942,7 +26945,7 @@ RebuildableAppContext :: AppContext -> InvalidationKeys -> Rule (ReaderT (Logger
 -- | Represents the Read-Only Hasura State, these fields are immutable and
 --   the state cannot be changed during runtime.
 data AppEnv
-AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> ConnParams -> TxIsolation -> Maybe Text -> Maybe Text -> ConnectionOptions -> KeepAliveDelay -> WSConnectionInitTimeout -> Refined NonNegative Seconds -> OptionalInterval -> CheckFeatureFlag -> Maybe (CredentialCache AgentLicenseKey) -> AppEnv
+AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> ConnParams -> TxIsolation -> Maybe Text -> Maybe Text -> ConnectionOptions -> KeepAliveDelay -> WSConnectionInitTimeout -> Refined NonNegative Seconds -> OptionalInterval -> CheckFeatureFlag -> Maybe (CredentialCache AgentLicenseKey) -> Int -> AppEnv
 [appEnvPort] :: AppEnv -> Port
 [appEnvHost] :: AppEnv -> HostPreference
 [appEnvMetadataDbPool] :: AppEnv -> PGPool
@@ -26973,6 +26976,7 @@ AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers
 [appEnvSchemaPollInterval] :: AppEnv -> OptionalInterval
 [appEnvCheckFeatureFlag] :: AppEnv -> CheckFeatureFlag
 [appEnvLicenseKeyCache] :: AppEnv -> Maybe (CredentialCache AgentLicenseKey)
+[appEnvMaxTotalHeaderLength] :: AppEnv -> Int
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can
 --   be changed during runtime.
