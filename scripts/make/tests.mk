@@ -8,8 +8,7 @@ API_TESTS_PRO=api-tests-pro:exe:api-tests-pro
 .PHONY: test-bigquery
 ## test-bigquery: run tests for BigQuery backend
 # will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
-test-bigquery: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait postgres
+test-bigquery: build remove-tix-file start-api-test-postgres
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -17,8 +16,7 @@ test-bigquery: build remove-tix-file
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for MS SQL Server backend
-test-sqlserver: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-sqlserver: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=SQLServer \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -26,8 +24,7 @@ test-sqlserver: build remove-tix-file
 
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
-test-citus: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-citus: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=Citus \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -35,8 +32,7 @@ test-citus: build remove-tix-file
 
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
-test-data-connectors: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-data-connectors: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=DataConnector \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -44,8 +40,7 @@ test-data-connectors: build remove-tix-file
 
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
-test-cockroach: build remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-cockroach: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=Cockroach \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -55,8 +50,7 @@ test-cockroach: build remove-tix-file
 ## test-postgres: run tests for Postgres backend
 # we have a few tests labeled with 'Postgres' which test their variants, too,
 # so this also starts containers for Postgres variants
-test-postgres: build build-postgres-agent remove-tix-file
-	$(API_TESTS_DOCKER_COMPOSE) up --build --detach --wait
+test-postgres: build build-postgres-agent remove-tix-file start-api-test-postgres
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -125,11 +119,10 @@ test-backends-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 
 .PHONY: test-postgres-pro
 ## test-postgres-pro: run tests for HGE pro for postgres
-test-postgres-pro: build-pro build-postgres-agent start-api-tests-pro-backends remove-tix-file
+test-postgres-pro: build-pro build-postgres-agent start-api-tests-pro-postgres remove-tix-file
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Postgres \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-citus-pro
@@ -138,7 +131,6 @@ test-citus-pro: build-pro build-postgres-agent start-api-tests-pro-backends remo
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Citus \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-cockroach-pro
@@ -147,7 +139,6 @@ test-cockroach-pro: build-pro build-postgres-agent start-api-tests-pro-backends 
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=Cockroach \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-sqlserver-pro
@@ -156,7 +147,6 @@ test-sqlserver-pro: build-pro build-postgres-agent start-api-tests-pro-backends 
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=SQLServer \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-bigquery-pro
@@ -165,7 +155,6 @@ test-bigquery-pro: build-pro build-postgres-agent start-api-tests-pro-backends r
 	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PRO_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		HASURA_TEST_BACKEND_TYPE=BigQuery \
-		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
 		cabal run $(API_TESTS_PRO)
 
 .PHONY: test-unit
@@ -260,19 +249,20 @@ upgrade-tests:
 #   2. Bring up the PostgreSQL container.
 #   3. Run the agent on port 8889, and wait a second for it to start.
 #   4. Ensure we clean up after ourselves.
-#   5. Get the port of the PostgreSQL container.
-#   6. Run the tests, pointing to the correct port for the DB.
+#   6. Run the tests
 test-dc-postgres-agent: build-postgres-agent
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
-	@ echo 'cabal run postgres-agent:exe:postgres-agent'; \
-		cabal run postgres-agent:exe:postgres-agent -- --port 8889 & trap "kill $$!" EXIT; \
+	  echo 'cabal run postgres-agent:exe:postgres-agent'; \
+		cabal run postgres-agent:exe:postgres-agent -- \
+			--port 8889 \
+			--admin-connection-string $(DC_AGENT_POSTGRES_URL) \
+			& trap "kill $$!" EXIT; \
 		sleep 1; \
-		PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
 		echo 'cabal run test:tests-dc-api -- test'; \
 		cabal run test:tests-dc-api -- \
 			test \
 			--agent-base-url 'http://localhost:8889' \
-			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			--agent-config "{\"connection\": \"$(DC_AGENT_POSTGRES_URL)\"}" \
 			sandwich
 
 .PHONY: test-dc-postgres-agent-only
@@ -281,9 +271,8 @@ test-dc-postgres-agent-only:
 	# See above for an explanation.
 	$(DC_POSTGRES_DOCKER_COMPOSE) up --wait
 	@ echo 'cabal run test:tests-dc-api -- test'
-	@ PG_PORT="$$($(DC_POSTGRES_DOCKER_COMPOSE) port postgres 5432 | sed 's/.*://')"; \
 		cabal run test:tests-dc-api -- \
 			test \
 			--agent-base-url "http://localhost:8888" \
-			--agent-config "{\"connection\": \"postgresql://postgres:password@localhost:$${PG_PORT}\"}" \
+			--agent-config "{\"connection\": \"$(DC_AGENT_POSTGRES_URL)\"}" \
 			sandwich --tui

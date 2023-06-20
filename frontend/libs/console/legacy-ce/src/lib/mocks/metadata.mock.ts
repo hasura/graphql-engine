@@ -5,6 +5,7 @@ import type { Metadata } from '../features/hasura-metadata-types';
 import { allowListInitialData } from '../features/AllowLists';
 import { queryCollectionInitialData } from '../features/QueryCollections';
 import { openTelemetryInitialData } from '../features/OpenTelemetry';
+import { restEndpointsInitialData } from '../features/RestEndpoints';
 import { dataInitialData } from '../features/Data';
 
 import { rest } from 'msw';
@@ -20,6 +21,7 @@ export const createDefaultInitialData = (): Metadata => ({
     ...queryCollectionInitialData,
     ...openTelemetryInitialData,
     ...dataInitialData,
+    ...restEndpointsInitialData,
   },
 });
 

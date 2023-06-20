@@ -37,9 +37,11 @@ import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { LandingPageRoute as NativeQueries } from '../../../features/Data/LogicalModels/LandingPage/LandingPage';
-
 import { TrackStoredProcedureRoute } from '../../../features/Data/LogicalModels/StoredProcedures/StoredProcedureWidget.route';
-import { LogicalModelPermissionsRoute } from '../../../features/Data/LogicalModels/LogicalModelPermissions/LogicalModelPermissionsPage';
+import {
+  ViewLogicalModelRoute,
+  LogicalModelPermissionsRoute,
+} from '../../../features/Data/LogicalModels';
 import { ManageFunction } from '../../../features/Data/ManageFunction/ManageFunction';
 import {
   UpdateNativeQueryRoute,
@@ -95,6 +97,7 @@ const makeDataRouter = (
           <IndexRoute component={NativeQueries} />
           <Redirect from=":source" to="/data/native-queries/logical-models" />
           <Route path=":source">
+            <Route path=":name" component={ViewLogicalModelRoute} />
             <Route
               path=":name/permissions"
               component={LogicalModelPermissionsRoute}

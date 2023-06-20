@@ -1,0 +1,67 @@
+version: "3.7"
+services:
+  redis:
+    image: redis:7
+    restart: always
+    # ports:
+    #   - 6379:6379
+  postgres:
+    image: postgres:15
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 25
+  mongodb:
+    image: mongo:6
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongouser
+      MONGO_INITDB_ROOT_PASSWORD: mongopassword
+  hasura:
+    image: hasura/graphql-engine:v2.27.0
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      ## Add your license key below
+      # HASURA_GRAPHQL_EE_LICENSE_KEY: ""
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      ## The metadata database for this Hasura GraphQL project. Can be changed to a managed postgres instance
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      
+      ## Optional settings
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      ## enable required apis; metrics api exposes a prometheus endpoint, uncomment to enable
+      # HASURA_GRAPHQL_ENABLED_APIS: 'graphql,metadata,config,developer,pgdump,metrics'
+      ## secure metrics endpoint with a secret, uncomment to enable
+      # HASURA_GRAPHQL_METRICS_SECRET: 'secret'
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      # HASURA_GRAPHQL_LOG_LEVEL: debug
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: "/srv/console-assets"
+      HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
+      HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
+      HASURA_GRAPHQL_MAX_CACHE_SIZE: "200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+  mongo-data-connector:
+    image: hasura/mongo-data-connector:v2.27.0
+    ports:
+      - 3000:3000
+volumes:
+  db_data:
+  mongo_data:

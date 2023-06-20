@@ -76,8 +76,7 @@ runRequestAcceptStatus' acceptStatus req = do
     fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ HTTP.httpLbs tracedReq _accHttpManager
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of
-    -- throwConnectionError is used here in order to avoid a metadata inconsistency error
-    Left ex -> throwConnectionError $ "Error in Data Connector backend: " <> Hasura.HTTP.serializeHTTPExceptionMessage (Hasura.HTTP.HttpException ex)
+    Left ex -> throwError $ err500 ConnectionNotEstablished ("Error communicating with data connector agent: " <> Hasura.HTTP.serializeHTTPExceptionMessage (Hasura.HTTP.HttpException ex))
     Right response -> do
       let status = HTTP.responseStatus response
           servantResponse = clientResponseToResponse id response

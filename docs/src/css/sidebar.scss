@@ -35,7 +35,7 @@
 .theme-doc-sidebar-menu {
   .theme-doc-sidebar-item-category {
     .theme-doc-sidebar-item-link {
-      margin-top: 0;
+      margin-top: 2px;
 
       .menu__link {
         //border-left: 0.1rem solid var(--color-gray-16);
@@ -103,6 +103,21 @@
       }
     }
   }
+}
+
+.theme-doc-sidebar-item-category-level-1 {
+  margin-top: 1px !important;
+}
+
+.sidebar_heading {
+  font-size: 0.9rem !important;
+  font-weight: 500;
+  margin-bottom: 0 !important;
+  margin-top: 12px !important;
+}
+
+.theme-doc-sidebar-item-link {
+  font-size: 14px !important;
 }
 
 /* Dark Mode Styles */

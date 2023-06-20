@@ -13,20 +13,24 @@ keywords:
 
 ## Introduction
 
-The RESTified GraphQL API allows for the use of a REST interface to
-saved GraphQL queries and mutations.
+The RESTified GraphQL API allows for the use of a REST interface to saved GraphQL queries and mutations.
 
-Users specify the query or mutation they wish to make available, as well
-a URL template. Segments of the URL template can potentially capture
-data to be used as GraphQL variables.
+Users specify the query or mutation they wish to make available, as well a URL template. Segments of the URL template
+can capture data to be used as GraphQL variables.
 
-See [Metadata API Reference: RESTified GraphQL Endpoints](/api-reference/metadata-api/restified-endpoints.mdx) for information on how to work
-with endpoints through the Metadata APIs.
+:::info Examples and quickstart
+
+This page details the API specification for the RESTified GraphQL Endpoints. For examples both with and without
+parameters and to see a quickstart guide, visit the [RESTified Endpoints](/restified/overview.mdx) page.
+
+:::
+
+See [Metadata API Reference: RESTified GraphQL Endpoints](/api-reference/metadata-api/restified-endpoints.mdx) for
+information on how to work with endpoints through the Metadata APIs.
 
 :::tip Supported from
 
-RESTified endpoints are supported from versions `v2.0.0-alpha.1` and
-above.
+RESTified endpoints are supported from versions `v2.0.0-alpha.1` and above.
 
 :::
 
@@ -39,12 +43,10 @@ By default these are:
 - `GET`, `POST` requests for queries, and
 - `POST` requests for mutations
 
-Although not in the REST spirit, `POST` requests are allowed by default
-for non-mutation queries since some HTTP clients may not be able to
-supply a JSON body for GET requests.
+Although not in the REST spirit, `POST` requests are allowed by default for non-mutation queries since some HTTP clients
+may not be able to supply a JSON body for GET requests.
 
-If required, users may explicitly configure the HTTP methods allowed per
-endpoint.
+If required, users may explicitly configure the HTTP methods allowed per endpoint.
 
 ## API Spec
 
@@ -52,38 +54,29 @@ endpoint.
 
 Endpoints are determined by the URL templates:
 
-- Simple URLs such as `/s1/s2/s3` match literally.
-- Segments starting with a `:` treat these parts of the path like
-  wildcards and use the name to assign a variable. For example:
-  `/s1/:id/s3`.
+- Simple URLs which don't include any arguments (such as `/s1/s2/s3`) **match literally.**
+- Segments starting with a `:` **treat these parts of the path like wildcards and use the name to assign a variable**.
+  For example: `/s1/:id/s3`.
 
 The request expects a normal REST style request to the endpoint.
 
-Variables can be supplied via route patterns, url query variables, and
-request body JSON object keys.
+Variables can be supplied via route patterns, url query variables, and request body JSON object keys.
 
-- JSON Body Object values are passed directly to the associated query
-  with no additional validation or type-coercion.
-- Route variables and Query parameters are interpreted as scalars
-  according to the variables types in the associated query and passed
-  as JSON data through the query variables:
+- JSON Body Object values are passed directly to the associated query with no additional validation or type-coercion.
+- Route variables and Query parameters are interpreted as scalars according to the variables types in the associated
+  query and passed as JSON data through the query variables:
   - Missing nullable variables are interpreted as `NULL`
   - Boolean variables are interpreted as `Boolean`
-  - Boolean flags without values e.g. `/api/rest/myquery?mybool` are
-    interpreted as `true`
+  - Boolean flags without values e.g. `/api/rest/myquery?mybool` are interpreted as `true`
   - String variables are interpreted as `String`
   - UUID variables are interpreted as `String`
   - ID variables are interpreted as `String`
-  - Number, Int, Float, and Double variables are interpreted as
-    `Number`
-  - **All other types or mismatches currently report variable type
-    errors**
+  - Number, Int, Float, and Double variables are interpreted as `Number`
+  - **All other types or mismatches currently report variable type errors**
 
-When making a request to this API only one endpoint should match. If
-multiple endpoints match your request this is considered an error and
-will report so via a 500 status code. If endpoints exist with your path,
-but none matching your HTTP method then a 405 error will be returned
-listing the methods that you can use.
+When making a request to this API only one endpoint should match. If multiple endpoints match your request this is
+considered an error and will report so via a 500 status code. If endpoints exist with your path, but none matching your
+HTTP method then a 405 error will be returned listing the methods that you can use.
 
 #### Sample requests
 
@@ -102,24 +95,22 @@ Content-Type: application/json
 
 ### Response
 
-The response is determined by the saved query. The response will be the
-same as if you had made the query directly in the GraphQL Console.
+The response is determined by the saved query. The response will be the same as if you had made the query directly in
+the GraphQL Console.
 
 See the [GraphQL API Reference](/api-reference/graphql-api/index.mdx) for more details.
 
 ## OpenAPI 3 Specification
 
-The OpenAPI 3 specification of the REST endpoints are exposed at
-`/api/swagger/json` for admin role only:
+The OpenAPI 3 specification of the REST endpoints are exposed at `/api/swagger/json` for admin role only:
 
 ```http
 GET /api/swagger/json HTTP/1.1
 X-Hasura-Role: admin
 ```
 
-The response JSON will be a OpenAPI 3 specification (OAS 3.0) for all
-the RESTified GraphQL Endpoints for admin roles. For more details about
-OAS 3.0, [click here](https://swagger.io/specification/).
+The response JSON will be a OpenAPI 3 specification (OAS 3.0) for all the RESTified GraphQL Endpoints for admin roles.
+For more details about OAS 3.0, [click here](https://swagger.io/specification/).
 
 ### Sample request
 

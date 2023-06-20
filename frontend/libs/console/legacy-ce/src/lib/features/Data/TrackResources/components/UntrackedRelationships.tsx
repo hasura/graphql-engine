@@ -15,7 +15,10 @@ import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/
 import Skeleton from 'react-loading-skeleton';
 import { useAllSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
-import { useTrackedRelationships } from './hooks/useTrackedRelationships';
+// import { useTrackedRelationships } from './hooks/useTrackedRelationships';
+import { useCreateTableRelationships } from '../../../DatabaseRelationships/hooks/useCreateTableRelationships/useCreateTableRelationships';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 
 interface UntrackedRelationshipsProps {
   dataSourceName: string;
@@ -35,15 +38,18 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const {
     suggestedRelationships,
     isLoadingSuggestedRelationships,
-    onAddMultipleSuggestedRelationships,
+    // onAddMultipleSuggestedRelationships,
   } = useAllSuggestedRelationships({
     dataSourceName,
     isEnabled: true,
     omitTracked: true,
   });
 
-  const { data: trackedRelationships } =
-    useTrackedRelationships(dataSourceName);
+  const { createTableRelationships, isLoading } =
+    useCreateTableRelationships(dataSourceName);
+
+  // const { data: trackedRelationships } =
+  //   useTrackedRelationships(dataSourceName);
 
   const checkboxRef = React.useRef<HTMLInputElement>(null);
   const { checkedIds, onCheck, allChecked, toggleAll, reset, inputStatus } =
@@ -54,8 +60,8 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const [filteredRelationships, setFilteredRelationships] = useState<
     SuggestedRelationshipWithName[]
   >(suggestedRelationships);
-  console.log('trackedRelationships', trackedRelationships);
-  console.log('suggestedRelationships', suggestedRelationships);
+  // console.log('trackedRelationships', trackedRelationships);
+  // console.log('suggestedRelationships', suggestedRelationships);
   const serializedRelationshipNames = suggestedRelationships
     .map(rel => rel.constraintName)
     .join('-');
@@ -78,27 +84,76 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const onTrackRelationship = async (
-    relationship: SuggestedRelationshipWithName
-  ) => {
-    await onAddMultipleSuggestedRelationships([relationship]);
+  const onTrackRelationship = async (rel: SuggestedRelationshipWithName) => {
+    await createTableRelationships({
+      data: [
+        {
+          name: rel.constraintName,
+          source: {
+            fromSource: dataSourceName,
+            fromTable: rel.from.table,
+          },
+          definition: {
+            target: {
+              toSource: dataSourceName,
+              toTable: rel.to.table,
+            },
+            type: rel.type,
+            detail: {
+              fkConstraintOn:
+                'constraint_name' in rel.from ? 'fromTable' : 'toTable',
+              fromColumns: rel.from.columns,
+              toColumns: rel.to.columns,
+            },
+          },
+        },
+      ],
+    });
   };
 
-  const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
-    useState(false);
   const onTrackSelected = async () => {
-    setTrackingSelectedRelationships(true);
-    try {
-      const selectedRelationships = suggestedRelationships.filter(rel =>
-        checkedIds.includes(rel.constraintName)
-      );
+    const selectedRelationships = suggestedRelationships.filter(rel =>
+      checkedIds.includes(rel.constraintName)
+    );
 
-      await onAddMultipleSuggestedRelationships(selectedRelationships);
-    } catch (err) {
-      setTrackingSelectedRelationships(false);
-    }
-    reset();
-    setTrackingSelectedRelationships(false);
+    createTableRelationships({
+      data: selectedRelationships.map(rel => ({
+        name: rel.constraintName,
+        source: {
+          fromSource: dataSourceName,
+          fromTable: rel.from.table,
+        },
+        definition: {
+          target: {
+            toSource: dataSourceName,
+            toTable: rel.to.table,
+          },
+          type: rel.type,
+          detail: {
+            fkConstraintOn:
+              'constraint_name' in rel.from ? 'fromTable' : 'toTable',
+            fromColumns: rel.from.columns,
+            toColumns: rel.to.columns,
+          },
+        },
+      })),
+      onSettled: () => {
+        reset();
+      },
+      onSuccess: () => {
+        hasuraToast({
+          type: 'success',
+          title: 'Successfully tracked relationships',
+        });
+      },
+      onError: err => {
+        hasuraToast({
+          type: 'error',
+          title: 'Error while tracking relationships',
+          children: <DisplayToastErrorMessage message={err.message} />,
+        });
+      },
+    });
   };
 
   if (isLoadingSuggestedRelationships) {
@@ -125,7 +180,7 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
             mode="primary"
             disabled={!checkedIds.length}
             onClick={onTrackSelected}
-            isLoading={isTrackingSelectedRelationships}
+            isLoading={isLoading}
             loadingText="Please Wait"
           >
             Track Selected ({checkedIds.length})

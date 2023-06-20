@@ -78,13 +78,20 @@ class GQLWsClient():
     def get_ws_query_event(self, query_id, timeout):
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
-    def send(self, frame):
+    def send(self, frame, count=0):
         self.wait_for_connection()
         if frame.get('type') == 'stop':
             self.ws_active_query_ids.discard( frame.get('id') )
         elif frame.get('type') == 'start' and 'id' in frame:
             self.ws_id_query_queues[frame['id']] = queue.Queue(maxsize=-1)
-        self._ws.send(json.dumps(frame))
+        try:
+            self._ws.send(json.dumps(frame))
+        except websocket.WebSocketConnectionClosedException:
+            if count > 2:
+                raise websocket.WebSocketConnectionClosedException("Connection is already closed and cannot be recreated even after 3 attempts")
+            # Connection closed, try to recreate the connection and send the frame again
+            self.recreate_conn()
+            self.send(frame, count+1)
 
     def init_as_admin(self):
         headers={}

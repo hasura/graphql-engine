@@ -1,7 +1,7 @@
 export type NativeQueryArgument = {
   type: string;
-  default_value?: string;
-  required?: boolean;
+  description?: string;
+  nullable?: boolean;
 };
 
 export type NativeQuery = {

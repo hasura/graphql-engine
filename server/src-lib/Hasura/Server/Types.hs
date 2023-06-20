@@ -18,6 +18,8 @@ module Hasura.Server.Types
     ApolloFederationStatus (..),
     isApolloFederationEnabled,
     GranularPrometheusMetricsState (..),
+    CloseWebsocketsOnMetadataChangeStatus (..),
+    isCloseWebsocketsOnMetadataChangeStatusEnabled,
     MonadGetPolicies (..),
   )
 where
@@ -84,6 +86,7 @@ data ExperimentalFeature
   | EFBigQueryStringNumericInput
   | EFHideAggregationPredicates
   | EFHideStreamFields
+  | EFGroupByAggregations
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -97,6 +100,7 @@ experimentalFeatureKey = \case
   EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
   EFHideStreamFields -> "hide_stream_fields"
+  EFGroupByAggregations -> "group_by_aggregations"
 
 instance Hashable ExperimentalFeature
 
@@ -179,6 +183,25 @@ instance ToJSON GranularPrometheusMetricsState where
   toJSON = \case
     GranularMetricsOff -> Bool False
     GranularMetricsOn -> Bool True
+
+-- | Whether or not to close websocket connections on metadata change.
+data CloseWebsocketsOnMetadataChangeStatus = CWMCEnabled | CWMCDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData CloseWebsocketsOnMetadataChangeStatus
+
+instance Hashable CloseWebsocketsOnMetadataChangeStatus
+
+instance FromJSON CloseWebsocketsOnMetadataChangeStatus where
+  parseJSON = fmap (bool CWMCDisabled CWMCEnabled) . parseJSON
+
+isCloseWebsocketsOnMetadataChangeStatusEnabled :: CloseWebsocketsOnMetadataChangeStatus -> Bool
+isCloseWebsocketsOnMetadataChangeStatusEnabled = \case
+  CWMCEnabled -> True
+  CWMCDisabled -> False
+
+instance ToJSON CloseWebsocketsOnMetadataChangeStatus where
+  toJSON = toJSON . isCloseWebsocketsOnMetadataChangeStatusEnabled
 
 class (Monad m) => MonadGetPolicies m where
   runGetApiTimeLimit ::

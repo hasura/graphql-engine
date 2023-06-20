@@ -7,14 +7,21 @@ export const LimitedFeatureWrapper = ({
   title,
   description,
   id,
+  override,
 }: //
 {
   title: string;
   description: string;
   id: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  override?: boolean;
 }) => {
   const { access: eeLiteAccess } = useEELiteAccess(globals);
+
+  /**
+   * This boolean will override any checks
+   */
+  if (override) return <div>{children}</div>;
 
   /**
    * There are three cases here.

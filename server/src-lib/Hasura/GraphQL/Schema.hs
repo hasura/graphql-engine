@@ -264,7 +264,11 @@ buildSchemaOptions
           if EFHideStreamFields `Set.member` expFeatures
             then Options.Don'tIncludeStreamFields
             else Options.IncludeStreamFields,
-        soBigQueryStringNumericInput = bigqueryStringNumericInput
+        soBigQueryStringNumericInput = bigqueryStringNumericInput,
+        soIncludeGroupByAggregateFields =
+          if EFGroupByAggregations `Set.member` expFeatures
+            then Options.IncludeGroupByAggregateFields
+            else Options.ExcludeGroupByAggregateFields
       }
 
 -- | Build the @QueryHasura@ context for a given role.

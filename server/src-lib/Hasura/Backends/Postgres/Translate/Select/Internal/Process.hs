@@ -236,6 +236,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
                 $ S.toColumnAlias
                 $ toIdentifier fieldName
             )
+        TAFGroupBy _xGroupBy _groupBy -> error "processAnnAggregateSelect: group_by is not yet supported"
         TAFExp e ->
           pure
             ( [],
@@ -264,6 +265,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
         TAFAgg _ -> mempty
         TAFNodes _ annFlds ->
           mkSimilarArrayFields annFlds orderBy
+        TAFGroupBy _xGroupBy _groupBy -> error "similarArrayFields: group_by is not yet supported"
         TAFExp _ -> mempty
 
     mkPermissionLimitSubQuery ::

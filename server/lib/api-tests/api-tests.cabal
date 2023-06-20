@@ -192,6 +192,7 @@ library
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.StoredProceduresSpec
     Test.Queries.VariablesAliasesFragments.AliasesSpec
     Test.Queries.VariablesAliasesFragments.Directives.DirectivesSpec
     Test.Queries.VariablesAliasesFragments.Directives.IncludeAndSkipSpec

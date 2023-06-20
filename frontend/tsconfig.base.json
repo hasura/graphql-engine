@@ -19,6 +19,7 @@
       "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],
       "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.js"],
       "@hasura/internal-plugin": ["libs/nx/internal-plugin/src/index.ts"],
+      "@hasura/open-api-to-graphql": ["libs/open-api-to-graphql/src/index.ts"],
       "storybook-addon-console-env": [
         "libs/nx/storybook-addon-console-env/src/index.ts"
       ],

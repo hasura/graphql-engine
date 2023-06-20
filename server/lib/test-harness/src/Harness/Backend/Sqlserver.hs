@@ -315,6 +315,10 @@ setup :: (HasCallStack) => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
+
+  -- enable open telemetry output in tests
+  GraphqlEngine.postMetadata_ testEnvironment Schema.enableOpenTelemetryCommand
+
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable testEnvironment table

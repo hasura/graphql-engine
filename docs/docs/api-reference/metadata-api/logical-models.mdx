@@ -52,8 +52,9 @@ X-Hasura-Role: admin
 }
 ```
 
-The type of each field can be any valid [PostgreSQL data type](/schema/postgres/postgresql-types.mdx), and each field
-can be marked as nullable or not.
+The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 ### Args syntax {#metadata-pg-track-logical-model-syntax}
 
@@ -180,7 +181,9 @@ X-Hasura-Role: admin
 }
 ```
 
-The type of each field can be any valid SQL Server data type, and each field can be marked as nullable or not.
+The type of each field can be either a SQL Server data type
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 ### Args syntax {#metadata-mssql-track-logical-model-syntax}
 
@@ -307,8 +310,9 @@ X-Hasura-Role: admin
 }
 ```
 
-The type of each field can be any valid [BigQuery data type](/schema/bigquery/bigquery-types.mdx), and each field can be
-marked as nullable or not.
+The type of each field can be either a [BigQuery data type](/schema/bigquery/bigquery-types.mdx)
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 ### Args syntax {#metadata-bigquery-track-logical-model-syntax}
 

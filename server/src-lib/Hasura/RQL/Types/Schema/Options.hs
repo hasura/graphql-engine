@@ -11,6 +11,7 @@ module Hasura.RQL.Types.Schema.Options
     IncludeStreamFields (..),
     IncludeUpdateManyFields (..),
     BigQueryStringNumericInput (..),
+    IncludeGroupByAggregateFields (..),
   )
 where
 
@@ -27,7 +28,8 @@ data SchemaOptions = SchemaOptions
     soIncludeUpdateManyFields :: IncludeUpdateManyFields,
     soIncludeAggregationPredicates :: IncludeAggregationPredicates,
     soIncludeStreamFields :: IncludeStreamFields,
-    soBigQueryStringNumericInput :: BigQueryStringNumericInput
+    soBigQueryStringNumericInput :: BigQueryStringNumericInput,
+    soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields
   }
 
 -- | Should we represent numbers in our responses as numbers, or strings?
@@ -136,4 +138,9 @@ data OptimizePermissionFilters
 data BigQueryStringNumericInput
   = EnableBigQueryStringNumericInput
   | DisableBigQueryStringNumericInput
+  deriving (Eq, Show)
+
+data IncludeGroupByAggregateFields
+  = IncludeGroupByAggregateFields
+  | ExcludeGroupByAggregateFields
   deriving (Eq, Show)

@@ -44,7 +44,12 @@ main = do
   withArgs (optionsHspecArgs options)
     . hspec
     -- we just run a single database container for all tests
-    . aroundAll (TC.withContainers dbContainer)
+    . aroundAll
+      ( TC.withContainers do
+          network <- TC.createNetwork TC.networkRequest
+          database <- dbContainer network
+          pure (network, database)
+      )
     $ spec options
 
 -- | The various tests.
@@ -65,7 +70,7 @@ main = do
 --
 -- This takes a little while, but doesn't require running hordes of queries or
 -- actually loading data, so should be quite reliable.
-spec :: Options -> SpecWith Database
+spec :: Options -> SpecWith (TC.Network, Database)
 spec options = describe "upgrading HGE" do
   let repositoryRoot = optionsRepositoryRoot options
       datasets =
@@ -73,10 +78,10 @@ spec options = describe "upgrading HGE" do
           mkDataset repositoryRoot "huge_schema" 8000
         ]
 
-  it "works with an empty schema" \database -> do
+  it "works with an empty schema" \(network, database) -> do
     databaseSchema <- newSchema database
 
-    baseSchema <- withBaseHge baseVersion databaseSchema \server -> do
+    baseSchema <- withBaseHge network baseVersion databaseSchema \server -> do
       Http.postValue (serverGraphqlUrl server) mempty introspectionQuery
 
     baseSchemaTypeLength <- typeLength baseSchema
@@ -88,14 +93,14 @@ spec options = describe "upgrading HGE" do
     currentSchema `shouldBeYaml` baseSchema
 
   forM_ datasets \dataset -> do
-    it ("works with the " <> show (datasetName dataset) <> " dataset") \database -> do
+    it ("works with the " <> show (datasetName dataset) <> " dataset") \(network, database) -> do
       migrationSql <- datasetMigrationSql dataset
       replaceMetadataCommand <- datasetReplaceMetadataCommand dataset
 
       databaseSchema <- newSchema database
-      runSql (databaseSchemaUrl databaseSchema) migrationSql
+      runSql (databaseSchemaUrlForHost databaseSchema) migrationSql
 
-      baseSchema <- withBaseHge baseVersion databaseSchema \server -> do
+      baseSchema <- withBaseHge network baseVersion databaseSchema \server -> do
         void $ Http.postValue (serverMetadataUrl server) mempty replaceMetadataCommand
         Http.postValue (serverGraphqlUrl server) mempty introspectionQuery
 

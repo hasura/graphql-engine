@@ -1,5 +1,6 @@
 import { routerMiddleware } from 'react-router-redux';
 import { browserHistory } from 'react-router';
+import { listenForStoreMetadataChanges } from './store.utils';
 
 // Since we only use it in dev, this warning doesn't make sense.
 // eslint-disable-next-line import/no-extraneous-dependencies
@@ -23,6 +24,8 @@ export const store = configureStore({
   // Enable redux browser devtools
   devTools: __DEVELOPMENT__,
 });
+
+listenForStoreMetadataChanges(store);
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

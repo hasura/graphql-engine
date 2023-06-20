@@ -27,7 +27,6 @@ module Hasura.Base.Error
     throw429,
     throw500,
     throw500WithDetail,
-    throwConnectionError,
     throw401,
     iResultToMaybe,
     -- Aeson helpers
@@ -53,7 +52,6 @@ module Hasura.Base.Error
     qeInternalLens,
     _ExtraExtensions,
     _ExtraInternal,
-    _HideInconsistencies,
   )
 where
 
@@ -185,21 +183,18 @@ data QErr = QErr
 data QErrExtra
   = ExtraExtensions Value
   | ExtraInternal Value
-  | HideInconsistencies
   deriving (Eq)
 
 instance ToJSON QErrExtra where
   toJSON = \case
     ExtraExtensions v -> v
     ExtraInternal v -> v
-    HideInconsistencies -> Null
 
 instance ToJSON QErr where
   toJSON (QErr jPath _ msg code extra) =
     object $ case extra of
       Just (ExtraInternal e) -> "internal" .= e : err
       Just ExtraExtensions {} -> err
-      Just HideInconsistencies -> []
       Nothing -> err
     where
       err =
@@ -211,7 +206,6 @@ instance ToJSON QErr where
     pairs $ case extra of
       Just (ExtraInternal e) -> err <> "internal" .= e -- Internal comes after all other properties so is the last thing the user sees
       Just ExtraExtensions {} -> err
-      Just HideInconsistencies -> mempty
       Nothing -> err
     where
       err =
@@ -247,7 +241,6 @@ encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
       Just (ExtraExtensions v) -> toEncoding v
       Just (ExtraInternal v) ->
         pairs $ appendIf includeInternal codeAndPath ("internal" .= v)
-      Just HideInconsistencies -> toEncoding Null
     codeAndPath =
       ("path" .= encodeJSONPath jPath)
         <> ("code" .= code)
@@ -341,14 +334,6 @@ internalError = err500 Unexpected
 throw500WithDetail :: (QErrM m) => Text -> Value -> m a
 throw500WithDetail t detail =
   throwError $ (err500 Unexpected t) {qeInternal = Just $ ExtraInternal detail}
-
-throwConnectionError :: (QErrM m) => Text -> m a
-throwConnectionError t =
-  throwError
-    $ (err500 Unexpected t)
-      { qeInternal = Just HideInconsistencies,
-        qeCode = ConnectionNotEstablished
-      }
 
 modifyQErr ::
   (QErrM m) =>

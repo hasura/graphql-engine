@@ -173,25 +173,6 @@ newtype Execute a = Execute
       MonadError ExecuteProblem
     )
 
--- | Big query parameters must be accompanied by an explicit type
--- signature.
-data BigQueryType
-  = DECIMAL
-  | INTEGER
-  | FLOAT
-  | BYTES
-  | STRING
-  | BOOL
-  | ARRAY BigQueryType
-  | GEOGRAPHY
-  | DATE
-  | TIMESTAMP
-  | DATETIME
-  | TIME
-  | JSON
-  | BIGDECIMAL
-  deriving (Show, Eq)
-
 data BigQuery = BigQuery
   { query :: LT.Text,
     parameters :: InsOrdHashMap ParameterName Parameter
@@ -199,7 +180,7 @@ data BigQuery = BigQuery
   deriving (Show)
 
 data Parameter = Parameter
-  { typ :: BigQueryType,
+  { typ :: ScalarType,
     value :: Value
   }
   deriving (Show)
@@ -307,9 +288,9 @@ selectToBigQuery select =
       parameters =
         InsOrdHashMap.fromList
           ( map
-              ( \(int, value) ->
+              ( \(int, (TypedValue typ value)) ->
                   ( ParameterName (LT.toLazyText (ToQuery.paramName int)),
-                    Parameter {typ = valueType value, value}
+                    Parameter {typ, value}
                   )
               )
               (InsOrdHashMap.toList params)
@@ -320,44 +301,27 @@ selectToBigQuery select =
       ToQuery.renderBuilderPretty (ToQuery.fromSelect select)
 
 --------------------------------------------------------------------------------
--- Type system
-
--- | Make a BigQuery type for the given value.
-valueType :: Value -> BigQueryType
-valueType =
-  \case
-    DecimalValue {} -> DECIMAL
-    BigDecimalValue {} -> BIGDECIMAL
-    IntegerValue {} -> INTEGER
-    FloatValue {} -> FLOAT
-    GeographyValue {} -> GEOGRAPHY
-    StringValue {} -> STRING
-    BytesValue {} -> BYTES
-    BoolValue {} -> BOOL
-    DatetimeValue {} -> DATETIME
-    TimeValue {} -> TIME
-    DateValue {} -> DATE
-    TimestampValue {} -> TIMESTAMP
-    JsonValue {} -> JSON
-    ArrayValue values ->
-      ARRAY
-        ( maybe
-            STRING
-            -- Above: If the array is null, it doesn't matter what type
-            -- the element is. So we put STRING.
-            valueType
-            (values V.!? 0)
-            -- Above: We base the type from the first element. Later,
-            -- we could add some kind of sanity check that they are all
-            -- the same type.
-        )
-    NullValue -> STRING
-
--- Above: If the value is null, it doesn't matter what type
--- the element is. So we put STRING.
-
---------------------------------------------------------------------------------
 -- JSON serialization
+
+typeToBigQueryJson :: ScalarType -> J.Value
+typeToBigQueryJson =
+  \case
+    DecimalScalarType -> atomic "NUMERIC"
+    BigDecimalScalarType -> atomic "BIGNUMERIC"
+    IntegerScalarType -> atomic "INTEGER"
+    DateScalarType -> atomic "DATE"
+    TimeScalarType -> atomic "TIME"
+    DatetimeScalarType -> atomic "DATETIME"
+    JsonScalarType -> atomic "JSON"
+    TimestampScalarType -> atomic "TIMESTAMP"
+    FloatScalarType -> atomic "FLOAT"
+    GeographyScalarType -> atomic "GEOGRAPHY"
+    StringScalarType -> atomic "STRING"
+    BytesScalarType -> atomic "BYTES"
+    BoolScalarType -> atomic "BOOL"
+    StructScalarType -> atomic "STRUCT"
+  where
+    atomic ty = J.object ["type" J..= (ty :: Text)]
 
 -- | Make a JSON representation of the type of the given value.
 valueToBigQueryJson :: Value -> J.Value
@@ -365,7 +329,7 @@ valueToBigQueryJson = go
   where
     go =
       \case
-        NullValue -> J.Null -- TODO: I haven't tested whether BigQuery is happy with this null value.
+        NullValue -> J.object [("value", J.Null)]
         DecimalValue i -> J.object ["value" .= i]
         BigDecimalValue i -> J.object ["value" .= i]
         IntegerValue i -> J.object ["value" .= i]
@@ -580,7 +544,7 @@ createQueryJob conn BigQuery {..} = do
                                 ( \(name, Parameter {..}) ->
                                     J.object
                                       [ "name" .= J.toJSON name,
-                                        "parameterType" .= J.toJSON typ,
+                                        "parameterType" .= typeToBigQueryJson typ,
                                         "parameterValue" .= valueToBigQueryJson value
                                       ]
                                 )
@@ -859,26 +823,6 @@ has_v_generic f =
 
 --------------------------------------------------------------------------------
 -- Generic JSON deserialization
-
-instance J.ToJSON BigQueryType where
-  toJSON =
-    \case
-      ARRAY t -> J.object ["type" .= ("ARRAY" :: Text), "arrayType" .= t]
-      DECIMAL -> atomic "NUMERIC"
-      BIGDECIMAL -> atomic "BIGNUMERIC"
-      INTEGER -> atomic "INTEGER"
-      DATE -> atomic "DATE"
-      TIME -> atomic "TIME"
-      DATETIME -> atomic "DATETIME"
-      JSON -> atomic "JSON"
-      TIMESTAMP -> atomic "TIMESTAMP"
-      FLOAT -> atomic "FLOAT"
-      GEOGRAPHY -> atomic "GEOGRAPHY"
-      STRING -> atomic "STRING"
-      BYTES -> atomic "BYTES"
-      BOOL -> atomic "BOOL"
-    where
-      atomic ty = J.object ["type" .= (ty :: Text)]
 
 instance J.FromJSON BigQueryField where
   parseJSON =

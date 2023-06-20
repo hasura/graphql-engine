@@ -23,7 +23,11 @@ export default {
 
 export const Basic: StoryFn<typeof LogicalModelFormInputs> = () => (
   <SimpleForm schema={addLogicalModelValidationSchema} onSubmit={() => {}}>
-    <LogicalModelFormInputs sourceOptions={[]} typeOptions={[]} />
+    <LogicalModelFormInputs
+      logicalModels={[]}
+      sourceOptions={[]}
+      typeOptions={[]}
+    />
   </SimpleForm>
 );
 
@@ -39,10 +43,12 @@ export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
               {
                 name: 'id',
                 type: 'int',
+                typeClass: 'scalar',
               },
               {
                 name: 'first_name',
                 type: 'text',
+                typeClass: 'scalar',
               },
             ],
             name: 'foobar',
@@ -51,6 +57,7 @@ export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
         onSubmit={() => {}}
       >
         <LogicalModelFormInputs
+          logicalModels={[]}
           sourceOptions={[{ value: 'chinook', label: 'chinook' }]}
           typeOptions={['text', 'int']}
         />
@@ -63,14 +70,14 @@ export const WithDefaultValues: StoryObj<typeof LogicalModelFormInputs> = {
 
     await expect(await canvas.findByTestId('name')).toHaveValue('foobar');
     await expect(await canvas.findByTestId('fields[0].name')).toHaveValue('id');
-    await expect(await canvas.findByTestId('fields[0].type')).toHaveValue(
-      'int'
+    await expect(await canvas.findByTestId('fields-input-type-0')).toHaveValue(
+      'scalar:int'
     );
     await expect(await canvas.findByTestId('fields[1].name')).toHaveValue(
       'first_name'
     );
-    await expect(await canvas.findByTestId('fields[1].type')).toHaveValue(
-      'text'
+    await expect(await canvas.findByTestId('fields-input-type-1')).toHaveValue(
+      'scalar:text'
     );
   },
 };

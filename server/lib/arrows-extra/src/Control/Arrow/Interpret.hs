@@ -62,6 +62,7 @@
 -- monadically using this technique.
 module Control.Arrow.Interpret
   ( interpretWriter,
+    interpretWriterT,
   )
 where
 
@@ -81,5 +82,12 @@ import Control.Monad.Trans.Writer
 interpretWriter :: (ArrowWriter w arr) => Writer w a `arr` a
 interpretWriter = proc m -> do
   let (a, w) = runWriter m
+  tellA -< w
+  returnA -< a
+
+-- | 'interpretWriter' for some Kleisli arrow.
+interpretWriterT :: (ArrowKleisli m arr, ArrowWriter w arr) => WriterT w m a `arr` a
+interpretWriterT = proc m -> do
+  (a, w) <- bindA -< runWriterT m
   tellA -< w
   returnA -< a

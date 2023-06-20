@@ -9,7 +9,6 @@ import {
 } from '../../../../new-components/Form';
 // import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
 import Skeleton from 'react-loading-skeleton';
-import { Driver, drivers } from '../../../../dataSources';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
@@ -23,6 +22,8 @@ import { SqlEditorField } from './components/SqlEditorField';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { transformFormOutputToMetadata } from './utils';
+import { useSupportedDrivesForNativeQueries } from '../hook';
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 
 type AddNativeQueryProps = {
   defaultFormValues?: Partial<NativeQueryForm>;
@@ -43,20 +44,28 @@ export const AddNativeQuery = ({
 
   const push = usePushRoute();
 
+  const allowedDrivers = useSupportedDrivesForNativeQueries();
+
   const {
     data: sources,
     isLoading: isSourcesLoading,
     error: sourcesError,
   } = useMetadata(s => {
-    return s.metadata.sources.filter(s => drivers.includes(s.kind as Driver));
+    return s.metadata.sources.filter(s => allowedDrivers.includes(s.kind));
   });
 
   const selectedSource = watch('source');
 
   React.useEffect(() => {
-    // if source changes, reset value for logical model since any previously selected value would be invalid because it's not a diff database
-    setValue('returns', '');
-  }, [selectedSource]);
+    const subscription = watch((value, { name, type }) => {
+      if (name === 'source' && type === 'change') {
+        // onChange fired for the source field
+        // reset the "returns" value if the source changes
+        setValue('returns', '');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const logicalModels = sources?.find(
     s => s.name === selectedSource
@@ -102,6 +111,13 @@ export const AddNativeQuery = ({
       return `Select a logical model...`;
     }
   };
+
+  const { data: isThereBigQueryOrMssqlSource } = useMetadata(
+    m =>
+      !!m.metadata.sources.find(
+        s => s.kind === 'mssql' || s.kind === 'bigquery'
+      )
+  );
 
   /**
    * Options for the data source types
@@ -166,6 +182,16 @@ export const AddNativeQuery = ({
               placeholder="Select a database..."
             />
           </div>
+          <div className="max-w-4xl">
+            {isThereBigQueryOrMssqlSource && (
+              <LimitedFeatureWrapper
+                title="Looking to add Native Queries for SQL Server/Big Query databases?"
+                id="native-queries"
+                description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+              />
+            )}
+          </div>
+
           {isIntrospectionLoading ? (
             <div>
               <Skeleton />
@@ -215,7 +241,7 @@ export const AddNativeQuery = ({
             />
           ) : null}
           <div className="flex flex-row justify-end gap-2">
-            {/* 
+            {/*
               Validate Button will remain hidden until we have more information about how to handle standalone validation
               Slack thread: https://hasurahq.slack.com/archives/C04LV93JNSH/p1682965503376129
           */}

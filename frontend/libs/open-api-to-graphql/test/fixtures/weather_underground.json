@@ -1,0 +1,1229 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1",
+    "title": "Weather Underground API",
+    "description": "Weather Underground provides real-time weather information via the Internet. Weather Underground provides weather reports for cities across the world as well as local weather reports for papers and Web sites. The Weather Underground API allows developers and users to access data from Weather Underground to integrate the data and functionality into other applications. They offer a variety of plans and pricing, though most use is free. Some example API methods include accessing weather information by cities and regions, retrieving forecast information, accessing satellite images, and current conditions by location. A unique feature of this API is the Developer Dashboard. Developers have great insight into usage and errors in real time. Over 80 languages are supported with this API. Finally, the folks at Weather Underground have come up with a cleaver way to allow for rate limit overages via a tool called Raindrops. This gives developers a cushion to avoid denial of service errors due to spikes in API requests.",
+    "contact": {
+      "name": "The Weather Company, LLC",
+      "url": "https://www.wunderground.com/about/contact-us"
+    },
+    "termsOfService": "https://www.wunderground.com/weather/api/d/terms.html",
+    "x-tags": ["Weather", "Conditions", "Forecast"]
+  },
+  "externalDocs": {
+    "url": "https://www.wunderground.com/weather/api/d/docs"
+  },
+  "tags": [
+    {
+      "description": "Weather condition related endpoints",
+      "name": "weather conditions"
+    }
+  ],
+  "paths": {
+    "/{key}/conditions/q/{state}/{place}.json": {
+      "get": {
+        "description": "Get current weather conditions for a given place.",
+        "parameters": [
+          {
+            "description": "The API key of the Weather Underground API",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The state of the place to get weather information for. For example, 'NY'",
+            "in": "path",
+            "name": "state",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The place to get weather information for. For example, 'New York'",
+            "in": "path",
+            "name": "place",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weather conditions",
+            "schema": {
+              "$ref": "#/definitions/WeatherConditions"
+            }
+          }
+        },
+        "tags": ["weather conditions"],
+        "x-apih-advice": {
+          "totalUsageCount": 12,
+          "topQueryParams": null,
+          "topPathParams": [
+            {
+              "paramName": "key",
+              "paramValues": [
+                {
+                  "value": "844ce94be6db44dd",
+                  "count": 1,
+                  "source": [
+                    "https://github.com/jacindaz/chrome-extension-rbm/blob/9e1504963fd3a3a972f951f13441a33c685302ab/javascript/github.js#L3"
+                  ]
+                },
+                {
+                  "value": "{apiKey}",
+                  "count": 1,
+                  "source": [
+                    "https://github.com/gavinblair/weather/blob/16b2f962842bfc533e998bd35f3284ee2ae13685/js/weather.js#L23"
+                  ]
+                }
+              ],
+              "bestSources": null,
+              "count": 2
+            },
+            {
+              "paramName": "state",
+              "paramValues": [
+                {
+                  "value": "MA",
+                  "count": 1,
+                  "source": [
+                    "https://github.com/jacindaz/chrome-extension-rbm/blob/9e1504963fd3a3a972f951f13441a33c685302ab/javascript/github.js#L3"
+                  ]
+                }
+              ],
+              "bestSources": null,
+              "count": 1
+            },
+            {
+              "paramName": "place",
+              "paramValues": [
+                {
+                  "value": "Boston",
+                  "count": 1,
+                  "source": [
+                    "https://github.com/jacindaz/chrome-extension-rbm/blob/9e1504963fd3a3a972f951f13441a33c685302ab/javascript/github.js#L3"
+                  ]
+                }
+              ],
+              "bestSources": null,
+              "count": 1
+            }
+          ],
+          "topPayloadParams": null,
+          "topJQueryAjaxParams": null,
+          "topResponseFields": null
+        }
+      }
+    },
+    "/{key}/forecast/q/{state}/{place}.json": {
+      "get": {
+        "description": "Get the weather forecast for the next 3 days for a given place.",
+        "parameters": [
+          {
+            "description": "The API key of the Weather Underground API",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The state of the place to get weather information for. For example, 'NY'",
+            "in": "path",
+            "name": "state",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The place to get weather information for. For example, 'New York'",
+            "in": "path",
+            "name": "place",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weather forecast",
+            "schema": {
+              "$ref": "#/definitions/WeatherForecast"
+            }
+          }
+        },
+        "tags": ["weather forecast"]
+      }
+    },
+    "/{key}/forecast10days/q/{state}/{place}.json": {
+      "get": {
+        "description": "Get the weather forecast for the next 10 days for a given place.",
+        "parameters": [
+          {
+            "description": "The API key of the Weather Underground API",
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The state of the place to get weather information for. For example, 'NY'",
+            "in": "path",
+            "name": "state",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The place to get weather information for. For example, 'New York'",
+            "in": "path",
+            "name": "place",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Weather forecast",
+            "schema": {
+              "$ref": "#/definitions/WeatherForecast"
+            }
+          }
+        },
+        "tags": ["weather forecast"]
+      }
+    }
+  },
+  "schemes": ["http", "https"],
+  "host": "api.wunderground.com",
+  "basePath": "/api",
+  "x-apih-id": "weather_underground_api",
+  "x-apih-ghusage": {
+    "count": 8106,
+    "topUsages": [
+      {
+        "repository": "zanthrash/yawa",
+        "repoUrl": "https://github.com/zanthrash/yawa",
+        "description": "Demo App for Angular Testing presentation at MidwestJS 2014",
+        "language": "JavaScript",
+        "stargazers": 14,
+        "watchers": 14,
+        "forks": 5,
+        "subscribers": 6,
+        "sources": [
+          "https://github.com/zanthrash/yawa/blob/a3b104d7707930f807ce8189aa05415ef5c81abc/app/scripts/services/Constants.js"
+        ]
+      },
+      {
+        "repository": "kevinmcalear/General_Assembly_Work",
+        "repoUrl": "https://github.com/kevinmcalear/General_Assembly_Work",
+        "description": "The work I did when I was in the Web Development Immersive.",
+        "language": "JavaScript",
+        "stargazers": 5,
+        "watchers": 5,
+        "forks": 7,
+        "subscribers": 2,
+        "sources": [
+          "https://github.com/kevinmcalear/General_Assembly_Work/blob/2911a60d61dc494cebdfe720a993590800d2ddda/w07/d04/Dima/weather.rb"
+        ]
+      },
+      {
+        "repository": "mwagner19446/wdi_work",
+        "repoUrl": "https://github.com/mwagner19446/wdi_work",
+        "description": "A Repository to Store the Work from General Assembly's Web Development Immersive Program (WDI)",
+        "language": "JavaScript",
+        "stargazers": 2,
+        "watchers": 2,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/mwagner19446/wdi_work/blob/6c284df7f87adb75f8e594356393ca456f278360/w07/d04/Dima/weather.rb",
+          "https://github.com/mwagner19446/wdi_work/blob/6c284df7f87adb75f8e594356393ca456f278360/w07/d04/Quincy/weather.rb"
+        ]
+      },
+      {
+        "repository": "boxuk/growify",
+        "repoUrl": "https://github.com/boxuk/growify",
+        "description": "(YRS2013)",
+        "language": "CSS",
+        "stargazers": 2,
+        "watchers": 2,
+        "forks": 1,
+        "subscribers": 33,
+        "sources": [
+          "https://github.com/boxuk/growify/blob/56e13b60f8d61de464198afa3f43f2559586bc04/app/controllers/pages_controller.rb"
+        ]
+      },
+      {
+        "repository": "dasmoose/tundra",
+        "repoUrl": "https://github.com/dasmoose/tundra",
+        "description": "weather where you need it...on the command line",
+        "language": "Ruby",
+        "stargazers": 1,
+        "watchers": 1,
+        "forks": 1,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/dasmoose/tundra/blob/44bea73bb96d3501e8c3f97666d823041d48f348/lib/constants.rb"
+        ]
+      },
+      {
+        "repository": "fplatten/wuapi",
+        "repoUrl": "https://github.com/fplatten/wuapi",
+        "description": "wrapper of weather underground api",
+        "language": "Java",
+        "stargazers": 1,
+        "watchers": 1,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/fplatten/wuapi/blob/18862c05cf73d526cee47c95036f294a962ea55a/src/test/java/com/first/wuapi/JsonToPojoDataServiceConverter.java"
+        ]
+      },
+      {
+        "repository": "kathy-ems/adventure_wear",
+        "repoUrl": "https://github.com/kathy-ems/adventure_wear",
+        "description": "Dress perfectly for every adventure! Helps people determine what they've worn in the past for similar weather conditions for their particular activity",
+        "language": "JavaScript",
+        "stargazers": 1,
+        "watchers": 1,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/kathy-ems/adventure_wear/blob/fb590e2c5b8ca2f5852be8052c5e583ff3f329bc/public/services/weatherData.js"
+        ]
+      },
+      {
+        "repository": "zlegein/thunderdome-talk",
+        "repoUrl": "https://github.com/zlegein/thunderdome-talk",
+        "description": null,
+        "language": "JavaScript",
+        "stargazers": 1,
+        "watchers": 1,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/grunt_demo/app/scripts/main/tide.constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/gulp_demo/src/app/main/tide.constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/npm_build/app/scripts/main/tide.constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/npm_test/app/scripts/main/tide.constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/npm_watch/app/scripts/main/tide.constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/grunt_demo/app/scripts/services/Constants.js",
+          "https://github.com/zlegein/thunderdome-talk/blob/5c8fddff7c04c0ec31dc9aa045f1520e434b62a4/npm_test/app/scripts/services/Constants.js"
+        ]
+      },
+      {
+        "repository": "diegodondiego/weather",
+        "repoUrl": "https://github.com/diegodondiego/weather",
+        "description": "[issgc] java interface to wunderground api",
+        "language": "Java",
+        "stargazers": 1,
+        "watchers": 1,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/diegodondiego/weather/blob/f454123e53680f41f0ddc8e6171250a58e8937c3/cumulus/src/main/java/br/issgc/weather/cumulus/GeneralConstants.java"
+        ]
+      },
+      {
+        "repository": "gostenca/-testandro",
+        "repoUrl": "https://github.com/gostenca/-testandro",
+        "description": null,
+        "language": "Java",
+        "stargazers": 0,
+        "watchers": 0,
+        "forks": 0,
+        "subscribers": 1,
+        "sources": [
+          "https://github.com/gostenca/-testandro/blob/5420d51cf0b225dd18934c0ff5cde05ac21b134b/Test6Fragments/src/org/gostenca/test6fragments/Constants.java",
+          "https://github.com/gostenca/-testandro/blob/5420d51cf0b225dd18934c0ff5cde05ac21b134b/Test7FragmentsWithServices/src/org/gostenca/test7fragments/Constants.java"
+        ]
+      }
+    ]
+  },
+  "x-apih-relationships": [
+    {
+      "relatedApiId": "bitstamp_api",
+      "commonUsages": [
+        {
+          "github_repo_name": "kevinmcalear/General_Assembly_Work",
+          "stargazers_count": 5
+        },
+        {
+          "github_repo_name": "mwagner19446/wdi_work",
+          "stargazers_count": 2
+        },
+        {
+          "github_repo_name": "jsimon727/WDI_Classwork",
+          "stargazers_count": 0
+        },
+        {
+          "github_repo_name": "iliastsangaris/WDI_JAN2014",
+          "stargazers_count": 0
+        }
+      ]
+    },
+    {
+      "relatedApiId": "forecast_v2_api",
+      "commonUsages": [
+        {
+          "github_repo_name": "smlcate/jarvis",
+          "stargazers_count": 0
+        }
+      ]
+    },
+    {
+      "relatedApiId": "job_opportunity_announcements_api",
+      "commonUsages": [
+        {
+          "github_repo_name": "amccartney/compjour-hw",
+          "stargazers_count": 0
+        }
+      ]
+    },
+    {
+      "relatedApiId": "giphy_api",
+      "commonUsages": [
+        {
+          "github_repo_name": "kevinmcalear/General_Assembly_Work",
+          "stargazers_count": 5
+        }
+      ]
+    }
+  ],
+  "x-apih-sdks": [
+    {
+      "name": "wunderground-api",
+      "downloads": {
+        "last-day": 0,
+        "last-month": 46,
+        "last-week": 8
+      },
+      "description": "Wundergroud Api wrapper for node",
+      "url": "https://www.npmjs.com/package/wunderground-api",
+      "repoUrl": "https://github.com/jacksongeller/wunderground-api",
+      "language": "JavaScript",
+      "license": "MIT"
+    },
+    {
+      "name": "wunderground-api-client",
+      "downloads": {
+        "last-day": 2,
+        "last-month": 15,
+        "last-week": 5
+      },
+      "description": "Query the wunderground.com API using Node.js",
+      "url": "https://www.npmjs.com/package/wunderground-api-client",
+      "repoUrl": "http://github.com/lukewendling/wunderground-api-client",
+      "language": "JavaScript"
+    },
+    {
+      "name": "wundernode",
+      "downloads": {
+        "last-day": 6,
+        "last-month": 211,
+        "last-week": 47
+      },
+      "description": "Wunderground API module for nodeJS",
+      "url": "https://www.npmjs.com/package/wundernode",
+      "repoUrl": "git://github.com/evalcrux/wundernode",
+      "language": "JavaScript"
+    },
+    {
+      "name": "wunderground",
+      "downloads": {
+        "last-day": 2,
+        "last-month": 18,
+        "last-week": 6
+      },
+      "description": "a simple wrapper around the wunderground API",
+      "url": "https://www.npmjs.com/package/wunderground",
+      "repoUrl": "https://github.com/mck9235/wunderground",
+      "language": "JavaScript"
+    },
+    {
+      "name": "wunderbar",
+      "downloads": {
+        "last-day": 2,
+        "last-month": 38,
+        "last-week": 16
+      },
+      "description": "Simple interface for the wunderground API.",
+      "url": "https://www.npmjs.com/package/wunderbar",
+      "repoUrl": "https://github.com/wridgers/wunderbar",
+      "language": "JavaScript"
+    },
+    {
+      "name": "node-weatherunderground",
+      "downloads": {
+        "last-day": 6,
+        "last-month": 66,
+        "last-week": 13
+      },
+      "description": "Wundergroud Api wrapper for node",
+      "url": "https://www.npmjs.com/package/node-weatherunderground",
+      "repoUrl": "git+https://github.com/jacksongeller/node-weatherunderground",
+      "language": "JavaScript",
+      "license": "MIT"
+    },
+    {
+      "name": "wgunderound",
+      "downloads": {
+        "last-day": 2,
+        "last-month": 13,
+        "last-week": 5
+      },
+      "description": "Wunderground API module for Node",
+      "url": "https://www.npmjs.com/package/wgunderound",
+      "repoUrl": "git://github.com/technotronicoz/wgunderound",
+      "language": "JavaScript"
+    },
+    {
+      "name": "wundergrounded",
+      "downloads": {
+        "last-day": 10,
+        "last-month": 58,
+        "last-week": 22
+      },
+      "description": "A Node.js module that wraps Weather Underground API's in a flexible, easy-to-use interface. Offers optional request bundling, rate limiting, and caching of responses (all in the name of cutting down on the overall number of HTTP requests).",
+      "url": "https://www.npmjs.com/package/wundergrounded",
+      "repoUrl": "https://github.com/patrickvalle/wundergrounded",
+      "language": "JavaScript",
+      "license": "ISC"
+    },
+    {
+      "name": "wundergroundnode",
+      "downloads": {
+        "last-day": 8,
+        "last-month": 481,
+        "last-week": 77
+      },
+      "description": "Weather Underground chainable API for nodeJS",
+      "url": "https://www.npmjs.com/package/wundergroundnode",
+      "repoUrl": "https://github.com/cendrizzi/wundergroundnode",
+      "language": "JavaScript",
+      "license": "ISC"
+    },
+    {
+      "name": "allthejs",
+      "downloads": {
+        "last-day": 0,
+        "last-month": 17,
+        "last-week": 3
+      },
+      "description": "This package name is not currently in use, but was formerly occupied by another package. To avoid malicious use, npm is hanging on to the package name, but loosely, and we'll probably give it to you if you want it.",
+      "url": "https://www.npmjs.com/package/allthejs",
+      "repoUrl": "git+https://github.com/npm/security-holder",
+      "language": "JavaScript",
+      "license": "ISC"
+    }
+  ],
+  "definitions": {
+    "WeatherConditions": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "termsofService": {
+              "type": "string"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "conditions": {
+                  "type": "integer"
+                }
+              },
+              "required": ["conditions"]
+            }
+          },
+          "required": ["version", "termsofService", "features"]
+        },
+        "current_observation": {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "link": {
+                  "type": "string"
+                }
+              },
+              "required": ["url", "title", "link"]
+            },
+            "display_location": {
+              "type": "object",
+              "properties": {
+                "full": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "state_name": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                },
+                "country_iso3166": {
+                  "type": "string"
+                },
+                "zip": {
+                  "type": "string"
+                },
+                "magic": {
+                  "type": "string"
+                },
+                "wmo": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "string"
+                },
+                "longitude": {
+                  "type": "string"
+                },
+                "elevation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "full",
+                "city",
+                "state",
+                "state_name",
+                "country",
+                "country_iso3166",
+                "zip",
+                "magic",
+                "wmo",
+                "latitude",
+                "longitude",
+                "elevation"
+              ]
+            },
+            "observation_location": {
+              "type": "object",
+              "properties": {
+                "full": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                },
+                "country_iso3166": {
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "string"
+                },
+                "longitude": {
+                  "type": "string"
+                },
+                "elevation": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "full",
+                "city",
+                "state",
+                "country",
+                "country_iso3166",
+                "latitude",
+                "longitude",
+                "elevation"
+              ]
+            },
+            "estimated": {
+              "type": "object",
+              "properties": {}
+            },
+            "station_id": {
+              "type": "string"
+            },
+            "observation_time": {
+              "type": "string"
+            },
+            "observation_time_rfc822": {
+              "type": "string"
+            },
+            "observation_epoch": {
+              "type": "string"
+            },
+            "local_time_rfc822": {
+              "type": "string"
+            },
+            "local_epoch": {
+              "type": "string"
+            },
+            "local_tz_short": {
+              "type": "string"
+            },
+            "local_tz_long": {
+              "type": "string"
+            },
+            "local_tz_offset": {
+              "type": "string"
+            },
+            "weather": {
+              "type": "string"
+            },
+            "temperature_string": {
+              "type": "string"
+            },
+            "temp_f": {
+              "type": "number"
+            },
+            "temp_c": {
+              "type": "number"
+            },
+            "relative_humidity": {
+              "type": "string"
+            },
+            "wind_string": {
+              "type": "string"
+            },
+            "wind_dir": {
+              "type": "string"
+            },
+            "wind_degrees": {
+              "type": "integer"
+            },
+            "wind_mph": {
+              "type": "integer"
+            },
+            "wind_gust_mph": {
+              "type": "integer"
+            },
+            "wind_kph": {
+              "type": "integer"
+            },
+            "wind_gust_kph": {
+              "type": "integer"
+            },
+            "pressure_mb": {
+              "type": "string"
+            },
+            "pressure_in": {
+              "type": "string"
+            },
+            "pressure_trend": {
+              "type": "string"
+            },
+            "dewpoint_string": {
+              "type": "string"
+            },
+            "dewpoint_f": {
+              "type": "integer"
+            },
+            "dewpoint_c": {
+              "type": "integer"
+            },
+            "heat_index_string": {
+              "type": "string"
+            },
+            "heat_index_f": {
+              "type": "string"
+            },
+            "heat_index_c": {
+              "type": "string"
+            },
+            "windchill_string": {
+              "type": "string"
+            },
+            "windchill_f": {
+              "type": "string"
+            },
+            "windchill_c": {
+              "type": "string"
+            },
+            "feelslike_string": {
+              "type": "string"
+            },
+            "feelslike_f": {
+              "type": "string"
+            },
+            "feelslike_c": {
+              "type": "string"
+            },
+            "visibility_mi": {
+              "type": "string"
+            },
+            "visibility_km": {
+              "type": "string"
+            },
+            "solarradiation": {
+              "type": "string"
+            },
+            "UV": {
+              "type": "string"
+            },
+            "precip_1hr_string": {
+              "type": "string"
+            },
+            "precip_1hr_in": {
+              "type": "string"
+            },
+            "precip_1hr_metric": {
+              "type": "string"
+            },
+            "precip_today_string": {
+              "type": "string"
+            },
+            "precip_today_in": {
+              "type": "string"
+            },
+            "precip_today_metric": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            },
+            "icon_url": {
+              "type": "string"
+            },
+            "forecast_url": {
+              "type": "string"
+            },
+            "history_url": {
+              "type": "string"
+            },
+            "ob_url": {
+              "type": "string"
+            },
+            "nowcast": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "image",
+            "display_location",
+            "observation_location",
+            "estimated",
+            "station_id",
+            "observation_time",
+            "observation_time_rfc822",
+            "observation_epoch",
+            "local_time_rfc822",
+            "local_epoch",
+            "local_tz_short",
+            "local_tz_long",
+            "local_tz_offset",
+            "weather",
+            "temperature_string",
+            "temp_f",
+            "temp_c",
+            "relative_humidity",
+            "wind_string",
+            "wind_dir",
+            "wind_degrees",
+            "wind_mph",
+            "wind_gust_mph",
+            "wind_kph",
+            "wind_gust_kph",
+            "pressure_mb",
+            "pressure_in",
+            "pressure_trend",
+            "dewpoint_string",
+            "dewpoint_f",
+            "dewpoint_c",
+            "heat_index_string",
+            "heat_index_f",
+            "heat_index_c",
+            "windchill_string",
+            "windchill_f",
+            "windchill_c",
+            "feelslike_string",
+            "feelslike_f",
+            "feelslike_c",
+            "visibility_mi",
+            "visibility_km",
+            "solarradiation",
+            "UV",
+            "precip_1hr_string",
+            "precip_1hr_in",
+            "precip_1hr_metric",
+            "precip_today_string",
+            "precip_today_in",
+            "precip_today_metric",
+            "icon",
+            "icon_url",
+            "forecast_url",
+            "history_url",
+            "ob_url",
+            "nowcast"
+          ]
+        }
+      },
+      "required": ["response", "current_observation"]
+    },
+    "WeatherForecast": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "termsofService": {
+              "type": "string"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "forecast": {
+                  "type": "integer"
+                }
+              },
+              "required": ["forecast"]
+            }
+          },
+          "required": ["version", "termsofService", "features"]
+        },
+        "forecast": {
+          "type": "object",
+          "properties": {
+            "txt_forecast": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "forecastday": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "period": {
+                        "type": "integer"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "icon_url": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "fcttext": {
+                        "type": "string"
+                      },
+                      "fcttext_metric": {
+                        "type": "string"
+                      },
+                      "pop": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "period",
+                      "icon",
+                      "icon_url",
+                      "title",
+                      "fcttext",
+                      "fcttext_metric",
+                      "pop"
+                    ]
+                  }
+                }
+              },
+              "required": ["date", "forecastday"]
+            },
+            "simpleforecast": {
+              "type": "object",
+              "properties": {
+                "forecastday": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "object",
+                        "properties": {
+                          "epoch": {
+                            "type": "string"
+                          },
+                          "pretty": {
+                            "type": "string"
+                          },
+                          "day": {
+                            "type": "integer"
+                          },
+                          "month": {
+                            "type": "integer"
+                          },
+                          "year": {
+                            "type": "integer"
+                          },
+                          "yday": {
+                            "type": "integer"
+                          },
+                          "hour": {
+                            "type": "integer"
+                          },
+                          "min": {
+                            "type": "string"
+                          },
+                          "sec": {
+                            "type": "integer"
+                          },
+                          "isdst": {
+                            "type": "string"
+                          },
+                          "monthname": {
+                            "type": "string"
+                          },
+                          "monthname_short": {
+                            "type": "string"
+                          },
+                          "weekday_short": {
+                            "type": "string"
+                          },
+                          "weekday": {
+                            "type": "string"
+                          },
+                          "ampm": {
+                            "type": "string"
+                          },
+                          "tz_short": {
+                            "type": "string"
+                          },
+                          "tz_long": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "epoch",
+                          "pretty",
+                          "day",
+                          "month",
+                          "year",
+                          "yday",
+                          "hour",
+                          "min",
+                          "sec",
+                          "isdst",
+                          "monthname",
+                          "monthname_short",
+                          "weekday_short",
+                          "weekday",
+                          "ampm",
+                          "tz_short",
+                          "tz_long"
+                        ]
+                      },
+                      "period": {
+                        "type": "integer"
+                      },
+                      "high": {
+                        "type": "object",
+                        "properties": {
+                          "fahrenheit": {
+                            "type": "string"
+                          },
+                          "celsius": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["fahrenheit", "celsius"]
+                      },
+                      "low": {
+                        "type": "object",
+                        "properties": {
+                          "fahrenheit": {
+                            "type": "string"
+                          },
+                          "celsius": {
+                            "type": "string"
+                          }
+                        },
+                        "required": ["fahrenheit", "celsius"]
+                      },
+                      "conditions": {
+                        "type": "string"
+                      },
+                      "icon": {
+                        "type": "string"
+                      },
+                      "icon_url": {
+                        "type": "string"
+                      },
+                      "skyicon": {
+                        "type": "string"
+                      },
+                      "pop": {
+                        "type": "integer"
+                      },
+                      "qpf_allday": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "number"
+                          },
+                          "mm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "mm"]
+                      },
+                      "qpf_day": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "number"
+                          },
+                          "mm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "mm"]
+                      },
+                      "qpf_night": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "number"
+                          },
+                          "mm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "mm"]
+                      },
+                      "snow_allday": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "integer"
+                          },
+                          "cm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "cm"]
+                      },
+                      "snow_day": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "integer"
+                          },
+                          "cm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "cm"]
+                      },
+                      "snow_night": {
+                        "type": "object",
+                        "properties": {
+                          "in": {
+                            "type": "integer"
+                          },
+                          "cm": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["in", "cm"]
+                      },
+                      "maxwind": {
+                        "type": "object",
+                        "properties": {
+                          "mph": {
+                            "type": "integer"
+                          },
+                          "kph": {
+                            "type": "integer"
+                          },
+                          "dir": {
+                            "type": "string"
+                          },
+                          "degrees": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["mph", "kph", "dir", "degrees"]
+                      },
+                      "avewind": {
+                        "type": "object",
+                        "properties": {
+                          "mph": {
+                            "type": "integer"
+                          },
+                          "kph": {
+                            "type": "integer"
+                          },
+                          "dir": {
+                            "type": "string"
+                          },
+                          "degrees": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": ["mph", "kph", "dir", "degrees"]
+                      },
+                      "avehumidity": {
+                        "type": "integer"
+                      },
+                      "maxhumidity": {
+                        "type": "integer"
+                      },
+                      "minhumidity": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "date",
+                      "period",
+                      "high",
+                      "low",
+                      "conditions",
+                      "icon",
+                      "icon_url",
+                      "skyicon",
+                      "pop",
+                      "qpf_allday",
+                      "qpf_day",
+                      "qpf_night",
+                      "snow_allday",
+                      "snow_day",
+                      "snow_night",
+                      "maxwind",
+                      "avewind",
+                      "avehumidity",
+                      "maxhumidity",
+                      "minhumidity"
+                    ]
+                  }
+                }
+              },
+              "required": ["forecastday"]
+            }
+          },
+          "required": ["txt_forecast", "simpleforecast"]
+        }
+      },
+      "required": ["response", "forecast"]
+    }
+  }
+}

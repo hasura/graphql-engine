@@ -1,36 +1,33 @@
 # ghcid gets its own cache
 GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
 
-# `ghcid` breaks if this flag is on because it does it's qualified imports the
-# Traditional way
-GHC_OPTIONS=-Wno-prepositive-qualified-module
-
-GHCID_FLAGS = --builddir ./dist-newstyle/repl --repl-option -O0 --repl-option -frefinement-level-hole-fits=0 -fobject-code --ghc-options=$(GHC_OPTIONS)
-GHCID_TESTS_FLAGS = --builddir ./dist-newstyle/repl-tests --repl-option -O0 --ghc-options=$(GHC_OPTIONS)
+GHC_OPTIONS=-Wno-prepositive-qualified-module -Wno-missing-export-lists -O0
+CABAL_REPL_FLAGS = --builddir ./dist-newstyle/repl --ghc-options=\"$(GHC_OPTIONS)\"
+GHCID_FLAGS?=--no-height-limit
 
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main"; \
+		HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(CABAL_REPL_TESTS_FLAGS)" \
+			--test "main" $(GHCID_FLAGS); \
 	else \
-  	HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-  		--test "main"; \
+  	HASURA_TEST_BACKEND_TYPE="$(2)" GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) ghcid -c "cabal repl $(1) $(CABAL_REPL_FLAGS)" \ 
+  		--test "main" $(GHCID_FLAGS); \
 	fi
 endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main"; \
+		ghcid -c "DYLD_LIBRARY_PATH=$${DYLD_LIBRARY_PATH:-} cabal repl $(1) $(CABAL_REPL_FLAGS)" \
+			--test "main" $(GHCID_FLAGS); \
 	else \
-		ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
-			--test "main"; \
+		ghcid -c "cabal repl $(1) $(CABAL_REPL_FLAGS)" \
+			--test "main" $(GHCID_FLAGS); \
 	fi
 endef
 
 
 define run_ghcid
-	ghcid -c "cabal repl $(1) $(GHCID_FLAGS)";
+	ghcid -c "cabal repl $(1) $(CABAL_REPL_FLAGS)" $(GHCID_FLAGS);
 endef
 
 .PHONY: ghcid-library

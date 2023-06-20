@@ -91,7 +91,9 @@ emptyServeOptionsRaw =
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing,
       rsoMetadataDefaults = Nothing,
-      rsoApolloFederationStatus = Nothing
+      rsoApolloFederationStatus = Nothing,
+      rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
+      rsoMaxTotalHeaderLength = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec

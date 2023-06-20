@@ -3,11 +3,9 @@ module Harness.Test.Protocol
   )
 where
 
-import GHC.Word (Word16)
 import Harness.TestEnvironment (GlobalTestEnvironment, Protocol (..))
 import Harness.TestEnvironment qualified as TestEnvironment
 import Hasura.Prelude
-import Network.WebSockets qualified as WS
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (Item (..), mapSpecItem_)
 
@@ -25,14 +23,10 @@ withEachProtocol spec = do
 
   let connectWS :: ActionWith GlobalTestEnvironment -> ActionWith GlobalTestEnvironment
       connectWS k globalTestEnvironment = do
-        let port' :: Word16
-            port' = TestEnvironment.port (TestEnvironment.server globalTestEnvironment)
-
-        WS.runClient "127.0.0.1" (fromIntegral port') "/v1/graphql" \connection ->
-          k
-            globalTestEnvironment
-              { TestEnvironment.requestProtocol = WebSocket connection
-              }
+        k
+          globalTestEnvironment
+            { TestEnvironment.requestProtocol = WebSocket
+            }
 
   aroundAllWith connectWS $ describe "Over WebSockets" $ flip mapSpecItem_ spec \item ->
     item {itemExample = \params -> itemExample item params}

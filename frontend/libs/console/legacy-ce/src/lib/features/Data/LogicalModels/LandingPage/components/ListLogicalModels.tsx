@@ -8,6 +8,8 @@ import Skeleton from 'react-loading-skeleton';
 import { Button } from '../../../../../new-components/Button';
 import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
 import { LogicalModelWithSource } from '../../types';
+import { CgDetailsMore } from 'react-icons/cg';
+import { FaTrash } from 'react-icons/fa';
 
 const columnHelper = createColumnHelper<LogicalModelWithSource>();
 
@@ -39,11 +41,15 @@ export const ListLogicalModels = ({
         header: 'Actions',
         cell: ({ cell, row }) => (
           <div className="flex flex-row gap-2">
-            <Button onClick={() => onEditClick(row.original)}>
-              Edit Permissions
+            <Button
+              icon={<CgDetailsMore />}
+              onClick={() => onEditClick(row.original)}
+            >
+              View
             </Button>
             <Button
               mode="destructive"
+              icon={<FaTrash />}
               onClick={() => onRemoveClick(row.original)}
             >
               Remove

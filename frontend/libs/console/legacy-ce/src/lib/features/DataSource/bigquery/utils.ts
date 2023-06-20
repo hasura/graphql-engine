@@ -1,3 +1,4 @@
+import { Capabilities } from '@hasura/dc-api-types';
 import { TableColumn } from '../types';
 
 export const DataTypeToSQLTypeMap: Record<
@@ -17,4 +18,14 @@ export const DataTypeToSQLTypeMap: Record<
   text: [],
   json: [],
   float: [],
+};
+
+export const bigQueryCapabilities: Capabilities = {
+  queries: {
+    foreach: {},
+  },
+  relationships: {},
+  data_schema: {
+    supports_foreign_keys: false,
+  },
 };

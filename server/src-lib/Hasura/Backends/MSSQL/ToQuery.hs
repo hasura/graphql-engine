@@ -584,7 +584,7 @@ fromWith (With withSelects) =
                 CTESelect select ->
                   fromSelect select
                 CTEUnsafeRawSQL nativeQuery ->
-                  renderInterpolatedQuery nativeQuery <+> "\n"
+                  renderInterpolatedQuery nativeQuery
             )
         <+> " )"
 

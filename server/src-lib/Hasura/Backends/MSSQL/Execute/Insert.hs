@@ -162,16 +162,20 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
 
-  -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
-  -- depending on the @if_matched@ field.
-  --
-  -- Affected rows will be inserted into the #inserted temporary table regardless.
-  case ifMatchedField of
-    Nothing -> do
-      -- Insert values into the table using INSERT query
-      let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
-      Tx.unitQueryE mutationMSSQLTxErrorHandler (insertQuery `withQueryTags` queryTags)
-    Just ifMatched -> buildUpsertTx tableName insert ifMatched queryTags
+  -- check we have any values to insert, SQLServer doesn't appear to have a
+  -- nice syntax for "insert no rows please"
+  unless (null $ _aiInsertObject $ _aiData insert)
+    $
+    -- Choose between running a regular @INSERT INTO@ statement or a @MERGE@ statement
+    -- depending on the @if_matched@ field.
+    --
+    -- Affected rows will be inserted into the #inserted temporary table regardless.
+    case ifMatchedField of
+      Nothing -> do
+        -- Insert values into the table using INSERT query
+        let insertQuery = toQueryFlat $ TQ.fromInsert $ TSQL.fromInsert insert
+        Tx.unitQueryE mutationMSSQLTxErrorHandler (insertQuery `withQueryTags` queryTags)
+      Just ifMatched -> buildUpsertTx tableName insert ifMatched queryTags
 
   -- Build a response to the user using the values in the temporary table named #inserted
   (responseText, checkConditionInt) <- buildInsertResponseTx stringifyNum withAlias insert queryTags
@@ -225,6 +229,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
         toQueryFlat
           $ TQ.fromInsertValuesIntoTempTable
           $ TSQL.toInsertValuesIntoTempTable tempTableNameValues insert
+
   Tx.unitQueryE mutationMSSQLTxErrorHandler (insertValuesIntoTempTableQuery `withQueryTags` queryTags)
 
   -- Run the MERGE query and store the mutated rows in #inserted temporary table

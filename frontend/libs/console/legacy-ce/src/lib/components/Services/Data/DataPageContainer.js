@@ -10,7 +10,7 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.module.scss';
 import { isFeatureSupported } from '../../../dataSources';
 import { fetchPostgresVersion } from '../../Main/Actions';
-import { useEnvironmentState } from '../../../features/ConnectDBRedesign/hooks';
+// import { useEnvironmentState } from '../../../features/ConnectDBRedesign/hooks';
 
 const DataPageContainer = ({
   children,
@@ -18,7 +18,7 @@ const DataPageContainer = ({
   dispatch,
   currentDataSource,
 }) => {
-  const { consoleType } = useEnvironmentState();
+  // const { consoleType } = useEnvironmentState();
   useEffect(() => {
     // TODO: handle for different drivers
     if (
@@ -84,25 +84,23 @@ const DataPageContainer = ({
                 SQL
               </Link>
             </li>
-            {consoleType !== 'oss' ? (
-              <li
-                role="presentation"
-                className={
-                  currentLocation.includes('/native-queries') ||
-                  currentLocation.includes('/logical-models')
-                    ? styles.active
-                    : ''
-                }
+            <li
+              role="presentation"
+              className={
+                currentLocation.includes('/native-queries') ||
+                currentLocation.includes('/logical-models')
+                  ? styles.active
+                  : ''
+              }
+            >
+              <Link
+                className={styles.linkBorder}
+                to={`/data/native-queries`}
+                data-test="native-queries"
               >
-                <Link
-                  className={styles.linkBorder}
-                  to={`/data/native-queries`}
-                  data-test="native-queries"
-                >
-                  Native Queries
-                </Link>
-              </li>
-            ) : null}
+                Native Queries
+              </Link>
+            </li>
           </>
         )}
         {migrationTab}

@@ -269,11 +269,10 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
   where
     doNullability ::
       forall a k.
-      ('Input <: k) =>
       G.Nullability ->
-      Parser k n (Maybe a) ->
-      Parser k n (Maybe a)
-    doNullability (G.Nullability True) = fmap join . P.nullable
+      Parser k n a ->
+      Parser k n a
+    doNullability (G.Nullability True) = nullableParser
     doNullability (G.Nullability False) = id
 
     fieldConstructor ::

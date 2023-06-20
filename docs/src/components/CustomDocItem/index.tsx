@@ -5,6 +5,7 @@ import GraphQLWithHasuraBanner from '@site/src/components/GraphQLWithHasuraBanne
 import CustomFooter from '@site/src/components/CustomFooter';
 import styles from './styles.module.scss';
 import { ScrollToFeedbackButton } from '@site/src/components/Feedback/ScrollToFeedbackButton';
+import { Redirect } from '@docusaurus/router';
 
 const CustomDocItem = props => {
   useEffect(() => {
@@ -25,6 +26,12 @@ const CustomDocItem = props => {
       });
     });
   }, []);
+
+  // redirect them to the index if they attempt to directly navigate to a path with
+  // _heading_ in it
+  if (props.location.pathname.includes('_heading_')) {
+    return <Redirect to="/docs/latest/index/" />;
+  }
 
   return (
     <div

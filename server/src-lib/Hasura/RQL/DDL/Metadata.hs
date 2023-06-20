@@ -731,6 +731,7 @@ purgeMetadataObj = \case
           %~ case logicalModelMetadataObjId of
             LMMOPerm roleName permType ->
               dropLogicalModelPermissionInMetadata roleName permType
+            LMMOInnerLogicalModel _ -> id
       SMOTableObj qt tableObj ->
         MetadataModifier
           $ tableMetadataSetter @b source qt

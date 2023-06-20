@@ -73,6 +73,10 @@ export const Select: React.VFC<SelectProps> = ({
         data-test={dataTest}
         data-testid={wrapperProps.dataTestId || name}
         {...register(name)}
+        // onChange={e => {
+        //   register(name).onChange(e);
+
+        // }}
       >
         {placeholder ? (
           <option value="" data-default-selected hidden>

@@ -88,7 +88,7 @@ postgresMetadataPort = 65002
 
 postgresqlMetadataConnectionString :: String
 postgresqlMetadataConnectionString =
-  "postgres://"
+  "postgresql://"
     <> postgresMetadataUser
     <> ":"
     <> postgresMetadataPassword
@@ -142,7 +142,7 @@ citusPort = 65004
 
 citusConnectionString :: UniqueTestId -> Text
 citusConnectionString uniqueTestId =
-  "postgres://"
+  "postgresql://"
     <> citusUser
     <> ":"
     <> citusPassword
@@ -155,7 +155,7 @@ citusConnectionString uniqueTestId =
 
 defaultCitusConnectionString :: Text
 defaultCitusConnectionString =
-  "postgres://"
+  "postgresql://"
     <> citusUser
     <> ":"
     <> citusPassword
@@ -308,7 +308,9 @@ serveOptions =
       soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
       soMetadataDefaults = emptyMetadataDefaults,
-      soApolloFederationStatus = ApolloFederationDisabled
+      soApolloFederationStatus = ApolloFederationDisabled,
+      soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption,
+      soMaxTotalHeaderLength = Init._default Init.maxTotalHeaderLengthOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

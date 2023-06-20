@@ -43,6 +43,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     mkRelationshipFieldValue,
     mkNestedObjFieldValue,
     mkNestedArrayFieldValue,
+    nullFieldValue,
     isNullFieldValue,
     deserializeAsColumnFieldValue,
     deserializeAsRelationshipFieldValue,
@@ -420,6 +421,9 @@ mkNestedObjFieldValue = FieldValue . J.toJSON
 
 mkNestedArrayFieldValue :: [FieldValue] -> FieldValue
 mkNestedArrayFieldValue = FieldValue . J.toJSON
+
+nullFieldValue :: FieldValue
+nullFieldValue = mkColumnFieldValue J.Null
 
 isNullFieldValue :: FieldValue -> Bool
 isNullFieldValue (FieldValue J.Null) = True

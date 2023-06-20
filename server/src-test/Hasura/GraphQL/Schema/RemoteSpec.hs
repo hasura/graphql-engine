@@ -182,6 +182,7 @@ spec :: Spec
 spec = do
   testNoVarExpansionIfNoPreset
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField
+  testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField
   testPartialVarExpansionIfPreset
   testVariableSubstitutionCollision
 
@@ -290,6 +291,41 @@ query($a: A) {
                    $ RemoteJSONValue
                      (G.TypeNamed (G.Nullability True) _A)
                      (J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
+               )
+
+testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField :: Spec
+testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField = it "send null value in the input variable for nullable field" $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+type Query {
+  test(a: Int): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: Int) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+  "a": null
+}
+|]
+  let arg = head $ HashMap.toList $ _fArguments field
+  arg
+    `shouldBe` ( _a,
+                 -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
+                 -- we repackage it as a newly minted JSON variable
+                 G.VVariable
+                   $ RemoteJSONValue
+                     (G.TypeNamed (G.Nullability True) _Int)
+                     (J.Null)
                )
 
 testPartialVarExpansionIfPreset :: Spec
@@ -426,3 +462,6 @@ _b = [G.name|b|]
 
 _x :: G.Name
 _x = [G.name|x|]
+
+_Int :: G.Name
+_Int = [G.name|Int|]

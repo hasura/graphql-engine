@@ -979,7 +979,7 @@ fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
       pure
         ( ExpressionFieldSource
             Aliased
-              { aliasedThing = BigQuery.ValueExpression (StringValue text),
+              { aliasedThing = BigQuery.ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)),
                 aliasedAlias = name
               }
         )
@@ -1019,7 +1019,7 @@ fromAggregateField aggregateField =
               expression' <-
                 case columnField of
                   Ir.SFCol column _columnType -> fmap ColumnExpression (fromColumn column)
-                  Ir.SFExp text -> pure (ValueExpression (StringValue text))
+                  Ir.SFExp text -> pure (ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)))
                   -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
                   Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"
               pure (fieldName, expression')
@@ -1044,7 +1044,7 @@ fromAnnFieldsG existingJoins (Rql.FieldName name, field) =
       pure
         ( ExpressionFieldSource
             Aliased
-              { aliasedThing = BigQuery.ValueExpression (StringValue text),
+              { aliasedThing = BigQuery.ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)),
                 aliasedAlias = name
               }
         )
@@ -1857,7 +1857,7 @@ selectProjectionsFromFieldSources keepJoinField fieldSources = do
     Nothing -> refute (pure NoProjectionFields)
 
 trueExpression :: Expression
-trueExpression = ValueExpression (BoolValue True)
+trueExpression = ValueExpression (TypedValue BoolScalarType (BoolValue True))
 
 --------------------------------------------------------------------------------
 -- Constants

@@ -43,32 +43,50 @@ export default function DocSidebarItemLink({ item, onItemClick, activePath, leve
     }
   }
 
-  return (
-    <li
-      className={clsx(
-        ThemeClassNames.docs.docSidebarItemLink,
-        ThemeClassNames.docs.docSidebarItemLinkLevel(level),
-        'menu__list-item',
-        className,
-        styles[`sidebar_link_wrapper`]
-      )}
-      key={label}
-    >
-      <Link
-        className={clsx('menu__link', !isInternalLink && styles.menuExternalLink, {
-          'menu__link--active': isActive,
-        })}
-        autoAddBaseUrl={autoAddBaseUrl}
-        aria-current={isActive ? 'page' : undefined}
-        to={href}
-        {...(isInternalLink && {
-          onClick: onItemClick ? () => onItemClick(item) : undefined,
-        })}
-        {...props}
+  if (className != 'sidebar_heading') {
+    return (
+      <li
+        className={clsx(
+          ThemeClassNames.docs.docSidebarItemLink,
+          ThemeClassNames.docs.docSidebarItemLinkLevel(level),
+          'menu__list-item',
+          className,
+          styles[`sidebar_link_wrapper`]
+        )}
+        key={label}
+      >
+        <Link
+          className={clsx('menu__link', !isInternalLink && styles.menuExternalLink, {
+            'menu__link--active': isActive,
+          })}
+          autoAddBaseUrl={autoAddBaseUrl}
+          aria-current={isActive ? 'page' : undefined}
+          to={href}
+          {...(isInternalLink && {
+            onClick: onItemClick ? () => onItemClick(item) : undefined,
+          })}
+          {...props}
+        >
+          {label}
+          {addIcons(className)}
+        </Link>
+      </li>
+    );
+  } else {
+    return (
+      <li
+        className={clsx(
+          ThemeClassNames.docs.docSidebarItemLink,
+          ThemeClassNames.docs.docSidebarItemLinkLevel(level),
+          'menu__list-item',
+          className,
+          styles[`sidebar_link_wrapper`]
+        )}
+        key={label}
       >
         {label}
         {addIcons(className)}
-      </Link>
-    </li>
-  );
+      </li>
+    );
+  }
 }

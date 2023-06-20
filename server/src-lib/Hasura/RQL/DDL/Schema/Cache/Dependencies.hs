@@ -176,6 +176,8 @@ pruneDanglingDependents cache =
             SOILogicalModelObj logicalModelName logicalModelObjId -> do
               logicalModel <- resolveLogicalModel sourceInfo logicalModelName
               case logicalModelObjId of
+                LMOInnerLogicalModel inner ->
+                  void $ resolveLogicalModel sourceInfo inner
                 LMOPerm roleName permType -> do
                   let rolePermissions :: Maybe (RolePermInfo b)
                       rolePermissions = logicalModel ^? lmiPermissions . ix roleName
@@ -346,13 +348,16 @@ deleteMetadataObject = \case
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiRelationships %~ InsOrdHashMap.delete name
       SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
-      SMOLogicalModel name -> siLogicalModels %~ HashMap.delete name
+      SMOLogicalModel name ->
+        -- TODO: if I'm inconsistent, delete everything that depends on me
+        siLogicalModels %~ HashMap.delete name
       SMOLogicalModelObj logicalModelName logicalModelObjectId ->
         siLogicalModels . ix logicalModelName %~ case logicalModelObjectId of
           LMMOPerm roleName PTSelect -> lmiPermissions . ix roleName . permSel .~ Nothing
           LMMOPerm roleName PTInsert -> lmiPermissions . ix roleName . permIns .~ Nothing
           LMMOPerm roleName PTUpdate -> lmiPermissions . ix roleName . permUpd .~ Nothing
           LMMOPerm roleName PTDelete -> lmiPermissions . ix roleName . permDel .~ Nothing
+          LMMOInnerLogicalModel _ -> id
       SMOTableObj tableName tableObjectId ->
         siTables . ix tableName %~ case tableObjectId of
           MTORel name _ -> tiCoreInfo . tciFieldInfoMap %~ HashMap.delete (fromRel name)

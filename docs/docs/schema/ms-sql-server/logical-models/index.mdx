@@ -6,24 +6,21 @@ keywords:
   - docs
   - ms sql server
   - schema
-  - logical models
-  - native queries
-  - stored procedures
+  - Logical Models
+  - Native Queries
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import ProductBadge from '@site/src/components/ProductBadge';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # MS SQL Server: Logical Models
-
-<ProductBadge standard pro ee self />
 
 ## Introduction
 
 :::tip Supported from
 
-Native queries are supported from `v2.26.0`.
+Logical Models are supported from `v2.26.0`.
 
 :::
 
@@ -34,19 +31,27 @@ Logical Models are a new approach from Hasura and are currently used by the
 [Stored Procedures](/schema/ms-sql-server/logical-models/stored-procedures.mdx) features to automatically create a
 GraphQL API for a native database query.
 
-You can find examples of how to use logical models in the
+You can find examples of how to use Logical Models in the
 [Native Queries](/schema/ms-sql-server/logical-models/native-queries.mdx) documentation. For a more detailed explanation
 of Logical Models themselves, read on.
 
 ## Tracking a Logical Model
 
-:::info Only creatable via the API
+:::info Only creatable via the Console and API
 
-Currently, Logical Models can only be created via the API. Console and CLI support will be added in a future release.
+Currently, Logical Models can only be created via the API and the Console. CLI support will be added in a future
+release.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 You create a logical model through the metadata API:
@@ -64,7 +69,7 @@ X-Hasura-Role: admin
     "fields": [
       {
         "name": "<field name>",
-        "type": "<SQL Server field type>",
+        "type": "<SQL Server Logical Model type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -77,11 +82,20 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-The type of each field can be any valid SQL Server data type, and each field can be marked as nullable or not.
+The type of each field can be either a SQL Server data type
+or references to other Logical Models, and each field can be marked as nullable or not, see
+[LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 For example, we could track a representation of an article as follows:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -97,24 +111,39 @@ X-Hasura-Role: admin
     "fields": [
       {
         "name": "id",
-        "type": "int"
+        "type":
+          {
+            "scalar": "int"
+          }
       },
       {
         "name": "title",
-        "type": "text"
+        "type":
+          {
+            "scalar": "text"
+          }
       },
       {
         "name": "contents",
-        "type": "text"
+        "type":
+          {
+            "scalar": "text"
+          }
       },
       {
         "name": "published_date",
-        "type": "published_date",
-        "nullable": true
+        "type":
+          {
+            "scalar": "date",
+            "nullable": true
+          },
       },
       {
         "name": "is_published",
-        "type": "bit"
+        "type":
+          {
+            "scalar": "bit"
+          }
       }
     ]
   }
@@ -127,6 +156,13 @@ X-Hasura-Role: admin
 ## Untracking a Logical Model
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/delete-logical-model.png"
+  alt="Delete Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 You can remove a Logical Model the same way:
@@ -158,6 +194,13 @@ will fail. You must remove the Native Query first.
 To untrack the above "article" Logical Model, we would run the following:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+<Thumbnail
+  src="/img/native-queries/delete-logical-model.png"
+  alt="Delete Logical Model"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -177,6 +220,119 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
+## Referencing other Logical Models {#referencing-other-logical-models}
+
+Logical Model fields are allowed to refer to other Logical Models, even recursively, allowing nested data types.
+
+Object or array relationships between Native Queries are an example use of this.
+
+To elaborate on the "article" example above, we can include authors in the data model:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk_atomic",
+  "args":
+  [
+    {
+      "type": "mssql_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "article",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "title",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "contents",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "author_id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "author",
+            "type":
+              {
+                "logical_model": "author",
+              },
+          }
+        ]
+      }
+    },
+    {
+      "type": "mssql_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "author",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "name",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "articles",
+            "type":
+              {
+                "array":
+                  {
+                    "logical_model": "article"
+                  }
+              }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+:::info Wrap calls in `bulk_atomic`
+
+Tracking the Logical Models one-by-one would fail, since `article` refers to `author`, which is not yet defined.
+
+Tracking the Logical Models in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
+
+:::
+
+</TabItem>
+</Tabs>
+
 ## Permissions
 
 By default, a model has no permissions, and only the admin account will be able to use it. You can enable the model by
@@ -188,6 +344,11 @@ The permissions consist of a list of columns that the role can access, and a fil
 can receive.
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/create-permissions.png" alt="Create Logical Model Permissions" width="800px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
@@ -226,6 +387,11 @@ could use the following permission to limit the accessible rows to those where `
 that column from the list (by specifying all other columns).
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/permissions-with-check.png" alt="Permissions with check" width="800px" />
+
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -260,6 +426,9 @@ X-Hasura-Role: admin
 You can also drop permissions:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+  <Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+</TabItem>
 <TabItem value="api" label="API">
 
 ```http
@@ -268,7 +437,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "mssql_drop_logical_model_select_permission",
+  "type": "bigquery_drop_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",
@@ -278,8 +447,5 @@ X-Hasura-Role: admin
 ```
 
 </TabItem>
+
 </Tabs>
-
-## Relationships
-
-Currently, Logical Models do not support relationships. They will be supported in a future release.

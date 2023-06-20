@@ -1,5 +1,7 @@
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "avoid getEnvironment" #-}
 
@@ -11,14 +13,15 @@ module CI
 where
 
 import CI.TH (getVendors)
-import qualified CI.Types as Types
+import CI.Types qualified as Types
 import Control.Arrow ((***))
 import Data.Bool (bool)
 import Data.Foldable (find)
-import qualified Data.HashMap.Strict as HashMap
+import Data.HashMap.Strict qualified as HashMap
 import Data.Maybe (isJust)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import System.Environment (getEnvironment)
+import Prelude
 
 vendors :: [Types.Vendor]
 vendors = $(getVendors)

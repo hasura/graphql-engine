@@ -92,6 +92,7 @@ class
     Representable (ScalarSelectionArguments b),
     Representable (ScalarType b),
     Representable (XComputedField b),
+    Representable (XGroupBy b),
     Representable (TableName b),
     Eq (RawFunctionInfo b),
     Show (RawFunctionInfo b),
@@ -331,6 +332,9 @@ class
 
   type XNestedObjects b :: Type
   type XNestedObjects b = XDisable
+
+  type XGroupBy b :: Type
+  type XGroupBy b = XDisable
 
   -- The result of dynamic connection template resolution
   type ResolvedConnectionTemplate b :: Type

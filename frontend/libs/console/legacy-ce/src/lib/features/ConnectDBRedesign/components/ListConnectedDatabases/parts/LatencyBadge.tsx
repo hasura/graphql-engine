@@ -1,38 +1,92 @@
-import { FaCheck, FaExclamationTriangle, FaMinusCircle } from 'react-icons/fa';
+import { useMemo } from 'react';
+import {
+  FaCheck,
+  FaExclamationCircle,
+  FaExclamationTriangle,
+  FaMinusCircle,
+} from 'react-icons/fa';
+import ToolTip from '../../../../../../lib/components/Common/Tooltip/Tooltip';
+import { Badge, BadgeColor } from '../../../../../new-components/Badge';
 import { Latency } from '../../../types';
-import { Badge } from '../../../../../new-components/Badge';
-import React from 'react';
 
-export const LatencyBadge = ({
-  latencies,
-  dataSourceName,
-}: {
+type AvgLatency = Latency['avgLatency'];
+
+type GetBadgeProps = {
+  color: BadgeColor;
+  icon: React.ReactNode;
+  label: string;
+};
+
+type LatencyBadgeProps = {
   latencies: Latency[];
   dataSourceName: string;
-}) => {
-  const currentDataSourceLatencyInfo = latencies.find(
-    latencyInfo => latencyInfo.dataSourceName === dataSourceName
+};
+
+const getMessage = (avgLatency: AvgLatency) =>
+  `Latency: ${Math.ceil(avgLatency)} ms`;
+
+const getBadgeProps = (avgLatency: AvgLatency): GetBadgeProps => {
+  if (avgLatency >= 200) {
+    return {
+      color: 'red',
+      icon: <FaExclamationTriangle className="mr-xs" />,
+      label: 'Elevated Latency',
+    };
+  }
+
+  if (avgLatency >= 100 && avgLatency < 200) {
+    return {
+      color: 'yellow',
+      icon: <FaMinusCircle className="mr-xs" />,
+      label: 'Acceptable',
+    };
+  }
+
+  if (avgLatency > 0) {
+    return {
+      color: 'green',
+      icon: <FaCheck className="mr-xs" />,
+      label: 'Connection',
+    };
+  }
+
+  return {
+    color: 'light-gray',
+    icon: <FaExclamationCircle className="mr-xs" />,
+    label: 'Failed to get latency',
+  };
+};
+
+export const LatencyBadge = ({
+  latencies = [],
+  dataSourceName,
+}: LatencyBadgeProps) => {
+  const { avgLatency, hasError } = useMemo(
+    () => ({
+      avgLatency:
+        latencies.find(
+          latencyInfo => latencyInfo.dataSourceName === dataSourceName
+        )?.avgLatency || 0,
+      hasError: latencies.find(
+        latencyInfo =>
+          latencyInfo.dataSourceName === dataSourceName && !!latencyInfo.error
+      ),
+    }),
+    [latencies, dataSourceName]
   );
 
-  if (!currentDataSourceLatencyInfo) return null;
+  if (!avgLatency && !hasError) {
+    return null;
+  }
 
-  if (currentDataSourceLatencyInfo.avgLatency < 100)
-    return (
-      <Badge color="green">
-        <FaCheck className="mr-xs" /> Connection
-      </Badge>
-    );
-
-  if (currentDataSourceLatencyInfo.avgLatency < 200)
-    return (
-      <Badge color="yellow">
-        <FaMinusCircle className="mr-xs" /> Acceptable
-      </Badge>
-    );
+  const message = getMessage(avgLatency);
+  const badgeProps = getBadgeProps(avgLatency);
 
   return (
-    <Badge color="red">
-      <FaExclamationTriangle className="mr-xs" /> Elevated Latency
-    </Badge>
+    <ToolTip message={message} placement="top">
+      <Badge color={badgeProps.color}>
+        {badgeProps.icon} {badgeProps.label}
+      </Badge>
+    </ToolTip>
   );
 };

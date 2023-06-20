@@ -187,6 +187,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
           service="modify-trigger"
           saveFunc={save}
           expandCallback={reset}
+          dataTest="edit-operations"
         />
       </div>
     </div>

@@ -2,6 +2,7 @@ module Hasura.Server.Auth.JWT.Internal
   ( parseEdDSAKey,
     parseHmacKey,
     parseRsaKey,
+    parseEsKey,
   )
 where
 
@@ -42,6 +43,12 @@ parseRsaKey key = do
 
 parseEdDSAKey :: Text -> Either Text JWK
 parseEdDSAKey key = do
+  let res = fromRawPem (unUTF8 $ fromText key)
+      err e = "Could not decode PEM: " <> e
+  onLeft res (Left . err)
+
+parseEsKey :: Text -> Either Text JWK
+parseEsKey key = do
   let res = fromRawPem (unUTF8 $ fromText key)
       err e = "Could not decode PEM: " <> e
   onLeft res (Left . err)
@@ -92,7 +99,8 @@ fromX509Pem s = do
   case pubKey of
     X509.PubKeyRSA pk -> return $ X509.PubKeyRSA pk
     X509.PubKeyEd25519 pk -> return $ X509.PubKeyEd25519 pk
-    _ -> Left "Could not decode RSA or EdDSA public key from x509 cert"
+    X509.PubKeyEC pk -> return $ X509.PubKeyEC pk
+    _ -> Left "Could not decode RSA, EdDSA or EC public key from x509 cert"
 
 pubKeyToJwk :: X509.PubKey -> Either Text JWK
 pubKeyToJwk pubKey = do
@@ -104,6 +112,11 @@ pubKeyToJwk pubKey = do
         return $ fromKeyMaterial $ RSAKeyMaterial (rsaKeyParams n e)
       X509.PubKeyEd25519 pubKeyEd ->
         return $ fromKeyMaterial $ OKPKeyMaterial (Ed25519Key pubKeyEd Nothing)
+      X509.PubKeyEC pubKeyEc ->
+        case ecParametersFromX509 pubKeyEc of
+          Nothing -> Left "Error getting EC parameters from the public key"
+          Just ecKeyParameters ->
+            return $ fromKeyMaterial $ ECKeyMaterial ecKeyParameters
       _ -> Left "This key type is not supported"
     rsaKeyParams n e =
       RSAKeyParameters (Base64Integer n) (Base64Integer e) Nothing

@@ -193,7 +193,7 @@ streamingSubscriptionPollingSpec srcConfig = do
       -- well create a new function with the other variables being set to `mempty`
       mkCohortVariables' = mkCohortVariables mempty mempty mempty mempty
 
-  describe "Streaming subcription poll" $ do
+  describe "Streaming subscription poll" $ do
     cohortId1 <- runIO newCohortId
     (subscriberId1, subscriberId2) <- runIO $ (,) <$> newSubscriberId <*> newSubscriberId
     let subscriber1 = mkSubscriber subscriberId1

@@ -28,6 +28,7 @@
         "main": "apps/console-ce/src/main.tsx",
         "polyfills": "apps/console-ce/src/polyfills.ts",
         "tsConfig": "apps/console-ce/tsconfig.app.json",
+        "buildLibsFromSource": false,
         "assets": [
           {
             "glob": "**",

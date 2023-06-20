@@ -66,6 +66,7 @@ import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
+import Hasura.GraphQL.Transport.WebSocket qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Types qualified as WS
 import Hasura.HTTP
@@ -95,7 +96,7 @@ import Hasura.Server.AppStateRef
   )
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
-import Hasura.Server.Init hiding (checkFeatureFlag)
+import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Middleware (corsMiddleware)
@@ -495,9 +496,10 @@ v1MetadataHandler ::
     UserInfoM m
   ) =>
   ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
+  WS.WebsocketCloseOnMetadataChangeAction ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler schemaCacheRefUpdater query = Tracing.newSpan "Metadata" $ do
+v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
   appContext <- asks hcAppContext
   r <-
@@ -505,6 +507,7 @@ v1MetadataHandler schemaCacheRefUpdater query = Tracing.newSpan "Metadata" $ do
       runMetadataQuery
         appContext
         schemaCache
+        closeWebsocketsOnMetadataChangeAction
         query
   pure $ HttpResponse r []
 
@@ -734,11 +737,10 @@ configApiGetHandler appStateRef = do
     $ do
       AppEnv {..} <- lift askAppEnv
       AppContext {..} <- liftIO $ getAppContext appStateRef
-      let (CheckFeatureFlag checkFeatureFlag) = appEnvCheckFeatureFlag
       featureFlagSettings <-
         traverse
-          (\ff -> (,) ff <$> liftIO (checkFeatureFlag ff))
-          (HashMap.elems (getFeatureFlags featureFlags))
+          (\(ff, desc) -> (ff,desc,) <$> liftIO (runCheckFeatureFlag appEnvCheckFeatureFlag ff))
+          (listKnownFeatureFlags appEnvCheckFeatureFlag)
       mkSpockAction appStateRef encodeQErr id
         $ mkGetHandler
         $ do
@@ -805,6 +807,7 @@ mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
     Spock.spockAsApp
       $ Spock.spockT lowerIO
       $ httpApp setupHook appStateRef appEnv consoleType ekgStore
+      $ WS.mkCloseWebsocketsOnMetadataChangeAction (WS._wseServer wsServerEnv)
 
   let wsServerApp = WS.createWSServerApp (_lsEnabledLogTypes appEnvLoggingSettings) wsServerEnv appEnvWebSocketConnectionInitTimeout appEnvLicenseKeyCache
       stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -846,8 +849,9 @@ httpApp ::
   AppEnv ->
   ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
+  WS.WebsocketCloseOnMetadataChangeAction ->
   Spock.SpockT m ()
-httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
+httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOnMetadataChangeAction = do
   -- Additional spock action to run
   setupHook appStateRef
 
@@ -970,7 +974,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore = do
       $ spockAction encodeQErr id
       $ mkPostHandler
       $ fmap (emptyHttpLogGraphQLInfo,)
-      <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater)
+      <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater closeWebsocketsOnMetadataChangeAction)
 
   Spock.post "v2/query" $ do
     onlyWhenApiEnabled isMetadataEnabled appStateRef

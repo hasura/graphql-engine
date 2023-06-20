@@ -1,0 +1,58 @@
+---
+slug: index
+description: Hasura MongoDB database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - mongodb
+  - nosql
+  - olap
+  - oltp
+---
+
+# MongoDB
+
+:::tip MongoDB Beta Availability
+
+The Hasura MongoDB connector is currently in `beta` for Hasura Enterprise Edition customers and is available
+from Hasura GraphQL Engine `v2.27.0` onwards.
+
+Hasura Cloud support for MongoDB will be coming soon. Once the MongoDB connector is generally available (GA), it will be
+available **only** for Hasura Cloud Enterprise and Enterprise Edition customers.
+
+:::
+
+## Introduction
+
+Hasura supports connecting to a [MongoDB](https://www.mongodb.com/) service to automatically build a GraphQL API based
+on its validation schema.
+
+## Get Started
+
+To try Hasura with MongoDB, you'll need a new or existing MongoDB instance (either self-hosted, or available through
+MongoDB Atlas).
+
+You can currently get started with Hasura and MongoDB using [Docker](/databases/mongodb/docker.mdx).
+
+## Keep up to date
+
+:::info Note
+
+Currently, Hasura supports read-only queries on MongoDB.<br/> Other limitations which are actively on the roadmap and
+will be supported soon include:
+
+- Embedded document queries and permissions.
+- Cross-Collection relationships (executed within the database).
+- Logical models to support schema customization and bespoke query execution.
+
+:::
+
+If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
+
+## Know more
+
+- [Get started](/databases/mongodb/docker.mdx)

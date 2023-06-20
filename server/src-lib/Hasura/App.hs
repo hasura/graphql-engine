@@ -478,9 +478,10 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvWebSocketKeepAlive = soWebSocketKeepAlive,
           appEnvWebSocketConnectionInitTimeout = soWebSocketConnectionInitTimeout,
           appEnvGracefulShutdownTimeout = soGracefulShutdownTimeout,
-          appEnvCheckFeatureFlag = CheckFeatureFlag $ checkFeatureFlag env,
+          appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,
-          appEnvLicenseKeyCache = Nothing
+          appEnvLicenseKeyCache = Nothing,
+          appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength
         }
     )
 
@@ -508,6 +509,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
           soDefaultNamingConvention
           soMetadataDefaults
           soApolloFederationStatus
+          soCloseWebsocketsOnMetadataChangeStatus
 
   -- Create the schema cache
   rebuildableSchemaCache <-
@@ -665,7 +667,7 @@ instance HasAppEnv AppM where
 
 instance HasFeatureFlagChecker AppM where
   checkFlag f = AppM do
-    CheckFeatureFlag runCheckFeatureFlag <- asks appEnvCheckFeatureFlag
+    CheckFeatureFlag {runCheckFeatureFlag} <- asks appEnvCheckFeatureFlag
     liftIO $ runCheckFeatureFlag f
 
 instance HasCacheStaticConfig AppM where
@@ -938,6 +940,7 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
           . Warp.setInstallShutdownHandler shutdownHandler
           . Warp.setBeforeMainLoop (for_ startupStatusHook id)
           . setForkIOWithMetrics
+          . Warp.setMaxTotalHeaderLength appEnvMaxTotalHeaderLength
           $ Warp.defaultSettings
 
       setForkIOWithMetrics :: Warp.Settings -> Warp.Settings

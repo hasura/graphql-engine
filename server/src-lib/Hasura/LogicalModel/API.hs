@@ -6,21 +6,20 @@ module Hasura.LogicalModel.API
     TrackLogicalModel (..),
     UntrackLogicalModel (..),
     runGetLogicalModel,
-    runTrackLogicalModel,
-    runUntrackLogicalModel,
+    execTrackLogicalModel,
+    execUntrackLogicalModel,
     dropLogicalModelInMetadata,
     CreateLogicalModelPermission (..),
     DropLogicalModelPermission (..),
     runCreateSelectLogicalModelPermission,
     runDropSelectLogicalModelPermission,
-    getCustomTypes,
     module Hasura.LogicalModel.Types,
   )
 where
 
 import Autodocodec (HasCodec)
 import Autodocodec qualified as AC
-import Control.Lens (Traversal', has, preview, traversed, (^..), (^?))
+import Control.Lens (Traversal', has, preview, (^?))
 import Data.Aeson
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
@@ -28,7 +27,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), lmmSelectPermissions)
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName, logicalModelFieldMapCodec)
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendTag (backendPrefix, backendTag, reify)
@@ -137,50 +135,50 @@ runGetLogicalModel q = do
   metadata <- getMetadata
 
   let logicalModels :: Maybe (LogicalModels b)
-      logicalModels = metadata ^? getCustomTypes (glmSource q)
+      logicalModels = metadata ^? getLogicalModels (glmSource q)
 
   pure (encJFromJValue (InsOrdHashMap.elems <$> logicalModels))
 
-getCustomTypes :: forall b. (Backend b) => SourceName -> Traversal' Metadata (LogicalModels b)
-getCustomTypes sourceName =
+getLogicalModels :: forall b. (Backend b) => SourceName -> Traversal' Metadata (LogicalModels b)
+getLogicalModels sourceName =
   metaSources . ix sourceName . toSourceMetadata . smLogicalModels @b
 
 -- | Handler for the 'track_logical_model' endpoint. The type 'TrackLogicalModel b'
 -- (appearing here in wrapped as 'BackendTrackLogicalModel b' for 'AnyBackend'
 -- compatibility) is defined in 'class LogicalModelMetadata'.
-runTrackLogicalModel ::
+execTrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
-    CacheRWM m,
-    MetadataM m,
     MonadError QErr m
   ) =>
   TrackLogicalModel b ->
-  m EncJSON
-runTrackLogicalModel trackLogicalModelRequest = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execTrackLogicalModel trackLogicalModelRequest metadata = do
+  -- validation
   sourceMetadata <-
     maybe (throw400 NotFound $ "Source " <> sourceNameToText source <> " not found.") pure
       . preview (metaSources . ix source . toSourceMetadata @b)
-      =<< getMetadata
+      $ metadata
 
-  let (metadata :: LogicalModelMetadata b) = logicalModelTrackToMetadata trackLogicalModelRequest
-
-  let fieldName = _lmmName metadata
-      metadataObj =
-        MOSourceObjId source
-          $ AB.mkAnyBackend
-          $ SMOLogicalModel @b fieldName
+  let (lmMetadata :: LogicalModelMetadata b) = logicalModelTrackToMetadata trackLogicalModelRequest
+      fieldName = _lmmName lmMetadata
       existingLogicalModels = InsOrdHashMap.keys (_smLogicalModels sourceMetadata)
 
   when (fieldName `elem` existingLogicalModels) do
     throw400 AlreadyTracked $ "Logical model '" <> toTxt fieldName <> "' is already tracked."
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ (metaSources . ix source . toSourceMetadata @b . smLogicalModels)
-    %~ InsOrdHashMap.insert fieldName metadata
+  let metadataObj =
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOLogicalModel @b fieldName
 
-  pure successMsg
+  let metadataModifier =
+        MetadataModifier
+          $ (metaSources . ix source . toSourceMetadata @b . smLogicalModels)
+          %~ InsOrdHashMap.insert fieldName lmMetadata
+
+  pure (metadataObj, metadataModifier)
   where
     source = tlmSource trackLogicalModelRequest
 
@@ -208,44 +206,25 @@ instance ToJSON (UntrackLogicalModel b) where
       ]
 
 -- | Handler for the 'untrack_logical_model' endpoint.
-runUntrackLogicalModel ::
+execUntrackLogicalModel ::
   forall b m.
   ( BackendMetadata b,
-    MonadError QErr m,
-    CacheRWM m,
-    MetadataM m
+    MonadError QErr m
   ) =>
   UntrackLogicalModel b ->
-  m EncJSON
-runUntrackLogicalModel q = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execUntrackLogicalModel q metadata = do
   -- we do not check for feature flag here as we always want users to be able
   -- to remove logical models if they'd like
-  assertLogicalModelExists @b source fieldName
+  assertLogicalModelExists @b source fieldName metadata
 
   let metadataObj =
         MOSourceObjId source
           $ AB.mkAnyBackend
           $ SMOLogicalModel @b fieldName
 
-  metadata <- getMetadata
-
-  let nativeQueries :: [NativeQueryMetadata b]
-      nativeQueries = metadata ^.. metaSources . ix source . toSourceMetadata @b . smNativeQueries . traversed
-
-  case find ((== fieldName) . _nqmReturns) nativeQueries of
-    Just NativeQueryMetadata {_nqmRootFieldName} ->
-      throw400 ConstraintViolation
-        $ "Logical model "
-        <> fieldName
-        <<> " still being used by native query "
-        <> _nqmRootFieldName
-        <<> "."
-    Nothing -> pure ()
-
-  buildSchemaCacheFor metadataObj
-    $ dropLogicalModelInMetadata @b source fieldName
-
-  pure successMsg
+  pure (metadataObj, dropLogicalModelInMetadata @b source fieldName)
   where
     source = utlmSource q
     fieldName = utlmName q
@@ -277,7 +256,8 @@ runCreateSelectLogicalModelPermission ::
   CreateLogicalModelPermission SelPerm b ->
   m EncJSON
 runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
-  assertLogicalModelExists @b clmpSource clmpName
+  metadata <- getMetadata
+  assertLogicalModelExists @b clmpSource clmpName metadata
 
   let metadataObj :: MetadataObjId
       metadataObj =
@@ -316,7 +296,8 @@ runDropSelectLogicalModelPermission ::
   DropLogicalModelPermission b ->
   m EncJSON
 runDropSelectLogicalModelPermission DropLogicalModelPermission {..} = do
-  assertLogicalModelExists @b dlmpSource dlmpName
+  metadata <- getMetadata
+  assertLogicalModelExists @b dlmpSource dlmpName metadata
 
   let metadataObj :: MetadataObjId
       metadataObj =
@@ -344,10 +325,9 @@ dropLogicalModelInMetadata source name = do
 
 -- | Check whether a logical model with the given root field name exists for
 -- the given source.
-assertLogicalModelExists :: forall b m. (Backend b, MetadataM m, MonadError QErr m) => SourceName -> LogicalModelName -> m ()
-assertLogicalModelExists sourceName name = do
-  metadata <- getMetadata
-
+assertLogicalModelExists ::
+  forall b m. (Backend b, MonadError QErr m) => SourceName -> LogicalModelName -> Metadata -> m ()
+assertLogicalModelExists sourceName name metadata = do
   let sourceMetadataTraversal :: Traversal' Metadata (SourceMetadata b)
       sourceMetadataTraversal = metaSources . ix sourceName . toSourceMetadata @b
 

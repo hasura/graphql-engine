@@ -1,0 +1,295 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API 7",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3007"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    },
+    {
+      "url": "mqtt://localhost:{port}/{basePath}",
+      "description": "The location of the local MQTT test broker.",
+      "variables": {
+        "port": {
+          "default": "1885"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/user": {
+      "get": {
+        "description": "Return a user.",
+        "responses": {
+          "202": {
+            "description": "A user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/devices": {
+      "get": {
+        "operationId": "findDevices",
+        "description": "Return a device collection.",
+        "responses": {
+          "200": {
+            "description": "A device collection",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "description": "The device collection",
+                  "items": {
+                    "$ref": "#/components/schemas/Device"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createDevice",
+        "description": "Create and return a device.",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DeviceBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeviceInstance"
+          },
+          "default": {
+            "$ref": "#/components/responses/GeneralError"
+          }
+        },
+        "callbacks": {
+          "deviceCreated": {
+            "$ref": "#/components/callbacks/DevicesEvent"
+          }
+        }
+      }
+    },
+    "/devices/{deviceName}": {
+      "get": {
+        "operationId": "findDeviceByName",
+        "description": "Find a device by name.",
+        "parameters": [
+          {
+            "name": "deviceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeviceInstance"
+          },
+          "default": {
+            "$ref": "#/components/responses/GeneralError"
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceDeviceByName",
+        "description": "Replace a device by name.",
+        "parameters": [
+          {
+            "name": "deviceName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/DeviceBody"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/DeviceInstance"
+          },
+          "default": {
+            "$ref": "#/components/responses/GeneralError"
+          }
+        },
+        "callbacks": {
+          "deviceUpdated": {
+            "$ref": "#/components/callbacks/DevicesEvent"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "description": "A user represents a natural person",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "description": "A device is an object connected to the network",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The device name in the network"
+          },
+          "userName": {
+            "type": "string",
+            "description": "The device owner Name"
+          },
+          "status": {
+            "type": "boolean"
+          }
+        },
+        "required": ["name", "userName"]
+      },
+      "Topic": {
+        "type": "object",
+        "description": "A topic is used to listen events",
+        "properties": {
+          "userName": {
+            "type": "string",
+            "description": "The device owner"
+          },
+          "deviceName": {
+            "type": "string",
+            "description": "The device name"
+          },
+          "method": {
+            "type": "string",
+            "description": "The device method to watch",
+            "example": "Equivalent to HTTP methods"
+          }
+        },
+        "required": ["userName", "method"]
+      },
+      "Error": {
+        "type": "object",
+        "description": "A topic is used to listen an event",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          }
+        },
+        "required": ["code", "message"]
+      }
+    },
+    "requestBodies": {
+      "EventsBody": {
+        "description": "Properties to generate the event path",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Topic"
+            }
+          }
+        }
+      },
+      "DeviceBody": {
+        "description": "Device instance to update / create",
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Device"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "DeviceInstance": {
+        "description": "Device instance",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Device"
+            }
+          }
+        }
+      },
+      "GeneralError": {
+        "description": "Error reponse",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "callbacks": {
+      "DevicesEvent": {
+        "/api/{$request.body#/userName}/devices/{$request.body#/method}/+": {
+          "post": {
+            "operationId": "devicesEventListener",
+            "description": "Listen all devices events owned by userName",
+            "requestBody": {
+              "$ref": "#/components/requestBodies/EventsBody"
+            },
+            "responses": {
+              "200": {
+                "$ref": "#/components/responses/DeviceInstance"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -91,7 +91,7 @@ getExeFromEnvVar envVar = do
   return binPath
 
 postgresqlInitialConnectionString :: String
-postgresqlInitialConnectionString = "postgres://hasura:hasura@127.0.0.1:65002/hasura_metadata"
+postgresqlInitialConnectionString = "postgresql://hasura:hasura@127.0.0.1:65002/hasura_metadata"
 
 -- | when running HGE via a binary, what should we pass through from the test's
 -- environment into the fresh HGE?

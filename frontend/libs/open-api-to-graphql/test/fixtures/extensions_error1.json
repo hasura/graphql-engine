@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Extensions Error 1",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Elias Meire",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3002"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/user": {
+      "get": {
+        "description": "Return a user.",
+        "responses": {
+          "202": {
+            "description": "A user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/user"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user2": {
+      "get": {
+        "description": "Return a user2.",
+        "responses": {
+          "202": {
+            "description": "A user2.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/user2"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "user": {
+        "type": "object",
+        "description": "A user represents a natural person",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          }
+        }
+      },
+      "user2": {
+        "type": "object",
+        "description": "A user2 represents a natural person",
+        "x-graphql-type-name": "User",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          }
+        }
+      }
+    }
+  },
+  "security": []
+}

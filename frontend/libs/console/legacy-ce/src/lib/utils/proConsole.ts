@@ -16,10 +16,6 @@ export const isProConsole = (env: ProConsoleEnv) => {
   return false;
 };
 
-export const isProLiteConsole = (env: ProConsoleEnv) => {
-  return env.consoleType === 'pro-lite';
-};
-
 // Commented this function so that it's not used
 // export const isProLiteConsole = (env: ProConsoleEnv) => {
 //   return env.consoleType === 'pro-lite';
@@ -53,7 +49,7 @@ export const isImportFromOpenAPIEnabled = isProConsole;
 export const isDynamicDBRoutingEnabled = isProConsole;
 // isProConsole or isProLiteConsole
 export const isCachingEnabled = (env: ProConsoleEnv) =>
-  isProConsole(env) || isProLiteConsole(env);
+  isProConsole(env) || env.consoleType === 'pro-lite';
 
 export const isEEClassicConsole = () => {
   return window.__env.eeMode || false;

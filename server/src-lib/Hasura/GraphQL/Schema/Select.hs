@@ -268,6 +268,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
 -- Parser for an aggregation selection of a table.
 -- > table_aggregate(limit: 10) {
 -- >   aggregate: table_aggregate_fields
+-- >   group_by(...): table_group_by
 -- >   nodes: [table!]!
 -- > } :: table_aggregate!
 --
@@ -300,6 +301,12 @@ defaultSelectTableAggregate tableInfo fieldName description = runMaybeT $ do
     tableGQLName <- getTableIdentifierName tableInfo
     tableArgsParser <- tableArguments tableInfo
     aggregateParser <- tableAggregationFields tableInfo
+    groupByParser <- groupBy tableInfo
+    let aggregateFields =
+          [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
+            IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
+          ]
+            <> (maybeToList groupByParser)
     let selectionName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName
         aggregationParser =
           P.nonNullableParser
@@ -307,9 +314,7 @@ defaultSelectTableAggregate tableInfo fieldName description = runMaybeT $ do
             <$> P.selectionSet
               selectionName
               (Just $ G.Description $ "aggregated selection of " <>> tableName)
-              [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
-                IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
-              ]
+              aggregateFields
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description tableArgsParser aggregationParser
@@ -322,6 +327,165 @@ defaultSelectTableAggregate tableInfo fieldName description = runMaybeT $ do
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
           }
+
+-- | Table aggregation group by selection
+--
+-- Parser for grouping over a table's rows:
+-- > group_by(
+-- >   keys: [table_group_by_key!]!
+-- > ) {
+-- >   group_key: table_group_by_key_fields
+-- >   aggregate: table_aggregate_fields
+-- > }
+--
+-- Returns 'Nothing' if the feature is disabled, the backend does not support group by
+-- or if no columns are selectable on the table
+groupBy ::
+  forall b r m n.
+  (MonadBuildSchema b r m n) =>
+  TableInfo b ->
+  SchemaT r m (Maybe (FieldParser n (IR.TableAggregateFieldG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+groupBy tableInfo = runMaybeT $ do
+  xGroupBy <- guardGroupByFeatureSupported
+  groupByInputFieldsParser <- groupByInputFields tableInfo
+  namingCase <- retrieve (_rscNamingConvention . _siCustomization @b)
+  let groupByFieldName = applyFieldNameCaseCust namingCase Name._group_by
+
+  selectionSetParser <- lift $ groupBySelectionSet tableInfo
+  P.subselection groupByFieldName (Just "Groups the table by the specified keys") groupByInputFieldsParser selectionSetParser
+    <&> (\(keys, fields) -> IR.TAFGroupBy xGroupBy (IR.GroupByG keys fields))
+    & pure
+  where
+    guardGroupByFeatureSupported :: MaybeT (SchemaT r m) (XGroupBy b)
+    guardGroupByFeatureSupported = do
+      includeGroupByAggregateFields <- retrieve Options.soIncludeGroupByAggregateFields
+      case includeGroupByAggregateFields of
+        Options.IncludeGroupByAggregateFields -> hoistMaybe (groupByExtension @b)
+        Options.ExcludeGroupByAggregateFields -> hoistMaybe Nothing
+
+-- | Parser for the input fields of the group_by field.
+--
+-- These are:
+-- > keys: [table_group_by_key!]!
+--
+-- Fails in 'MaybeT' if there are no selectable columns on the table
+groupByInputFields ::
+  forall b r m n.
+  (MonadBuildSchema b r m n) =>
+  TableInfo b ->
+  MaybeT (SchemaT r m) (InputFieldsParser n [IR.GroupKeyField b])
+groupByInputFields tableInfo = do
+  namingCase <- retrieve (_rscNamingConvention . _siCustomization @b)
+  let keyFieldName = applyFieldNameCaseCust namingCase Name._keys
+  keysFieldValueParser <- groupByKeyField tableInfo
+  pure $ P.field keyFieldName (Just "The keys on which to group by") (P.list keysFieldValueParser)
+
+-- | Parser for the table_group_by_key input type that captures a grouping key
+--
+-- > {
+-- >   column: table_select_column
+-- > }
+--
+-- Fails in 'MaybeT' if there are no selectable columns on the table
+groupByKeyField ::
+  forall b r m n.
+  (MonadBuildSchema b r m n) =>
+  TableInfo b ->
+  MaybeT (SchemaT r m) (Parser 'Input n (IR.GroupKeyField b))
+groupByKeyField tableInfo = do
+  customization <- retrieve (_siCustomization @b)
+  let namingCase = _rscNamingConvention customization
+  let mkTypename = runMkTypename $ _rscTypeNames customization
+  tableGQLName <- getTableIdentifierName tableInfo
+  let groupByKeyTypeName = mkTypename $ applyTypeNameCaseIdentifier namingCase $ mkGroupByKeyTypeName tableGQLName
+  let columnFieldName = applyFieldNameCaseCust namingCase Name._column
+
+  tableColumnsEnumParser <- MaybeT $ tableSelectColumnsEnum tableInfo
+  let groupByKeyFields =
+        (\column -> IR.GKFColumn column)
+          <$> P.field columnFieldName (Just "A column grouping key") tableColumnsEnumParser
+  pure $ P.object groupByKeyTypeName (Just groupByKeyDescription) groupByKeyFields
+  where
+    tableName = tableInfoName tableInfo
+    groupByKeyDescription = G.Description $ "Allows the selection of a grouping key from " <>> tableName
+
+-- | Parser for the selection set type of the group_by field, table_group_by
+--
+-- > {
+-- >   group_key: table_group_by_key_fields
+-- >   aggregate: table_aggregate_fields
+-- > }
+groupBySelectionSet ::
+  forall b r m n.
+  (MonadBuildSchema b r m n) =>
+  TableInfo b ->
+  SchemaT r m (Parser 'Output n (Fields (IR.GroupByField b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+groupBySelectionSet tableInfo = do
+  customization <- retrieve (_siCustomization @b)
+  let namingCase = _rscNamingConvention customization
+  let mkTypename = runMkTypename $ _rscTypeNames customization
+  tableGQLName <- getTableIdentifierName tableInfo
+  let groupByTypeName = mkTypename $ applyTypeNameCaseIdentifier namingCase $ mkGroupByTypeName tableGQLName
+  let aggregateFieldName = applyFieldNameCaseCust namingCase Name._aggregate
+  let groupKeyName = applyFieldNameCaseCust namingCase Name._group_key
+
+  aggregateParser <- tableAggregationFields tableInfo
+  groupByKeyParser <- groupByKeySelectionSet tableInfo
+  P.selectionSet
+    groupByTypeName
+    (Just groupByDescription)
+    [ IR.GBFGroupKey <$> P.subselection_ groupKeyName Nothing groupByKeyParser,
+      IR.GBFAggregate <$> P.subselection_ aggregateFieldName Nothing aggregateParser
+    ]
+    <&> parsedSelectionsToFields IR.GBFExp
+    & P.nonNullableParser
+    & pure
+  where
+    tableName = tableInfoName tableInfo
+    groupByDescription = G.Description $ "Group by fields of " <>> tableName
+
+-- | Parser for the selection set type of the group_key field, table_group_by_key_fields
+--
+-- > {
+-- >   TableColumnA: ColumnScalarType
+-- >   TableColumnB: ColumnScalarType
+-- >   ...
+-- > }
+--
+-- This is not the same as 'defaultTableSelectionSet' because all columns must be nullable
+-- since they can be null if selected but aren't used in the group key, or if a rollup
+-- or cube type of grouping is used, which puts nulls into the group key columns when
+-- rolling up.
+groupByKeySelectionSet ::
+  forall b r m n.
+  (MonadBuildSchema b r m n) =>
+  TableInfo b ->
+  SchemaT r m (Parser 'Output n (Fields (IR.GroupKeyField b)))
+groupByKeySelectionSet tableInfo = do
+  customization <- retrieve (_siCustomization @b)
+  let namingCase = _rscNamingConvention customization
+  let mkTypename = runMkTypename $ _rscTypeNames customization
+  tableGQLName <- getTableIdentifierName tableInfo
+  let groupByKeyFieldsTypeName = mkTypename $ applyTypeNameCaseIdentifier namingCase $ mkGroupByKeyFieldsTypeName tableGQLName
+
+  scalarColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  columnFieldParsers <-
+    for scalarColumns $ \columnInfo -> do
+      let columnFieldName = ciName columnInfo
+      let column = ciColumn columnInfo
+      columnParser' <- columnParser (ciType columnInfo) (G.Nullability True)
+      pure $ (IR.GKFColumn @b column) <$ P.selection_ columnFieldName (ciDescription columnInfo) columnParser'
+
+  P.selectionSet
+    groupByKeyFieldsTypeName
+    (Just groupByKeyFieldsDescription)
+    columnFieldParsers
+    <&> parsedSelectionsToFields IR.GKFExp
+    & P.nonNullableParser
+    & pure
+  where
+    tableName = tableInfoName tableInfo
+    groupByKeyFieldsDescription = G.Description $ "Allows the selection of fields from the grouping key of " <>> tableName
 
 {- Note [Selectability of tables]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

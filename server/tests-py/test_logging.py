@@ -264,7 +264,7 @@ class TestWebsocketLogging:
         tests for the `websocket-log` type. currently tests presence of operation_name
         """
         def _get_ws_server_logs(x):
-            return x['type'] == 'ws-server' and 'metadata' in x['detail']
+            return x['type'] == 'ws-server' and 'metadata' in x['detail'] and type(x['detail']) != str
 
         ws_logs = list(filter(_get_ws_server_logs, logs_from_requests))
         assert len(ws_logs) > 0

@@ -25,8 +25,20 @@ const noPermissionArgs: Partial<
         tables: [],
       },
       fields: [
-        { name: 'one', nullable: false, type: 'text' },
-        { name: 'two', nullable: false, type: 'text' },
+        {
+          name: 'one',
+          type: {
+            scalar: 'text',
+            nullable: false,
+          },
+        },
+        {
+          name: 'two',
+          type: {
+            scalar: 'text',
+            nullable: false,
+          },
+        },
       ],
       name: 'hello_world',
     },
@@ -47,8 +59,20 @@ const existingPermissionArgs: Partial<
         tables: [],
       },
       fields: [
-        { name: 'one', nullable: false, type: 'text' },
-        { name: 'two', nullable: false, type: 'text' },
+        {
+          name: 'one',
+          type: {
+            scalar: 'text',
+            nullable: false,
+          },
+        },
+        {
+          name: 'two',
+          type: {
+            scalar: 'text',
+            nullable: false,
+          },
+        },
       ],
       name: 'hello_world',
       select_permissions: [

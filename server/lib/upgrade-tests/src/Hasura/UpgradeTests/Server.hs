@@ -10,10 +10,16 @@ where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Exception (bracket)
+import Data.Aeson qualified as J
+import Data.Aeson.KeyMap ((!?))
+import Data.Aeson.KeyMap qualified as KeyMap
+import Data.Aeson.Types qualified as J
 import Data.Text qualified as Text
+import Data.Vector qualified as Vector
 import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
+import Hasura.Base.Error (runAesonParser, showQErr)
 import Hasura.Prelude
 import Hasura.Server.Init (ServeOptions (..), unsafePort)
 import Hasura.UpgradeTests.Database
@@ -21,7 +27,6 @@ import Network.Socket qualified as Socket
 import TestContainers qualified as TC
 import TestContainers.Config qualified as TC
 import TestContainers.Monad qualified as TC
-import Unsafe.Coerce (unsafeCoerce)
 
 type Url = String
 
@@ -41,64 +46,94 @@ serverMetadataUrl (Server url) = url <> "/v1/metadata"
 serverQueryUrl :: Server -> Url
 serverQueryUrl (Server url) = url <> "/v2/query"
 
--- | Starts HGE with the given version number, and runs an action.
+-- | Uses Docker to start HGE with the given version number, and runs an action.
 --
 -- It uses the images from Docker Hub, so the version must be released. "latest"
 -- corresponds to the latest released version.
 --
 -- The database will be used as both the metadata and source database.
---
--- The server is run using host networking (and therefore expects a database URL
--- that is host-facing), because 'withCurrentHge' is run as a process directly
--- on the host. These two processes are expected to share a metadata database,
--- and therefore must agree on the source database connection URL.
-withBaseHge :: TC.ImageTag -> DatabaseSchema -> (Server -> IO a) -> IO a
-withBaseHge version (DatabaseSchema schemaUrl) f =
+withBaseHge :: TC.Network -> TC.ImageTag -> DatabaseSchema -> (Server -> IO a) -> IO a
+withBaseHge network version databaseSchema f = do
+  let databaseSchemaUrl = databaseSchemaUrlForContainer databaseSchema
   TC.runTestContainer TC.defaultConfig do
-    port <- liftIO getFreePort
-    _container <-
+    container <-
       TC.run
         $ TC.containerRequest (TC.fromTag ("hasura/graphql-engine:" <> version))
         & TC.setSuffixedName "hge-test-upgrade-base-server"
         & TC.setCmd
           [ "graphql-engine",
             "--database-url",
-            Text.pack schemaUrl,
-            "serve",
-            "--server-port",
-            tshow port
+            Text.pack databaseSchemaUrl,
+            "serve"
           ]
-        & TC.withNetwork hostNetwork
-    let url = "http://localhost:" <> show port
+        & TC.withNetwork network
+        & TC.setExpose [8080]
+    let url = "http://localhost:" <> show (TC.containerPort container 8080)
     liftIO do
       Http.healthCheck $ url <> "/healthz"
+      configureServer url databaseSchemaUrl
       f $ Server url
 
--- | Starts HGE from code, and runs an action.
+-- | Starts HGE in a new thread, and runs an action.
+--
+-- This uses HGE as a library, so the version of HGE is the one that this is
+-- compiled against.
 --
 -- The database will be used as the metadata database. Because this is designed
 -- to be run after 'withBaseHge', it is expected that the metadata is already
 -- configured with a source and some tracked relations.
 withCurrentHge :: DatabaseSchema -> (Server -> IO a) -> IO a
-withCurrentHge (DatabaseSchema schemaUrl) f = do
+withCurrentHge databaseSchema f = do
   port <- getFreePort
+  let databaseSchemaUrl = databaseSchemaUrlForHost databaseSchema
   let serverApp =
         GraphqlEngine.runApp
-          schemaUrl
+          databaseSchemaUrl
           Constants.serveOptions {soPort = unsafePort port}
   Async.withAsync serverApp \_ -> do
     let url = "http://localhost:" <> show port
     Http.healthCheck $ url <> "/healthz"
+    configureServer url databaseSchemaUrl
     f $ Server url
 
--- | This represents the "host" Docker network.
-hostNetwork :: TC.Network
--- Unfortunately, the 'TC.Network' constructor is not exposed, and so we need
--- to cheat to get one. It's a newtype, so it's not too hard.
+-- | Sets the default source's database URL to the given value.
 --
--- A better solution would be to patch the upstream library to expose a
--- 'hostNetwork' function.
-hostNetwork = unsafeCoerce ("host" :: Text)
+-- This leaves the rest of the metadata intact.
+--
+-- This code is incredibly unpleasant. Perhaps it could be improved with Aeson lenses or Autodocodec.
+configureServer :: String -> String -> IO ()
+configureServer serverUrl databaseSchemaUrl = do
+  metadata <- Http.postValue (serverUrl <> "/v1/metadata") mempty $ J.object [("type", "export_metadata"), ("args", J.object mempty)]
+  newMetadata <-
+    either (fail . Text.unpack . showQErr) pure
+      . runExcept
+      $ runAesonParser modifyMetadata metadata
+  void $ Http.postValue (serverUrl <> "/v1/metadata") mempty $ J.object [("type", "replace_metadata"), ("args", J.toJSON newMetadata)]
+  where
+    modifyMetadata :: J.Value -> J.Parser J.Value
+    modifyMetadata metadata = flip (J.withObject "metadata") metadata \metadataObject -> do
+      let sources = fromMaybe (J.Array mempty) (metadataObject !? "sources")
+      -- updating this is unpleasant because it's an array, keyed by a property, not an object
+      newSources <- flip (J.withArray "sources") sources \sourcesArray ->
+        case Vector.findIndex (\case J.Object source -> source !? "name" == Just "default"; _ -> False) sourcesArray of
+          -- if there is a source, update it
+          Just index -> (\newSource -> J.Array $ sourcesArray Vector.// [(index, newSource)]) <$> modifySource (sourcesArray Vector.! index)
+          -- if not, add a new one
+          Nothing -> pure . J.Array $ Vector.snoc sourcesArray defaultSourceValue
+      pure . J.Object $ KeyMap.insert "sources" newSources metadataObject
+
+    modifySource :: J.Value -> J.Parser J.Value
+    modifySource source = flip (J.withObject "source") source \sourceObject ->
+      pure . J.Object $ KeyMap.insert "configuration" configurationValue sourceObject
+
+    configurationValue = J.object [("connection_info", J.object [("database_url", J.String (Text.pack databaseSchemaUrl))])]
+    defaultSourceValue =
+      J.object
+        [ ("name", "default"),
+          ("kind", "postgres"),
+          ("configuration", configurationValue),
+          ("tables", J.Array mempty)
+        ]
 
 -- | Looks for a free port and returns it.
 --

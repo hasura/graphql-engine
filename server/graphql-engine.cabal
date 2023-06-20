@@ -857,7 +857,6 @@ library
                      , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DDL.DataConnector
                      , Hasura.RQL.DDL.Endpoint
-                     , Hasura.RQL.DDL.FeatureFlag
                      , Hasura.RQL.DDL.GraphqlSchemaIntrospection
                      , Hasura.RQL.DDL.InheritedRoles
                      , Hasura.RQL.DDL.Headers
@@ -1135,6 +1134,7 @@ test-suite graphql-engine-tests
     , vector
     , yaml
     , shakespeare
+    , temporary
 
   if !flag(ghci-load-test-with-lib)
     build-depends: graphql-engine
@@ -1221,6 +1221,7 @@ test-suite graphql-engine-tests
     Hasura.Server.VersionSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
+    Hasura.Server.ResourceCheckerSpec
     Hasura.SessionSpec
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec
