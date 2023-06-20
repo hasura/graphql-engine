@@ -895,7 +895,8 @@
                         "type": "boolean"
                     },
                     "type": {
-                        "$ref": "#/components/schemas/ScalarType"
+                        "additionalProperties": true,
+                        "description": "The base scalar type\nA scalar type for BigQuery\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     }
                 },
                 "required": [
