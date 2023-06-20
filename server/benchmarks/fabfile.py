@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import boto3
@@ -281,7 +281,9 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             break
 
         # Install any extra dependencies (TODO: bake these into AMI)
-        c.sudo('apt install -y jq')
+        c.sudo('apt-get update')
+        c.sudo('apt-get upgrade -y')
+        c.sudo('apt-get install -y jq')
 
         # In case our heroic exception handling and cleanup attempts here fail,
         # make sure this instance shuts down (and is terminated, per

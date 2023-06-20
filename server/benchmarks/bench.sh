@@ -256,18 +256,30 @@ function maybe_launch_hasura_container() {
 
 function hasura_wait() {
   # Wait for the graphql-engine under bench to be ready
-  echo -n "Waiting for graphql-engine at $HASURA_URL"
+  wait_time=120
+  echo -n "Waiting for graphql-engine at $HASURA_URL for $wait_time seconds"
   if [ -z "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
     echo -n " (e.g. from 'dev.sh graphql-engine')"
   fi
+  start_time="$(date +%s)"
   until curl -s "$HASURA_URL/v1/query" &>/dev/null; do
+    if [[ $(( "$(date +%s)" - start_time )) -gt "$wait_time" ]]; then
+      echo
+      echo 'Timed out.'
+      if [ -n "$HASURA_CONTAINER_NAME" ]; then
+        echo 'Container logs:'
+        docker logs -f "$HASURA_CONTAINER_NAME" 2>&1 &
+        docker stop "$HASURA_CONTAINER_NAME" || : >/dev/null
+      fi
+      return 1
+    fi
     echo -n '.' && sleep 0.2
   done
-  echo ""
-  echo " Ok"
+  echo
+  echo ' Ok'
   echo -n "Sleeping for an additional $POST_SETUP_SLEEP_TIME seconds as requested... "
   sleep "$POST_SETUP_SLEEP_TIME"
-  echo " Ok"
+  echo ' Ok'
 }
 
 #####################
