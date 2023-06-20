@@ -675,7 +675,7 @@ instance FromJSON ScalarType where
           -- if the type is something like `varchar(127)`, try stripping off the data length
           if T.isInfixOf "(" t
             then parseScalarType (T.takeWhile (\c -> c /= '(') t)
-            else fail $ "Did not recognise scalar type '" <> T.unpack t <> "'"
+            else fail $ "Did not recognize scalar type '" <> T.unpack t <> "'"
   parseJSON _ = fail "expected a string"
 
 instance ToJSON ScalarType where
