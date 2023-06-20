@@ -50,6 +50,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         title: 'Could not fetch latency data!',
         message: 'Something went wrong',
       });
+      setShowAccelerateProjectSection(false);
     },
   });
 
