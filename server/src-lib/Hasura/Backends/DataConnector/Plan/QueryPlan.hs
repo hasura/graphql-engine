@@ -62,13 +62,12 @@ instance Monoid FieldsAndAggregates where
 
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkQueryPlan ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
-  SourceConfig ->
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m (Plan API.QueryRequest API.QueryResponse)
-mkQueryPlan sessionVariables (SourceConfig {}) ir = do
+mkQueryPlan sessionVariables ir = do
   queryRequest <- translateQueryDB ir
   pure $ Plan queryRequest (reshapeResponseToQueryShape ir)
   where
@@ -82,8 +81,8 @@ mkQueryPlan sessionVariables (SourceConfig {}) ir = do
         QDBAggregation aggregateSelect -> translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect
 
 translateAnnSimpleSelectToQueryRequest ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.QueryRequest
@@ -91,8 +90,8 @@ translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect =
   translateAnnSelectToQueryRequest sessionVariables (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) simpleSelect
 
 translateAnnAggregateSelectToQueryRequest ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnAggregateSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.QueryRequest
@@ -100,8 +99,8 @@ translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect =
   translateAnnSelectToQueryRequest sessionVariables (translateTableAggregateFields sessionVariables) aggregateSelect
 
 translateAnnSelectToQueryRequest ::
-  forall m fieldType.
-  (MonadError QErr m) =>
+  forall m r fieldType.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   (TableRelationshipsKey -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
   AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
@@ -164,7 +163,9 @@ mkArgs sessionVariables (Function.FunctionArgsExp ps ns) functionName = do
 translateAnnSelect ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   (TableRelationshipsKey -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT writerOutput m FieldsAndAggregates) ->
@@ -199,7 +200,9 @@ translateAnnSelect sessionVariables translateFieldsAndAggregates entityName sele
 translateOrderBy ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -219,7 +222,9 @@ translateOrderBy sessionVariables sourceName orderByItems = do
 translateOrderByElement ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -288,7 +293,9 @@ mergeOrderByRelations orderByRelationsList =
 translateAnnFieldsWithNoAggregates ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   FieldPrefix ->
@@ -301,7 +308,9 @@ translateAnnFieldsWithNoAggregates sessionVariables fieldNamePrefix sourceName f
 translateAnnFields ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   FieldPrefix ->
@@ -315,7 +324,9 @@ translateAnnFields sessionVariables fieldNamePrefix sourceName fields = do
 translateAnnField ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -383,7 +394,9 @@ translateAnnField sessionVariables sourceTableName = \case
 translateArrayRelationSelect ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -418,7 +431,9 @@ translateArrayRelationSelect sessionVariables sourceName translateFieldsAndAggre
 translateTableAggregateFields ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -430,7 +445,9 @@ translateTableAggregateFields sessionVariables sourceName fields = do
 translateTableAggregateField ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -497,7 +514,9 @@ translateSingleColumnAggregateFunction functionName =
 translateNestedObjectSelect ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->

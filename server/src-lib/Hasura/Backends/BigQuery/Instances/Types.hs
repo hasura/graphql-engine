@@ -60,8 +60,8 @@ instance Backend 'BigQuery where
   textToScalarValue :: Maybe Text -> ScalarValue 'BigQuery
   textToScalarValue = maybe BigQuery.NullValue BigQuery.StringValue
 
-  parseScalarValue :: ScalarType 'BigQuery -> Value -> Either QErr (ScalarValue 'BigQuery)
-  parseScalarValue = BigQuery.parseScalarValue
+  parseScalarValue :: ScalarTypeParsingContext 'BigQuery -> ScalarType 'BigQuery -> Value -> Either QErr (ScalarValue 'BigQuery)
+  parseScalarValue = const BigQuery.parseScalarValue
 
   scalarValueToJSON :: ScalarValue 'BigQuery -> Value
   scalarValueToJSON = error "scalarValueToJSON"

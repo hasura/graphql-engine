@@ -27,11 +27,13 @@ where
 import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalFieldOrNull', optionalFieldWithDefault', requiredField')
 import Autodocodec qualified as AC
 import Autodocodec.Extended (fromEnvCodec)
+import Control.Lens (united)
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
+import Data.Has
 import Data.Text (pack, unpack)
 import Data.Time (localTimeToUTC)
 import Database.MSSQL.Pool qualified as MSPool
@@ -303,6 +305,10 @@ instance Eq MSSQLSourceConfig where
 
 instance ToJSON MSSQLSourceConfig where
   toJSON = toJSON . _mscConnectionString
+
+-- Note: () ~ ScalarTypeParsingContext 'MSSQL but we can't use the type family instance in the Has instance.
+instance Has () MSSQLSourceConfig where
+  hasLens = united
 
 odbcValueToJValue :: ODBC.Value -> J.Value
 odbcValueToJValue = \case

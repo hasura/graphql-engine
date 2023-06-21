@@ -43,10 +43,10 @@ parseCollectableType pgType = \case
   -- Typical value as Aeson's value
   val -> case pgType of
     CollectableTypeScalar cvType ->
-      PSESQLExp . toTxtValue . ColumnValue cvType <$> parseScalarValueColumnType cvType val
+      PSESQLExp . toTxtValue . ColumnValue cvType <$> parseScalarValueColumnTypeWithContext () cvType val
     CollectableTypeArray ofType -> do
       vals <- runAesonParser parseJSON val
-      scalarValues <- parseScalarValuesColumnType ofType vals
+      scalarValues <- parseScalarValuesColumnTypeWithContext () ofType vals
       return
         . PSESQLExp
         $ SETyAnn

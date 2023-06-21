@@ -161,7 +161,7 @@ class
     EventTriggerConf b
 
   parseCollectableType ::
-    (MonadError QErr m) =>
+    (MonadError QErr m, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
     CollectableType (ColumnType b) ->
     Value ->
     m (PartialSQLExp b)

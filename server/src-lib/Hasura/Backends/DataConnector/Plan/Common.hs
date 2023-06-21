@@ -34,7 +34,7 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Types qualified as J
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
-import Data.Has (Has (modifier))
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -165,7 +165,7 @@ data Cardinality
 --------------------------------------------------------------------------------
 
 prepareLiteral ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   UnpreparedValue 'DataConnector ->
   m Literal
@@ -180,34 +180,35 @@ prepareLiteral sessionVariables = \case
     parseSessionVariable sessionVar sessionVarType textValue
 
 parseSessionVariable ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariable ->
   SessionVarType 'DataConnector ->
   Text ->
   m Literal
 parseSessionVariable varName varType varValue = do
+  scalarTypesCapabilities <- asks getter
   case varType of
-    CollectableTypeScalar scalarType@(ScalarType customTypeName _) ->
-      parseCustomValue scalarType (customTypeName <> " JSON value")
-    CollectableTypeArray scalarType@(ScalarType customTypeName _) ->
-      parseCustomArray scalarType ("JSON array of " <> customTypeName <> " JSON values")
+    CollectableTypeScalar scalarType@(ScalarType customTypeName) ->
+      parseCustomValue scalarTypesCapabilities scalarType (customTypeName <> " JSON value")
+    CollectableTypeArray scalarType@(ScalarType customTypeName) ->
+      parseCustomArray scalarTypesCapabilities scalarType ("JSON array of " <> customTypeName <> " JSON values")
   where
-    parseCustomValue :: ScalarType -> Text -> m Literal
-    parseCustomValue scalarType description =
-      case scalarType of
-        ScalarType _ (Just GraphQLString) ->
+    parseCustomValue :: API.ScalarTypesCapabilities -> ScalarType -> Text -> m Literal
+    parseCustomValue scalarTypesCapabilities scalarType description = do
+      case lookupGraphQLType scalarTypesCapabilities scalarType of
+        Just GraphQLString ->
           -- Special case for string: uses literal session variable value rather than trying to parse a JSON string
           pure . ValueLiteral scalarType $ J.String varValue
         _ ->
-          parseValue' (parseValue scalarType) (ValueLiteral scalarType) description
+          parseValue' (parseValue scalarTypesCapabilities scalarType) (ValueLiteral scalarType) description
 
-    parseCustomArray :: ScalarType -> Text -> m Literal
-    parseCustomArray scalarType =
+    parseCustomArray :: API.ScalarTypesCapabilities -> ScalarType -> Text -> m Literal
+    parseCustomArray scalarTypesCapabilities scalarType =
       parseValue' parser (ArrayLiteral scalarType)
       where
         parser :: (J.Value -> J.Parser [J.Value])
-        parser = J.withArray "array of JSON values" (fmap toList . traverse (parseValue scalarType))
+        parser = J.withArray "array of JSON values" (fmap toList . traverse (parseValue scalarTypesCapabilities scalarType))
 
     parseValue' :: (J.Value -> J.Parser a) -> (a -> Literal) -> Text -> m Literal
     parseValue' parser toLiteral description =
@@ -223,7 +224,9 @@ parseSessionVariable varName varType varValue = do
 translateBoolExpToExpression ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -235,7 +238,9 @@ translateBoolExpToExpression sessionVariables sourceName boolExp = do
 translateBoolExp ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
-    MonadError QErr m
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
@@ -280,7 +285,7 @@ removeAlwaysFalseExpression = \case
   other -> Just other
 
 translateOp ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   API.ColumnName ->
   API.ScalarType ->

@@ -369,7 +369,9 @@ class
   getCustomAggregateOperators = const mempty
 
   textToScalarValue :: Maybe Text -> ScalarValue b
-  parseScalarValue :: ScalarType b -> Value -> Either QErr (ScalarValue b)
+
+  parseScalarValue :: ScalarTypeParsingContext b -> ScalarType b -> Value -> Either QErr (ScalarValue b)
+
   scalarValueToJSON :: ScalarValue b -> Value
   functionToTable :: FunctionName b -> TableName b
   tableToFunction :: TableName b -> FunctionName b

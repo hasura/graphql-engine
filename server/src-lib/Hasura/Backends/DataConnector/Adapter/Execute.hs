@@ -53,7 +53,7 @@ instance BackendExecute 'DataConnector where
   type ExecutionMonad 'DataConnector = AgentClientT
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- Plan.mkQueryPlan _uiSession sourceConfig ir
+    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
@@ -65,7 +65,7 @@ instance BackendExecute 'DataConnector where
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- Plan.mkQueryPlan _uiSession sourceConfig ir
+    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       $ mkAnyBackend @'DataConnector
@@ -78,7 +78,7 @@ instance BackendExecute 'DataConnector where
           }
 
   mkDBMutationPlan UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
-    mutationPlan@Plan {..} <- Plan.mkMutationPlan _uiSession mutationDB
+    mutationPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkMutationPlan _uiSession mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
@@ -96,7 +96,7 @@ instance BackendExecute 'DataConnector where
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
   mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
-    remoteRelationshipPlan@Plan {..} <- Plan.mkRemoteRelationshipPlan _uiSession sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
+    remoteRelationshipPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkRemoteRelationshipPlan _uiSession sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo

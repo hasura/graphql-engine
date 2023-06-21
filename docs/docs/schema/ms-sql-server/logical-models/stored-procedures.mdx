@@ -7,7 +7,7 @@ keywords:
   - docs
   - ms sql server
   - schema
-  - Logical Models
+  - logical models
   - stored procedures
 sidebar_class_name: alpha-tag
 ---
@@ -16,7 +16,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# MS SQL Server: stored procedures
+# MS SQL Server: Stored Procedures
 
 <div className="badge-container">
   <ProductBadge standard pro ee self />
@@ -27,11 +27,11 @@ import TabItem from '@theme/TabItem';
 
 :::tip Supported from
 
-stored procedures are supported from `v2.26.0`.
+Stored procedures are supported from `v2.26.0`.
 
 :::
 
-stored procedures can be used to track MS SQL Server
+Stored procedures can be used to track MS SQL Server
 [stored procedures](https://learn.microsoft.com/en-us/sql/relational-databases/stored-procedures/stored-procedures-database-engine)
 and execute them via the Hasura GraphQL Engine.
 
@@ -60,14 +60,41 @@ stored procedure.
 
 We can create a Logical Model representing the results set:
 
-:::info Only creatable via the API
+:::info Only creatable via the CLI oand API
 
-Currently, stored procedures can only be created using the API. Console and CLI support will be added in a future
+Currently, stored procedures can only be created using the CLI or API. Console support will be added in a future
 release.
 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+Add the following to the relevant database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  logical_models:
+    - name: tables
+      fields:
+        TABLE_QUALIFIER:
+          type: sysname
+          nullable: true
+        TABLE_OWNER:
+          type: sysname
+          nullable: true
+        TABLE_NAME:
+          type: sysname
+          nullable: true
+        TABLE_TYPE:
+          type: "varchar(32)"
+          nullable: true
+        REMARKS:
+          type: "varchar(254)"
+          nullable: true
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -127,6 +154,25 @@ database stored procedure and the Logical Model or the arguments, an error will 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+Add the following to the relevant database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  stored_procedures:
+    - stored_procedure:
+        schema: public
+        name: sp_tables
+      configuration:
+        exposed_as: query
+      arguments:
+        table_type:
+          type: varchar
+      returns: tables
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -213,6 +259,24 @@ Note that this Logical Model has no attached permissions and therefore will only
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases.yaml`
+file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<SQL Server field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -246,6 +310,28 @@ X-Hasura-Role: admin
 Once the Logical Model is defined, we can use it to define the query:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="cli" label="CLI">
+
+Add the following to the relevant database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  stored_procedures:
+    - stored_procedure:
+        schema: "<schema name>"
+        name: "<procedure name>"
+      configuration:
+        exposed_as: query
+        custom_name: "<custom name>"
+      arguments:
+        "<argument name>":
+          type: "<SQL Server field type>"
+          nullable: false | true
+          description: "<optional argument description>"
+      returns: "<logical model name>"
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -256,20 +342,20 @@ X-Hasura-Role: admin
 {
   "type": "mssql_track_stored_procedure",
   "args": {
-    "source": <source-name>,
-    "stored_procedure": <name> | { "schema": <schema-name>, "name": <procedure-name> },
+    "source": <source name>,
+    "stored_procedure": <procedure name> | { "schema": <schema name>, "name": <procedure name> },
     "arguments": {
-      <name>: {
-        "type": "<type>",
+      "<argument name>": {
+        "type": "<SQL Server field type>",
         "nullable": false | true,
-        "description": <string>
+        "description": "<optional argument description>"
       }
     },
     "configuration": {
       "exposed_as": "query",
-      "custom_name": <custom-name>
+      "custom_name": <custom name>
     },
-    "returns": <logical-model-name>
+    "returns": <logical model name>
   }
 }
 ```

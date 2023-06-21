@@ -98,7 +98,7 @@ parseCollectableType collectableType = \case
     | isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->
-      PSESQLExp . MT.ValueExpression <$> parseScalarValueColumnType scalarType val
+      PSESQLExp . MT.ValueExpression <$> parseScalarValueColumnTypeWithContext () scalarType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported in MSSQL backend"
 

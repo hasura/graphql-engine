@@ -910,6 +910,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
       firstAndLast = (,) <$> maybeFirst <*> maybeLast
       afterBeforeAndOrderBy = (,,) <$> maybeAfter <*> maybeBefore <*> orderByParser
 
+  scalarTypeParsingContext <- askScalarTypeParsingContext @b
   pure $ do
     whereF <- whereParser
     orderBy <- orderByParser
@@ -921,7 +922,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
           (Just _, Just _) -> parseError "\"after\" and \"before\" are not allowed at once"
           (Just v, Nothing) -> pure $ Just (IR.CSKAfter, v)
           (Nothing, Just v) -> pure $ Just (IR.CSKBefore, v)
-        for rawSplit (uncurry (parseConnectionSplit orderBy'))
+        for rawSplit (uncurry (parseConnectionSplit scalarTypeParsingContext orderBy'))
 
     slice <-
       firstAndLast `P.bindFields` \case
@@ -949,11 +950,12 @@ tableConnectionArgs pkeyColumns tableInfo = do
        in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit ::
+      ScalarTypeParsingContext b ->
       Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b))) ->
       IR.ConnectionSplitKind ->
       BL.ByteString ->
       n (NonEmpty (IR.ConnectionSplit b (IR.UnpreparedValue b)))
-    parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
+    parseConnectionSplit scalarTypeParsingContext maybeOrderBys splitKind cursorSplit = do
       cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
         Nothing -> forM (nonEmptySeqToNonEmptyList pkeyColumns)
@@ -963,7 +965,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
             columnValue <-
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
-            pgValue <- liftQErr $ parseScalarValueColumnType columnType columnValue
+            pgValue <- liftQErr $ parseScalarValueColumnTypeWithContext scalarTypeParsingContext columnType columnValue
             let unresolvedValue = IR.UVParameter IR.FreshVar $ ColumnValue columnType pgValue
             pure
               $ IR.ConnectionSplit splitKind unresolvedValue
@@ -975,7 +977,7 @@ tableConnectionArgs pkeyColumns tableInfo = do
             orderByItemValue <-
               iResultToMaybe (executeJSONPath (map (J.Key . K.fromText) (getPathFromOrderBy annObCol)) cursorValue)
                 `onNothing` throwInvalidCursor
-            pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
+            pgValue <- liftQErr $ parseScalarValueColumnTypeWithContext scalarTypeParsingContext columnType orderByItemValue
             let unresolvedValue = IR.UVParameter IR.FreshVar $ ColumnValue columnType pgValue
             pure
               $ IR.ConnectionSplit splitKind unresolvedValue

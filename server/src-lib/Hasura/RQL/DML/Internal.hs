@@ -205,7 +205,7 @@ valueParserWithCollectableType valBldr pgType val = case pgType of
   CollectableTypeArray ofTy -> do
     -- for arrays, we don't use the prepared builder
     vals <- runAesonParser parseJSON val
-    scalarValues <- parseScalarValuesColumnType ofTy vals
+    scalarValues <- parseScalarValuesColumnTypeWithContext () ofTy vals
     return
       $ S.SETyAnn
         (S.SEArray $ map (toTxtValue . ColumnValue ofTy) scalarValues)
@@ -218,7 +218,7 @@ binRHSBuilder ::
   DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
   preparedArgs <- get
-  scalarValue <- parseScalarValueColumnType colType val
+  scalarValue <- parseScalarValueColumnTypeWithContext () colType val
   put (preparedArgs DS.|> binEncoder scalarValue)
   return $ toPrepParam (DS.length preparedArgs + 1) (unsafePGColumnToBackend colType)
 

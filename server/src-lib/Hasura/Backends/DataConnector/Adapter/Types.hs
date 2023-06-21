@@ -27,7 +27,6 @@ module Hasura.Backends.DataConnector.Adapter.Types
     API.GraphQLType (..),
     ScalarType (..),
     ArgumentExp (..),
-    mkScalarType,
     fromGQLType,
     ExtraTableMetadata (..),
     ExtraColumnMetadata (..),
@@ -44,6 +43,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as J
 import Data.Aeson.Types (parseEither, toJSONKeyText)
 import Data.Environment (Environment)
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
@@ -413,8 +413,8 @@ instance Witch.From OrderDirection API.OrderDirection where
 
 --------------------------------------------------------------------------------
 
-data ScalarType
-  = ScalarType Text (Maybe API.GraphQLType)
+newtype ScalarType
+  = ScalarType Text
   deriving stock (Eq, Generic, Ord, Show)
   deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
 
@@ -422,19 +422,16 @@ instance HasCodec ScalarType where
   codec = AC.named "ScalarType" placeholderCodecViaJSON
 
 instance ToTxt ScalarType where
-  toTxt (ScalarType name _) = name
+  toTxt (ScalarType name) = name
 
 instance ToErrorValue ScalarType where
   toErrorValue = ErrorValue.squote . toTxt
 
 instance Witch.From ScalarType API.ScalarType where
-  from (ScalarType name _) = API.ScalarType name
+  from (ScalarType name) = API.ScalarType name
 
-mkScalarType :: API.Capabilities -> API.ScalarType -> ScalarType
-mkScalarType API.Capabilities {..} apiType@(API.ScalarType name) =
-  ScalarType name graphQLType
-  where
-    graphQLType = HashMap.lookup apiType (API.unScalarTypesCapabilities _cScalarTypes) >>= API._stcGraphQLType
+instance Witch.From API.ScalarType ScalarType where
+  from (API.ScalarType name) = ScalarType name
 
 fromGQLType :: GQL.Name -> API.ScalarType
 fromGQLType typeName =
@@ -459,3 +456,6 @@ data ExtraColumnMetadata = ExtraColumnMetadata
 --------------------------------------------------------------------------------
 
 $(makeLenses ''SourceConfig)
+
+instance Has API.ScalarTypesCapabilities SourceConfig where
+  hasLens = scCapabilities . API.cScalarTypes
