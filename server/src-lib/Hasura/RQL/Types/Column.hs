@@ -12,7 +12,9 @@ module Hasura.RQL.Types.Column
     onlyNumCols,
     isNumCol,
     onlyComparableCols,
+    parseScalarValueColumnTypeWithContext,
     parseScalarValueColumnType,
+    parseScalarValuesColumnTypeWithContext,
     parseScalarValuesColumnType,
     ColumnValue (..),
     ColumnMutability (..),
@@ -46,6 +48,7 @@ import Autodocodec
 import Control.Lens.TH
 import Data.Aeson hiding ((.=))
 import Data.Aeson.TH
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -150,14 +153,16 @@ isEnumColumn (ColumnEnumReference _) = True
 isEnumColumn _ = False
 
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
-parseScalarValueColumnType ::
+parseScalarValueColumnTypeWithContext ::
   forall m b.
   (MonadError QErr m, Backend b) =>
+  ScalarTypeParsingContext b ->
   ColumnType b ->
   Value ->
   m (ScalarValue b)
-parseScalarValueColumnType columnType value = case columnType of
-  ColumnScalar scalarType -> liftEither $ parseScalarValue @b scalarType value
+parseScalarValueColumnTypeWithContext context columnType value = case columnType of
+  ColumnScalar scalarType -> do
+    liftEither $ parseScalarValue @b context scalarType value
   ColumnEnumReference (EnumReference tableName enumValues _) ->
     parseEnumValue =<< decodeValue value
     where
@@ -175,13 +180,36 @@ parseScalarValueColumnType columnType value = case columnType of
             <>> evn
         pure $ textToScalarValue @b $ G.unName <$> enumValueName
 
-parseScalarValuesColumnType ::
+-- | Note: Unconditionally accepts null values and returns 'PGNull'.
+parseScalarValueColumnType ::
+  forall m b r.
+  (MonadError QErr m, Backend b, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
+  ColumnType b ->
+  Value ->
+  m (ScalarValue b)
+parseScalarValueColumnType columnType value = do
+  scalarTypeParsingContext <- asks getter
+  parseScalarValueColumnTypeWithContext scalarTypeParsingContext columnType value
+
+parseScalarValuesColumnTypeWithContext ::
+  forall m b.
   (MonadError QErr m, Backend b) =>
+  ScalarTypeParsingContext b ->
   ColumnType b ->
   [Value] ->
   m [ScalarValue b]
-parseScalarValuesColumnType columnType =
-  indexedMapM (parseScalarValueColumnType columnType)
+parseScalarValuesColumnTypeWithContext context columnType =
+  indexedMapM (parseScalarValueColumnTypeWithContext context columnType)
+
+parseScalarValuesColumnType ::
+  forall m b r.
+  (MonadError QErr m, Backend b, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
+  ColumnType b ->
+  [Value] ->
+  m [ScalarValue b]
+parseScalarValuesColumnType columnType values = do
+  scalarTypeParsingContext <- asks getter
+  parseScalarValuesColumnTypeWithContext scalarTypeParsingContext columnType values
 
 data RawColumnType (b :: BackendType)
   = RawColumnTypeScalar (ScalarType b)

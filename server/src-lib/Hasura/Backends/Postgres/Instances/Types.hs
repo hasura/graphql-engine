@@ -140,7 +140,7 @@ instance
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
   textToScalarValue = Postgres.textToScalarValue
-  parseScalarValue ty val = runAesonParser (Postgres.parsePGValue ty) val
+  parseScalarValue () ty val = runAesonParser (Postgres.parsePGValue ty) val
   scalarValueToJSON = Postgres.pgScalarValueToJson
   functionToTable = fmap (Postgres.TableName . Postgres.getFunctionTxt)
   tableToFunction = fmap (Postgres.FunctionName . Postgres.getTableTxt)

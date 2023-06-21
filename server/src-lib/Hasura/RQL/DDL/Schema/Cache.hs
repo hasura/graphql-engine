@@ -31,6 +31,7 @@ import Data.Aeson
 import Data.ByteString.Lazy qualified as LBS
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
+import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
@@ -812,12 +813,13 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               \((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
                 let tableFields = _tciFieldInfoMap tableCoreInfo
                 permissionInfos <-
-                  buildTablePermissions
-                    sourceName
-                    tableCoreInfos
-                    tableFields
-                    permissionInputs
-                    orderedRoles
+                  flip runReaderT sourceConfig
+                    $ buildTablePermissions
+                      sourceName
+                      tableCoreInfos
+                      tableFields
+                      permissionInputs
+                      orderedRoles
                 pure $ TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
       -- Generate a non-recoverable error when inherited roles were not ordered in a way that allows for building permissions to succeed
       tableCache <- bindA -< liftEither result
@@ -894,7 +896,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 logicalModelPermissions <-
-                  buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
+                  flip runReaderT sourceConfig $ buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
 
                 let recurseLogicalModelDependencies = \case
                       LogicalModelTypeScalar _ -> pure ()
@@ -1242,7 +1244,10 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                               remoteSchemaCtxMap,
                               orderedRoles
                             )
-                      returnA -< (AB.mkAnyBackend so, BackendMap.singleton (_rsScalars introspection))
+                      let scalarParsingContext = getter sourceConfig
+                          ScalarMap scalarMap = _rsScalars introspection
+                          scalarParsingMap = ScalarParsingMap $ (flip (ScalarWrapper @b) scalarParsingContext) <$> scalarMap
+                      returnA -< (AB.mkAnyBackend so, BackendMap.singleton scalarParsingMap)
                   )
                   -<
                     ( exists,
@@ -1583,7 +1588,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
     buildActions ::
       (MonadWriter (Seq CollectItem) m) =>
       AnnotatedCustomTypes ->
-      BackendMap ScalarMap ->
+      BackendMap ScalarParsingMap ->
       OrderedRoles ->
       [ActionMetadata] ->
       m (HashMap ActionName ActionInfo)

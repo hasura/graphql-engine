@@ -11,6 +11,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Set qualified as Set
@@ -32,8 +33,8 @@ import Witch qualified
 --------------------------------------------------------------------------------
 
 mkRemoteRelationshipPlan ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   SourceConfig ->
   -- | List of join json objects, each of which contains IDs to be laterally-joined against

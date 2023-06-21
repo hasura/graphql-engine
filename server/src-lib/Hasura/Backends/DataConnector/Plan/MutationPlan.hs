@@ -76,7 +76,7 @@ recordTableInsertSchema tableName tableInsertSchema =
 --------------------------------------------------------------------------------
 
 mkMutationPlan ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m (Plan API.MutationRequest API.MutationResponse)
@@ -85,7 +85,7 @@ mkMutationPlan sessionVariables mutationDB = do
   pure $ Plan request (reshapeResponseToMutationGqlShape mutationDB)
 
 translateMutationDB ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.MutationRequest
@@ -135,7 +135,7 @@ eitherKey (FunctionNameKey f, x) = Left (f, x)
 eitherKey (TableNameKey t, x) = Right (t, x)
 
 translateInsert ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnotatedInsert 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT (TableRelationships, TableInsertSchemas) m API.InsertMutationOperation
@@ -183,7 +183,7 @@ captureTableInsertSchema tableName tableColumns primaryKey ExtraTableMetadata {.
   recordTableInsertSchema tableName $ TableInsertSchema primaryKey' fieldSchemas
 
 translateInsertRow ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   API.TableName ->
   [ColumnInfo 'DataConnector] ->
@@ -223,7 +223,7 @@ translateInsertRow sessionVariables tableName tableColumns defaultColumnValues i
         & HashMap.fromList
 
 translateUpdate ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT TableRelationships m [API.UpdateMutationOperation]
@@ -233,7 +233,7 @@ translateUpdate sessionVariables annUpdate@AnnotatedUpdateG {..} = do
     MultipleBatches batches -> traverse (translateUpdateBatch sessionVariables annUpdate) batches
 
 translateUpdateBatch ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   UpdateBatch 'DataConnector UpdateOperator (UnpreparedValue 'DataConnector) ->
@@ -256,8 +256,8 @@ translateUpdateBatch sessionVariables AnnotatedUpdateG {..} UpdateBatch {..} = d
     tableName :: API.TableName = Witch.from _auTable
 
 translateUpdateOperations ::
-  forall m.
-  (MonadError QErr m) =>
+  forall m r.
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   HashMap ColumnName (UpdateOperator (UnpreparedValue 'DataConnector)) ->
   m (Set API.RowUpdate)
@@ -279,7 +279,7 @@ translateUpdateOperations sessionVariables columnUpdates =
         ArrayLiteral _scalarType _values -> throw400 NotSupported "translateUpdateOperations: Array literals are not supported as column update values"
 
 translateDelete ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
   AnnDelG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   CPS.WriterT TableRelationships m API.DeleteMutationOperation
@@ -299,7 +299,9 @@ translateDelete sessionVariables AnnDel {..} = do
 translateMutationOutputToReturningFields ::
   ( MonadError QErr m,
     Has TableRelationships writerOutput,
-    Monoid writerOutput
+    Monoid writerOutput,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   API.TableName ->
@@ -314,7 +316,9 @@ translateMutationOutputToReturningFields sessionVariables tableName = \case
 translateMutField ::
   ( MonadError QErr m,
     Has TableRelationships writerOutput,
-    Monoid writerOutput
+    Monoid writerOutput,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r
   ) =>
   SessionVariables ->
   API.TableName ->
