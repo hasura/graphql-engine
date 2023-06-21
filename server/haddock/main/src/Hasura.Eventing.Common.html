@@ -39,13 +39,13 @@
 </span><span id="line-35"></span><span class="hs-comment">-- | After the events are fetched from the DB, we store the locked events</span><span>
 </span><span id="line-36"></span><span class="hs-comment">--   in a hash set(order doesn't matter and look ups are faster) in the</span><span>
 </span><span id="line-37"></span><span class="hs-comment">--   event engine context</span><span>
-</span><span id="line-38"></span><span id="local-6989586621687108454"><span class="annot"><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-type">saveLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108454"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687108454"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-38"></span><span id="local-6989586621687108452"><span class="annot"><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-type">saveLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108452"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687108452"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-39"></span><span id="saveLockedEvents"><span class="annot"><span class="annottext">saveLockedEvents :: forall (m :: * -&gt; *).
 MonadIO m =&gt;
 [CronEventId] -&gt; TVar (Set CronEventId) -&gt; m ()
-</span><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-var hs-var">saveLockedEvents</span></a></span></span><span> </span><span id="local-6989586621687108528"><span class="annot"><span class="annottext">[CronEventId]
-</span><a href="#local-6989586621687108528"><span class="hs-identifier hs-var">eventIds</span></a></span></span><span> </span><span id="local-6989586621687108529"><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108529"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Eventing.Common.html#saveLockedEvents"><span class="hs-identifier hs-var hs-var">saveLockedEvents</span></a></span></span><span> </span><span id="local-6989586621687108526"><span class="annot"><span class="annottext">[CronEventId]
+</span><a href="#local-6989586621687108526"><span class="hs-identifier hs-var">eventIds</span></a></span></span><span> </span><span id="local-6989586621687108527"><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621687108527"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall a. IO a -&gt; m a
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -58,38 +58,38 @@ forall a. STM a -&gt; IO a
 </span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>      </span><span id="local-6989586621687108532"><span class="annot"><span class="annottext">Set CronEventId
-</span><a href="#local-6989586621687108532"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
+</span><span id="line-43"></span><span>      </span><span id="local-6989586621687108530"><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621687108530"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
 forall a. TVar a -&gt; STM a
 </span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108529"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><a href="#local-6989586621687108527"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
 </span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; Set CronEventId -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108529"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><a href="#local-6989586621687108527"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
 </span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; STM ()) -&gt; Set CronEventId -&gt; STM ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Set CronEventId -&gt; Set CronEventId -&gt; Set CronEventId
 forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
 </span><span class="hs-identifier hs-var">Set.union</span></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
-</span><a href="#local-6989586621687108532"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
+</span><a href="#local-6989586621687108530"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
 </span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; Set CronEventId)
 -&gt; Set CronEventId -&gt; Set CronEventId
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[CronEventId] -&gt; Set CronEventId
 forall a. Ord a =&gt; [a] -&gt; Set a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">[CronEventId]
-</span><a href="#local-6989586621687108528"><span class="hs-identifier hs-var">eventIds</span></a></span><span>
+</span><a href="#local-6989586621687108526"><span class="hs-identifier hs-var">eventIds</span></a></span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="annot"><span class="hs-comment">-- | Remove an event from the 'LockedEventsCtx' after it has been processed</span></span><span>
-</span><span id="line-49"></span><span id="local-6989586621687108468"><span class="annot"><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-type">removeEventFromLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108468"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687108468"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-49"></span><span id="local-6989586621687108466"><span class="annot"><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-type">removeEventFromLockedEvents</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108466"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.html#EventId"><span class="hs-identifier hs-type">EventId</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687108466"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-51"></span><span id="removeEventFromLockedEvents"><span class="annot"><span class="annottext">removeEventFromLockedEvents :: forall (m :: * -&gt; *).
 MonadIO m =&gt;
 CronEventId -&gt; TVar (Set CronEventId) -&gt; m ()
-</span><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-var hs-var">removeEventFromLockedEvents</span></a></span></span><span> </span><span id="local-6989586621687108542"><span class="annot"><span class="annottext">CronEventId
-</span><a href="#local-6989586621687108542"><span class="hs-identifier hs-var">eventId</span></a></span></span><span> </span><span id="local-6989586621687108543"><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108543"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Eventing.Common.html#removeEventFromLockedEvents"><span class="hs-identifier hs-var hs-var">removeEventFromLockedEvents</span></a></span></span><span> </span><span id="local-6989586621687108540"><span class="annot"><span class="annottext">CronEventId
+</span><a href="#local-6989586621687108540"><span class="hs-identifier hs-var">eventId</span></a></span></span><span> </span><span id="local-6989586621687108541"><span class="annot"><span class="annottext">TVar (Set CronEventId)
+</span><a href="#local-6989586621687108541"><span class="hs-identifier hs-var">lockedEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall a. IO a -&gt; m a
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -102,39 +102,39 @@ forall a. STM a -&gt; IO a
 </span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">(STM () -&gt; IO ()) -&gt; STM () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-55"></span><span>      </span><span id="local-6989586621687108544"><span class="annot"><span class="annottext">Set CronEventId
-</span><a href="#local-6989586621687108544"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621687108542"><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621687108542"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; STM (Set CronEventId)
 forall a. TVar a -&gt; STM a
 </span><span class="hs-identifier hs-var">readTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108543"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
+</span><a href="#local-6989586621687108541"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
 </span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">TVar (Set CronEventId) -&gt; Set CronEventId -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621687108543"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span> </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; STM ()) -&gt; Set CronEventId -&gt; STM ()
+</span><a href="#local-6989586621687108541"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span> </span><span class="annot"><span class="annottext">(Set CronEventId -&gt; STM ()) -&gt; Set CronEventId -&gt; STM ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">CronEventId -&gt; Set CronEventId -&gt; Set CronEventId
 forall a. Ord a =&gt; a -&gt; Set a -&gt; Set a
 </span><span class="hs-identifier hs-var">Set.delete</span></span><span> </span><span class="annot"><span class="annottext">CronEventId
-</span><a href="#local-6989586621687108542"><span class="hs-identifier hs-var">eventId</span></a></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
-</span><a href="#local-6989586621687108544"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
+</span><a href="#local-6989586621687108540"><span class="hs-identifier hs-var">eventId</span></a></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
+</span><a href="#local-6989586621687108542"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="annot"><span class="hs-comment">-- | Generates next @n events starting @from according to 'CronSchedule'</span></span><span>
 </span><span id="line-59"></span><span class="annot"><a href="Hasura.Eventing.Common.html#generateScheduleTimes"><span class="hs-identifier hs-type">generateScheduleTimes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/cron-0.7.0-4f20609b85a78cbbab05366504facbfcf2e2c0f3ee2c5fa0f642801de054b061/share/doc/html/src/System.Cron.Types.html#CronSchedule"><span class="hs-identifier hs-type">CronSchedule</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">]</span><span>
 </span><span id="line-60"></span><span id="generateScheduleTimes"><span class="annot"><span class="annottext">generateScheduleTimes :: UTCTime -&gt; Int -&gt; CronSchedule -&gt; [UTCTime]
-</span><a href="Hasura.Eventing.Common.html#generateScheduleTimes"><span class="hs-identifier hs-var hs-var">generateScheduleTimes</span></a></span></span><span> </span><span id="local-6989586621687108547"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621687108547"><span class="hs-identifier hs-var">from</span></a></span></span><span> </span><span id="local-6989586621687108548"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108548"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621687108549"><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621687108549"><span class="hs-identifier hs-var">cron</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [UTCTime] -&gt; [UTCTime]
+</span><a href="Hasura.Eventing.Common.html#generateScheduleTimes"><span class="hs-identifier hs-var hs-var">generateScheduleTimes</span></a></span></span><span> </span><span id="local-6989586621687108545"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621687108545"><span class="hs-identifier hs-var">from</span></a></span></span><span> </span><span id="local-6989586621687108546"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108546"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621687108547"><span class="annot"><span class="annottext">CronSchedule
+</span><a href="#local-6989586621687108547"><span class="hs-identifier hs-var">cron</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [UTCTime] -&gt; [UTCTime]
 forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108548"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">([UTCTime] -&gt; [UTCTime]) -&gt; [UTCTime] -&gt; [UTCTime]
+</span><a href="#local-6989586621687108546"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">([UTCTime] -&gt; [UTCTime]) -&gt; [UTCTime] -&gt; [UTCTime]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; [UTCTime]
-</span><a href="#local-6989586621687108551"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621687108547"><span class="hs-identifier hs-var">from</span></a></span><span>
+</span><a href="#local-6989586621687108549"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621687108545"><span class="hs-identifier hs-var">from</span></a></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>    </span><span id="local-6989586621687108551"><span class="annot"><span class="annottext">go :: UTCTime -&gt; [UTCTime]
-</span><a href="#local-6989586621687108551"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UTCTime -&gt; Maybe (UTCTime, UTCTime)) -&gt; UTCTime -&gt; [UTCTime]
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621687108549"><span class="annot"><span class="annottext">go :: UTCTime -&gt; [UTCTime]
+</span><a href="#local-6989586621687108549"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UTCTime -&gt; Maybe (UTCTime, UTCTime)) -&gt; UTCTime -&gt; [UTCTime]
 forall b a. (b -&gt; Maybe (a, b)) -&gt; b -&gt; [a]
 </span><span class="hs-identifier hs-var">unfoldr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(UTCTime -&gt; (UTCTime, UTCTime))
 -&gt; Maybe UTCTime -&gt; Maybe (UTCTime, UTCTime)
@@ -149,7 +149,7 @@ forall (arr :: * -&gt; * -&gt; *) a. Arrow arr =&gt; arr a (a, a)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CronSchedule -&gt; UTCTime -&gt; Maybe UTCTime
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/cron-0.7.0-4f20609b85a78cbbab05366504facbfcf2e2c0f3ee2c5fa0f642801de054b061/share/doc/html/src/System.Cron.Internal.Check.html#nextMatch"><span class="hs-identifier hs-var">nextMatch</span></a></span><span> </span><span class="annot"><span class="annottext">CronSchedule
-</span><a href="#local-6989586621687108549"><span class="hs-identifier hs-var">cron</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687108547"><span class="hs-identifier hs-var">cron</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="annot"><span class="hs-comment">-- | number of cleanup schedules to be generated in one iteration</span></span><span>
 </span><span id="line-65"></span><span class="annot"><a href="Hasura.Eventing.Common.html#cleanupSchedulesToBeGenerated"><span class="hs-identifier hs-type">cleanupSchedulesToBeGenerated</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
@@ -157,12 +157,12 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Eventing.Common.html#cleanupSchedulesToBeGenerated"><span class="hs-identifier hs-var hs-var">cleanupSchedulesToBeGenerated</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">50</span></span><span>
 </span><span id="line-67"></span><span>
-</span><span id="line-68"></span><span id="local-6989586621687108484"><span class="annot"><a href="Hasura.Eventing.Common.html#deleteEventTriggerLogsInBatchesWith"><span class="hs-identifier hs-type">deleteEventTriggerLogsInBatchesWith</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108484"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687108484"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-68"></span><span id="local-6989586621687108482"><span class="annot"><a href="Hasura.Eventing.Common.html#deleteEventTriggerLogsInBatchesWith"><span class="hs-identifier hs-type">deleteEventTriggerLogsInBatchesWith</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687108482"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687108482"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerLogCleanupConfig"><span class="hs-identifier hs-type">TriggerLogCleanupConfig</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerCleanupStatus"><span class="hs-identifier hs-type">EventTriggerCleanupStatus</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerLogCleanupConfig"><span class="hs-identifier hs-type">TriggerLogCleanupConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerLogCleanupConfig"><span class="hs-identifier hs-type">TriggerLogCleanupConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-73"></span><span>  </span><span class="annot"><a href="#local-6989586621687108484"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="#local-6989586621687108482"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span></span><span>
 </span><span id="line-74"></span><span id="deleteEventTriggerLogsInBatchesWith"><span class="annot"><span class="annottext">deleteEventTriggerLogsInBatchesWith :: forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
@@ -170,20 +170,20 @@ IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
 -&gt; (TriggerLogCleanupConfig
     -&gt; IO (Either QErr DeletedEventLogStats))
 -&gt; m DeletedEventLogStats
-</span><a href="Hasura.Eventing.Common.html#deleteEventTriggerLogsInBatchesWith"><span class="hs-identifier hs-var hs-var">deleteEventTriggerLogsInBatchesWith</span></a></span></span><span> </span><span id="local-6989586621687108577"><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
-</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span></span><span> </span><span id="local-6989586621687108578"><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621687108578"><span class="hs-identifier hs-var">oldCleanupConfig</span></a></span></span><span> </span><span id="local-6989586621687108579"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; IO (Either QErr DeletedEventLogStats)
-</span><a href="#local-6989586621687108579"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Eventing.Common.html#deleteEventTriggerLogsInBatchesWith"><span class="hs-identifier hs-var hs-var">deleteEventTriggerLogsInBatchesWith</span></a></span></span><span> </span><span id="local-6989586621687108575"><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
+</span><a href="#local-6989586621687108575"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span></span><span> </span><span id="local-6989586621687108576"><span class="annot"><span class="annottext">TriggerLogCleanupConfig
+</span><a href="#local-6989586621687108576"><span class="hs-identifier hs-var">oldCleanupConfig</span></a></span></span><span> </span><span id="local-6989586621687108577"><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; IO (Either QErr DeletedEventLogStats)
+</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-comment">-- fetch the latest cleanup config from the schema cache</span><span>
-</span><span id="line-76"></span><span>  </span><span id="local-6989586621687108580"><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
-</span><a href="#local-6989586621687108580"><span class="hs-identifier hs-var">latestCleanupConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621687108578"><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
+</span><a href="#local-6989586621687108578"><span class="hs-identifier hs-var">latestCleanupConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
 -&gt; m (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
 forall a. IO a -&gt; m a
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
-</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span><span>
+</span><a href="#local-6989586621687108575"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
-</span><a href="#local-6989586621687108580"><span class="hs-identifier hs-var">latestCleanupConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687108578"><span class="hs-identifier hs-var">latestCleanupConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-78"></span><span>    </span><span class="hs-comment">-- if the cleanup has been paused, then don't delete anything</span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EventTriggerCleanupStatus
@@ -194,27 +194,27 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-var">DeletedEventLogStats</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
-</span><span id="line-80"></span><span>    </span><span id="local-6989586621687108583"><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
-</span><a href="#local-6989586621687108583"><span class="hs-identifier hs-var">nonPausedNewConfig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621687108581"><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
+</span><a href="#local-6989586621687108581"><span class="hs-identifier hs-var">nonPausedNewConfig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-81"></span><span>      </span><span class="hs-comment">-- get latest cleanup config if available, else use the older one</span><span>
-</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687108584"><span class="annot"><span class="annottext">cleanupConfig :: TriggerLogCleanupConfig
-</span><a href="#local-6989586621687108584"><span class="hs-identifier hs-var hs-var">cleanupConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
+</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687108582"><span class="annot"><span class="annottext">cleanupConfig :: TriggerLogCleanupConfig
+</span><a href="#local-6989586621687108582"><span class="hs-identifier hs-var hs-var">cleanupConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
 -&gt; ((TriggerLogCleanupConfig, EventTriggerCleanupStatus)
     -&gt; TriggerLogCleanupConfig)
 -&gt; Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
 -&gt; TriggerLogCleanupConfig
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621687108578"><span class="hs-identifier hs-var">oldCleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerLogCleanupConfig, EventTriggerCleanupStatus)
+</span><a href="#local-6989586621687108576"><span class="hs-identifier hs-var">oldCleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerLogCleanupConfig, EventTriggerCleanupStatus)
 -&gt; TriggerLogCleanupConfig
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)
-</span><a href="#local-6989586621687108583"><span class="hs-identifier hs-var">nonPausedNewConfig</span></a></span><span>
+</span><a href="#local-6989586621687108581"><span class="hs-identifier hs-var">nonPausedNewConfig</span></a></span><span>
 </span><span id="line-83"></span><span>      </span><span class="hs-comment">-- delete one batch of the logs</span><span>
-</span><span id="line-84"></span><span>      </span><span id="local-6989586621687108587"><span class="annot"><span class="annottext">deletedStatsForCurrentBatch :: DeletedEventLogStats
-</span><a href="#local-6989586621687108587"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span><span> </span><span id="local-6989586621687108588"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108588"><span class="hs-identifier hs-var">delEventLogsInBatch</span></a></span></span><span> </span><span id="local-6989586621687108589"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108589"><span class="hs-identifier hs-var">delInvocationLogsInBatch</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621687108585"><span class="annot"><span class="annottext">deletedStatsForCurrentBatch :: DeletedEventLogStats
+</span><a href="#local-6989586621687108585"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span><span> </span><span id="local-6989586621687108586"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108586"><span class="hs-identifier hs-var">delEventLogsInBatch</span></a></span></span><span> </span><span id="local-6989586621687108587"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108587"><span class="hs-identifier hs-var">delInvocationLogsInBatch</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">m (Either QErr DeletedEventLogStats) -&gt; m DeletedEventLogStats
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr DeletedEventLogStats) -&gt; m DeletedEventLogStats)
@@ -230,11 +230,11 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 -&gt; m (Either QErr DeletedEventLogStats)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; IO (Either QErr DeletedEventLogStats)
-</span><a href="#local-6989586621687108579"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621687108584"><span class="hs-identifier hs-var">cleanupConfig</span></a></span><span>
+</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
+</span><a href="#local-6989586621687108582"><span class="hs-identifier hs-var">cleanupConfig</span></a></span><span>
 </span><span id="line-86"></span><span>      </span><span class="hs-comment">-- If no logs has been deleted, then end the recursion</span><span>
 </span><span id="line-87"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">DeletedEventLogStats
-</span><a href="#local-6989586621687108587"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span><span> </span><span class="annot"><span class="annottext">DeletedEventLogStats -&gt; DeletedEventLogStats -&gt; Bool
+</span><a href="#local-6989586621687108585"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span><span> </span><span class="annot"><span class="annottext">DeletedEventLogStats -&gt; DeletedEventLogStats -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; DeletedEventLogStats
 </span><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-var">DeletedEventLogStats</span></a></span><span> </span><span class="annot"><span class="annottext">Int
@@ -244,12 +244,12 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">DeletedEventLogStats
-</span><a href="#local-6989586621687108587"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span><span>
+</span><a href="#local-6989586621687108585"><span class="hs-identifier hs-var">deletedStatsForCurrentBatch</span></a></span><span>
 </span><span id="line-89"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-90"></span><span>          </span><span class="hs-comment">-- if non zero logs has been deleted then do a recursion</span><span>
-</span><span id="line-91"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span><span> </span><span id="local-6989586621687108591"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108591"><span class="hs-identifier hs-var">deletedRemainingEventLogs</span></a></span></span><span> </span><span id="local-6989586621687108592"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108592"><span class="hs-identifier hs-var">deletedRemainingInvocationLogs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-91"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-type">DeletedEventLogStats</span></a></span><span> </span><span id="local-6989586621687108589"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108589"><span class="hs-identifier hs-var">deletedRemainingEventLogs</span></a></span></span><span> </span><span id="local-6989586621687108590"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108590"><span class="hs-identifier hs-var">deletedRemainingInvocationLogs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-92"></span><span>            </span><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
 -&gt; TriggerLogCleanupConfig
 -&gt; (TriggerLogCleanupConfig
@@ -263,21 +263,21 @@ IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
     -&gt; IO (Either QErr DeletedEventLogStats))
 -&gt; m DeletedEventLogStats
 </span><a href="Hasura.Eventing.Common.html#deleteEventTriggerLogsInBatchesWith"><span class="hs-identifier hs-var">deleteEventTriggerLogsInBatchesWith</span></a></span><span> </span><span class="annot"><span class="annottext">IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus))
-</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621687108584"><span class="hs-identifier hs-var">cleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; IO (Either QErr DeletedEventLogStats)
-</span><a href="#local-6989586621687108579"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span><span>
+</span><a href="#local-6989586621687108575"><span class="hs-identifier hs-var">getLatestCleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
+</span><a href="#local-6989586621687108582"><span class="hs-identifier hs-var">cleanupConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; IO (Either QErr DeletedEventLogStats)
+</span><a href="#local-6989586621687108577"><span class="hs-identifier hs-var">dbLogDeleteAction</span></a></span><span>
 </span><span id="line-93"></span><span>          </span><span class="hs-comment">-- Finally collect all the statistics</span><span>
 </span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">DeletedEventLogStats -&gt; m DeletedEventLogStats
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; DeletedEventLogStats
 </span><a href="Hasura.RQL.Types.EventTrigger.html#DeletedEventLogStats"><span class="hs-identifier hs-var">DeletedEventLogStats</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108588"><span class="hs-identifier hs-var">delEventLogsInBatch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687108586"><span class="hs-identifier hs-var">delEventLogsInBatch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108591"><span class="hs-identifier hs-var">deletedRemainingEventLogs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108589"><span class="hs-identifier hs-var">delInvocationLogsInBatch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621687108589"><span class="hs-identifier hs-var">deletedRemainingEventLogs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687108587"><span class="hs-identifier hs-var">delInvocationLogsInBatch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687108592"><span class="hs-identifier hs-var">deletedRemainingInvocationLogs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687108590"><span class="hs-identifier hs-var">deletedRemainingInvocationLogs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span></pre></body></html>
