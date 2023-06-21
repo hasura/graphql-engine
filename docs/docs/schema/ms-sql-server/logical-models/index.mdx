@@ -37,21 +37,35 @@ of Logical Models themselves, read on.
 
 ## Tracking a Logical Model
 
-:::info Only creatable via the Console and API
-
-Currently, Logical Models can only be created via the API and the Console. CLI support will be added in a future
-release.
-
-:::
-
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
+
 <Thumbnail
   src="/img/native-queries/create-logical-model-excerpt-example.png"
   alt="Create Logical Model"
   width="800px"
 />
+
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases.yaml`
+file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<SQL Server field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 You create a logical model through the metadata API:
@@ -69,7 +83,7 @@ X-Hasura-Role: admin
     "fields": [
       {
         "name": "<field name>",
-        "type": "<SQL Server Logical Model type>",
+        "type": "<SQL Server field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -90,12 +104,42 @@ For example, we could track a representation of an article as follows:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
+
 <Thumbnail
   src="/img/native-queries/create-logical-model-excerpt-example.png"
   alt="Create Logical Model"
   width="800px"
 />
+
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the `default` database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  logical_models:
+    - name: article
+      fields:
+        id:
+          type: integer
+          nullable: false
+        title:
+          type: text
+          nullable: false
+        contents:
+          type: text
+          nullable: false
+        published_date:
+          type: date
+          nullable: true
+        is_published:
+          type: bit
+          nullable: false
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -157,12 +201,21 @@ X-Hasura-Role: admin
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
+
 <Thumbnail
   src="/img/native-queries/delete-logical-model.png"
   alt="Delete Logical Model"
   width="800px"
 />
+
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can remove a Logical Model by removing it from the `metadata > databases.yaml` file.
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 You can remove a Logical Model the same way:
@@ -195,12 +248,21 @@ To untrack the above "article" Logical Model, we would run the following:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
+
 <Thumbnail
   src="/img/native-queries/delete-logical-model.png"
   alt="Delete Logical Model"
   width="800px"
 />
+
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the above metadata from the `metadata > databases.yaml` file.
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -349,6 +411,35 @@ can receive.
 <Thumbnail src="/img/native-queries/create-permissions.png" alt="Create Logical Model Permissions" width="800px" />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+all rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+Add the required permissions to the relevant logical model in `metadata > databases.yaml`:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        ...
+      select_permissions:
+        - role: "<role name>"
+          permission:
+            columns: "*" | [
+              "column 1",
+              "column 2",
+              ...
+            ]
+            filter: "<boolean expression>"
+        - ...
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
@@ -392,6 +483,32 @@ that column from the list (by specifying all other columns).
 <Thumbnail src="/img/native-queries/permissions-with-check.png" alt="Permissions with check" width="800px" />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the required permissions to the relevant logical model in `metadata > databases.yaml`:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        ...
+      select_permissions:
+        - role: reader
+          permission:
+            columns:
+              - id
+              - title
+              - contents
+              - date
+            filter:
+              is_published:
+                _eq: true
+        - ...
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -427,8 +544,17 @@ You can also drop permissions:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
-  <Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
+<Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the relevant permission from `metadata > databases.yaml`.
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -447,5 +573,4 @@ X-Hasura-Role: admin
 ```
 
 </TabItem>
-
 </Tabs>

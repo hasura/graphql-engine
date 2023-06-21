@@ -9,7 +9,6 @@ keywords:
   - schema
   - Logical Models
   - Native Queries
-sidebar_class_name: beta-tag
 ---
 
 import ProductBadge from '@site/src/components/ProductBadge';
@@ -21,7 +20,6 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 <div className="badge-container">
   <ProductBadge standard pro ee self />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## What are Native Queries?
@@ -88,13 +86,6 @@ INSERT INTO article(title, date, content) VALUES
 When listing these articles in an index, we probably want to truncate the text to, let’s say, 20 characters. So let’s
 create a Logical Model representing the excerpted article:
 
-:::info Only creatable via the Console and API
-
-Currently, Native Queries can be created using the Console and the API. CLI support will be added in a future
-release.
-
-:::
-
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
@@ -111,6 +102,27 @@ Once the modal is open, fill in the form.
 />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the `default` database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  logical_models:
+    - name: article_excerpt
+      fields:
+        id:
+          type: integer
+        title:
+          type: text
+        date:
+          type: date
+        excerpt:
+          type: text
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -182,6 +194,23 @@ FROM article
 />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the `default` database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  native_queries:
+    - root_field_name: article_with_excerpt
+      arguments:
+        max_length:
+          type: integer
+      code: SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN '' else '...' END)) AS excerpt, date FROM article
+      returns: article_excerpt
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -285,6 +314,25 @@ Once the modal is open, fill in the forms with:
 <Thumbnail src="/img/native-queries/logical-model-modal.png" alt="Create Logical Model" width="800px" />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases.yaml`
+file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<BigQuery field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
@@ -336,6 +384,33 @@ Fill in the form with the data required:
 <Thumbnail src="/img/native-queries/create-native-query.png" alt="Create Native Query Form" width="1146px" />
 
 </TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the relevant database definition in the `metadata > databases.yaml` file:
+
+```yaml
+  native_queries:
+    - root_field_name: "<root field name>"
+      arguments:
+        "<argument name>":
+          type: "<PostgreSQL field type>"
+          nullable: false | true
+          description: "<optional field description>"
+          array_relationships:
+            - name: "<relationship name>"
+              using:
+                column_mapping:
+                  "<local column>": "<remote column>"
+                remote_native_query: <remote native query name>"
+          object_relationships: <same as array_relationships>
+          description: "<text>"
+          code: "<SQL query>"
+          returns: "<logical model name>"
+```
+
+</TabItem>
+
 <TabItem value="api" label="API">
 
 ```http
