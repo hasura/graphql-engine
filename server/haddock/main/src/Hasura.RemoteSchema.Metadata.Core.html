@@ -60,7 +60,7 @@
 </span><span id="line-54"></span><span>    </span><span class="hs-comment">-- See: https://github.com/hasura/graphql-engine-mono/issues/144</span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-comment">-- TODO we probably want to move this into a sub-field &quot;transformations&quot;?</span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686874810"><span id="local-6989586621686874827"><span id="local-6989586621686874831"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaDef -&gt; ShowS
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686898626"><span id="local-6989586621686898643"><span id="local-6989586621686898647"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaDef -&gt; ShowS
 [RemoteSchemaDef] -&gt; ShowS
 RemoteSchemaDef -&gt; String
 (Int -&gt; RemoteSchemaDef -&gt; ShowS)
@@ -75,7 +75,7 @@ $cshow :: RemoteSchemaDef -&gt; String
 show :: RemoteSchemaDef -&gt; String
 $cshowList :: [RemoteSchemaDef] -&gt; ShowS
 showList :: [RemoteSchemaDef] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874842"><span id="local-6989586621686874857"><span class="annot"><span class="annottext">RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686898658"><span id="local-6989586621686898673"><span class="annot"><span class="annottext">RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
 (RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool)
 -&gt; (RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool)
 -&gt; Eq RemoteSchemaDef
@@ -84,7 +84,7 @@ $c== :: RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
 == :: RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
 $c/= :: RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
 /= :: RemoteSchemaDef -&gt; RemoteSchemaDef -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686874869"><span id="local-6989586621686874871"><span class="annot"><span class="annottext">(forall x. RemoteSchemaDef -&gt; Rep RemoteSchemaDef x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686898685"><span id="local-6989586621686898687"><span class="annot"><span class="annottext">(forall x. RemoteSchemaDef -&gt; Rep RemoteSchemaDef x)
 -&gt; (forall x. Rep RemoteSchemaDef x -&gt; RemoteSchemaDef)
 -&gt; Generic RemoteSchemaDef
 forall x. Rep RemoteSchemaDef x -&gt; RemoteSchemaDef
@@ -97,10 +97,10 @@ $cto :: forall x. Rep RemoteSchemaDef x -&gt; RemoteSchemaDef
 to :: forall x. Rep RemoteSchemaDef x -&gt; RemoteSchemaDef
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>
-</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874875"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898691"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874925"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621686874959"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaDef
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898741"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621686898775"><span class="annot"><span class="annottext">codec :: JSONCodec RemoteSchemaDef
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">UrlFromEnv
 -&gt; ObjectCodec RemoteSchemaDef RemoteSchemaDef
@@ -305,11 +305,11 @@ ObjectCodec oldInput output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef -&gt; Maybe RemoteSchemaCustomization
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsdCustomization"><span class="hs-identifier hs-var">_rsdCustomization</span></a></span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span class="hs-special">$</span><span id="local-6989586621686874962"><span id="local-6989586621686874999"><span id="local-6989586621686875023"><span id="local-6989586621686875027"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaDef</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-78"></span><span class="hs-special">$</span><span id="local-6989586621686898778"><span id="local-6989586621686898815"><span id="local-6989586621686898839"><span id="local-6989586621686898843"><span class="hs-special">(</span><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaDef</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686875071"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621686875104"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaDef
-</span><a href="#local-6989586621686875104"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898887"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621686898920"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaDef
+</span><a href="#local-6989586621686898920"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser RemoteSchemaDef)
 -&gt; Value
 -&gt; Parser RemoteSchemaDef
@@ -321,8 +321,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser RemoteSchemaDef
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686875107"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686898923"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">Maybe InputWebhook
 -&gt; Maybe UrlFromEnv
 -&gt; Maybe [HeaderConf]
@@ -348,7 +348,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; RemoteSchemaDef)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe InputWebhook)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -370,7 +370,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe UrlFromEnv)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -388,7 +388,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [HeaderConf])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -402,7 +402,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -418,7 +418,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -429,45 +429,45 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875107"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686898923"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe RemoteSchemaCustomization)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;customization&quot;</span></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span id="local-6989586621686874691"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#getUrlFromEnv"><span class="hs-identifier hs-type">getUrlFromEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874691"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686874691"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-type">EnvRecord</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-ff6111cc9f401dfdd6cfb9899f973de8d1a7bb086bb17ed998afaa76126635bb/share/doc/html/src/Network.URI.html#URI"><span class="hs-identifier hs-type">N.URI</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-97"></span><span id="local-6989586621686898507"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#getUrlFromEnv"><span class="hs-identifier hs-type">getUrlFromEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898507"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686898507"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-type">EnvRecord</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-ff6111cc9f401dfdd6cfb9899f973de8d1a7bb086bb17ed998afaa76126635bb/share/doc/html/src/Network.URI.html#URI"><span class="hs-identifier hs-type">N.URI</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-98"></span><span id="getUrlFromEnv"><span class="annot"><span class="annottext">getUrlFromEnv :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Environment -&gt; UrlFromEnv -&gt; m (EnvRecord URI)
-</span><a href="Hasura.RemoteSchema.Metadata.Core.html#getUrlFromEnv"><span class="hs-identifier hs-var hs-var">getUrlFromEnv</span></a></span></span><span> </span><span id="local-6989586621686875125"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621686875125"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621686875126"><span class="annot"><span class="annottext">UrlFromEnv
-</span><a href="#local-6989586621686875126"><span class="hs-identifier hs-var">urlFromEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686875127"><span class="annot"><span class="annottext">mEnv :: Maybe String
-</span><a href="#local-6989586621686875127"><span class="hs-identifier hs-var hs-var">mEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
+</span><a href="Hasura.RemoteSchema.Metadata.Core.html#getUrlFromEnv"><span class="hs-identifier hs-var hs-var">getUrlFromEnv</span></a></span></span><span> </span><span id="local-6989586621686898941"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621686898941"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621686898942"><span class="annot"><span class="annottext">UrlFromEnv
+</span><a href="#local-6989586621686898942"><span class="hs-identifier hs-var">urlFromEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686898943"><span class="annot"><span class="annottext">mEnv :: Maybe String
+</span><a href="#local-6989586621686898943"><span class="hs-identifier hs-var hs-var">mEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621686875125"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Maybe String) -&gt; String -&gt; Maybe String
+</span><a href="#local-6989586621686898941"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Maybe String) -&gt; String -&gt; Maybe String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
-</span><a href="#local-6989586621686875126"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621686875130"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686875130"><span class="hs-identifier hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; m String -&gt; m String
+</span><a href="#local-6989586621686898942"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621686898946"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686898946"><span class="hs-identifier hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; m String -&gt; m String
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621686875127"><span class="hs-identifier hs-var">mEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; UrlFromEnv -&gt; m String
+</span><a href="#local-6989586621686898943"><span class="hs-identifier hs-var">mEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; UrlFromEnv -&gt; m String
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; UrlFromEnv -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#InvalidParams"><span class="hs-identifier hs-var">InvalidParams</span></a></span><span> </span><span class="annot"><span class="annottext">(UrlFromEnv -&gt; m String) -&gt; UrlFromEnv -&gt; m String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv -&gt; UrlFromEnv
 forall {a}. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621686875134"><span class="hs-identifier hs-var">envNotFoundMsg</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
-</span><a href="#local-6989586621686875126"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686898950"><span class="hs-identifier hs-var">envNotFoundMsg</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
+</span><a href="#local-6989586621686898942"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe URI
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/network-uri-2.6.4.1-ff6111cc9f401dfdd6cfb9899f973de8d1a7bb086bb17ed998afaa76126635bb/share/doc/html/src/Network.URI.html#parseURI"><span class="hs-identifier hs-var">N.parseURI</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686875130"><span class="hs-identifier hs-var">uri</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-102"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621686875136"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621686875136"><span class="hs-identifier hs-var">uri'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnvRecord URI -&gt; m (EnvRecord URI)
+</span><a href="#local-6989586621686898946"><span class="hs-identifier hs-var">uri</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621686898952"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621686898952"><span class="hs-identifier hs-var">uri'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnvRecord URI -&gt; m (EnvRecord URI)
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EnvRecord URI -&gt; m (EnvRecord URI))
@@ -476,8 +476,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv -&gt; URI -&gt; EnvRecord URI
 forall a. UrlFromEnv -&gt; a -&gt; EnvRecord a
 </span><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-var">EnvRecord</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
-</span><a href="#local-6989586621686875126"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621686875136"><span class="hs-identifier hs-var">uri'</span></a></span><span>
+</span><a href="#local-6989586621686898942"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span> </span><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621686898952"><span class="hs-identifier hs-var">uri'</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">Maybe URI
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; UrlFromEnv -&gt; m (EnvRecord URI)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; UrlFromEnv -&gt; m a
@@ -487,28 +487,28 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; UrlFromEnv -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv -&gt; UrlFromEnv
 forall {a}. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621686875138"><span class="hs-identifier hs-var">invalidUri</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
-</span><a href="#local-6989586621686875126"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span>
+</span><a href="#local-6989586621686898954"><span class="hs-identifier hs-var">invalidUri</span></a></span><span> </span><span class="annot"><span class="annottext">UrlFromEnv
+</span><a href="#local-6989586621686898942"><span class="hs-identifier hs-var">urlFromEnv</span></a></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-105"></span><span>    </span><span id="local-6989586621686875138"><span class="annot"><span class="annottext">invalidUri :: a -&gt; a
-</span><a href="#local-6989586621686875138"><span class="hs-identifier hs-var hs-var">invalidUri</span></a></span></span><span> </span><span id="local-6989586621686875143"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686875143"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><span id="line-105"></span><span>    </span><span id="local-6989586621686898954"><span class="annot"><span class="annottext">invalidUri :: a -&gt; a
+</span><a href="#local-6989586621686898954"><span class="hs-identifier hs-var hs-var">invalidUri</span></a></span></span><span> </span><span id="local-6989586621686898959"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621686898959"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;not a valid URI in environment variable: &quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686875143"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-106"></span><span>    </span><span id="local-6989586621686875134"><span class="annot"><span class="annottext">envNotFoundMsg :: a -&gt; a
-</span><a href="#local-6989586621686875134"><span class="hs-identifier hs-var hs-var">envNotFoundMsg</span></a></span></span><span> </span><span id="local-6989586621686875150"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686875150"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621686898959"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span id="local-6989586621686898950"><span class="annot"><span class="annottext">envNotFoundMsg :: a -&gt; a
+</span><a href="#local-6989586621686898950"><span class="hs-identifier hs-var hs-var">envNotFoundMsg</span></a></span></span><span> </span><span id="local-6989586621686898966"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621686898966"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;environment variable '&quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686875150"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+</span><a href="#local-6989586621686898966"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;' not set&quot;</span></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaMetadataG"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-var">RemoteSchemaMetadataG</span></a></span></span><span> </span><span id="local-6989586621686874710"><span class="annot"><a href="#local-6989586621686874710"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaMetadata"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-var">RemoteSchemaMetadata</span></a></span></span><span>
+</span><span id="line-108"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaMetadataG"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-var">RemoteSchemaMetadataG</span></a></span></span><span> </span><span id="local-6989586621686898526"><span class="annot"><a href="#local-6989586621686898526"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaMetadata"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-var">RemoteSchemaMetadata</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rsmName"><span class="annot"><span class="annottext">forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaName
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmName"><span class="hs-identifier hs-var hs-var">_rsmName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-110"></span><span>    </span><span id="_rsmDefinition"><span class="annot"><span class="annottext">forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaDef
@@ -519,9 +519,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 RemoteSchemaMetadataG r -&gt; [RemoteSchemaPermissionMetadata]
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmPermissions"><span class="hs-identifier hs-var hs-var">_rsmPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-113"></span><span>    </span><span id="_rsmRemoteRelationships"><span class="annot"><span class="annottext">forall r. RemoteSchemaMetadataG r -&gt; SchemaRemoteRelationships r
-</span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmRemoteRelationships"><span class="hs-identifier hs-var hs-var">_rsmRemoteRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.RemoteRelationship.html#SchemaRemoteRelationships"><span class="hs-identifier hs-type">SchemaRemoteRelationships</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874710"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmRemoteRelationships"><span class="hs-identifier hs-var hs-var">_rsmRemoteRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.RemoteRelationship.html#SchemaRemoteRelationships"><span class="hs-identifier hs-type">SchemaRemoteRelationships</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898526"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686875159"><span id="local-6989586621686875173"><span id="local-6989586621686875177"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaMetadataG r -&gt; ShowS
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686898975"><span id="local-6989586621686898989"><span id="local-6989586621686898993"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaMetadataG r -&gt; ShowS
 [RemoteSchemaMetadataG r] -&gt; ShowS
 RemoteSchemaMetadataG r -&gt; String
 (Int -&gt; RemoteSchemaMetadataG r -&gt; ShowS)
@@ -539,7 +539,7 @@ $cshow :: forall r. Show r =&gt; RemoteSchemaMetadataG r -&gt; String
 show :: RemoteSchemaMetadataG r -&gt; String
 $cshowList :: forall r. Show r =&gt; [RemoteSchemaMetadataG r] -&gt; ShowS
 showList :: [RemoteSchemaMetadataG r] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686875184"><span id="local-6989586621686875197"><span class="annot"><span class="annottext">RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686899000"><span id="local-6989586621686899013"><span class="annot"><span class="annottext">RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool
 (RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool)
 -&gt; (RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool)
 -&gt; Eq (RemoteSchemaMetadataG r)
@@ -555,7 +555,7 @@ $c/= :: forall r.
 Eq r =&gt;
 RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool
 /= :: RemoteSchemaMetadataG r -&gt; RemoteSchemaMetadataG r -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686875204"><span id="local-6989586621686875206"><span class="annot"><span class="annottext">(forall x.
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686899020"><span id="local-6989586621686899022"><span class="annot"><span class="annottext">(forall x.
  RemoteSchemaMetadataG r -&gt; Rep (RemoteSchemaMetadataG r) x)
 -&gt; (forall x.
     Rep (RemoteSchemaMetadataG r) x -&gt; RemoteSchemaMetadataG r)
@@ -580,8 +580,8 @@ to :: forall x.
 Rep (RemoteSchemaMetadataG r) x -&gt; RemoteSchemaMetadataG r
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874737"><span id="local-6989586621686875212"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874737"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621686874737"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874737"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621686875246"><span class="annot"><span class="annottext">codec :: JSONCodec (RemoteSchemaMetadataG r)
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898553"><span id="local-6989586621686899028"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898553"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621686898553"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898553"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621686899062"><span class="annot"><span class="annottext">codec :: JSONCodec (RemoteSchemaMetadataG r)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">UrlFromEnv
 -&gt; ObjectCodec (RemoteSchemaMetadataG r) (RemoteSchemaMetadataG r)
@@ -593,7 +593,7 @@ UrlFromEnv -&gt; ObjectCodec input output -&gt; ValueCodec input output
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Typeable a =&gt; UrlFromEnv
 forall {k} (a :: k). Typeable a =&gt; UrlFromEnv
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#typeableName"><span class="hs-identifier hs-var">typeableName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621686874737"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#typeableName"><span class="hs-identifier hs-var">typeableName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621686898553"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec (RemoteSchemaMetadataG r) (RemoteSchemaMetadataG r)
  -&gt; JSONCodec (RemoteSchemaMetadataG r))
 -&gt; ObjectCodec (RemoteSchemaMetadataG r) (RemoteSchemaMetadataG r)
@@ -798,16 +798,16 @@ ObjectCodec oldInput output
 forall r. RemoteSchemaMetadataG r -&gt; SchemaRemoteRelationships r
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmRemoteRelationships"><span class="hs-identifier hs-var">_rsmRemoteRelationships</span></a></span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874752"><span id="local-6989586621686875251"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874752"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874752"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621686875277"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RemoteSchemaMetadataG r)
+</span><span id="line-135"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898568"><span id="local-6989586621686899067"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898568"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898568"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621686899093"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RemoteSchemaMetadataG r)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (RemoteSchemaMetadataG r))
 -&gt; Value
 -&gt; Parser (RemoteSchemaMetadataG r)
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;RemoteSchemaMetadata&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686875278"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;RemoteSchemaMetadata&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686899094"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-137"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaName
 -&gt; RemoteSchemaDef
 -&gt; Maybe UrlFromEnv
@@ -837,7 +837,7 @@ RemoteSchemaName
       -&gt; RemoteSchemaMetadataG r)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-139"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RemoteSchemaName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -857,7 +857,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-141"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RemoteSchemaDef
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -874,7 +874,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-143"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe UrlFromEnv)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -887,7 +887,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span><span>
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [RemoteSchemaPermissionMetadata])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -914,7 +914,7 @@ forall r. RemoteSchemaTypeRelationships r -&gt; Name
 -&gt; Parser (SchemaRemoteRelationships r)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686875278"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [RemoteSchemaTypeRelationships r])
+</span><a href="#local-6989586621686899094"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [RemoteSchemaTypeRelationships r])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;remote_relationships&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [RemoteSchemaTypeRelationships r])
@@ -923,9 +923,9 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">J..!=</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-148"></span><span>
-</span><span id="line-149"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686874759"><span id="local-6989586621686875284"><span id="local-6989586621686875288"><span id="local-6989586621686875291"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874759"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686874759"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-150"></span><span>  </span><span id="local-6989586621686875318"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaMetadataG r -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-type">RemoteSchemaMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686875319"><span id="local-6989586621686875320"><span id="local-6989586621686875321"><span id="local-6989586621686875322"><span id="local-6989586621686875323"><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
+</span><span id="line-149"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686898575"><span id="local-6989586621686899100"><span id="local-6989586621686899104"><span id="local-6989586621686899107"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RemoteRelationshipG"><span class="hs-identifier hs-type">RemoteRelationshipG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898575"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686898575"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-150"></span><span>  </span><span id="local-6989586621686899134"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaMetadataG r -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-type">RemoteSchemaMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621686899135"><span id="local-6989586621686899136"><span id="local-6989586621686899137"><span id="local-6989586621686899138"><span id="local-6989586621686899139"><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
 Maybe UrlFromEnv
 SchemaRemoteRelationships r
 RemoteSchemaName
@@ -949,25 +949,25 @@ _rsmRemoteRelationships :: SchemaRemoteRelationships r
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621686875319"><span class="hs-identifier hs-var">_rsmName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686899135"><span class="hs-identifier hs-var">_rsmName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-153"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;definition&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; RemoteSchemaDef -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621686875320"><span class="hs-identifier hs-var">_rsmDefinition</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686899136"><span class="hs-identifier hs-var">_rsmDefinition</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-154"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;comment&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe UrlFromEnv -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe UrlFromEnv
-</span><a href="#local-6989586621686875321"><span class="hs-identifier hs-var">_rsmComment</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686899137"><span class="hs-identifier hs-var">_rsmComment</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-155"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;permissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [RemoteSchemaPermissionMetadata] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
-</span><a href="#local-6989586621686875322"><span class="hs-identifier hs-var">_rsmPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621686899138"><span class="hs-identifier hs-var">_rsmPermissions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-156"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;remote_relationships&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [RemoteSchemaTypeRelationships r] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -975,8 +975,8 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships r -&gt; [RemoteSchemaTypeRelationships r]
 forall k v. InsOrdHashMap k v -&gt; [v]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#elems"><span class="hs-identifier hs-var">InsOrdHashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships r
-</span><a href="#local-6989586621686875323"><span class="hs-identifier hs-var">_rsmRemoteRelationships</span></a></span><span>
+</span><a href="#local-6989586621686899139"><span class="hs-identifier hs-var">_rsmRemoteRelationships</span></a></span><span>
 </span><span id="line-157"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-158"></span><span>
-</span><span id="line-159"></span><span class="hs-special">$</span><span id="local-6989586621686874710"><span id="local-6989586621686874770"><span id="rsmComment"><span id="rsmDefinition"><span id="rsmName"><span id="rsmPermissions"><span id="rsmRemoteRelationships"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaMetadataG</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
+</span><span id="line-159"></span><span class="hs-special">$</span><span id="local-6989586621686898526"><span id="local-6989586621686898586"><span id="rsmComment"><span id="rsmDefinition"><span id="rsmName"><span id="rsmPermissions"><span id="rsmRemoteRelationships"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RemoteSchemaMetadataG</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
 </span><span id="line-160"></span></pre></body></html>
