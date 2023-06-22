@@ -1177,7 +1177,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                                   _rsTables source,
                                   tableInputs,
                                   metadataInvalidationKey,
-                                  namingConv
+                                  namingConv,
+                                  _smLogicalModels sourceMetadata
                                 )
 
                           let tablesMetadata = InsOrdHashMap.elems $ _smTables sourceMetadata

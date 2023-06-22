@@ -52,7 +52,6 @@ import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.DataConnector
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -413,13 +412,14 @@ instance Witch.From OrderDirection API.OrderDirection where
 
 --------------------------------------------------------------------------------
 
-newtype ScalarType
-  = ScalarType Text
+newtype ScalarType = ScalarType {unScalarType :: Text}
   deriving stock (Eq, Generic, Ord, Show)
-  deriving anyclass (FromJSON, FromJSONKey, Hashable, NFData, ToJSON, ToJSONKey)
+  deriving anyclass (Hashable, NFData)
+  deriving newtype (FromJSONKey, ToJSONKey)
+  deriving (FromJSON, ToJSON) via AC.Autodocodec ScalarType
 
 instance HasCodec ScalarType where
-  codec = AC.named "ScalarType" placeholderCodecViaJSON
+  codec = AC.named "ScalarType" $ AC.dimapCodec ScalarType unScalarType codec
 
 instance ToTxt ScalarType where
   toTxt (ScalarType name) = name

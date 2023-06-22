@@ -421,5 +421,9 @@ class
   -- metadata.
   defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
 
+  backendSupportsNestedObjects :: Either QErr (XNestedObjects b)
+  default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)
+  backendSupportsNestedObjects = throw400 InvalidConfiguration "Nested objects not supported"
+
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

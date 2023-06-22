@@ -20,6 +20,7 @@ module Hasura.Table.Metadata
     tmEventTriggers,
     tmInsertPermissions,
     tmIsEnum,
+    tmLogicalModel,
     tmObjectRelationships,
     tmRemoteRelationships,
     tmSelectPermissions,
@@ -38,6 +39,7 @@ import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -134,7 +136,8 @@ data TableMetadata b = TableMetadata
     _tmUpdatePermissions :: Permissions (UpdPermDef b),
     _tmDeletePermissions :: Permissions (DelPermDef b),
     _tmEventTriggers :: EventTriggers b,
-    _tmApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tmApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tmLogicalModel :: Maybe LogicalModelName
   }
   deriving (Generic)
 
@@ -175,6 +178,8 @@ instance (Backend b) => HasCodec (TableMetadata b) where
         <*> eventTriggers
         <*> optionalFieldOrNull' "apollo_federation_config"
       .== _tmApolloFederationConfig
+        <*> optionalFieldOrNull' "logical_model"
+      .== _tmLogicalModel
     where
       -- Some backends do not implement event triggers. In those cases we tailor
       -- the codec to omit the @"event_triggers"@ field from the API.
@@ -217,6 +222,7 @@ mkTableMeta qt isEnum config =
     mempty
     mempty
     Nothing
+    Nothing
 
 instance (Backend b) => FromJSON (TableMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
@@ -246,6 +252,8 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "event triggers" etcName (o .:? etKey .!= [])
       <*> o
       .:? enableAFKey
+      <*> o
+      .:? logicalModelKey
     where
       tableKey = "table"
       isEnumKey = "is_enum"
@@ -260,6 +268,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       cfKey = "computed_fields"
       rrKey = "remote_relationships"
       enableAFKey = "apollo_federation_config"
+      logicalModelKey = "logical_model"
 
       getUnexpectedKeys o =
         HS.fromList (KM.keys o) `HS.difference` expectedKeySet
@@ -278,5 +287,6 @@ instance (Backend b) => FromJSON (TableMetadata b) where
             etKey,
             cfKey,
             rrKey,
-            enableAFKey
+            enableAFKey,
+            logicalModelKey
           ]

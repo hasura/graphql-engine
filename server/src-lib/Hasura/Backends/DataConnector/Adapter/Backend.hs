@@ -165,6 +165,8 @@ instance Backend 'DataConnector where
 
   defaultTriggerOnReplication = Nothing
 
+  backendSupportsNestedObjects = pure ()
+
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig
   type SourceConnConfiguration 'DataConnector = DC.ConnSourceConfig
