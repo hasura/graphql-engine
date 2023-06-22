@@ -5,10 +5,14 @@ GRAPHQL_ENGINE_PRO_PATH=$(shell cabal list-bin exe:graphql-engine-pro)
 API_TESTS=api-tests:exe:api-tests
 API_TESTS_PRO=api-tests-pro:exe:api-tests-pro
 
+# Note that all tests start all the various databases, because we test remote
+# relationships across databases, and so running e.g. the "Postgres" tests also
+# runs the "Postgres-SQLServer" tests, the "Postgres-Cockroach" tests, etc.
+
 .PHONY: test-bigquery
 ## test-bigquery: run tests for BigQuery backend
 # will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
-test-bigquery: build remove-tix-file start-api-test-postgres
+test-bigquery: build remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=BigQuery \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
@@ -48,9 +52,7 @@ test-cockroach: build remove-tix-file start-api-tests-backends
 
 .PHONY: test-postgres
 ## test-postgres: run tests for Postgres backend
-# we have a few tests labeled with 'Postgres' which test their variants, too,
-# so this also starts containers for Postgres variants
-test-postgres: build build-postgres-agent remove-tix-file start-api-test-postgres
+test-postgres: build build-postgres-agent remove-tix-file start-api-tests-backends
 	HASURA_TEST_BACKEND_TYPE=Postgres \
 		GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
 		POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
