@@ -33,6 +33,7 @@ import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Data.Aeson.Extended qualified as J
 import Data.CaseInsensitive qualified as CI
+import Data.Has
 import Data.HashMap.Internal.Strict qualified as Map
 import Data.List.NonEmpty qualified as List.NonEmpty
 import Database.PG.Query qualified as PG
@@ -230,6 +231,9 @@ instance Eq PGSourceConfig where
 
 instance J.ToJSON PGSourceConfig where
   toJSON = J.toJSON . show . _pscConnInfo
+
+instance Has () PGSourceConfig where
+  hasLens = united
 
 runPgSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>

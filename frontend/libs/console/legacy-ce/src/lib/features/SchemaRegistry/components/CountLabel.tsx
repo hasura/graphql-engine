@@ -1,11 +1,24 @@
 import React from 'react';
 import { ChangeLevel } from '../types';
+import { FaExclamationTriangle } from 'react-icons/fa';
+import { IconTooltip } from '../../../new-components/Tooltip';
 
 export const CountLabel: React.VFC<{
-  count: number;
+  count?: number;
   type: ChangeLevel;
 }> = props => {
   const { count, type } = props;
+
+  if (count === undefined) {
+    return (
+      <IconTooltip
+        icon={<FaExclamationTriangle className="pr-2 text-xl text-secondary" />}
+        message={
+          'Could not compute changes with respect to previous schema for this role. A previous schema for this role might not exist or one of the GraphQL schemas could be erroneous.'
+        }
+      />
+    );
+  }
 
   let textColor = 'text-green-500';
   let backgroundColor = 'bg-green-100';

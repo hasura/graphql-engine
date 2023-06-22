@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.CustomTypes
     clearCustomTypesInMetadata,
     resolveCustomTypes,
     lookupBackendScalar,
+    ScalarParsingMap (..),
   )
 where
 
@@ -58,11 +59,17 @@ clearCustomTypesInMetadata =
 --------------------------------------------------------------------------------
 -- Cache building functions
 
+-- | A map from GraphQL name to equivalent scalar type for a given backend.
+newtype ScalarParsingMap b = ScalarParsingMap (HashMap G.Name (ScalarWrapper b))
+  deriving newtype (Semigroup, Monoid)
+
+deriving stock instance (Backend b) => Eq (ScalarParsingMap b)
+
 resolveCustomTypes ::
   (MonadError QErr m) =>
   SourceCache ->
   CustomTypes ->
-  BackendMap ScalarMap ->
+  BackendMap ScalarParsingMap ->
   m AnnotatedCustomTypes
 resolveCustomTypes sources customTypes allScalars =
   runValidate (validateCustomTypeDefinitions sources customTypes allScalars)
@@ -116,7 +123,7 @@ validateCustomTypeDefinitions ::
   SourceCache ->
   CustomTypes ->
   -- | A map that, to each backend, associates the set of all its scalars.
-  BackendMap ScalarMap ->
+  BackendMap ScalarParsingMap ->
   m AnnotatedCustomTypes
 validateCustomTypeDefinitions sources customTypes allScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
@@ -332,7 +339,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
 
 -- see Note [Postgres scalars in custom types]
 lookupBackendScalar ::
-  BackendMap ScalarMap ->
+  BackendMap ScalarParsingMap ->
   G.Name ->
   Maybe AnnotatedScalarType
 lookupBackendScalar allScalars baseType =
@@ -341,8 +348,8 @@ lookupBackendScalar allScalars baseType =
   where
     go backendScalars =
       ASTReusedScalar baseType
-        <$> AB.traverseBackend @Backend backendScalars \(ScalarMap scalarMap :: ScalarMap b) ->
-          ScalarWrapper <$> HashMap.lookup baseType scalarMap
+        <$> AB.traverseBackend @Backend backendScalars \(ScalarParsingMap scalarMap :: ScalarParsingMap b) ->
+          HashMap.lookup baseType scalarMap
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types

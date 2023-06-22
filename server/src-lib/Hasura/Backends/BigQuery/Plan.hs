@@ -12,6 +12,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
+import Hasura.Backends.BigQuery.DDL (scalarTypeFromColumnType)
 import Hasura.Backends.BigQuery.FromIr as BigQuery
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error qualified as E
@@ -76,8 +77,12 @@ prepareValueNoPlan sessionVariables =
             )
         CollectableTypeArray {} ->
           throwError $ E.internalError "Cannot currently prepare array types in BigQuery."
-    UVParameter _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
+    UVParameter _ RQL.ColumnValue {..} ->
+      pure (ValueExpression (TypedValue (scalarTypeFromColumnType cvType) cvValue))
   where
     globalSessionExpression =
       ValueExpression
-        (StringValue (LT.toStrict (encodeToLazyText sessionVariables)))
+        ( TypedValue
+            StringScalarType
+            (StringValue (LT.toStrict (encodeToLazyText sessionVariables)))
+        )

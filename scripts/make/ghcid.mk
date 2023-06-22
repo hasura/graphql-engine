@@ -3,7 +3,7 @@ GRAPHQL_ENGINE_PATH=$(shell cabal list-bin exe:graphql-engine)
 
 GHC_OPTIONS=-Wno-prepositive-qualified-module -Wno-missing-export-lists -O0
 CABAL_REPL_FLAGS = --builddir ./dist-newstyle/repl --ghc-options=\"$(GHC_OPTIONS)\"
-GHCID_FLAGS=--no-height-limit
+GHCID_FLAGS?=--no-height-limit
 
 define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \

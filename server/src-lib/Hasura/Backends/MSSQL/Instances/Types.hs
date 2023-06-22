@@ -79,8 +79,8 @@ instance Backend 'MSSQL where
   textToScalarValue :: Maybe Text -> ScalarValue 'MSSQL
   textToScalarValue = maybe ODBC.NullValue ODBC.TextValue
 
-  parseScalarValue :: ScalarType 'MSSQL -> Value -> Either QErr (ScalarValue 'MSSQL)
-  parseScalarValue = MSSQL.parseScalarValue
+  parseScalarValue :: ScalarTypeParsingContext 'MSSQL -> ScalarType 'MSSQL -> Value -> Either QErr (ScalarValue 'MSSQL)
+  parseScalarValue = const MSSQL.parseScalarValue
 
   -- TODO: Is this Postgres specific? Should it be removed from the class?
   scalarValueToJSON :: ScalarValue 'MSSQL -> Value

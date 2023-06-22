@@ -110,7 +110,7 @@ modifyApolloFedParserFunc
             cvType = ciType columnInfo
         cvValue <- case KMap.lookup (K.fromText colName) afPKValues of
           Nothing -> P.parseError . toErrorMessage $ "cannot find " <> colName <> " in _Any type"
-          Just va -> liftQErr $ parseScalarValueColumnType (ciType columnInfo) va
+          Just va -> liftQErr $ flip runReaderT _siConfiguration $ parseScalarValueColumnType (ciType columnInfo) va
         pure
           $ IR.BoolField
           . IR.AVColumn columnInfo

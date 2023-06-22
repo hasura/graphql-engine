@@ -12,8 +12,8 @@ import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata)
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata)
+import Hasura.LogicalModel.Cache (LogicalModelInfo)
+import Hasura.NativeQuery.Metadata (ArgumentName, InterpolatedQuery, NativeQueryMetadata)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -161,7 +161,7 @@ class
     EventTriggerConf b
 
   parseCollectableType ::
-    (MonadError QErr m) =>
+    (MonadError QErr m, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
     CollectableType (ColumnType b) ->
     Value ->
     m (PartialSQLExp b)
@@ -237,9 +237,9 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    LogicalModelMetadata b ->
+    LogicalModelInfo b ->
     NativeQueryMetadata b ->
-    m ()
+    m (InterpolatedQuery ArgumentName)
   validateNativeQuery _ _ _ _ =
     throw500 "validateNativeQuery: not implemented for this backend."
 
@@ -247,7 +247,7 @@ class
     (MonadIO m, MonadError QErr m) =>
     Env.Environment ->
     SourceConnConfiguration b ->
-    LogicalModelMetadata b ->
+    LogicalModelInfo b ->
     StoredProcedureMetadata b ->
     m ()
   validateStoredProcedure _ _ _ _ =

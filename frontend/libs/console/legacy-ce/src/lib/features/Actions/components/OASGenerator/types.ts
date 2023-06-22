@@ -1,5 +1,5 @@
 import { RequestTransformMethod } from '../../../../metadata/types';
-import { createGraphQLSchema } from '@dancamma/openapi-to-graphql';
+import { createGraphQLSchema } from '@hasura/open-api-to-graphql';
 import z from 'zod';
 import { formSchema } from './OASGeneratorPage';
 

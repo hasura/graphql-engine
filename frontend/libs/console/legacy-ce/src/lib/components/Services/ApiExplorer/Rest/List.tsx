@@ -16,6 +16,7 @@ import _push from '../../Data/push';
 import Landing from './Landing';
 import { badgeSort } from './utils';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import { ExportOpenApiButton } from './Form/ExportOpenAPI';
 
 const ListComponent: React.FC<Props> = ({
   restEndpoints,
@@ -59,8 +60,10 @@ const ListComponent: React.FC<Props> = ({
             <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/restified.html" />
           </div>
         </div>
-
-        <div className="mt-md overflow-x-auto border border-gray-300 rounded">
+        <div className="pt-xs text-right">
+          <ExportOpenApiButton />
+        </div>
+        <div className="mt-xs overflow-x-auto border border-gray-300 rounded">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <th className="px-sm py-xs max-w-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">

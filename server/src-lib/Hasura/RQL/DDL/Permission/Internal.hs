@@ -17,6 +17,7 @@ where
 import Control.Lens hiding ((.=))
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
@@ -88,7 +89,9 @@ procBoolExp ::
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -112,11 +115,13 @@ procBoolExp source tn fieldInfoMap be = do
 -- independent dependencies on other tables. For example, "this user can only
 -- select from this logical model if their ID is in the @allowed_users@ table".
 procLogicalModelBoolExp ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   LogicalModelName ->

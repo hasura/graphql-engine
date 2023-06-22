@@ -68,6 +68,7 @@ instance (Backend b) => Hashable (TableObjId b)
 data LogicalModelObjId (b :: BackendType)
   = LMOPerm RoleName PermType
   | LMOCol (Column b)
+  | LMOInnerLogicalModel LogicalModelName
   deriving (Generic)
 
 deriving stock instance (Backend b) => Eq (LogicalModelObjId b)
@@ -147,6 +148,8 @@ reportSchemaObj = \case
           "logical model column " <> toTxt lm <> "." <> toTxt cn
         SOILogicalModelObj lm (LMOPerm rn pt) ->
           "permission " <> toTxt lm <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
+        SOILogicalModelObj lm (LMOInnerLogicalModel inner) ->
+          "inner logical model " <> toTxt lm <> "." <> toTxt inner
         SOITableObj tn (TOCol cn) ->
           "column " <> toTxt tn <> "." <> toTxt cn
         SOITableObj tn (TORel cn) ->
@@ -209,6 +212,7 @@ data DependencyReason
   | DRRemoteRelationship
   | DRParentRole
   | DRLogicalModel
+  | DRInnerLogicalModel
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -232,6 +236,7 @@ reasonToTxt = \case
   DRRemoteRelationship -> "remote_relationship"
   DRParentRole -> "parent_role"
   DRLogicalModel -> "logical_model"
+  DRInnerLogicalModel -> "inner_logical_model"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

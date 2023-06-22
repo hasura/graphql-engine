@@ -372,3 +372,6 @@ instance FromEnv Server.Types.ApolloFederationStatus where
 
 instance FromEnv GranularPrometheusMetricsState where
   fromEnv = fmap (bool GranularMetricsOff GranularMetricsOn) . fromEnv @Bool
+
+instance FromEnv Server.Types.CloseWebsocketsOnMetadataChangeStatus where
+  fromEnv = fmap (bool Server.Types.CWMCDisabled Server.Types.CWMCEnabled) . fromEnv @Bool

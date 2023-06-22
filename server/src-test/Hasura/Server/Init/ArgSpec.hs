@@ -2096,3 +2096,16 @@ serveParserSpec =
         Opt.Success enableApolloFederation -> enableApolloFederation == (Just Types.ApolloFederationEnabled)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "It accepts '--disable-close-websockets-on-metadata-change'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--disable-close-websockets-on-metadata-change"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.rsoCloseWebsocketsOnMetadataChangeStatus result `Hspec.shouldSatisfy` \case
+        Opt.Success disableCloseWebsocketsOnMetadataChange -> disableCloseWebsocketsOnMetadataChange == (Just Types.CWMCDisabled)
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False

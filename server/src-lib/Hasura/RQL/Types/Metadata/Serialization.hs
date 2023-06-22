@@ -159,6 +159,7 @@ sourcesToOrdJSONList sources =
           deletePermissions
           eventTriggers
           enableApolloFed
+          logicalModel
         ) =
         AO.object
           $ [("table", AO.toOrdered table)]
@@ -174,7 +175,8 @@ sourcesToOrdJSONList sources =
               updatePermissionsPair,
               deletePermissionsPair,
               eventTriggersPair,
-              apolloFedConfigPair
+              apolloFedConfigPair,
+              logicalModelPair
             ]
         where
           isEnumPair = if isEnum then Just ("is_enum", AO.toOrdered isEnum) else Nothing
@@ -237,6 +239,7 @@ sourcesToOrdJSONList sources =
               eventTriggerConfToOrdJSON
               etcName
               eventTriggers
+          logicalModelPair = ("logical_model",) . AO.toOrdered <$> logicalModel
 
           relDefToOrdJSON :: (ToJSON a) => RelDef a -> AO.Value
           relDefToOrdJSON (RelDef name using comment) =

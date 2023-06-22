@@ -76,6 +76,9 @@ module Hasura.RQL.IR.Select
     TableAggregateFieldG (..),
     TableAggregateFields,
     TableAggregateFieldsG,
+    GroupByG (..),
+    GroupByField (..),
+    GroupKeyField (..),
     CountDistinct (..),
     insertFunctionArg,
     mkAnnColumnField,
@@ -323,27 +326,32 @@ traverseSourceRelationshipSelection f = \case
 data TableAggregateFieldG (b :: BackendType) (r :: Type) v
   = TAFAgg (AggregateFields b v)
   | TAFNodes (XNodesAgg b) (AnnFieldsG b r v)
+  | TAFGroupBy (XGroupBy b) (GroupByG b r v)
   | TAFExp Text
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
     Eq (AggregateFields b v),
-    Eq (AnnFieldsG b r v)
+    Eq (AnnFieldsG b r v),
+    Eq (GroupByG b r v)
   ) =>
   Eq (TableAggregateFieldG b r v)
 
 deriving stock instance
   ( Backend b,
     Show (AggregateFields b v),
-    Show (AnnFieldsG b r v)
+    Show (AnnFieldsG b r v),
+    Show (GroupByG b r v)
   ) =>
   Show (TableAggregateFieldG b r v)
 
 instance (Backend b) => Bifoldable (TableAggregateFieldG b) where
-  bifoldMap f g = \case
-    TAFAgg {} -> mempty
-    TAFNodes _ fields -> foldMap (foldMap $ bifoldMap f g) fields
+  bifoldMap :: (Monoid m) => (r -> m) -> (v -> m) -> TableAggregateFieldG b r v -> m
+  bifoldMap mapR mapV = \case
+    TAFAgg aggFields -> foldMap (foldMap $ foldMap mapV) aggFields
+    TAFNodes _ fields -> foldMap (foldMap $ bifoldMap mapR mapV) fields
+    TAFGroupBy _ groupByFields -> bifoldMap mapR mapV groupByFields
     TAFExp {} -> mempty
 
 data AggregateField (b :: BackendType) v
@@ -373,6 +381,48 @@ deriving stock instance
 deriving stock instance
   (Backend b, Show (FunctionArgumentExp b v), Show v) =>
   Show (AggregateOp b v)
+
+data GroupByG (b :: BackendType) r v = GroupByG
+  { _gbgKeys :: [GroupKeyField b],
+    _gbgFields :: Fields (GroupByField b r v)
+  }
+  deriving (Functor, Foldable, Traversable)
+
+deriving stock instance (Backend b, Eq (GroupByField b r v), Eq (GroupKeyField b)) => Eq (GroupByG b r v)
+
+deriving stock instance (Backend b, Show (GroupByField b r v), Show (GroupKeyField b)) => Show (GroupByG b r v)
+
+instance (Backend b) => Bifoldable (GroupByG b) where
+  bifoldMap :: (Monoid m) => (r -> m) -> (v -> m) -> GroupByG b r v -> m
+  bifoldMap mapR mapV GroupByG {..} =
+    foldMap (foldMap $ bifoldMap mapR mapV) _gbgFields
+
+data GroupByField (b :: BackendType) r v
+  = GBFGroupKey (Fields (GroupKeyField b))
+  | GBFAggregate (AggregateFields b v)
+  | GBFNodes (AnnFieldsG b r v)
+  | GBFExp Text
+  deriving (Functor, Foldable, Traversable)
+
+deriving stock instance (Backend b, Eq (GroupKeyField b), Eq (AggregateField b v), Eq (AnnFieldG b r v)) => Eq (GroupByField b r v)
+
+deriving stock instance (Backend b, Show (GroupKeyField b), Show (AggregateField b v), Show (AnnFieldG b r v)) => Show (GroupByField b r v)
+
+instance (Backend b) => Bifoldable (GroupByField b) where
+  bifoldMap :: (Monoid m) => (r -> m) -> (v -> m) -> GroupByField b r v -> m
+  bifoldMap mapR mapV = \case
+    GBFGroupKey _groupKeyFields -> mempty
+    GBFAggregate aggFields -> foldMap (foldMap $ foldMap mapV) aggFields
+    GBFNodes fields -> foldMap (foldMap $ bifoldMap mapR mapV) fields
+    GBFExp _text -> mempty
+
+data GroupKeyField (b :: BackendType)
+  = GKFColumn (Column b)
+  | GKFExp Text
+
+deriving stock instance (Backend b) => Eq (GroupKeyField b)
+
+deriving stock instance (Backend b) => Show (GroupKeyField b)
 
 -- | Types of fields that can be selected in a user query.
 data SelectionField (b :: BackendType) v

@@ -27,7 +27,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.DDL.CustomTypes (lookupBackendScalar)
+import Hasura.RQL.DDL.CustomTypes (ScalarParsingMap (..), lookupBackendScalar)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
@@ -36,7 +36,6 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.Source
 import Hasura.SQL.BackendMap (BackendMap)
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -116,7 +115,7 @@ resolveAction ::
   Env.Environment ->
   AnnotatedCustomTypes ->
   ActionDefinitionInput ->
-  BackendMap ScalarMap -> -- See Note [Postgres scalars in custom types]
+  BackendMap ScalarParsingMap -> -- See Note [Postgres scalars in custom types]
   m
     ( ResolvedActionDefinition,
       AnnotatedOutputType

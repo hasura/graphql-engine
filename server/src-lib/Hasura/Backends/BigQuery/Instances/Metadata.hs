@@ -5,6 +5,8 @@ module Hasura.Backends.BigQuery.Instances.Metadata () where
 import Hasura.Backends.BigQuery.DDL qualified as BigQuery
 import Hasura.Backends.BigQuery.Schema.Introspection qualified as BigQuery (listAllTables)
 import Hasura.Base.Error (Code (UnexpectedPayload), throw400)
+import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
 import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
@@ -32,4 +34,6 @@ instance BackendMetadata 'BigQuery where
   listAllTables = BigQuery.listAllTables
   listAllTrackables _ = throw400 UnexpectedPayload "listAllTrackables not supported by BigQuery!"
   getTableInfo _ _ = throw400 UnexpectedPayload "get_table_info not yet supported in BigQuery!"
-  validateNativeQuery _ _ _ = validateArgumentDeclaration -- for now, all queries are valid
+  validateNativeQuery _ _ _ nq = do
+    validateArgumentDeclaration nq
+    pure (trimQueryEnd (_nqmCode nq)) -- for now, all queries are valid

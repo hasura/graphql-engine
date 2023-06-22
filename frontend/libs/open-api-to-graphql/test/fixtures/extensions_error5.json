@@ -1,0 +1,120 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Extensions Error 5",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Elias Meire",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3002"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/user": {
+      "post": {
+        "tags": ["user"],
+        "summary": "Creates a user",
+        "description": "Creates a user",
+        "operationId": "createUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/user" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/user" }
+              }
+            }
+          }
+        },
+        "callbacks": {
+          "userCreated": {
+            "$ref": "#/components/callbacks/UserEvent"
+          },
+          "userCreated2": {
+            "$ref": "#/components/callbacks/UserEvent2"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "user": {
+        "type": "object",
+        "description": "A user represents a natural person",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The legal name of a user"
+          }
+        }
+      }
+    },
+    "callbacks": {
+      "UserEvent": {
+        "/users/{$request.body#/id}/events/+": {
+          "post": {
+            "operationId": "userEventListener",
+            "description": "Listen all user events owned by userName",
+            "responses": {
+              "204": {
+                "description": "user event response"
+              }
+            }
+          }
+        }
+      },
+      "UserEvent2": {
+        "/users/{$request.body#/id}/events/+": {
+          "post": {
+            "operationId": "userEventListener2",
+            "x-graphql-field-name": "userEventListener",
+            "description": "Listen all user events owned by userName",
+            "responses": {
+              "204": {
+                "description": "user event response"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": []
+}

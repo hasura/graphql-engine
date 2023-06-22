@@ -287,6 +287,9 @@ setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
 
+  -- enable open telemetry output in tests
+  GraphqlEngine.postMetadata_ testEnvironment Schema.enableOpenTelemetryCommand
+
   let schemaName = Schema.getSchemaName testEnvironment
   -- Because the test harness sets the schema name we use for testing, we need
   -- to make sure it exists before we run the tests. We may want to consider

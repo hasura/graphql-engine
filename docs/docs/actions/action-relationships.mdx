@@ -24,6 +24,12 @@ connected with the rest of the graph.
 For example, a custom `insertAuthor` action will be related to the `author` object in the schema. Hence, we would want
 to be able to get information about the `author` from the graph as a response of the `insertAuthor` mutation.
 
+:::info Supported databases
+
+Currently, Action Relationships are only supported for Postgres databases.
+
+:::
+
 ## Using an Action's output types in relationships
 
 Actions can be connected to the rest of the graph by setting up relationships on its return output type.
@@ -170,8 +176,8 @@ Actions by using a Hasura instance as a federation gateway, or "parent" supergra
 
 To achieve this we can add a "child" Hasura instance to a "parent" or "gateway" Hasura instance as a Remote Schema. This
 allows relationships to be created between types from two different Actions in the child instance by creating a
-[Remote Schema to Remote Schema](/remote-schemas/remote-relationships/remote-schema-relationships.mdx) relationship
-on the same Remote Schema.
+[Remote Schema to Remote Schema](/remote-schemas/remote-relationships/remote-schema-relationships.mdx) relationship on
+the same Remote Schema.
 
 :::info Remote Schema Action to Action workaround
 

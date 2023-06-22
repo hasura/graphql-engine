@@ -129,7 +129,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
           value: dbURL,
         },
       ]).then(() => {
-        return emptyEnvVar;
+        return { envVar: emptyEnvVar, oldConfigHash: hash };
       });
     })
     .catch(e => {

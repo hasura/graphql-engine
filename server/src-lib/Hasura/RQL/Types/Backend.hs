@@ -92,6 +92,7 @@ class
     Representable (ScalarSelectionArguments b),
     Representable (ScalarType b),
     Representable (XComputedField b),
+    Representable (XGroupBy b),
     Representable (TableName b),
     Eq (RawFunctionInfo b),
     Show (RawFunctionInfo b),
@@ -332,6 +333,9 @@ class
   type XNestedObjects b :: Type
   type XNestedObjects b = XDisable
 
+  type XGroupBy b :: Type
+  type XGroupBy b = XDisable
+
   -- The result of dynamic connection template resolution
   type ResolvedConnectionTemplate b :: Type
   type ResolvedConnectionTemplate b = () -- Uninmplemented value
@@ -365,7 +369,9 @@ class
   getCustomAggregateOperators = const mempty
 
   textToScalarValue :: Maybe Text -> ScalarValue b
-  parseScalarValue :: ScalarType b -> Value -> Either QErr (ScalarValue b)
+
+  parseScalarValue :: ScalarTypeParsingContext b -> ScalarType b -> Value -> Either QErr (ScalarValue b)
+
   scalarValueToJSON :: ScalarValue b -> Value
   functionToTable :: FunctionName b -> TableName b
   tableToFunction :: TableName b -> FunctionName b
@@ -414,6 +420,10 @@ class
   -- Setting this to @Nothing@ will disable event trigger configuration in the
   -- metadata.
   defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
+
+  backendSupportsNestedObjects :: Either QErr (XNestedObjects b)
+  default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)
+  backendSupportsNestedObjects = throw400 InvalidConfiguration "Nested objects not supported"
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

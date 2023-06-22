@@ -34,6 +34,7 @@ module Hasura.GraphQL.Schema.Common
     TablePerms,
     getTableRoles,
     getLogicalModelRoles,
+    askScalarTypeParsingContext,
     askTableInfo,
     askLogicalModelInfo,
     askNativeQueryInfo,
@@ -340,6 +341,12 @@ getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
     go si = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
+
+askScalarTypeParsingContext ::
+  forall b r m.
+  (MonadReader r m, Has (SourceInfo b) r, Has (ScalarTypeParsingContext b) (SourceConfig b)) =>
+  m (ScalarTypeParsingContext b)
+askScalarTypeParsingContext = asks (getter . _siConfiguration @b . getter)
 
 -- | Looks up table information for the given table name. This function
 -- should never fail, since the schema cache construction process is

@@ -1,4 +1,4 @@
-import { MetadataActions } from './actions';
+import { ExportMetadataSuccess, MetadataActions } from './actions';
 import {
   HasuraMetadataV3,
   CollectionName,
@@ -99,30 +99,37 @@ const renameSourceAttributes = (sources: HasuraMetadataV3['sources']) =>
     return { ...s, tables };
   });
 
+const updateMetadata = (
+  action: ExportMetadataSuccess,
+  state: MetadataState
+) => {
+  const metadata =
+    'metadata' in action.data ? action.data.metadata : action.data;
+  return {
+    ...state,
+    metadataObject: {
+      ...metadata,
+      sources: renameSourceAttributes(metadata.sources),
+    },
+    resourceVersion:
+      'resource_version' in action.data ? action.data.resource_version : 1,
+    allowedQueries: setAllowedQueries(
+      metadata?.query_collections,
+      metadata?.allowlist
+    ),
+    inheritedRoles: metadata?.inherited_roles,
+    loading: false,
+    error: null,
+  };
+};
+
 export const metadataReducer = (
   state = defaultState,
   action: MetadataActions
 ): MetadataState => {
   switch (action.type) {
     case 'Metadata/EXPORT_METADATA_SUCCESS':
-      const metadata =
-        'metadata' in action.data ? action.data.metadata : action.data;
-      return {
-        ...state,
-        metadataObject: {
-          ...metadata,
-          sources: renameSourceAttributes(metadata.sources),
-        },
-        resourceVersion:
-          'resource_version' in action.data ? action.data.resource_version : 1,
-        allowedQueries: setAllowedQueries(
-          metadata?.query_collections,
-          metadata?.allowlist
-        ),
-        inheritedRoles: metadata?.inherited_roles,
-        loading: false,
-        error: null,
-      };
+      return updateMetadata(action, state);
     case 'Metadata/EXPORT_METADATA_REQUEST':
       return {
         ...state,

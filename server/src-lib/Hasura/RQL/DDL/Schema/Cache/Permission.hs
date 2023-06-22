@@ -11,6 +11,7 @@ where
 
 import Data.Aeson
 import Data.Graph qualified as G
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
@@ -184,11 +185,13 @@ resolveCheckTablePermission inheritedRolePermission accumulatedRolePermInfo perm
   resolveCheckPermission checkPermission roleName inconsistentRoleEntity
 
 buildTablePermissions ::
-  forall b m.
+  forall b m r.
   ( MonadError QErr m,
     MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableCoreCache b ->
@@ -287,11 +290,13 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
 -- | Create the permission map for a native query based on the select
 -- permissions given in metadata. Compare with 'buildTablePermissions'.
 buildLogicalModelPermissions ::
-  forall b m.
+  forall b m r.
   ( MonadError QErr m,
     MonadWriter (Seq CollectItem) m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableCoreCache b ->

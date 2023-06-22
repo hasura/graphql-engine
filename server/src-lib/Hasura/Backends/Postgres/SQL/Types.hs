@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | Postgres SQL Types
@@ -92,6 +93,7 @@ import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
 import Text.Builder qualified as TB
+import Text.Regex.TDFA ((=~))
 
 {- Note [About identifier types]
 
@@ -471,13 +473,84 @@ pgScalarTypeToText = \case
   PGCompositeScalar t -> t
   PGEnumScalar t -> t
 
+-- | Used for logical models validation.
 instance HasCodec PGScalarType where
   codec =
     AC.bimapCodec
-      (Right . textToPGScalarType)
+      decodePGScalarType
       pgScalarTypeToText
       AC.textCodec
       AC.<?> "Postgres Scalar Types"
+    where
+      -- We check that the types are one of the ones described in our docs
+      -- <https://hasura.io/docs/latest/schema/postgres/postgresql-types>.
+      decodePGScalarType :: Text -> Either String PGScalarType
+      decodePGScalarType t =
+        maybe
+          (Left $ "Did not recognize scalar type '" <> T.unpack t <> "'")
+          Right
+          -- For tables, etc. We accept all types. For native queries we want to be a bit more conservatives.
+          (lookup typ (pgScalarTranslations <> pgKnownUnknowns))
+        where
+          typ = massage t
+          massage = stripPrecision . T.toLower
+          stripPrecision usertype =
+            fromMaybe usertype
+              $ listToMaybe
+              $ [ prectype
+                  | prectype <- typesWithPrecision,
+                    usertype =~ ("^" <> prectype <> " *\\([0-9]+\\)$")
+                ]
+              <> [ prectype
+                   | prectype <- typesWithPrecision2,
+                     usertype =~ ("^" <> prectype <> " *\\([0-9]+ *, *[0-9]+\\)$")
+                 ]
+
+          typesWithPrecision :: [Text]
+          typesWithPrecision =
+            [ "bit",
+              "bit varying",
+              "varbit",
+              "char",
+              "character",
+              "varchar",
+              "character varying"
+            ]
+          typesWithPrecision2 :: [Text]
+          typesWithPrecision2 =
+            [ "numeric",
+              "decimal"
+            ]
+          -- Types we describe as PGUnknown internally.
+          pgKnownUnknowns =
+            map (,PGUnknown typ)
+              $ [ "bit varying",
+                  "bit",
+                  "box",
+                  "bytea",
+                  "cidr",
+                  "circle",
+                  "inet",
+                  "interval",
+                  "line",
+                  "lseg",
+                  "macaddr",
+                  "macaddr8",
+                  "path",
+                  "pg_lsn",
+                  "point",
+                  "polygon",
+                  "serial2",
+                  "serial4",
+                  "smallserial",
+                  "time without time zone",
+                  "time",
+                  "tsquery",
+                  "tsvector",
+                  "txid_snapshot",
+                  "varbit",
+                  "xml"
+                ]
 
 instance ToSQL PGScalarType where
   toSQL =
@@ -511,6 +584,7 @@ pgScalarTranslations =
     ("bigserial", PGBigSerial),
     ("smallint", PGSmallInt),
     ("int2", PGSmallInt),
+    ("int", PGInteger),
     ("integer", PGInteger),
     ("int4", PGInteger),
     ("bigint", PGBigInt),

@@ -188,23 +188,17 @@ tests = do
                 - insertable: true
                   name: id
                   nullable: false
-                  type:
-                  - number
-                  - Float
+                  type: number
                   updatable: true
                 - insertable: true
                   name: author
                   nullable: false
-                  type:
-                  - number
-                  - Float
+                  type: number
                   updatable: true
                 - insertable: true
                   name: title
                   nullable: false
-                  type:
-                  - string
-                  - String
+                  type: string
                   updatable: true
                 deletable: true
                 insertable: true

@@ -117,14 +117,14 @@ describe('Create event trigger with shortest possible path', () => {
     cy.log(
       '**--- Click on Edit trigger operation and modfiy the trigger operation'
     );
-    cy.findAllByRole('button', { name: 'Edit' }).eq(1).click();
+    cy.get('[data-test=edit-operations]').click();
     cy.get('[name=update]').click();
     cy.get('[name=column-id]').click();
     cy.findByRole('button', { name: 'Save' }).click();
 
     // modify the retry config
     cy.log('**--- Click on Edit retry config and modify the config');
-    cy.findAllByRole('button', { name: 'Edit' }).eq(1).click();
+    cy.get('[data-test=edit-retry-config]').click();
     cy.get('[name=num_retries]').clear().type('10');
     cy.get('[name=interval_sec]').clear().type('5');
     cy.get('[name=timeout_sec]').clear().type('70');
@@ -132,7 +132,7 @@ describe('Create event trigger with shortest possible path', () => {
 
     // add headers
     cy.log('**--- Click on Edit retry config and add header');
-    cy.findAllByRole('button', { name: 'Edit' }).eq(2).click();
+    cy.get('[data-test=edit-header]').click();
     cy.findByPlaceholderText('key').type('x-hasura-user-id');
     cy.findByPlaceholderText('value').type('1234');
     cy.findByRole('button', { name: 'Save' }).click();

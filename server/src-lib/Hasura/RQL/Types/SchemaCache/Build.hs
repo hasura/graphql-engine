@@ -26,6 +26,7 @@ module Hasura.RQL.Types.SchemaCache.Build
     buildSchemaCacheWithInvalidations,
     buildSchemaCache,
     tryBuildSchemaCache,
+    tryBuildSchemaCacheWithModifiers,
     tryBuildSchemaCacheAndWarnOnFailingObjects,
     buildSchemaCacheFor,
     throwOnInconsistencies,
@@ -142,8 +143,6 @@ withRecordInconsistencyM metadataObject f = do
           recordInconsistencyM (Just (toJSON exts)) metadataObject "withRecordInconsistency: unexpected ExtraExtensions"
         Just (ExtraInternal internal) ->
           recordInconsistencyM (Just (toJSON internal)) metadataObject (qeError err)
-        Just HideInconsistencies ->
-          pure ()
         Nothing ->
           recordInconsistencyM Nothing metadataObject (qeError err)
       return Nothing
@@ -167,8 +166,6 @@ recordInconsistenciesWith recordInconsistency' f = proc (e, (metadataObject, s))
           recordInconsistency' -< ((Just (toJSON exts), metadataObject), "withRecordInconsistency: unexpected ExtraExtensions")
         Just (ExtraInternal internal) ->
           recordInconsistency' -< ((Just (toJSON internal), metadataObject), qeError err)
-        Just HideInconsistencies ->
-          returnA -< ()
         Nothing ->
           recordInconsistency' -< ((Nothing, metadataObject), qeError err)
       returnA -< Nothing
@@ -325,8 +322,22 @@ tryBuildSchemaCache ::
   (CacheRWM m, MetadataM m) =>
   MetadataModifier ->
   m (HashMap MetadataObjId (NonEmpty InconsistentMetadata))
-tryBuildSchemaCache MetadataModifier {..} = do
-  modifiedMetadata <- runMetadataModifier <$> getMetadata
+tryBuildSchemaCache MetadataModifier {..} =
+  tryBuildSchemaCacheWithModifiers [pure . runMetadataModifier]
+
+-- | Rebuilds the schema cache after modifying metadata sequentially and returns any _new_ metadata inconsistencies.
+-- If there are any new inconsistencies, the changes to the metadata and the schema cache are abandoned.
+-- If the metadata modifiers run into validation issues (e.g. a native query is already tracked in the metadata),
+-- we throw these errors back without changing the metadata and schema cache.
+tryBuildSchemaCacheWithModifiers ::
+  (CacheRWM m, MetadataM m) =>
+  [Metadata -> m Metadata] ->
+  m (HashMap MetadataObjId (NonEmpty InconsistentMetadata))
+tryBuildSchemaCacheWithModifiers modifiers = do
+  modifiedMetadata <- do
+    metadata <- getMetadata
+    foldM (flip ($)) metadata modifiers
+
   newInconsistentObjects <- tryBuildSchemaCacheWithOptions (CatalogUpdate mempty) mempty modifiedMetadata validateNewSchemaCache
   when (newInconsistentObjects == mempty)
     $ putMetadata modifiedMetadata

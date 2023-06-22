@@ -386,7 +386,7 @@ data AnnotatedScalarType
   | ASTReusedScalar G.Name (AnyBackend ScalarWrapper)
   deriving (Eq, Ord, Generic)
 
-newtype ScalarWrapper b = ScalarWrapper {unwrapScalar :: (ScalarType b)}
+data ScalarWrapper b = ScalarWrapper {unwrapScalar :: ScalarType b, parsingContext :: ScalarTypeParsingContext b}
 
 deriving instance (Backend b) => Eq (ScalarWrapper b)
 

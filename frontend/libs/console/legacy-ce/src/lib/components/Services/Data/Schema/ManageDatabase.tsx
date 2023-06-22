@@ -19,6 +19,7 @@ import { getRoute } from '../../../../utils/getDataRoute';
 import { Collapsible } from '../../../../new-components/Collapsible';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { ListConnectedDatabases } from '../../../../features/ConnectDBRedesign';
+import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
 
 type ManageDatabaseProps = InjectedProps;
 
@@ -100,6 +101,8 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
           <div className="mt-sm">
             <ListConnectedDatabases />
           </div>
+
+          <NeonDashboardLink className="mt-lg" />
 
           <hr className="my-md" />
           <div className="mt-4">

@@ -7,6 +7,8 @@ export const addLogicalModelValidationSchema = z.object({
     .object({
       name: z.string().min(1, 'Field Name is a required field'),
       type: z.string().min(1, 'Type is a required field'),
+      typeClass: z.enum(['scalar', 'logical_model']),
+      array: z.boolean(),
       nullable: z.boolean({ required_error: 'Nullable is a required field' }),
     })
     .array(),

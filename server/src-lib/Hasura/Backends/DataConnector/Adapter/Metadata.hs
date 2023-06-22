@@ -241,23 +241,35 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
       httpMgr <- bindA -< askHTTPManager
       Inc.dependOn -< Inc.selectMaybeD (Inc.ConstS dataConnectorName) invalidationKeys
-      (|
-        withRecordInconsistency
-          ( bindErrorA -< ExceptT $ getDataConnectorCapabilities dataConnectorOptions httpMgr
-          )
-        |)
-        metadataObj
+      maybeDcInfo <- (| withRecordInconsistency (bindErrorA -< getDataConnectorCapabilities dataConnectorOptions httpMgr) |) metadataObj
+      returnA -< join maybeDcInfo
 
     getDataConnectorCapabilities ::
       DC.DataConnectorOptions ->
       HTTP.Manager ->
-      m (Either QErr DC.DataConnectorInfo)
-    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
-      API.CapabilitiesResponse {..} <-
-        ignoreTraceT
+      ExceptT QErr m (Maybe DC.DataConnectorInfo)
+    getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager =
+      ( ignoreTraceT
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing Nothing)
-          $ Client.capabilities
-      pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
+          $ (Just . mkDataConnectorInfo options)
+          <$> Client.capabilities
+      )
+        `catchError` ignoreConnectionErrors
+
+    -- If we can't connect to a data connector agent to get its capabilities
+    -- we don't throw an error, we just return Nothing, which means the agent is in a broken state
+    -- but we don't fail the schema cache building process with metadata inconsistencies if the
+    -- agent isn't in use. If the agent is in use, when we go to consume its 'DC.DataConnectorInfo'
+    -- later, it will be missing and we'll throw an error then.
+    ignoreConnectionErrors :: QErr -> ExceptT QErr m (Maybe a)
+    ignoreConnectionErrors err@QErr {..} =
+      if qeCode == ConnectionNotEstablished
+        then pure Nothing
+        else throwError err
+
+    mkDataConnectorInfo :: DC.DataConnectorOptions -> API.CapabilitiesResponse -> DC.DataConnectorInfo
+    mkDataConnectorInfo options API.CapabilitiesResponse {..} =
+      DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse _crDisplayName _crReleaseName
 
     toHashMap = HashMap.fromList . Map.toList
 
@@ -298,11 +310,11 @@ getDataConnectorInfo dataConnectorName backendInfo =
   onNothing (HashMap.lookup dataConnectorName backendInfo)
     $ throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <<> " was not found in the data connector backend info")
 
-mkRawColumnType :: API.Capabilities -> API.ColumnType -> RQL.T.C.RawColumnType 'DataConnector
-mkRawColumnType capabilities = \case
-  API.ColumnTypeScalar scalarType -> RQL.T.C.RawColumnTypeScalar $ DC.mkScalarType capabilities scalarType
+mkRawColumnType :: API.ColumnType -> RQL.T.C.RawColumnType 'DataConnector
+mkRawColumnType = \case
+  API.ColumnTypeScalar scalarType -> RQL.T.C.RawColumnTypeScalar $ Witch.from scalarType
   API.ColumnTypeObject name -> RQL.T.C.RawColumnTypeObject () name
-  API.ColumnTypeArray columnType isNullable -> RQL.T.C.RawColumnTypeArray () (mkRawColumnType capabilities columnType) isNullable
+  API.ColumnTypeArray columnType isNullable -> RQL.T.C.RawColumnTypeArray () (mkRawColumnType columnType) isNullable
 
 resolveDatabaseMetadata' ::
   ( MonadIO m,
@@ -312,10 +324,10 @@ resolveDatabaseMetadata' ::
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
-resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceConfig {_scCapabilities} = runExceptT do
+resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig = runExceptT do
   API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig
   let logicalModels =
-        maybe mempty (InsOrdHashMap.fromList . map (toLogicalModelMetadata _scCapabilities) . toList) _srObjectTypes
+        maybe mempty (InsOrdHashMap.fromList . map toLogicalModelMetadata . toList) _srObjectTypes
       tables = HashMap.fromList $ do
         API.TableInfo {..} <- _srTables
         let primaryKeyColumns = fmap Witch.from . NESeq.fromList <$> _tiPrimaryKey
@@ -328,7 +340,7 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig@DC.SourceC
                       $ RQL.T.C.RawColumnInfo
                         { rciName = Witch.from _ciName,
                           rciPosition = 1, -- TODO: This is very wrong and needs to be fixed. It is used for diffing tables and seeing what's new/deleted/altered, so reusing 1 for all columns is problematic.
-                          rciType = mkRawColumnType _scCapabilities _ciType,
+                          rciType = mkRawColumnType _ciType,
                           rciIsNullable = _ciNullable,
                           rciDescription = fmap GQL.Description _ciDescription,
                           rciMutability = RQL.T.C.ColumnMutability _ciInsertable _ciUpdatable
@@ -378,14 +390,14 @@ requestDatabaseSchema logger sourceName sourceConfig = do
     . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
     $ Client.schema sourceName (DC._scConfig transformedSourceConfig)
 
-getFieldType :: API.Capabilities -> Bool -> API.ColumnType -> LogicalModelType 'DataConnector
-getFieldType capabilities isNullable = \case
-  API.ColumnTypeScalar scalarType -> LogicalModelTypeScalar $ LogicalModelTypeScalarC (DC.mkScalarType capabilities scalarType) isNullable
+getFieldType :: Bool -> API.ColumnType -> LogicalModelType 'DataConnector
+getFieldType isNullable = \case
+  API.ColumnTypeScalar scalarType -> LogicalModelTypeScalar $ LogicalModelTypeScalarC (Witch.from scalarType) isNullable
   API.ColumnTypeObject objectTypeName -> LogicalModelTypeReference $ LogicalModelTypeReferenceC (LogicalModelName objectTypeName) isNullable
-  API.ColumnTypeArray columnType isNullable' -> LogicalModelTypeArray $ LogicalModelTypeArrayC (getFieldType capabilities isNullable' columnType) isNullable
+  API.ColumnTypeArray columnType isNullable' -> LogicalModelTypeArray $ LogicalModelTypeArrayC (getFieldType isNullable' columnType) isNullable
 
-toLogicalModelMetadata :: API.Capabilities -> API.ObjectTypeDefinition -> (LogicalModelName, LogicalModelMetadata 'DataConnector)
-toLogicalModelMetadata capabilities API.ObjectTypeDefinition {..} =
+toLogicalModelMetadata :: API.ObjectTypeDefinition -> (LogicalModelName, LogicalModelMetadata 'DataConnector)
+toLogicalModelMetadata API.ObjectTypeDefinition {..} =
   ( logicalModelName,
     LogicalModelMetadata
       { _lmmName = logicalModelName,
@@ -397,7 +409,7 @@ toLogicalModelMetadata capabilities API.ObjectTypeDefinition {..} =
   where
     logicalModelName = LogicalModelName _otdName
     toTableObjectFieldDefinition API.ColumnInfo {..} =
-      let fieldType = getFieldType capabilities _ciNullable _ciType
+      let fieldType = getFieldType _ciNullable _ciType
           columnName = Witch.from _ciName
        in ( columnName,
             LogicalModelField
@@ -543,7 +555,7 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
           pure rhsCol
 
 parseCollectableType' ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   CollectableType (RQL.T.C.ColumnType 'DataConnector) ->
   J.Value ->
   m (PartialSQLExp 'DataConnector)

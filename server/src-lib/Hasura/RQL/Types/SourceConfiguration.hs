@@ -8,6 +8,7 @@ where
 
 import Autodocodec (HasCodec)
 import Data.Aeson.Extended
+import Data.Has
 import Data.Kind (Type)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendTag
@@ -22,11 +23,18 @@ class
     ToJSON (SourceConfig b),
     ToJSON (SourceConnConfiguration b),
     Eq (SourceConfig b),
+    Has (ScalarTypeParsingContext b) (SourceConfig b),
+    Eq (ScalarTypeParsingContext b),
+    Ord (ScalarTypeParsingContext b),
     HasTag b
   ) =>
   HasSourceConfiguration (b :: BackendType)
   where
   -- types
+
+  -- Extra context required for parsing values of the backend's scalar types
+  type ScalarTypeParsingContext b
+  type ScalarTypeParsingContext b = ()
 
   -- | User facing connection configuration for a database.
   type SourceConnConfiguration b :: Type

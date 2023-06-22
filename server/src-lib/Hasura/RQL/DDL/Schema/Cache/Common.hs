@@ -134,7 +134,8 @@ data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
     _tbiIsEnum :: Bool,
     _tbiConfiguration :: TableConfig b,
-    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tbiLogicalModel :: Maybe LogicalModelName
   }
   deriving (Show, Eq, Generic)
 
@@ -167,7 +168,7 @@ mkTableInputs ::
 mkTableInputs TableMetadata {..} =
   (buildInput, nonColumns, permissions)
   where
-    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig _tmLogicalModel
     nonColumns =
       NonColumnTableInputs
         _tmTable

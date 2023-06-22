@@ -1,0 +1,42 @@
+version: '3'
+services:
+
+  # External MongoDB sample database
+  mongodb:
+    image: mongo:6
+    container_name: mongodb_mongo
+    ports:
+      - 27017:27017
+    volumes:
+      # Imports sample database:
+      - ./sample_data/import.sh:/docker-entrypoint-initdb.d/import.sh
+      - ./sample_data/sample_mflix:/sample_data/sample_mflix
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  # External service which will be used for sampling
+  mongodb_sampler:
+    image: node
+    container_name: mongodb_sampling
+    environment:
+      MONGO_DATABASE: mongodb://root:password@mongodb:27017/sample_mflix
+      MONGO_USERNAME: root
+      MONGO_PASSWORD: password
+      MONGO_SELECT_COLLECTIONS: '' # which collections to analyze and sample. ('' [all collections]), (movies,comments)
+      MONGO_UPDATE_COLLECTIONS: true # automatically update collections in database with validation schemas. (true or false [or blank])
+    volumes:
+      # Scripts to analuze the database and create the validation schema:
+      - ./schema_sampler:/schema_sampler
+      # Final results will be stored here:
+      - ./schema_exports:/schema_exports
+    command: bash -c "/schema_sampler/analyze.sh"
+    depends_on:
+      mongodb:
+        condition: service_healthy

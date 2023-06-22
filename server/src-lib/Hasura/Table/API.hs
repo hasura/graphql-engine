@@ -50,7 +50,8 @@ import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common (textToGQLIdentifier)
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Types (LogicalModelName (..))
+import Hasura.LogicalModel.Metadata
+import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Enum (resolveEnumReferences)
@@ -73,14 +74,15 @@ import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Utils
 import Hasura.Table.Cache
-import Hasura.Table.Metadata (mkTableMeta, tmApolloFederationConfig, tmConfiguration, tmIsEnum)
+import Hasura.Table.Metadata (mkTableMeta, tmApolloFederationConfig, tmConfiguration, tmIsEnum, tmLogicalModel)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TrackTable b = TrackTable
   { tSource :: SourceName,
     tName :: TableName b,
     tIsEnum :: Bool,
-    tApolloFedConfig :: Maybe ApolloFederationConfig
+    tApolloFedConfig :: Maybe ApolloFederationConfig,
+    tLogicalModel :: Maybe LogicalModelName
   }
 
 deriving instance (Backend b) => Show (TrackTable b)
@@ -102,7 +104,9 @@ instance (Backend b) => FromJSON (TrackTable b) where
           .!= False
           <*> o
           .:? "apollo_federation_config"
-      withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
+          <*> o
+          .:? "logical_model"
+      withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing <*> pure Nothing
 
 data SetTableIsEnum b = SetTableIsEnum
   { stieSource :: SourceName,
@@ -288,8 +292,11 @@ trackExistingTableOrViewPhase2 trackTable@TrackTableV2 {ttv2Table = TrackTable {
   pure successMsg
 
 mkTrackTableMetadataModifier :: (Backend b) => TrackTableV2 b -> MetadataModifier
-mkTrackTableMetadataModifier (TrackTableV2 (TrackTable source tableName isEnum apolloFedConfig) config) =
-  let metadata = tmApolloFederationConfig .~ apolloFedConfig $ mkTableMeta tableName isEnum config
+mkTrackTableMetadataModifier (TrackTableV2 (TrackTable source tableName isEnum apolloFedConfig logicalModel) config) =
+  let metadata =
+        mkTableMeta tableName isEnum config
+          & tmApolloFederationConfig .~ apolloFedConfig
+          & tmLogicalModel .~ logicalModel
    in MetadataModifier $ metaSources . ix source . toSourceMetadata . smTables %~ InsOrdHashMap.insert tableName metadata
 
 runTrackTableQ ::
@@ -702,10 +709,11 @@ buildTableCache ::
     DBTablesMetadata b,
     [TableBuildInput b],
     Inc.Dependency Inc.InvalidationKey,
-    NamingCase
+    NamingCase,
+    LogicalModels b
   )
     `arr` HashMap.HashMap (TableName b) (TableCoreInfoG b (StructuredColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase, logicalModels) -> do
   rawTableInfos <-
     (|
       Inc.keyed
@@ -720,7 +728,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                           -<
                             err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
                       Just metadataTable ->
-                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey)
+                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels)
                 )
             |)
               (mkTableMetadataObject source tableName)
@@ -756,13 +764,25 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         ( TableBuildInput b,
           DBTableMetadata b,
           SourceConfig b,
-          Inc.Dependency Inc.InvalidationKey
+          Inc.Dependency Inc.InvalidationKey,
+          LogicalModels b
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey) -> do
-      let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
-          columns :: [RawColumnInfo b] = _ptmiColumns metadataTable
-          columnMap = mapFromL (FieldName . toTxt . rciName) columns
+    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels) -> do
+      let TableBuildInput name isEnum config apolloFedConfig mLogicalModelName = tableBuildInput
+      columns <-
+        liftEitherA
+          -< case mLogicalModelName of
+            Nothing ->
+              -- No logical model specified: use columns from DB introspection
+              pure $ _ptmiColumns metadataTable
+            Just logicalModelName -> do
+              -- A logical model was specified: use columns from the logical model
+              logicalModel <-
+                InsOrdHashMap.lookup logicalModelName logicalModels
+                  `onNothing` throw400 InvalidConfiguration ("The logical mode " <> logicalModelName <<> " could not be found")
+              logicalModelToRawColumnInfos logicalModel
+      let columnMap = mapFromL (FieldName . toTxt . rciName) columns
           primaryKey = _ptmiPrimaryKey metadataTable
           description = buildDescription name config metadataTable
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
@@ -791,6 +811,33 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable,
               _tciApolloFederationConfig = apolloFedConfig
             }
+
+    logicalModelToRawColumnInfos :: LogicalModelMetadata b -> Either QErr [RawColumnInfo b]
+    logicalModelToRawColumnInfos = traverse (uncurry logicalModelColumnFieldToRawColumnInfo) . zip [1 ..] . InsOrdHashMap.elems . _lmmFields
+
+    logicalModelColumnFieldToRawColumnInfo :: Int -> LogicalModelField b -> Either QErr (RawColumnInfo b)
+    logicalModelColumnFieldToRawColumnInfo position LogicalModelField {..} = do
+      (rciType, rciIsNullable) <- logicalModelTypeToRawColumnType lmfType
+      pure
+        $ RawColumnInfo
+          { rciName = lmfName,
+            rciPosition = position,
+            rciDescription = G.Description <$> lmfDescription,
+            rciMutability = ColumnMutability False False, -- TODO
+            ..
+          }
+
+    logicalModelTypeToRawColumnType :: LogicalModelType b -> Either QErr (RawColumnType b, Bool)
+    logicalModelTypeToRawColumnType = \case
+      LogicalModelTypeScalar LogicalModelTypeScalarC {..} ->
+        pure (RawColumnTypeScalar lmtsScalar, lmtsNullable)
+      LogicalModelTypeArray LogicalModelTypeArrayC {..} -> do
+        supportsNestedObjects <- backendSupportsNestedObjects @b
+        (nestedType, nestedIsNullable) <- logicalModelTypeToRawColumnType lmtaArray
+        pure (RawColumnTypeArray supportsNestedObjects nestedType nestedIsNullable, lmtaNullable)
+      LogicalModelTypeReference LogicalModelTypeReferenceC {..} -> do
+        supportsNestedObjects <- backendSupportsNestedObjects @b
+        pure (RawColumnTypeObject supportsNestedObjects (getLogicalModelName lmtrReference), lmtrNullable)
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.

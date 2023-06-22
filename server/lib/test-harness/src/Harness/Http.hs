@@ -1,3 +1,5 @@
+{-# LANGUAGE NumericUnderscores #-}
+
 -- | Helper functions for HTTP requests.
 module Harness.Http
   ( get_,
@@ -20,10 +22,13 @@ import Data.ByteString.Lazy.Char8 qualified as L8
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
+import Data.Text.Lazy qualified as TL
 import GHC.Stack
 import Hasura.Prelude
+import Network.HTTP.Client.Conduit qualified as Http.Conduit
 import Network.HTTP.Simple qualified as Http
 import Network.HTTP.Types qualified as Http
+import Text.Pretty.Simple (pShow)
 
 --------------------------------------------------------------------------------
 -- API
@@ -59,11 +64,14 @@ postValue = postValueWithStatus 200
 post :: String -> Http.RequestHeaders -> Value -> IO (Http.Response L8.ByteString)
 post url headers value = do
   let request =
-        Http.setRequestHeaders headers
-          $ Http.setRequestMethod Http.methodPost
-          $ Http.setRequestBodyJSON value (fromString url)
+        fromString url
+          & Http.setRequestHeaders headers
+          & Http.setRequestMethod Http.methodPost
+          & Http.setRequestBodyJSON value
+          & Http.setRequestResponseTimeout (Http.Conduit.responseTimeoutMicro 60_000_000)
   response <- Http.httpLbs request
-  unless ("Content-Type" `elem` (fst <$> Http.getResponseHeaders response)) $ error "Missing Content-Type header in response"
+  unless ("Content-Type" `elem` (fst <$> Http.getResponseHeaders response))
+    $ error ("Missing Content-Type header in response. Response: " <> TL.unpack (pShow response))
   pure response
 
 -- | Post the JSON to the given URL and expected HTTP response code.

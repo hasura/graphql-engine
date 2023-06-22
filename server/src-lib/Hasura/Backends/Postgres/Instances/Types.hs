@@ -121,6 +121,7 @@ instance
   type XEventTriggers ('Postgres pgKind) = XEnable
   type XNestedInserts ('Postgres pgKind) = XEnable
   type XStreamingSubscription ('Postgres pgKind) = XEnable
+  type XGroupBy ('Postgres pgKind) = XEnable
 
   type ResolvedConnectionTemplate ('Postgres pgKind) = Maybe Postgres.PostgresResolvedConnectionTemplate -- 'Nothing' represents no connection template configured
   type ConnectionTemplateRequestContext ('Postgres pgKind) = Postgres.RequestContext
@@ -139,7 +140,7 @@ instance
   isComparableType = Postgres.isComparableType
   isNumType = Postgres.isNumType
   textToScalarValue = Postgres.textToScalarValue
-  parseScalarValue ty val = runAesonParser (Postgres.parsePGValue ty) val
+  parseScalarValue () ty val = runAesonParser (Postgres.parsePGValue ty) val
   scalarValueToJSON = Postgres.pgScalarValueToJson
   functionToTable = fmap (Postgres.TableName . Postgres.getFunctionTxt)
   tableToFunction = fmap (Postgres.FunctionName . Postgres.getTableTxt)

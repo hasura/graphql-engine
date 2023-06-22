@@ -19,6 +19,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON (encJFromLBS)
 import Hasura.GraphQL.RemoteServer
 import Hasura.Incremental qualified as Inc
+import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Permission
@@ -48,12 +49,13 @@ buildRemoteSchemas ::
     MonadError QErr m,
     ProvidesNetwork m
   ) =>
+  Logger Hasura ->
   Env.Environment ->
   ( (Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey), OrderedRoles, Maybe (HashMap RemoteSchemaName BL.ByteString)),
     [RemoteSchemaMetadataG remoteRelationshipDefinition]
   )
     `arr` HashMap RemoteSchemaName (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition, MetadataObject)
-buildRemoteSchemas env =
+buildRemoteSchemas logger env =
   buildInfoMapPreservingMetadata _rsmName mkRemoteSchemaMetadataObject buildRemoteSchema
   where
     -- We want to cache this call because it fetches the remote schema over
@@ -93,6 +95,7 @@ buildRemoteSchemas env =
                             ]
                     -- Still record inconsistency to notify the user obout the usage of stored stale data
                     recordInconsistencies -< ((Just $ toJSON (qeInternal upstreamError), [metadataObj]), inconsistencyMessage)
+                    bindA -< unLogger logger $ StoredIntrospectionLog ("Using stored introspection for remote schema " <>> name) upstreamError
                     returnA -< Just processed
                   Left _processError ->
                     -- Unable to process stored introspection, give up and re-throw upstream exception

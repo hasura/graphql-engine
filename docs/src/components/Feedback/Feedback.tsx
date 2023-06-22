@@ -53,8 +53,10 @@ export const Feedback = ({ metadata }: { metadata: any }) => {
         .catch(error => console.error('error', error));
     };
 
-    if (window.location.hostname === 'localhost') {
-      alert('Testing feedback (not) sent!');
+    if (!window.location.hostname.includes('hasura.io')) {
+      alert(
+        'Hey! We like that you like our docs and chose to use them 🎉\n\nHowever, you might want to remove the feedback component or modify the route you hit, lest you want us reading what people think of your site ✌️'
+      );
       setRating(null);
       setNotes(null);
       setIsSubmitSuccess(true);

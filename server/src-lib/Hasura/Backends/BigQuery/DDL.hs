@@ -4,6 +4,7 @@ module Hasura.Backends.BigQuery.DDL
     updateColumnInEventTrigger,
     parseBoolExpOperations,
     parseCollectableType,
+    scalarTypeFromColumnType,
     module M,
   )
 where
@@ -74,9 +75,13 @@ parseCollectableType collectableType = \case
     | isReqUserId t -> pure $ mkTypedSessionVar collectableType userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->
-      PSESQLExp . BigQuery.ValueExpression <$> parseScalarValueColumnType scalarType val
+      PSESQLExp . BigQuery.ValueExpression . BigQuery.TypedValue (scalarTypeFromColumnType scalarType) <$> parseScalarValueColumnTypeWithContext () scalarType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported in BigQuery backend"
+
+scalarTypeFromColumnType :: ColumnType 'BigQuery -> BigQuery.ScalarType
+scalarTypeFromColumnType (ColumnEnumReference _) = BigQuery.StringScalarType
+scalarTypeFromColumnType (ColumnScalar scalar) = scalar
 
 mkTypedSessionVar ::
   CollectableType (ColumnType 'BigQuery) ->

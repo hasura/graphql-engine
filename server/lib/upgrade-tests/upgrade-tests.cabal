@@ -62,6 +62,7 @@ test-suite upgrade-tests
     , async
     , bytestring
     , file-embed
+    , hasura-base
     , hasura-prelude
     , hspec
     , network

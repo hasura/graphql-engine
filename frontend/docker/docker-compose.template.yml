@@ -97,7 +97,6 @@ services:
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: 'naming_convention'
       HASURA_GRAPHQL_ADMIN_SECRET: 'moocow'
-      HASURA_FF_NATIVE_QUERY_INTERFACE: 'True'
       # HASURA_GRAPHQL_EE_LICENSE_KEY: ''
   data-connector-agent:
     container_name: 'super-connector'

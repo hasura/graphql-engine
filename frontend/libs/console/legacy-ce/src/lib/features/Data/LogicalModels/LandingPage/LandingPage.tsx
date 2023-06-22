@@ -4,7 +4,10 @@ import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
 import { Tabs } from '../../../../new-components/Tabs';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import {
+  useEnvironmentState,
+  usePushRoute,
+} from '../../../ConnectDBRedesign/hooks';
 import {
   useInvalidateMetadata,
   useMetadata,
@@ -20,6 +23,7 @@ import { ListStoredProcedures } from './components/ListStoredProcedures';
 import { NATIVE_QUERY_ROUTES } from '../constants';
 import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
 import { RouteWrapper } from '../components/RouteWrapper';
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 
 export const LandingPage = ({ pathname }: { pathname: string }) => {
   const push = usePushRoute();
@@ -49,6 +53,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
 
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];
+  const { consoleType } = useEnvironmentState();
 
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     useState(false);
@@ -165,7 +170,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                     isLoading={isLoading}
                     onEditClick={model => {
                       push?.(
-                        `/data/native-queries/logical-models/${model.source.name}/${model.name}/permissions`
+                        `/data/native-queries/logical-models/${model.source.name}/${model.name}`
                       );
                     }}
                     onRemoveClick={handleRemoveLogicalModel}
@@ -183,20 +188,32 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                 </div>
               ),
             },
-            {
-              value: '/data/native-queries/stored-procedures',
-              label: `Stored Procedures (${storedProcedures.length})`,
-              content: (
-                <div className="mt-md">
-                  <ListStoredProcedures />
-                  <div className="flex justify-end mt-sm">
-                    <Link to="/data/native-queries/stored-procedures/track">
-                      <Button mode="primary">Track Stored Procedure</Button>
-                    </Link>
-                  </div>
-                </div>
-              ),
-            },
+            ...(consoleType !== 'oss'
+              ? [
+                  {
+                    value: '/data/native-queries/stored-procedures',
+                    label: `Stored Procedures (${storedProcedures.length})`,
+                    content: (
+                      <div className="mt-md">
+                        <LimitedFeatureWrapper
+                          title="Looking to add Stored Procedures for SQL Server?"
+                          id="native-queries"
+                          description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
+                        >
+                          <ListStoredProcedures />
+                          <div className="flex justify-end mt-sm">
+                            <Link to="/data/native-queries/stored-procedures/track">
+                              <Button mode="primary">
+                                Track Stored Procedure
+                              </Button>
+                            </Link>
+                          </div>
+                        </LimitedFeatureWrapper>
+                      </div>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>

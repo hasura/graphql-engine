@@ -320,7 +320,9 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoDefaultNamingConvention :: Maybe NamingCase,
     rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
     rsoMetadataDefaults :: Maybe MetadataDefaults,
-    rsoApolloFederationStatus :: Maybe Server.Types.ApolloFederationStatus
+    rsoApolloFederationStatus :: Maybe Server.Types.ApolloFederationStatus,
+    rsoCloseWebsocketsOnMetadataChangeStatus :: Maybe Server.Types.CloseWebsocketsOnMetadataChangeStatus,
+    rsoMaxTotalHeaderLength :: Maybe Int
   }
 
 -- | Whether or not to serve Console assets.
@@ -618,7 +620,9 @@ data ServeOptions impl = ServeOptions
     soDefaultNamingConvention :: NamingCase,
     soExtensionsSchema :: MonadTx.ExtensionsSchema,
     soMetadataDefaults :: MetadataDefaults,
-    soApolloFederationStatus :: Server.Types.ApolloFederationStatus
+    soApolloFederationStatus :: Server.Types.ApolloFederationStatus,
+    soCloseWebsocketsOnMetadataChangeStatus :: Server.Types.CloseWebsocketsOnMetadataChangeStatus,
+    soMaxTotalHeaderLength :: Int
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

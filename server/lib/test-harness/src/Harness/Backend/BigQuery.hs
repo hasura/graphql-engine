@@ -257,6 +257,10 @@ setup tables' (testEnvironment, _) = do
             datasets: [*schemaName]
             retry_limit: 5
     |]
+
+  -- enable open telemetry output in tests
+  GraphqlEngine.postMetadata_ testEnvironment Schema.enableOpenTelemetryCommand
+
   -- Setup and track tables
   for_ tables $ \table -> do
     retryIfJobRateLimitExceeded $ createTable schemaName table

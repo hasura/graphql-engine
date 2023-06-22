@@ -12,7 +12,9 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.Postgres.Instances.NativeQueries
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
+import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata
+import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude hiding (first)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -66,12 +68,12 @@ spec = do
       parseInterpolatedQuery rawSQL `shouldBe` Left "Found '{{' without a matching closing '}}'"
 
   describe "Validation" do
-    let lmm =
-          LogicalModelMetadata
-            { _lmmName = LogicalModelName (G.unsafeMkName "logical_model_name"),
-              _lmmFields = mempty,
-              _lmmDescription = Nothing,
-              _lmmSelectPermissions = mempty
+    let lmi =
+          LogicalModelInfo
+            { _lmiName = LogicalModelName (G.unsafeMkName "logical_model_name"),
+              _lmiFields = mempty,
+              _lmiDescription = Nothing,
+              _lmiPermissions = mempty
             }
 
         nqm =
@@ -87,7 +89,7 @@ spec = do
 
     it "Rejects undeclared variables" do
       let Right code = parseInterpolatedQuery "SELECT {{hey}}"
-      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmm nqm {_nqmCode = code}
+      let actual :: Either QErr Text = fmap snd $ runExcept $ nativeQueryToPreparedStatement lmi nqm {_nqmCode = code}
 
       (first showQErr actual) `shouldSatisfy` isLeft
       let Left err = actual
@@ -99,7 +101,7 @@ spec = do
             fmap snd
               $ runExcept
               $ nativeQueryToPreparedStatement
-                lmm
+                lmi
                 nqm
                   { _nqmCode = code,
                     _nqmArguments =
@@ -119,7 +121,7 @@ spec = do
             fmap snd
               $ runExcept
               $ nativeQueryToPreparedStatement
-                lmm
+                lmi
                 nqm
                   { _nqmCode = code,
                     _nqmArguments =
@@ -133,3 +135,51 @@ spec = do
       let Right rendered = actual
       rendered
         `shouldBe` "PREPARE _logimo_vali_(varchar, integer) AS WITH _cte_logimo_vali_ AS (\nSELECT $1, $2\n)\nSELECT \nFROM _cte_logimo_vali_"
+
+  describe "trimQueryEnd" do
+    it "only adds a newline when query does not end in trimmable characters" do
+      let Right query =
+            parseInterpolatedQuery "SELECT * FROM dogs WHERE {{name}} = '{doggy friend}'"
+      trimQueryEnd query
+        `shouldBe` ( InterpolatedQuery
+                       [ IIText "SELECT * FROM dogs WHERE ",
+                         IIVariable (ArgumentName "name"),
+                         IIText " = '{doggy friend}'",
+                         IIText "\n"
+                       ]
+                   )
+
+    it "It trims spaces from the end" do
+      let Right query =
+            parseInterpolatedQuery "SELECT * FROM dogs WHERE {{name}} = '{doggy friend}'   "
+      trimQueryEnd query
+        `shouldBe` ( InterpolatedQuery
+                       [ IIText "SELECT * FROM dogs WHERE ",
+                         IIVariable (ArgumentName "name"),
+                         IIText " = '{doggy friend}'",
+                         IIText "\n"
+                       ]
+                   )
+
+    it "It trims spaces, newlines and tabs from the end from the end" do
+      let Right query =
+            parseInterpolatedQuery "SELECT * FROM dogs WHERE {{name}} = '{doggy friend}'   \n \n\n \t \n \t  "
+      trimQueryEnd query
+        `shouldBe` ( InterpolatedQuery
+                       [ IIText "SELECT * FROM dogs WHERE ",
+                         IIVariable (ArgumentName "name"),
+                         IIText " = '{doggy friend}'",
+                         IIText "\n"
+                       ]
+                   )
+    it "It trims spaces, newlines and tabs, and then semicolon from the end from the end" do
+      let Right query =
+            parseInterpolatedQuery "SELECT * FROM dogs WHERE {{name}} = '{doggy friend}' ;  \n \n\n \t \n \t  "
+      trimQueryEnd query
+        `shouldBe` ( InterpolatedQuery
+                       [ IIText "SELECT * FROM dogs WHERE ",
+                         IIVariable (ArgumentName "name"),
+                         IIText " = '{doggy friend}' ",
+                         IIText "\n"
+                       ]
+                   )

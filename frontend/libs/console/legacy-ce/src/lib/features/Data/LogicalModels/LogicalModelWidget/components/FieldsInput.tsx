@@ -10,7 +10,6 @@ import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import {
   GraphQLSanitizedInputField,
-  Select,
   fieldLabelStyles,
 } from '../../../../../new-components/Form';
 import { BooleanInput } from '../../components/BooleanInput';
@@ -19,6 +18,7 @@ import {
   AddLogicalModelField,
   AddLogicalModelFormData,
 } from '../validationSchema';
+import { LogicalModel } from '../../../../hasura-metadata-types';
 
 const columnHelper = createColumnHelper<AddLogicalModelField>();
 
@@ -26,12 +26,15 @@ export const FieldsInput = ({
   name,
   types,
   disabled,
+  logicalModels,
 }: {
   name: string;
   types: string[];
   disabled?: boolean;
+  logicalModels: LogicalModel[];
 }) => {
-  const { control } = useFormContext<AddLogicalModelFormData>();
+  const { control, setValue, watch } =
+    useFormContext<AddLogicalModelFormData>();
 
   const { append, remove, fields } = useFieldArray({
     control,
@@ -58,18 +61,58 @@ export const FieldsInput = ({
       }),
       columnHelper.accessor('type', {
         id: 'type',
-        cell: ({ row }) => (
-          <Select
-            noErrorPlaceholder
-            dataTestId={`${name}[${row.index}].type`}
-            name={`fields.${row.index}.type`}
-            options={types.map(t => ({ label: t, value: t }))}
-            disabled={disabled}
-          />
-        ),
+        cell: ({ row }) => {
+          const typeValue = watch(`fields.${row.index}.type`);
+          const typeClassValue = watch(`fields.${row.index}.typeClass`);
+          return (
+            <select
+              className={clsx(
+                'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
+                'text-black',
+                disabled
+                  ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
+                  : 'hover:border-gray-400'
+              )}
+              value={`${typeClassValue}:${typeValue}`}
+              data-testid={`fields-input-type-${row.index}`}
+              onChange={e => {
+                const [typeClass, selectedValue] = e.target.value.split(':');
+                setValue(`fields.${row.index}.type`, selectedValue);
+                setValue(`fields.${row.index}.typeClass`, typeClass as any);
+                if (typeClass === 'scalar') {
+                  setValue(`fields.${row.index}.array`, false);
+                }
+              }}
+              disabled={disabled}
+            >
+              <option value="" data-default-selected hidden>
+                Select a type
+              </option>
+              <optgroup
+                label="Logical Models"
+                data-testid={`fields-input-type-${row.index}-logical-models`}
+              >
+                {logicalModels.map(l => (
+                  <option key={l.name} value={`logical_model:${l.name}`}>
+                    {l.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup
+                label="Types"
+                data-testid={`fields-input-type-${row.index}-scalars`}
+              >
+                {types.map(t => (
+                  <option key={t} value={`scalar:${t}`}>
+                    {t}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          );
+        },
         header: 'Type',
       }),
-
       columnHelper.accessor('nullable', {
         id: 'nullable',
         cell: ({ row }) => (
@@ -79,6 +122,20 @@ export const FieldsInput = ({
           />
         ),
         header: 'Nullable',
+      }),
+      columnHelper.accessor('array', {
+        id: 'array',
+        cell: ({ row }) => {
+          const typeClassValue = watch(`fields.${row.index}.typeClass`);
+          return (
+            <BooleanInput
+              disabled={disabled || typeClassValue === 'scalar'}
+              name={`fields.${row.index}.array`}
+              dataTestId={`fields-input-array-${row.index}`}
+            />
+          );
+        },
+        header: 'Array',
       }),
       columnHelper.display({
         id: 'action',
@@ -115,9 +172,15 @@ export const FieldsInput = ({
           <div className={clsx(fieldLabelStyles, 'mb-0')}>Fields</div>
           <Button
             icon={<FaPlusCircle />}
-            disabled={!types || types.length === 0}
+            disabled={disabled || !types || types.length === 0}
             onClick={() => {
-              append({ name: '', type: 'text', nullable: true });
+              append({
+                name: '',
+                type: 'text',
+                typeClass: 'scalar',
+                nullable: true,
+                array: false,
+              });
             }}
           >
             Add Field

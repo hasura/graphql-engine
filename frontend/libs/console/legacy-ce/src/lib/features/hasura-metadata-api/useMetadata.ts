@@ -4,6 +4,7 @@ import { useHttpClient } from '../Network';
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { APIError } from '../../hooks/error';
+import { useAppDispatch } from '../../storeHooks';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -39,11 +40,18 @@ export const useMetadata = <FinalResult = Metadata>(
 ) => {
   const httpClient = useHttpClient();
   const invalidateMetadata = useInvalidateMetadata();
+  const dispatch = useAppDispatch();
 
   const queryReturn = useQuery<Metadata, APIError, FinalResult>({
     queryKey: [METADATA_QUERY_KEY],
     queryFn: async () => {
       const result = await exportMetadata({ httpClient });
+
+      dispatch({
+        type: 'Metadata/EXPORT_METADATA_SUCCESS',
+        data: result,
+      });
+
       return result;
     },
     staleTime: options.staleTime,

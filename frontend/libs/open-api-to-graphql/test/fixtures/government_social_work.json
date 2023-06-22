@@ -1,0 +1,4422 @@
+{
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "/government/socialwork"
+    }
+  ],
+  "info": {
+    "version": "2.6.0",
+    "title": "Government Social Work apis",
+    "description": "This version is a collection of the Government product app 'Case Advice' apis which enable a social case worker to work on specific case visits and perform\nUpdate in 2.6.0:  1. added a PATCH api for FILE 2. Re-worked assessment types/factors/questions apis\n  - Added new data definitions for a) AssessmentTypeMaster b) AssessmentFactorsTemplate and c) AssessmentFactorQuestionsTemplate: these will serve up as the initial lookup tables\n  - Amended the api: GET /assessment_types to get data from the AssessmentTypeFactor entity  \n  - Dropped the GET /assessment_type/{assessmentTypeId}/assessment_factors' api and GET '/assessment_type/{assessmentTypeId}/assessment_factor/{factorId}/assessment_factor_questions' apis \n  - Amended the data definitions for AssessmentFactors and AssessmentFactorQuestions entities\nname: Murali Natarajan email: mnataraj@us.ibm.com\n"
+  },
+  "security": [
+    {
+      "mf_auth": ["default"]
+    }
+  ],
+  "paths": {
+    "/assessment_types": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Assessment"],
+        "summary": "Get assessment types",
+        "description": "Gets all `Assessment` types",
+        "operationId": "getAssessmentTypes",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AssessmentTypeMaster"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case"],
+        "summary": "Get case details",
+        "description": "Gets case details for a given case id",
+        "operationId": "getCase",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Case"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social_worker/{userName}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Social worker profile"],
+        "summary": "Gets the given worker's profile",
+        "description": "Gets profile date for the case worker",
+        "operationId": "getWorkersProfile",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-worker-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SocialWorker"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social_worker/{userName}/cases": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Social worker"],
+        "summary": "Gets assigned cases for the given worker",
+        "description": "Gets All `Case` objects for a social worker",
+        "operationId": "getWorkersCases",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-worker-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Case"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/social_worker/{userName}/families": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Social worker"],
+        "summary": "Gets assigned families for the given worker",
+        "description": "Gets the assigned `Family` objects for a social worker",
+        "operationId": "getWorkersFamilies",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-worker-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Family"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/case_visit": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["CaseVisit"],
+        "summary": "Add visit",
+        "description": "Adds a new case visit to the given case",
+        "operationId": "addVisit",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CaseVisit"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/CaseVisit"
+                }
+              }
+            }
+          },
+          "description": "Visit data",
+          "required": true
+        }
+      }
+    },
+    "/case/{caseId}/case_visit/{visitId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["CaseVisit"],
+        "summary": "Gets a specific case visit's data for a specific case",
+        "description": "Gets a specific case visit data for a given case id/case visit id combination",
+        "operationId": "getCaseVisit",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-visit-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CaseVisit"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/family/{familyId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Family"],
+        "summary": "Gets client family data",
+        "description": "Gets a specific family's data",
+        "operationId": "getFamily",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-family-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Family"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client/{clientId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Gets client data",
+        "description": "Gets a specific client data",
+        "operationId": "getClient",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Client"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Person"],
+        "summary": "Gets a list of persons",
+        "description": "Gets all persons",
+        "operationId": "getPersons",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Person"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person": {
+      "post": {
+        "x-since-version": 2,
+        "tags": ["Person"],
+        "summary": "Add a new client particpant's person profile data",
+        "description": "Add a new client record to store the person details of a client participant",
+        "operationId": "addPerson",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Person"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "description": "Participant data",
+          "required": true
+        }
+      }
+    },
+    "/person/{personId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Person"],
+        "summary": "Update person data",
+        "description": "Update person data",
+        "operationId": "updatePerson",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-person-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "description": "Person data",
+          "required": true
+        }
+      }
+    },
+    "/client": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Updates client data",
+        "description": "Updates a specific client data",
+        "operationId": "updateClient",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Update Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Client"
+                }
+              }
+            }
+          },
+          "description": "Client data",
+          "required": true
+        }
+      }
+    },
+    "/client_relationship/{clientId}": {
+      "post": {
+        "x-since-version": 2,
+        "tags": ["ClientRelationship"],
+        "summary": "Add a new client relationship",
+        "description": "Add a new client relationship with relationshipId=clientId",
+        "operationId": "addClientRelationship",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ClientRelationship"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientRelationship"
+                }
+              }
+            }
+          },
+          "description": "Relationship data",
+          "required": true
+        }
+      }
+    },
+    "/client_relationship": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["ClientRelationship"],
+        "summary": "Mark a client relationship with status=\"Deleted\" or do other updates",
+        "description": "Sets a specific client relationship as \"deleted\"  or do other updates",
+        "operationId": "deleteClientRelationship",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Delete Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientRelationship"
+                }
+              }
+            }
+          },
+          "description": "Client Relationship data",
+          "required": true
+        }
+      }
+    },
+    "/client/{clientId}/client_contacts": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Gets client's contacts",
+        "description": "Gets client's contacts  - not marked as \"Deleted\" - with their email/phone information",
+        "operationId": "getClientContacts",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientContact"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client_contact": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Add a new client contact",
+        "description": "Add a new client contact with phone/email for a client id",
+        "operationId": "addClientContact",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ClientContact"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientContact"
+                }
+              }
+            }
+          },
+          "description": "Physician data",
+          "required": true
+        }
+      }
+    },
+    "/client_contact/{contactId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Update/delete client contact",
+        "description": "Update/delete client contact for a client id",
+        "operationId": "updateClientContact",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-contact-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Client contact update successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientContact"
+                }
+              }
+            }
+          },
+          "description": "Contact data",
+          "required": true
+        }
+      }
+    },
+    "/client/{clientId}/client_schools": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Gets client's schools - not marked as \"Deleted\"",
+        "description": "Gets client's schools information",
+        "operationId": "getClientSchools",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientSchool"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client_school": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Add a new client school",
+        "description": "Add a new client school detail for a client id",
+        "operationId": "addClientSchool",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ClientSchool"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientSchool"
+                }
+              }
+            }
+          },
+          "description": "Physician data",
+          "required": true
+        }
+      }
+    },
+    "/client_school/{schoolId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Update/delete client school",
+        "description": "Update/delete client school",
+        "operationId": "updateClientSchool",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-school-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Client school update successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/ClientSchool"
+                }
+              }
+            }
+          },
+          "description": "Client school data",
+          "required": true
+        }
+      }
+    },
+    "/client/{clientId}/client_physicians": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Gets client's physicians  - not marked as \"Deleted\"",
+        "description": "Gets client's physicians information  - not marked as \"Deleted\"",
+        "operationId": "getClientPhysicians",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientPhysician"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client_physician": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Add a new client physician",
+        "description": "Add a new client physician for a client id",
+        "operationId": "addClientPhysician",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ClientPhysician"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Physician"
+        }
+      }
+    },
+    "/client_physician/{physicianId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Client"],
+        "summary": "Update/delete client physician",
+        "description": "Update/delete client physician for a client id",
+        "operationId": "updateClientPhysician",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-physician-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Client physician update successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Physician"
+        }
+      }
+    },
+    "/experts": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Expert"],
+        "summary": "Gets experts data",
+        "description": "Gets all experts",
+        "operationId": "getExperts",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Expert"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/file/{fileId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["File"],
+        "summary": "Gets a specific file(s)",
+        "description": "Gets a specific file for a given file id or return all files if no specific file id is given",
+        "operationId": "getFile",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-file-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/File"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["File"],
+        "summary": "Puts a specific file(s)",
+        "description": "Gets a specific file for a given file id or return all files if no specific file id is given",
+        "operationId": "updateFile",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-file-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/File"
+        }
+      }
+    },
+    "/file": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["File"],
+        "summary": "Puts a specific file(s)",
+        "description": "Gets a specific file for a given file id or return all files if no specific file id is given",
+        "operationId": "putFile",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/File"
+        }
+      }
+    },
+    "/manual/{manualId}": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Manual"],
+        "summary": "Gets a specific manual or return all manuals if no specific manual id is given",
+        "description": "Gets a specific file for a given manual id",
+        "operationId": "getManual",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-manual-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Manual"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/media_files": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Media"],
+        "summary": "Get media file of a certain kind  - not marked as \"Deleted\"",
+        "description": "Gets all media files of the mediaType  - not marked as \"Deleted\"",
+        "operationId": "getMedia",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Media"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/media_file": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Media"],
+        "summary": "Add media file of a certain kind",
+        "description": "Adds a new Media file to a case [video, audio, picture, etc]",
+        "operationId": "addMedia",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Media"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            }
+          },
+          "description": "Media content",
+          "required": true
+        }
+      }
+    },
+    "/case/{caseId}/media/{mediaId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Media"],
+        "summary": "Mark a media file as status=\"Deleted\" or update tagged participants",
+        "description": "Sets a specific assessment for a case as \"deleted\" or update tagged participants",
+        "operationId": "deleteMedia",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-media-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Delete Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            }
+          },
+          "description": "Media data",
+          "required": true
+        }
+      }
+    },
+    "/case/{caseId}/case_assessments": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Assessment"],
+        "summary": "Retrieve case assessments",
+        "description": "Retrieves past assessments - not marked as \"Deleted\" - for a case; if a worker id is specified in the query then retrieves only those assessments  - not marked as \"Deleted\" - for this case and for this worked id",
+        "operationId": "getCaseAssessments",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CaseAssessment"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/caseAssessment/{caseAssessmentId}/assessmentType/{assessmentTypeId}/recommendations": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Analytics"],
+        "summary": "get recommendations",
+        "description": "This api sends along the case assessment data to the backend analytics engine which sends back recommendations to the app",
+        "operationId": "getRecommendations",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-caseassessment-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-assessmenttype-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CaseAssessment"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Assessment"
+        }
+      }
+    },
+    "/case/{caseId}/case_note_types": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Notes"],
+        "summary": "Retrieve case notetypes",
+        "description": "Retrieves a list of available case note types",
+        "operationId": "getCaseNoteTypes",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/NotesType"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/case_notes": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Notes"],
+        "summary": "Retrieve case notes",
+        "description": "Retrieves past notes  - not marked as \"Deleted\" - for a case",
+        "operationId": "getCaseNotes",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Notes"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/case/{caseId}/case_note": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Notes"],
+        "summary": "Add case notes",
+        "description": "Adds a case notes record for a case",
+        "operationId": "addCaseNotes",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Notes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Notes"
+                }
+              }
+            }
+          },
+          "description": "Case Notes",
+          "required": true
+        }
+      }
+    },
+    "/case/{caseId}/case_note/{noteId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Notes"],
+        "summary": "Mark a case note with status=\"Deleted\" or update tagged participants",
+        "description": "Sets a specific case note as \"deleted\" or update tagged participants",
+        "operationId": "deleteCaseNote",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-note-id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Delete Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/Notes"
+                }
+              }
+            }
+          },
+          "description": "Case notes data",
+          "required": true
+        }
+      }
+    },
+    "/case/{caseId}/case_assessment": {
+      "post": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Assessment"],
+        "summary": "Add assessment",
+        "description": "Adds a new assessment record for a case - along with recommedndations elected by the user",
+        "operationId": "addCaseAssessment",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CaseAssessment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Assessment"
+        }
+      }
+    },
+    "/case/{caseId}/case_assessment/{caseAssessmentId}": {
+      "patch": {
+        "x-since-version": "1.0.0",
+        "tags": ["Case Assessment"],
+        "summary": "Mark an assessment as status=\"Deleted\"",
+        "description": "Sets a specific assessment for a case as \"deleted\"",
+        "operationId": "deleteCaseAssessment",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/path-case-id"
+          },
+          {
+            "$ref": "#/components/parameters/path-caseassessment-id"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "boolean",
+                      "description": "Delete Success"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "$ref": "#/components/requestBodies/Assessment"
+        }
+      }
+    },
+    "/client/{clientId}/client_relationships": {
+      "get": {
+        "x-since-version": 2,
+        "tags": ["ClientRelationship"],
+        "summary": "Gets all the client relationships  - not marked as \"Deleted\"",
+        "description": "Gets all the client relationships  - not marked as \"Deleted\" - for the given client",
+        "operationId": "getRelationships",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/path-client-id"
+          },
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientRelationship"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/client_relationship_types": {
+      "get": {
+        "x-since-version": 2,
+        "tags": ["ClientRelationship"],
+        "summary": "Gets all the client relationship types",
+        "description": "Gets all the client relationship types",
+        "operationId": "getRelationshipTypes",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientRelationshipType"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/score_categories": {
+      "get": {
+        "x-since-version": "1.0.0",
+        "tags": ["ScoreCategories"],
+        "summary": "Gets all score categories",
+        "description": "Gets all score categories",
+        "operationId": "getScoreCategories",
+        "security": [
+          {
+            "mf_auth": ["default"]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Content-Type"
+          },
+          {
+            "$ref": "#/components/parameters/Accept-Language"
+          },
+          {
+            "$ref": "#/components/parameters/Device-Model"
+          },
+          {
+            "$ref": "#/components/parameters/Api-Version"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "no technical errors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "description": "may return NO_RESULTS_FOUND for this user and search query",
+                      "items": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ScoreCategories"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "unexpected error(s)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "description": "warnings and errors from backend systems.  Message is for debug only, app should lookup localized message from local based on id",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "server-generated error code",
+            "enum": [
+              "NO_RESULTS_FOUND",
+              "SAVE_FAILED",
+              "ADD_FAILED",
+              "UPLOAD_FAILED",
+              "SCAN_FAILED",
+              "DELETE_FAILED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "message for debug only, not to be displayed"
+          },
+          "level": {
+            "type": "string",
+            "description": "message level",
+            "enum": ["INFO", "WARNING", "ERROR"]
+          }
+        }
+      },
+      "Pagination": {
+        "description": "Used to limit number of results returned at one time so the app or server do not get overloaded, and to keep payloads small.",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "first": {
+            "type": "string"
+          },
+          "last": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "next": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "previous": {
+            "type": "string"
+          }
+        }
+      },
+      "AssessmentTypeMaster": {
+        "description": "Assessment Type",
+        "properties": {
+          "assessmentTypeId": {
+            "description": "Unique Assessment Type Id",
+            "type": "string"
+          },
+          "assessmentTypeDesc": {
+            "type": "string"
+          },
+          "factorsTemplate": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentFactorsTemplate"
+            }
+          }
+        }
+      },
+      "AssessmentFactorsTemplate": {
+        "description": "Assessment Factor Name.",
+        "properties": {
+          "factorId": {
+            "description": "Unique Assessment Factor Id.",
+            "type": "string"
+          },
+          "factorName": {
+            "type": "string"
+          },
+          "factorQuestionsTemplate": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentFactorQuestionTemplate"
+            }
+          }
+        }
+      },
+      "AssessmentFactorQuestionTemplate": {
+        "description": "Assessment Factor Questions.",
+        "properties": {
+          "questionId": {
+            "description": "Assessment Factor Question Id.",
+            "type": "string"
+          },
+          "questionText": {
+            "description": "Assessment Factor Question Text.",
+            "type": "string"
+          },
+          "answerType": {
+            "description": "Assessment Factor Question Type.",
+            "type": "string",
+            "enum": ["Yes", "No", "N/A"]
+          }
+        }
+      },
+      "Case": {
+        "description": "Client Case Narrative.",
+        "properties": {
+          "caseId": {
+            "description": "Unique Case Id.",
+            "type": "string"
+          },
+          "caseNarative": {
+            "type": "string"
+          },
+          "location": {
+            "description": "Primary Location for Case.",
+            "type": "string"
+          },
+          "nextActionDate": {
+            "description": "Next Action Time Stamp.",
+            "type": "string"
+          },
+          "riskScore": {
+            "description": "Overall Case Risk Score.",
+            "type": "string"
+          },
+          "status": {
+            "description": "Case Status",
+            "type": "string"
+          },
+          "title": {
+            "description": "Case Title.",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of Case.",
+            "type": "string"
+          },
+          "visits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CaseVisit"
+            }
+          },
+          "worker": {
+            "description": "array of assigbed case workers' ids",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "caseAssessment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "client": {
+            "description": "client's id for this case",
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CaseVisit": {
+        "description": "Date of Client Visit.",
+        "properties": {
+          "checkIn": {
+            "description": "Case visit check-in date/time by the case worker",
+            "type": "string"
+          },
+          "checkOut": {
+            "description": "Case visit check-out date/time by the case worker",
+            "type": "string"
+          },
+          "location": {
+            "description": "Location where client was visited.",
+            "type": "string"
+          },
+          "riskScore": {
+            "description": "Risk score for visit.",
+            "type": "string"
+          },
+          "title": {
+            "description": "Client Visit Title.",
+            "type": "string"
+          },
+          "visitId": {
+            "description": "Unique visit Id (auto generated)",
+            "type": "string"
+          },
+          "case": {
+            "description": "case id",
+            "type": "string"
+          }
+        }
+      },
+      "Family": {
+        "description": "Family data",
+        "properties": {
+          "familyId": {
+            "description": "Family Unique Id (auto generated)",
+            "type": "string"
+          },
+          "familyName": {
+            "description": "Family name",
+            "type": "string"
+          },
+          "client": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Client"
+            }
+          }
+        }
+      },
+      "Person": {
+        "description": "Person profile data",
+        "properties": {
+          "address": {
+            "description": "Person Address.",
+            "type": "string"
+          },
+          "address2": {
+            "description": "Person Address line 2",
+            "type": "string"
+          },
+          "address3": {
+            "description": "Person Address line 3",
+            "type": "string"
+          },
+          "city": {
+            "description": "Person city name",
+            "type": "string"
+          },
+          "state": {
+            "description": "Person state or province",
+            "type": "string"
+          },
+          "postalCode": {
+            "description": "Person postal code",
+            "type": "string"
+          },
+          "district": {
+            "description": "Person postal district or county",
+            "type": "string"
+          },
+          "country": {
+            "description": "Person country",
+            "type": "string"
+          },
+          "birthDate": {
+            "description": "Person Date of Birth.",
+            "type": "string"
+          },
+          "personId": {
+            "description": "Person Unique Id (auto generated)",
+            "type": "string"
+          },
+          "ethnicity": {
+            "description": "Person's ethnicity",
+            "type": "string"
+          },
+          "gender": {
+            "description": "Person Gender.",
+            "type": "string",
+            "enum": ["Male", "Female"]
+          },
+          "lat": {
+            "description": "Person Location Latitude.",
+            "type": "string"
+          },
+          "lng": {
+            "description": "Person location longitude.",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "Person First Name.",
+            "type": "string"
+          },
+          "middleName": {
+            "description": "Person Middle Name.",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Person Last Name.",
+            "type": "string"
+          },
+          "nickName": {
+            "description": "Person Nick Name.",
+            "type": "string"
+          },
+          "legalStatus": {
+            "description": "Person Legal Status.",
+            "type": "string"
+          },
+          "personalCharacteristics": {
+            "description": "Person personal characteristics.",
+            "type": "string"
+          },
+          "healthConcerns": {
+            "description": "Person health concerns, allergies, illnesses, etc.",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Person Phone Number.",
+            "type": "string"
+          },
+          "email": {
+            "description": "Person email address.",
+            "type": "string"
+          },
+          "avatarPhoto": {
+            "$ref": "#/components/schemas/File"
+          }
+        }
+      },
+      "Client": {
+        "description": "Client profile data",
+        "properties": {
+          "clientId": {
+            "description": "Client Unique Id (auto generated)",
+            "type": "string"
+          },
+          "person": {
+            "$ref": "#/components/schemas/Person"
+          },
+          "contact": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "physician": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "school": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "case": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          },
+          "family": {
+            "description": "client's family id",
+            "type": "string"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClientRelationship"
+            }
+          }
+        }
+      },
+      "ClientRelationshipType": {
+        "description": "Lookup table for Client Relationship Types.",
+        "properties": {
+          "relationId": {
+            "description": "Unique Id for relationship type.",
+            "type": "string"
+          },
+          "relationName": {
+            "description": "Name of relationship.",
+            "type": "string"
+          },
+          "category": {
+            "description": "Household/Non-household grouping",
+            "type": "string",
+            "enum": ["Household", "Non-household"]
+          }
+        }
+      },
+      "Expert": {
+        "description": "Expert Entity.",
+        "properties": {
+          "email": {
+            "description": "Expert email address.",
+            "type": "string"
+          },
+          "expertId": {
+            "description": "Expert Id ( auto generated).",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First Name of Expert.",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Expert Last Name.",
+            "type": "string"
+          },
+          "onlineStatus": {
+            "description": "Expert Online Status.",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "Expert Phone Number",
+            "type": "string"
+          },
+          "userName": {
+            "description": "Expert User Name.",
+            "type": "string"
+          },
+          "avatarPicture": {
+            "$ref": "#/components/schemas/File"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Roles"
+          }
+        }
+      },
+      "File": {
+        "description": "Keeps references to various files used across the system.",
+        "properties": {
+          "caption": {
+            "description": "Caption For the File.",
+            "type": "string"
+          },
+          "content": {
+            "description": "File content",
+            "type": "string"
+          },
+          "fileId": {
+            "description": "Unique File Id.",
+            "type": "string"
+          },
+          "fileLocation": {
+            "description": "Physical File Location URI.",
+            "type": "string"
+          },
+          "fileType": {
+            "description": "File Type.",
+            "type": "string"
+          }
+        }
+      },
+      "Manual": {
+        "description": "Manual Entity.",
+        "properties": {
+          "desc": {
+            "description": "Description for Manual File.",
+            "type": "string"
+          },
+          "manualId": {
+            "description": "unique Id for Manual.",
+            "type": "string"
+          },
+          "file": {
+            "description": "file id of the manual",
+            "type": "string"
+          }
+        }
+      },
+      "Media": {
+        "description": "Media Entity.",
+        "properties": {
+          "status": {
+            "description": "Status",
+            "type": "string",
+            "enum": ["Submitted", "Deleted"]
+          },
+          "date": {
+            "description": "Date Media was created.",
+            "type": "string"
+          },
+          "mediaId": {
+            "description": "Media Id.",
+            "type": "string"
+          },
+          "case": {
+            "description": "case id of the case to which this media belongs",
+            "type": "string"
+          },
+          "file": {
+            "$ref": "#/components/schemas/File"
+          },
+          "mediaType": {
+            "$ref": "#/components/schemas/MediaTypeName"
+          },
+          "taggedClients": {
+            "description": "tagged client's client id",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MediaTypeName": {
+        "properties": {
+          "mediaType": {
+            "type": "string"
+          },
+          "mediaTypeId": {
+            "type": "string"
+          }
+        }
+      },
+      "NotesType": {
+        "properties": {
+          "notesTypeId": {
+            "type": "string"
+          },
+          "notestTypeDescription": {
+            "type": "string"
+          }
+        }
+      },
+      "Notes": {
+        "properties": {
+          "status": {
+            "description": "Status",
+            "type": "string",
+            "enum": ["Submitted", "Deleted"]
+          },
+          "noteId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "taggedClients": {
+            "description": "tagged client's client id",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "case": {
+            "description": "case id of the case where this notes belongs",
+            "type": "string"
+          },
+          "notesType": {
+            "$ref": "#/components/schemas/NotesType"
+          }
+        }
+      },
+      "Recommendation": {
+        "description": "Recommendations for Assessments.",
+        "properties": {
+          "recommendationId": {
+            "description": "Recommendation Id",
+            "type": "string"
+          },
+          "recommendationDsec": {
+            "description": "Recommendation Description",
+            "type": "string"
+          },
+          "recommendationSelection": {
+            "description": "Recommendation Selection",
+            "type": "string",
+            "enum": ["Yes", "No"]
+          }
+        }
+      },
+      "ClientRelationship": {
+        "description": "Client relationship data",
+        "properties": {
+          "participantId": {
+            "description": "Participant's Id",
+            "type": "string"
+          },
+          "status": {
+            "description": "Realtionship active/deleted status",
+            "type": "string",
+            "enum": ["Active", "Deleted"]
+          },
+          "role": {
+            "$ref": "#/components/schemas/Roles"
+          },
+          "personId": {
+            "description": "Participant's person Id - an object should exist in the Person entity for this participant",
+            "type": "string"
+          },
+          "clientId": {
+            "description": "this relationship's client id of the case client",
+            "type": "string"
+          },
+          "relationshipType": {
+            "$ref": "#/components/schemas/ClientRelationshipType"
+          }
+        }
+      },
+      "ClientContact": {
+        "description": "Client contact details",
+        "properties": {
+          "contactId": {
+            "type": "string"
+          },
+          "contactDescription": {
+            "type": "string"
+          },
+          "emailId": {
+            "type": "string"
+          },
+          "phoneType": {
+            "type": "string",
+            "enum": ["Cell", "Home", "Work"]
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "status": {
+            "description": "Client contact status",
+            "type": "string",
+            "enum": ["Active", "Deleted"]
+          }
+        }
+      },
+      "ClientPhysician": {
+        "description": "Client physician details",
+        "properties": {
+          "physicianId": {
+            "type": "string"
+          },
+          "gpName": {
+            "type": "string"
+          },
+          "officeName": {
+            "type": "string"
+          },
+          "street1": {
+            "type": "string"
+          },
+          "street2": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          },
+          "emailId": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "status": {
+            "description": "Client Physician status",
+            "type": "string",
+            "enum": ["Active", "Deleted"]
+          }
+        }
+      },
+      "ClientSchool": {
+        "description": "Client school details",
+        "properties": {
+          "schoolId": {
+            "type": "string"
+          },
+          "schoolName": {
+            "type": "string"
+          },
+          "street1": {
+            "type": "string"
+          },
+          "street2": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          },
+          "status": {
+            "description": "Client school status",
+            "type": "string",
+            "enum": ["Active", "Deleted"]
+          }
+        }
+      },
+      "Roles": {
+        "description": "Roles Lookup Table.",
+        "properties": {
+          "name": {
+            "description": "Role Name.",
+            "type": "string"
+          },
+          "roleId": {
+            "description": "Roles Unique Id.",
+            "type": "string"
+          }
+        }
+      },
+      "ScoreCategories": {
+        "description": "Score Categories Criteria.",
+        "properties": {
+          "scoreCategories": {
+            "description": "Risk Score Category Name.",
+            "type": "string"
+          },
+          "threasholdValue": {
+            "description": "Risk Score Threashold.",
+            "type": "string"
+          },
+          "threasholdDescription": {
+            "description": "Risk Score Threashold description.",
+            "type": "string"
+          }
+        }
+      },
+      "SocialWorker": {
+        "description": "Social Workers Assigned to Clients.",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "case": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          },
+          "family": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Family"
+            }
+          }
+        }
+      },
+      "CaseAssessment": {
+        "description": "Case Assessment",
+        "properties": {
+          "assessmentDate": {
+            "description": "Assessment timestamp",
+            "type": "string"
+          },
+          "assessmentId": {
+            "description": "Assessment Unique Id",
+            "type": "string"
+          },
+          "assessmentSignature": {
+            "description": "Worker's signature upon submitting the assessment",
+            "type": "string"
+          },
+          "status": {
+            "description": "Case assesement status",
+            "type": "string",
+            "enum": ["Submitted", "Deleted"]
+          },
+          "worker": {
+            "description": "id of the worker that performed this case assessment",
+            "type": "string"
+          },
+          "case": {
+            "description": "case id",
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentType"
+            }
+          },
+          "taggedClients": {
+            "description": "tagged client's client id",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AssessmentType": {
+        "description": "Assessment Type",
+        "properties": {
+          "assessmentTypeId": {
+            "description": "Unique Assessment Type Id",
+            "type": "string"
+          },
+          "assessmentTypeDesc": {
+            "type": "string"
+          },
+          "factors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentFactors"
+            }
+          },
+          "recommendation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Recommendation"
+            }
+          }
+        }
+      },
+      "AssessmentFactors": {
+        "description": "Assessment Factor Name.",
+        "properties": {
+          "factorId": {
+            "description": "Unique Assessment Factor Id.",
+            "type": "string"
+          },
+          "factorName": {
+            "type": "string"
+          },
+          "riskSCore": {
+            "type": "string"
+          },
+          "factorQuestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentFactorQuestion"
+            }
+          }
+        }
+      },
+      "AssessmentFactorQuestion": {
+        "description": "Assessment Factor Questions.",
+        "properties": {
+          "questionId": {
+            "description": "Assessment Factor Question Id.",
+            "type": "string"
+          },
+          "questionText": {
+            "description": "Assessment Factor Question Text.",
+            "type": "string"
+          },
+          "answerText": {
+            "description": "Assessment Factor Answer Text.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "responses": {},
+    "parameters": {
+      "path-assessmenttype-id": {
+        "name": "assessmentTypeId",
+        "in": "path",
+        "description": "Assessment Type Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-caseassessment-id": {
+        "name": "caseAssessmentId",
+        "in": "path",
+        "description": "Case Assessment Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-person-id": {
+        "name": "personId",
+        "in": "path",
+        "description": "personId to find Person",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-family-id": {
+        "name": "familyId",
+        "in": "path",
+        "description": "FamilyId to find family data",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-client-id": {
+        "name": "clientId",
+        "in": "path",
+        "description": "ClientId to find Client",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-contact-id": {
+        "name": "contactId",
+        "in": "path",
+        "description": "Client's contact's id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-physician-id": {
+        "name": "physicianId",
+        "in": "path",
+        "description": "Client's physician's id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-school-id": {
+        "name": "schoolId",
+        "in": "path",
+        "description": "Client's school's id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-case-id": {
+        "name": "caseId",
+        "in": "path",
+        "description": "Case Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-visit-id": {
+        "name": "visitId",
+        "in": "path",
+        "description": "Visit Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-worker-id": {
+        "name": "userName",
+        "in": "path",
+        "description": "Worker Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-file-id": {
+        "name": "fileId",
+        "in": "path",
+        "description": "File Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-manual-id": {
+        "name": "manualId",
+        "in": "path",
+        "description": "Manual Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-media-id": {
+        "name": "mediaId",
+        "in": "path",
+        "description": "Media Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "path-case-note-id": {
+        "name": "noteId",
+        "in": "path",
+        "description": "Case Note Id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Accept-Language": {
+        "in": "header",
+        "name": "Accept-Language",
+        "description": "to support API localization",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Content-Type": {
+        "in": "header",
+        "name": "Content-Type",
+        "description": "to support API localization",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Device-Model": {
+        "name": "User-Agent",
+        "in": "header",
+        "description": "iPod Touch, iPhone, iPhone Simulator, iPad, iPad Simulator",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "default": "iPad"
+        }
+      },
+      "Api-Version": {
+        "name": "Api-Version",
+        "in": "header",
+        "description": "1.1.0",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "default": "1.1.0"
+        }
+      },
+      "offset": {
+        "in": "query",
+        "name": "offset",
+        "description": "offset for pagination (e.g. start at 40)",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "in": "query",
+        "name": "limit",
+        "description": "limit for pagination (e.g. 20 at a time)",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "examples": {},
+    "requestBodies": {
+      "Physician": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/ClientPhysician"
+              }
+            }
+          }
+        },
+        "description": "Physician data",
+        "required": true
+      },
+      "File": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/File"
+              }
+            }
+          }
+        },
+        "description": "File content",
+        "required": true
+      },
+      "Assessment": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "items": {
+                "$ref": "#/components/schemas/CaseAssessment"
+              }
+            }
+          }
+        },
+        "description": "Assessment data",
+        "required": true
+      }
+    },
+    "securitySchemes": {
+      "mf_auth": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://github.com/login/oauth/authorize",
+            "tokenUrl": "https://github.com/login/oauth/access_token",
+            "scopes": {
+              "default": "Grants read/write access to api catalog"
+            }
+          }
+        }
+      }
+    },
+    "headers": {}
+  }
+}

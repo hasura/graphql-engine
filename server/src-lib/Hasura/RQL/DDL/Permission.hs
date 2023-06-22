@@ -34,6 +34,7 @@ import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
@@ -181,8 +182,8 @@ We've a table "user" tracked by hasura and a role "public"
   mutation operations are visible by default.
 -}
 procSetObj ::
-  forall b m.
-  (QErrM m, BackendMetadata b) =>
+  forall b m r.
+  (QErrM m, BackendMetadata b, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
@@ -234,7 +235,9 @@ buildPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -254,7 +257,9 @@ buildLogicalModelPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   LogicalModelName ->
@@ -337,11 +342,13 @@ runDropPerm permType (DropPerm source table role) = do
   return successMsg
 
 buildInsPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -443,11 +450,13 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
 -- native query's metadata, try to construct the @SELECT@ permission
 -- definition.
 buildLogicalModelSelPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   LogicalModelName ->
@@ -515,11 +524,13 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
   return (SelPermInfo {..}, deps)
 
 buildSelPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -584,11 +595,13 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 buildUpdPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -633,11 +646,13 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 
 buildDelPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->

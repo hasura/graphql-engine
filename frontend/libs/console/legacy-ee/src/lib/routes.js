@@ -15,6 +15,7 @@ import {
   prefetchEELicenseInfo,
   PageNotFound,
   dataHeaders,
+  loadAdminSecretState,
 } from '@hasura/console-legacy-ce';
 import {
   dataRouterUtils,
@@ -65,6 +66,7 @@ import { decodeToken, checkAccess } from './utils/computeAccess';
 import preLoginHook from './utils/preLoginHook';
 import metricsRouter from './components/Services/Metrics/MetricsRouter';
 import { notifyRouteChangeToAppcues } from './utils/appCues';
+import extendedGlobals from './Globals';
 
 const routes = store => {
   // load hasuractl migration status
@@ -288,6 +290,18 @@ const routes = store => {
     // when console type is pro-lite only admin secret login is allowed, making this check unnecessary
     // ie. admin privileges are already checked in the login process
     if (globals.consoleType === 'pro-lite') return; // show security tab
+
+    // when consoleType === pro and if admin secret is provided, show security tab
+    if (
+      globals.consoleType === 'pro' &&
+      (extendedGlobals.adminSecret ||
+        loadAdminSecretState() ||
+        globals.adminSecret) &&
+      (extendedGlobals.adminSecret ||
+        loadAdminSecretState() ||
+        globals.adminSecret) !== ''
+    )
+      return;
 
     // cloud cli doesn't have any privileges when `hasura console` command is executed, it will only have previleges when `hasura pro console` is executed.
     // this will make sure that security tab is visible even when the users are running `hasura console` command with valid admin secret

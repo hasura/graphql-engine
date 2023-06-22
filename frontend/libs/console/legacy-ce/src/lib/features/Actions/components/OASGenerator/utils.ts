@@ -14,11 +14,8 @@ import {
   Oas2,
   Oas3,
   createGraphQLSchema,
-} from '@dancamma/openapi-to-graphql';
-import {
-  ReferenceObject,
-  SchemaObject,
-} from '@dancamma/openapi-to-graphql/dist/types/oas3';
+} from '@hasura/open-api-to-graphql';
+import { ReferenceObject, SchemaObject } from '@hasura/open-api-to-graphql';
 import { Microfiber } from 'microfiber';
 import { formatSdl } from 'format-graphql';
 import { getActionRequestSampleInput } from '../../../../components/Services/Actions/Add/utils';

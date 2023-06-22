@@ -443,7 +443,7 @@ customScalarParser = \case
             -- for that reason; we might want to reconsider this validation as
             -- well.
             void
-              $ parseScalarValue @b (unwrapScalar scalarType) jsonInput
+              $ parseScalarValue @b (parsingContext scalarType) (unwrapScalar scalarType) jsonInput
               `onLeft` \e -> parseErrorWith P.ParseFailed . toErrorMessage $ qeError e
             pure jsonInput
      in P.Parser

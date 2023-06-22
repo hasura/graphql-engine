@@ -4,61 +4,64 @@
 module Hasura.Server.Init.FeatureFlag
   ( FeatureFlag (..),
     CheckFeatureFlag (..),
-    checkFeatureFlag,
-    Identifier (..),
-    FeatureFlags (..),
+    ceCheckFeatureFlag,
     HasFeatureFlagChecker (..),
-    featureFlags,
-    nativeQueryInterface,
-    storedProceduresFlag,
   )
 where
 
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Char
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HashMap
+import Data.Text qualified as T
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
-newtype Identifier = Identifier {getIdentifier :: Text}
-  deriving stock (Generic)
-  deriving newtype (Eq, FromJSON, ToJSON)
-  deriving anyclass (Hashable)
-
-data FeatureFlag = FeatureFlag
-  { ffIdentifier :: Identifier,
-    ffDefaultValue :: Bool,
-    ffDescription :: Text,
-    ffEnvVar :: String
+newtype FeatureFlag = FeatureFlag
+  { ffIdentifier :: Text
   }
   deriving stock (Eq, Generic)
   deriving anyclass (Hashable, FromJSON, ToJSON)
 
--- | In OSS we look for a environment variable or fall back to the default
--- value
-checkFeatureFlag :: Env.Environment -> FeatureFlag -> IO Bool
-checkFeatureFlag env (FeatureFlag {ffEnvVar = envVar, ffDefaultValue = defaultValue}) =
-  case Env.lookupEnv env envVar of
-    Just found -> pure $ fromMaybe defaultValue (readMaybe found)
-    Nothing -> pure $ defaultValue
+-- | In OSS we _may_ look for a environment variable or fall back to the default
+-- value.
+ceCheckFeatureFlag :: Env.Environment -> CheckFeatureFlag
+ceCheckFeatureFlag env =
+  CheckFeatureFlag
+    { runCheckFeatureFlag = \cases
+        ff@FeatureFlag {ffIdentifier = name}
+          | ff `elem` map fst ceFeatureFlags ->
+              let envVar = "HASURA_FF_" ++ T.unpack (T.map (hypenToUnderscore . toUpper) name)
+               in return $ fromMaybe False $ Env.lookupEnv env envVar >>= readMaybe
+        _ -> return False,
+      listKnownFeatureFlags = ceFeatureFlags
+    }
+  where
+    hypenToUnderscore '-' = '_'
+    hypenToUnderscore c = c
 
-newtype CheckFeatureFlag = CheckFeatureFlag {runCheckFeatureFlag :: FeatureFlag -> IO Bool}
+data CheckFeatureFlag = CheckFeatureFlag
+  { -- | Action that samples the value of a feature flag.
+    -- Different products will want to do different things. For example, the
+    -- Cloud product will want to use LaunchDarkly whereas the OSS and non-cloud
+    -- EE products will want to sample environment variables.
+    runCheckFeatureFlag :: FeatureFlag -> IO Bool,
+    -- | A registry of flags that are 'known' by the system. This is only used
+    -- to inform of feature flag values via the '/v1alpha/config' endpoint.
+    -- Ideally, the console should have a dedicated endpoint to sample feature
+    -- flags so we don't _have_ to centralise that knowledge here.
+    listKnownFeatureFlags :: [(FeatureFlag, Text)]
+  }
 
 --------------------------------------------------------------------------------
 
-newtype FeatureFlags = FeatureFlags {getFeatureFlags :: HashMap Text FeatureFlag}
-
-featureFlags :: FeatureFlags
-featureFlags =
-  FeatureFlags
-    $ HashMap.fromList
-      [ ("test-flag", testFlag),
-        ("native-query-interface", nativeQueryInterface),
-        ("stored-procedures", storedProceduresFlag)
-      ]
+-- | This is the list of feature flags that exist in the CE version
+ceFeatureFlags :: [(FeatureFlag, Text)]
+ceFeatureFlags =
+  [ (testFlag, "Testing feature flag integration")
+  ]
 
 --------------------------------------------------------------------------------
 
@@ -76,29 +79,6 @@ instance (HasFeatureFlagChecker m) => HasFeatureFlagChecker (StateT s m) where
 
 --------------------------------------------------------------------------------
 
+-- | Testing feature flag integration
 testFlag :: FeatureFlag
-testFlag =
-  FeatureFlag
-    { ffIdentifier = Identifier "test-flag",
-      ffDefaultValue = False,
-      ffDescription = "Testing feature flag integration",
-      ffEnvVar = "HASURA_FF_TEST_FLAG"
-    }
-
-nativeQueryInterface :: FeatureFlag
-nativeQueryInterface =
-  FeatureFlag
-    { ffIdentifier = Identifier "native-query-interface",
-      ffDefaultValue = False,
-      ffDescription = "Expose custom views, permissions and advanced SQL functionality via custom queries",
-      ffEnvVar = "HASURA_FF_NATIVE_QUERY_INTERFACE"
-    }
-
-storedProceduresFlag :: FeatureFlag
-storedProceduresFlag =
-  FeatureFlag
-    { ffIdentifier = Identifier "stored-procedures",
-      ffDefaultValue = False,
-      ffDescription = "Expose stored procedures support",
-      ffEnvVar = "HASURA_FF_STORED_PROCEDURES"
-    }
+testFlag = FeatureFlag {ffIdentifier = "test-flag"}

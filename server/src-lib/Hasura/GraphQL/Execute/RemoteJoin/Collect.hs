@@ -227,8 +227,26 @@ transformAggregateSelect ::
   Collector (AnnAggregateSelectG b Void (UnpreparedValue b))
 transformAggregateSelect =
   traverseOf asnFields
+    $ traverseFields transformTableAggregateField
+
+transformTableAggregateField ::
+  (Backend b) =>
+  TableAggregateFieldG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  Collector (TableAggregateFieldG b Void (UnpreparedValue b))
+transformTableAggregateField = \case
+  TAFAgg aggFields -> pure $ TAFAgg aggFields
+  TAFNodes xNodesAgg annFields -> TAFNodes xNodesAgg <$> transformAnnFields annFields
+  TAFGroupBy xGroupBy groupBy -> TAFGroupBy xGroupBy <$> transformGroupBy groupBy
+  TAFExp txt -> pure $ TAFExp txt
+
+transformGroupBy ::
+  (Backend b) =>
+  GroupByG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b) ->
+  Collector (GroupByG b Void (UnpreparedValue b))
+transformGroupBy =
+  traverseOf gbgFields
     $ traverseFields
-    $ traverseOf (_TAFNodes . _2) transformAnnFields
+    $ traverseOf _GBFNodes transformAnnFields
 
 -- Relay doesn't support remote relationships: we can drill down directly to the
 -- inner non-relay selection sets.

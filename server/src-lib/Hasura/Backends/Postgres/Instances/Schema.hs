@@ -324,6 +324,7 @@ instance
   relayExtension = pgkRelayExtension @pgKind
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Just ()
+  groupByExtension = Just ()
 
   -- individual components
   columnParser = columnParser

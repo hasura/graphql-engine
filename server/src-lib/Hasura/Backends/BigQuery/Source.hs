@@ -21,11 +21,13 @@ where
 import Autodocodec
 import Autodocodec.Extended (fromEnvCodec)
 import Control.Concurrent.MVar
+import Control.Lens (united)
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as BL
+import Data.Has
 import Data.Int qualified as Int
 import Data.Scientific (Scientific)
 import Data.Text.Encoding qualified as TE
@@ -331,3 +333,7 @@ instance J.ToJSON BigQuerySourceConfig where
             "retry_limit" J..= _retryNumRetries
           ]
         Nothing -> []
+
+-- Note: () ~ ScalarTypeParsingContext 'BigQuery but we can't use the type family instance in the Has instance.
+instance Has () BigQuerySourceConfig where
+  hasLens = united

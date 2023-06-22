@@ -1,5 +1,5 @@
-import { Oas3 } from '@dancamma/openapi-to-graphql';
-import { ParameterObject } from '@dancamma/openapi-to-graphql/dist/types/oas3';
+import { Oas3 } from '@hasura/open-api-to-graphql';
+import { ParameterObject } from '@hasura/open-api-to-graphql';
 import petStore from './petstore.json';
 import { generateAction, generateQueryParams, parseOas } from './utils';
 
