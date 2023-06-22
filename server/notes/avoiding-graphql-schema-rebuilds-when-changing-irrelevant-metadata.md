@@ -1,7 +1,7 @@
 This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L398).
 It is referenced at:
   - line 552 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L552)
-  - line 190 of [Hasura.RQL.DDL.Schema.Cache.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Common.hs#L190)
+  - line 191 of [Hasura.RQL.DDL.Schema.Cache.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Common.hs#L191)
   - line 327 of [Hasura.RQL.DDL.Schema.Cache.Dependencies](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache/Dependencies.hs#L327)
 
 # Avoiding GraphQL schema rebuilds when changing irrelevant Metadata
