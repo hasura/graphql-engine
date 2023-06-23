@@ -4935,6 +4935,11 @@
                             }
                         ]
                     },
+                    "isolation_level": {
+                        "default": "read-committed",
+                        "description": "The transaction isolation level in which the queries made to the source will be run with (default: read-committed).\nIsolation level",
+                        "type": "string"
+                    },
                     "pool_settings": {
                         "$ref": "#/components/schemas/MSSQLPoolSettings"
                     }

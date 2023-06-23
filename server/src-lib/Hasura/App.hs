@@ -1466,7 +1466,7 @@ mkPgSourceResolver pgLogger env _ config = runExceptT do
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT do
-  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
+  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} isolationLevel = connInfo
       connOptions =
         MSPool.ConnectionOptions
           { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
@@ -1474,6 +1474,6 @@ mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT
             _coIdleTime = _mpsIdleTimeout
           }
   (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
-  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
+  let mssqlExecCtx = mkMSSQLExecCtx isolationLevel mssqlPool NeverResizePool
       numReadReplicas = 0
   pure $ MSSQLSourceConfig connString mssqlExecCtx numReadReplicas

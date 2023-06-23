@@ -127,10 +127,11 @@ keywords:
 
 ## MsSQLSourceConnectionInfo {#mssqlsourceconnectioninfo}
 
-| Key               | Required | Schema                                  | Description                                                   |
-| ----------------- | -------- | --------------------------------------- | ------------------------------------------------------------- |
-| connection_string | true     | `String` \| [FromEnv](#fromenv)         | The database connection string, or as an environment variable |
-| pool_settings     | false    | [MsSQLPoolSettings](#mssqlpoolsettings) | Connection pool settings                                      |
+| Key               | Required | Schema                                                                                     | Description                                                                                                           |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| connection_string | true     | `String` \| [FromEnv](#fromenv)                                                            | The database connection string, or as an environment variable                                                         |
+| pool_settings     | false    | [MsSQLPoolSettings](#mssqlpoolsettings)                                                    | Connection pool settings                                                                                              |
+| isolation_level   | false    | `read-uncommited` \| `read-committed` \| `repeatable-read` \| `snapshot` \| `serializable` | The transaction isolation level in which the queries made to the source will be run with (default: `read-committed`). |
 
 ## FromEnv {#fromenv}
 
