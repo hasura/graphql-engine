@@ -6,14 +6,16 @@ export const Item: React.FC<{
   dangerous?: boolean;
   link?: boolean;
   selectable?: boolean;
-}> = ({ children, dangerous, link, selectable = false }) => (
+  disabled?: boolean;
+}> = ({ children, dangerous, link, selectable = false, disabled }) => (
   <div
     className={clsx(
       styles.twBaseStyle,
       selectable && styles.twSelectableItem,
       styles.twDefault,
       dangerous && styles.twDangerous,
-      link && styles.twLink
+      link && styles.twLink,
+      disabled && 'cursor-not-allowed'
     )}
   >
     {children}

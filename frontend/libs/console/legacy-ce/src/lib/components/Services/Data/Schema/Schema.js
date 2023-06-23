@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
@@ -56,6 +57,7 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import { EmptyState } from './components/EmptyState/EmptyState';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
+import { FeatureFlagContainer } from './TrackTablesContainer';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -737,9 +739,18 @@ class Schema extends Component {
           <hr className="my-md" />
           {getCurrentSchemaSection()}
           <hr className="my-md" />
-          {getUntrackedTablesSection()}
+
+          <FeatureFlagContainer
+            dataSourceName={currentDataSource}
+            schema={currentSchema}
+            dispatch={dispatch}
+          >
+            {getUntrackedTablesSection()}
+          </FeatureFlagContainer>
+
           {isFeatureSupported('tables.relationships.track') &&
             getUntrackedRelationsSection()}
+
           {getUntrackedFunctionsSection(
             isFeatureSupported('functions.track.enabled')
           )}

@@ -22,12 +22,14 @@ export type CustomFieldNamesFormProps = {
   callToAction?: string;
   callToActionLoadingText?: string;
   callToDeny?: string;
+  isLoading: boolean;
 };
 
 export const CustomFieldNamesForm: React.VFC<
   CustomFieldNamesFormProps
 > = props => {
   const {
+    isLoading,
     onClose,
     callToAction = 'Save',
     callToActionLoadingText = 'Saving...',
@@ -158,6 +160,7 @@ export const CustomFieldNamesForm: React.VFC<
             */}
         <Dialog.Footer
           callToAction={callToAction}
+          isLoading={isLoading}
           callToActionLoadingText={callToActionLoadingText}
           callToDeny={callToDeny}
           onClose={onClose}

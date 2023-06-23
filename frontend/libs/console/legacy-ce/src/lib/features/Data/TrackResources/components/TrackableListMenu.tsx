@@ -11,6 +11,8 @@ export const TrackableListMenu = (
     handleTrackButton?: () => void;
     checkActionText: string;
     showButton?: boolean;
+    searchChildren?: React.ReactChild;
+    actionChildren?: React.ReactChild;
   }
 ) => (
   <div className="flex justify-between space-x-4">
@@ -27,6 +29,7 @@ export const TrackableListMenu = (
           >
             {props.checkActionText}
           </Button>
+          {props.actionChildren && props.actionChildren}
           <span className="border-r border-slate-300" />
         </>
       )}
@@ -34,6 +37,7 @@ export const TrackableListMenu = (
       {/* Search Input */}
       <div className="flex gap-2">
         <SearchBar onSearch={props.handleSearch} />
+        {props.searchChildren && props.searchChildren}
         {props.searchIsActive ? (
           <Badge>{props.filteredData.length} results found</Badge>
         ) : null}

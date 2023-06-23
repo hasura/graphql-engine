@@ -17,6 +17,7 @@ interface TableRowProps {
   reset: () => void;
   onChange: () => void;
   onTableNameClick?: () => void;
+  onTableTrack?: (table: TrackableTable) => void;
 }
 
 export const TableRow = React.memo(
@@ -27,6 +28,7 @@ export const TableRow = React.memo(
     reset,
     onChange,
     onTableNameClick,
+    onTableTrack,
   }: TableRowProps) => {
     const [showCustomModal, setShowCustomModal] = React.useState(false);
     const { trackTables, untrackTables, isLoading } = useTrackTables({
@@ -40,7 +42,7 @@ export const TableRow = React.memo(
       }
 
       trackTables({
-        tablesToBeTracked: [t],
+        tables: [t],
         onSuccess: () => {
           hasuraToast({
             type: 'success',
@@ -49,9 +51,9 @@ export const TableRow = React.memo(
           });
           reset();
           setShowCustomModal(false);
+          onTableTrack?.(table);
         },
         onError: err => {
-          console.log('!!!', err);
           hasuraToast({
             type: 'error',
             title: 'Unable to perform operation',
@@ -63,7 +65,7 @@ export const TableRow = React.memo(
 
     const untrack = () => {
       untrackTables({
-        tablesToBeUntracked: [table],
+        tables: [table],
         onSuccess: () => {
           hasuraToast({
             type: 'success',
@@ -71,9 +73,9 @@ export const TableRow = React.memo(
             message: 'Object untracked successfully.',
           });
           reset();
+          onTableTrack?.(table);
         },
         onError: err => {
-          console.log('log!!');
           hasuraToast({
             type: 'error',
             title: 'Unable to perform operation',

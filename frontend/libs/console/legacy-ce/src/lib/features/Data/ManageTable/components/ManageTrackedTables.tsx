@@ -80,7 +80,7 @@ export const ManageTrackedTables = ({
           amount: untrackedTables.length,
           content: (
             <TableList
-              mode={'untrack'}
+              viewingTablesThatAre={'untracked'}
               dataSourceName={dataSourceName}
               tables={untrackedTables}
             />
@@ -90,7 +90,7 @@ export const ManageTrackedTables = ({
           amount: trackedTables.length,
           content: (
             <TableList
-              mode={'track'}
+              viewingTablesThatAre={'tracked'}
               dataSourceName={dataSourceName}
               tables={trackedTables}
             />

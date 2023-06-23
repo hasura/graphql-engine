@@ -48,13 +48,11 @@ export const paginate = <T>({
 export function search<T>({
   data,
   searchText,
-  searchFn,
+  filterFn,
 }: {
   data: T[];
   searchText: string;
-  searchFn: (searchText: string, item: T) => boolean;
+  filterFn: (searchText: string, item: T) => boolean;
 }) {
-  if (!searchText.length) return data;
-
-  return data.filter(item => searchFn(searchText, item));
+  return data.filter(item => filterFn(searchText, item));
 }

@@ -5,20 +5,22 @@ import { paginate, search } from '../utils';
 
 export function usePaginatedSearchableList<TData extends { id: string }>({
   data,
-  searchFn,
+  filterFn,
+  defaultQuery,
 }: {
   data: TData[];
-  searchFn: (searchText: string, item: TData) => boolean;
+  filterFn: (searchText: string, item: TData) => boolean;
+  defaultQuery?: string;
 }) {
   const [pageNumber, setPageNumber] = useState(DEFAULT_PAGE_NUMBER);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState(defaultQuery ?? '');
 
   const searchIsActive = !!searchText.length;
 
   const filteredData = React.useMemo(
-    () => search<TData>({ data, searchText, searchFn }),
-    [data, searchFn, searchText]
+    () => search<TData>({ data, searchText, filterFn }),
+    [data, filterFn, searchText]
   );
 
   const { data: paginatedData, totalPages } = React.useMemo(
@@ -28,7 +30,7 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
 
   const rowsToBeChecked = searchIsActive ? filteredData : paginatedData;
 
-  const checkData = useCheckRows(rowsToBeChecked, data);
+  const checkData = useCheckRows(rowsToBeChecked, filteredData, data);
 
   const checkedItems = React.useMemo(
     () => data.filter(d => checkData.checkedIds.includes(d.id)),

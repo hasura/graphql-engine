@@ -1,5 +1,4 @@
 import { Table } from '../../hasura-metadata-types';
-import { TrackableTable } from './types';
 
 export const getQualifiedTable = (table: Table): string[] => {
   if (Array.isArray(table)) return table;
@@ -32,10 +31,14 @@ export const paginate = <T>(
   return array.slice((page_number - 1) * page_size, page_number * page_size);
 };
 
-export const search = (tables: TrackableTable[], searchText: string) => {
-  if (!searchText.length) return tables;
+export const filterByText = (parentText: string, searchText: string) => {
+  if (!searchText.length) return true;
 
-  return tables.filter(table =>
-    table.name.toLowerCase().includes(searchText.toLowerCase())
-  );
+  return parentText.includes(searchText.toLowerCase());
+};
+
+export const filterByTableType = (type: string, selectedTypes?: string[]) => {
+  if (!selectedTypes?.length) return true;
+
+  return selectedTypes.includes(type);
 };

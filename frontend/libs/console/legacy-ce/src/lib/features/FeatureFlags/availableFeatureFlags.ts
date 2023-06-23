@@ -5,6 +5,7 @@ import globals from '../../Globals';
 const relationshipTabTablesId = 'f6c57c31-abd3-46d9-aae9-b97435793273';
 const importActionFromOpenApiId = '12e5aaf4-c794-4b8f-b762-5fda0bff946a';
 const permissionsNewUI = '5f7b1673-b2ef-4c98-89f7-f30cb64f0136';
+const trackingSectionUI = 'c2536b28-0ea3-11ee-be56-0242ac120002';
 
 const importActionFromOpenApi: FeatureFlagDefinition = {
   id: importActionFromOpenApiId,
@@ -21,6 +22,7 @@ export const availableFeatureFlagIds = {
   relationshipTabTablesId,
   importActionFromOpenApiId,
   permissionsNewUI,
+  trackingSectionUI,
 };
 
 export const availableFeatureFlags: FeatureFlagDefinition[] = [
@@ -42,6 +44,15 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     status: 'experimental',
     defaultValue: false,
     discussionUrl: '',
+  },
+  {
+    id: trackingSectionUI,
+    title: 'Enable new Table Tracking UI for Postgres & SQL Server',
+    description: 'Try out the new UI experience for tracking tables',
+    section: 'data',
+    status: 'experimental',
+    defaultValue: false,
+    discussionUrl: 'https://github.com/hasura/graphql-engine/discussions/9727',
   },
   // eslint-disable-next-line no-underscore-dangle
   ...(isProConsole(globals) ? [importActionFromOpenApi] : []),

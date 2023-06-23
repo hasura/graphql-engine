@@ -62,7 +62,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
 
   const listProps = usePaginatedSearchableList({
     data: functionsWithId,
-    searchFn: searchFn,
+    filterFn: searchFn,
   });
 
   const {
