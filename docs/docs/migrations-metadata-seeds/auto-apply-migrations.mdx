@@ -15,29 +15,46 @@ keywords:
 ## Introduction
 
 Hasura ships a special `cli-migrations` Docker image which can be used to automatically apply Migrations and Metadata
-when the server starts:
+when the server starts.
+
+This Docker image provides a method to implement Migrations and Metadata at the Docker entrypoint automatically. A temporary server is booted,
+with the Migrations API allowed, securely through localhost. Once Migrations and Metadata have been applied, the server
+will reboot in a secure mode for inbound graphql usage.
+
+You can use this image in your CI/CD workflows to automatically apply Migrations and Metadata to a Hasura GraphQL Engine
+instance like this in a Dockerfile:
 
 ```bash
-hasura/graphql-engine:<version>.cli-migrations-v3
+FROM hasura/graphql-engine:<version>.cli-migrations-v3
+
+CMD graphql-engine \
+  --metadata-database-url $METADATA_DATABASE_URL \
+  serve \
+  --server-port $PORT \
+  --enable-console
 ```
 
-You can find the image on [DockerHub for various platforms here](https://hub.docker.com/r/hasura/graphql-engine/tags?page=1&name=cli-migrations-v3).
+You can find more information about configuring the `cli-migrations` image
+[here](https://github.com/hasura/graphql-engine/blob/master/packaging/cli-migrations/v3/README.md#metadata-directory-optional)
+and find the image on
+[DockerHub for various platforms here](https://hub.docker.com/r/hasura/graphql-engine/tags?page=1&name=cli-migrations-v3).
 
 This container image also includes the Hasura CLI at `/bin/hasura-cli` and can be used for running any other CI/CD
 scripts in your workflow too.
 
 :::info Note
 
-For `config v2`, see [Auto-apply Migrations/Metadata when the server starts (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/auto-apply-migrations.mdx).
+For `config v2`, see
+[Auto-apply Migrations/Metadata when the server starts (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/auto-apply-migrations.mdx).
 
 :::
 
 ## Applying Migrations
 
 The `migrations` and `metadata` directories created by the Hasura CLI in a Hasura Project can be mounted at the
-`/hasura-migrations` and `/hasura-metadata` paths of this Docker container and the container's entrypoint script
-will automatically apply the Migrations and Metadata before starting the server. If no directory is mounted at the
-designated paths, the server will start and ignore the Migrations and/or Metadata.
+`/hasura-migrations` and `/hasura-metadata` paths of this Docker container and the container's entrypoint script will
+automatically apply the Migrations and Metadata before starting the server. If no directory is mounted at the designated
+paths, the server will start and ignore the Migrations and/or Metadata.
 
 You can also mount the Migrations/Metadata directories at some location other than the above by setting the following
 environment variables:
