@@ -111,6 +111,21 @@ Each ✅ below links **directly** to the feature within a particular type of dat
 | DELETE | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
 | MANUAL | [✅](/event-triggers/overview.mdx) | [❌](/databases/postgres/citus-hyperscale-postgres/hasura-citus-compatibility.mdx/#event-triggers) | [✅](/event-triggers/overview.mdx) | ❌       | [❌](/databases/postgres/cockroachdb/hasura-cockroachdb-compatibility.mdx/#event-triggers) | ❌       |
 
+## Joins
+
+| From ⬇️ / To ➡️         | Postgres                                                                      | Citus                                                                         | SQL Server | BigQuery | CockroachDB | CosmosDB | Action                                                                 | Remote Schema                                                               |
+| ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------- | -------- | ----------- | -------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Postgres Database       | [✅](/schema/postgres/remote-relationships/index.mdx)                         | [✅](/schema/postgres/remote-relationships/index.mdx)                         | ❌         | ❌       | ❌          | ❌       | ❌                                                                     | [✅](/schema/postgres/remote-relationships/remote-schema-relationships.mdx) |
+| Database (non-Postgres) | ⚠️                                                                            | ⚠️                                                                            | ⚠️         | ⚠️       | ⚠️          | ⚠️       | ❌                                                                     | ⚠️                                                                          |
+| Action                  | [✅](/schema/postgres/remote-relationships/action-relationships.mdx)          | [✅](/schema/postgres/remote-relationships/action-relationships.mdx)          | ❌         | ❌       | ❌          | ❌       | [✅](/actions/action-relationships.mdx#action-to-action-relationships) | ❌                                                                          |
+| Remote Schema           | [✅](/remote-schemas/remote-relationships/remote-schema-db-relationships.mdx) | [✅](/remote-schemas/remote-relationships/remote-schema-db-relationships.mdx) | ⚠️         | ⚠️       | ⚠️          | ⚠️       | ❌                                                                     | [✅](/remote-schemas/remote-relationships/remote-schema-relationships.mdx)  |
+
+:::info For any ⚠️ above
+
+Check your individual database's compatibility page for more details.
+
+:::
+
 </div>
 
 :::info Additional Resources
