@@ -9,6 +9,7 @@ import {
   CodeEditorField,
   InputField,
   Radio,
+  SelectField,
   Select,
   Textarea,
   useConsoleForm,
@@ -211,7 +212,14 @@ export const AllInputs: StoryObj<any> = {
     const schema = z.object({
       inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
       textareaName: z.string().min(1, { message: 'Mandatory field' }),
+      simpleSelectName: z.string().min(1, { message: 'Mandatory field' }),
       selectName: z.string().min(1, { message: 'Mandatory field' }),
+      multiSelectName: z
+        .enum(['multiSelectValue0', 'multiSelectValue1', 'multiSelectValue2'])
+        .array()
+        .nonempty({
+          message: 'Choose at least one option',
+        }),
       checkboxesFieldNames: z
         .enum(['checkboxValue0', 'checkboxValue1', 'checkboxValue2'])
         .array()
@@ -267,6 +275,22 @@ export const AllInputs: StoryObj<any> = {
             placeholder="Textarea field placeholder"
           />
           <Select
+            name="simpleSelectName"
+            options={[
+              { value: 'simpleSelectValue0', label: 'Simple select value 0' },
+              {
+                value: 'simpleSelectValue1',
+                label: 'Simple select value 1',
+                disabled: true,
+              },
+              { value: 'simpleSelectValue2', label: 'Simple select value 2' },
+            ]}
+            label="The simple select label *"
+            description="The simple select description"
+            tooltip="The simple select tooltip"
+            placeholder="--Simple select placeholder--"
+          />
+          <SelectField
             name="selectName"
             options={[
               { value: 'selectValue0', label: 'Select value 0' },
@@ -281,6 +305,33 @@ export const AllInputs: StoryObj<any> = {
             description="The select description"
             tooltip="The select tooltip"
             placeholder="--Select placeholder--"
+          />
+          <SelectField
+            name="multiSelectName"
+            options={[
+              {
+                label: 'Group 0',
+                options: [
+                  { value: 'multiSelectValue0', label: 'Multi select value 0' },
+                ],
+              },
+              {
+                label: 'Group 1',
+                options: [
+                  {
+                    value: 'multiSelectValue1',
+                    label: 'Multi select value 1',
+                    disabled: true,
+                  },
+                  { value: 'multiSelectValue2', label: 'Multi select value 2' },
+                ],
+              },
+            ]}
+            label="The multi select label *"
+            description="The multi select description"
+            tooltip="The multi select tooltip"
+            placeholder="--Multi select placeholder--"
+            multi
           />
           <CheckboxesField
             name="checkboxesFieldNames"

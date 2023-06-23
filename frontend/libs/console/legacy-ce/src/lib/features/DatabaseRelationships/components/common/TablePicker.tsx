@@ -13,17 +13,6 @@ import {
   mapMetadataSourceToSelectorItems,
 } from './TablePicker.utils';
 
-const getLabel = (type: TablePickerProps['type']) =>
-  type === 'fromSource' ? (
-    <>
-      From Source <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
-    </>
-  ) : (
-    <>
-      To Reference <FaArrowAltCircleLeft className="fill-violet-700 ml-1.5" />
-    </>
-  );
-
 export const TablePicker: React.VFC<TablePickerProps> = ({
   type,
   disabled = false,
@@ -63,15 +52,20 @@ export const TablePicker: React.VFC<TablePickerProps> = ({
 
   if (!metadataSources) return <Skeleton count={5} height={20} />;
 
-  const sourcePickerLabel = getLabel(type);
-
   return (
     <div className="h-full">
       <div className="my-2">
         <SourcePicker
           name={type}
           items={items}
-          label={sourcePickerLabel}
+          label={type === 'fromSource' ? 'From Source' : 'To Reference'}
+          labelIcon={
+            type === 'fromSource' ? (
+              <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
+            ) : (
+              <FaArrowAltCircleLeft className="fill-violet-700 ml-1.5" />
+            )
+          }
           disabled={disabled}
         />
       </div>

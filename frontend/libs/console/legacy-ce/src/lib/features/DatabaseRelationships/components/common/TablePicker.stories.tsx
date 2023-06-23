@@ -16,22 +16,18 @@ export const Basic: StoryFn<typeof TablePicker> = () => (
   <SimpleForm
     schema={z.object({
       fromSource: z.object({
-        value: z.object({
-          dataSourceName: z.string(),
-          table: z.unknown(),
-        }),
+        dataSourceName: z.string(),
+        table: z.unknown(),
       }),
     })}
     onSubmit={action('onSubmit')}
     options={{
       defaultValues: {
         fromSource: {
-          value: {
-            dataSourceName: 'bikes',
-            table: {
-              name: 'orders',
-              schema: 'sales',
-            },
+          dataSourceName: 'bikes',
+          table: {
+            name: 'orders',
+            schema: 'sales',
           },
         },
       },

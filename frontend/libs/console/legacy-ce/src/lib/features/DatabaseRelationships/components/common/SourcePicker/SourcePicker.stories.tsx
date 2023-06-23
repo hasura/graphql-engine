@@ -28,16 +28,13 @@ const items: SourceSelectorItem[] = [
   },
 ];
 
-const validationSchema = z.any({});
+const validationSchema = z.object({
+  fromSource: z.any(),
+});
 
 export const Basic: StoryFn<typeof SourcePicker> = () => (
   <SimpleForm schema={validationSchema} onSubmit={action('onSubmit')}>
-    <SourcePicker
-      name="from"
-      items={items}
-      label="My label"
-      onChange={action('onChange')}
-    />
+    <SourcePicker name="from" items={items} label="My label" />
   </SimpleForm>
 );
 
@@ -49,17 +46,16 @@ export const Preselected: StoryFn<typeof SourcePicker> = () => {
       onSubmit={action('onSubmit')}
       options={{
         defaultValues: {
-          fromSource: defaultValue,
+          fromSource: defaultValue.value,
         },
       }}
     >
       <SourcePicker
         name="fromSource"
         items={items}
-        label={
-          <>
-            Label <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
-          </>
+        label="Label"
+        labelIcon={
+          <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
         }
         disabled
       />

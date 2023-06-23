@@ -16,6 +16,7 @@ import { formSchema } from './schema';
 import { Toggle } from './components/Toggle';
 import { useResetDefaultFormValues } from './hooks/useResetDefaultFormValues';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
+import { z } from 'zod';
 
 interface FormProps {
   skeletonMode: boolean;
@@ -47,7 +48,7 @@ export function Form(props: FormProps) {
 
   return (
     <ConsoleForm
-      onSubmit={data => {
+      onSubmit={(data: z.infer<typeof formSchema>) => {
         onSubmit(data);
       }}
     >

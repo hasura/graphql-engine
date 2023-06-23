@@ -29,12 +29,7 @@ export const registrationSchema = z.object({
       value => value === true,
       'Please agree to our Terms of Service and Privacy Policy'
     ),
-  hasuraUseCase: z
-    .object({
-      label: z.string(),
-      value: z.string(),
-    })
-    .transform(val => val.value),
+  hasuraUseCase: z.string(),
   eeUseCase: z.array(z.string()).nonempty({
     message: 'Please select at least one use case',
   }),

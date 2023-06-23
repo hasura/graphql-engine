@@ -99,7 +99,7 @@ export const SourceSelect = ({
             onBlur={onBlur}
             value={options.find(c => isEqual(c.value, value))}
             onChange={val => onChange((val as SourceOption).value)}
-            inputRef={ref}
+            ref={ref}
             components={{ Option, SingleValue }}
             options={options}
             styles={selectStyles}
