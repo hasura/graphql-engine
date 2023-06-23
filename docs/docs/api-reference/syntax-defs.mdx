@@ -1167,6 +1167,11 @@ Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 | name  | true     | String | Name of the header  |
 | value | true     | String | Value of the header |
 
+The `value` field supports templating environment variables enclosed in
+`{{` and `}}`.
+
+Template example: `header-{{HEADER_FROM_ENV}}`
+
 ## HeaderFromEnv {#headerfromenv}
 
 | Key            | required | Schema | Description                                                          |

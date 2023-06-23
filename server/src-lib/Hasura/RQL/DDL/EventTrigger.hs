@@ -59,7 +59,7 @@ import Data.HashSet qualified as Set
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate, renderTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Backend
@@ -503,7 +503,9 @@ getHeaderInfosFromConf env = mapM getHeader
   where
     getHeader :: (QErrM m) => HeaderConf -> m EventHeaderInfo
     getHeader hconf = case hconf of
-      (HeaderConf _ (HVValue val)) -> return $ EventHeaderInfo hconf val
+      (HeaderConf _ (HVValue val)) -> case renderTemplate env val of
+        Left err -> throw400 NotFound $ "template cannot be resolved: " <> err
+        Right resolvedVal -> return $ EventHeaderInfo hconf resolvedVal
       (HeaderConf _ (HVEnv val)) -> do
         envVal <- getEnv env val
         return $ EventHeaderInfo hconf envVal
@@ -522,7 +524,9 @@ getHeaderInfosFromConfEither env hConfList =
     headerInfoList = map getHeader hConfList
     getHeader :: HeaderConf -> Either Text EventHeaderInfo
     getHeader hconf = case hconf of
-      (HeaderConf _ (HVValue val)) -> Right $ EventHeaderInfo hconf val
+      (HeaderConf _ (HVValue val)) -> case renderTemplate env val of
+        Left err -> Left $ "template cannot be resolved: " <> tshow err
+        Right resolvedVal -> Right $ EventHeaderInfo hconf resolvedVal
       (HeaderConf _ (HVEnv val)) ->
         (Right . EventHeaderInfo hconf) =<< getEnvEither env val
 
@@ -534,7 +538,7 @@ getWebhookInfoFromConf ::
 getWebhookInfoFromConf env webhookConf = case webhookConf of
   WCValue w -> do
     resolvedWebhook <- resolveWebhook env w
-    let urlTemplate = printURLTemplate $ unInputWebhook w
+    let urlTemplate = printTemplate $ unInputWebhook w
     -- `urlTemplate` can either be the template value({{TEST}}) or a plain text.
     -- When `urlTemplate` is a template value then '_envVarName' of the 'EnvRecord'
     -- will be the template value i.e '{{TEST}}'

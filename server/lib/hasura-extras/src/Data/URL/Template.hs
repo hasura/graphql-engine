@@ -1,15 +1,18 @@
 -- | A simple URL templating that enables interpolating environment variables
 module Data.URL.Template
-  ( URLTemplate,
+  ( Template (..),
     TemplateItem,
     Variable,
-    printURLTemplate,
-    mkPlainURLTemplate,
-    parseURLTemplate,
-    renderURLTemplate,
+    printTemplate,
+    mkPlainTemplate,
+    parseTemplate,
+    renderTemplate,
   )
 where
 
+import Autodocodec (HasCodec)
+import Autodocodec qualified as AC
+import Data.Aeson
 import Data.Attoparsec.Combinator (lookAhead)
 import Data.Attoparsec.Text
 import Data.Environment qualified as Env
@@ -38,24 +41,40 @@ printTemplateItem = \case
 
 -- | A String with environment variables enclosed in '{{' and '}}'
 -- http://{{APP_HOST}}:{{APP_PORT}}/v1/api
-newtype URLTemplate = URLTemplate {unURLTemplate :: [TemplateItem]}
+newtype Template = Template {unTemplate :: [TemplateItem]}
   deriving (Show, Eq, Generic, Hashable)
 
-printURLTemplate :: URLTemplate -> Text
-printURLTemplate = T.concat . map printTemplateItem . unURLTemplate
+instance ToJSON Template where
+  toJSON = String . printTemplate
 
-mkPlainURLTemplate :: Text -> URLTemplate
-mkPlainURLTemplate =
-  URLTemplate . pure . TIText
+instance FromJSON Template where
+  parseJSON = withText "Template" $ \t ->
+    onLeft
+      (parseTemplate t)
+      (\err -> fail $ "Parsing URL template failed: " ++ err)
 
-parseURLTemplate :: Text -> Either String URLTemplate
-parseURLTemplate t = parseOnly parseTemplate t
+instance HasCodec Template where
+  codec =
+    AC.bimapCodec
+      (mapLeft ("Parsing URL template failed: " ++) . parseTemplate)
+      printTemplate
+      AC.codec
+
+printTemplate :: Template -> Text
+printTemplate = T.concat . map printTemplateItem . unTemplate
+
+mkPlainTemplate :: Text -> Template
+mkPlainTemplate =
+  Template . pure . TIText
+
+parseTemplate :: Text -> Either String Template
+parseTemplate t = parseOnly parseTemplate' t
   where
-    parseTemplate :: Parser URLTemplate
-    parseTemplate = do
+    parseTemplate' :: Parser Template
+    parseTemplate' = do
       items <- many parseTemplateItem
       lastItem <- TIText <$> takeText
-      pure $ URLTemplate $ items <> [lastItem]
+      pure $ Template $ items <> [lastItem]
 
     parseTemplateItem :: Parser TemplateItem
     parseTemplateItem =
@@ -66,13 +85,13 @@ parseURLTemplate t = parseOnly parseTemplate t
     parseVariable =
       string "{{" *> (Variable . T.pack <$> manyTill anyChar (string "}}"))
 
-renderURLTemplate :: Env.Environment -> URLTemplate -> Either Text Text
-renderURLTemplate env template =
+renderTemplate :: Env.Environment -> Template -> Either Text Text
+renderTemplate env template =
   case errorVariables of
     [] -> Right $ T.concat $ rights eitherResults
     _ -> Left (commaSeparated errorVariables)
   where
-    eitherResults = map renderTemplateItem $ unURLTemplate template
+    eitherResults = map renderTemplateItem $ unTemplate template
     errorVariables = lefts eitherResults
     renderTemplateItem = \case
       TIText t -> Right t
@@ -86,8 +105,8 @@ renderURLTemplate env template =
 instance Arbitrary Variable where
   arbitrary = Variable . T.pack <$> listOf1 (elements $ alphaNumerics <> " -_")
 
-instance Arbitrary URLTemplate where
-  arbitrary = URLTemplate <$> listOf (oneof [genText, genVariable])
+instance Arbitrary Template where
+  arbitrary = Template <$> listOf (oneof [genText, genVariable])
     where
       genText = TIText . T.pack <$> listOf1 (elements $ alphaNumerics <> " ://")
       genVariable = TIVariable <$> arbitrary

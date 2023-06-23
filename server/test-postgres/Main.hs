@@ -70,7 +70,7 @@ main = do
         <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
-      urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
+      urlConf = UrlValue $ InputWebhook $ mkPlainTemplate pgUrlText
       sourceConnInfo =
         PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema Nothing mempty

@@ -59,6 +59,7 @@ import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
+import Data.URL.Template (mkPlainTemplate, printTemplate)
 import Hasura.HTTP
 import Hasura.Logging
 import Hasura.Prelude
@@ -142,7 +143,7 @@ mkHTTPResp resp =
     respBody = HTTP.responseBody resp
     decodeBS = TE.decodeUtf8With TE.lenientDecode
     decodeHeader' (hdrName, hdrVal) =
-      HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
+      HeaderConf (decodeBS $ CI.original hdrName) (HVValue $ mkPlainTemplate (decodeBS hdrVal))
 
 data RequestDetails = RequestDetails
   { _rdOriginalRequest :: HTTP.Request,
@@ -191,7 +192,7 @@ instance J.ToJSON (HTTPRespExtra a) where
         Just name -> ["event_name" J..= name]
         Nothing -> []
       getValue val = case val of
-        HVValue txt -> J.String txt
+        HVValue txt -> J.String (printTemplate txt)
         HVEnv txt -> J.String txt
       getRedactedHeaders =
         J.Object
@@ -410,7 +411,7 @@ decodeHeader headerInfos (hdrName, hdrVal) =
          in name'
       mehi = find (\hi -> getName hi == name) headerInfos
    in case mehi of
-        Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+        Nothing -> HeaderConf name (HVValue $ mkPlainTemplate (decodeBS hdrVal))
         Just ehi -> ehiHeaderConf ehi
   where
     decodeBS = TE.decodeUtf8With TE.lenientDecode
@@ -437,7 +438,7 @@ getRetryAfterHeaderFromResp resp =
           (\(HeaderConf name _) -> CI.mk name == retryAfterHeader)
           (hrsHeaders resp)
    in case mHeader of
-        Just (HeaderConf _ (HVValue value)) -> Just value
+        Just (HeaderConf _ (HVValue value)) -> Just $ printTemplate value
         _ -> Nothing
 
 parseRetryHeaderValue :: Text -> Maybe Int

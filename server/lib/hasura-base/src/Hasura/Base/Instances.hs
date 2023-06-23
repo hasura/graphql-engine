@@ -43,7 +43,7 @@ instance NFData UT.Variable
 
 instance NFData UT.TemplateItem
 
-instance NFData UT.URLTemplate
+instance NFData UT.Template
 
 instance NFData C.StepField
 

@@ -58,7 +58,7 @@ import Data.HashSet qualified as Set
 import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
@@ -234,7 +234,7 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout 
   where
     hdrs = fromMaybe [] hdrC
     timeout = fromMaybe 60 mTimeout
-    getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
+    getTemplateFromUrl url = printTemplate $ unInputWebhook url
 
 -- | See `resolveRemoteVariable` function. This data type is used
 --   for validation of the session variable value

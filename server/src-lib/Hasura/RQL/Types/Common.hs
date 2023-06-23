@@ -315,7 +315,7 @@ newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
 
 instance NFData ResolvedWebhook
 
-newtype InputWebhook = InputWebhook {unInputWebhook :: URLTemplate}
+newtype InputWebhook = InputWebhook {unInputWebhook :: Template}
   deriving (Show, Eq, Generic)
 
 instance NFData InputWebhook
@@ -327,22 +327,22 @@ instance HasCodec InputWebhook where
     where
       urlTemplateCodec =
         bimapCodec
-          (mapLeft ("Parsing URL template failed: " ++) . parseURLTemplate)
-          printURLTemplate
+          (mapLeft ("Parsing URL template failed: " ++) . parseTemplate)
+          printTemplate
           codec
 
 instance ToJSON InputWebhook where
-  toJSON = String . printURLTemplate . unInputWebhook
+  toJSON = String . printTemplate . unInputWebhook
 
 instance FromJSON InputWebhook where
   parseJSON = withText "String" $ \t ->
-    case parseURLTemplate t of
+    case parseTemplate t of
       Left e -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
 instance PG.FromCol InputWebhook where
   fromCol bs = do
-    urlTemplate <- parseURLTemplate <$> PG.fromCol bs
+    urlTemplate <- parseTemplate <$> PG.fromCol bs
     bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
 -- Consists of the environment variable name with missing/invalid value
@@ -358,7 +358,7 @@ resolveWebhook env inputWebhook = do
 -- This is similar to `resolveWebhook` but it doesn't fail when an env var is invalid
 resolveWebhookEither :: Env.Environment -> InputWebhook -> Either ResolveWebhookError ResolvedWebhook
 resolveWebhookEither env (InputWebhook urlTemplate) =
-  bimap ResolveWebhookError ResolvedWebhook (renderURLTemplate env urlTemplate)
+  bimap ResolveWebhookError ResolvedWebhook (renderTemplate env urlTemplate)
 
 newtype Timeout = Timeout {unTimeout :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData)
