@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { LocalRelationship } from '../../../types';
 import { getDriverPrefix, runMetadataQuery } from '../../../../DataSource';
 import { MetadataSelectors } from '../../../../hasura-metadata-api';
@@ -8,47 +8,8 @@ import { useHttpClient } from '../../../../Network';
 import {
   addConstraintName,
   SuggestedRelationshipsResponse,
-  SuggestedRelationshipWithName,
 } from './useSuggestedRelationships';
-import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '../../../../MetadataAPI';
-import {
-  BulkKeepGoingResponse,
-  NamingConvention,
-  Table,
-} from '../../../../hasura-metadata-types';
-import { getTrackedRelationshipsCacheKey } from '../../../../Data/TrackResources/components/hooks/useTrackedRelationships';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { useDriverRelationshipSupport } from '../../../../Data/hooks/useDriverRelationshipSupport';
-import adaptTrackRelationship from '../../../../Data/TrackResources/components/utils/adaptTrackRelationship';
-import {
-  getLocalRelationshipPayload,
-  LocalRelationshipQuery,
-} from '../adapters/getLocalRelationshipPayload';
-
-type QueriesType =
-  | {
-      type: allowedMetadataTypes;
-      args: LocalRelationshipQuery;
-    }[]
-  | {
-      type: allowedMetadataTypes;
-      args: {
-        table: unknown;
-        name: string;
-        source: string;
-        definition: {
-          to_source: {
-            relationship_type: 'object' | 'array';
-            source: any;
-            table: any;
-            field_mapping: { [x: string]: string };
-          };
-        };
-      };
-    }[];
+import { NamingConvention, Table } from '../../../../hasura-metadata-types';
 
 export type AddSuggestedRelationship = {
   name: string;
@@ -80,11 +41,6 @@ export const useAllSuggestedRelationships = ({
   const { data: metadataSource, isFetching } = useMetadata(
     MetadataSelectors.findSource(dataSourceName)
   );
-
-  const { driverSupportsLocalRelationship, driverSupportsRemoteRelationship } =
-    useDriverRelationshipSupport({
-      dataSourceName,
-    });
 
   const dataSourcePrefix = metadataSource?.kind
     ? getDriverPrefix(metadataSource?.kind)
@@ -132,106 +88,6 @@ export const useAllSuggestedRelationships = ({
 
   const rawSuggestedRelationships = data?.relationships || [];
 
-  const metadataMutation = useMetadataMigration<BulkKeepGoingResponse>({});
-  const queryClient = useQueryClient();
-
-  const onAddMultipleSuggestedRelationships = async (
-    suggestedRelationships: SuggestedRelationshipWithName[]
-  ) => {
-    const relationships = suggestedRelationships.map(adaptTrackRelationship);
-    let queries: QueriesType = [];
-
-    if (!driverSupportsLocalRelationship && !driverSupportsRemoteRelationship) {
-      hasuraToast({
-        type: 'error',
-        title: 'Not able to track',
-        message: `This datasource does not support tracking of relationships.`,
-      });
-      return;
-    }
-    if (driverSupportsLocalRelationship) {
-      queries = relationships.map(relationship =>
-        getLocalRelationshipPayload({
-          dataSourcePrefix: dataSourcePrefix || '',
-          dataSourceName,
-          relationship,
-        })
-      );
-    } else if (driverSupportsRemoteRelationship) {
-      queries = relationships.map(relationship => {
-        return {
-          type: `${dataSourcePrefix}_create_remote_relationship`,
-          args: {
-            table: relationship.fromTable,
-            name: relationship.name,
-            source: dataSourceName,
-            definition: {
-              to_source: {
-                relationship_type: relationship.relationshipType,
-                source: dataSourceName,
-                table: relationship.fromTable,
-                field_mapping: relationship?.fromColumnNames?.reduce(
-                  (tally, curr, i) => {
-                    return {
-                      ...tally,
-                      [curr]: relationship.toColumnNames[i],
-                    };
-                  },
-                  {}
-                ),
-              },
-            },
-          },
-        };
-      });
-    }
-
-    await metadataMutation.mutateAsync(
-      {
-        query: {
-          type: 'bulk_keep_going',
-          args: queries,
-        },
-      },
-      {
-        onSuccess: response => {
-          response.forEach(result => {
-            if ('error' in result) {
-              hasuraToast({
-                type: 'error',
-                title: 'Error while tracking foreign key',
-                children: result.error,
-              });
-            }
-          });
-
-          const successfullyTrackedCounter = response.filter(
-            result => 'message' in result && result.message === 'success'
-          ).length;
-          const plural = successfullyTrackedCounter > 1 ? 's' : '';
-
-          hasuraToast({
-            type: 'success',
-            title: 'Successfully tracked',
-            message: `${successfullyTrackedCounter} foreign key${plural} tracked`,
-          });
-        },
-        onSettled: () => {
-          queryClient.invalidateQueries({
-            queryKey: getAllSuggestedRelationshipsCacheQuery(
-              dataSourceName,
-              omitTracked
-            ),
-          });
-
-          queryClient.invalidateQueries({
-            queryKey: getTrackedRelationshipsCacheKey(dataSourceName),
-          });
-        },
-      }
-    );
-  };
-
   const relationshipsWithConstraintName = addConstraintName(
     rawSuggestedRelationships,
     namingConvention
@@ -242,7 +98,6 @@ export const useAllSuggestedRelationships = ({
     isLoadingSuggestedRelationships: isLoadingAllSuggestedRelationships,
     isFetchingSuggestedRelationships: isFetchingAllSuggestedRelationships,
     refetchSuggestedRelationships: refetchAllSuggestedRelationships,
-    onAddMultipleSuggestedRelationships,
     ...rest,
   };
 };

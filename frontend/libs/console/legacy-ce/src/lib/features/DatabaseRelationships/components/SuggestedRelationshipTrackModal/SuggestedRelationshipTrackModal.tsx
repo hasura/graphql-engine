@@ -25,7 +25,6 @@ export const SuggestedRelationshipTrackModal: React.VFC<
   const { refetchSuggestedRelationships } = useSuggestedRelationships({
     dataSourceName,
     table: relationship.from.table,
-    existingRelationships: [],
     isEnabled: true,
   });
 
