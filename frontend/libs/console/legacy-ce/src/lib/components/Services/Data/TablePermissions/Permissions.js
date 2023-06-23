@@ -1399,7 +1399,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 value={preset.column}
                 onChange={setPresetColumn}
                 data-preset-column={preset.column}
@@ -1420,7 +1420,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 onChange={setPresetType}
                 data-preset-column={preset.column}
                 data-test={'column-presets-type-' + index}
