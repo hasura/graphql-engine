@@ -9,15 +9,6 @@ export type EnabledTabs = {
 };
 
 export function getEnabledTabs(kind: string | undefined): EnabledTabs {
-  if (kind === 'Mongo') {
-    return {
-      browse: false,
-      insert: false,
-      modify: true,
-      relationships: false,
-      permissions: true,
-    };
-  }
   return {
     browse: true,
     insert: true,

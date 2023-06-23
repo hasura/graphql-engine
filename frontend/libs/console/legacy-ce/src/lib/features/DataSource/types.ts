@@ -1,3 +1,4 @@
+import { GraphQLType } from 'graphql';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
@@ -73,6 +74,7 @@ export type TableColumn = {
   graphQLProperties?: {
     name: string;
     scalarType: string;
+    graphQLType?: GraphQLType | undefined;
   };
 };
 

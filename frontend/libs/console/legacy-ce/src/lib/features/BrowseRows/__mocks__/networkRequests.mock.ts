@@ -97,9 +97,13 @@ export const graphqlRequestResponseMap = {
   })]: {
     data: {
       __schema: {
-        queryType: { name: 'query_root' },
+        queryType: {
+          name: 'query_root',
+        },
         mutationType: null,
-        subscriptionType: { name: 'subscription_root' },
+        subscriptionType: {
+          name: 'subscription_root',
+        },
         types: [
           {
             kind: 'OBJECT',
@@ -116,21 +120,9 @@ export const graphqlRequestResponseMap = {
                   name: null,
                   ofType: {
                     kind: 'SCALAR',
-                    name: 'decimal',
+                    name: 'number',
                     ofType: null,
                   },
-                },
-                isDeprecated: false,
-                deprecationReason: null,
-              },
-              {
-                name: 'Artist',
-                description: 'An object relationship',
-                args: [],
-                type: {
-                  kind: 'OBJECT',
-                  name: 'Artist',
-                  ofType: null,
                 },
                 isDeprecated: false,
                 deprecationReason: null,
@@ -144,7 +136,7 @@ export const graphqlRequestResponseMap = {
                   name: null,
                   ofType: {
                     kind: 'SCALAR',
-                    name: 'decimal',
+                    name: 'number',
                     ofType: null,
                   },
                 },
@@ -160,67 +152,40 @@ export const graphqlRequestResponseMap = {
                   name: null,
                   ofType: {
                     kind: 'SCALAR',
-                    name: 'String',
+                    name: 'string',
                     ofType: null,
                   },
                 },
                 isDeprecated: false,
                 deprecationReason: null,
               },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Album_aggregate',
+            description: 'aggregated selection of "Album"',
+            fields: [
               {
-                name: 'Tracks',
-                description: 'An array relationship',
-                args: [
-                  {
-                    name: 'limit',
-                    description: 'limit the number of rows returned',
-                    type: {
-                      kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                    defaultValue: null,
-                  },
-                  {
-                    name: 'offset',
-                    description:
-                      'skip the first n rows. Use only with order_by',
-                    type: {
-                      kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                    defaultValue: null,
-                  },
-                  {
-                    name: 'order_by',
-                    description: 'sort the rows by one or more columns',
-                    type: {
-                      kind: 'LIST',
-                      name: null,
-                      ofType: {
-                        kind: 'NON_NULL',
-                        name: null,
-                        ofType: {
-                          kind: 'INPUT_OBJECT',
-                          name: 'Track_order_by',
-                          ofType: null,
-                        },
-                      },
-                    },
-                    defaultValue: null,
-                  },
-                  {
-                    name: 'where',
-                    description: 'filter the rows returned',
-                    type: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'Track_bool_exp',
-                      ofType: null,
-                    },
-                    defaultValue: null,
-                  },
-                ],
+                name: 'aggregate',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album_aggregate_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'nodes',
+                description: null,
+                args: [],
                 type: {
                   kind: 'NON_NULL',
                   name: null,
@@ -232,7 +197,7 @@ export const graphqlRequestResponseMap = {
                       name: null,
                       ofType: {
                         kind: 'OBJECT',
-                        name: 'Track',
+                        name: 'Album',
                         ofType: null,
                       },
                     },
@@ -241,55 +206,37 @@ export const graphqlRequestResponseMap = {
                 isDeprecated: false,
                 deprecationReason: null,
               },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Album_aggregate_fields',
+            description: 'aggregate fields of "Album"',
+            fields: [
               {
-                name: 'Tracks_aggregate',
-                description: 'An aggregate relationship',
+                name: 'count',
+                description: null,
                 args: [
                   {
-                    name: 'limit',
-                    description: 'limit the number of rows returned',
+                    name: 'column',
+                    description: null,
                     type: {
-                      kind: 'SCALAR',
-                      name: 'Int',
+                      kind: 'ENUM',
+                      name: 'Album_select_column',
                       ofType: null,
                     },
                     defaultValue: null,
                   },
                   {
-                    name: 'offset',
-                    description:
-                      'skip the first n rows. Use only with order_by',
+                    name: 'distinct',
+                    description: null,
                     type: {
                       kind: 'SCALAR',
-                      name: 'Int',
-                      ofType: null,
-                    },
-                    defaultValue: null,
-                  },
-                  {
-                    name: 'order_by',
-                    description: 'sort the rows by one or more columns',
-                    type: {
-                      kind: 'LIST',
-                      name: null,
-                      ofType: {
-                        kind: 'NON_NULL',
-                        name: null,
-                        ofType: {
-                          kind: 'INPUT_OBJECT',
-                          name: 'Track_order_by',
-                          ofType: null,
-                        },
-                      },
-                    },
-                    defaultValue: null,
-                  },
-                  {
-                    name: 'where',
-                    description: 'filter the rows returned',
-                    type: {
-                      kind: 'INPUT_OBJECT',
-                      name: 'Track_bool_exp',
+                      name: 'Boolean',
                       ofType: null,
                     },
                     defaultValue: null,
@@ -299,10 +246,333 @@ export const graphqlRequestResponseMap = {
                   kind: 'NON_NULL',
                   name: null,
                   ofType: {
-                    kind: 'OBJECT',
-                    name: 'Track_aggregate',
+                    kind: 'SCALAR',
+                    name: 'Int',
                     ofType: null,
                   },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'max',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album_max_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'min',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album_min_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'sum',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album_sum_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'Album_bool_exp',
+            description:
+              'Boolean expression to filter rows from the table "Album". All fields are combined with a logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: 'AlbumId',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'number_SQLite_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'ArtistId',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'number_SQLite_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'Title',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'string_SQLite_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_and',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_not',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'Album_bool_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_or',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Album_max_fields',
+            description: 'aggregate max on columns',
+            fields: [
+              {
+                name: 'AlbumId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Title',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Album_min_fields',
+            description: 'aggregate min on columns',
+            fields: [
+              {
+                name: 'AlbumId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Title',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'Album_order_by',
+            description: 'Ordering options when selecting data from "Album".',
+            fields: null,
+            inputFields: [
+              {
+                name: 'AlbumId',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'SQLite_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'ArtistId',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'SQLite_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'Title',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'SQLite_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'Album_select_column',
+            description: 'select columns of table "Album"',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: 'AlbumId',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'ArtistId',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Title',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Album_sum_fields',
+            description: 'aggregate sum on columns',
+            fields: [
+              {
+                name: 'AlbumId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
                 },
                 isDeprecated: false,
                 deprecationReason: null,
@@ -328,7 +598,7 @@ export const graphqlRequestResponseMap = {
                   name: null,
                   ofType: {
                     kind: 'SCALAR',
-                    name: 'decimal',
+                    name: 'number',
                     ofType: null,
                   },
                 },
@@ -341,7 +611,363 @@ export const graphqlRequestResponseMap = {
                 args: [],
                 type: {
                   kind: 'SCALAR',
-                  name: 'String',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Artist_aggregate',
+            description: 'aggregated selection of "Artist"',
+            fields: [
+              {
+                name: 'aggregate',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist_aggregate_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'nodes',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'Artist',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Artist_aggregate_fields',
+            description: 'aggregate fields of "Artist"',
+            fields: [
+              {
+                name: 'count',
+                description: null,
+                args: [
+                  {
+                    name: 'column',
+                    description: null,
+                    type: {
+                      kind: 'ENUM',
+                      name: 'Artist_select_column',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'distinct',
+                    description: null,
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Boolean',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Int',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'max',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist_max_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'min',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist_min_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'sum',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist_sum_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'Artist_bool_exp',
+            description:
+              'Boolean expression to filter rows from the table "Artist". All fields are combined with a logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: 'ArtistId',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'number_SQLite_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'Name',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'string_SQLite_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_and',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_not',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'Artist_bool_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_or',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Artist_max_fields',
+            description: 'aggregate max on columns',
+            fields: [
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Artist_min_fields',
+            description: 'aggregate min on columns',
+            fields: [
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'Artist_order_by',
+            description: 'Ordering options when selecting data from "Artist".',
+            fields: null,
+            inputFields: [
+              {
+                name: 'ArtistId',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'SQLite_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'Name',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'SQLite_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'Artist_select_column',
+            description: 'select columns of table "Artist"',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: 'ArtistId',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Name',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'Artist_sum_fields',
+            description: 'aggregate sum on columns',
+            fields: [
+              {
+                name: 'ArtistId',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
                   ofType: null,
                 },
                 isDeprecated: false,
@@ -355,13 +981,3713 @@ export const graphqlRequestResponseMap = {
           },
           {
             kind: 'SCALAR',
-            name: 'decimal',
+            name: 'Boolean',
             description: null,
             fields: null,
             inputFields: null,
             interfaces: null,
             enumValues: null,
             possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'Int',
+            description: null,
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'SQLite_order_by',
+            description: 'column ordering options',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: 'asc',
+                description: 'in ascending order',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'desc',
+                description: 'in descending order',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'String',
+            description: null,
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__Directive',
+            description: null,
+            fields: [
+              {
+                name: 'args',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__InputValue',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'isRepeatable',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'locations',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__EnumValue',
+            description: null,
+            fields: [
+              {
+                name: 'deprecationReason',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'isDeprecated',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__Field',
+            description: null,
+            fields: [
+              {
+                name: 'args',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__InputValue',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'deprecationReason',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'isDeprecated',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'type',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__InputValue',
+            description: null,
+            fields: [
+              {
+                name: 'defaultValue',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'type',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__Schema',
+            description: null,
+            fields: [
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'directives',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Directive',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mutationType',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'queryType',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'subscriptionType',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'types',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: '__Type',
+            description: null,
+            fields: [
+              {
+                name: 'description',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'enumValues',
+                description: null,
+                args: [
+                  {
+                    name: 'includeDeprecated',
+                    description: null,
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Boolean',
+                      ofType: null,
+                    },
+                    defaultValue: 'false',
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__EnumValue',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'fields',
+                description: null,
+                args: [
+                  {
+                    name: 'includeDeprecated',
+                    description: null,
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Boolean',
+                      ofType: null,
+                    },
+                    defaultValue: 'false',
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Field',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'inputFields',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__InputValue',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'interfaces',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'kind',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'ENUM',
+                    name: '__TypeKind',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'String',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'ofType',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'possibleTypes',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: '__Type',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: '__TypeKind',
+            description: null,
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: 'ENUM',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'INPUT_OBJECT',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'INTERFACE',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'LIST',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'NON_NULL',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'OBJECT',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'SCALAR',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'UNION',
+                description: null,
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'double',
+            description: 'A custom scalar type',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'double_mongodb_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "double". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'double',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'double',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'double',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'int',
+            description: 'A custom scalar type',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'int_mongodb_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "int". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'int',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'int',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'int',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'mongodb_order_by',
+            description: 'column ordering options',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: 'asc',
+                description: 'in ascending order',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'desc',
+                description: 'in descending order',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'mycollection',
+            description: 'columns and relationships of "mycollection"',
+            fields: [
+              {
+                name: '_id',
+                description: 'primary key _id',
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'objectId',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'age',
+                description: 'must be an integer and is required',
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'int',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'email',
+                description:
+                  'must be a string and match the regular expression pattern',
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: 'must be a string and is required',
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'string',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'mycollection_aggregate',
+            description: 'aggregated selection of "mycollection"',
+            fields: [
+              {
+                name: 'aggregate',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'mycollection_aggregate_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'nodes',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'mycollection',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'mycollection_aggregate_fields',
+            description: 'aggregate fields of "mycollection"',
+            fields: [
+              {
+                name: 'count',
+                description: null,
+                args: [
+                  {
+                    name: 'column',
+                    description: null,
+                    type: {
+                      kind: 'ENUM',
+                      name: 'mycollection_select_column',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'distinct',
+                    description: null,
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Boolean',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Int',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'mycollection_bool_exp',
+            description:
+              'Boolean expression to filter rows from the table "mycollection". All fields are combined with a logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_and',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_id',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'objectId_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_not',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'mycollection_bool_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_or',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'age',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'int_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'email',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'string_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'string_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'mycollection_order_by',
+            description:
+              'Ordering options when selecting data from "mycollection".',
+            fields: null,
+            inputFields: [
+              {
+                name: '_id',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'age',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'email',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'mycollection_select_column',
+            description: 'select columns of table "mycollection"',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: '_id',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'age',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'email',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'number',
+            description: null,
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'number_SQLite_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "number". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'number',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_modulus_is_zero',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'number',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'number',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'objectId',
+            description: 'A custom scalar type',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'objectId_mongodb_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "objectId". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'objectId',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'objectId',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'objectId',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'query_root',
+            description: null,
+            fields: [
+              {
+                name: 'Album',
+                description: 'fetch data from the table: "Album"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Album_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'Album',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Album_aggregate',
+                description: 'fetch aggregated fields from the table: "Album"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Album_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'Album_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Album_by_pk',
+                description:
+                  'fetch data from the table: "Album" using primary key columns',
+                args: [
+                  {
+                    name: 'AlbumId',
+                    description: null,
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'number',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist',
+                description: 'fetch data from the table: "Artist"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Artist_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'Artist',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist_aggregate',
+                description: 'fetch aggregated fields from the table: "Artist"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Artist_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'Artist_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist_by_pk',
+                description:
+                  'fetch data from the table: "Artist" using primary key columns',
+                args: [
+                  {
+                    name: 'ArtistId',
+                    description: null,
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'number',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection',
+                description: 'fetch data from the table: "mycollection"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'mycollection_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'mycollection',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection_aggregate',
+                description:
+                  'fetch aggregated fields from the table: "mycollection"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'mycollection_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'mycollection_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection_by_pk',
+                description:
+                  'fetch data from the table: "mycollection" using primary key columns',
+                args: [
+                  {
+                    name: '_id',
+                    description: 'primary key _id',
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'objectId',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'mycollection',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students',
+                description: 'fetch data from the table: "students"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'students_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'students',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students_aggregate',
+                description:
+                  'fetch aggregated fields from the table: "students"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'students_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'students_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students_by_pk',
+                description:
+                  'fetch data from the table: "students" using primary key columns',
+                args: [
+                  {
+                    name: '_id',
+                    description: 'primary key _id',
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'objectId',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'students',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'SCALAR',
+            name: 'string',
+            description: null,
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'string_SQLite_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "string". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_glob',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'string',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_like',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'string',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'string_mongodb_comparison_exp',
+            description:
+              'Boolean expression to compare columns of type "string". All fields are combined with logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_eq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_gte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_in',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'string',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_is_null',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'Boolean',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lt',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_lte',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_neq',
+                description: null,
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_nin',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'SCALAR',
+                      name: 'string',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'students',
+            description: 'columns and relationships of "students"',
+            fields: [
+              {
+                name: '_id',
+                description: 'primary key _id',
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'objectId',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'address',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'students_address',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'gpa',
+                description: "'gpa' must be a double if the field exists",
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'double',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: "'name' must be a string and is required",
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'string',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'year',
+                description:
+                  "'year' must be an integer in [ 2017, 3017 ] and is required",
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'int',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'students_address',
+            description: 'generated from MongoDB validation schema',
+            fields: [
+              {
+                name: 'city',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'street',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'SCALAR',
+                  name: 'string',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'students_aggregate',
+            description: 'aggregated selection of "students"',
+            fields: [
+              {
+                name: 'aggregate',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'students_aggregate_fields',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'nodes',
+                description: null,
+                args: [],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'students',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'students_aggregate_fields',
+            description: 'aggregate fields of "students"',
+            fields: [
+              {
+                name: 'count',
+                description: null,
+                args: [
+                  {
+                    name: 'column',
+                    description: null,
+                    type: {
+                      kind: 'ENUM',
+                      name: 'students_select_column',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'distinct',
+                    description: null,
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Boolean',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Int',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'students_bool_exp',
+            description:
+              'Boolean expression to filter rows from the table "students". All fields are combined with a logical \'AND\'.',
+            fields: null,
+            inputFields: [
+              {
+                name: '_and',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_id',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'objectId_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_not',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'students_bool_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: '_or',
+                description: null,
+                type: {
+                  kind: 'LIST',
+                  name: null,
+                  ofType: {
+                    kind: 'NON_NULL',
+                    name: null,
+                    ofType: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                  },
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'gpa',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'double_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'string_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'year',
+                description: null,
+                type: {
+                  kind: 'INPUT_OBJECT',
+                  name: 'int_mongodb_comparison_exp',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'INPUT_OBJECT',
+            name: 'students_order_by',
+            description:
+              'Ordering options when selecting data from "students".',
+            fields: null,
+            inputFields: [
+              {
+                name: '_id',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'gpa',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'name',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+              {
+                name: 'year',
+                description: null,
+                type: {
+                  kind: 'ENUM',
+                  name: 'mongodb_order_by',
+                  ofType: null,
+                },
+                defaultValue: null,
+              },
+            ],
+            interfaces: null,
+            enumValues: null,
+            possibleTypes: null,
+          },
+          {
+            kind: 'ENUM',
+            name: 'students_select_column',
+            description: 'select columns of table "students"',
+            fields: null,
+            inputFields: null,
+            interfaces: null,
+            enumValues: [
+              {
+                name: '_id',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'address',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'gpa',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'name',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'year',
+                description: 'column name',
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            possibleTypes: null,
+          },
+          {
+            kind: 'OBJECT',
+            name: 'subscription_root',
+            description: null,
+            fields: [
+              {
+                name: 'Album',
+                description: 'fetch data from the table: "Album"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Album_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'Album',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Album_aggregate',
+                description: 'fetch aggregated fields from the table: "Album"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Album_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Album_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'Album_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Album_by_pk',
+                description:
+                  'fetch data from the table: "Album" using primary key columns',
+                args: [
+                  {
+                    name: 'AlbumId',
+                    description: null,
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'number',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Album',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist',
+                description: 'fetch data from the table: "Artist"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Artist_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'Artist',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist_aggregate',
+                description: 'fetch aggregated fields from the table: "Artist"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'Artist_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'Artist_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'Artist_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'Artist_by_pk',
+                description:
+                  'fetch data from the table: "Artist" using primary key columns',
+                args: [
+                  {
+                    name: 'ArtistId',
+                    description: null,
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'number',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'Artist',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection',
+                description: 'fetch data from the table: "mycollection"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'mycollection_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'mycollection',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection_aggregate',
+                description:
+                  'fetch aggregated fields from the table: "mycollection"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'mycollection_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'mycollection_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'mycollection_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'mycollection_by_pk',
+                description:
+                  'fetch data from the table: "mycollection" using primary key columns',
+                args: [
+                  {
+                    name: '_id',
+                    description: 'primary key _id',
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'objectId',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'mycollection',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students',
+                description: 'fetch data from the table: "students"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'students_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'LIST',
+                    name: null,
+                    ofType: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'OBJECT',
+                        name: 'students',
+                        ofType: null,
+                      },
+                    },
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students_aggregate',
+                description:
+                  'fetch aggregated fields from the table: "students"',
+                args: [
+                  {
+                    name: 'limit',
+                    description: 'limit the number of rows returned',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'offset',
+                    description:
+                      'skip the first n rows. Use only with order_by',
+                    type: {
+                      kind: 'SCALAR',
+                      name: 'Int',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'order_by',
+                    description: 'sort the rows by one or more columns',
+                    type: {
+                      kind: 'LIST',
+                      name: null,
+                      ofType: {
+                        kind: 'NON_NULL',
+                        name: null,
+                        ofType: {
+                          kind: 'INPUT_OBJECT',
+                          name: 'students_order_by',
+                          ofType: null,
+                        },
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                  {
+                    name: 'where',
+                    description: 'filter the rows returned',
+                    type: {
+                      kind: 'INPUT_OBJECT',
+                      name: 'students_bool_exp',
+                      ofType: null,
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'OBJECT',
+                    name: 'students_aggregate',
+                    ofType: null,
+                  },
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+              {
+                name: 'students_by_pk',
+                description:
+                  'fetch data from the table: "students" using primary key columns',
+                args: [
+                  {
+                    name: '_id',
+                    description: 'primary key _id',
+                    type: {
+                      kind: 'NON_NULL',
+                      name: null,
+                      ofType: {
+                        kind: 'SCALAR',
+                        name: 'objectId',
+                        ofType: null,
+                      },
+                    },
+                    defaultValue: null,
+                  },
+                ],
+                type: {
+                  kind: 'OBJECT',
+                  name: 'students',
+                  ofType: null,
+                },
+                isDeprecated: false,
+                deprecationReason: null,
+              },
+            ],
+            inputFields: null,
+            interfaces: [],
+            enumValues: null,
+            possibleTypes: null,
+          },
+        ],
+        directives: [
+          {
+            name: 'include',
+            description: 'whether this query should be included',
+            locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'],
+            args: [
+              {
+                name: 'if',
+                description: null,
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+          },
+          {
+            name: 'skip',
+            description: 'whether this query should be skipped',
+            locations: ['FIELD', 'FRAGMENT_SPREAD', 'INLINE_FRAGMENT'],
+            args: [
+              {
+                name: 'if',
+                description: null,
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                },
+                defaultValue: null,
+              },
+            ],
+          },
+          {
+            name: 'cached',
+            description:
+              'whether this query should be cached (Hasura Cloud only)',
+            locations: ['QUERY'],
+            args: [
+              {
+                name: 'ttl',
+                description: 'measured in seconds',
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Int',
+                    ofType: null,
+                  },
+                },
+                defaultValue: '60',
+              },
+              {
+                name: 'refresh',
+                description: 'refresh the cache entry',
+                type: {
+                  kind: 'NON_NULL',
+                  name: null,
+                  ofType: {
+                    kind: 'SCALAR',
+                    name: 'Boolean',
+                    ofType: null,
+                  },
+                },
+                defaultValue: 'false',
+              },
+            ],
           },
         ],
       },

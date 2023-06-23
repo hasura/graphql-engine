@@ -115,6 +115,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 5s
+  mongo-data-connector:
+    image: hasura/mongo-data-connector:v2.27.0
+    container_name: mongo_connector
+    ports:
+      - 3000:3000
 
 volumes:
   metadata_db_data:

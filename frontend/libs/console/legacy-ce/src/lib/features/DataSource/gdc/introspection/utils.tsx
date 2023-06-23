@@ -82,7 +82,21 @@ export function adaptAgentDataType(
   };
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
-    value.includes(sqlDataType.toLowerCase())
+    value.includes(
+      // Check if sqlDataType is a string or an object
+      // Reason is `Error: sqlDataType.toLowerCase is not a function`
+      /*
+        sqlDataType ->
+          {
+            element_type: "string",
+            nullable: false,
+            type: "array"
+          }
+      */
+      typeof sqlDataType === 'string'
+        ? sqlDataType.toLowerCase()
+        : (sqlDataType as any).type.toLowerCase() // Doubt: Could also be element_type in the case of arrays
+    )
   ) ?? ['string', []];
 
   return dataType;
