@@ -35,6 +35,7 @@ export const useDropSource = (props?: MetadataMigrationOptions) => {
             type: `${driver}_drop_source`,
             args: {
               name: dataSourceName,
+              cascade: true,
             },
           },
         },
