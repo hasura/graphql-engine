@@ -11,6 +11,9 @@ module Harness.Services.GraphqlEngine.API
     -- * Api actions
     hgePost,
     hgePostGraphql,
+    hgePostMetadata,
+    hgePostExplain,
+    hgePostExplainRole,
     export_metadata,
     replace_metadata,
   )
@@ -97,3 +100,59 @@ hgePostGraphql ::
   IO J.Value
 hgePostGraphql env query = do
   hgePost env 200 "/v1/graphql" [] (J.object ["query" J..= query])
+
+hgePostMetadata ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  J.Value ->
+  IO J.Value
+hgePostMetadata env = do
+  hgePost
+    env
+    200
+    "/v1/metadata"
+    []
+
+-- | post to /v1/graphql/explain endpoint
+hgePostExplain ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  Value ->
+  IO Value
+hgePostExplain env value =
+  withFrozenCallStack
+    $ hgePost
+      env
+      200
+      "/v1/graphql/explain"
+      mempty
+      [yaml|
+          query:
+            query: *value
+        |]
+
+hgePostExplainRole ::
+  ( Has HgeServerInstance env,
+    Has Logger env
+  ) =>
+  env ->
+  Text ->
+  Value ->
+  IO Value
+hgePostExplainRole env role value =
+  withFrozenCallStack
+    $ hgePost
+      env
+      200
+      "/v1/graphql/explain"
+      mempty
+      [yaml|
+          query:
+            query: *value
+          user:
+            x-hasura-role: *role
+        |]

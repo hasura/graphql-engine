@@ -155,10 +155,13 @@ library
     Harness.Schema.Table
     Harness.Services.Composed
     Harness.Services.Database.Postgres
-    Harness.Services.ExternalProcess.GraphqlEngine
     Harness.Services.ExternalProcess.DCPostgresAgent
+    Harness.Services.ExternalProcess.GraphqlEngine
     Harness.Services.GraphqlEngine
     Harness.Services.GraphqlEngine.API
+    Harness.Services.Permissions.Table.Metadata
+    Harness.Services.Permissions.Table.Types
+    Harness.Services.Permissions.Table.Postgres
     Harness.Services.Schema
     Harness.Services.Source.DCPostgres
     Harness.Services.Source.Postgres

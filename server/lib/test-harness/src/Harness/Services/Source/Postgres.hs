@@ -69,15 +69,156 @@ withPostgresSchema tables spec = flip aroundWith spec \action testEnvironment' -
     insertTable testEnvironment table
     pg_track_table testEnvironment table
 
-  {- TODO:
-
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships table testEnvironment
-    Schema.trackArrayRelationships table testEnvironment
-    -}
+    trackObjectRelationships table testEnvironment
+    trackArrayRelationships table testEnvironment
 
   action testEnvironment'
+
+trackObjectRelationships ::
+  ( Has PostgresSource env,
+    Has Logger env,
+    Has SchemaName env,
+    HasCallStack,
+    Has HgeServerInstance env
+  ) =>
+  Schema.Table ->
+  env ->
+  IO ()
+trackObjectRelationships (Schema.Table {tableName, tableReferences {-, tableManualRelationships-}}) env = do
+  let localSchema = getter @SchemaName env
+      source = postgresSourceName $ getter @PostgresSource env
+      tableField = J.object ["schema" J..= J.String (unSchemaName localSchema), "name" J..= J.String tableName]
+
+  for_ tableReferences $ \ref@Schema.Reference {referenceLocalColumn} -> do
+    let relationshipName = mkObjectRelationshipName ref
+    hgePost
+      env
+      200
+      "/v1/metadata"
+      []
+      [yaml|
+        type: "pg_create_object_relationship"
+        args:
+          source: *source
+          table: *tableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on: *referenceLocalColumn
+      |]
+
+{-
+for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+  let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+        Just schema -> schema
+        Nothing -> getSchemaName testEnvironment
+      relationshipName = mkObjectRelationshipName ref
+      targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
+      manualConfiguration :: J.Value
+      manualConfiguration =
+        J.object
+          [ "remote_table" .= targetTableField,
+            "column_mapping"
+              .= J.object [K.fromText referenceLocalColumn .= referenceTargetColumn]
+          ]
+      payload =
+        [yaml|
+          type: *requestType
+          args:
+            source: *source
+            table: *tableField
+            name: *relationshipName
+            using:
+              manual_configuration: *manualConfiguration
+        |]
+
+  GraphqlEngine.postMetadata_ testEnvironment payload
+  -}
+
+-- | Helper to create the object relationship name
+mkObjectRelationshipName :: Schema.Reference -> Text
+mkObjectRelationshipName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> columnName
+
+-- | Unified track array relationships
+trackArrayRelationships ::
+  ( HasCallStack,
+    Has HgeServerInstance env,
+    Has SchemaName env,
+    Has PostgresSource env,
+    Has Logger env
+  ) =>
+  Schema.Table ->
+  env ->
+  IO ()
+trackArrayRelationships (Schema.Table {tableName, tableReferences {-, tableManualRelationships-}}) env = do
+  let localSchema = getter @SchemaName env
+      source = postgresSourceName $ getter @PostgresSource env
+      tableField = J.object ["schema" J..= J.String (unSchemaName localSchema), "name" J..= J.String tableName]
+
+  for_ tableReferences $ \Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = localSchema
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = J.object ["schema" J..= J.String (unSchemaName targetSchema), "name" J..= J.String referenceTargetTable]
+
+    hgePost
+      env
+      200
+      "/v1/metadata"
+      []
+      [yaml|
+        type: pg_create_array_relationship
+        args:
+          source: *source
+          table: *targetTableField
+          name: *relationshipName
+          using:
+            foreign_key_constraint_on:
+              table: *tableField
+              column: *referenceLocalColumn
+      |]
+
+-- Unfinished implementation of manual relationships, to be completed when the need arises.
+{-
+  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
+    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+          Just schema -> schema
+          Nothing -> getSchemaName testEnvironment
+        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
+        manualConfiguration :: J.Value
+        manualConfiguration =
+          J.object
+            [ "remote_table"
+                .= tableField,
+              "column_mapping"
+                .= J.object [K.fromText referenceTargetColumn .= referenceLocalColumn]
+            ]
+        payload =
+          [yaml|
+type: *requestType
+args:
+  source: *source
+  table: *targetTableField
+  name: *relationshipName
+  using:
+    manual_configuration: *manualConfiguration
+\|]
+
+    GraphqlEngine.postMetadata_ testEnvironment payload
+    -}
+
+-- | Helper to create the array relationship name
+mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text
+mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn referenceTargetQualifiers =
+  let columnName = case resolveReferenceSchema referenceTargetQualifiers of
+        Just (SchemaName targetSchema) -> targetSchema <> "_" <> referenceTargetColumn
+        Nothing -> referenceTargetColumn
+   in tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> columnName
 
 pg_add_source ::
   ( Has Logger env,
@@ -126,11 +267,8 @@ pg_track_table testEnvironment (Schema.Table {tableName, tableColumns}) = do
   let schemaName = getter @SchemaName testEnvironment
   let column_config = columnsConfig tableColumns
   _ <-
-    hgePost
+    hgePostMetadata
       testEnvironment
-      200
-      "/v1/metadata"
-      []
       [yaml|
             type: pg_track_table
             args:
