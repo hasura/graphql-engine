@@ -50,7 +50,9 @@ import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 
 -- | Overall representation of an insert mutation, corresponding to one root
@@ -78,7 +80,8 @@ data AnnotatedInsertData (b :: BackendType) (f :: Type -> Type) (v :: Type) = An
     _aiPrimaryKey :: Maybe (NESeq (Column b)),
     _aiExtraTableMetadata :: ExtraTableMetadata b,
     _aiPresetValues :: PreSetColsG b v,
-    _aiBackendInsert :: BackendInsert b v
+    _aiBackendInsert :: BackendInsert b v,
+    _aiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Functor, Foldable, Traversable)
 

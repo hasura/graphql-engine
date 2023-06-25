@@ -46,7 +46,8 @@ data InsertPermissionDetails = InsertPermissionDetails
     insertPermissionTable :: Text,
     insertPermissionRole :: Text,
     insertPermissionColumns :: [Text],
-    insertPermissionRows :: Value
+    insertPermissionRows :: Value,
+    insertPermissionValidationWebhook :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -79,5 +80,6 @@ insertPermission =
       insertPermissionTable = mempty,
       insertPermissionRole = "test-role",
       insertPermissionColumns = mempty,
-      insertPermissionRows = object []
+      insertPermissionRows = object [],
+      insertPermissionValidationWebhook = Nothing
     }

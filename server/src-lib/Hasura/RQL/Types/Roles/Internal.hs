@@ -170,8 +170,8 @@ instance
   ) =>
   OnlyRelevantEq (InsPermInfo b)
   where
-  (InsPermInfo colsL checkL setL backendOnlyL reqHeadersL)
-    ==~ (InsPermInfo colsR checkR setR backendOnlyR reqHeadersR) =
+  (InsPermInfo colsL checkL setL backendOnlyL reqHeadersL validateInputL)
+    ==~ (InsPermInfo colsR checkR setR backendOnlyR reqHeadersR validateInputR) =
       colsL
         == colsR
         && checkL
@@ -182,6 +182,8 @@ instance
         == backendOnlyR
         && reqHeadersL
         == reqHeadersR
+        && validateInputL
+        == validateInputR
 
 instance
   ( Backend b,

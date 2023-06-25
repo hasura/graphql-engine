@@ -34,6 +34,7 @@ import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
+import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -239,15 +240,16 @@ buildPermInfo ::
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildPermInfo x1 x2 x3 roleName = \case
+buildPermInfo e x1 x2 x3 roleName = \case
   SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
-  InsPerm' p -> buildInsPermInfo x1 x2 x3 p
+  InsPerm' p -> buildInsPermInfo e x1 x2 x3 p
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
@@ -350,12 +352,13 @@ buildInsPermInfo ::
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   InsPerm b ->
   m (WithDeps (InsPermInfo b))
-buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly) =
+buildInsPermInfo env source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly validateInput) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp source tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj source tn fieldInfoMap set
@@ -380,7 +383,9 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
         deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
         insColsWithoutPresets = HS.fromList insCols `HS.difference` HashMap.keysSet setColsSQL
 
-    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
+    resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+
+    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs resolvedValidateInput, deps)
   where
     allInsCols = map structuredColumnInfoColumn $ filter (_cmIsInsertable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)

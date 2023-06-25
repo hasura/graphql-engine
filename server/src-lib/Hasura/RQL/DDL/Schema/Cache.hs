@@ -815,6 +815,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 permissionInfos <-
                   flip runReaderT sourceConfig
                     $ buildTablePermissions
+                      env
                       sourceName
                       tableCoreInfos
                       tableFields

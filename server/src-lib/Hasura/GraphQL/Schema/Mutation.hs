@@ -366,7 +366,8 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
       _aiPrimaryKey = primaryKey,
       _aiExtraTableMetadata = extraTableMetadata,
       _aiPresetValues = presetValues,
-      _aiBackendInsert = backendInsert
+      _aiBackendInsert = backendInsert,
+      _aiValidateInput = ipiValidateInput insertPerms
     }
   where
     table = tableInfoName tableInfo

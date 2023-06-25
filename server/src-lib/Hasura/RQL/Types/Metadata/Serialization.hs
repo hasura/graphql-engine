@@ -260,15 +260,16 @@ sourcesToOrdJSONList sources =
           insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
           insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
             where
-              insPermToOrdJSON (InsPerm check set columns backendOnly) =
+              insPermToOrdJSON (InsPerm check set columns backendOnly validateInput) =
                 let columnsPair = ("columns",) . AO.toOrdered <$> columns
                     backendOnlyPair =
                       if backendOnly
                         then Just ("backend_only", AO.toOrdered backendOnly)
                         else Nothing
+                    validateInputPair = (("validate_input",) . AO.toOrdered) <$> validateInput
                  in AO.object
                       $ [("check", AO.toOrdered check)]
-                      <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair]
+                      <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair, validateInputPair]
 
           selPermDefToOrdJSON :: (Backend b) => SelPermDef b -> AO.Value
           selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON

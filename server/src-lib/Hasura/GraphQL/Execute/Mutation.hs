@@ -34,7 +34,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
-import Hasura.Server.Types (RequestId (..))
+import Hasura.Server.Types
 import Hasura.Services
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -81,6 +81,7 @@ convertMutationSelectionSet ::
   PrometheusMetrics ->
   GQLContext ->
   SQLGenCtx ->
+  InputValidationSetting ->
   UserInfo ->
   HTTP.RequestHeaders ->
   [G.Directive G.Name] ->
@@ -98,6 +99,7 @@ convertMutationSelectionSet
   prometheusMetrics
   gqlContext
   SQLGenCtx {stringifyNum}
+  inputValidationSetting
   userInfo
   reqHeaders
   directives
@@ -135,7 +137,8 @@ convertMutationSelectionSet
                       mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  httpManager <- askHTTPManager
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField

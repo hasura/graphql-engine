@@ -97,6 +97,7 @@ data instance EngineLogType Hasura
   | ELTActionHandler
   | ELTDataConnectorLog
   | ELTJwkRefreshLog
+  | ELTValidateInputLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -115,6 +116,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTActionHandler -> "action-handler-log"
     ELTDataConnectorLog -> "data-connector-log"
     ELTJwkRefreshLog -> "jwk-refresh-log"
+    ELTValidateInputLog -> "validate-insert-input-log"
     ELTInternal t -> Witch.from t
 
 instance J.ToJSON (EngineLogType Hasura) where
@@ -210,7 +212,8 @@ userAllowedLogTypes =
     ELTLivequeryPollerLog,
     ELTActionHandler,
     ELTDataConnectorLog,
-    ELTJwkRefreshLog
+    ELTJwkRefreshLog,
+    ELTValidateInputLog
   ]
 
 data LogLevel

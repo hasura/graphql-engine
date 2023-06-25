@@ -6,7 +6,7 @@ module Harness.Permissions.Metadata
   )
 where
 
-import Data.Aeson (Value)
+import Data.Aeson
 import Data.Text qualified as Text
 import Harness.Permissions.Types qualified as Types
 import Harness.Quoter.Yaml (yaml)
@@ -28,6 +28,8 @@ createPermissionMetadata testEnvironment (Types.InsertPermission Types.InsertPer
           insertPermissionSource
       requestType = backendType <> "_create_insert_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName insertPermissionTable
+      validateInput =
+        insertPermissionValidationWebhook <&> \url -> object ["type" .= ("http" :: String), "definition" .= (object ["url" .= url])]
   [yaml|
     type: *requestType
     args:
@@ -39,6 +41,7 @@ createPermissionMetadata testEnvironment (Types.InsertPermission Types.InsertPer
         filter: *insertPermissionRows
         check: {}
         set: {}
+        validate_input: *validateInput
   |]
 createPermissionMetadata testEnvironment (Types.UpdatePermission Types.UpdatePermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment

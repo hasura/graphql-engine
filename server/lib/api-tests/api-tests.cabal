@@ -167,6 +167,7 @@ library
     Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Insert.ValidationSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec

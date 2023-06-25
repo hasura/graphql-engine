@@ -745,6 +745,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -1693,6 +1696,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -2684,6 +2690,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -3830,6 +3839,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -5503,6 +5515,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -6768,6 +6783,9 @@
                             "additionalProperties": true
                         },
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -9203,6 +9221,59 @@
                 },
                 "required": [
                     "connection_parameters"
+                ],
+                "type": "object"
+            },
+            "ValidateInputHttpDefinition": {
+                "properties": {
+                    "forward_client_headers": {
+                        "default": false,
+                        "type": "boolean"
+                    },
+                    "headers": {
+                        "default": [],
+                        "items": {
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfValue"
+                                },
+                                {
+                                    "$ref": "#/components/schemas/HeaderConfFromEnv"
+                                }
+                            ]
+                        },
+                        "type": "array"
+                    },
+                    "timeout": {
+                        "default": 10,
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "type": "number"
+                    },
+                    "url": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "url"
+                ],
+                "type": "object"
+            },
+            "ValidateInputInputWebhook": {
+                "properties": {
+                    "definition": {
+                        "$ref": "#/components/schemas/ValidateInputHttpDefinition"
+                    },
+                    "type": {
+                        "enum": [
+                            "http"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "type",
+                    "definition"
                 ],
                 "type": "object"
             }

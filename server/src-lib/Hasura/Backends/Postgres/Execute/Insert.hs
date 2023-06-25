@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres Execute Insert
 --
 -- Translates and executes IR to Postgres-specific SQL.
@@ -5,11 +7,20 @@
 -- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Insert
   ( convertToSQLTransaction,
+    validateInsertInput,
+    validateInsertRows,
   )
 where
 
+import Control.Exception (try)
+import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J
+import Data.Aeson.TH qualified as J
+import Data.Environment qualified as Env
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -18,7 +29,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types as PGTypes hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.BoolExp qualified as PGT
 import Hasura.Backends.Postgres.Translate.Insert qualified as PGT
@@ -28,20 +39,29 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.HTTP
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.Wreq qualified as Wreq
 
 convertToSQLTransaction ::
   forall pgKind m.
@@ -88,7 +108,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum tCase =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnotatedInsertData insObjs table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) = multiObjIns
+    IR.AnnotatedInsertData insObjs table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) _validateInput = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -114,7 +134,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause)
+        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) _validateInput
         insertObject singleObj additionalColumns userInfo planVars stringifyNum tCase
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -169,7 +189,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
 
     return (totAffRows, colValM)
   where
-    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) = singleObjIns
+    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) _validateInput = singleObjIns
     columns = HashMap.fromList $ IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
@@ -185,12 +205,6 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     afterInsertDepCols =
       flip (getColInfos @('Postgres pgKind)) allColumns
         $ concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
-
-    objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
-    objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
-
-    singleToMulti :: forall a b. IR.SingleObjectInsert b a -> IR.MultiObjectInsert b a
-    singleToMulti annIns = annIns {IR._aiInsertObject = [IR.unSingle $ IR._aiInsertObject annIns]}
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->
@@ -216,6 +230,12 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
       "cannot proceed to insert array relations since insert to table "
         <> table
         <<> " affects zero rows"
+
+objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
+objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
+  where
+    singleToMulti :: IR.SingleObjectInsert b a -> IR.MultiObjectInsert b a
+    singleToMulti annIns = annIns {IR._aiInsertObject = [IR.unSingle $ IR._aiInsertObject annIns]}
 
 insertObjRel ::
   forall pgKind m.
@@ -378,3 +398,162 @@ decodeEncJSON =
   either (throw500 . T.pack) decodeValue
     . J.eitherDecode
     . encJToLBS
+
+-------------- Validating insert input using external HTTP webhook -----------------------
+type ValidateInputPayloadVersion = Int
+
+validateInputPayloadVersion :: ValidateInputPayloadVersion
+validateInputPayloadVersion = 1
+
+newtype ValidateInputErrorResponse = ValidateInputErrorResponse {_vierMessage :: Text}
+  deriving (Show, Eq)
+
+$(J.deriveJSON hasuraJSON ''ValidateInputErrorResponse)
+
+data HttpHandlerLog = HttpHandlerLog
+  { _hhlUrl :: Text,
+    _hhlRequest :: J.Value,
+    _hhlRequestHeaders :: [HeaderConf],
+    _hhlResponse :: J.Value,
+    _hhlResponseStatus :: Int
+  }
+  deriving (Show)
+
+$(J.deriveToJSON hasuraJSON ''HttpHandlerLog)
+
+data ValidateInsertInputLog
+  = VIILHttpHandler HttpHandlerLog
+
+instance J.ToJSON ValidateInsertInputLog where
+  toJSON (VIILHttpHandler httpHandlerLog) =
+    J.object $ ["type" J..= ("http" :: String), "details" J..= J.toJSON httpHandlerLog]
+
+instance L.ToEngineLog ValidateInsertInputLog L.Hasura where
+  toEngineLog ahl = (L.LevelInfo, L.ELTValidateInputLog, J.toJSON ahl)
+
+type ValidationPayloadMap pgKind = InsOrdHashMap.InsOrdHashMap (TableName ('Postgres pgKind)) ([IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))], (ValidateInput ResolvedWebhook))
+
+validateInsertInput ::
+  forall m pgKind.
+  ( MonadError QErr m,
+    MonadIO m,
+    Tracing.MonadTrace m,
+    MonadState (ValidationPayloadMap pgKind) m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  IR.MultiObjectInsert ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) ->
+  [HTTP.Header] ->
+  m ()
+validateInsertInput env manager logger userInfo IR.AnnotatedInsertData {..} reqHeaders = do
+  for_ _aiValidateInput $ \validateInput -> do
+    validatePaylodMap <- get
+    case InsOrdHashMap.lookup _aiTableName validatePaylodMap of
+      Nothing -> modify $ InsOrdHashMap.insert _aiTableName (_aiInsertObject, validateInput)
+      Just _ -> modify $ InsOrdHashMap.adjust (\(insertedRows, validateInputDef) -> (insertedRows <> _aiInsertObject, validateInputDef)) _aiTableName
+
+  -- Validate the nested insert data
+  -- for each row
+  for_ _aiInsertObject $ \row ->
+    -- for each field
+    for_ row $ \case
+      IR.AIColumn {} -> pure () -- ignore columns
+      IR.AIObjectRelationship _ objectRelationInsert -> do
+        let multiObjectInsert = IR._riInsertData $ objToArr objectRelationInsert
+        validateInsertInput env manager logger userInfo multiObjectInsert reqHeaders
+      IR.AIArrayRelationship _ arrayRelationInsert ->
+        validateInsertInput env manager logger userInfo (IR._riInsertData arrayRelationInsert) reqHeaders
+
+validateInsertRows ::
+  forall m pgKind.
+  ( MonadError QErr m,
+    MonadIO m,
+    Tracing.MonadTrace m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  ResolvedWebhook ->
+  [HeaderConf] ->
+  Timeout ->
+  Bool ->
+  [HTTP.Header] ->
+  [IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))] ->
+  m ()
+validateInsertRows env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders rows = do
+  let requestBody =
+        J.object
+          [ "version" J..= validateInputPayloadVersion,
+            "session_variables" J..= _uiSession userInfo,
+            "role" J..= _uiRole userInfo,
+            "data" J..= J.object ["input" J..= map convertInsertRow rows]
+          ]
+  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
+      -- Using HashMap to avoid duplicate headers between configuration headers
+      -- and client headers where configuration headers are preferred
+      hdrs = (HashMap.toList . HashMap.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
+  initRequest <- liftIO $ HTTP.mkRequestThrow urlText
+  let request =
+        initRequest
+          & Lens.set HTTP.method "POST"
+          & Lens.set HTTP.headers hdrs
+          & Lens.set HTTP.body (HTTP.RequestBodyLBS $ J.encode requestBody)
+          & Lens.set HTTP.timeout (HTTP.responseTimeoutMicro (unTimeout timeout * 1000000)) -- (default: 10 seconds)
+  httpResponse <-
+    Tracing.traceHTTPRequest request $ \request' ->
+      liftIO . try $ HTTP.httpLbs request' manager
+
+  case httpResponse of
+    Left e ->
+      throw500WithDetail "http exception when validating input data"
+        $ J.toJSON
+        $ HttpException e
+    Right response -> do
+      let responseStatus = response Lens.^. Wreq.responseStatus
+          responseBody = response Lens.^. Wreq.responseBody
+          responseBodyForLogging = fromMaybe (J.String $ lbsToTxt responseBody) $ J.decode' responseBody
+      -- Log the details of the HTTP webhook call
+      L.unLogger logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
+      if
+        | HTTP.statusIsSuccessful responseStatus -> pure ()
+        | responseStatus == HTTP.status400 -> do
+            ValidateInputErrorResponse errorMessage <-
+              J.eitherDecode responseBody `onLeft` \e ->
+                throw500WithDetail "received invalid response from input validation webhook"
+                  $ J.toJSON
+                  $ "invalid response: "
+                  <> e
+            throw400 ValidationFailed errorMessage
+        | otherwise -> do
+            let err =
+                  J.toJSON
+                    $ "expecting 200 or 400 status code, but found "
+                    ++ show (HTTP.statusCode responseStatus)
+            throw500WithDetail "internal error when validating input data" err
+  where
+    convertInsertRow :: IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) -> J.Value
+    convertInsertRow fields = J.object $ flip mapMaybe fields $ \field ->
+      let (fieldName, maybeFieldValue) = case field of
+            IR.AIColumn (column, value) -> (toTxt column, convertValue value)
+            IR.AIObjectRelationship _ objectRelationInsert ->
+              let relationshipName = riName $ IR._riRelationInfo objectRelationInsert
+                  insertRow = IR.unSingle $ IR._aiInsertObject $ IR._riInsertData objectRelationInsert
+               in -- We want to follow the GQL types. And since nested objects (object and array relationships)
+                  -- are always included inside 'data', we add the "data" key here.
+                  (toTxt relationshipName, Just $ J.object ["data" J..= convertInsertRow insertRow])
+            IR.AIArrayRelationship _ arrayRelationInsert ->
+              let relationshipName = riName $ IR._riRelationInfo arrayRelationInsert
+                  insertRows = IR._aiInsertObject $ IR._riInsertData arrayRelationInsert
+               in (toTxt relationshipName, Just $ J.object ["data" J..= map convertInsertRow insertRows])
+       in maybeFieldValue <&> \fieldValue -> (J.fromText fieldName J..= fieldValue)
+
+    convertValue :: IR.UnpreparedValue ('Postgres pgKind) -> Maybe J.Value
+    convertValue = \case
+      IR.UVParameter _ columnValue -> Just $ pgScalarValueToJson $ cvValue columnValue
+      IR.UVLiteral sqlExp -> Just $ J.toJSON sqlExp
+      IR.UVSession -> Nothing
+      IR.UVSessionVar {} -> Nothing
