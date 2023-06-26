@@ -14,7 +14,7 @@
 }
 
 .ReactTable .pagination-top {
-  top: 0;
+  top: -20px;
   position: sticky;
   background-color: #f8fafb;
   z-index: 1;
@@ -51,6 +51,7 @@
   box-shadow: none;
   min-height: 32px;
   position: sticky;
+  top: 40px;
   z-index: 1;
 }
 
