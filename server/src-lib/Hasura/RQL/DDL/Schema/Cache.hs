@@ -14,7 +14,6 @@ module Hasura.RQL.DDL.Schema.Cache
   ( RebuildableSchemaCache,
     lastBuiltSchemaCache,
     buildRebuildableSchemaCache,
-    buildRebuildableSchemaCacheWithReason,
     CacheRWT,
     runCacheRWT,
     mkBooleanPermissionMap,
@@ -159,20 +158,9 @@ buildRebuildableSchemaCache ::
   CacheDynamicConfig ->
   Maybe SchemaRegistryContext ->
   CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCache =
-  buildRebuildableSchemaCacheWithReason CatalogSync
-
-buildRebuildableSchemaCacheWithReason ::
-  BuildReason ->
-  Logger Hasura ->
-  Env.Environment ->
-  MetadataWithResourceVersion ->
-  CacheDynamicConfig ->
-  Maybe SchemaRegistryContext ->
-  CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason reason logger env metadataWithVersion dynamicConfig mSchemaRegistryContext = do
+buildRebuildableSchemaCache logger env metadataWithVersion dynamicConfig mSchemaRegistryContext = do
   result <-
-    flip runReaderT reason
+    flip runReaderT CatalogSync
       $ Inc.build (buildSchemaCacheRule logger env mSchemaRegistryContext) (metadataWithVersion, dynamicConfig, initialInvalidationKeys, Nothing)
 
   pure $ RebuildableSchemaCache (fst $ Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
@@ -187,7 +175,7 @@ newtype CacheRWT m a
     -- passing the 'CacheDynamicConfig' to every function that builds the cache. It
     -- should ultimately be reduced to 'AppContext', or even better a relevant
     -- subset thereof.
-    CacheRWT (ReaderT CacheDynamicConfig (StateT (RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus) m) a)
+    CacheRWT (ReaderT CacheDynamicConfig (StateT (RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus, SchemaRegistryAction) m) a)
   deriving newtype
     ( Functor,
       Applicative,
@@ -222,11 +210,11 @@ runCacheRWT ::
   CacheDynamicConfig ->
   RebuildableSchemaCache ->
   CacheRWT m a ->
-  m (a, RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus)
+  m (a, RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus, SchemaRegistryAction)
 runCacheRWT config cache (CacheRWT m) = do
-  (v, (newCache, invalidations, introspection)) <-
-    runStateT (runReaderT m config) (cache, mempty, SourcesIntrospectionUnchanged)
-  pure (v, newCache, invalidations, introspection)
+  (v, (newCache, invalidations, introspection, schemaRegistryAction)) <-
+    runStateT (runReaderT m config) (cache, mempty, SourcesIntrospectionUnchanged, Nothing)
+  pure (v, newCache, invalidations, introspection, schemaRegistryAction)
 
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift . lift
@@ -278,26 +266,26 @@ instance
   ) =>
   CacheRWM (CacheRWT m)
   where
-  tryBuildSchemaCacheWithOptions buildReason invalidations metadata validateNewSchemaCache = CacheRWT do
+  tryBuildSchemaCacheWithOptions buildReason invalidations newMetadata validateNewSchemaCache = CacheRWT do
     dynamicConfig <- ask
     staticConfig <- askCacheStaticConfig
-    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations, _) <- get
-    let metadataVersion = scMetadataResourceVersion lastBuiltSC
-        metadataWithVersion = MetadataWithResourceVersion metadata metadataVersion
+    (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations, _, _) <- get
+    let oldMetadataVersion = scMetadataResourceVersion lastBuiltSC
+        metadataWithVersion = MetadataWithResourceVersion newMetadata $ MetadataResourceVersion (-1)
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
-    storedIntrospection <- loadStoredIntrospection (_cscLogger staticConfig) metadataVersion
+    storedIntrospection <- loadStoredIntrospection (_cscLogger staticConfig) oldMetadataVersion
     result <-
       runCacheBuildM
         $ flip runReaderT buildReason
         $ Inc.build rule (metadataWithVersion, dynamicConfig, newInvalidationKeys, storedIntrospection)
 
-    let (schemaCache, storedIntrospectionStatus) = Inc.result result
+    let (schemaCache, (storedIntrospectionStatus, schemaRegistryAction)) = Inc.result result
         prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
         !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
         !newInvalidations = oldInvalidations <> invalidations
 
     case validateNewSchemaCache lastBuiltSC schemaCache of
-      (KeepNewSchemaCache, valueToReturn) -> put (newCache, newInvalidations, storedIntrospectionStatus) >> pure valueToReturn
+      (KeepNewSchemaCache, valueToReturn) -> put (newCache, newInvalidations, storedIntrospectionStatus, schemaRegistryAction) >> pure valueToReturn
       (DiscardNewSchemaCache, valueToReturn) -> pure valueToReturn
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
@@ -307,7 +295,7 @@ instance
         name `elem` getAllRemoteSchemas schemaCache
 
   setMetadataResourceVersionInSchemaCache resourceVersion = CacheRWT $ do
-    (rebuildableSchemaCache, invalidations, introspection) <- get
+    (rebuildableSchemaCache, invalidations, introspection, schemaRegistryAction) <- get
     put
       ( rebuildableSchemaCache
           { lastBuiltSchemaCache =
@@ -316,7 +304,8 @@ instance
                 }
           },
         invalidations,
-        introspection
+        introspection,
+        schemaRegistryAction
       )
 
 -- | Generate health checks related cache from sources metadata
@@ -438,8 +427,8 @@ buildSchemaCacheRule ::
   Logger Hasura ->
   Env.Environment ->
   Maybe SchemaRegistryContext ->
-  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, SourcesIntrospectionStatus)
-buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults metadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
+  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
+buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults lastKnownMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
@@ -502,8 +491,17 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
   _ <-
     bindA
       -< do
-        for_ schemaRegistryAction $ \action -> do
-          liftIO $ action metadataResourceVersion
+        buildReason <- ask
+        case buildReason of
+          -- If this is a catalog sync then we know for sure that the schema has more chances of being committed as some
+          -- other instance of Hasura has already committed the schema. So we can safely write the schema to the registry
+          -- service.
+          CatalogSync ->
+            for_ schemaRegistryAction $ \action -> do
+              liftIO $ action lastKnownMetadataResourceVersion
+          -- If this is a metadata event then we cannot be sure that the schema will be committed. So we write the schema
+          -- to the registry service only after the schema is committed.
+          CatalogUpdate _ -> pure ()
 
   let schemaCache =
         SchemaCache
@@ -537,7 +535,12 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 <> inconsistentQueryCollections,
             scApiLimits = _metaApiLimits,
             scMetricsConfig = _metaMetricsConfig,
-            scMetadataResourceVersion = metadataResourceVersion,
+            -- Please note that we are setting the metadata resource version to the last known metadata resource
+            -- version. This might not be the final value of the metadata resource version. This is because, if we are
+            -- in the middle of a metadata operation, we might push the metadata to the database and thus this version
+            -- will be of the older metadata. As a fix, we do update the metadata resource version to the latest value
+            -- after the metadata operation is complete (see the usage of `setMetadataResourceVersionInSchemaCache`).
+            scMetadataResourceVersion = lastKnownMetadataResourceVersion,
             scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
             scTlsAllowlist = networkTlsAllowlist _metaNetwork,
             scQueryCollections = _metaQueryCollections,
@@ -546,7 +549,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             scSourcePingConfig = buildSourcePingCache _metaSources,
             scOpenTelemetryConfig = openTelemetryInfo
           }
-  returnA -< (schemaCache, storedIntrospectionStatus)
+  returnA -< (schemaCache, (storedIntrospectionStatus, schemaRegistryAction))
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]
     buildOutputsAndSchema = proc (metadataDep, dynamicConfig, invalidationKeysDep, storedIntrospection) -> do

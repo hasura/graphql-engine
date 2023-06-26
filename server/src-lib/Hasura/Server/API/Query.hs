@@ -211,24 +211,35 @@ runQuery appContext sc query = do
   let dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
-  ((result, updatedMetadata), updatedCache, invalidations, sourcesIntrospection) <-
+  ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
     runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
       & runCacheRWT dynamicConfig sc
-  when (queryModifiesSchemaCache query) $ do
-    case appEnvEnableMaintenanceMode of
+  if queryModifiesSchemaCache query
+    then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
+
+        (_, modSchemaCache', _, _, _) <-
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
+
         -- save sources introspection to stored-introspection DB
         saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+        -- run schema registry action
+        for_ schemaRegistryAction $ \action -> do
+          liftIO $ action newResourceVersion
         -- notify schema cache sync
         liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+
+        pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->
         throw500 "metadata cannot be modified in maintenance mode"
-  pure (result, updatedCache)
+    else pure (result, modSchemaCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
