@@ -6,7 +6,8 @@ keywords:
   - metrics
   - prometheus
   - grafana
-sidebar_position: 5
+sidebar_position: 6
+sidebar_class_name: enterprise-icon
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -24,16 +25,16 @@ This can help towards monitoring and further optimization of the cache utilizati
 
 ## Exposed metrics
 
-The graphql engine exposes the `hasura_cache_request_count` Prometheus metric.
-It represents a `counter` and is incremented every time a request with `@cached` directive is served.
+The graphql engine exposes the [hasura_cache_request_count](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-cache-request-count)
+Prometheus metric. It represents a `counter` and is incremented every time a request with `@cached` directive is served.
 
 
 It has one label `status`, which can have values of either `hit` or `miss`.
 
-| status    | description       |
-|-----------|-------------------|
-| `hit`     | request served from the cache |
-| `miss`    | request served from the source (not found in cache) |
+| status | description                                         |
+|--------|-----------------------------------------------------|
+| `hit`  | request served from the cache                       |
+| `miss` | request served from the source (not found in cache) |
 
 
 ## Get insights from metrics

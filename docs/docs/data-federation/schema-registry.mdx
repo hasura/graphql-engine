@@ -41,6 +41,7 @@ Schema Registry is available on Hasura Cloud from `v2.26.0-cloud.1` and above.
 ## How it works
 
 Whenever there is any operation on the Hasura Engine that could change the GraphQL schema, Hasura sends an event to the
+
 Schema Registry along with the GraphQL schemas for all defined roles. Operations which could change the GraphQL schema
 include:
 
@@ -83,6 +84,7 @@ The changes between subsequent schemas are computed using the open source
 
 Breaking changes are typically the changes that could potentially break your GraphQL operations (queries, mutations or
 subscriptions) at the GraphQL operation validation layer.
+
 
 For example, if a field `name` is removed from a GraphQL object type `user`, that counts as a breaking change as it
 could potentially fail an existing GraphQL operation that queries the `name` field in the `user` type.

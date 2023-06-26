@@ -4,7 +4,9 @@ keywords:
   - hasura
   - docs
   - best practices
-sidebar_label: Security
+sidebar_label: Best Practices
+toc_max_heading_level: 3
+sidebar_position: 3
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -36,14 +38,14 @@ Specifics about each security best practice can be found below.
 
 ## Hasura GraphQL Engine
 
-#### Restrict Access
+### Restrict Access
 
 Restrict knowledge of admin secrets to the minimally required team members as an admin secret provides unrestricted
 access to the Hasura GraphQL Engine. SSO collaboration should be used to grant project access without sharing an admin
 key. Subsequently, implement a plan to rotate admin secrets to limit the exposure of an admin secret being shared too
 broadly.
 
-[Multiple admin secrets](/security/multiple-admin-secrets.mdx) should be used in situations where admin secrets have
+[Multiple admin secrets](/auth/authentication/multiple-admin-secrets.mdx) should be used in situations where admin secrets have
 different rotation timelines or when granting temporary access is needed.
 
 Leverage [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) whenever
@@ -61,7 +63,7 @@ The admin role will bypass the allowed operations list.
 
 :::
 
-#### Limit the API
+### Limit the API
 
 The allowed operations lists workflow is ideal for private/internal APIs or APIs with well understood and clearly
 defined operations. Public APIs or APIs with less defined expected operations should additionally configure
@@ -72,7 +74,7 @@ defined operations. Public APIs or APIs with less defined expected operations sh
 
 - [Limit rows](/auth/authorization/permissions/row-fetch-limit.mdx) returned by a select operation.
 
-#### Permissions
+### Permissions
 
 The row-based access control configuration dictates permissions for the GraphQL API. It is critical that these
 permissions be configured correctly in order to prevent unauthorized or unintended access to the GraphQL API.
@@ -86,7 +88,7 @@ permissions be configured correctly in order to prevent unauthorized or unintend
   [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) and
   [disabling schema introspection](/security/disable-graphql-introspection.mdx).
 
-#### Disable development components
+### Disable development components
 
 There are several components of Hasura GraphQL Engine that are crucial for development efforts but should be disabled
 for a production environment. However, it should be expected that some of these components may need to be temporarily
@@ -100,7 +102,7 @@ re-enabled if a situation arises where a production environment specific issue r
 
 - [Disable schema introspection](/security/disable-graphql-introspection.mdx).
 
-#### Additional environment variables
+### Additional environment variables
 
 There are specific environment variables that should be configured to ensure appropriate communication to the Hasura
 GraphQL Engine server.

@@ -1,11 +1,11 @@
 ---
-title: 'Best Practices: Observability'
 description: Observability best practices
 keywords:
   - hasura
   - docs
   - best practices
-sidebar_label: Observability
+sidebar_label: Best Practices
+sidebar_position: 2
 ---
 
 # Observability Best Practices
@@ -52,20 +52,20 @@ Hasura Cloud projects include dashboards for observability. You will find your m
 The following default observability options are enabled on your Hasura Cloud project:
 
 - [Stats Overview](/observability/overview.mdx)
-- [Errors](/observability/errors.mdx)
-- [Usage Summaries](/observability/usage.mdx)
-- [Operations](/observability/operations.mdx)
-- [Websockets](/observability/websockets.mdx)
-- [Subscription Workers](/observability/subscription-workers.mdx)
-- [Distributed Tracing](/observability/tracing.mdx)
-- [Query Tags](/observability/query-tags.mdx)
+- [Errors](/observability/cloud-monitoring/errors.mdx)
+- [Usage Summaries](/observability/cloud-monitoring/usage.mdx)
+- [Operations](/observability/cloud-monitoring/operations.mdx)
+- [Websockets](/observability/cloud-monitoring/websockets.mdx)
+- [Subscription Workers](/observability/cloud-monitoring/subscription-workers.mdx)
+- [Distributed Tracing](/observability/cloud-monitoring/tracing.mdx)
+- [Query Tags](/observability/cloud-monitoring/query-tags.mdx)
 
 #### Third-party observability platforms
 
 If your organization has multiple applications and systems that need to be monitored, the most efficient way to do so is
 via an observability platform. Hasura provides first-party integrations with multiple observability platforms and is
 fully open-telemetry compliant. You can find a list of third-party observability platforms supported by Hasura
-[here](/observability/integrations/index.mdx).
+[here](/observability/cloud/index.mdx).
 
 ### Hasura Enterprise (self-hosted)
 
@@ -84,7 +84,7 @@ to be exported to your observability platform using the appropriate log drivers.
 
 You can export metrics of your Hasura Cloud project to Prometheus. You can configure this on the `Integrations` tab on
 the project's settings page. You can find more information on this
-[here](/observability/prometheus/cloud-integration.mdx).
+[here](/observability/cloud/prometheus.mdx).
 
 ## Database observability
 
@@ -105,12 +105,12 @@ be implemented:
   - Memory
 - Query Tags
 
-[Query Tags](/observability/query-tags.mdx) are SQL comments that consist of `key=value` pairs that are appended to
+[Query Tags](/observability/cloud-monitoring/query-tags.mdx) are SQL comments that consist of `key=value` pairs that are appended to
 generated SQL statements. When you issue a query or mutation with query tags, the generated SQL has some extra
-information. Database analytics tools can use that information (metadata) in these comments to analyze DB load and track
-or monitor performance.
+information. Database analytics tools can use that information (metadata) in these comments to analyze DB load
+and track or monitor performance.
 
-### Using Query Tags and pganalyze
+### Using Query Tags and **pganalyze**
 
 - Refer to documentation from [pganalyze](https://pganalyze.com/docs) for information on how to connect your database to
   the analyzer.

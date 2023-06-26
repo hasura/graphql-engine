@@ -11,6 +11,7 @@ import EnterpriseLight from '@site/static/icons/enterprise-dark.svg';
 import EnterpriseDark from '@site/static/icons/enterprise-light.svg';
 import CloudLight from '@site/static/icons/cloud-dark.svg';
 import CloudDark from '@site/static/icons/cloud-light.svg';
+import BetaTag from "@site/src/components/BetaTag/BetaTag";
 export default function DocSidebarItemLink({ item, onItemClick, activePath, level, index, ...props }) {
   const { href, label, className, autoAddBaseUrl } = item;
   const isActive = isActiveSidebarItem(item, activePath);
@@ -24,6 +25,20 @@ export default function DocSidebarItemLink({ item, onItemClick, activePath, leve
         return isDarkTheme ? <EnterpriseDark /> : <EnterpriseLight />;
       case 'cloud-icon':
         return isDarkTheme ? <CloudDark /> : <CloudLight />;
+      case 'enterprise-icon-and-beta':
+        return (
+          <div className={styles['sidebar_link_wrapper']}>
+            {isDarkTheme ? (
+              <>
+                <EnterpriseDark />{' '}<BetaTag/>
+              </>
+            ) : (
+              <>
+                <EnterpriseLight />{' '}<BetaTag/>
+              </>
+            )}
+          </div>
+        );
       case 'cloud-and-enterprise-icon':
         return (
           <div className={styles['cloud-ee-container']}>
@@ -37,6 +52,12 @@ export default function DocSidebarItemLink({ item, onItemClick, activePath, leve
               </>
             )}
           </div>
+        );
+      case 'beta-icon':
+        return (
+            <div className={styles['sidebar_link_wrapper']}>
+              <BetaTag/>
+            </div>
         );
       default:
         return null;

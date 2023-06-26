@@ -1,5 +1,5 @@
 ---
-title: 'Best Practices: Database observability'
+title: 'Database observability'
 description: Database observability best practices
 keywords:
   - hasura
@@ -8,6 +8,7 @@ keywords:
   - observability
   - database observability
 sidebar_label: Database observability
+sidebar_position: 6
 ---
 
 # Database Observability
@@ -45,8 +46,8 @@ tables.
 In this example, we will use Postgres and Datadog:
 
 Log into a `psql` session as a user who has
-[CREATEROLE privileges](https://www.postgresql.org/docs/current/static/app-createuser.html), create a `datadog`user and
-password, and grant it read access to `pg_stat_database.`
+[CREATEROLE privileges](https://www.postgresql.org/docs/current/static/app-createuser.html), create a `datadog`user and
+password, and grant it read access to `pg_stat_database.`
 
 ```
 create user datadog with password '<PASSWORD>';
@@ -134,7 +135,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 />
 
 - [Sign up](https://www.datadoghq.com) for Datadog.
-- [Enable Datadog integration for your Hasura Project](/observability/integrations/datadog.mdx).
+- [Enable Datadog integration for your Hasura Project](/observability/cloud/datadog.mdx).
 - Set up Tags.
 - [Enable Hasura Integration for Datadog](https://app.datadoghq.com/integrations).
 - Create a New Dashboard and import the JSON file by following the instructions

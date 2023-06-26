@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
-sidebar_label: Integrate with Hasura EE
-title: 'Integrate Prometheus with Hasura EE'
+sidebar_label: Integrate and build a Grafana Dashboard
+title: 'Integrate Prometheus with Hasura EE and build a Grafana Dashboard'
 description: Install Prometheus server and Grafana to create a basic observability dashboard for Hasura.
 keywords:
   - hasura
@@ -15,6 +15,7 @@ keywords:
   - grafana
   - monitoring
   - monitoring framework
+toc_max_heading_level: 4
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
@@ -35,11 +36,47 @@ approaches depending on your use case:
 - **Containerized**: If you are running Prometheus and Grafana in a containerized environment, follow the
   [containerized installation](#containerized-installation) instructions.
 
-## Self-hosted installation
+## Step 1: Enable metrics endpoint
 
-### Install and configure Prometheus
+By default, the Prometheus metrics endpoint is disabled. To enable Prometheus metrics, configure the environment variable
+below:
 
-#### Step 1. Set up the environment
+```bash
+HASURA_GRAPHQL_ENABLED_APIS=metadata,graphql,config,metrics
+```
+
+Secure the Prometheus metrics endpoint with a secret:
+
+```bash
+HASURA_GRAPHQL_METRICS_SECRET=<secret>
+```
+
+```bash
+curl 'http://127.0.0.1:8080/v1/metrics' -H 'Authorization: Bearer <secret>'
+```
+
+:::info Configure a secret
+
+The metrics endpoint should be configured with a secret to prevent misuse and should not be exposed over the internet.
+
+:::
+
+:::tip High-cardinality Labels
+
+Starting in `v2.26.0`, Hasura GraphQL Engine exposes metrics with high-cardinality labels by default.
+
+You can disable
+[the cardinality of labels for metrics](/deployment/graphql-engine-flags/reference.mdx#enable-high-cardinality-labels-for-metrics)
+if you are experiencing high memory usage, which can be due to a large number of labels in the metrics (typically more
+than 10000).
+
+:::
+
+## Option 1: Self-hosted installation
+
+### Step 2: Install and configure Prometheus
+
+#### Step 2.1: Set up the environment
 
 You will need to create a Prometheus user and group, and a directory for Prometheus to store its data. You will also
 need to create a directory for Prometheus to store its configuration files.
@@ -54,7 +91,7 @@ sudo mkdir /var/lib/prometheus
 for i in rules rules.d files_sd; do sudo mkdir -p /etc/prometheus/${i}; done
 ```
 
-#### Step 2. Install Prometheus
+#### Step 2.2: Install Prometheus
 
 The following set of commands will help you download and install Prometheus:
 
@@ -75,7 +112,7 @@ You can check to see if Prometheus is installed correctly by running the followi
 prometheus --version
 ```
 
-#### Step 3. Connect Prometheus to Hasura
+#### Step 2.3: Connect Prometheus to Hasura
 
 To connect Prometheus to Hasura, you will need to create a configuration file for Prometheus. The following commands
 will help you do this:
@@ -124,7 +161,7 @@ scrape_configs:
       - targets: ['hasura_deployment_url:8080']
 ```
 
-#### Step 4. Set firewall rules
+#### Step 2.4: Set firewall rules
 
 If you are using a firewall, you will need to set the following rules:
 
@@ -132,7 +169,7 @@ If you are using a firewall, you will need to set the following rules:
 sudo ufw allow 9090/tcp
 ```
 
-#### Step 5. Set up a password for Prometheus web access
+#### Step 2.5: Set up a password for Prometheus web access
 
 To set up a password for Prometheus web access, you will need to create a hashed password. First, we'll create the YAML
 file which will store the password. Inside `/etc/prometheus/`, run the following:
@@ -177,7 +214,7 @@ To check yourself, use `promtool` to check the configuration file:
 promtool check web-config /etc/prometheus/web.yml
 ```
 
-#### Step 6. Restart Prometheus
+#### Step 2.6: Restart Prometheus
 
 To restart Prometheus, run the following command:
 
@@ -201,9 +238,9 @@ go_gc_duration_seconds{quantile="0.25"} 0
 # etc...
 ```
 
-### Install and configure Grafana
+### Step 3: Install and configure Grafana
 
-#### Step 7. Install Grafana
+#### Step 3.1: Install Grafana
 
 You can install Grafana by running the following commands:
 
@@ -224,7 +261,7 @@ After logging in, you will be prompted to change the default password. Set your 
 
 :::
 
-#### Step 8. Create a Prometheus data source
+#### Step 3.2: Create a Prometheus data source
 
 In Grafana, from the settings icon on the sidebar, open the `Configuration` menu and select `Data Sources`. Then, click
 on `Add data source` and select `Prometheus` as the type.
@@ -238,7 +275,7 @@ everything is working correctly, you should see a green `Data source is working`
   width="1000px"
 />
 
-#### Step 9. Create a Prometheus graph
+#### Step 3.3: Create a Prometheus graph
 
 Click the graph title and select `Edit`. Then, select the `Metrics` tab and select your Prometheus data source. Then,
 enter any Prometheus expression ino the `Query` field while using the `Metric` field to lookup metrics via autocomplete.
@@ -263,11 +300,11 @@ status labels of a returned query result, separated by a dash, you could use the
 
 :::
 
-## Containerized installation
+## Option 2: Containerized installation
 
-### Install and configure Prometheus and Grafana
+### Step 2: Install and configure Prometheus and Grafana
 
-#### Step 1. Prepare the Prometheus configuration file
+#### Step 2.1: Prepare the Prometheus configuration file
 
 Create a file named `prometheus.yml` on your host with the following information:
 
@@ -302,7 +339,7 @@ scrape_configs:
       - targets: ['ip_address_of_hasura_installation:8080']
 ```
 
-#### Step 2. Pull the Prometheus and Grafana Docker containers
+#### Step 2.2: Pull the Prometheus and Grafana Docker containers
 
 For Prometheus, run the following command:
 
@@ -316,9 +353,9 @@ Then, for Grafana, run the following:
 docker run -d -p 3000:3000 grafana/grafana-enterprise
 ```
 
-### Configure Grafana
+### Step 3: Configure Grafana
 
-#### Step 3. Adding a Prometheus as a data source in Grafana
+#### Step 3.1: Adding a Prometheus as a data source in Grafana
 
 In Grafana, from the settings icon on the sidebar, open the `Configuration` menu and select `Data Sources`. Then, click
 on `Add data source` and select `Prometheus` as the type.
@@ -332,7 +369,7 @@ everything is working correctly, you should see a green `Alerting supported` mes
   width="1000px"
 />
 
-#### Step 5. Add Hasura metrics to the dashboard
+#### Step 3.2: Add Hasura metrics to the dashboard
 
 Click on the `Add Panel` icon in the top-right corner of the Grafana dashboard. Then, select `Add New Panel` or
 `Add New Row`.

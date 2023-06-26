@@ -1,8 +1,7 @@
 ---
 sidebar_position: 1
-slug: index
-title: 'Cloud: Integrations with external services'
-description: Configure integrations with Hasura Cloud
+title: 'Cloud: Observability integrations with external services'
+description: Configure observability integrations with Hasura Cloud
 keywords:
   - hasura
   - docs
@@ -13,12 +12,14 @@ keywords:
   - observability
   - monitoring
   - monitoring framework
+sidebar_class_name: cloud-icon
+slug: index
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 import ProductBadge from '@site/src/components/ProductBadge';
 
-# Integrations with External Services
+# Hasura Cloud observability integrations with external services
 
 <ProductBadge standard pro ee />
 
@@ -26,6 +27,17 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 To be able to effectively monitor, diagnose and troubleshoot your application stack in production, Hasura Cloud will
 export metrics, logs and traces to observability tools / APM vendors.
+
+## Supported integrations
+
+Check out the following guides on how to export telemetry data from Hasura Cloud to the observability tool of your
+choice:
+
+- [Datadog](datadog.mdx)
+- [New Relic](newrelic.mdx)
+- [Azure monitor](azure-monitor.mdx)
+- [Prometheus](prometheus.mdx)
+- [OpenTelemetry](opentelemetry.mdx)
 
 ## Log types
 
@@ -128,7 +140,7 @@ Hasura Cloud APM integrations export the following metrics:
 ## Traces
 
 Hasura Cloud APM integrations export the same trace logs as Hasura GraphQL Engine. You can find more information about
-tracing [here](/observability/tracing.mdx).
+tracing [here](/observability/cloud-monitoring/tracing.mdx).
 
 :::info Sampling
 
@@ -213,14 +225,3 @@ Hasura samples all trace logs and exports only 5% to your configured APM provide
 ```
 
 </details>
-
-## Supported integrations
-
-Check out the following guides on how to export telemetry data from Hasura Cloud to the observability tool of your
-choice:
-
-- [Datadog](/observability/integrations/datadog.mdx)
-- [New Relic](/observability/integrations/newrelic.mdx)
-- [Azure monitor](/observability/integrations/azure-monitor.mdx)
-- [Prometheus](/observability/prometheus/cloud-integration.mdx)
-- [OpenTelemetry](/observability/integrations/opentelemetry.mdx)
