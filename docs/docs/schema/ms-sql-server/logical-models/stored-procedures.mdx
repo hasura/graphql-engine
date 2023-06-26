@@ -15,6 +15,7 @@ sidebar_class_name: alpha-tag
 import ProductBadge from '@site/src/components/ProductBadge';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # MS SQL Server: Stored Procedures
 
@@ -60,37 +61,44 @@ stored procedure.
 
 We can create a Logical Model representing the results set:
 
-:::info Only creatable via the CLI oand API
-
-Currently, stored procedures can only be created using the CLI or API. Console support will be added in a future
-release.
-
-:::
-
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Logical Models` tab, and on the `Add Logical Model` button.
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
+
+Once the modal is open, fill in the form.
+
+<Thumbnail
+  src="/img/stored-procedures/create-logical-model.png"
+  alt="Create Logical Model Form"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="cli" label="CLI">
 
 Add the following to the relevant database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  logical_models:
-    - name: tables
-      fields:
-        TABLE_QUALIFIER:
-          type: sysname
-          nullable: true
-        TABLE_OWNER:
-          type: sysname
-          nullable: true
-        TABLE_NAME:
-          type: sysname
-          nullable: true
-        TABLE_TYPE:
-          type: "varchar(32)"
-          nullable: true
-        REMARKS:
-          type: "varchar(254)"
-          nullable: true
+logical_models:
+  - name: tables
+    fields:
+      TABLE_QUALIFIER:
+        type: sysname
+        nullable: true
+      TABLE_OWNER:
+        type: sysname
+        nullable: true
+      TABLE_NAME:
+        type: sysname
+        nullable: true
+      TABLE_TYPE:
+        type: 'varchar(32)'
+        nullable: true
+      REMARKS:
+        type: 'varchar(254)'
+        nullable: true
 ```
 
 </TabItem>
@@ -154,21 +162,35 @@ database stored procedure and the Logical Model or the arguments, an error will 
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Stored Procedures` tab, and on the `Track Stored Procedures` button.
+
+<Thumbnail src="/img/stored-procedures/track-stored-procedure.png" alt="Track Stored Procedure" width="800px" />
+
+Next, fill in the form, choosing the Logical Model created in the previous step:
+
+<Thumbnail
+  src="/img/stored-procedures/stored-procedure-form.png"
+  alt="Stored Procedure Form"
+  width="800px"
+/>
+</TabItem>
 <TabItem value="cli" label="CLI">
 
 Add the following to the relevant database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  stored_procedures:
-    - stored_procedure:
-        schema: public
-        name: sp_tables
-      configuration:
-        exposed_as: query
-      arguments:
-        table_type:
-          type: varchar
-      returns: tables
+stored_procedures:
+  - stored_procedure:
+      schema: public
+      name: sp_tables
+    configuration:
+      exposed_as: query
+    arguments:
+      table_type:
+        type: varchar
+    returns: tables
 ```
 
 </TabItem>
@@ -259,6 +281,16 @@ Note that this Logical Model has no attached permissions and therefore will only
 :::
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Logical Models` tab, and on the `Add Logical Model` button.
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
+
+Once the modal is open, fill in the form with the name of the Logical Model and the fields that will be returned by the
+stored procedure.
+
+</TabItem>
 <TabItem value="cli" label="CLI">
 
 You can create a logical model by adding it to the appropriate database definition in the `metadata > databases.yaml`
@@ -310,24 +342,33 @@ X-Hasura-Role: admin
 Once the Logical Model is defined, we can use it to define the query:
 
 <Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Click on the `Stored Procedures` tab, and on the `Track Stored Procedures` button.
+
+<Thumbnail src="/img/stored-procedures/track-stored-procedure.png" alt="Track Stored Procedure" width="800px" />
+
+Next, fill in the form, choosing the Logical Model created in the previous step as the return type.
+
+</TabItem>
 <TabItem value="cli" label="CLI">
 
 Add the following to the relevant database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  stored_procedures:
-    - stored_procedure:
-        schema: "<schema name>"
-        name: "<procedure name>"
-      configuration:
-        exposed_as: query
-        custom_name: "<custom name>"
-      arguments:
-        "<argument name>":
-          type: "<SQL Server field type>"
-          nullable: false | true
-          description: "<optional argument description>"
-      returns: "<logical model name>"
+stored_procedures:
+  - stored_procedure:
+      schema: '<schema name>'
+      name: '<procedure name>'
+    configuration:
+      exposed_as: query
+      custom_name: '<custom name>'
+    arguments:
+      '<argument name>':
+        type: '<SQL Server field type>'
+        nullable: false | true
+        description: '<optional argument description>'
+    returns: '<logical model name>'
 ```
 
 </TabItem>

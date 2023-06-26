@@ -6,7 +6,7 @@ export const DataTypeToSQLTypeMap: Record<
   string[]
 > = {
   boolean: [],
-  string: ['char', 'text', 'varchar'],
+  string: ['char', 'text', 'varchar', 'nvarchar', 'sysname'],
   number: [
     'bigint',
     'bit',
