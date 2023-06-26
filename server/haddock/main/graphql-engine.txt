@@ -25205,7 +25205,7 @@ SourcesIntrospectionChangedPartial :: StoredIntrospection -> SourcesIntrospectio
 -- | None of remote schemas or data sources introspection is refetched.
 SourcesIntrospectionUnchanged :: SourcesIntrospectionStatus
 data RebuildableSchemaCache
-RebuildableSchemaCache :: SchemaCache -> InvalidationKeys -> Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, SourcesIntrospectionStatus) -> RebuildableSchemaCache
+RebuildableSchemaCache :: SchemaCache -> InvalidationKeys -> Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction)) -> RebuildableSchemaCache
 withRecordDependencies :: ArrowWriter (Seq CollectItem) arr => WriterA (Seq SchemaDependency) arr (e, s) a -> arr (e, (MetadataObject, (SchemaObjId, s))) a
 
 -- | Processes a list of catalog metadata into a map of processed
@@ -26462,9 +26462,8 @@ addNonColumnFields :: forall b m. (MonadWriter (Seq CollectItem) m, BackendMetad
 --   that trigger schema cache rebuilds.
 module Hasura.RQL.DDL.Schema.Cache
 buildRebuildableSchemaCache :: Logger Hasura -> Environment -> MetadataWithResourceVersion -> CacheDynamicConfig -> Maybe SchemaRegistryContext -> CacheBuild RebuildableSchemaCache
-buildRebuildableSchemaCacheWithReason :: BuildReason -> Logger Hasura -> Environment -> MetadataWithResourceVersion -> CacheDynamicConfig -> Maybe SchemaRegistryContext -> CacheBuild RebuildableSchemaCache
 data CacheRWT m a
-runCacheRWT :: Monad m => CacheDynamicConfig -> RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus)
+runCacheRWT :: Monad m => CacheDynamicConfig -> RebuildableSchemaCache -> CacheRWT m a -> m (a, RebuildableSchemaCache, CacheInvalidations, SourcesIntrospectionStatus, SchemaRegistryAction)
 saveSourcesIntrospection :: (MonadIO m, MonadMetadataStorage m) => Logger Hasura -> SourcesIntrospectionStatus -> MetadataResourceVersion -> m ()
 instance Hasura.QueryTags.MonadQueryTags m => Hasura.QueryTags.MonadQueryTags (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
 instance Hasura.Server.Init.FeatureFlag.HasFeatureFlagChecker m => Hasura.Server.Init.FeatureFlag.HasFeatureFlagChecker (Hasura.RQL.DDL.Schema.Cache.CacheRWT m)
@@ -27146,14 +27145,14 @@ data AppStateRef impl
 --   This function also updates the <a>TLSAllowListRef</a> to make it point
 --   to the newly minted <tt>SchemaCacheRef</tt>.
 initialiseAppStateRef :: MonadIO m => TLSAllowListRef -> Maybe MetricsConfigRef -> ServerMetrics -> RebuildableSchemaCache -> RebuildableAppContext impl -> m (AppStateRef impl)
+withSchemaCacheUpdate :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> m (a, RebuildableSchemaCache) -> m a
 
 -- | Set the <a>AppStateRef</a> to the <a>RebuildableSchemaCache</a>
 --   produced by the given action.
 --   
 --   An internal lock ensures that at most one update to the
 --   <a>AppStateRef</a> may proceed at a time.
-withSchemaCacheUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> m (a, RebuildableSchemaCache) -> m a
-withSchemaCacheReadUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) -> m a
+withSchemaCacheReadUpdate :: (MonadIO m, MonadBaseControl IO m, MonadError QErr m) => AppStateRef impl -> Logger Hasura -> Maybe (TVar Bool) -> (RebuildableSchemaCache -> m (a, RebuildableSchemaCache)) -> m a
 
 -- | Read the contents of the <a>AppStateRef</a> to get the latest
 --   <a>RebuildableAppContext</a>
