@@ -198,8 +198,10 @@ annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
             $ AVRelationship
               relInfo
               ( RelationshipFilters
-                  { -- Note that we do not include the permissions of the target table, since
-                    -- those only apply to GraphQL queries.
+                  { --  Note that what we are building here are the permissions of the _current_ table.
+                    --  Therefore, they need to go into `rfFilter`.  `rfTargetTablePermissions` refers
+                    -- to the permissions of the _target_ table, which do not apply to the permissions
+                    -- definition of the _current_ table.
                     rfTargetTablePermissions = BoolAnd [],
                     rfFilter = annRelBoolExp
                   }
