@@ -11,7 +11,7 @@ keywords:
   - production
   - environment
 sidebar_label: Manage development environments
-sidebar_position: 11
+sidebar_position: 33
 ---
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
@@ -105,7 +105,7 @@ Also add any other ENV vars that you might have set on your local project.
 ### Setting up a Git repo for your Hasura Project
 
 In order to easily apply your local changes to your new Cloud project, we'll use the Hasura
-[GitHub deployment](/hasura-cloud/ci-cd/github-integration.mdx) feature. But before we do that, we need to setup
+[GitHub deployment](/cloud-ci-cd/github-integration.mdx) feature. But before we do that, we need to setup
 Metadata & Migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura Metadata &
 Migrations refer the guide [here](/migrations-metadata-seeds/overview.mdx)
 
@@ -157,4 +157,4 @@ git commit -m "initialize metadata and migrations"
 Push these changes to GitHub repo of your choice.
 
 Now we're all set to see the magic of our GitHub integration to deploy the Metadata and Migrations to your Cloud project
-by following the steps [here](/hasura-cloud/ci-cd/github-integration.mdx)!
+by following the steps [here](/cloud-ci-cd/github-integration.mdx)!
