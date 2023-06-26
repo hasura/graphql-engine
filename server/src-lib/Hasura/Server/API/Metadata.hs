@@ -177,7 +177,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
         Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
-            liftIO $ action newResourceVersion
+            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache))
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"

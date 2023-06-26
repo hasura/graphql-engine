@@ -28,6 +28,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Execute.Types qualified as SQLTypes
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata.Object (InconsistentMetadata)
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
 import Hasura.Server.Utils
@@ -84,7 +85,7 @@ newtype SchemaHash = SchemaHash {_schemaHash :: T.Text}
 
 type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
 
-type SchemaRegistryAction = Maybe (MetadataResourceVersion -> IO ())
+type SchemaRegistryAction = Maybe (MetadataResourceVersion -> [InconsistentMetadata] -> IO ())
 
 data GQLSchemaInformation = GQLSchemaInformation
   { _gsiSchemaSDL :: SchemaSDL,

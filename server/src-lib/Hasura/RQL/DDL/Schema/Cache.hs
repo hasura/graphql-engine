@@ -271,6 +271,8 @@ instance
     staticConfig <- askCacheStaticConfig
     (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations, _, _) <- get
     let oldMetadataVersion = scMetadataResourceVersion lastBuiltSC
+        -- We are purposely putting (-1) as the metadata resource version here. This is because we want to
+        -- catch error cases in `withSchemaCache(Read)Update`
         metadataWithVersion = MetadataWithResourceVersion newMetadata $ MetadataResourceVersion (-1)
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     storedIntrospection <- loadStoredIntrospection (_cscLogger staticConfig) oldMetadataVersion
@@ -428,7 +430,7 @@ buildSchemaCacheRule ::
   Env.Environment ->
   Maybe SchemaRegistryContext ->
   (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
-buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults lastKnownMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
+buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults interimMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
       metadata@Metadata {..} = overrideMetadataDefaults metadataNoDefaults metadataDefaults
@@ -487,22 +489,6 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
 
       inconsistentQueryCollections = getInconsistentQueryCollections adminIntrospection _metaQueryCollections listedQueryObjects endpoints globalAllowLists
 
-  -- Write the Project Schema information to schema registry service
-  _ <-
-    bindA
-      -< do
-        buildReason <- ask
-        case buildReason of
-          -- If this is a catalog sync then we know for sure that the schema has more chances of being committed as some
-          -- other instance of Hasura has already committed the schema. So we can safely write the schema to the registry
-          -- service.
-          CatalogSync ->
-            for_ schemaRegistryAction $ \action -> do
-              liftIO $ action lastKnownMetadataResourceVersion
-          -- If this is a metadata event then we cannot be sure that the schema will be committed. So we write the schema
-          -- to the registry service only after the schema is committed.
-          CatalogUpdate _ -> pure ()
-
   let schemaCache =
         SchemaCache
           { scSources = _boSources resolvedOutputs,
@@ -535,12 +521,12 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 <> inconsistentQueryCollections,
             scApiLimits = _metaApiLimits,
             scMetricsConfig = _metaMetricsConfig,
-            -- Please note that we are setting the metadata resource version to the last known metadata resource
-            -- version. This might not be the final value of the metadata resource version. This is because, if we are
-            -- in the middle of a metadata operation, we might push the metadata to the database and thus this version
-            -- will be of the older metadata. As a fix, we do update the metadata resource version to the latest value
-            -- after the metadata operation is complete (see the usage of `setMetadataResourceVersionInSchemaCache`).
-            scMetadataResourceVersion = lastKnownMetadataResourceVersion,
+            -- Please note that we are setting the metadata resource version to the last known metadata resource version
+            -- for `CatalogSync` or to an invalid metadata resource version (-1) for `CatalogUpdate`.
+            --
+            -- For, CatalogUpdate, we update the metadata resource version to the latest value after the metadata
+            -- operation is complete (see the usage of `setMetadataResourceVersionInSchemaCache`).
+            scMetadataResourceVersion = interimMetadataResourceVersion,
             scSetGraphqlIntrospectionOptions = _metaSetGraphqlIntrospectionOptions,
             scTlsAllowlist = networkTlsAllowlist _metaNetwork,
             scQueryCollections = _metaQueryCollections,
@@ -549,6 +535,23 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             scSourcePingConfig = buildSourcePingCache _metaSources,
             scOpenTelemetryConfig = openTelemetryInfo
           }
+
+  -- Write the Project Schema information to schema registry service
+  _ <-
+    bindA
+      -< do
+        buildReason <- ask
+        case buildReason of
+          -- If this is a catalog sync then we know for sure that the schema has more chances of being committed as some
+          -- other instance of Hasura has already committed the schema. So we can safely write the schema to the registry
+          -- service.
+          CatalogSync ->
+            for_ schemaRegistryAction $ \action -> do
+              liftIO $ action interimMetadataResourceVersion (scInconsistentObjs schemaCache)
+          -- If this is a metadata event then we cannot be sure that the schema will be committed. So we write the schema
+          -- to the registry service only after the schema is committed.
+          CatalogUpdate _ -> pure ()
+
   returnA -< (schemaCache, (storedIntrospectionStatus, schemaRegistryAction))
   where
     -- See Note [Avoiding GraphQL schema rebuilds when changing irrelevant Metadata]

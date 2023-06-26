@@ -43,7 +43,7 @@ import Hasura.RQL.DML.Update
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion))
+import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion), SchemaCache (scInconsistentObjs))
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
@@ -151,7 +151,7 @@ runQuery appContext schemaCache rqlQuery = do
         Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
-            liftIO $ action newResourceVersion
+            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache'))
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
