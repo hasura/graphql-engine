@@ -192,7 +192,7 @@ withRecordInconsistencies = recordInconsistenciesWith recordInconsistencies
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  tryBuildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> (ValidateNewSchemaCache a) -> m a
+  tryBuildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> ValidateNewSchemaCache a -> m a
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
 buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> m ()
@@ -310,7 +310,10 @@ buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidat
 buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
   metadata <- getMetadata
   let modifiedMetadata = runMetadataModifier metadata
-  buildSchemaCacheWithOptions (CatalogUpdate mempty) cacheInvalidations modifiedMetadata
+  buildSchemaCacheWithOptions
+    (CatalogUpdate mempty)
+    cacheInvalidations
+    modifiedMetadata
   putMetadata modifiedMetadata
 
 buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
@@ -338,7 +341,12 @@ tryBuildSchemaCacheWithModifiers modifiers = do
     metadata <- getMetadata
     foldM (flip ($)) metadata modifiers
 
-  newInconsistentObjects <- tryBuildSchemaCacheWithOptions (CatalogUpdate mempty) mempty modifiedMetadata validateNewSchemaCache
+  newInconsistentObjects <-
+    tryBuildSchemaCacheWithOptions
+      (CatalogUpdate mempty)
+      mempty
+      modifiedMetadata
+      validateNewSchemaCache
   when (newInconsistentObjects == mempty)
     $ putMetadata modifiedMetadata
   pure $ newInconsistentObjects
