@@ -35,7 +35,12 @@ export const fetchRows = async ({
         // Filter out columns that are objects or arrays
         // We do this because generateGraphQLSelectQuery cannot handle those types
         // TODO: Remove this filter once we improve generateGraphQLSelectQuery
-        .filter(isScalarGraphQLType)
+        .filter(column => {
+          if (typeof column.graphQLProperties?.graphQLType !== 'undefined') {
+            return isScalarGraphQLType(column);
+          }
+          return true;
+        })
         .map(column => column.name),
     options,
   });
