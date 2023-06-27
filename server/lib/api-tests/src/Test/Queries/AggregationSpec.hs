@@ -38,8 +38,7 @@ spec = do
               Fixture.customOptions =
                 Just
                   $ Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "BigQuery returns numbers as strings, which means the second test fails"
+                    { Fixture.stringifyNumbers = True
                     }
             },
           (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
@@ -234,6 +233,47 @@ tests = do
                   #{schemaName}_article_aggregate {
                    aggregate {
                       count
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Fetch __typename for an aggregate" \testEnvironment -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      -- SQL Server returns int type when the input is of int type, which is different than the rest.
+      -- https://learn.microsoft.com/en-us/sql/t-sql/functions/avg-transact-sql?view=sql-server-ver16#return-types
+      let avgResult :: String
+          avgResult
+            | fmap BackendType.backendType (getBackendTypeConfig testEnvironment) == Just Fixture.SQLServer = "3"
+            | otherwise = "3.25"
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_article_aggregate:
+                  aggregate:
+                    avg:
+                      rating: #{avgResult}
+                      __typename: #{schemaName}_article_avg_fields
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_article_aggregate {
+                    aggregate {
+                      avg {
+                        rating
+                        __typename
+                      }
                     }
                   }
                 }
