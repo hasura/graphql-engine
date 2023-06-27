@@ -27,7 +27,7 @@
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="Position"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-var">Position</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Position"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-var">Position</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">)</span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942177"><span id="local-6989586621686942186"><span id="local-6989586621686942190"><span class="annot"><span class="annottext">Int -&gt; Position -&gt; ShowS
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942198"><span id="local-6989586621686942207"><span id="local-6989586621686942211"><span class="annot"><span class="annottext">Int -&gt; Position -&gt; ShowS
 [Position] -&gt; ShowS
 Position -&gt; String
 (Int -&gt; Position -&gt; ShowS)
@@ -40,7 +40,7 @@ $cshow :: Position -&gt; String
 show :: Position -&gt; String
 $cshowList :: [Position] -&gt; ShowS
 showList :: [Position] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942194"><span id="local-6989586621686942201"><span class="annot"><span class="annottext">Position -&gt; Position -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942215"><span id="local-6989586621686942222"><span class="annot"><span class="annottext">Position -&gt; Position -&gt; Bool
 (Position -&gt; Position -&gt; Bool)
 -&gt; (Position -&gt; Position -&gt; Bool) -&gt; Eq Position
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -50,22 +50,22 @@ $c/= :: Position -&gt; Position -&gt; Bool
 /= :: Position -&gt; Position -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span id="local-6989586621686942068"><span id="local-6989586621686942071"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#withParsedArray"><span class="hs-identifier hs-type">withParsedArray</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942068"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-32"></span><span id="local-6989586621686942089"><span id="local-6989586621686942092"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#withParsedArray"><span class="hs-identifier hs-type">withParsedArray</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942089"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#Vector"><span class="hs-identifier hs-type">V.Vector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942068"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">J.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942071"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#Vector"><span class="hs-identifier hs-type">V.Vector</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942089"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">J.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942092"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-37"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">J.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942071"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">J.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942092"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
 </span><span id="line-38"></span><span id="withParsedArray"><span class="annot"><span class="annottext">withParsedArray :: forall a b.
 FromJSON a =&gt;
 String -&gt; (Vector a -&gt; Parser b) -&gt; Value -&gt; Parser b
-</span><a href="Hasura.SQL.GeoJSON.html#withParsedArray"><span class="hs-identifier hs-var hs-var">withParsedArray</span></a></span></span><span> </span><span id="local-6989586621686942213"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686942213"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621686942214"><span class="annot"><span class="annottext">Vector a -&gt; Parser b
-</span><a href="#local-6989586621686942214"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.SQL.GeoJSON.html#withParsedArray"><span class="hs-identifier hs-var hs-var">withParsedArray</span></a></span></span><span> </span><span id="local-6989586621686942234"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span id="local-6989586621686942235"><span class="annot"><span class="annottext">Vector a -&gt; Parser b
+</span><a href="#local-6989586621686942235"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; (Array -&gt; Parser b) -&gt; Value -&gt; Parser b
 forall a. String -&gt; (Array -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withArray"><span class="hs-identifier hs-var">J.withArray</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686942213"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Parser a) -&gt; Array -&gt; Parser (Vector a)
+</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Value -&gt; Parser a) -&gt; Array -&gt; Parser (Vector a)
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
@@ -80,10 +80,10 @@ forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
 </span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="annot"><span class="annottext">Vector a -&gt; Parser b
-</span><a href="#local-6989586621686942214"><span class="hs-identifier hs-var">fn</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686942235"><span class="hs-identifier hs-var">fn</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942221"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621686942233"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Position
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942242"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621686942254"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Position
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Vector Double -&gt; Parser Position) -&gt; Value -&gt; Parser Position
 forall a b.
@@ -93,12 +93,12 @@ String -&gt; (Vector a -&gt; Parser b) -&gt; Value -&gt; Parser b
 </span><span class="hs-string">&quot;Position&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Vector Double -&gt; Parser Position) -&gt; Value -&gt; Parser Position)
 -&gt; (Vector Double -&gt; Parser Position) -&gt; Value -&gt; Parser Position
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942234"><span class="annot"><span class="annottext">Vector Double
-</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942255"><span class="annot"><span class="annottext">Vector Double
+</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int
 forall a. Vector a -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#length"><span class="hs-identifier hs-var">V.length</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double
-</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span>
@@ -118,47 +118,47 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Maybe Double -&gt; Position
 </span><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-var">Position</span></a></span><span>
 </span><span id="line-49"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector Double
-</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Double
+</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Double
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector Double
-</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Double
+</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Double
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector Double
-</span><a href="#local-6989586621686942234"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Maybe Double
+</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Double -&gt; Int -&gt; Maybe Double
 forall a. Vector a -&gt; Int -&gt; Maybe a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#%21%3F"><span class="hs-operator hs-var">V.!?</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942241"><span id="local-6989586621686942245"><span id="local-6989586621686942248"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621686942255"><span class="annot"><span class="annottext">toJSON :: Position -&gt; Value
-</span><a href="#local-6989586621686942255"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span> </span><span id="local-6989586621686942257"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621686942257"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942258"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621686942258"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942259"><span class="annot"><span class="annottext">Maybe Double
-</span><a href="#local-6989586621686942259"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942262"><span id="local-6989586621686942266"><span id="local-6989586621686942269"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621686942276"><span class="annot"><span class="annottext">toJSON :: Position -&gt; Value
+</span><a href="#local-6989586621686942276"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span> </span><span id="local-6989586621686942278"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621686942278"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942279"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621686942279"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942280"><span class="annot"><span class="annottext">Maybe Double
+</span><a href="#local-6989586621686942280"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">[Double] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([Double] -&gt; Value) -&gt; [Double] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621686942257"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; [Double] -&gt; [Double]
+</span><a href="#local-6989586621686942278"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; [Double] -&gt; [Double]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621686942258"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; [Double] -&gt; [Double]
+</span><a href="#local-6989586621686942279"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; [Double] -&gt; [Double]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double -&gt; [Double]
 forall a. Maybe a -&gt; [a]
 </span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="annot"><span class="annottext">Maybe Double
-</span><a href="#local-6989586621686942259"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><a href="#local-6989586621686942280"><span class="hs-identifier hs-var">c</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="hs-comment">-- Point, Multipoint</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">newtype</span><span> </span><span id="Point"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Point"><span class="hs-identifier hs-var">Point</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Point"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Point"><span class="hs-identifier hs-var">Point</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPoint"><span class="annot"><span class="annottext">Point -&gt; Position
 </span><a href="Hasura.SQL.GeoJSON.html#unPoint"><span class="hs-identifier hs-var hs-var">unPoint</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942264"><span id="local-6989586621686942268"><span id="local-6989586621686942272"><span class="annot"><span class="annottext">Int -&gt; Point -&gt; ShowS
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942285"><span id="local-6989586621686942289"><span id="local-6989586621686942293"><span class="annot"><span class="annottext">Int -&gt; Point -&gt; ShowS
 [Point] -&gt; ShowS
 Point -&gt; String
 (Int -&gt; Point -&gt; ShowS)
@@ -171,14 +171,14 @@ $cshow :: Point -&gt; String
 show :: Point -&gt; String
 $cshowList :: [Point] -&gt; ShowS
 showList :: [Point] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942275"><span id="local-6989586621686942279"><span class="annot"><span class="annottext">Point -&gt; Point -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942296"><span id="local-6989586621686942300"><span class="annot"><span class="annottext">Point -&gt; Point -&gt; Bool
 (Point -&gt; Point -&gt; Bool) -&gt; (Point -&gt; Point -&gt; Bool) -&gt; Eq Point
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c== :: Point -&gt; Point -&gt; Bool
 == :: Point -&gt; Point -&gt; Bool
 $c/= :: Point -&gt; Point -&gt; Bool
 /= :: Point -&gt; Point -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942284"><span id="local-6989586621686942288"><span id="local-6989586621686942292"><span id="local-6989586621686942296"><span class="annot"><span class="annottext">[Point] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942305"><span id="local-6989586621686942309"><span id="local-6989586621686942313"><span id="local-6989586621686942317"><span class="annot"><span class="annottext">[Point] -&gt; Value
 [Point] -&gt; Encoding
 Point -&gt; Value
 Point -&gt; Encoding
@@ -201,7 +201,7 @@ $ctoJSONList :: [Point] -&gt; Value
 toJSONList :: [Point] -&gt; Value
 $ctoEncodingList :: [Point] -&gt; Encoding
 toEncodingList :: [Point] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942301"><span id="local-6989586621686942305"><span class="annot"><span class="annottext">Value -&gt; Parser [Point]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942322"><span id="local-6989586621686942326"><span class="annot"><span class="annottext">Value -&gt; Parser [Point]
 Value -&gt; Parser Point
 (Value -&gt; Parser Point)
 -&gt; (Value -&gt; Parser [Point]) -&gt; FromJSON Point
@@ -215,7 +215,7 @@ parseJSONList :: Value -&gt; Parser [Point]
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span id="MultiPoint"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPoint"><span class="hs-identifier hs-var">MultiPoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiPoint"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPoint"><span class="hs-identifier hs-var">MultiPoint</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMultiPoint"><span class="annot"><span class="annottext">MultiPoint -&gt; [Position]
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiPoint"><span class="hs-identifier hs-var hs-var">unMultiPoint</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942312"><span id="local-6989586621686942318"><span id="local-6989586621686942322"><span class="annot"><span class="annottext">Int -&gt; MultiPoint -&gt; ShowS
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942333"><span id="local-6989586621686942339"><span id="local-6989586621686942343"><span class="annot"><span class="annottext">Int -&gt; MultiPoint -&gt; ShowS
 [MultiPoint] -&gt; ShowS
 MultiPoint -&gt; String
 (Int -&gt; MultiPoint -&gt; ShowS)
@@ -230,7 +230,7 @@ $cshow :: MultiPoint -&gt; String
 show :: MultiPoint -&gt; String
 $cshowList :: [MultiPoint] -&gt; ShowS
 showList :: [MultiPoint] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942325"><span id="local-6989586621686942331"><span class="annot"><span class="annottext">MultiPoint -&gt; MultiPoint -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942346"><span id="local-6989586621686942352"><span class="annot"><span class="annottext">MultiPoint -&gt; MultiPoint -&gt; Bool
 (MultiPoint -&gt; MultiPoint -&gt; Bool)
 -&gt; (MultiPoint -&gt; MultiPoint -&gt; Bool) -&gt; Eq MultiPoint
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -238,7 +238,7 @@ $c== :: MultiPoint -&gt; MultiPoint -&gt; Bool
 == :: MultiPoint -&gt; MultiPoint -&gt; Bool
 $c/= :: MultiPoint -&gt; MultiPoint -&gt; Bool
 /= :: MultiPoint -&gt; MultiPoint -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942337"><span id="local-6989586621686942342"><span id="local-6989586621686942347"><span id="local-6989586621686942352"><span class="annot"><span class="annottext">[MultiPoint] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942358"><span id="local-6989586621686942363"><span id="local-6989586621686942368"><span id="local-6989586621686942373"><span class="annot"><span class="annottext">[MultiPoint] -&gt; Value
 [MultiPoint] -&gt; Encoding
 MultiPoint -&gt; Value
 MultiPoint -&gt; Encoding
@@ -261,7 +261,7 @@ $ctoJSONList :: [MultiPoint] -&gt; Value
 toJSONList :: [MultiPoint] -&gt; Value
 $ctoEncodingList :: [MultiPoint] -&gt; Encoding
 toEncodingList :: [MultiPoint] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942358"><span id="local-6989586621686942364"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiPoint]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942379"><span id="local-6989586621686942385"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiPoint]
 Value -&gt; Parser MultiPoint
 (Value -&gt; Parser MultiPoint)
 -&gt; (Value -&gt; Parser [MultiPoint]) -&gt; FromJSON MultiPoint
@@ -283,7 +283,7 @@ parseJSONList :: Value -&gt; Parser [MultiPoint]
 </span><span id="line-70"></span><span>    </span><span id="_lsRest"><span class="annot"><span class="annottext">LineString -&gt; [Position]
 </span><a href="Hasura.SQL.GeoJSON.html#_lsRest"><span class="hs-identifier hs-var hs-var">_lsRest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942374"><span id="local-6989586621686942380"><span id="local-6989586621686942384"><span class="annot"><span class="annottext">Int -&gt; LineString -&gt; ShowS
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942395"><span id="local-6989586621686942401"><span id="local-6989586621686942405"><span class="annot"><span class="annottext">Int -&gt; LineString -&gt; ShowS
 [LineString] -&gt; ShowS
 LineString -&gt; String
 (Int -&gt; LineString -&gt; ShowS)
@@ -298,7 +298,7 @@ $cshow :: LineString -&gt; String
 show :: LineString -&gt; String
 $cshowList :: [LineString] -&gt; ShowS
 showList :: [LineString] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942387"><span id="local-6989586621686942392"><span class="annot"><span class="annottext">LineString -&gt; LineString -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942408"><span id="local-6989586621686942413"><span class="annot"><span class="annottext">LineString -&gt; LineString -&gt; Bool
 (LineString -&gt; LineString -&gt; Bool)
 -&gt; (LineString -&gt; LineString -&gt; Bool) -&gt; Eq LineString
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -308,27 +308,27 @@ $c/= :: LineString -&gt; LineString -&gt; Bool
 /= :: LineString -&gt; LineString -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942397"><span id="local-6989586621686942401"><span id="local-6989586621686942404"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621686942408"><span class="annot"><span class="annottext">toJSON :: LineString -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span><span> </span><span id="local-6989586621686942409"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942409"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942410"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942410"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942411"><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621686942411"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942418"><span id="local-6989586621686942422"><span id="local-6989586621686942425"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621686942429"><span class="annot"><span class="annottext">toJSON :: LineString -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span><span> </span><span id="local-6989586621686942430"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942430"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942431"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942431"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942432"><span class="annot"><span class="annottext">[Position]
+</span><a href="#local-6989586621686942432"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">[Position] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([Position] -&gt; Value) -&gt; [Position] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942409"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621686942430"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942410"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621686942431"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621686942411"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><a href="#local-6989586621686942432"><span class="hs-identifier hs-var">rest</span></a></span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942414"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621686942422"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LineString
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942435"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621686942443"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LineString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Vector Position -&gt; Parser LineString)
 -&gt; Value
@@ -343,12 +343,12 @@ String -&gt; (Vector a -&gt; Parser b) -&gt; Value -&gt; Parser b
 -&gt; Value
 -&gt; Parser LineString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942423"><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942423"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942444"><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942444"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-80"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int
 forall a. Vector a -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#length"><span class="hs-identifier hs-var">V.length</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942423"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621686942444"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span>
@@ -359,20 +359,20 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-string">&quot;A LineString needs at least 2 Positions&quot;</span></span><span>
 </span><span id="line-82"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- here we are ignoring anything past 3 elements</span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942424"><span class="annot"><span class="annottext">fstPos :: Position
-</span><a href="#local-6989586621686942424"><span class="hs-identifier hs-var hs-var">fstPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942423"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
+</span><span id="line-84"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942445"><span class="annot"><span class="annottext">fstPos :: Position
+</span><a href="#local-6989586621686942445"><span class="hs-identifier hs-var hs-var">fstPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942444"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-85"></span><span>            </span><span id="local-6989586621686942425"><span class="annot"><span class="annottext">sndPos :: Position
-</span><a href="#local-6989586621686942425"><span class="hs-identifier hs-var hs-var">sndPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942423"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
+</span><span id="line-85"></span><span>            </span><span id="local-6989586621686942446"><span class="annot"><span class="annottext">sndPos :: Position
+</span><a href="#local-6989586621686942446"><span class="hs-identifier hs-var hs-var">sndPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942444"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
-</span><span id="line-86"></span><span>            </span><span id="local-6989586621686942426"><span class="annot"><span class="annottext">rest :: [Position]
-</span><a href="#local-6989586621686942426"><span class="hs-identifier hs-var hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; [Position]
+</span><span id="line-86"></span><span>            </span><span id="local-6989586621686942447"><span class="annot"><span class="annottext">rest :: [Position]
+</span><a href="#local-6989586621686942447"><span class="hs-identifier hs-var hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; [Position]
 forall a. Vector a -&gt; [a]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#toList"><span class="hs-identifier hs-var">V.toList</span></a></span><span> </span><span class="annot"><span class="annottext">(Vector Position -&gt; [Position]) -&gt; Vector Position -&gt; [Position]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -380,7 +380,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Int -&gt; Vector a -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#drop"><span class="hs-identifier hs-var">V.drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942423"><span class="hs-identifier hs-var">arr</span></a></span><span>
+</span><a href="#local-6989586621686942444"><span class="hs-identifier hs-var">arr</span></a></span><span>
 </span><span id="line-87"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">LineString -&gt; Parser LineString
 forall a. a -&gt; Parser a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -389,13 +389,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Position -&gt; Position -&gt; [Position] -&gt; LineString
 </span><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-var">LineString</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942424"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942425"><span class="hs-identifier hs-var">sndPos</span></a></span><span> </span><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621686942426"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><a href="#local-6989586621686942445"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942446"><span class="hs-identifier hs-var">sndPos</span></a></span><span> </span><span class="annot"><span class="annottext">[Position]
+</span><a href="#local-6989586621686942447"><span class="hs-identifier hs-var">rest</span></a></span><span>
 </span><span id="line-88"></span><span>
 </span><span id="line-89"></span><span class="hs-keyword">newtype</span><span> </span><span id="MultiLineString"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiLineString"><span class="hs-identifier hs-var">MultiLineString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiLineString"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiLineString"><span class="hs-identifier hs-var">MultiLineString</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMultiLineString"><span class="annot"><span class="annottext">MultiLineString -&gt; [LineString]
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiLineString"><span class="hs-identifier hs-var hs-var">unMultiLineString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">LineString</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942432"><span id="local-6989586621686942437"><span id="local-6989586621686942441"><span class="annot"><span class="annottext">Int -&gt; MultiLineString -&gt; ShowS
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942453"><span id="local-6989586621686942458"><span id="local-6989586621686942462"><span class="annot"><span class="annottext">Int -&gt; MultiLineString -&gt; ShowS
 [MultiLineString] -&gt; ShowS
 MultiLineString -&gt; String
 (Int -&gt; MultiLineString -&gt; ShowS)
@@ -410,7 +410,7 @@ $cshow :: MultiLineString -&gt; String
 show :: MultiLineString -&gt; String
 $cshowList :: [MultiLineString] -&gt; ShowS
 showList :: [MultiLineString] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942444"><span id="local-6989586621686942449"><span class="annot"><span class="annottext">MultiLineString -&gt; MultiLineString -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942465"><span id="local-6989586621686942470"><span class="annot"><span class="annottext">MultiLineString -&gt; MultiLineString -&gt; Bool
 (MultiLineString -&gt; MultiLineString -&gt; Bool)
 -&gt; (MultiLineString -&gt; MultiLineString -&gt; Bool)
 -&gt; Eq MultiLineString
@@ -419,7 +419,7 @@ $c== :: MultiLineString -&gt; MultiLineString -&gt; Bool
 == :: MultiLineString -&gt; MultiLineString -&gt; Bool
 $c/= :: MultiLineString -&gt; MultiLineString -&gt; Bool
 /= :: MultiLineString -&gt; MultiLineString -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942455"><span id="local-6989586621686942460"><span id="local-6989586621686942465"><span id="local-6989586621686942470"><span class="annot"><span class="annottext">[MultiLineString] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942476"><span id="local-6989586621686942481"><span id="local-6989586621686942486"><span id="local-6989586621686942491"><span class="annot"><span class="annottext">[MultiLineString] -&gt; Value
 [MultiLineString] -&gt; Encoding
 MultiLineString -&gt; Value
 MultiLineString -&gt; Encoding
@@ -442,7 +442,7 @@ $ctoJSONList :: [MultiLineString] -&gt; Value
 toJSONList :: [MultiLineString] -&gt; Value
 $ctoEncodingList :: [MultiLineString] -&gt; Encoding
 toEncodingList :: [MultiLineString] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942476"><span id="local-6989586621686942481"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiLineString]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942497"><span id="local-6989586621686942502"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiLineString]
 Value -&gt; Parser MultiLineString
 (Value -&gt; Parser MultiLineString)
 -&gt; (Value -&gt; Parser [MultiLineString]) -&gt; FromJSON MultiLineString
@@ -466,7 +466,7 @@ parseJSONList :: Value -&gt; Parser [MultiLineString]
 </span><span id="line-98"></span><span>    </span><span id="_pRest"><span class="annot"><span class="annottext">LinearRing -&gt; [Position]
 </span><a href="Hasura.SQL.GeoJSON.html#_pRest"><span class="hs-identifier hs-var hs-var">_pRest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">Position</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942492"><span id="local-6989586621686942499"><span id="local-6989586621686942503"><span class="annot"><span class="annottext">Int -&gt; LinearRing -&gt; ShowS
+</span><span id="line-100"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942513"><span id="local-6989586621686942520"><span id="local-6989586621686942524"><span class="annot"><span class="annottext">Int -&gt; LinearRing -&gt; ShowS
 [LinearRing] -&gt; ShowS
 LinearRing -&gt; String
 (Int -&gt; LinearRing -&gt; ShowS)
@@ -481,7 +481,7 @@ $cshow :: LinearRing -&gt; String
 show :: LinearRing -&gt; String
 $cshowList :: [LinearRing] -&gt; ShowS
 showList :: [LinearRing] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942506"><span id="local-6989586621686942512"><span class="annot"><span class="annottext">LinearRing -&gt; LinearRing -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942527"><span id="local-6989586621686942533"><span class="annot"><span class="annottext">LinearRing -&gt; LinearRing -&gt; Bool
 (LinearRing -&gt; LinearRing -&gt; Bool)
 -&gt; (LinearRing -&gt; LinearRing -&gt; Bool) -&gt; Eq LinearRing
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -491,8 +491,8 @@ $c/= :: LinearRing -&gt; LinearRing -&gt; Bool
 /= :: LinearRing -&gt; LinearRing -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942517"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621686942530"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LinearRing
+</span><span id="line-102"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942538"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621686942551"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser LinearRing
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Vector Position -&gt; Parser LinearRing)
 -&gt; Value
@@ -507,12 +507,12 @@ String -&gt; (Vector a -&gt; Parser b) -&gt; Value -&gt; Parser b
 -&gt; Value
 -&gt; Parser LinearRing
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942531"><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686942552"><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-104"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int
 forall a. Vector a -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#length"><span class="hs-identifier hs-var">V.length</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">4</span></span><span>
@@ -523,42 +523,42 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-string">&quot;A LinearRing needs at least 4 Positions&quot;</span></span><span>
 </span><span id="line-106"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="hs-comment">-- here we are ignoring anything past 3 elements</span><span>
 </span><span id="line-107"></span><span>      </span><span class="hs-keyword">do</span><span>
-</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942532"><span class="annot"><span class="annottext">fstPos :: Position
-</span><a href="#local-6989586621686942532"><span class="hs-identifier hs-var hs-var">fstPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
+</span><span id="line-108"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942553"><span class="annot"><span class="annottext">fstPos :: Position
+</span><a href="#local-6989586621686942553"><span class="hs-identifier hs-var hs-var">fstPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-109"></span><span>            </span><span id="local-6989586621686942533"><span class="annot"><span class="annottext">sndPos :: Position
-</span><a href="#local-6989586621686942533"><span class="hs-identifier hs-var hs-var">sndPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
+</span><span id="line-109"></span><span>            </span><span id="local-6989586621686942554"><span class="annot"><span class="annottext">sndPos :: Position
+</span><a href="#local-6989586621686942554"><span class="hs-identifier hs-var hs-var">sndPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
-</span><span id="line-110"></span><span>            </span><span id="local-6989586621686942534"><span class="annot"><span class="annottext">thrPos :: Position
-</span><a href="#local-6989586621686942534"><span class="hs-identifier hs-var hs-var">thrPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
+</span><span id="line-110"></span><span>            </span><span id="local-6989586621686942555"><span class="annot"><span class="annottext">thrPos :: Position
+</span><a href="#local-6989586621686942555"><span class="hs-identifier hs-var hs-var">thrPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Int -&gt; Position
 forall a. Vector a -&gt; Int -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#unsafeIndex"><span class="hs-operator hs-var">`V.unsafeIndex`</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">2</span></span><span>
-</span><span id="line-111"></span><span>            </span><span id="local-6989586621686942535"><span class="annot"><span class="annottext">rest :: Vector Position
-</span><a href="#local-6989586621686942535"><span class="hs-identifier hs-var hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Vector Position -&gt; Vector Position
+</span><span id="line-111"></span><span>            </span><span id="local-6989586621686942556"><span class="annot"><span class="annottext">rest :: Vector Position
+</span><a href="#local-6989586621686942556"><span class="hs-identifier hs-var hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Vector Position -&gt; Vector Position
 forall a. Int -&gt; Vector a -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#drop"><span class="hs-identifier hs-var">V.drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942531"><span class="hs-identifier hs-var">arr</span></a></span><span>
-</span><span id="line-112"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942536"><span class="annot"><span class="annottext">lastPos :: Position
-</span><a href="#local-6989586621686942536"><span class="hs-identifier hs-var hs-var">lastPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Position
+</span><a href="#local-6989586621686942552"><span class="hs-identifier hs-var">arr</span></a></span><span>
+</span><span id="line-112"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621686942557"><span class="annot"><span class="annottext">lastPos :: Position
+</span><a href="#local-6989586621686942557"><span class="hs-identifier hs-var hs-var">lastPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Position
 forall a. Vector a -&gt; a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#last"><span class="hs-identifier hs-var">V.last</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942535"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><a href="#local-6989586621686942556"><span class="hs-identifier hs-var">rest</span></a></span><span>
 </span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942532"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; Position -&gt; Bool
+</span><a href="#local-6989586621686942553"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; Position -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942536"><span class="hs-identifier hs-var">lastPos</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621686942557"><span class="hs-identifier hs-var">lastPos</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-114"></span><span>          </span><span class="annot"><span class="annottext">(Parser () -&gt; Parser ()) -&gt; Parser () -&gt; Parser ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ()
@@ -574,9 +574,9 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Position -&gt; Position -&gt; Position -&gt; [Position] -&gt; LinearRing
 </span><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-var">LinearRing</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942532"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942533"><span class="hs-identifier hs-var">sndPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942534"><span class="hs-identifier hs-var">thrPos</span></a></span><span> </span><span class="annot"><span class="annottext">([Position] -&gt; LinearRing) -&gt; [Position] -&gt; LinearRing
+</span><a href="#local-6989586621686942553"><span class="hs-identifier hs-var">fstPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942554"><span class="hs-identifier hs-var">sndPos</span></a></span><span> </span><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942555"><span class="hs-identifier hs-var">thrPos</span></a></span><span> </span><span class="annot"><span class="annottext">([Position] -&gt; LinearRing) -&gt; [Position] -&gt; LinearRing
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; [Position]
 forall a. Vector a -&gt; [a]
@@ -585,15 +585,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Vector Position
 forall a. Vector a -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#init"><span class="hs-identifier hs-var">V.init</span></a></span><span> </span><span class="annot"><span class="annottext">Vector Position
-</span><a href="#local-6989586621686942535"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><a href="#local-6989586621686942556"><span class="hs-identifier hs-var">rest</span></a></span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942542"><span id="local-6989586621686942546"><span id="local-6989586621686942549"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621686942556"><span class="annot"><span class="annottext">toJSON :: LinearRing -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span><span> </span><span id="local-6989586621686942557"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942557"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942558"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942558"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942559"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942559"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621686942560"><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621686942560"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942563"><span id="local-6989586621686942567"><span id="local-6989586621686942570"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621686942577"><span class="annot"><span class="annottext">toJSON :: LinearRing -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span><span> </span><span id="local-6989586621686942578"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942578"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621686942579"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942579"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621686942580"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942580"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621686942581"><span class="annot"><span class="annottext">[Position]
+</span><a href="#local-6989586621686942581"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">Vector Position -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Vector Position -&gt; Value) -&gt; Vector Position -&gt; Value
@@ -601,21 +601,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Position] -&gt; Vector Position
 forall a. [a] -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#fromList"><span class="hs-identifier hs-var">V.fromList</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942557"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942558"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942559"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Vector Position -&gt; Vector Position
+</span><a href="#local-6989586621686942578"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942579"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621686942580"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Vector Position -&gt; Vector Position
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; Vector Position
 forall a. [a] -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#fromList"><span class="hs-identifier hs-var">V.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621686942560"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Position -&gt; Vector Position
+</span><a href="#local-6989586621686942581"><span class="hs-identifier hs-var">rest</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Vector Position -&gt; Position -&gt; Vector Position
 forall a. Vector a -&gt; a -&gt; Vector a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/vector-0.12.3.1-f68b0d44d54e94bb7480a36606587ee8e0899ec052c8c75916005374191a9ebc/share/doc/html/src/Data.Vector.html#snoc"><span class="hs-operator hs-var">`V.snoc`</span></a></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621686942557"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621686942578"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-keyword">newtype</span><span> </span><span id="Polygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Polygon"><span class="hs-identifier hs-var">Polygon</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Polygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Polygon"><span class="hs-identifier hs-var">Polygon</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unPolygon"><span class="annot"><span class="annottext">Polygon -&gt; [LinearRing]
 </span><a href="Hasura.SQL.GeoJSON.html#unPolygon"><span class="hs-identifier hs-var hs-var">unPolygon</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">LinearRing</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-122"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942566"><span id="local-6989586621686942571"><span id="local-6989586621686942575"><span class="annot"><span class="annottext">Int -&gt; Polygon -&gt; ShowS
+</span><span id="line-122"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942587"><span id="local-6989586621686942592"><span id="local-6989586621686942596"><span class="annot"><span class="annottext">Int -&gt; Polygon -&gt; ShowS
 [Polygon] -&gt; ShowS
 Polygon -&gt; String
 (Int -&gt; Polygon -&gt; ShowS)
@@ -628,7 +628,7 @@ $cshow :: Polygon -&gt; String
 show :: Polygon -&gt; String
 $cshowList :: [Polygon] -&gt; ShowS
 showList :: [Polygon] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942578"><span id="local-6989586621686942583"><span class="annot"><span class="annottext">Polygon -&gt; Polygon -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942599"><span id="local-6989586621686942604"><span class="annot"><span class="annottext">Polygon -&gt; Polygon -&gt; Bool
 (Polygon -&gt; Polygon -&gt; Bool)
 -&gt; (Polygon -&gt; Polygon -&gt; Bool) -&gt; Eq Polygon
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -636,7 +636,7 @@ $c== :: Polygon -&gt; Polygon -&gt; Bool
 == :: Polygon -&gt; Polygon -&gt; Bool
 $c/= :: Polygon -&gt; Polygon -&gt; Bool
 /= :: Polygon -&gt; Polygon -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942589"><span id="local-6989586621686942594"><span id="local-6989586621686942599"><span id="local-6989586621686942604"><span class="annot"><span class="annottext">[Polygon] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942610"><span id="local-6989586621686942615"><span id="local-6989586621686942620"><span id="local-6989586621686942625"><span class="annot"><span class="annottext">[Polygon] -&gt; Value
 [Polygon] -&gt; Encoding
 Polygon -&gt; Value
 Polygon -&gt; Encoding
@@ -659,7 +659,7 @@ $ctoJSONList :: [Polygon] -&gt; Value
 toJSONList :: [Polygon] -&gt; Value
 $ctoEncodingList :: [Polygon] -&gt; Encoding
 toEncodingList :: [Polygon] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942610"><span id="local-6989586621686942615"><span class="annot"><span class="annottext">Value -&gt; Parser [Polygon]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942631"><span id="local-6989586621686942636"><span class="annot"><span class="annottext">Value -&gt; Parser [Polygon]
 Value -&gt; Parser Polygon
 (Value -&gt; Parser Polygon)
 -&gt; (Value -&gt; Parser [Polygon]) -&gt; FromJSON Polygon
@@ -673,7 +673,7 @@ parseJSONList :: Value -&gt; Parser [Polygon]
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-keyword">newtype</span><span> </span><span id="MultiPolygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPolygon"><span class="hs-identifier hs-var">MultiPolygon</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiPolygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPolygon"><span class="hs-identifier hs-var">MultiPolygon</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unMultiPolygon"><span class="annot"><span class="annottext">MultiPolygon -&gt; [Polygon]
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiPolygon"><span class="hs-identifier hs-var hs-var">unMultiPolygon</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Polygon"><span class="hs-identifier hs-type">Polygon</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942623"><span id="local-6989586621686942628"><span id="local-6989586621686942632"><span class="annot"><span class="annottext">Int -&gt; MultiPolygon -&gt; ShowS
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942644"><span id="local-6989586621686942649"><span id="local-6989586621686942653"><span class="annot"><span class="annottext">Int -&gt; MultiPolygon -&gt; ShowS
 [MultiPolygon] -&gt; ShowS
 MultiPolygon -&gt; String
 (Int -&gt; MultiPolygon -&gt; ShowS)
@@ -688,7 +688,7 @@ $cshow :: MultiPolygon -&gt; String
 show :: MultiPolygon -&gt; String
 $cshowList :: [MultiPolygon] -&gt; ShowS
 showList :: [MultiPolygon] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942635"><span id="local-6989586621686942640"><span class="annot"><span class="annottext">MultiPolygon -&gt; MultiPolygon -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942656"><span id="local-6989586621686942661"><span class="annot"><span class="annottext">MultiPolygon -&gt; MultiPolygon -&gt; Bool
 (MultiPolygon -&gt; MultiPolygon -&gt; Bool)
 -&gt; (MultiPolygon -&gt; MultiPolygon -&gt; Bool) -&gt; Eq MultiPolygon
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -696,7 +696,7 @@ $c== :: MultiPolygon -&gt; MultiPolygon -&gt; Bool
 == :: MultiPolygon -&gt; MultiPolygon -&gt; Bool
 $c/= :: MultiPolygon -&gt; MultiPolygon -&gt; Bool
 /= :: MultiPolygon -&gt; MultiPolygon -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942646"><span id="local-6989586621686942651"><span id="local-6989586621686942656"><span id="local-6989586621686942661"><span class="annot"><span class="annottext">[MultiPolygon] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942667"><span id="local-6989586621686942672"><span id="local-6989586621686942677"><span id="local-6989586621686942682"><span class="annot"><span class="annottext">[MultiPolygon] -&gt; Value
 [MultiPolygon] -&gt; Encoding
 MultiPolygon -&gt; Value
 MultiPolygon -&gt; Encoding
@@ -719,7 +719,7 @@ $ctoJSONList :: [MultiPolygon] -&gt; Value
 toJSONList :: [MultiPolygon] -&gt; Value
 $ctoEncodingList :: [MultiPolygon] -&gt; Encoding
 toEncodingList :: [MultiPolygon] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942667"><span id="local-6989586621686942672"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiPolygon]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942688"><span id="local-6989586621686942693"><span class="annot"><span class="annottext">Value -&gt; Parser [MultiPolygon]
 Value -&gt; Parser MultiPolygon
 (Value -&gt; Parser MultiPolygon)
 -&gt; (Value -&gt; Parser [MultiPolygon]) -&gt; FromJSON MultiPolygon
@@ -737,7 +737,7 @@ parseJSONList :: Value -&gt; Parser [MultiPolygon]
 </span><span id="line-130"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cnpName"><span class="annot"><span class="annottext">CRSNameProps -&gt; Text
 </span><a href="Hasura.SQL.GeoJSON.html#_cnpName"><span class="hs-identifier hs-var hs-var">_cnpName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-131"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942680"><span id="local-6989586621686942685"><span id="local-6989586621686942689"><span class="annot"><span class="annottext">Int -&gt; CRSNameProps -&gt; ShowS
+</span><span id="line-132"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942701"><span id="local-6989586621686942706"><span id="local-6989586621686942710"><span class="annot"><span class="annottext">Int -&gt; CRSNameProps -&gt; ShowS
 [CRSNameProps] -&gt; ShowS
 CRSNameProps -&gt; String
 (Int -&gt; CRSNameProps -&gt; ShowS)
@@ -752,7 +752,7 @@ $cshow :: CRSNameProps -&gt; String
 show :: CRSNameProps -&gt; String
 $cshowList :: [CRSNameProps] -&gt; ShowS
 showList :: [CRSNameProps] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942692"><span id="local-6989586621686942696"><span class="annot"><span class="annottext">CRSNameProps -&gt; CRSNameProps -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942713"><span id="local-6989586621686942717"><span class="annot"><span class="annottext">CRSNameProps -&gt; CRSNameProps -&gt; Bool
 (CRSNameProps -&gt; CRSNameProps -&gt; Bool)
 -&gt; (CRSNameProps -&gt; CRSNameProps -&gt; Bool) -&gt; Eq CRSNameProps
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -768,7 +768,7 @@ $c/= :: CRSNameProps -&gt; CRSNameProps -&gt; Bool
 </span><span id="line-136"></span><span>    </span><span id="_clpType"><span class="annot"><span class="annottext">CRSLinkProps -&gt; Maybe Text
 </span><a href="Hasura.SQL.GeoJSON.html#_clpType"><span class="hs-identifier hs-var hs-var">_clpType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942703"><span id="local-6989586621686942708"><span id="local-6989586621686942712"><span class="annot"><span class="annottext">Int -&gt; CRSLinkProps -&gt; ShowS
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942724"><span id="local-6989586621686942729"><span id="local-6989586621686942733"><span class="annot"><span class="annottext">Int -&gt; CRSLinkProps -&gt; ShowS
 [CRSLinkProps] -&gt; ShowS
 CRSLinkProps -&gt; String
 (Int -&gt; CRSLinkProps -&gt; ShowS)
@@ -783,7 +783,7 @@ $cshow :: CRSLinkProps -&gt; String
 show :: CRSLinkProps -&gt; String
 $cshowList :: [CRSLinkProps] -&gt; ShowS
 showList :: [CRSLinkProps] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942715"><span id="local-6989586621686942719"><span class="annot"><span class="annottext">CRSLinkProps -&gt; CRSLinkProps -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942736"><span id="local-6989586621686942740"><span class="annot"><span class="annottext">CRSLinkProps -&gt; CRSLinkProps -&gt; Bool
 (CRSLinkProps -&gt; CRSLinkProps -&gt; Bool)
 -&gt; (CRSLinkProps -&gt; CRSLinkProps -&gt; Bool) -&gt; Eq CRSLinkProps
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -796,7 +796,7 @@ $c/= :: CRSLinkProps -&gt; CRSLinkProps -&gt; Bool
 </span><span id="line-140"></span><span class="hs-keyword">data</span><span> </span><span id="CRS"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRS"><span class="hs-identifier hs-var">CRS</span></a></span></span><span>
 </span><span id="line-141"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CRSName"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRSName"><span class="hs-identifier hs-var">CRSName</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRSNameProps"><span class="hs-identifier hs-type">CRSNameProps</span></a></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CRSLink"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRSLink"><span class="hs-identifier hs-var">CRSLink</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRSLinkProps"><span class="hs-identifier hs-type">CRSLinkProps</span></a></span><span>
-</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942725"><span id="local-6989586621686942731"><span id="local-6989586621686942735"><span class="annot"><span class="annottext">Int -&gt; CRS -&gt; ShowS
+</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942746"><span id="local-6989586621686942752"><span id="local-6989586621686942756"><span class="annot"><span class="annottext">Int -&gt; CRS -&gt; ShowS
 [CRS] -&gt; ShowS
 CRS -&gt; String
 (Int -&gt; CRS -&gt; ShowS)
@@ -809,7 +809,7 @@ $cshow :: CRS -&gt; String
 show :: CRS -&gt; String
 $cshowList :: [CRS] -&gt; ShowS
 showList :: [CRS] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942738"><span id="local-6989586621686942742"><span class="annot"><span class="annottext">CRS -&gt; CRS -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942759"><span id="local-6989586621686942763"><span class="annot"><span class="annottext">CRS -&gt; CRS -&gt; Bool
 (CRS -&gt; CRS -&gt; Bool) -&gt; (CRS -&gt; CRS -&gt; Bool) -&gt; Eq CRS
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c== :: CRS -&gt; CRS -&gt; Bool
@@ -818,9 +818,9 @@ $c/= :: CRS -&gt; CRS -&gt; Bool
 /= :: CRS -&gt; CRS -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span class="hs-special">$</span><span id="local-6989586621686942746"><span id="local-6989586621686942754"><span id="local-6989586621686942758"><span id="local-6989586621686942767"><span id="local-6989586621686942773"><span id="local-6989586621686942777"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CRSNameProps</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
-</span><span id="line-146"></span><span class="hs-special">$</span><span id="local-6989586621686942799"><span id="local-6989586621686942809"><span id="local-6989586621686942813"><span id="local-6989586621686942824"><span id="local-6989586621686942832"><span id="local-6989586621686942836"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CRSLinkProps</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
-</span><span id="line-147"></span><span class="hs-special">$</span><span id="local-6989586621686942850"><span id="local-6989586621686942867"><span id="local-6989586621686942871"><span id="local-6989586621686942884"><span id="local-6989586621686942893"><span id="local-6989586621686942897"><span class="hs-special">(</span><span> </span><span class="hs-identifier">J.deriveJSON</span><span>
+</span><span id="line-145"></span><span class="hs-special">$</span><span id="local-6989586621686942767"><span id="local-6989586621686942775"><span id="local-6989586621686942779"><span id="local-6989586621686942788"><span id="local-6989586621686942794"><span id="local-6989586621686942798"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CRSNameProps</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-146"></span><span class="hs-special">$</span><span id="local-6989586621686942820"><span id="local-6989586621686942830"><span id="local-6989586621686942834"><span id="local-6989586621686942845"><span id="local-6989586621686942853"><span id="local-6989586621686942857"><span class="hs-special">(</span><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">CRSLinkProps</span><span class="hs-special">)</span></span></span></span></span></span></span><span>
+</span><span id="line-147"></span><span class="hs-special">$</span><span id="local-6989586621686942871"><span id="local-6989586621686942888"><span id="local-6989586621686942892"><span id="local-6989586621686942905"><span id="local-6989586621686942914"><span id="local-6989586621686942918"><span class="hs-special">(</span><span> </span><span class="hs-identifier">J.deriveJSON</span><span>
 </span><span id="line-148"></span><span>     </span><span class="hs-identifier">J.defaultOptions</span><span>
 </span><span id="line-149"></span><span>       </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">J.constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">J.camelCase</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">3</span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>         </span><span class="hs-identifier">J.sumEncoding</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">J.TaggedObject</span><span> </span><span class="hs-string">&quot;type&quot;</span><span> </span><span class="hs-string">&quot;properties&quot;</span><span>
@@ -834,7 +834,7 @@ $c/= :: CRS -&gt; CRS -&gt; Bool
 </span><span id="line-157"></span><span>    </span><span id="_gwcCrs"><span class="annot"><span class="annottext">GeometryWithCRS -&gt; Maybe CRS
 </span><a href="Hasura.SQL.GeoJSON.html#_gwcCrs"><span class="hs-identifier hs-var hs-var">_gwcCrs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRS"><span class="hs-identifier hs-type">CRS</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-159"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942926"><span id="local-6989586621686942933"><span id="local-6989586621686942937"><span class="annot"><span class="annottext">Int -&gt; GeometryWithCRS -&gt; ShowS
+</span><span id="line-159"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686942947"><span id="local-6989586621686942954"><span id="local-6989586621686942958"><span class="annot"><span class="annottext">Int -&gt; GeometryWithCRS -&gt; ShowS
 [GeometryWithCRS] -&gt; ShowS
 GeometryWithCRS -&gt; String
 (Int -&gt; GeometryWithCRS -&gt; ShowS)
@@ -849,7 +849,7 @@ $cshow :: GeometryWithCRS -&gt; String
 show :: GeometryWithCRS -&gt; String
 $cshowList :: [GeometryWithCRS] -&gt; ShowS
 showList :: [GeometryWithCRS] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942940"><span id="local-6989586621686942946"><span class="annot"><span class="annottext">GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686942961"><span id="local-6989586621686942967"><span class="annot"><span class="annottext">GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool
 (GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool)
 -&gt; (GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool)
 -&gt; Eq GeometryWithCRS
@@ -860,11 +860,11 @@ $c/= :: GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool
 /= :: GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-160"></span><span>
-</span><span id="line-161"></span><span id="local-6989586621686942163"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-type">encToCoords</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942163"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686942163"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRS"><span class="hs-identifier hs-type">CRS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
+</span><span id="line-161"></span><span id="local-6989586621686942184"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-type">encToCoords</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621686942184"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621686942184"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#CRS"><span class="hs-identifier hs-type">CRS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span></span><span>
 </span><span id="line-162"></span><span id="encToCoords"><span class="annot"><span class="annottext">encToCoords :: forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
-</span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var hs-var">encToCoords</span></a></span></span><span> </span><span id="local-6989586621686942970"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686942970"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621686942971"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686942971"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var hs-var">encToCoords</span></a></span></span><span> </span><span id="local-6989586621686942991"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621686942991"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621686942992"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621686942992"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-163"></span><span>  </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
@@ -872,84 +872,84 @@ $c/= :: GeometryWithCRS -&gt; GeometryWithCRS -&gt; Bool
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686942970"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621686942991"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; a -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686942971"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-164"></span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span id="local-6989586621686942974"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686942974"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621686942975"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686942975"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621686942976"><span class="annot"><span class="annottext">CRS
-</span><a href="#local-6989586621686942976"><span class="hs-identifier hs-var">crs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621686942992"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-164"></span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span id="local-6989586621686942995"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621686942995"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621686942996"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621686942996"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621686942997"><span class="annot"><span class="annottext">CRS
+</span><a href="#local-6989586621686942997"><span class="hs-identifier hs-var">crs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-165"></span><span>  </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621686942974"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621686942995"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; a -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621686942975"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621686942996"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;crs&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; CRS -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">CRS
-</span><a href="#local-6989586621686942976"><span class="hs-identifier hs-var">crs</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621686942997"><span class="hs-identifier hs-var">crs</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-166"></span><span>
-</span><span id="line-167"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686942979"><span id="local-6989586621686942983"><span id="local-6989586621686942986"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-168"></span><span>  </span><span id="local-6989586621686943011"><span class="annot"><span class="annottext">toJSON :: GeometryWithCRS -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span><span> </span><span id="local-6989586621686943012"><span class="annot"><span class="annottext">Geometry
-</span><a href="#local-6989586621686943012"><span class="hs-identifier hs-var">geom</span></a></span></span><span> </span><span id="local-6989586621686943013"><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Geometry
-</span><a href="#local-6989586621686943012"><span class="hs-identifier hs-var">geom</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-169"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPoint"><span class="hs-identifier hs-type">GPoint</span></a></span><span> </span><span id="local-6989586621686943015"><span class="annot"><span class="annottext">Point
-</span><a href="#local-6989586621686943015"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Point -&gt; Maybe CRS -&gt; Value
+</span><span id="line-167"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686943000"><span id="local-6989586621686943004"><span id="local-6989586621686943007"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-168"></span><span>  </span><span id="local-6989586621686943032"><span class="annot"><span class="annottext">toJSON :: GeometryWithCRS -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span><span> </span><span id="local-6989586621686943033"><span class="annot"><span class="annottext">Geometry
+</span><a href="#local-6989586621686943033"><span class="hs-identifier hs-var">geom</span></a></span></span><span> </span><span id="local-6989586621686943034"><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Geometry
+</span><a href="#local-6989586621686943033"><span class="hs-identifier hs-var">geom</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-169"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPoint"><span class="hs-identifier hs-type">GPoint</span></a></span><span> </span><span id="local-6989586621686943036"><span class="annot"><span class="annottext">Point
+</span><a href="#local-6989586621686943036"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Point -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Point&quot;</span></span><span> </span><span class="annot"><span class="annottext">Point
-</span><a href="#local-6989586621686943015"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-170"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPoint"><span class="hs-identifier hs-type">GMultiPoint</span></a></span><span> </span><span id="local-6989586621686943017"><span class="annot"><span class="annottext">MultiPoint
-</span><a href="#local-6989586621686943017"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiPoint -&gt; Maybe CRS -&gt; Value
+</span><a href="#local-6989586621686943036"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-170"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPoint"><span class="hs-identifier hs-type">GMultiPoint</span></a></span><span> </span><span id="local-6989586621686943038"><span class="annot"><span class="annottext">MultiPoint
+</span><a href="#local-6989586621686943038"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiPoint -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MultiPoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">MultiPoint
-</span><a href="#local-6989586621686943017"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-171"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GLineString"><span class="hs-identifier hs-type">GLineString</span></a></span><span> </span><span id="local-6989586621686943019"><span class="annot"><span class="annottext">LineString
-</span><a href="#local-6989586621686943019"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; LineString -&gt; Maybe CRS -&gt; Value
+</span><a href="#local-6989586621686943038"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-171"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GLineString"><span class="hs-identifier hs-type">GLineString</span></a></span><span> </span><span id="local-6989586621686943040"><span class="annot"><span class="annottext">LineString
+</span><a href="#local-6989586621686943040"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; LineString -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;LineString&quot;</span></span><span> </span><span class="annot"><span class="annottext">LineString
-</span><a href="#local-6989586621686943019"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-172"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiLineString"><span class="hs-identifier hs-type">GMultiLineString</span></a></span><span> </span><span id="local-6989586621686943021"><span class="annot"><span class="annottext">MultiLineString
-</span><a href="#local-6989586621686943021"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiLineString -&gt; Maybe CRS -&gt; Value
+</span><a href="#local-6989586621686943040"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiLineString"><span class="hs-identifier hs-type">GMultiLineString</span></a></span><span> </span><span id="local-6989586621686943042"><span class="annot"><span class="annottext">MultiLineString
+</span><a href="#local-6989586621686943042"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiLineString -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MultiLineString&quot;</span></span><span> </span><span class="annot"><span class="annottext">MultiLineString
-</span><a href="#local-6989586621686943021"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-173"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-type">GPolygon</span></a></span><span> </span><span id="local-6989586621686943023"><span class="annot"><span class="annottext">Polygon
-</span><a href="#local-6989586621686943023"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Polygon -&gt; Maybe CRS -&gt; Value
+</span><a href="#local-6989586621686943042"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-type">GPolygon</span></a></span><span> </span><span id="local-6989586621686943044"><span class="annot"><span class="annottext">Polygon
+</span><a href="#local-6989586621686943044"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Polygon -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Polygon&quot;</span></span><span> </span><span class="annot"><span class="annottext">Polygon
-</span><a href="#local-6989586621686943023"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-174"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPolygon"><span class="hs-identifier hs-type">GMultiPolygon</span></a></span><span> </span><span id="local-6989586621686943025"><span class="annot"><span class="annottext">MultiPolygon
-</span><a href="#local-6989586621686943025"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiPolygon -&gt; Maybe CRS -&gt; Value
+</span><a href="#local-6989586621686943044"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPolygon"><span class="hs-identifier hs-type">GMultiPolygon</span></a></span><span> </span><span id="local-6989586621686943046"><span class="annot"><span class="annottext">MultiPolygon
+</span><a href="#local-6989586621686943046"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MultiPolygon -&gt; Maybe CRS -&gt; Value
 forall a. ToJSON a =&gt; Text -&gt; a -&gt; Maybe CRS -&gt; Value
 </span><a href="Hasura.SQL.GeoJSON.html#encToCoords"><span class="hs-identifier hs-var">encToCoords</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MultiPolygon&quot;</span></span><span> </span><span class="annot"><span class="annottext">MultiPolygon
-</span><a href="#local-6989586621686943025"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943013"><span class="hs-identifier hs-var">crsM</span></a></span><span>
-</span><span id="line-175"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GGeometryCollection"><span class="hs-identifier hs-type">GGeometryCollection</span></a></span><span> </span><span id="local-6989586621686943027"><span class="annot"><span class="annottext">GeometryCollection
-</span><a href="#local-6989586621686943027"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621686943046"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943034"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><span id="line-175"></span><span>    </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GGeometryCollection"><span class="hs-identifier hs-type">GGeometryCollection</span></a></span><span> </span><span id="local-6989586621686943048"><span class="annot"><span class="annottext">GeometryCollection
+</span><a href="#local-6989586621686943048"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-176"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-177"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
@@ -963,11 +963,11 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">GeometryCollection
-</span><a href="#local-6989586621686943027"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621686943048"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-179"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-180"></span><span>
-</span><span id="line-181"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686943030"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-182"></span><span>  </span><span id="local-6989586621686943087"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GeometryWithCRS
+</span><span id="line-181"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621686943051"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621686943108"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GeometryWithCRS
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser GeometryWithCRS)
 -&gt; Value
@@ -980,23 +980,23 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser GeometryWithCRS
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686943089"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-183"></span><span>    </span><span id="local-6989586621686943090"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686943090"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621686943110"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-183"></span><span>    </span><span id="local-6989586621686943111"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686943111"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser String
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span>
-</span><span id="line-184"></span><span>    </span><span id="local-6989586621686943091"><span class="annot"><span class="annottext">Geometry
-</span><a href="#local-6989586621686943091"><span class="hs-identifier hs-var">geom</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686943090"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-184"></span><span>    </span><span id="local-6989586621686943112"><span class="annot"><span class="annottext">Geometry
+</span><a href="#local-6989586621686943112"><span class="hs-identifier hs-var">geom</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621686943111"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-185"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Point&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Point -&gt; Geometry
 </span><a href="Hasura.SQL.GeoJSON.html#GPoint"><span class="hs-identifier hs-var">GPoint</span></a></span><span> </span><span class="annot"><span class="annottext">(Point -&gt; Geometry) -&gt; Parser Point -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Point
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Point
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1005,7 +1005,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="Hasura.SQL.GeoJSON.html#GMultiPoint"><span class="hs-identifier hs-var">GMultiPoint</span></a></span><span> </span><span class="annot"><span class="annottext">(MultiPoint -&gt; Geometry) -&gt; Parser MultiPoint -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiPoint
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiPoint
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1014,7 +1014,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="Hasura.SQL.GeoJSON.html#GLineString"><span class="hs-identifier hs-var">GLineString</span></a></span><span> </span><span class="annot"><span class="annottext">(LineString -&gt; Geometry) -&gt; Parser LineString -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser LineString
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser LineString
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1024,7 +1024,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser MultiLineString -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiLineString
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiLineString
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1033,7 +1033,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-var">GPolygon</span></a></span><span> </span><span class="annot"><span class="annottext">(Polygon -&gt; Geometry) -&gt; Parser Polygon -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Polygon
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Polygon
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1043,7 +1043,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser MultiPolygon -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiPolygon
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser MultiPolygon
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;coordinates&quot;</span></span><span>
@@ -1053,7 +1053,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser GeometryCollection -&gt; Parser Geometry
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser GeometryCollection
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser GeometryCollection
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">J..:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;geometries&quot;</span></span><span>
@@ -1067,10 +1067,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;unexpected geometry type: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621686943090"><span class="hs-identifier hs-var">ty</span></a></span><span>
-</span><span id="line-193"></span><span>    </span><span id="local-6989586621686943092"><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943092"><span class="hs-identifier hs-var">crsM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621686943089"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe CRS)
+</span><a href="#local-6989586621686943111"><span class="hs-identifier hs-var">ty</span></a></span><span>
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621686943113"><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943113"><span class="hs-identifier hs-var">crsM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621686943110"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe CRS)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">J..:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;crs&quot;</span></span><span>
@@ -1082,12 +1082,12 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Geometry -&gt; Maybe CRS -&gt; GeometryWithCRS
 </span><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-var">GeometryWithCRS</span></a></span><span> </span><span class="annot"><span class="annottext">Geometry
-</span><a href="#local-6989586621686943091"><span class="hs-identifier hs-var">geom</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
-</span><a href="#local-6989586621686943092"><span class="hs-identifier hs-var">crsM</span></a></span><span>
+</span><a href="#local-6989586621686943112"><span class="hs-identifier hs-var">geom</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CRS
+</span><a href="#local-6989586621686943113"><span class="hs-identifier hs-var">crsM</span></a></span><span>
 </span><span id="line-195"></span><span>
 </span><span id="line-196"></span><span class="hs-keyword">newtype</span><span> </span><span id="GeometryCollection"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryCollection"><span class="hs-identifier hs-var">GeometryCollection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GeometryCollection"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryCollection"><span class="hs-identifier hs-var">GeometryCollection</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unGeometryCollection"><span class="annot"><span class="annottext">GeometryCollection -&gt; [GeometryWithCRS]
 </span><a href="Hasura.SQL.GeoJSON.html#unGeometryCollection"><span class="hs-identifier hs-var hs-var">unGeometryCollection</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">GeometryWithCRS</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-197"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686943097"><span id="local-6989586621686943102"><span id="local-6989586621686943106"><span class="annot"><span class="annottext">Int -&gt; GeometryCollection -&gt; ShowS
+</span><span id="line-197"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686943118"><span id="local-6989586621686943123"><span id="local-6989586621686943127"><span class="annot"><span class="annottext">Int -&gt; GeometryCollection -&gt; ShowS
 [GeometryCollection] -&gt; ShowS
 GeometryCollection -&gt; String
 (Int -&gt; GeometryCollection -&gt; ShowS)
@@ -1102,7 +1102,7 @@ $cshow :: GeometryCollection -&gt; String
 show :: GeometryCollection -&gt; String
 $cshowList :: [GeometryCollection] -&gt; ShowS
 showList :: [GeometryCollection] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943109"><span id="local-6989586621686943114"><span class="annot"><span class="annottext">GeometryCollection -&gt; GeometryCollection -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943130"><span id="local-6989586621686943135"><span class="annot"><span class="annottext">GeometryCollection -&gt; GeometryCollection -&gt; Bool
 (GeometryCollection -&gt; GeometryCollection -&gt; Bool)
 -&gt; (GeometryCollection -&gt; GeometryCollection -&gt; Bool)
 -&gt; Eq GeometryCollection
@@ -1111,7 +1111,7 @@ $c== :: GeometryCollection -&gt; GeometryCollection -&gt; Bool
 == :: GeometryCollection -&gt; GeometryCollection -&gt; Bool
 $c/= :: GeometryCollection -&gt; GeometryCollection -&gt; Bool
 /= :: GeometryCollection -&gt; GeometryCollection -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943120"><span id="local-6989586621686943125"><span id="local-6989586621686943130"><span id="local-6989586621686943135"><span class="annot"><span class="annottext">[GeometryCollection] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943141"><span id="local-6989586621686943146"><span id="local-6989586621686943151"><span id="local-6989586621686943156"><span class="annot"><span class="annottext">[GeometryCollection] -&gt; Value
 [GeometryCollection] -&gt; Encoding
 GeometryCollection -&gt; Value
 GeometryCollection -&gt; Encoding
@@ -1134,7 +1134,7 @@ $ctoJSONList :: [GeometryCollection] -&gt; Value
 toJSONList :: [GeometryCollection] -&gt; Value
 $ctoEncodingList :: [GeometryCollection] -&gt; Encoding
 toEncodingList :: [GeometryCollection] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943140"><span id="local-6989586621686943145"><span class="annot"><span class="annottext">Value -&gt; Parser [GeometryCollection]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943161"><span id="local-6989586621686943166"><span class="annot"><span class="annottext">Value -&gt; Parser [GeometryCollection]
 Value -&gt; Parser GeometryCollection
 (Value -&gt; Parser GeometryCollection)
 -&gt; (Value -&gt; Parser [GeometryCollection])
@@ -1157,7 +1157,7 @@ parseJSONList :: Value -&gt; Parser [GeometryCollection]
 </span><span id="line-206"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GPolygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-var">GPolygon</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Polygon"><span class="hs-identifier hs-type">Polygon</span></a></span><span>
 </span><span id="line-207"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GMultiPolygon"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPolygon"><span class="hs-identifier hs-var">GMultiPolygon</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPolygon"><span class="hs-identifier hs-type">MultiPolygon</span></a></span><span>
 </span><span id="line-208"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GGeometryCollection"><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GGeometryCollection"><span class="hs-identifier hs-var">GGeometryCollection</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryCollection"><span class="hs-identifier hs-type">GeometryCollection</span></a></span><span>
-</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686943150"><span id="local-6989586621686943166"><span id="local-6989586621686943169"><span class="annot"><span class="annottext">Int -&gt; Geometry -&gt; ShowS
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686943171"><span id="local-6989586621686943187"><span id="local-6989586621686943190"><span class="annot"><span class="annottext">Int -&gt; Geometry -&gt; ShowS
 [Geometry] -&gt; ShowS
 Geometry -&gt; String
 (Int -&gt; Geometry -&gt; ShowS)
@@ -1170,7 +1170,7 @@ $cshow :: Geometry -&gt; String
 show :: Geometry -&gt; String
 $cshowList :: [Geometry] -&gt; ShowS
 showList :: [Geometry] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943172"><span id="local-6989586621686943181"><span class="annot"><span class="annottext">Geometry -&gt; Geometry -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686943193"><span id="local-6989586621686943202"><span class="annot"><span class="annottext">Geometry -&gt; Geometry -&gt; Bool
 (Geometry -&gt; Geometry -&gt; Bool)
 -&gt; (Geometry -&gt; Geometry -&gt; Bool) -&gt; Eq Geometry
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
