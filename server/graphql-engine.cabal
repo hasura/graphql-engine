@@ -280,7 +280,7 @@ common lib-depends
                      , dependent-sum
                      , dependent-sum-template
                      , either
-                     , error-message
+                     , hasura-error-message
                      , exceptions
                      , fast-logger
                      , free
