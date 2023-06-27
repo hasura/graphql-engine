@@ -558,6 +558,11 @@
             "default": false,
             "description": "Whether tables can have primary keys",
             "type": "boolean"
+          },
+          "supports_schemaless_tables": {
+            "default": false,
+            "description": "Whether the database supports tables with no defined schema",
+            "type": "boolean"
           }
         },
         "type": "object"
