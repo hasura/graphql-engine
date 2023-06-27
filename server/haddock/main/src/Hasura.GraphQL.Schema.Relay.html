@@ -18,8 +18,8 @@
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/these-skinny-0.7.5-5eab29193e00439411675385d84acae17e03a57cb5606bc1e0c0f9dcde732484/share/doc/html/src/Data.These.html"><span class="hs-identifier">Data.These</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/these-1.1.1.1-fbf3c32f0a939a700aefca9defcc1f5c2eaaabdd4a9ec03cf302a3edbc3bfa89/share/doc/html/src/Data.These.html#partitionThese"><span class="hs-identifier">partitionThese</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html"><span class="hs-identifier">Hasura.Base.ToErrorValue</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html"><span class="hs-identifier">Hasura.Base.ToErrorValue</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Common</span></a></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Instances.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -732,7 +732,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621687257019"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-134"></span><span>            </span><span id="local-6989586621687257031"><span class="annot"><span class="annottext">[NodeInfo ('Postgres 'Vanilla)]
 </span><a href="#local-6989586621687257031"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -748,7 +748,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621687257019"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-138"></span><span>                </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -758,7 +758,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[SourceName] -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo ('Postgres 'Vanilla) -&gt; SourceName
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo ('Postgres 'Vanilla) -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
 </span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">(SourceInfo ('Postgres 'Vanilla) -&gt; SourceName)
 -&gt; (NodeInfo ('Postgres 'Vanilla)
@@ -805,7 +805,7 @@ forall a. ErrorMessage -&gt; n a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621687257054"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
@@ -813,7 +813,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621687257053"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>            </span><span class="annot"><span class="annottext">StringifyNumbers
 -&gt; TableName b
@@ -833,7 +833,7 @@ StringifyNumbers
 </span><a href="#local-6989586621687257056"><span class="hs-identifier hs-var">nodeValue</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq Value
 </span><a href="#local-6989586621687257055"><span class="hs-identifier hs-var">pKeys</span></a></span><span>
 </span><span id="line-150"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-151"></span><span>    </span><span id="local-6989586621687256580"><span class="annot"><a href="#local-6989586621687257029"><span class="hs-identifier hs-type">throwInvalidNodeId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687256533"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687256580"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-151"></span><span>    </span><span id="local-6989586621687256580"><span class="annot"><a href="#local-6989586621687257029"><span class="hs-identifier hs-type">throwInvalidNodeId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687256533"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687256580"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-152"></span><span>    </span><span id="local-6989586621687257029"><span class="annot"><span class="annottext">throwInvalidNodeId :: forall a. ErrorMessage -&gt; n a
 </span><a href="#local-6989586621687257029"><span class="hs-identifier hs-var hs-var">throwInvalidNodeId</span></a></span></span><span> </span><span id="local-6989586621687257066"><span class="annot"><span class="annottext">ErrorMessage
 </span><a href="#local-6989586621687257066"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; n a -&gt; n a
@@ -875,7 +875,7 @@ forall a. ErrorMessage -&gt; n a
 -&gt; ([Char] -&gt; ErrorMessage) -&gt; [Char] -&gt; n NodeId
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; ([Char] -&gt; Text) -&gt; [Char] -&gt; ErrorMessage
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Text
@@ -1206,7 +1206,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Column b] -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Column b) -&gt; [ColumnInfo b] -&gt; [Column b]
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Column b) -&gt; [ColumnInfo b] -&gt; [Column b]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
@@ -1237,7 +1237,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
 </span><a href="#local-6989586621687257167"><span class="hs-identifier hs-var">nonAlignedColumnValues</span></a></span><span>
 </span><span id="line-218"></span><span>
 </span><span id="line-219"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687257173"><span class="annot"><span class="annottext">allTuples :: [(ColumnInfo b, Value)]
@@ -1304,7 +1304,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621687257175"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
@@ -1313,7 +1313,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-string">&quot; in node id: &quot;</span></span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var">qeError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621687257182"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-225"></span><span>        </span><span class="annot"><span class="annottext">AnnBoolExp b (UnpreparedValue b)

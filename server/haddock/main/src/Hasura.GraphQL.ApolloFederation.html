@@ -20,7 +20,7 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier">toErrorMessage</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html"><span class="hs-identifier">Hasura.Base.ErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier">toErrorMessage</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Common</span></a></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span>
@@ -137,7 +137,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; ErrorMessage -&gt; Parse ApolloFederationAnyType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; Text -&gt; ErrorMessage
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; Text -&gt; ErrorMessage
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687189321"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -151,7 +151,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; ErrorMessage -&gt; Parse ApolloFederationAnyType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;__typename key not found&quot;</span></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; Parse ApolloFederationAnyType
@@ -160,7 +160,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; ErrorMessage -&gt; Parse ApolloFederationAnyType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;__typename can only be a string value&quot;</span></span><span>
 </span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; Parse ApolloFederationAnyType
@@ -169,7 +169,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; ErrorMessage -&gt; Parse ApolloFederationAnyType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;representations is expecting a list of objects only&quot;</span></span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span id="local-6989586621687188946"><span id="local-6989586621687188947"><span class="annot"><a href="Hasura.GraphQL.ApolloFederation.html#convertToApolloFedParserFunc"><span class="hs-identifier hs-type">convertToApolloFedParserFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -368,7 +368,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; (Text -&gt; ErrorMessage) -&gt; Text -&gt; n (ScalarValue b)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; n (ScalarValue b)) -&gt; Text -&gt; n (ScalarValue b)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; n (ScalarValue b)) -&gt; Text -&gt; n (ScalarValue b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cannot find &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -688,7 +688,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Class.html#parseError"><span class="hs-identifier hs-var">P.parseError</span></a></span><span> </span><span class="annot"><span class="annottext">(ErrorMessage -&gt; n a) -&gt; (QErr -&gt; ErrorMessage) -&gt; QErr -&gt; n a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; (QErr -&gt; Text) -&gt; QErr -&gt; ErrorMessage
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; (QErr -&gt; Text) -&gt; QErr -&gt; ErrorMessage
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var">qeError</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">a -&gt; n a
@@ -1457,7 +1457,7 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
 -&gt; Parse (QueryRootField UnpreparedValue)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/error-message-1.0.0/opt/doc/html/error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parse (QueryRootField UnpreparedValue))
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ErrorMessage.html#toErrorMessage"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parse (QueryRootField UnpreparedValue))
 -&gt; Text -&gt; Parse (QueryRootField UnpreparedValue)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
