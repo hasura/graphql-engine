@@ -6,7 +6,7 @@ It is referenced at:
   - line 452 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L452)
   - line 274 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L274)
   - line 518 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L518)
-  - line 558 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L558)
+  - line 563 of [Hasura.RQL.Types.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Permission.hs#L563)
   - line 90 of [Hasura.RQL.Types.Session](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/Session.hs#L90)
 
 # Backend only permissions

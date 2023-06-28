@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">data</span><span> </span><span id="HeaderConf"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HeaderConf"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderName"><span class="hs-identifier hs-type">HeaderName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span><span>
-</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073357"><span id="local-6989586621687073365"><span id="local-6989586621687073369"><span class="annot"><span class="annottext">Int -&gt; HeaderConf -&gt; ShowS
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687076710"><span id="local-6989586621687076718"><span id="local-6989586621687076722"><span class="annot"><span class="annottext">Int -&gt; HeaderConf -&gt; ShowS
 [HeaderConf] -&gt; ShowS
 HeaderConf -&gt; String
 (Int -&gt; HeaderConf -&gt; ShowS)
@@ -28,7 +28,7 @@ $cshow :: HeaderConf -&gt; String
 show :: HeaderConf -&gt; String
 $cshowList :: [HeaderConf] -&gt; ShowS
 showList :: [HeaderConf] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073373"><span id="local-6989586621687073379"><span class="annot"><span class="annottext">HeaderConf -&gt; HeaderConf -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076726"><span id="local-6989586621687076732"><span class="annot"><span class="annottext">HeaderConf -&gt; HeaderConf -&gt; Bool
 (HeaderConf -&gt; HeaderConf -&gt; Bool)
 -&gt; (HeaderConf -&gt; HeaderConf -&gt; Bool) -&gt; Eq HeaderConf
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -36,7 +36,7 @@ $c== :: HeaderConf -&gt; HeaderConf -&gt; Bool
 == :: HeaderConf -&gt; HeaderConf -&gt; Bool
 $c/= :: HeaderConf -&gt; HeaderConf -&gt; Bool
 /= :: HeaderConf -&gt; HeaderConf -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073384"><span id="local-6989586621687073386"><span class="annot"><span class="annottext">(forall x. HeaderConf -&gt; Rep HeaderConf x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076737"><span id="local-6989586621687076739"><span class="annot"><span class="annottext">(forall x. HeaderConf -&gt; Rep HeaderConf x)
 -&gt; (forall x. Rep HeaderConf x -&gt; HeaderConf) -&gt; Generic HeaderConf
 forall x. Rep HeaderConf x -&gt; HeaderConf
 forall x. HeaderConf -&gt; Rep HeaderConf x
@@ -48,14 +48,14 @@ $cto :: forall x. Rep HeaderConf x -&gt; HeaderConf
 to :: forall x. Rep HeaderConf x -&gt; HeaderConf
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073390"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076743"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073413"><span id="local-6989586621687073420"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076766"><span id="local-6989586621687076773"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span><span>
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">type</span><span> </span><span id="HeaderName"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderName"><span class="hs-identifier hs-var">HeaderName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-23"></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">data</span><span> </span><span id="HeaderValue"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-var">HeaderValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HVValue"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#Template"><span class="hs-identifier hs-type">Template</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="HVEnv"><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073438"><span id="local-6989586621687073445"><span id="local-6989586621687073448"><span class="annot"><span class="annottext">Int -&gt; HeaderValue -&gt; ShowS
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687076791"><span id="local-6989586621687076798"><span id="local-6989586621687076801"><span class="annot"><span class="annottext">Int -&gt; HeaderValue -&gt; ShowS
 [HeaderValue] -&gt; ShowS
 HeaderValue -&gt; String
 (Int -&gt; HeaderValue -&gt; ShowS)
@@ -70,7 +70,7 @@ $cshow :: HeaderValue -&gt; String
 show :: HeaderValue -&gt; String
 $cshowList :: [HeaderValue] -&gt; ShowS
 showList :: [HeaderValue] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073451"><span id="local-6989586621687073456"><span class="annot"><span class="annottext">HeaderValue -&gt; HeaderValue -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076804"><span id="local-6989586621687076809"><span class="annot"><span class="annottext">HeaderValue -&gt; HeaderValue -&gt; Bool
 (HeaderValue -&gt; HeaderValue -&gt; Bool)
 -&gt; (HeaderValue -&gt; HeaderValue -&gt; Bool) -&gt; Eq HeaderValue
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -78,7 +78,7 @@ $c== :: HeaderValue -&gt; HeaderValue -&gt; Bool
 == :: HeaderValue -&gt; HeaderValue -&gt; Bool
 $c/= :: HeaderValue -&gt; HeaderValue -&gt; Bool
 /= :: HeaderValue -&gt; HeaderValue -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073459"><span id="local-6989586621687073461"><span class="annot"><span class="annottext">(forall x. HeaderValue -&gt; Rep HeaderValue x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076812"><span id="local-6989586621687076814"><span class="annot"><span class="annottext">(forall x. HeaderValue -&gt; Rep HeaderValue x)
 -&gt; (forall x. Rep HeaderValue x -&gt; HeaderValue)
 -&gt; Generic HeaderValue
 forall x. Rep HeaderValue x -&gt; HeaderValue
@@ -91,12 +91,12 @@ $cto :: forall x. Rep HeaderValue x -&gt; HeaderValue
 to :: forall x. Rep HeaderValue x -&gt; HeaderValue
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073464"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076817"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073483"><span id="local-6989586621687073489"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076836"><span id="local-6989586621687076842"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderValue"><span class="hs-identifier hs-type">HeaderValue</span></a></span></span></span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073505"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621687073509"><span class="annot"><span class="annottext">codec :: JSONCodec HeaderConf
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076858"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621687076862"><span class="annot"><span class="annottext">codec :: JSONCodec HeaderConf
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Either (HeaderName, Template) (HeaderName, HeaderName)
  -&gt; Either String HeaderConf)
 -&gt; (HeaderConf
@@ -113,9 +113,9 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; Codec context newInput newOutput
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#bimapCodec"><span class="hs-identifier hs-var">bimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Either (HeaderName, Template) (HeaderName, HeaderName)
 -&gt; Either String HeaderConf
-</span><a href="#local-6989586621687073510"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderConf
+</span><a href="#local-6989586621687076863"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderConf
 -&gt; Either (HeaderName, Template) (HeaderName, HeaderName)
-</span><a href="#local-6989586621687073511"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec
+</span><a href="#local-6989586621687076864"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec
    Value
    (Either (HeaderName, Template) (HeaderName, HeaderName))
    (Either (HeaderName, Template) (HeaderName, HeaderName))
@@ -137,11 +137,11 @@ Codec context input1 output1
 -&gt; Codec context input2 output2
 -&gt; Codec context (Either input1 input2) (Either output1 output2)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#disjointEitherCodec"><span class="hs-identifier hs-var">disjointEitherCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value (HeaderName, Template) (HeaderName, Template)
-</span><a href="#local-6989586621687073512"><span class="hs-identifier hs-var">valCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value (HeaderName, HeaderName) (HeaderName, HeaderName)
-</span><a href="#local-6989586621687073513"><span class="hs-identifier hs-var">fromEnvCodec</span></a></span><span>
+</span><a href="#local-6989586621687076865"><span class="hs-identifier hs-var">valCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621687076866"><span class="hs-identifier hs-var">fromEnvCodec</span></a></span><span>
 </span><span id="line-33"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621687073512"><span class="annot"><span class="annottext">valCodec :: Codec Value (HeaderName, Template) (HeaderName, Template)
-</span><a href="#local-6989586621687073512"><span class="hs-identifier hs-var hs-var">valCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621687076865"><span class="annot"><span class="annottext">valCodec :: Codec Value (HeaderName, Template) (HeaderName, Template)
+</span><a href="#local-6989586621687076865"><span class="hs-identifier hs-var hs-var">valCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">HeaderName
 -&gt; ObjectCodec (HeaderName, Template) (HeaderName, Template)
 -&gt; Codec Value (HeaderName, Template) (HeaderName, Template)
@@ -200,8 +200,8 @@ ObjectCodec oldInput output
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span>      </span><span id="local-6989586621687073513"><span class="annot"><span class="annottext">fromEnvCodec :: Codec Value (HeaderName, HeaderName) (HeaderName, HeaderName)
-</span><a href="#local-6989586621687073513"><span class="hs-identifier hs-var hs-var">fromEnvCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621687076866"><span class="annot"><span class="annottext">fromEnvCodec :: Codec Value (HeaderName, HeaderName) (HeaderName, HeaderName)
+</span><a href="#local-6989586621687076866"><span class="hs-identifier hs-var hs-var">fromEnvCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">HeaderName
 -&gt; ObjectCodec (HeaderName, HeaderName) (HeaderName, HeaderName)
 -&gt; Codec Value (HeaderName, HeaderName) (HeaderName, HeaderName)
@@ -264,27 +264,27 @@ ObjectCodec oldInput output
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span>      </span><span id="local-6989586621687073510"><span class="annot"><span class="annottext">dec :: Either (HeaderName, Template) (HeaderName, HeaderName)
+</span><span id="line-50"></span><span>      </span><span id="local-6989586621687076863"><span class="annot"><span class="annottext">dec :: Either (HeaderName, Template) (HeaderName, HeaderName)
 -&gt; Either String HeaderConf
-</span><a href="#local-6989586621687073510"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073544"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073544"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073545"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073545"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderConf -&gt; Either String HeaderConf
+</span><a href="#local-6989586621687076863"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687076897"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076897"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076898"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687076898"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderConf -&gt; Either String HeaderConf
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(HeaderConf -&gt; Either String HeaderConf)
 -&gt; HeaderConf -&gt; Either String HeaderConf
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
 </span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073544"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; HeaderValue
+</span><a href="#local-6989586621687076897"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; HeaderValue
 </span><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073545"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span>      </span><span class="annot"><a href="#local-6989586621687073510"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073546"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073546"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073547"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073547"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687076898"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><a href="#local-6989586621687076863"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687076899"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076899"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687076900"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076900"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#isPrefixOf"><span class="hs-identifier hs-var">T.isPrefixOf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;HASURA_GRAPHQL_&quot;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073547"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
+</span><a href="#local-6989586621687076900"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
 </span><span id="line-53"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String HeaderConf
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String HeaderConf)
@@ -295,7 +295,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073547"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
+</span><a href="#local-6989586621687076900"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span>
 </span><span id="line-54"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">HeaderConf -&gt; Either String HeaderConf
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(HeaderConf -&gt; Either String HeaderConf)
@@ -303,54 +303,54 @@ forall a b. b -&gt; Either a b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
 </span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073546"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="#local-6989586621687076899"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
 </span><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073547"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687076900"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621687073511"><span class="annot"><span class="annottext">enc :: HeaderConf
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621687076864"><span class="annot"><span class="annottext">enc :: HeaderConf
 -&gt; Either (HeaderName, Template) (HeaderName, HeaderName)
-</span><a href="#local-6989586621687073511"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687073550"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073550"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621687073551"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073551"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HeaderName, Template)
+</span><a href="#local-6989586621687076864"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687076903"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076903"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621687076904"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687076904"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HeaderName, Template)
 -&gt; Either (HeaderName, Template) (HeaderName, HeaderName)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073550"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073551"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621687073511"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687073552"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073552"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621687073553"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073553"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HeaderName, HeaderName)
+</span><a href="#local-6989586621687076903"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687076904"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621687076864"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687076905"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076905"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621687076906"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076906"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HeaderName, HeaderName)
 -&gt; Either (HeaderName, Template) (HeaderName, HeaderName)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073552"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073553"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687076905"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076906"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>
-</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073556"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621687073590"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HeaderConf
-</span><a href="#local-6989586621687073590"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687073593"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687073593"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-61"></span><span>    </span><span id="local-6989586621687073594"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073594"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687073593"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser HeaderName
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076909"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687076943"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser HeaderConf
+</span><a href="#local-6989586621687076943"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Object"><span class="hs-identifier hs-type">Object</span></a></span><span> </span><span id="local-6989586621687076946"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687076946"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>    </span><span id="local-6989586621687076947"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076947"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687076946"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser HeaderName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
-</span><span id="line-62"></span><span>    </span><span id="local-6989586621687073596"><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621687073596"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687073593"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Value)
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621687076949"><span class="annot"><span class="annottext">Maybe Value
+</span><a href="#local-6989586621687076949"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687076946"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Value)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span>
-</span><span id="line-63"></span><span>    </span><span id="local-6989586621687073598"><span class="annot"><span class="annottext">Maybe HeaderName
-</span><a href="#local-6989586621687073598"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687073593"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HeaderName)
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621687076951"><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621687076951"><span class="hs-identifier hs-var">valueFromEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687076946"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe HeaderName)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value_from_env&quot;</span></span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Value
-</span><a href="#local-6989586621687073596"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
-</span><a href="#local-6989586621687073598"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687076949"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><a href="#local-6989586621687076951"><span class="hs-identifier hs-var">valueFromEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-65"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Value
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser HeaderConf
@@ -358,14 +358,14 @@ forall a. String -&gt; Parser a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;expecting value or value_from_env keys&quot;</span></span><span>
-</span><span id="line-66"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687073599"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687073599"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
+</span><span id="line-66"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687076952"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687076952"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe HeaderName
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-67"></span><span>        </span><span id="local-6989586621687073600"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073600"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Template
+</span><span id="line-67"></span><span>        </span><span id="local-6989586621687076953"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687076953"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Template
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687073599"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621687076952"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="annot"><span class="annottext">HeaderConf -&gt; Parser HeaderConf
 forall a. a -&gt; Parser a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -374,18 +374,18 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
 </span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073594"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; HeaderValue
+</span><a href="#local-6989586621687076947"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; HeaderValue
 </span><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073600"><span class="hs-identifier hs-var">template</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687076953"><span class="hs-identifier hs-var">template</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Value
-</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687073601"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073601"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687076954"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076954"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#isPrefixOf"><span class="hs-identifier hs-var">T.isPrefixOf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;HASURA_GRAPHQL_&quot;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073601"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687076954"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">(Parser () -&gt; Parser ()) -&gt; Parser () -&gt; Parser ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ()
@@ -400,7 +400,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073601"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621687076954"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">HeaderConf -&gt; Parser HeaderConf
 forall a. a -&gt; Parser a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -409,9 +409,9 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue -&gt; HeaderConf
 </span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073594"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
+</span><a href="#local-6989586621687076947"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderValue
 </span><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-var">HVEnv</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073601"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687076954"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser HeaderConf
@@ -426,36 +426,36 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;expecting object for headers&quot;</span></span><span>
 </span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073605"><span id="local-6989586621687073609"><span id="local-6989586621687073612"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621687073634"><span class="annot"><span class="annottext">toJSON :: HeaderConf -&gt; Value
-</span><a href="#local-6989586621687073634"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687073636"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073636"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621687073637"><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073637"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687076958"><span id="local-6989586621687076962"><span id="local-6989586621687076965"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621687076987"><span class="annot"><span class="annottext">toJSON :: HeaderConf -&gt; Value
+</span><a href="#local-6989586621687076987"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687076989"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076989"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621687076990"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687076990"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HeaderName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073636"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687076989"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Template -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Template
-</span><a href="#local-6989586621687073637"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-80"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687073640"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073640"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621687073641"><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073641"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="#local-6989586621687076990"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687076993"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076993"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621687076994"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621687076994"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HeaderName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073640"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687076993"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value_from_env&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HeaderName -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName
-</span><a href="#local-6989586621687073641"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621687076994"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-81"></span></pre></body></html>
