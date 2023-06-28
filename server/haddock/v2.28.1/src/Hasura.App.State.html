@@ -1,0 +1,1465 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE Arrows #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.App.State</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * application state</span></span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier">RebuildableAppContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier">AppEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier">AppContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#Loggers"><span class="hs-identifier">Loggers</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * env access</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier">HasAppEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * init functions</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#buildRebuildableAppContext"><span class="hs-identifier">buildRebuildableAppContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#rebuildRebuildableAppContext"><span class="hs-identifier">rebuildRebuildableAppContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><span class="hs-comment">-- * subsets</span></span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#initSQLGenCtx"><span class="hs-identifier">initSQLGenCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#buildCacheStaticConfig"><span class="hs-identifier">buildCacheStaticConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.App.State.html#buildCacheDynamicConfig"><span class="hs-identifier">buildCacheDynamicConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Extended.html"><span class="hs-identifier">Control.Arrow.Extended</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html"><span class="hs-identifier">Control.Monad.Trans.Control</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier">MonadBaseControl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">E</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.html"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.html"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Agent.Client</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.CredentialCache.html"><span class="hs-identifier">Hasura.CredentialCache</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Eventing.Common.html"><span class="hs-identifier">Hasura.Eventing.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Eventing.Common.html#LockedEventsCtx"><span class="hs-identifier">LockedEventsCtx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Eventing.EventTrigger.html"><span class="hs-identifier">Hasura.Eventing.EventTrigger</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.Options</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.State</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ES</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Inc</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html"><span class="hs-identifier">Hasura.RQL.DDL.Schema.Cache.Config</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata</span></a></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html"><span class="hs-identifier">Hasura.RQL.Types.NamingCase</span></a></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html"><span class="hs-identifier">Hasura.RQL.Types.Roles</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier">RoleName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html"><span class="hs-identifier">Hasura.RQL.Types.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier">MetadataResourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html"><span class="hs-identifier">Hasura.Server.Auth</span></a></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html"><span class="hs-identifier">Hasura.Server.Cors</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Cors</span></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.html"><span class="hs-identifier">Hasura.Server.Init</span></a></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html"><span class="hs-identifier">Hasura.Server.Logging</span></a></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html"><span class="hs-identifier">Hasura.Server.Metrics</span></a></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html"><span class="hs-identifier">Hasura.Server.Prometheus</span></a></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html"><span class="hs-identifier">Hasura.ShutdownLatch</span></a></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.html"><span class="hs-identifier">Network.HTTP.Client</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/warp-3.3.23-cb60195bba020126182cd452e2169ae8e3d767bdfed4271a62100abf850eb09c/share/doc/html/src/Network.Wai.Handler.Warp.html"><span class="hs-identifier">Network.Wai.Handler.Warp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/streaming-commons-0.2.2.5-8badbca9a33cd9d7061fd6d73817fb72e26d64da868d601afdd9f600ada53f5c/share/doc/html/src/Data.Streaming.Network.Internal.html#HostPreference"><span class="hs-identifier">HostPreference</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/websockets-0.12.7.3-ff8bb5f8ae6a258cb497d6b0b22cf7dfb7114419e96999d1d9397dcb179f22b1/share/doc/html/src/Network.WebSockets.Connection.html"><span class="hs-identifier">Network.WebSockets.Connection</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WebSockets</span></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html"><span class="hs-identifier">Refined</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier">NonNegative</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier">Refined</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- application state</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">{- Note [Hasura Application State]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Hasura Application state represents the entire state of hasura.
+
+Hasura Application State = AppEnv (static) + AppContext (dynamic)
+
+Hasura Application State can be divided into two parts:
+
+  1. Read-Only State (Static State):
+  =================================
+  The information required to build this state is provided only during the
+  initialization of hasura. This information is immutable. If you want update any
+  field in this state, you would need to shutdown the current instance and
+  re-launch hausura with new information.
+
+  Eg: If you want to run hasura in read-only mode, you would have to mention
+      this information when hasura starts up. There is no way to make hasura
+      run in read-only mode once it has booted up.
+
+  2. Runtime Configurable State (Dynamic State):
+  ==============================================
+  The information present in this state can be updated during the runtime. This state
+  is mutable and does not require a restart of hasura instance to take effect.
+
+  The fields in the state are usually updated via Metadata API's or Hasura Console.
+
+  Eg: You can change the entries in Allowlist via console and hasura need not restart
+      for the changes to take effect.
+
+-}</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span id="RebuildableAppContext"><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-var">RebuildableAppContext</span></a></span></span><span> </span><span id="local-6989586621687206562"><span class="annot"><a href="#local-6989586621687206562"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RebuildableAppContext"><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-var">RebuildableAppContext</span></a></span></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="lastBuiltAppContext"><span class="annot"><span class="annottext">forall impl. RebuildableAppContext impl -&gt; AppContext
+</span><a href="Hasura.App.State.html#lastBuiltAppContext"><span class="hs-identifier hs-var hs-var">lastBuiltAppContext</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span id="_racInvalidationMap"><span class="annot"><span class="annottext">forall impl. RebuildableAppContext impl -&gt; InvalidationKeys
+</span><a href="Hasura.App.State.html#_racInvalidationMap"><span class="hs-identifier hs-var hs-var">_racInvalidationMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>    </span><span id="_racRebuild"><span class="annot"><span class="annottext">forall impl.
+RebuildableAppContext impl
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+</span><a href="Hasura.App.State.html#_racRebuild"><span class="hs-identifier hs-var hs-var">_racRebuild</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#Rule"><span class="hs-identifier hs-type">Inc.Rule</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Manager"><span class="hs-identifier hs-type">HTTP.Manager</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206562"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">E.Environment</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- | Represents the Read-Only Hasura State, these fields are immutable and the state</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- cannot be changed during runtime.</span><span>
+</span><span id="line-104"></span><span class="hs-keyword">data</span><span> </span><span id="AppEnv"><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-var">AppEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AppEnv"><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-var">AppEnv</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="appEnvPort"><span class="annot"><span class="annottext">AppEnv -&gt; Port
+</span><a href="Hasura.App.State.html#appEnvPort"><span class="hs-identifier hs-var hs-var">appEnvPort</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Port"><span class="hs-identifier hs-type">Port</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="appEnvHost"><span class="annot"><span class="annottext">AppEnv -&gt; HostPreference
+</span><a href="Hasura.App.State.html#appEnvHost"><span class="hs-identifier hs-var hs-var">appEnvHost</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/streaming-commons-0.2.2.5-8badbca9a33cd9d7061fd6d73817fb72e26d64da868d601afdd9f600ada53f5c/share/doc/html/src/Data.Streaming.Network.Internal.html#HostPreference"><span class="hs-identifier hs-type">HostPreference</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>    </span><span id="appEnvMetadataDbPool"><span class="annot"><span class="annottext">AppEnv -&gt; PGPool
+</span><a href="Hasura.App.State.html#appEnvMetadataDbPool"><span class="hs-identifier hs-var hs-var">appEnvMetadataDbPool</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html#PGPool"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>    </span><span id="appEnvIntrospectionDbPool"><span class="annot"><span class="annottext">AppEnv -&gt; Maybe PGPool
+</span><a href="Hasura.App.State.html#appEnvIntrospectionDbPool"><span class="hs-identifier hs-var hs-var">appEnvIntrospectionDbPool</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html#PGPool"><span class="hs-identifier hs-type">PG.PGPool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span id="appEnvManager"><span class="annot"><span class="annottext">AppEnv -&gt; Manager
+</span><a href="Hasura.App.State.html#appEnvManager"><span class="hs-identifier hs-var hs-var">appEnvManager</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Manager"><span class="hs-identifier hs-type">HTTP.Manager</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>    </span><span id="appEnvLoggers"><span class="annot"><span class="annottext">AppEnv -&gt; Loggers
+</span><a href="Hasura.App.State.html#appEnvLoggers"><span class="hs-identifier hs-var hs-var">appEnvLoggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#Loggers"><span class="hs-identifier hs-type">Loggers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>    </span><span id="appEnvMetadataVersionRef"><span class="annot"><span class="annottext">AppEnv -&gt; TMVar MetadataResourceVersion
+</span><a href="Hasura.App.State.html#appEnvMetadataVersionRef"><span class="hs-identifier hs-var hs-var">appEnvMetadataVersionRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>    </span><span id="appEnvInstanceId"><span class="annot"><span class="annottext">AppEnv -&gt; InstanceId
+</span><a href="Hasura.App.State.html#appEnvInstanceId"><span class="hs-identifier hs-var hs-var">appEnvInstanceId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>    </span><span id="appEnvEnableMaintenanceMode"><span class="annot"><span class="annottext">AppEnv -&gt; MaintenanceMode ()
+</span><a href="Hasura.App.State.html#appEnvEnableMaintenanceMode"><span class="hs-identifier hs-var hs-var">appEnvEnableMaintenanceMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#MaintenanceMode"><span class="hs-identifier hs-type">MaintenanceMode</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span id="appEnvLoggingSettings"><span class="annot"><span class="annottext">AppEnv -&gt; LoggingSettings
+</span><a href="Hasura.App.State.html#appEnvLoggingSettings"><span class="hs-identifier hs-var hs-var">appEnvLoggingSettings</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html#LoggingSettings"><span class="hs-identifier hs-type">LoggingSettings</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>    </span><span id="appEnvEventingMode"><span class="annot"><span class="annottext">AppEnv -&gt; EventingMode
+</span><a href="Hasura.App.State.html#appEnvEventingMode"><span class="hs-identifier hs-var hs-var">appEnvEventingMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#EventingMode"><span class="hs-identifier hs-type">EventingMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span id="appEnvEnableReadOnlyMode"><span class="annot"><span class="annottext">AppEnv -&gt; ReadOnlyMode
+</span><a href="Hasura.App.State.html#appEnvEnableReadOnlyMode"><span class="hs-identifier hs-var hs-var">appEnvEnableReadOnlyMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ReadOnlyMode"><span class="hs-identifier hs-type">ReadOnlyMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>    </span><span id="appEnvServerMetrics"><span class="annot"><span class="annottext">AppEnv -&gt; ServerMetrics
+</span><a href="Hasura.App.State.html#appEnvServerMetrics"><span class="hs-identifier hs-var hs-var">appEnvServerMetrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-118"></span><span>    </span><span id="appEnvShutdownLatch"><span class="annot"><span class="annottext">AppEnv -&gt; ShutdownLatch
+</span><a href="Hasura.App.State.html#appEnvShutdownLatch"><span class="hs-identifier hs-var hs-var">appEnvShutdownLatch</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-119"></span><span>    </span><span id="appEnvMetaVersionRef"><span class="annot"><span class="annottext">AppEnv -&gt; TMVar MetadataResourceVersion
+</span><a href="Hasura.App.State.html#appEnvMetaVersionRef"><span class="hs-identifier hs-var hs-var">appEnvMetaVersionRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">STM.TMVar</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-120"></span><span>    </span><span id="appEnvPrometheusMetrics"><span class="annot"><span class="annottext">AppEnv -&gt; PrometheusMetrics
+</span><a href="Hasura.App.State.html#appEnvPrometheusMetrics"><span class="hs-identifier hs-var hs-var">appEnvPrometheusMetrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Prometheus.html#PrometheusMetrics"><span class="hs-identifier hs-type">PrometheusMetrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>    </span><span id="appEnvTraceSamplingPolicy"><span class="annot"><span class="annottext">AppEnv -&gt; SamplingPolicy
+</span><a href="Hasura.App.State.html#appEnvTraceSamplingPolicy"><span class="hs-identifier hs-var hs-var">appEnvTraceSamplingPolicy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">Tracing.SamplingPolicy</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-122"></span><span>    </span><span id="appEnvSubscriptionState"><span class="annot"><span class="annottext">AppEnv -&gt; SubscriptionsState
+</span><a href="Hasura.App.State.html#appEnvSubscriptionState"><span class="hs-identifier hs-var hs-var">appEnvSubscriptionState</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#SubscriptionsState"><span class="hs-identifier hs-type">ES.SubscriptionsState</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>    </span><span id="appEnvLockedEventsCtx"><span class="annot"><span class="annottext">AppEnv -&gt; LockedEventsCtx
+</span><a href="Hasura.App.State.html#appEnvLockedEventsCtx"><span class="hs-identifier hs-var hs-var">appEnvLockedEventsCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Eventing.Common.html#LockedEventsCtx"><span class="hs-identifier hs-type">LockedEventsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>    </span><span id="appEnvConnParams"><span class="annot"><span class="annottext">AppEnv -&gt; ConnParams
+</span><a href="Hasura.App.State.html#appEnvConnParams"><span class="hs-identifier hs-var hs-var">appEnvConnParams</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Pool.html#ConnParams"><span class="hs-identifier hs-type">PG.ConnParams</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>    </span><span id="appEnvTxIso"><span class="annot"><span class="annottext">AppEnv -&gt; TxIsolation
+</span><a href="Hasura.App.State.html#appEnvTxIso"><span class="hs-identifier hs-var hs-var">appEnvTxIso</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Transaction.html#TxIsolation"><span class="hs-identifier hs-type">PG.TxIsolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-126"></span><span>    </span><span id="appEnvConsoleAssetsDir"><span class="annot"><span class="annottext">AppEnv -&gt; Maybe Text
+</span><a href="Hasura.App.State.html#appEnvConsoleAssetsDir"><span class="hs-identifier hs-var hs-var">appEnvConsoleAssetsDir</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-127"></span><span>    </span><span id="appEnvConsoleSentryDsn"><span class="annot"><span class="annottext">AppEnv -&gt; Maybe Text
+</span><a href="Hasura.App.State.html#appEnvConsoleSentryDsn"><span class="hs-identifier hs-var hs-var">appEnvConsoleSentryDsn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>    </span><span id="appEnvConnectionOptions"><span class="annot"><span class="annottext">AppEnv -&gt; ConnectionOptions
+</span><a href="Hasura.App.State.html#appEnvConnectionOptions"><span class="hs-identifier hs-var hs-var">appEnvConnectionOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/websockets-0.12.7.3-ff8bb5f8ae6a258cb497d6b0b22cf7dfb7114419e96999d1d9397dcb179f22b1/share/doc/html/src/Network.WebSockets.Connection.Options.html#ConnectionOptions"><span class="hs-identifier hs-type">WebSockets.ConnectionOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>    </span><span id="appEnvWebSocketKeepAlive"><span class="annot"><span class="annottext">AppEnv -&gt; KeepAliveDelay
+</span><a href="Hasura.App.State.html#appEnvWebSocketKeepAlive"><span class="hs-identifier hs-var hs-var">appEnvWebSocketKeepAlive</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-type">KeepAliveDelay</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>    </span><span id="appEnvWebSocketConnectionInitTimeout"><span class="annot"><span class="annottext">AppEnv -&gt; WSConnectionInitTimeout
+</span><a href="Hasura.App.State.html#appEnvWebSocketConnectionInitTimeout"><span class="hs-identifier hs-var hs-var">appEnvWebSocketConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-type">WSConnectionInitTimeout</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>    </span><span id="appEnvGracefulShutdownTimeout"><span class="annot"><span class="annottext">AppEnv -&gt; Refined NonNegative Seconds
+</span><a href="Hasura.App.State.html#appEnvGracefulShutdownTimeout"><span class="hs-identifier hs-var hs-var">appEnvGracefulShutdownTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="hs-comment">-- TODO: Move this to `AppContext`. We are leaving this for now as this cannot be changed directly</span><span>
+</span><span id="line-133"></span><span>    </span><span class="hs-comment">-- by the user on the cloud dashboard and will also require a refactor in HasuraPro/App.hs</span><span>
+</span><span id="line-134"></span><span>    </span><span class="hs-comment">-- as this thread is initialised there before creating the `AppStateRef`. But eventually we need</span><span>
+</span><span id="line-135"></span><span>    </span><span class="hs-comment">-- to do it for the Enterprise version.</span><span>
+</span><span id="line-136"></span><span>    </span><span id="appEnvSchemaPollInterval"><span class="annot"><span class="annottext">AppEnv -&gt; OptionalInterval
+</span><a href="Hasura.App.State.html#appEnvSchemaPollInterval"><span class="hs-identifier hs-var hs-var">appEnvSchemaPollInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span id="appEnvCheckFeatureFlag"><span class="annot"><span class="annottext">AppEnv -&gt; CheckFeatureFlag
+</span><a href="Hasura.App.State.html#appEnvCheckFeatureFlag"><span class="hs-identifier hs-var hs-var">appEnvCheckFeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-type">CheckFeatureFlag</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>    </span><span id="appEnvLicenseKeyCache"><span class="annot"><span class="annottext">AppEnv -&gt; Maybe (CredentialCache AgentLicenseKey)
+</span><a href="Hasura.App.State.html#appEnvLicenseKeyCache"><span class="hs-identifier hs-var hs-var">appEnvLicenseKeyCache</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.CredentialCache.html#CredentialCache"><span class="hs-identifier hs-type">CredentialCache</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Agent.Client.html#AgentLicenseKey"><span class="hs-identifier hs-type">AgentLicenseKey</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- | Represents the Dynamic Hasura State, these field are mutable and can be changed</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- during runtime.</span><span>
+</span><span id="line-143"></span><span class="hs-keyword">data</span><span> </span><span id="AppContext"><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-var">AppContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AppContext"><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-var">AppContext</span></a></span></span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="acAuthMode"><span class="annot"><span class="annottext">AppContext -&gt; AuthMode
+</span><a href="Hasura.App.State.html#acAuthMode"><span class="hs-identifier hs-var hs-var">acAuthMode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>    </span><span id="acSQLGenCtx"><span class="annot"><span class="annottext">AppContext -&gt; SQLGenCtx
+</span><a href="Hasura.App.State.html#acSQLGenCtx"><span class="hs-identifier hs-var hs-var">acSQLGenCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-type">SQLGenCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span id="acEnabledAPIs"><span class="annot"><span class="annottext">AppContext -&gt; HashSet API
+</span><a href="Hasura.App.State.html#acEnabledAPIs"><span class="hs-identifier hs-var hs-var">acEnabledAPIs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">Set.HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-type">API</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span id="acEnableAllowlist"><span class="annot"><span class="annottext">AppContext -&gt; AllowListStatus
+</span><a href="Hasura.App.State.html#acEnableAllowlist"><span class="hs-identifier hs-var hs-var">acEnableAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#AllowListStatus"><span class="hs-identifier hs-type">AllowListStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-148"></span><span>    </span><span id="acResponseInternalErrorsConfig"><span class="annot"><span class="annottext">AppContext -&gt; ResponseInternalErrorsConfig
+</span><a href="Hasura.App.State.html#acResponseInternalErrorsConfig"><span class="hs-identifier hs-var hs-var">acResponseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ResponseInternalErrorsConfig"><span class="hs-identifier hs-type">ResponseInternalErrorsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-149"></span><span>    </span><span id="acEnvironment"><span class="annot"><span class="annottext">AppContext -&gt; Environment
+</span><a href="Hasura.App.State.html#acEnvironment"><span class="hs-identifier hs-var hs-var">acEnvironment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">E.Environment</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>    </span><span id="acRemoteSchemaPermsCtx"><span class="annot"><span class="annottext">AppContext -&gt; RemoteSchemaPermissions
+</span><a href="Hasura.App.State.html#acRemoteSchemaPermsCtx"><span class="hs-identifier hs-var hs-var">acRemoteSchemaPermsCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">Options.RemoteSchemaPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>    </span><span id="acFunctionPermsCtx"><span class="annot"><span class="annottext">AppContext -&gt; InferFunctionPermissions
+</span><a href="Hasura.App.State.html#acFunctionPermsCtx"><span class="hs-identifier hs-var hs-var">acFunctionPermsCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">Options.InferFunctionPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>    </span><span id="acExperimentalFeatures"><span class="annot"><span class="annottext">AppContext -&gt; HashSet ExperimentalFeature
+</span><a href="Hasura.App.State.html#acExperimentalFeatures"><span class="hs-identifier hs-var hs-var">acExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">Set.HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>    </span><span id="acDefaultNamingConvention"><span class="annot"><span class="annottext">AppContext -&gt; NamingCase
+</span><a href="Hasura.App.State.html#acDefaultNamingConvention"><span class="hs-identifier hs-var hs-var">acDefaultNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-154"></span><span>    </span><span id="acMetadataDefaults"><span class="annot"><span class="annottext">AppContext -&gt; MetadataDefaults
+</span><a href="Hasura.App.State.html#acMetadataDefaults"><span class="hs-identifier hs-var hs-var">acMetadataDefaults</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataDefaults"><span class="hs-identifier hs-type">MetadataDefaults</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>    </span><span id="acLiveQueryOptions"><span class="annot"><span class="annottext">AppContext -&gt; LiveQueriesOptions
+</span><a href="Hasura.App.State.html#acLiveQueryOptions"><span class="hs-identifier hs-var hs-var">acLiveQueryOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#LiveQueriesOptions"><span class="hs-identifier hs-type">LiveQueriesOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span id="acStreamQueryOptions"><span class="annot"><span class="annottext">AppContext -&gt; LiveQueriesOptions
+</span><a href="Hasura.App.State.html#acStreamQueryOptions"><span class="hs-identifier hs-var hs-var">acStreamQueryOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#StreamQueriesOptions"><span class="hs-identifier hs-type">StreamQueriesOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span id="acCorsPolicy"><span class="annot"><span class="annottext">AppContext -&gt; CorsPolicy
+</span><a href="Hasura.App.State.html#acCorsPolicy"><span class="hs-identifier hs-var hs-var">acCorsPolicy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">Cors.CorsPolicy</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span id="acConsoleStatus"><span class="annot"><span class="annottext">AppContext -&gt; ConsoleStatus
+</span><a href="Hasura.App.State.html#acConsoleStatus"><span class="hs-identifier hs-var hs-var">acConsoleStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ConsoleStatus"><span class="hs-identifier hs-type">ConsoleStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-159"></span><span>    </span><span id="acEnableTelemetry"><span class="annot"><span class="annottext">AppContext -&gt; TelemetryStatus
+</span><a href="Hasura.App.State.html#acEnableTelemetry"><span class="hs-identifier hs-var hs-var">acEnableTelemetry</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#TelemetryStatus"><span class="hs-identifier hs-type">TelemetryStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>    </span><span id="acEventEngineCtx"><span class="annot"><span class="annottext">AppContext -&gt; EventEngineCtx
+</span><a href="Hasura.App.State.html#acEventEngineCtx"><span class="hs-identifier hs-var hs-var">acEventEngineCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Eventing.EventTrigger.html#EventEngineCtx"><span class="hs-identifier hs-type">EventEngineCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>    </span><span id="acAsyncActionsFetchInterval"><span class="annot"><span class="annottext">AppContext -&gt; OptionalInterval
+</span><a href="Hasura.App.State.html#acAsyncActionsFetchInterval"><span class="hs-identifier hs-var hs-var">acAsyncActionsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-162"></span><span>    </span><span id="acApolloFederationStatus"><span class="annot"><span class="annottext">AppContext -&gt; ApolloFederationStatus
+</span><a href="Hasura.App.State.html#acApolloFederationStatus"><span class="hs-identifier hs-var hs-var">acApolloFederationStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ApolloFederationStatus"><span class="hs-identifier hs-type">ApolloFederationStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-163"></span><span>    </span><span id="acCloseWebsocketsOnMetadataChangeStatus"><span class="annot"><span class="annottext">AppContext -&gt; CloseWebsocketsOnMetadataChangeStatus
+</span><a href="Hasura.App.State.html#acCloseWebsocketsOnMetadataChangeStatus"><span class="hs-identifier hs-var hs-var">acCloseWebsocketsOnMetadataChangeStatus</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#CloseWebsocketsOnMetadataChangeStatus"><span class="hs-identifier hs-type">CloseWebsocketsOnMetadataChangeStatus</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="annot"><span class="hs-comment">-- | Collection of the LoggerCtx, the regular Logger and the PGLogger</span></span><span>
+</span><span id="line-167"></span><span class="hs-keyword">data</span><span> </span><span id="Loggers"><span class="annot"><a href="Hasura.App.State.html#Loggers"><span class="hs-identifier hs-var">Loggers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Loggers"><span class="annot"><a href="Hasura.App.State.html#Loggers"><span class="hs-identifier hs-var">Loggers</span></a></span></span><span>
+</span><span id="line-168"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_lsLoggerCtx"><span class="annot"><span class="annottext">Loggers -&gt; LoggerCtx Hasura
+</span><a href="Hasura.App.State.html#_lsLoggerCtx"><span class="hs-identifier hs-var hs-var">_lsLoggerCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LoggerCtx"><span class="hs-identifier hs-type">L.LoggerCtx</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-169"></span><span>    </span><span id="_lsLogger"><span class="annot"><span class="annottext">Loggers -&gt; Logger Hasura
+</span><a href="Hasura.App.State.html#_lsLogger"><span class="hs-identifier hs-var hs-var">_lsLogger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-170"></span><span>    </span><span id="_lsPgLogger"><span class="annot"><span class="annottext">Loggers -&gt; PGLogger
+</span><a href="Hasura.App.State.html#_lsPgLogger"><span class="hs-identifier hs-var hs-var">_lsPgLogger</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/pg-client-0.1.0/opt/doc/html/pg-client/src/Database.PG.Query.Connection.html#PGLogger"><span class="hs-identifier hs-type">PG.PGLogger</span></a></span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span class="hs-keyword">data</span><span> </span><span id="InvalidationKeys"><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKeys"><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span></span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-176"></span><span class="hs-comment">-- env access</span><span>
+</span><span id="line-177"></span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- | Provides access to the 'AppEnv'.</span><span>
+</span><span id="line-179"></span><span class="hs-comment">--</span><span>
+</span><span id="line-180"></span><span class="hs-comment">-- This class is nothing more than an equivalent of @MonadReader AppEnv m@, but</span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- it abstracts it, so that application code can be written without explicitly</span><span>
+</span><span id="line-182"></span><span class="hs-comment">-- relying on an explicit implementation of the app monad. It allows for the app</span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- env to be passed implicitly instead of explictly in all of the app init code.</span><span>
+</span><span id="line-184"></span><span class="hs-comment">--</span><span>
+</span><span id="line-185"></span><span class="hs-comment">-- This class is not meant to be used across the entirety of the codebase, as</span><span>
+</span><span id="line-186"></span><span class="hs-comment">-- using it brings in scope the types of all fields, creating dependencies</span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- between unrelated parts of the codebase. It is only meant to be used at the</span><span>
+</span><span id="line-188"></span><span class="hs-comment">-- top level; more specific parts of the code should only rely on the relevant</span><span>
+</span><span id="line-189"></span><span class="hs-comment">-- subset of the environment, exposed by small, local typeclasses. For instance,</span><span>
+</span><span id="line-190"></span><span class="hs-comment">-- at time of writing, this can be used to implement 'HasServerConfigCtx', as a</span><span>
+</span><span id="line-191"></span><span class="hs-comment">-- first step towards breaking it down.</span><span>
+</span><span id="line-192"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687206627"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="HasAppEnv"><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-var">HasAppEnv</span></a></span></span><span> </span><span id="local-6989586621687206627"><span class="annot"><a href="#local-6989586621687206627"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-193"></span><span>  </span><span id="askAppEnv"><span class="annot"><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-type">askAppEnv</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621687206627"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-type">AppEnv</span></a></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687206633"><span id="local-6989586621687206634"><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206633"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621687206634"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206633"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621687206903"><span class="annot"><span class="annottext">askAppEnv :: ReaderT r m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var hs-var hs-var hs-var">askAppEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m AppEnv -&gt; ReaderT r m AppEnv
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m AppEnv
+forall (m :: * -&gt; *). HasAppEnv m =&gt; m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var">askAppEnv</span></a></span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687206644"><span id="local-6989586621687206645"><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206644"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.App.State.html#HasAppEnv"><span class="hs-identifier hs-type">HasAppEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621687206645"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206644"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621687206916"><span class="annot"><span class="annottext">askAppEnv :: ExceptT e m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var hs-var hs-var hs-var">askAppEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m AppEnv -&gt; ExceptT e m AppEnv
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ExceptT e m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">m AppEnv
+forall (m :: * -&gt; *). HasAppEnv m =&gt; m AppEnv
+</span><a href="Hasura.App.State.html#askAppEnv"><span class="hs-identifier hs-var">askAppEnv</span></a></span><span>
+</span><span id="line-200"></span><span>
+</span><span id="line-201"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-202"></span><span class="hs-comment">-- init functions</span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span class="annot"><a href="Hasura.App.State.html#initInvalidationKeys"><span class="hs-identifier hs-type">initInvalidationKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span>
+</span><span id="line-205"></span><span id="initInvalidationKeys"><span class="annot"><span class="annottext">initInvalidationKeys :: InvalidationKeys
+</span><a href="Hasura.App.State.html#initInvalidationKeys"><span class="hs-identifier hs-var hs-var">initInvalidationKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span><span>
+</span><span id="line-206"></span><span>
+</span><span id="line-207"></span><span class="hs-comment">-- | Function to build the 'AppContext' (given the 'ServeOptions') for the first</span><span>
+</span><span id="line-208"></span><span class="hs-comment">-- time</span><span>
+</span><span id="line-209"></span><span id="local-6989586621687206647"><span class="annot"><a href="Hasura.App.State.html#buildRebuildableAppContext"><span class="hs-identifier hs-type">buildRebuildableAppContext</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Manager"><span class="hs-identifier hs-type">HTTP.Manager</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206647"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">E.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206647"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-210"></span><span id="buildRebuildableAppContext"><span class="annot"><span class="annottext">buildRebuildableAppContext :: forall impl.
+(Logger Hasura, Manager)
+-&gt; ServeOptions impl
+-&gt; Environment
+-&gt; ExceptT QErr IO (RebuildableAppContext impl)
+</span><a href="Hasura.App.State.html#buildRebuildableAppContext"><span class="hs-identifier hs-var hs-var">buildRebuildableAppContext</span></a></span></span><span> </span><span id="local-6989586621687206952"><span class="annot"><span class="annottext">(Logger Hasura, Manager)
+</span><a href="#local-6989586621687206952"><span class="hs-identifier hs-var">readerContext</span></a></span></span><span> </span><span id="local-6989586621687206953"><span class="annot"><span class="annottext">ServeOptions impl
+</span><a href="#local-6989586621687206953"><span class="hs-identifier hs-var">serveOptions</span></a></span></span><span> </span><span id="local-6989586621687206954"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687206954"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-211"></span><span>  </span><span id="local-6989586621687206955"><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206955"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ReaderT
+   (Logger Hasura, Manager)
+   (ExceptT QErr IO)
+   (Result
+      (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+      (ServeOptions impl, Environment, InvalidationKeys)
+      AppContext)
+ -&gt; (Logger Hasura, Manager)
+ -&gt; ExceptT
+      QErr
+      IO
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+-&gt; (Logger Hasura, Manager)
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  (Logger Hasura, Manager)
+  (ExceptT QErr IO)
+  (Result
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext)
+-&gt; (Logger Hasura, Manager)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">(Logger Hasura, Manager)
+</span><a href="#local-6989586621687206952"><span class="hs-identifier hs-var">readerContext</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
+   (Logger Hasura, Manager)
+   (ExceptT QErr IO)
+   (Result
+      (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+      (ServeOptions impl, Environment, InvalidationKeys)
+      AppContext)
+ -&gt; ExceptT
+      QErr
+      IO
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Rule
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; (ServeOptions impl, Environment, InvalidationKeys)
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+Rule m a b -&gt; a -&gt; m (Result m a b)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#build"><span class="hs-identifier hs-var">Inc.build</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Rule
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *) impl.
+(ArrowChoice arr, ArrowCache m arr, MonadBaseControl IO m,
+ MonadIO m, MonadError QErr m,
+ MonadReader (Logger Hasura, Manager) m) =&gt;
+arr (ServeOptions impl, Environment, InvalidationKeys) AppContext
+</span><a href="Hasura.App.State.html#buildAppContextRule"><span class="hs-identifier hs-var">buildAppContextRule</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServeOptions impl
+</span><a href="#local-6989586621687206953"><span class="hs-identifier hs-var">serveOptions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687206954"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="Hasura.App.State.html#initInvalidationKeys"><span class="hs-identifier hs-var">initInvalidationKeys</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-212"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621687206960"><span class="annot"><span class="annottext">appContext :: AppContext
+</span><a href="#local-6989586621687206960"><span class="hs-identifier hs-var hs-var">appContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; AppContext
+forall {k} (m :: k -&gt; *) a b. Result m a b -&gt; b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#result"><span class="hs-identifier hs-var">Inc.result</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206955"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-213"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621687206962"><span class="annot"><span class="annottext">rebuildableAppContext :: RebuildableAppContext impl
+</span><a href="#local-6989586621687206962"><span class="hs-identifier hs-var hs-var">rebuildableAppContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppContext
+-&gt; InvalidationKeys
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+-&gt; RebuildableAppContext impl
+forall impl.
+AppContext
+-&gt; InvalidationKeys
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+-&gt; RebuildableAppContext impl
+</span><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-var">RebuildableAppContext</span></a></span><span> </span><span class="annot"><span class="annottext">AppContext
+</span><a href="#local-6989586621687206960"><span class="hs-identifier hs-var">appContext</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="Hasura.App.State.html#initInvalidationKeys"><span class="hs-identifier hs-var">initInvalidationKeys</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+forall {k} (m :: k -&gt; *) a b. Result m a b -&gt; Rule m a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#rebuildRule"><span class="hs-identifier hs-var">Inc.rebuildRule</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206955"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">RebuildableAppContext impl
+-&gt; ExceptT QErr IO (RebuildableAppContext impl)
+forall a. a -&gt; ExceptT QErr IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RebuildableAppContext impl
+</span><a href="#local-6989586621687206962"><span class="hs-identifier hs-var">rebuildableAppContext</span></a></span><span>
+</span><span id="line-215"></span><span>
+</span><span id="line-216"></span><span class="hs-comment">-- | Function to rebuild the 'AppContext' from a given 'RebuildableAppContext'</span><span>
+</span><span id="line-217"></span><span class="hs-comment">-- and a new 'ServeOptions'</span><span>
+</span><span id="line-218"></span><span id="local-6989586621687206705"><span id="local-6989586621687206706"><span class="annot"><a href="Hasura.App.State.html#rebuildRebuildableAppContext"><span class="hs-identifier hs-type">rebuildRebuildableAppContext</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-219"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687206705"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206705"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-220"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Manager"><span class="hs-identifier hs-type">HTTP.Manager</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206706"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206706"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">E.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><a href="#local-6989586621687206705"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206706"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-225"></span><span id="rebuildRebuildableAppContext"><span class="annot"><span class="annottext">rebuildRebuildableAppContext :: forall (m :: * -&gt; *) impl.
+(MonadIO m, MonadError QErr m) =&gt;
+(Logger Hasura, Manager)
+-&gt; RebuildableAppContext impl
+-&gt; ServeOptions impl
+-&gt; Environment
+-&gt; m (RebuildableAppContext impl)
+</span><a href="Hasura.App.State.html#rebuildRebuildableAppContext"><span class="hs-identifier hs-var hs-var">rebuildRebuildableAppContext</span></a></span></span><span> </span><span id="local-6989586621687206978"><span class="annot"><span class="annottext">(Logger Hasura, Manager)
+</span><a href="#local-6989586621687206978"><span class="hs-identifier hs-var">readerCtx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-type">RebuildableAppContext</span></a></span><span> </span><span class="annot"><span class="annottext">AppContext
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687206979"><span class="annot"><span class="annottext">Rule
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206979"><span class="hs-identifier hs-var">rule</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687206980"><span class="annot"><span class="annottext">ServeOptions impl
+</span><a href="#local-6989586621687206980"><span class="hs-identifier hs-var">serveOptions</span></a></span></span><span> </span><span id="local-6989586621687206981"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687206981"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-226"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687206982"><span class="annot"><span class="annottext">newInvalidationKeys :: InvalidationKeys
+</span><a href="#local-6989586621687206982"><span class="hs-identifier hs-var hs-var">newInvalidationKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-var">InvalidationKeys</span></a></span><span>
+</span><span id="line-227"></span><span>  </span><span id="local-6989586621687206983"><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206983"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-228"></span><span>    </span><span class="annot"><span class="annottext">m (Either
+     QErr
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext))
+-&gt; m (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#liftEitherM"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span>
+</span><span id="line-229"></span><span>      </span><span class="annot"><span class="annottext">(m (Either
+      QErr
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+ -&gt; m (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+-&gt; m (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+-&gt; m (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO
+  (Either
+     QErr
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext))
+-&gt; m (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+forall a. IO a -&gt; m a
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span>
+</span><span id="line-230"></span><span>      </span><span class="annot"><span class="annottext">(IO
+   (Either
+      QErr
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+ -&gt; m (Either
+         QErr
+         (Result
+            (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+            (ServeOptions impl, Environment, InvalidationKeys)
+            AppContext)))
+-&gt; IO
+     (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+-&gt; m (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExceptT
+  QErr
+  IO
+  (Result
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext)
+-&gt; IO
+     (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span>
+</span><span id="line-231"></span><span>      </span><span class="annot"><span class="annottext">(ExceptT
+   QErr
+   IO
+   (Result
+      (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+      (ServeOptions impl, Environment, InvalidationKeys)
+      AppContext)
+ -&gt; IO
+      (Either
+         QErr
+         (Result
+            (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+            (ServeOptions impl, Environment, InvalidationKeys)
+            AppContext)))
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+-&gt; IO
+     (Either
+        QErr
+        (Result
+           (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+           (ServeOptions impl, Environment, InvalidationKeys)
+           AppContext))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ReaderT
+   (Logger Hasura, Manager)
+   (ExceptT QErr IO)
+   (Result
+      (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+      (ServeOptions impl, Environment, InvalidationKeys)
+      AppContext)
+ -&gt; (Logger Hasura, Manager)
+ -&gt; ExceptT
+      QErr
+      IO
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+-&gt; (Logger Hasura, Manager)
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  (Logger Hasura, Manager)
+  (ExceptT QErr IO)
+  (Result
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext)
+-&gt; (Logger Hasura, Manager)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">(Logger Hasura, Manager)
+</span><a href="#local-6989586621687206978"><span class="hs-identifier hs-var">readerCtx</span></a></span><span>
+</span><span id="line-232"></span><span>      </span><span class="annot"><span class="annottext">(ReaderT
+   (Logger Hasura, Manager)
+   (ExceptT QErr IO)
+   (Result
+      (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+      (ServeOptions impl, Environment, InvalidationKeys)
+      AppContext)
+ -&gt; ExceptT
+      QErr
+      IO
+      (Result
+         (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+         (ServeOptions impl, Environment, InvalidationKeys)
+         AppContext))
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+-&gt; ExceptT
+     QErr
+     IO
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Rule
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; (ServeOptions impl, Environment, InvalidationKeys)
+-&gt; ReaderT
+     (Logger Hasura, Manager)
+     (ExceptT QErr IO)
+     (Result
+        (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+        (ServeOptions impl, Environment, InvalidationKeys)
+        AppContext)
+forall (m :: * -&gt; *) a b.
+Applicative m =&gt;
+Rule m a b -&gt; a -&gt; m (Result m a b)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#build"><span class="hs-identifier hs-var">Inc.build</span></a></span><span> </span><span class="annot"><span class="annottext">Rule
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206979"><span class="hs-identifier hs-var">rule</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServeOptions impl
+</span><a href="#local-6989586621687206980"><span class="hs-identifier hs-var">serveOptions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687206981"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="#local-6989586621687206982"><span class="hs-identifier hs-var">newInvalidationKeys</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-233"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687206987"><span class="annot"><span class="annottext">appContext :: AppContext
+</span><a href="#local-6989586621687206987"><span class="hs-identifier hs-var hs-var">appContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; AppContext
+forall {k} (m :: k -&gt; *) a b. Result m a b -&gt; b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#result"><span class="hs-identifier hs-var">Inc.result</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206983"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><span id="line-234"></span><span>      </span><span class="hs-glyph">!</span><span id="local-6989586621687206988"><span class="annot"><span class="annottext">newCtx :: RebuildableAppContext impl
+</span><a href="#local-6989586621687206988"><span class="hs-identifier hs-var hs-var">newCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AppContext
+-&gt; InvalidationKeys
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+-&gt; RebuildableAppContext impl
+forall impl.
+AppContext
+-&gt; InvalidationKeys
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+-&gt; RebuildableAppContext impl
+</span><a href="Hasura.App.State.html#RebuildableAppContext"><span class="hs-identifier hs-var">RebuildableAppContext</span></a></span><span> </span><span class="annot"><span class="annottext">AppContext
+</span><a href="#local-6989586621687206987"><span class="hs-identifier hs-var">appContext</span></a></span><span> </span><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="#local-6989586621687206982"><span class="hs-identifier hs-var">newInvalidationKeys</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+-&gt; Rule
+     (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+     (ServeOptions impl, Environment, InvalidationKeys)
+     AppContext
+forall {k} (m :: k -&gt; *) a b. Result m a b -&gt; Rule m a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#rebuildRule"><span class="hs-identifier hs-var">Inc.rebuildRule</span></a></span><span> </span><span class="annot"><span class="annottext">Result
+  (ReaderT (Logger Hasura, Manager) (ExceptT QErr IO))
+  (ServeOptions impl, Environment, InvalidationKeys)
+  AppContext
+</span><a href="#local-6989586621687206983"><span class="hs-identifier hs-var">result</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-235"></span><span>  </span><span class="annot"><span class="annottext">RebuildableAppContext impl -&gt; m (RebuildableAppContext impl)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RebuildableAppContext impl
+</span><a href="#local-6989586621687206988"><span class="hs-identifier hs-var">newCtx</span></a></span><span>
+</span><span id="line-236"></span><span>
+</span><span id="line-237"></span><span class="annot"><a href="Hasura.App.State.html#buildAppContextRule"><span class="hs-identifier hs-type">buildAppContextRule</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-238"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687206692"><span class="annot"><a href="#local-6989586621687206692"><span class="hs-identifier hs-type">arr</span></a></span></span><span> </span><span id="local-6989586621687206693"><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687206694"><span class="annot"><a href="#local-6989586621687206694"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-239"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621687206692"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-240"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">Inc.ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206692"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-241"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-242"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-243"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-244"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Manager"><span class="hs-identifier hs-type">HTTP.Manager</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687206693"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-245"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687206694"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">E.Environment</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.App.State.html#InvalidationKeys"><span class="hs-identifier hs-type">InvalidationKeys</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687206692"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span>
+</span><span id="line-247"></span><span id="buildAppContextRule"><span class="annot"><span class="annottext">buildAppContextRule :: forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *) impl.
+(ArrowChoice arr, ArrowCache m arr, MonadBaseControl IO m,
+ MonadIO m, MonadError QErr m,
+ MonadReader (Logger Hasura, Manager) m) =&gt;
+arr (ServeOptions impl, Environment, InvalidationKeys) AppContext
+</span><a href="Hasura.App.State.html#buildAppContextRule"><span class="hs-identifier hs-var hs-var">buildAppContextRule</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687207033"><span id="local-6989586621687207034"><span id="local-6989586621687207035"><span id="local-6989586621687207036"><span id="local-6989586621687207037"><span id="local-6989586621687207038"><span id="local-6989586621687207039"><span id="local-6989586621687207040"><span id="local-6989586621687207041"><span id="local-6989586621687207042"><span id="local-6989586621687207043"><span id="local-6989586621687207044"><span id="local-6989586621687207045"><span id="local-6989586621687207046"><span id="local-6989586621687207047"><span id="local-6989586621687207048"><span id="local-6989586621687207049"><span id="local-6989586621687207050"><span id="local-6989586621687207051"><span id="local-6989586621687207052"><span id="local-6989586621687207053"><span id="local-6989586621687207054"><span id="local-6989586621687207055"><span id="local-6989586621687207056"><span id="local-6989586621687207057"><span id="local-6989586621687207058"><span id="local-6989586621687207059"><span id="local-6989586621687207060"><span id="local-6989586621687207061"><span id="local-6989586621687207062"><span id="local-6989586621687207063"><span id="local-6989586621687207064"><span id="local-6989586621687207065"><span id="local-6989586621687207066"><span id="local-6989586621687207067"><span id="local-6989586621687207068"><span id="local-6989586621687207069"><span id="local-6989586621687207070"><span id="local-6989586621687207071"><span id="local-6989586621687207072"><span id="local-6989586621687207073"><span id="local-6989586621687207074"><span id="local-6989586621687207075"><span id="local-6989586621687207076"><span class="annot"><span class="annottext">[JWTConfig]
+Maybe Text
+Maybe RoleName
+Maybe AuthHook
+HostPreference
+HashSet (EngineLogType impl)
+HashSet ExperimentalFeature
+HashSet AdminSecretHash
+HashSet API
+TxIsolation
+ConnParams
+Refined NonNegative Int
+Refined NonNegative Milliseconds
+Refined NonNegative Seconds
+Refined Positive Int
+ConnectionOptions
+LiveQueriesOptions
+LogLevel
+NamingCase
+RemoteSchemaPermissions
+InferFunctionPermissions
+DangerouslyCollapseBooleans
+StringifyNumbers
+ExtensionsSchema
+CloseWebsocketsOnMetadataChangeStatus
+ApolloFederationStatus
+EventingMode
+ReadOnlyMode
+MaintenanceMode ()
+CorsConfig
+MetadataQueryLoggingMode
+MetadataDefaults
+WSConnectionInitTimeout
+KeepAliveDelay
+OptionalInterval
+Port
+TelemetryStatus
+DevModeStatus
+AllowListStatus
+AdminInternalErrorsStatus
+ConsoleStatus
+soPort :: Port
+soHost :: HostPreference
+soConnParams :: ConnParams
+soTxIso :: TxIsolation
+soAdminSecret :: HashSet AdminSecretHash
+soAuthHook :: Maybe AuthHook
+soJwtSecret :: [JWTConfig]
+soUnAuthRole :: Maybe RoleName
+soCorsConfig :: CorsConfig
+soConsoleStatus :: ConsoleStatus
+soConsoleAssetsDir :: Maybe Text
+soConsoleSentryDsn :: Maybe Text
+soEnableTelemetry :: TelemetryStatus
+soStringifyNum :: StringifyNumbers
+soDangerousBooleanCollapse :: DangerouslyCollapseBooleans
+soEnabledAPIs :: HashSet API
+soLiveQueryOpts :: LiveQueriesOptions
+soStreamingQueryOpts :: LiveQueriesOptions
+soEnableAllowList :: AllowListStatus
+soEnabledLogTypes :: HashSet (EngineLogType impl)
+soLogLevel :: LogLevel
+soEventsHttpPoolSize :: Refined Positive Int
+soEventsFetchInterval :: Refined NonNegative Milliseconds
+soAsyncActionsFetchInterval :: OptionalInterval
+soEnableRemoteSchemaPermissions :: RemoteSchemaPermissions
+soConnectionOptions :: ConnectionOptions
+soWebSocketKeepAlive :: KeepAliveDelay
+soInferFunctionPermissions :: InferFunctionPermissions
+soEnableMaintenanceMode :: MaintenanceMode ()
+soSchemaPollInterval :: OptionalInterval
+soExperimentalFeatures :: HashSet ExperimentalFeature
+soEventsFetchBatchSize :: Refined NonNegative Int
+soDevMode :: DevModeStatus
+soAdminInternalErrors :: AdminInternalErrorsStatus
+soGracefulShutdownTimeout :: Refined NonNegative Seconds
+soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout
+soEventingMode :: EventingMode
+soReadOnlyMode :: ReadOnlyMode
+soEnableMetadataQueryLogging :: MetadataQueryLoggingMode
+soDefaultNamingConvention :: NamingCase
+soExtensionsSchema :: ExtensionsSchema
+soMetadataDefaults :: MetadataDefaults
+soApolloFederationStatus :: ApolloFederationStatus
+soCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
+soPort :: forall impl. ServeOptions impl -&gt; Port
+soHost :: forall impl. ServeOptions impl -&gt; HostPreference
+soConnParams :: forall impl. ServeOptions impl -&gt; ConnParams
+soTxIso :: forall impl. ServeOptions impl -&gt; TxIsolation
+soAdminSecret :: forall impl. ServeOptions impl -&gt; HashSet AdminSecretHash
+soAuthHook :: forall impl. ServeOptions impl -&gt; Maybe AuthHook
+soJwtSecret :: forall impl. ServeOptions impl -&gt; [JWTConfig]
+soUnAuthRole :: forall impl. ServeOptions impl -&gt; Maybe RoleName
+soCorsConfig :: forall impl. ServeOptions impl -&gt; CorsConfig
+soConsoleStatus :: forall impl. ServeOptions impl -&gt; ConsoleStatus
+soConsoleAssetsDir :: forall impl. ServeOptions impl -&gt; Maybe Text
+soConsoleSentryDsn :: forall impl. ServeOptions impl -&gt; Maybe Text
+soEnableTelemetry :: forall impl. ServeOptions impl -&gt; TelemetryStatus
+soStringifyNum :: forall impl. ServeOptions impl -&gt; StringifyNumbers
+soDangerousBooleanCollapse :: forall impl. ServeOptions impl -&gt; DangerouslyCollapseBooleans
+soEnabledAPIs :: forall impl. ServeOptions impl -&gt; HashSet API
+soLiveQueryOpts :: forall impl. ServeOptions impl -&gt; LiveQueriesOptions
+soStreamingQueryOpts :: forall impl. ServeOptions impl -&gt; LiveQueriesOptions
+soEnableAllowList :: forall impl. ServeOptions impl -&gt; AllowListStatus
+soEnabledLogTypes :: forall impl. ServeOptions impl -&gt; HashSet (EngineLogType impl)
+soLogLevel :: forall impl. ServeOptions impl -&gt; LogLevel
+soEventsHttpPoolSize :: forall impl. ServeOptions impl -&gt; Refined Positive Int
+soEventsFetchInterval :: forall impl. ServeOptions impl -&gt; Refined NonNegative Milliseconds
+soAsyncActionsFetchInterval :: forall impl. ServeOptions impl -&gt; OptionalInterval
+soEnableRemoteSchemaPermissions :: forall impl. ServeOptions impl -&gt; RemoteSchemaPermissions
+soConnectionOptions :: forall impl. ServeOptions impl -&gt; ConnectionOptions
+soWebSocketKeepAlive :: forall impl. ServeOptions impl -&gt; KeepAliveDelay
+soInferFunctionPermissions :: forall impl. ServeOptions impl -&gt; InferFunctionPermissions
+soEnableMaintenanceMode :: forall impl. ServeOptions impl -&gt; MaintenanceMode ()
+soSchemaPollInterval :: forall impl. ServeOptions impl -&gt; OptionalInterval
+soExperimentalFeatures :: forall impl. ServeOptions impl -&gt; HashSet ExperimentalFeature
+soEventsFetchBatchSize :: forall impl. ServeOptions impl -&gt; Refined NonNegative Int
+soDevMode :: forall impl. ServeOptions impl -&gt; DevModeStatus
+soAdminInternalErrors :: forall impl. ServeOptions impl -&gt; AdminInternalErrorsStatus
+soGracefulShutdownTimeout :: forall impl. ServeOptions impl -&gt; Refined NonNegative Seconds
+soWebSocketConnectionInitTimeout :: forall impl. ServeOptions impl -&gt; WSConnectionInitTimeout
+soEventingMode :: forall impl. ServeOptions impl -&gt; EventingMode
+soReadOnlyMode :: forall impl. ServeOptions impl -&gt; ReadOnlyMode
+soEnableMetadataQueryLogging :: forall impl. ServeOptions impl -&gt; MetadataQueryLoggingMode
+soDefaultNamingConvention :: forall impl. ServeOptions impl -&gt; NamingCase
+soExtensionsSchema :: forall impl. ServeOptions impl -&gt; ExtensionsSchema
+soMetadataDefaults :: forall impl. ServeOptions impl -&gt; MetadataDefaults
+soApolloFederationStatus :: forall impl. ServeOptions impl -&gt; ApolloFederationStatus
+soCloseWebsocketsOnMetadataChangeStatus :: forall impl.
+ServeOptions impl -&gt; CloseWebsocketsOnMetadataChangeStatus
+</span><a href="#local-6989586621687207033"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207121"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687207121"><span class="hs-identifier hs-var">env</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207122"><span class="annot"><span class="annottext">InvalidationKeys
+</span><a href="#local-6989586621687207122"><span class="hs-identifier hs-var">_keys</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-248"></span><span>  </span><span id="local-6989586621687207123"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621687207123"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+  (HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig],
+   Maybe RoleName)
+  AuthMode
+</span><a href="#local-6989586621687207124"><span class="hs-identifier hs-var">buildAuthMode</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621687207037"><span class="hs-identifier hs-var">soAdminSecret</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621687207038"><span class="hs-identifier hs-var">soAuthHook</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[JWTConfig]
+</span><a href="#local-6989586621687207039"><span class="hs-identifier hs-var">soJwtSecret</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621687207040"><span class="hs-identifier hs-var">soUnAuthRole</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-249"></span><span>  </span><span id="local-6989586621687207125"><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621687207125"><span class="hs-identifier hs-var">sqlGenCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+  (HashSet ExperimentalFeature, StringifyNumbers,
+   DangerouslyCollapseBooleans)
+  SQLGenCtx
+</span><a href="#local-6989586621687207126"><span class="hs-identifier hs-var">buildSqlGenCtx</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207063"><span class="hs-identifier hs-var">soExperimentalFeatures</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687207046"><span class="hs-identifier hs-var">soStringifyNum</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621687207047"><span class="hs-identifier hs-var">soDangerousBooleanCollapse</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-250"></span><span>  </span><span id="local-6989586621687207127"><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207127"><span class="hs-identifier hs-var">responseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+  (AdminInternalErrorsStatus, DevModeStatus)
+  ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207128"><span class="hs-identifier hs-var">buildResponseInternalErrorsConfig</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdminInternalErrorsStatus
+</span><a href="#local-6989586621687207066"><span class="hs-identifier hs-var">soAdminInternalErrors</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DevModeStatus
+</span><a href="#local-6989586621687207065"><span class="hs-identifier hs-var">soDevMode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-251"></span><span>  </span><span id="local-6989586621687207129"><span class="annot"><span class="annottext">EventEngineCtx
+</span><a href="#local-6989586621687207129"><span class="hs-identifier hs-var">eventEngineCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+  (Refined Positive Int, Refined NonNegative Milliseconds,
+   Refined NonNegative Int)
+  EventEngineCtx
+</span><a href="#local-6989586621687207130"><span class="hs-identifier hs-var">buildEventEngineCtx</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621687207054"><span class="hs-identifier hs-var">soEventsHttpPoolSize</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621687207055"><span class="hs-identifier hs-var">soEventsFetchInterval</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Int
+</span><a href="#local-6989586621687207064"><span class="hs-identifier hs-var">soEventsFetchBatchSize</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-252"></span><span>  </span><span class="annot"><span class="annottext">arr AppContext AppContext
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span>
+</span><span id="line-253"></span><span>    </span><span class="hs-glyph">-&lt;</span><span>
+</span><span id="line-254"></span><span>      </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span>
+</span><span id="line-255"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">acAuthMode :: AuthMode
+</span><a href="Hasura.App.State.html#acAuthMode"><span class="hs-identifier hs-var">acAuthMode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621687207123"><span class="hs-identifier hs-var">authMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-256"></span><span>          </span><span class="annot"><span class="annottext">acSQLGenCtx :: SQLGenCtx
+</span><a href="Hasura.App.State.html#acSQLGenCtx"><span class="hs-identifier hs-var">acSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621687207125"><span class="hs-identifier hs-var">sqlGenCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-257"></span><span>          </span><span class="annot"><span class="annottext">acEnabledAPIs :: HashSet API
+</span><a href="Hasura.App.State.html#acEnabledAPIs"><span class="hs-identifier hs-var">acEnabledAPIs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet API
+</span><a href="#local-6989586621687207048"><span class="hs-identifier hs-var">soEnabledAPIs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-258"></span><span>          </span><span class="annot"><span class="annottext">acEnableAllowlist :: AllowListStatus
+</span><a href="Hasura.App.State.html#acEnableAllowlist"><span class="hs-identifier hs-var">acEnableAllowlist</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687207051"><span class="hs-identifier hs-var">soEnableAllowList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-259"></span><span>          </span><span class="annot"><span class="annottext">acResponseInternalErrorsConfig :: ResponseInternalErrorsConfig
+</span><a href="Hasura.App.State.html#acResponseInternalErrorsConfig"><span class="hs-identifier hs-var">acResponseInternalErrorsConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207127"><span class="hs-identifier hs-var">responseInternalErrorsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-260"></span><span>          </span><span class="annot"><span class="annottext">acEnvironment :: Environment
+</span><a href="Hasura.App.State.html#acEnvironment"><span class="hs-identifier hs-var">acEnvironment</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687207121"><span class="hs-identifier hs-var">env</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-261"></span><span>          </span><span class="annot"><span class="annottext">acRemoteSchemaPermsCtx :: RemoteSchemaPermissions
+</span><a href="Hasura.App.State.html#acRemoteSchemaPermsCtx"><span class="hs-identifier hs-var">acRemoteSchemaPermsCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="#local-6989586621687207057"><span class="hs-identifier hs-var">soEnableRemoteSchemaPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-262"></span><span>          </span><span class="annot"><span class="annottext">acFunctionPermsCtx :: InferFunctionPermissions
+</span><a href="Hasura.App.State.html#acFunctionPermsCtx"><span class="hs-identifier hs-var">acFunctionPermsCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="#local-6989586621687207060"><span class="hs-identifier hs-var">soInferFunctionPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-263"></span><span>          </span><span class="annot"><span class="annottext">acExperimentalFeatures :: HashSet ExperimentalFeature
+</span><a href="Hasura.App.State.html#acExperimentalFeatures"><span class="hs-identifier hs-var">acExperimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207063"><span class="hs-identifier hs-var">soExperimentalFeatures</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-264"></span><span>          </span><span class="annot"><span class="annottext">acDefaultNamingConvention :: NamingCase
+</span><a href="Hasura.App.State.html#acDefaultNamingConvention"><span class="hs-identifier hs-var">acDefaultNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687207072"><span class="hs-identifier hs-var">soDefaultNamingConvention</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-265"></span><span>          </span><span class="annot"><span class="annottext">acMetadataDefaults :: MetadataDefaults
+</span><a href="Hasura.App.State.html#acMetadataDefaults"><span class="hs-identifier hs-var">acMetadataDefaults</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetadataDefaults
+</span><a href="#local-6989586621687207074"><span class="hs-identifier hs-var">soMetadataDefaults</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-266"></span><span>          </span><span class="annot"><span class="annottext">acLiveQueryOptions :: LiveQueriesOptions
+</span><a href="Hasura.App.State.html#acLiveQueryOptions"><span class="hs-identifier hs-var">acLiveQueryOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621687207049"><span class="hs-identifier hs-var">soLiveQueryOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-267"></span><span>          </span><span class="annot"><span class="annottext">acStreamQueryOptions :: LiveQueriesOptions
+</span><a href="Hasura.App.State.html#acStreamQueryOptions"><span class="hs-identifier hs-var">acStreamQueryOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621687207050"><span class="hs-identifier hs-var">soStreamingQueryOpts</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-268"></span><span>          </span><span class="annot"><span class="annottext">acCorsPolicy :: CorsPolicy
+</span><a href="Hasura.App.State.html#acCorsPolicy"><span class="hs-identifier hs-var">acCorsPolicy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CorsConfig -&gt; CorsPolicy
+</span><a href="Hasura.Server.Cors.html#mkDefaultCorsPolicy"><span class="hs-identifier hs-var">Cors.mkDefaultCorsPolicy</span></a></span><span> </span><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621687207041"><span class="hs-identifier hs-var">soCorsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-269"></span><span>          </span><span class="annot"><span class="annottext">acConsoleStatus :: ConsoleStatus
+</span><a href="Hasura.App.State.html#acConsoleStatus"><span class="hs-identifier hs-var">acConsoleStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConsoleStatus
+</span><a href="#local-6989586621687207042"><span class="hs-identifier hs-var">soConsoleStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-270"></span><span>          </span><span class="annot"><span class="annottext">acEnableTelemetry :: TelemetryStatus
+</span><a href="Hasura.App.State.html#acEnableTelemetry"><span class="hs-identifier hs-var">acEnableTelemetry</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TelemetryStatus
+</span><a href="#local-6989586621687207045"><span class="hs-identifier hs-var">soEnableTelemetry</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-271"></span><span>          </span><span class="annot"><span class="annottext">acEventEngineCtx :: EventEngineCtx
+</span><a href="Hasura.App.State.html#acEventEngineCtx"><span class="hs-identifier hs-var">acEventEngineCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventEngineCtx
+</span><a href="#local-6989586621687207129"><span class="hs-identifier hs-var">eventEngineCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-272"></span><span>          </span><span class="annot"><span class="annottext">acAsyncActionsFetchInterval :: OptionalInterval
+</span><a href="Hasura.App.State.html#acAsyncActionsFetchInterval"><span class="hs-identifier hs-var">acAsyncActionsFetchInterval</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OptionalInterval
+</span><a href="#local-6989586621687207056"><span class="hs-identifier hs-var">soAsyncActionsFetchInterval</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-273"></span><span>          </span><span class="annot"><span class="annottext">acApolloFederationStatus :: ApolloFederationStatus
+</span><a href="Hasura.App.State.html#acApolloFederationStatus"><span class="hs-identifier hs-var">acApolloFederationStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ApolloFederationStatus
+</span><a href="#local-6989586621687207075"><span class="hs-identifier hs-var">soApolloFederationStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-274"></span><span>          </span><span class="annot"><span class="annottext">acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
+</span><a href="Hasura.App.State.html#acCloseWebsocketsOnMetadataChangeStatus"><span class="hs-identifier hs-var">acCloseWebsocketsOnMetadataChangeStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CloseWebsocketsOnMetadataChangeStatus
+</span><a href="#local-6989586621687207076"><span class="hs-identifier hs-var">soCloseWebsocketsOnMetadataChangeStatus</span></a></span><span>
+</span><span id="line-275"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-276"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-277"></span><span>    </span><span id="local-6989586621687207126"><span class="annot"><span class="annottext">buildSqlGenCtx :: arr
+  (HashSet ExperimentalFeature, StringifyNumbers,
+   DangerouslyCollapseBooleans)
+  SQLGenCtx
+</span><a href="#local-6989586621687207126"><span class="hs-identifier hs-var hs-var">buildSqlGenCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
+  (HashSet ExperimentalFeature, StringifyNumbers,
+   DangerouslyCollapseBooleans)
+  SQLGenCtx
+-&gt; arr
+     (HashSet ExperimentalFeature, StringifyNumbers,
+      DangerouslyCollapseBooleans)
+     SQLGenCtx
+forall a b. (Given Accesses =&gt; Eq a) =&gt; arr a b -&gt; arr a b
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Given Accesses =&gt; Eq a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687207147"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207147"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207148"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687207148"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207149"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621687207149"><span class="hs-identifier hs-var">dangerousBooleanCollapse</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-278"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687207150"><span class="annot"><span class="annottext">sqlGenCtx :: SQLGenCtx
+</span><a href="#local-6989586621687207150"><span class="hs-identifier hs-var hs-var">sqlGenCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+-&gt; StringifyNumbers -&gt; DangerouslyCollapseBooleans -&gt; SQLGenCtx
+</span><a href="Hasura.App.State.html#initSQLGenCtx"><span class="hs-identifier hs-var">initSQLGenCtx</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207147"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687207148"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621687207149"><span class="hs-identifier hs-var">dangerousBooleanCollapse</span></a></span><span>
+</span><span id="line-279"></span><span>      </span><span class="annot"><span class="annottext">arr SQLGenCtx SQLGenCtx
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621687207150"><span class="hs-identifier hs-var">sqlGenCtx</span></a></span><span>
+</span><span id="line-280"></span><span>
+</span><span id="line-281"></span><span>    </span><span id="local-6989586621687207130"><span class="annot"><span class="annottext">buildEventEngineCtx :: arr
+  (Refined Positive Int, Refined NonNegative Milliseconds,
+   Refined NonNegative Int)
+  EventEngineCtx
+</span><a href="#local-6989586621687207130"><span class="hs-identifier hs-var hs-var">buildEventEngineCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
+  (Refined Positive Int, Refined NonNegative Milliseconds,
+   Refined NonNegative Int)
+  EventEngineCtx
+-&gt; arr
+     (Refined Positive Int, Refined NonNegative Milliseconds,
+      Refined NonNegative Int)
+     EventEngineCtx
+forall a b. (Given Accesses =&gt; Eq a) =&gt; arr a b -&gt; arr a b
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Given Accesses =&gt; Eq a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687207174"><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621687207174"><span class="hs-identifier hs-var">httpPoolSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207175"><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621687207175"><span class="hs-identifier hs-var">fetchInterval</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207176"><span class="annot"><span class="annottext">Refined NonNegative Int
+</span><a href="#local-6989586621687207176"><span class="hs-identifier hs-var">fetchBatchSize</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-282"></span><span>      </span><span id="local-6989586621687207177"><span class="annot"><span class="annottext">EventEngineCtx
+</span><a href="#local-6989586621687207177"><span class="hs-identifier hs-var">eventEngineCtx</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr (m EventEngineCtx) EventEngineCtx
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowKleisli m arr =&gt;
+arr (m a) a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Extended.html#bindA"><span class="hs-identifier hs-var">bindA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">Refined Positive Int
+-&gt; Refined NonNegative Milliseconds
+-&gt; Refined NonNegative Int
+-&gt; m EventEngineCtx
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Refined Positive Int
+-&gt; Refined NonNegative Milliseconds
+-&gt; Refined NonNegative Int
+-&gt; m EventEngineCtx
+</span><a href="Hasura.Eventing.EventTrigger.html#initEventEngineCtx"><span class="hs-identifier hs-var">initEventEngineCtx</span></a></span><span> </span><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621687207174"><span class="hs-identifier hs-var">httpPoolSize</span></a></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621687207175"><span class="hs-identifier hs-var">fetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Int
+</span><a href="#local-6989586621687207176"><span class="hs-identifier hs-var">fetchBatchSize</span></a></span><span>
+</span><span id="line-283"></span><span>      </span><span class="annot"><span class="annottext">arr EventEngineCtx EventEngineCtx
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">EventEngineCtx
+</span><a href="#local-6989586621687207177"><span class="hs-identifier hs-var">eventEngineCtx</span></a></span><span>
+</span><span id="line-284"></span><span>
+</span><span id="line-285"></span><span>    </span><span class="annot"><a href="#local-6989586621687207124"><span class="hs-identifier hs-type">buildAuthMode</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">Set.HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687206692"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span>
+</span><span id="line-286"></span><span>    </span><span id="local-6989586621687207124"><span class="annot"><span class="annottext">buildAuthMode :: arr
+  (HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig],
+   Maybe RoleName)
+  AuthMode
+</span><a href="#local-6989586621687207124"><span class="hs-identifier hs-var hs-var">buildAuthMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
+  (HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig],
+   Maybe RoleName)
+  AuthMode
+-&gt; arr
+     (HashSet AdminSecretHash, Maybe AuthHook, [JWTConfig],
+      Maybe RoleName)
+     AuthMode
+forall a b. (Given Accesses =&gt; Eq a) =&gt; arr a b -&gt; arr a b
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Given Accesses =&gt; Eq a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687207180"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621687207180"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207181"><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621687207181"><span class="hs-identifier hs-var">webHook</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207182"><span class="annot"><span class="annottext">[JWTConfig]
+</span><a href="#local-6989586621687207182"><span class="hs-identifier hs-var">jwtSecrets</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207183"><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621687207183"><span class="hs-identifier hs-var">unAuthRole</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-287"></span><span>      </span><span id="local-6989586621687207184"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621687207184"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-288"></span><span>        </span><span class="annot"><span class="annottext">arr (m AuthMode) AuthMode
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
+ArrowKleisli m arr =&gt;
+arr (m a) a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Extended.html#bindA"><span class="hs-identifier hs-var">bindA</span></a></span><span>
+</span><span id="line-289"></span><span>          </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-290"></span><span>            </span><span class="hs-special">(</span><span id="local-6989586621687207185"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687207185"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207186"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621687207186"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Logger Hasura, Manager)
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-291"></span><span>            </span><span id="local-6989586621687207188"><span class="annot"><span class="annottext">Either Text AuthMode
+</span><a href="#local-6989586621687207188"><span class="hs-identifier hs-var">authModeRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-292"></span><span>              </span><span class="annot"><span class="annottext">ExceptT Text m AuthMode -&gt; m (Either Text AuthMode)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span>
+</span><span id="line-293"></span><span>                </span><span class="annot"><span class="annottext">(ExceptT Text m AuthMode -&gt; m (Either Text AuthMode))
+-&gt; ExceptT Text m AuthMode -&gt; m (Either Text AuthMode)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+-&gt; Maybe AuthHook
+-&gt; [JWTConfig]
+-&gt; Maybe RoleName
+-&gt; Logger Hasura
+-&gt; Manager
+-&gt; ExceptT Text m AuthMode
+forall (m :: * -&gt; *).
+(MonadError Text m, MonadIO m, MonadBaseControl IO m) =&gt;
+HashSet AdminSecretHash
+-&gt; Maybe AuthHook
+-&gt; [JWTConfig]
+-&gt; Maybe RoleName
+-&gt; Logger Hasura
+-&gt; Manager
+-&gt; m AuthMode
+</span><a href="Hasura.Server.Auth.html#setupAuthMode"><span class="hs-identifier hs-var">setupAuthMode</span></a></span><span>
+</span><span id="line-294"></span><span>                  </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621687207180"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span>
+</span><span id="line-295"></span><span>                  </span><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621687207181"><span class="hs-identifier hs-var">webHook</span></a></span><span>
+</span><span id="line-296"></span><span>                  </span><span class="annot"><span class="annottext">[JWTConfig]
+</span><a href="#local-6989586621687207182"><span class="hs-identifier hs-var">jwtSecrets</span></a></span><span>
+</span><span id="line-297"></span><span>                  </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621687207183"><span class="hs-identifier hs-var">unAuthRole</span></a></span><span>
+</span><span id="line-298"></span><span>                  </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687207185"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-299"></span><span>                  </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621687207186"><span class="hs-identifier hs-var">httpManager</span></a></span><span>
+</span><span id="line-300"></span><span>            </span><span class="annot"><span class="annottext">Either Text AuthMode -&gt; (Text -&gt; m AuthMode) -&gt; m AuthMode
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text AuthMode
+</span><a href="#local-6989586621687207188"><span class="hs-identifier hs-var">authModeRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m AuthMode
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span>
+</span><span id="line-301"></span><span>      </span><span class="annot"><span class="annottext">arr AuthMode AuthMode
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621687207184"><span class="hs-identifier hs-var">authMode</span></a></span><span>
+</span><span id="line-302"></span><span>
+</span><span id="line-303"></span><span>    </span><span class="annot"><a href="#local-6989586621687207128"><span class="hs-identifier hs-type">buildResponseInternalErrorsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#AdminInternalErrorsStatus"><span class="hs-identifier hs-type">AdminInternalErrorsStatus</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#DevModeStatus"><span class="hs-identifier hs-type">DevModeStatus</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687206692"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ResponseInternalErrorsConfig"><span class="hs-identifier hs-type">ResponseInternalErrorsConfig</span></a></span><span>
+</span><span id="line-304"></span><span>    </span><span id="local-6989586621687207128"><span class="annot"><span class="annottext">buildResponseInternalErrorsConfig :: arr
+  (AdminInternalErrorsStatus, DevModeStatus)
+  ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207128"><span class="hs-identifier hs-var hs-var">buildResponseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
+  (AdminInternalErrorsStatus, DevModeStatus)
+  ResponseInternalErrorsConfig
+-&gt; arr
+     (AdminInternalErrorsStatus, DevModeStatus)
+     ResponseInternalErrorsConfig
+forall a b. (Given Accesses =&gt; Eq a) =&gt; arr a b -&gt; arr a b
+forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
+(ArrowCache m arr, Given Accesses =&gt; Eq a) =&gt;
+arr a b -&gt; arr a b
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687207192"><span class="annot"><span class="annottext">AdminInternalErrorsStatus
+</span><a href="#local-6989586621687207192"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687207193"><span class="annot"><span class="annottext">DevModeStatus
+</span><a href="#local-6989586621687207193"><span class="hs-identifier hs-var">devMode</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-305"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687207194"><span class="annot"><span class="annottext">responseInternalErrorsConfig :: ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207194"><span class="hs-identifier hs-var hs-var">responseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-306"></span><span>            </span><span class="hs-keyword">if</span><span>
+</span><span id="line-307"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">DevModeStatus -&gt; Bool
+</span><a href="Hasura.Server.Init.Config.html#isDevModeEnabled"><span class="hs-identifier hs-var">isDevModeEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">DevModeStatus
+</span><a href="#local-6989586621687207193"><span class="hs-identifier hs-var">devMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="Hasura.Server.Init.Config.html#InternalErrorsAllRequests"><span class="hs-identifier hs-var">InternalErrorsAllRequests</span></a></span><span>
+</span><span id="line-308"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus -&gt; Bool
+</span><a href="Hasura.Server.Init.Config.html#isAdminInternalErrorsEnabled"><span class="hs-identifier hs-var">isAdminInternalErrorsEnabled</span></a></span><span> </span><span class="annot"><span class="annottext">AdminInternalErrorsStatus
+</span><a href="#local-6989586621687207192"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="Hasura.Server.Init.Config.html#InternalErrorsAdminOnly"><span class="hs-identifier hs-var">InternalErrorsAdminOnly</span></a></span><span>
+</span><span id="line-309"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="Hasura.Server.Init.Config.html#InternalErrorsDisabled"><span class="hs-identifier hs-var">InternalErrorsDisabled</span></a></span><span>
+</span><span id="line-310"></span><span>      </span><span class="annot"><span class="annottext">arr ResponseInternalErrorsConfig ResponseInternalErrorsConfig
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="#local-6989586621687207194"><span class="hs-identifier hs-var">responseInternalErrorsConfig</span></a></span><span>
+</span><span id="line-311"></span><span>
+</span><span id="line-312"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-313"></span><span class="hs-comment">-- subsets</span><span>
+</span><span id="line-314"></span><span>
+</span><span id="line-315"></span><span class="annot"><a href="Hasura.App.State.html#initSQLGenCtx"><span class="hs-identifier hs-type">initSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">Options.StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">Options.DangerouslyCollapseBooleans</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-type">SQLGenCtx</span></a></span><span>
+</span><span id="line-316"></span><span id="initSQLGenCtx"><span class="annot"><span class="annottext">initSQLGenCtx :: HashSet ExperimentalFeature
+-&gt; StringifyNumbers -&gt; DangerouslyCollapseBooleans -&gt; SQLGenCtx
+</span><a href="Hasura.App.State.html#initSQLGenCtx"><span class="hs-identifier hs-var hs-var">initSQLGenCtx</span></a></span></span><span> </span><span id="local-6989586621687207200"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207200"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span></span><span> </span><span id="local-6989586621687207201"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687207201"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621687207202"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621687207202"><span class="hs-identifier hs-var">dangerousBooleanCollapse</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-317"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687207203"><span class="annot"><span class="annottext">optimizePermissionFilters :: OptimizePermissionFilters
+</span><a href="#local-6989586621687207203"><span class="hs-identifier hs-var hs-var">optimizePermissionFilters</span></a></span></span><span>
+</span><span id="line-318"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature
+</span><a href="Hasura.Server.Types.html#EFOptimizePermissionFilters"><span class="hs-identifier hs-var">EFOptimizePermissionFilters</span></a></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; HashSet ExperimentalFeature -&gt; Bool
+forall a. Eq a =&gt; a -&gt; HashSet a -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207200"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OptimizePermissionFilters
+</span><a href="Hasura.RQL.Types.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">Options.OptimizePermissionFilters</span></a></span><span>
+</span><span id="line-319"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OptimizePermissionFilters
+</span><a href="Hasura.RQL.Types.Schema.Options.html#Don%27tOptimizePermissionFilters"><span class="hs-identifier hs-var">Options.Don'tOptimizePermissionFilters</span></a></span><span>
+</span><span id="line-320"></span><span>
+</span><span id="line-321"></span><span>      </span><span id="local-6989586621687207208"><span class="annot"><span class="annottext">bigqueryStringNumericInput :: BigQueryStringNumericInput
+</span><a href="#local-6989586621687207208"><span class="hs-identifier hs-var hs-var">bigqueryStringNumericInput</span></a></span></span><span>
+</span><span id="line-322"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature
+</span><a href="Hasura.Server.Types.html#EFBigQueryStringNumericInput"><span class="hs-identifier hs-var">EFBigQueryStringNumericInput</span></a></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; HashSet ExperimentalFeature -&gt; Bool
+forall a. Eq a =&gt; a -&gt; HashSet a -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207200"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQueryStringNumericInput
+</span><a href="Hasura.RQL.Types.Schema.Options.html#EnableBigQueryStringNumericInput"><span class="hs-identifier hs-var">Options.EnableBigQueryStringNumericInput</span></a></span><span>
+</span><span id="line-323"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BigQueryStringNumericInput
+</span><a href="Hasura.RQL.Types.Schema.Options.html#DisableBigQueryStringNumericInput"><span class="hs-identifier hs-var">Options.DisableBigQueryStringNumericInput</span></a></span><span>
+</span><span id="line-324"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+-&gt; DangerouslyCollapseBooleans
+-&gt; OptimizePermissionFilters
+-&gt; BigQueryStringNumericInput
+-&gt; SQLGenCtx
+</span><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-var">SQLGenCtx</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687207201"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621687207202"><span class="hs-identifier hs-var">dangerousBooleanCollapse</span></a></span><span> </span><span class="annot"><span class="annottext">OptimizePermissionFilters
+</span><a href="#local-6989586621687207203"><span class="hs-identifier hs-var">optimizePermissionFilters</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryStringNumericInput
+</span><a href="#local-6989586621687207208"><span class="hs-identifier hs-var">bigqueryStringNumericInput</span></a></span><span>
+</span><span id="line-325"></span><span>
+</span><span id="line-326"></span><span class="annot"><a href="Hasura.App.State.html#buildCacheStaticConfig"><span class="hs-identifier hs-type">buildCacheStaticConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-type">AppEnv</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#CacheStaticConfig"><span class="hs-identifier hs-type">CacheStaticConfig</span></a></span><span>
+</span><span id="line-327"></span><span id="buildCacheStaticConfig"><span class="annot"><span class="annottext">buildCacheStaticConfig :: AppEnv -&gt; CacheStaticConfig
+</span><a href="Hasura.App.State.html#buildCacheStaticConfig"><span class="hs-identifier hs-var hs-var">buildCacheStaticConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppEnv"><span class="hs-identifier hs-type">AppEnv</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687207213"><span id="local-6989586621687207214"><span id="local-6989586621687207215"><span id="local-6989586621687207216"><span id="local-6989586621687207217"><span id="local-6989586621687207218"><span id="local-6989586621687207219"><span id="local-6989586621687207220"><span id="local-6989586621687207221"><span id="local-6989586621687207222"><span id="local-6989586621687207223"><span id="local-6989586621687207224"><span id="local-6989586621687207225"><span id="local-6989586621687207226"><span id="local-6989586621687207227"><span id="local-6989586621687207228"><span id="local-6989586621687207229"><span id="local-6989586621687207230"><span id="local-6989586621687207231"><span id="local-6989586621687207232"><span id="local-6989586621687207233"><span id="local-6989586621687207234"><span id="local-6989586621687207235"><span id="local-6989586621687207236"><span id="local-6989586621687207237"><span id="local-6989586621687207238"><span id="local-6989586621687207239"><span id="local-6989586621687207240"><span id="local-6989586621687207241"><span id="local-6989586621687207242"><span class="annot"><span class="annottext">Maybe Text
+Maybe PGPool
+Maybe (CredentialCache AgentLicenseKey)
+SamplingPolicy
+HostPreference
+Manager
+TxIsolation
+ConnParams
+PGPool
+Refined NonNegative Seconds
+TMVar MetadataResourceVersion
+ConnectionOptions
+CheckFeatureFlag
+ServerMetrics
+EventingMode
+ReadOnlyMode
+MaintenanceMode ()
+InstanceId
+PrometheusMetrics
+ShutdownLatch
+LoggingSettings
+LockedEventsCtx
+WSConnectionInitTimeout
+KeepAliveDelay
+OptionalInterval
+Port
+SubscriptionsState
+Loggers
+appEnvPort :: AppEnv -&gt; Port
+appEnvHost :: AppEnv -&gt; HostPreference
+appEnvMetadataDbPool :: AppEnv -&gt; PGPool
+appEnvIntrospectionDbPool :: AppEnv -&gt; Maybe PGPool
+appEnvManager :: AppEnv -&gt; Manager
+appEnvLoggers :: AppEnv -&gt; Loggers
+appEnvMetadataVersionRef :: AppEnv -&gt; TMVar MetadataResourceVersion
+appEnvInstanceId :: AppEnv -&gt; InstanceId
+appEnvEnableMaintenanceMode :: AppEnv -&gt; MaintenanceMode ()
+appEnvLoggingSettings :: AppEnv -&gt; LoggingSettings
+appEnvEventingMode :: AppEnv -&gt; EventingMode
+appEnvEnableReadOnlyMode :: AppEnv -&gt; ReadOnlyMode
+appEnvServerMetrics :: AppEnv -&gt; ServerMetrics
+appEnvShutdownLatch :: AppEnv -&gt; ShutdownLatch
+appEnvMetaVersionRef :: AppEnv -&gt; TMVar MetadataResourceVersion
+appEnvPrometheusMetrics :: AppEnv -&gt; PrometheusMetrics
+appEnvTraceSamplingPolicy :: AppEnv -&gt; SamplingPolicy
+appEnvSubscriptionState :: AppEnv -&gt; SubscriptionsState
+appEnvLockedEventsCtx :: AppEnv -&gt; LockedEventsCtx
+appEnvConnParams :: AppEnv -&gt; ConnParams
+appEnvTxIso :: AppEnv -&gt; TxIsolation
+appEnvConsoleAssetsDir :: AppEnv -&gt; Maybe Text
+appEnvConsoleSentryDsn :: AppEnv -&gt; Maybe Text
+appEnvConnectionOptions :: AppEnv -&gt; ConnectionOptions
+appEnvWebSocketKeepAlive :: AppEnv -&gt; KeepAliveDelay
+appEnvWebSocketConnectionInitTimeout :: AppEnv -&gt; WSConnectionInitTimeout
+appEnvGracefulShutdownTimeout :: AppEnv -&gt; Refined NonNegative Seconds
+appEnvSchemaPollInterval :: AppEnv -&gt; OptionalInterval
+appEnvCheckFeatureFlag :: AppEnv -&gt; CheckFeatureFlag
+appEnvLicenseKeyCache :: AppEnv -&gt; Maybe (CredentialCache AgentLicenseKey)
+appEnvPort :: Port
+appEnvHost :: HostPreference
+appEnvMetadataDbPool :: PGPool
+appEnvIntrospectionDbPool :: Maybe PGPool
+appEnvManager :: Manager
+appEnvLoggers :: Loggers
+appEnvMetadataVersionRef :: TMVar MetadataResourceVersion
+appEnvInstanceId :: InstanceId
+appEnvEnableMaintenanceMode :: MaintenanceMode ()
+appEnvLoggingSettings :: LoggingSettings
+appEnvEventingMode :: EventingMode
+appEnvEnableReadOnlyMode :: ReadOnlyMode
+appEnvServerMetrics :: ServerMetrics
+appEnvShutdownLatch :: ShutdownLatch
+appEnvMetaVersionRef :: TMVar MetadataResourceVersion
+appEnvPrometheusMetrics :: PrometheusMetrics
+appEnvTraceSamplingPolicy :: SamplingPolicy
+appEnvSubscriptionState :: SubscriptionsState
+appEnvLockedEventsCtx :: LockedEventsCtx
+appEnvConnParams :: ConnParams
+appEnvTxIso :: TxIsolation
+appEnvConsoleAssetsDir :: Maybe Text
+appEnvConsoleSentryDsn :: Maybe Text
+appEnvConnectionOptions :: ConnectionOptions
+appEnvWebSocketKeepAlive :: KeepAliveDelay
+appEnvWebSocketConnectionInitTimeout :: WSConnectionInitTimeout
+appEnvGracefulShutdownTimeout :: Refined NonNegative Seconds
+appEnvSchemaPollInterval :: OptionalInterval
+appEnvCheckFeatureFlag :: CheckFeatureFlag
+appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey)
+</span><a href="Hasura.App.State.html#appEnvPort"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-328"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#CacheStaticConfig"><span class="hs-identifier hs-type">CacheStaticConfig</span></a></span><span>
+</span><span id="line-329"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_cscMaintenanceMode :: MaintenanceMode ()
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscMaintenanceMode"><span class="hs-identifier hs-var">_cscMaintenanceMode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
+</span><a href="#local-6989586621687207221"><span class="hs-identifier hs-var">appEnvEnableMaintenanceMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-330"></span><span>      </span><span class="annot"><span class="annottext">_cscEventingMode :: EventingMode
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscEventingMode"><span class="hs-identifier hs-var">_cscEventingMode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventingMode
+</span><a href="#local-6989586621687207223"><span class="hs-identifier hs-var">appEnvEventingMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-331"></span><span>      </span><span class="annot"><span class="annottext">_cscReadOnlyMode :: ReadOnlyMode
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscReadOnlyMode"><span class="hs-identifier hs-var">_cscReadOnlyMode</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode
+</span><a href="#local-6989586621687207224"><span class="hs-identifier hs-var">appEnvEnableReadOnlyMode</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-332"></span><span>      </span><span class="annot"><span class="annottext">_cscLogger :: Logger Hasura
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscLogger"><span class="hs-identifier hs-var">_cscLogger</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Loggers -&gt; Logger Hasura
+</span><a href="Hasura.App.State.html#_lsLogger"><span class="hs-identifier hs-var">_lsLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Loggers
+</span><a href="#local-6989586621687207218"><span class="hs-identifier hs-var">appEnvLoggers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-333"></span><span>      </span><span class="hs-comment">-- Native Queries are always enabled for Postgres in the OSS edition.</span><span>
+</span><span id="line-334"></span><span>      </span><span class="annot"><span class="annottext">_cscAreNativeQueriesEnabled :: BackendType -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscAreNativeQueriesEnabled"><span class="hs-identifier hs-var">_cscAreNativeQueriesEnabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-335"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
+</span><a href="Hasura.RQL.Types.BackendType.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-336"></span><span>        </span><span class="annot"><span class="annottext">BackendType
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-337"></span><span>      </span><span class="annot"><span class="annottext">_cscAreStoredProceduresEnabled :: Bool
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cscAreStoredProceduresEnabled"><span class="hs-identifier hs-var">_cscAreStoredProceduresEnabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-338"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-339"></span><span>
+</span><span id="line-340"></span><span class="annot"><a href="Hasura.App.State.html#buildCacheDynamicConfig"><span class="hs-identifier hs-type">buildCacheDynamicConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#CacheDynamicConfig"><span class="hs-identifier hs-type">CacheDynamicConfig</span></a></span><span>
+</span><span id="line-341"></span><span id="buildCacheDynamicConfig"><span class="annot"><span class="annottext">buildCacheDynamicConfig :: AppContext -&gt; CacheDynamicConfig
+</span><a href="Hasura.App.State.html#buildCacheDynamicConfig"><span class="hs-identifier hs-var hs-var">buildCacheDynamicConfig</span></a></span></span><span> </span><span class="annot"><a href="Hasura.App.State.html#AppContext"><span class="hs-identifier hs-type">AppContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687207252"><span id="local-6989586621687207253"><span id="local-6989586621687207254"><span id="local-6989586621687207255"><span id="local-6989586621687207256"><span id="local-6989586621687207257"><span id="local-6989586621687207258"><span id="local-6989586621687207259"><span id="local-6989586621687207260"><span id="local-6989586621687207261"><span id="local-6989586621687207262"><span id="local-6989586621687207263"><span id="local-6989586621687207264"><span id="local-6989586621687207265"><span id="local-6989586621687207266"><span id="local-6989586621687207267"><span id="local-6989586621687207268"><span id="local-6989586621687207269"><span id="local-6989586621687207270"><span id="local-6989586621687207271"><span class="annot"><span class="annottext">Environment
+HashSet ExperimentalFeature
+HashSet API
+LiveQueriesOptions
+NamingCase
+RemoteSchemaPermissions
+InferFunctionPermissions
+SQLGenCtx
+CloseWebsocketsOnMetadataChangeStatus
+ApolloFederationStatus
+CorsPolicy
+AuthMode
+MetadataDefaults
+ResponseInternalErrorsConfig
+OptionalInterval
+TelemetryStatus
+AllowListStatus
+ConsoleStatus
+EventEngineCtx
+acAuthMode :: AppContext -&gt; AuthMode
+acSQLGenCtx :: AppContext -&gt; SQLGenCtx
+acEnabledAPIs :: AppContext -&gt; HashSet API
+acEnableAllowlist :: AppContext -&gt; AllowListStatus
+acResponseInternalErrorsConfig :: AppContext -&gt; ResponseInternalErrorsConfig
+acEnvironment :: AppContext -&gt; Environment
+acRemoteSchemaPermsCtx :: AppContext -&gt; RemoteSchemaPermissions
+acFunctionPermsCtx :: AppContext -&gt; InferFunctionPermissions
+acExperimentalFeatures :: AppContext -&gt; HashSet ExperimentalFeature
+acDefaultNamingConvention :: AppContext -&gt; NamingCase
+acMetadataDefaults :: AppContext -&gt; MetadataDefaults
+acLiveQueryOptions :: AppContext -&gt; LiveQueriesOptions
+acStreamQueryOptions :: AppContext -&gt; LiveQueriesOptions
+acCorsPolicy :: AppContext -&gt; CorsPolicy
+acConsoleStatus :: AppContext -&gt; ConsoleStatus
+acEnableTelemetry :: AppContext -&gt; TelemetryStatus
+acEventEngineCtx :: AppContext -&gt; EventEngineCtx
+acAsyncActionsFetchInterval :: AppContext -&gt; OptionalInterval
+acApolloFederationStatus :: AppContext -&gt; ApolloFederationStatus
+acCloseWebsocketsOnMetadataChangeStatus :: AppContext -&gt; CloseWebsocketsOnMetadataChangeStatus
+acAuthMode :: AuthMode
+acSQLGenCtx :: SQLGenCtx
+acEnabledAPIs :: HashSet API
+acEnableAllowlist :: AllowListStatus
+acResponseInternalErrorsConfig :: ResponseInternalErrorsConfig
+acEnvironment :: Environment
+acRemoteSchemaPermsCtx :: RemoteSchemaPermissions
+acFunctionPermsCtx :: InferFunctionPermissions
+acExperimentalFeatures :: HashSet ExperimentalFeature
+acDefaultNamingConvention :: NamingCase
+acMetadataDefaults :: MetadataDefaults
+acLiveQueryOptions :: LiveQueriesOptions
+acStreamQueryOptions :: LiveQueriesOptions
+acCorsPolicy :: CorsPolicy
+acConsoleStatus :: ConsoleStatus
+acEnableTelemetry :: TelemetryStatus
+acEventEngineCtx :: EventEngineCtx
+acAsyncActionsFetchInterval :: OptionalInterval
+acApolloFederationStatus :: ApolloFederationStatus
+acCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
+</span><a href="Hasura.App.State.html#acAuthMode"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-342"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#CacheDynamicConfig"><span class="hs-identifier hs-type">CacheDynamicConfig</span></a></span><span>
+</span><span id="line-343"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_cdcFunctionPermsCtx :: InferFunctionPermissions
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcFunctionPermsCtx"><span class="hs-identifier hs-var">_cdcFunctionPermsCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="#local-6989586621687207259"><span class="hs-identifier hs-var">acFunctionPermsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-344"></span><span>      </span><span class="annot"><span class="annottext">_cdcRemoteSchemaPermsCtx :: RemoteSchemaPermissions
+</span><a href="Hasura.RQL.DDL.Schema.Cache.Config.html#_cdcRemoteSchemaPermsCtx"><span class="hs-identifier hs-var">_cdcRemoteSchemaPermsCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="#local-6989586621687207258"><span class="hs-identifier hs-var">acRemoteSchemaPermsCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-345"></span><span>      </span><span class="annot"><span class="annottext">_cdcSQLGenCtx :: SQLGenCtx
+</span><a href="#local-6989586621687207275"><span class="hs-identifier hs-var">_cdcSQLGenCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621687207253"><span class="hs-identifier hs-var">acSQLGenCtx</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-346"></span><span>      </span><span class="annot"><span class="annottext">_cdcExperimentalFeatures :: HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207276"><span class="hs-identifier hs-var">_cdcExperimentalFeatures</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687207260"><span class="hs-identifier hs-var">acExperimentalFeatures</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-347"></span><span>      </span><span class="annot"><span class="annottext">_cdcDefaultNamingConvention :: NamingCase
+</span><a href="#local-6989586621687207277"><span class="hs-identifier hs-var">_cdcDefaultNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687207261"><span class="hs-identifier hs-var">acDefaultNamingConvention</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-348"></span><span>      </span><span class="annot"><span class="annottext">_cdcMetadataDefaults :: MetadataDefaults
+</span><a href="#local-6989586621687207278"><span class="hs-identifier hs-var">_cdcMetadataDefaults</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MetadataDefaults
+</span><a href="#local-6989586621687207262"><span class="hs-identifier hs-var">acMetadataDefaults</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-349"></span><span>      </span><span class="annot"><span class="annottext">_cdcApolloFederationStatus :: ApolloFederationStatus
+</span><a href="#local-6989586621687207279"><span class="hs-identifier hs-var">_cdcApolloFederationStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ApolloFederationStatus
+</span><a href="#local-6989586621687207270"><span class="hs-identifier hs-var">acApolloFederationStatus</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-350"></span><span>      </span><span class="annot"><span class="annottext">_cdcCloseWebsocketsOnMetadataChangeStatus :: CloseWebsocketsOnMetadataChangeStatus
+</span><a href="#local-6989586621687207280"><span class="hs-identifier hs-var">_cdcCloseWebsocketsOnMetadataChangeStatus</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CloseWebsocketsOnMetadataChangeStatus
+</span><a href="#local-6989586621687207271"><span class="hs-identifier hs-var">acCloseWebsocketsOnMetadataChangeStatus</span></a></span><span>
+</span><span id="line-351"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-352"></span></pre></body></html>

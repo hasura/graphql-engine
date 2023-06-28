@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE MagicHash #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Types related to resizing a connection pool</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Resize connection pools, on-demand, based on underlying server replicas</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- See @'resizeSourcePools' in Hasura.RQL.Types.Backend</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.ResizePool</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier">ServerReplicas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ResizePoolStrategy"><span class="hs-identifier">ResizePoolStrategy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier">getServerReplicasInt</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier">safeServerReplicas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier">SourceResizePoolSummary</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#noPoolsResizedSummary"><span class="hs-identifier">noPoolsResizedSummary</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><span class="hs-comment">-- * exporting for tests</span></span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#unsafeServerReplicas"><span class="hs-identifier">unsafeServerReplicas</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#oneServerReplica"><span class="hs-identifier">oneServerReplica</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Exts</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">I#</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">W#</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">int2Word#</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- | Number of server instances. A wrapper over @'Word' type, a non-negative integer</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- with the same size as @'Int'. Useful for resize a connection pool.</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="ServerReplicas"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServerReplicas"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span></span><span> </span><span class="hs-special">{</span><span id="serverReplicaNumber"><span class="annot"><span class="annottext">ServerReplicas -&gt; Word
+</span><a href="Hasura.RQL.Types.ResizePool.html#serverReplicaNumber"><span class="hs-identifier hs-var hs-var">serverReplicaNumber</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">}</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686792193"><span id="local-6989586621686792198"><span id="local-6989586621686792202"><span class="annot"><span class="annottext">Int -&gt; ServerReplicas -&gt; ShowS
+[ServerReplicas] -&gt; ShowS
+ServerReplicas -&gt; String
+(Int -&gt; ServerReplicas -&gt; ShowS)
+-&gt; (ServerReplicas -&gt; String)
+-&gt; ([ServerReplicas] -&gt; ShowS)
+-&gt; Show ServerReplicas
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ServerReplicas -&gt; ShowS
+showsPrec :: Int -&gt; ServerReplicas -&gt; ShowS
+$cshow :: ServerReplicas -&gt; String
+show :: ServerReplicas -&gt; String
+$cshowList :: [ServerReplicas] -&gt; ShowS
+showList :: [ServerReplicas] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792206"><span id="local-6989586621686792211"><span class="annot"><span class="annottext">ServerReplicas -&gt; ServerReplicas -&gt; Bool
+(ServerReplicas -&gt; ServerReplicas -&gt; Bool)
+-&gt; (ServerReplicas -&gt; ServerReplicas -&gt; Bool) -&gt; Eq ServerReplicas
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ServerReplicas -&gt; ServerReplicas -&gt; Bool
+== :: ServerReplicas -&gt; ServerReplicas -&gt; Bool
+$c/= :: ServerReplicas -&gt; ServerReplicas -&gt; Bool
+/= :: ServerReplicas -&gt; ServerReplicas -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#unsafeServerReplicas"><span class="hs-identifier hs-type">unsafeServerReplicas</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span>
+</span><span id="line-31"></span><span id="unsafeServerReplicas"><span class="annot"><span class="annottext">unsafeServerReplicas :: Word -&gt; ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#unsafeServerReplicas"><span class="hs-identifier hs-var hs-var">unsafeServerReplicas</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#oneServerReplica"><span class="hs-identifier hs-type">oneServerReplica</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span>
+</span><span id="line-34"></span><span id="oneServerReplica"><span class="annot"><span class="annottext">oneServerReplica :: ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#oneServerReplica"><span class="hs-identifier hs-var hs-var">oneServerReplica</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span><span> </span><span class="annot"><span class="annottext">Word
+</span><span class="hs-number">1</span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="annot"><span class="hs-comment">-- | Safely build @'ServerReplicas' from non-negative and non-zero @'Int' value.</span></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier hs-type">safeServerReplicas</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span>
+</span><span id="line-38"></span><span id="safeServerReplicas"><span class="annot"><span class="annottext">safeServerReplicas :: Int -&gt; Either Text ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#safeServerReplicas"><span class="hs-identifier hs-var hs-var">safeServerReplicas</span></a></span></span><span> </span><span id="local-6989586621686792216"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621686792216"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">I#</span></span><span> </span><span id="local-6989586621686792217"><span class="annot"><span class="annottext">Int#
+</span><a href="#local-6989586621686792217"><span class="hs-identifier hs-var">i#</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686792216"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text ServerReplicas
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either Text ServerReplicas)
+-&gt; Text -&gt; Either Text ServerReplicas
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expecting a non-zero and non-negative integer for ServerReplicas but got &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621686792216"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerReplicas -&gt; Either Text ServerReplicas
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(ServerReplicas -&gt; Either Text ServerReplicas)
+-&gt; ServerReplicas -&gt; Either Text ServerReplicas
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; ServerReplicas
+</span><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-var">ServerReplicas</span></a></span><span> </span><span class="annot"><span class="annottext">(Word -&gt; ServerReplicas) -&gt; Word -&gt; ServerReplicas
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word# -&gt; Word
+</span><span class="hs-identifier hs-var">W#</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int# -&gt; Word#
+</span><span class="hs-identifier hs-var">int2Word#</span></span><span> </span><span class="annot"><span class="annottext">Int#
+</span><a href="#local-6989586621686792217"><span class="hs-identifier hs-var">i#</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="annot"><span class="hs-comment">-- | Get server replic count in @'Int'</span></span><span>
+</span><span id="line-43"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-type">getServerReplicasInt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-44"></span><span id="getServerReplicasInt"><span class="annot"><span class="annottext">getServerReplicasInt :: ServerReplicas -&gt; Int
+</span><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-var hs-var">getServerReplicasInt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ServerReplicas"><span class="hs-identifier hs-type">ServerReplicas</span></a></span><span> </span><span id="local-6989586621686792220"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621686792220"><span class="hs-identifier hs-var">replicaNumber</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621686792220"><span class="hs-identifier hs-var">replicaNumber</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><span class="hs-comment">-- | A strategy for resizing a pool</span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="ResizePoolStrategy"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ResizePoolStrategy"><span class="hs-identifier hs-var">ResizePoolStrategy</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Never resize the pool</span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="NeverResizePool"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#NeverResizePool"><span class="hs-identifier hs-var">NeverResizePool</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Resize the pool by using provided total maximum connections</span></span><span>
+</span><span id="line-51"></span><span>    </span><span id="ResizePool"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#ResizePool"><span class="hs-identifier hs-var">ResizePool</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><span class="hs-comment">-- | Summary of a source's pools resize. Predominantly used to log.</span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">data</span><span> </span><span id="SourceResizePoolSummary"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-var">SourceResizePoolSummary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceResizePoolSummary"><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-var">SourceResizePoolSummary</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srpsPrimaryResized"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; Bool
+</span><a href="Hasura.RQL.Types.ResizePool.html#_srpsPrimaryResized"><span class="hs-identifier hs-var hs-var">_srpsPrimaryResized</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span id="_srpsReadReplicasResized"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; Bool
+</span><a href="Hasura.RQL.Types.ResizePool.html#_srpsReadReplicasResized"><span class="hs-identifier hs-var hs-var">_srpsReadReplicasResized</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span id="_srpsConnectionSet"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; [Text]
+</span><a href="Hasura.RQL.Types.ResizePool.html#_srpsConnectionSet"><span class="hs-identifier hs-var hs-var">_srpsConnectionSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621686792228"><span id="local-6989586621686792236"><span class="annot"><span class="annottext">SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+(SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool)
+-&gt; (SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool)
+-&gt; Eq SourceResizePoolSummary
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+== :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+$c/= :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+/= :: SourceResizePoolSummary -&gt; SourceResizePoolSummary -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621686792241"><span id="local-6989586621686792250"><span id="local-6989586621686792254"><span class="annot"><span class="annottext">Int -&gt; SourceResizePoolSummary -&gt; ShowS
+[SourceResizePoolSummary] -&gt; ShowS
+SourceResizePoolSummary -&gt; String
+(Int -&gt; SourceResizePoolSummary -&gt; ShowS)
+-&gt; (SourceResizePoolSummary -&gt; String)
+-&gt; ([SourceResizePoolSummary] -&gt; ShowS)
+-&gt; Show SourceResizePoolSummary
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SourceResizePoolSummary -&gt; ShowS
+showsPrec :: Int -&gt; SourceResizePoolSummary -&gt; ShowS
+$cshow :: SourceResizePoolSummary -&gt; String
+show :: SourceResizePoolSummary -&gt; String
+$cshowList :: [SourceResizePoolSummary] -&gt; ShowS
+showList :: [SourceResizePoolSummary] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#noPoolsResizedSummary"><span class="hs-identifier hs-type">noPoolsResizedSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-type">SourceResizePoolSummary</span></a></span><span>
+</span><span id="line-62"></span><span id="noPoolsResizedSummary"><span class="annot"><span class="annottext">noPoolsResizedSummary :: SourceResizePoolSummary
+</span><a href="Hasura.RQL.Types.ResizePool.html#noPoolsResizedSummary"><span class="hs-identifier hs-var hs-var">noPoolsResizedSummary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; [Text] -&gt; SourceResizePoolSummary
+</span><a href="Hasura.RQL.Types.ResizePool.html#SourceResizePoolSummary"><span class="hs-identifier hs-var">SourceResizePoolSummary</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span></pre></body></html>
