@@ -37,7 +37,8 @@ data UpdatePermissionDetails = UpdatePermissionDetails
     updatePermissionTable :: Text,
     updatePermissionRole :: Text,
     updatePermissionColumns :: [Text],
-    updatePermissionRows :: Value
+    updatePermissionRows :: Value,
+    updatePermissionValidationWebhook :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -70,7 +71,8 @@ updatePermission =
       updatePermissionTable = mempty,
       updatePermissionRole = "test-role",
       updatePermissionColumns = mempty,
-      updatePermissionRows = object []
+      updatePermissionRows = object [],
+      updatePermissionValidationWebhook = Nothing
     }
 
 insertPermission :: InsertPermissionDetails

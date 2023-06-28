@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Postgres Execute Insert
 --
 -- Translates and executes IR to Postgres-specific SQL.
@@ -12,11 +10,8 @@ module Hasura.Backends.Postgres.Execute.Insert
   )
 where
 
-import Control.Exception (try)
-import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
@@ -39,11 +34,9 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
-import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
@@ -54,14 +47,11 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.NamingCase (NamingCase)
-import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
-import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
-import Network.Wreq qualified as Wreq
 
 convertToSQLTransaction ::
   forall pgKind m.
@@ -399,46 +389,12 @@ decodeEncJSON =
     . J.eitherDecode
     . encJToLBS
 
--------------- Validating insert input using external HTTP webhook -----------------------
-type ValidateInputPayloadVersion = Int
-
-validateInputPayloadVersion :: ValidateInputPayloadVersion
-validateInputPayloadVersion = 1
-
-newtype ValidateInputErrorResponse = ValidateInputErrorResponse {_vierMessage :: Text}
-  deriving (Show, Eq)
-
-$(J.deriveJSON hasuraJSON ''ValidateInputErrorResponse)
-
-data HttpHandlerLog = HttpHandlerLog
-  { _hhlUrl :: Text,
-    _hhlRequest :: J.Value,
-    _hhlRequestHeaders :: [HeaderConf],
-    _hhlResponse :: J.Value,
-    _hhlResponseStatus :: Int
-  }
-  deriving (Show)
-
-$(J.deriveToJSON hasuraJSON ''HttpHandlerLog)
-
-data ValidateInsertInputLog
-  = VIILHttpHandler HttpHandlerLog
-
-instance J.ToJSON ValidateInsertInputLog where
-  toJSON (VIILHttpHandler httpHandlerLog) =
-    J.object $ ["type" J..= ("http" :: String), "details" J..= J.toJSON httpHandlerLog]
-
-instance L.ToEngineLog ValidateInsertInputLog L.Hasura where
-  toEngineLog ahl = (L.LevelInfo, L.ELTValidateInputLog, J.toJSON ahl)
-
-type ValidationPayloadMap pgKind = InsOrdHashMap.InsOrdHashMap (TableName ('Postgres pgKind)) ([IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))], (ValidateInput ResolvedWebhook))
-
 validateInsertInput ::
   forall m pgKind.
   ( MonadError QErr m,
     MonadIO m,
     Tracing.MonadTrace m,
-    MonadState (ValidationPayloadMap pgKind) m
+    MonadState (PGE.InsertValidationPayloadMap pgKind) m
   ) =>
   Env.Environment ->
   HTTP.Manager ->
@@ -483,57 +439,9 @@ validateInsertRows ::
   [HTTP.Header] ->
   [IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))] ->
   m ()
-validateInsertRows env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders rows = do
-  let requestBody =
-        J.object
-          [ "version" J..= validateInputPayloadVersion,
-            "session_variables" J..= _uiSession userInfo,
-            "role" J..= _uiRole userInfo,
-            "data" J..= J.object ["input" J..= map convertInsertRow rows]
-          ]
-  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
-      -- Using HashMap to avoid duplicate headers between configuration headers
-      -- and client headers where configuration headers are preferred
-      hdrs = (HashMap.toList . HashMap.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
-  initRequest <- liftIO $ HTTP.mkRequestThrow urlText
-  let request =
-        initRequest
-          & Lens.set HTTP.method "POST"
-          & Lens.set HTTP.headers hdrs
-          & Lens.set HTTP.body (HTTP.RequestBodyLBS $ J.encode requestBody)
-          & Lens.set HTTP.timeout (HTTP.responseTimeoutMicro (unTimeout timeout * 1000000)) -- (default: 10 seconds)
-  httpResponse <-
-    Tracing.traceHTTPRequest request $ \request' ->
-      liftIO . try $ HTTP.httpLbs request' manager
-
-  case httpResponse of
-    Left e ->
-      throw500WithDetail "http exception when validating input data"
-        $ J.toJSON
-        $ HttpException e
-    Right response -> do
-      let responseStatus = response Lens.^. Wreq.responseStatus
-          responseBody = response Lens.^. Wreq.responseBody
-          responseBodyForLogging = fromMaybe (J.String $ lbsToTxt responseBody) $ J.decode' responseBody
-      -- Log the details of the HTTP webhook call
-      L.unLogger logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
-      if
-        | HTTP.statusIsSuccessful responseStatus -> pure ()
-        | responseStatus == HTTP.status400 -> do
-            ValidateInputErrorResponse errorMessage <-
-              J.eitherDecode responseBody `onLeft` \e ->
-                throw500WithDetail "received invalid response from input validation webhook"
-                  $ J.toJSON
-                  $ "invalid response: "
-                  <> e
-            throw400 ValidationFailed errorMessage
-        | otherwise -> do
-            let err =
-                  J.toJSON
-                    $ "expecting 200 or 400 status code, but found "
-                    ++ show (HTTP.statusCode responseStatus)
-            throw500WithDetail "internal error when validating input data" err
+validateInsertRows env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders rows = do
+  let inputData = J.object ["input" J..= map convertInsertRow rows]
+  PGE.validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
   where
     convertInsertRow :: IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) -> J.Value
     convertInsertRow fields = J.object $ flip mapMaybe fields $ \field ->

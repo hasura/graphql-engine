@@ -245,7 +245,8 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
           upiCheck = Nothing,
           upiSet = mempty,
           upiBackendOnly = False,
-          upiRequiredHeaders = mempty
+          upiRequiredHeaders = mempty,
+          upiValidateInput = Nothing
         }
 
     columnInfos :: [ColumnInfo PG]

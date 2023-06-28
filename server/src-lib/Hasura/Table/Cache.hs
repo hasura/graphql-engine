@@ -595,7 +595,8 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
     upiCheck :: Maybe (AnnBoolExpPartialSQL b),
     upiSet :: PreSetColsPartial b,
     upiBackendOnly :: Bool,
-    upiRequiredHeaders :: HashSet Text
+    upiRequiredHeaders :: HashSet Text,
+    upiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Generic)
 
@@ -1293,5 +1294,5 @@ mkAdminRolePermInfo tableInfo =
     tableName = _tciName tableInfo
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty Nothing
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
-    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty
+    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty Nothing
     d = DelPermInfo tableName annBoolExpTrue False mempty

@@ -191,8 +191,8 @@ instance
   ) =>
   OnlyRelevantEq (UpdPermInfo b)
   where
-  (UpdPermInfo colsL tableL filterL checkL setL backendOnlyL reqHeadersL)
-    ==~ (UpdPermInfo colsR tableR filterR checkR setR backendOnlyR reqHeadersR) =
+  (UpdPermInfo colsL tableL filterL checkL setL backendOnlyL reqHeadersL validateInputL)
+    ==~ (UpdPermInfo colsR tableR filterR checkR setR backendOnlyR reqHeadersR validateInputR) =
       colsL
         == colsR
         && tableL
@@ -207,6 +207,8 @@ instance
         == backendOnlyR
         && reqHeadersL
         == reqHeadersR
+        && validateInputL
+        == validateInputR
 
 instance
   ( Backend b,

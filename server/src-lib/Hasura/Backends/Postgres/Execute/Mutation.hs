@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | Postgres Execute Mutation
 --
 -- Generic combinators for translating and excecuting IR mutation statements.
@@ -13,16 +15,33 @@ module Hasura.Backends.Postgres.Execute.Mutation
     --
     executeMutationOutputQuery,
     mutateAndFetchCols,
+    --
+    ValidateInputPayloadVersion,
+    validateInputPayloadVersion,
+    ValidateInputErrorResponse (..),
+    HttpHandlerLog (..),
+    ValidateInsertInputLog (..),
+    InsertValidationPayloadMap,
+    validateUpdateMutation,
+    validateMutation,
   )
 where
 
+import Control.Exception (try)
+import Control.Lens qualified as Lens
 import Control.Monad.Writer (runWriter)
 import Data.Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J
+import Data.Aeson.TH qualified as J
+import Data.Environment qualified as Env
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as DS
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Delete
 import Hasura.Backends.Postgres.Translate.Insert
@@ -31,23 +50,40 @@ import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Update
+import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Parser.Internal.Convert
+import Hasura.GraphQL.Parser.Variable qualified as G
+import Hasura.HTTP
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
+import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
+import Hasura.RQL.IR.Update qualified as IR
+import Hasura.RQL.IR.Value (UnpreparedValue)
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers (HeaderConf)
 import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Schema.Options qualified as Options
+import Hasura.Server.Utils
 import Hasura.Session
+import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client.Transformable qualified as HTTP
+import Network.Wreq qualified as Wreq
 
 data MutateResp (b :: BackendType) a = MutateResp
   { _mrAffectedRows :: Int,
@@ -312,3 +348,152 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
           JASMultipleRows
           ( AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
           )
+
+-------------- Validating insert input using external HTTP webhook -----------------------
+type ValidateInputPayloadVersion = Int
+
+validateInputPayloadVersion :: ValidateInputPayloadVersion
+validateInputPayloadVersion = 1
+
+newtype ValidateInputErrorResponse = ValidateInputErrorResponse {_vierMessage :: Text}
+  deriving (Show, Eq)
+
+$(J.deriveJSON hasuraJSON ''ValidateInputErrorResponse)
+
+data HttpHandlerLog = HttpHandlerLog
+  { _hhlUrl :: Text,
+    _hhlRequest :: J.Value,
+    _hhlRequestHeaders :: [HeaderConf],
+    _hhlResponse :: J.Value,
+    _hhlResponseStatus :: Int
+  }
+  deriving (Show)
+
+$(J.deriveToJSON hasuraJSON ''HttpHandlerLog)
+
+data ValidateInsertInputLog
+  = VIILHttpHandler HttpHandlerLog
+
+instance J.ToJSON ValidateInsertInputLog where
+  toJSON (VIILHttpHandler httpHandlerLog) =
+    J.object $ ["type" J..= ("http" :: String), "details" J..= J.toJSON httpHandlerLog]
+
+instance L.ToEngineLog ValidateInsertInputLog L.Hasura where
+  toEngineLog ahl = (L.LevelInfo, L.ELTValidateInputLog, J.toJSON ahl)
+
+-- | Map of table name and the value that is being inserted for that table
+-- This map is helpful for collecting all the insert mutation arguments for the
+-- nested tables and then sending them all at onve to the input validation webhook.
+type InsertValidationPayloadMap pgKind = InsOrdHashMap.InsOrdHashMap (TableName ('Postgres pgKind)) ([IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))], (ValidateInput ResolvedWebhook))
+
+validateUpdateMutation ::
+  forall pgKind m.
+  (MonadError QErr m, MonadIO m, Tracing.MonadTrace m) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  ResolvedWebhook ->
+  [HeaderConf] ->
+  Timeout ->
+  Bool ->
+  [HTTP.Header] ->
+  IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  m ()
+validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders updateOperation maybeSelSetArgs = do
+  inputData <-
+    case maybeSelSetArgs of
+      Just arguments -> do
+        case (IR._auUpdateVariant updateOperation) of
+          -- Mutation arguments for single update (eg: update_customer) are
+          -- present as seperate root fields of the selection set.
+          -- eg:
+          Postgres.SingleBatch _ -> do
+            -- this constructs something like: {"_set":{"name": {"_eq": "abc"}}, "where":{"id":{"_eq":10}}}
+            let singleBatchinputVal =
+                  J.object
+                    $ map
+                      (\(k, v) -> J.fromText (G.unName k) J..= graphQLToJSON v)
+                      (HashMap.toList $ arguments)
+            return (J.object ["input" J..= [singleBatchinputVal]])
+          -- Mutation arguments for multiple updates (eg:
+          -- update_customer_many) are present in the "updates" field of the
+          -- selection set.
+          -- Look for "updates" field and get the mutation arguments from it.
+          -- eg: {"updates": [{"_set":{"id":{"_eq":10}}, "where":{"name":{"_eq":"abc"}}}]}
+          Postgres.MultipleBatches _ -> do
+            case (HashMap.lookup $$(G.litName "updates") arguments) of
+              Nothing -> return $ J.Null
+              Just val -> (return $ J.object ["input" J..= graphQLToJSON val])
+      Nothing -> return J.Null
+  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+
+validateMutation ::
+  forall m.
+  ( MonadError QErr m,
+    MonadIO m,
+    Tracing.MonadTrace m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  ResolvedWebhook ->
+  [HeaderConf] ->
+  Timeout ->
+  Bool ->
+  [HTTP.Header] ->
+  J.Value ->
+  m ()
+validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeaders timeout forwardClientHeaders reqHeaders inputData = do
+  let requestBody =
+        J.object
+          [ "version" J..= validateInputPayloadVersion,
+            "session_variables" J..= _uiSession userInfo,
+            "role" J..= _uiRole userInfo,
+            "data" J..= inputData
+          ]
+  resolvedConfHeaders <- makeHeadersFromConf env confHeaders
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else mempty
+      -- Using HashMap to avoid duplicate headers between configuration headers
+      -- and client headers where configuration headers are preferred
+      hdrs = (HashMap.toList . HashMap.fromList) (resolvedConfHeaders <> defaultHeaders <> clientHeaders)
+  initRequest <- liftIO $ HTTP.mkRequestThrow urlText
+  let request =
+        initRequest
+          & Lens.set HTTP.method "POST"
+          & Lens.set HTTP.headers hdrs
+          & Lens.set HTTP.body (HTTP.RequestBodyLBS $ J.encode requestBody)
+          & Lens.set HTTP.timeout (HTTP.responseTimeoutMicro (unTimeout timeout * 1000000)) -- (default: 10 seconds)
+  httpResponse <-
+    Tracing.traceHTTPRequest request $ \request' ->
+      liftIO . try $ HTTP.httpLbs request' manager
+
+  case httpResponse of
+    Left e ->
+      throw500WithDetail "http exception when validating input data"
+        $ J.toJSON
+        $ HttpException e
+    Right response -> do
+      let responseStatus = response Lens.^. Wreq.responseStatus
+          responseBody = response Lens.^. Wreq.responseBody
+          responseBodyForLogging = fromMaybe (J.String $ lbsToTxt responseBody) $ J.decode' responseBody
+      -- Log the details of the HTTP webhook call
+      L.unLogger logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
+      if
+        | HTTP.statusIsSuccessful responseStatus -> pure ()
+        | responseStatus == HTTP.status400 -> do
+            ValidateInputErrorResponse errorMessage <-
+              J.eitherDecode responseBody `onLeft` \e ->
+                throw500WithDetail "received invalid response from input validation webhook"
+                  $ J.toJSON
+                  $ "invalid response: "
+                  <> e
+            throw400 ValidationFailed errorMessage
+        | otherwise -> do
+            let err =
+                  J.toJSON
+                    $ "expecting 200 or 400 status code, but found "
+                    ++ show (HTTP.statusCode responseStatus)
+            throw500WithDetail "internal error when validating input data" err

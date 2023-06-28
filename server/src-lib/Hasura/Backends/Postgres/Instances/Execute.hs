@@ -68,6 +68,7 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
   )
 import Hasura.GraphQL.Namespace qualified as G
+import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -75,11 +76,7 @@ import Hasura.QueryTags
     emptyQueryTagsComment,
   )
 import Hasura.RQL.IR
-import Hasura.RQL.IR.Delete qualified as IR
-import Hasura.RQL.IR.Insert qualified as IR
-import Hasura.RQL.IR.Returning qualified as IR
-import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
@@ -261,13 +258,26 @@ convertUpdate ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
+  InputValidationSetting ->
+  [HTTP.Header] ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertUpdate userInfo updateOperation stringifyNum = do
+convertUpdate env manager logger userInfo updateOperation stringifyNum inputValidationSetting reqHeaders selSetArguments = do
+  case inputValidationSetting of
+    IVSEnabled -> do
+      for_ (_auValidateInput updateOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+        PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments
+    IVSDisabled -> pure ()
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
@@ -360,8 +370,9 @@ pgDBMutationPlan ::
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig mrf reqHeaders operationName = do
+pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig mrf reqHeaders operationName selSetArguments = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -372,7 +383,7 @@ pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting
      in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   go resolvedConnectionTemplate <$> case mrf of
     MDBInsert s -> convertInsert env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders
-    MDBUpdate s -> convertUpdate userInfo s stringifyNum
+    MDBUpdate s -> convertUpdate env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders selSetArguments
     MDBDelete s -> convertDelete userInfo s stringifyNum
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where

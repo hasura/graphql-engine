@@ -555,7 +555,8 @@ data UpdPerm (b :: BackendType) = UpdPerm
     -- but Nothing should be equivalent to the expression which always
     -- returns true.
     ucCheck :: Maybe (BoolExp b),
-    ucBackendOnly :: Bool -- see Note [Backend only permissions]
+    ucBackendOnly :: Bool, -- see Note [Backend only permissions]
+    ucValidateInput :: Maybe (ValidateInput InputWebhook)
   }
   deriving (Show, Eq, Generic)
 
@@ -573,6 +574,8 @@ instance (Backend b) => FromJSON (UpdPerm b) where
       <*> o
       .:? "backend_only"
       .!= False
+      <*> o
+      .:? "validate_input"
 
 instance (Backend b) => ToJSON (UpdPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -593,6 +596,8 @@ instance (Backend b) => HasCodec (UpdPerm b) where
       AC..= ucCheck
         <*> optionalFieldWithOmittedDefault' "backend_only" False
       AC..= ucBackendOnly
+        <*> optionalField' "validate_input"
+      AC..= ucValidateInput
 
 type UpdPermDef b = PermDef b UpdPerm
 

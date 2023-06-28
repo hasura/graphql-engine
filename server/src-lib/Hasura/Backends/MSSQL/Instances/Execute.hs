@@ -41,6 +41,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
+import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
@@ -264,8 +265,9 @@ msDBMutationPlan ::
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan _env _manager _logger userInfo stringifyNum _inputValidation sourceName sourceConfig mrf _headers _gName = do
+msDBMutationPlan _env _manager _logger userInfo stringifyNum _inputValidation sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete

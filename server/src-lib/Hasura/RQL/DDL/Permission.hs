@@ -250,7 +250,7 @@ buildPermInfo ::
 buildPermInfo e x1 x2 x3 roleName = \case
   SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
   InsPerm' p -> buildInsPermInfo e x1 x2 x3 p
-  UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
+  UpdPerm' p -> buildUpdPermInfo e x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
 
 -- | Given the logical model's definition and the permissions as defined in the
@@ -608,12 +608,13 @@ buildUpdPermInfo ::
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   UpdPerm b ->
   m (WithDeps (UpdPermInfo b))
-buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendOnly) = do
+buildUpdPermInfo env source tn fieldInfoMap (UpdPerm colSpec set fltr check backendOnly validateInput) = do
   (be, beDeps) <-
     withPathK "filter"
       $ procBoolExp source tn fieldInfoMap fltr
@@ -643,8 +644,8 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
       updColsWithoutPreSets = HS.fromList updCols `HS.difference` HashMap.keysSet setColsSQL
-
-  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
+  resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders resolvedValidateInput, deps)
   where
     allUpdCols = map structuredColumnInfoColumn $ filter (_cmIsUpdatable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     updCols = interpColSpec allUpdCols colSpec

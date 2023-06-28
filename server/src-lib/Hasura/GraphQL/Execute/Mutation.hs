@@ -20,6 +20,7 @@ import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.GraphQL.Schema.Parser (runParse, toQErr)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
@@ -120,7 +121,6 @@ convertMutationSelectionSet
 
     -- Process directives on the mutation
     _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
-
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
         resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = Tracing.newSpan ("Resolve execution step for " <>> rootFieldName) do
@@ -137,8 +137,10 @@ convertMutationSelectionSet
                       mutationQueryTagsAttributes = encodeQueryTags $ QTMutation $ MutationMetadata mReqId maybeOperationName rootFieldName parameterizedQueryHash
                       queryTagsComment = Tagged.untag $ createQueryTags @m mutationQueryTagsAttributes queryTagsConfig
                       (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsMutationDB db
+
                   httpManager <- askHTTPManager
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName
+                  let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
@@ -161,3 +163,26 @@ convertMutationSelectionSet
     -- Transform the RQL AST into a prepared SQL query
     txs <- flip InsOrdHashMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
     return (txs, parameterizedQueryHash)
+
+-- | Extract the arguments from the selection set for a root field
+-- This is used to validate the arguments of a mutation.
+getSelSetArgsFromRootField :: G.SelectionSet G.NoFragments G.Variable -> RootFieldAlias -> Maybe (HashMap G.Name (G.Value G.Variable))
+getSelSetArgsFromRootField selSet rootFieldName = do
+  let maybeSelSet =
+        case rootFieldName of
+          RootFieldAlias Nothing alias -> getSelSet alias selSet
+          RootFieldAlias (Just namespace) alias -> do
+            let namespaceSelSet = getSelSet namespace selSet
+            case namespaceSelSet of
+              Just (G.SelectionField fld) -> getSelSet alias (G._fSelectionSet fld)
+              _ -> Nothing
+  case maybeSelSet of
+    Just (G.SelectionField fld) -> Just $ (G._fArguments fld)
+    _ -> Nothing
+  where
+    getSelSet alias set = flip find set $ \case
+      G.SelectionField fld ->
+        case G._fAlias fld of
+          Nothing -> G.unName alias == G.unName (G._fName fld)
+          Just aliasName -> G.unName alias == G.unName aliasName
+      _ -> False

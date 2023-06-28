@@ -263,6 +263,7 @@ common lib-depends
                      , aeson
                      , aeson-casing
                      , aeson-ordered
+                     , aeson-pretty
                      , arrows-extra
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0

@@ -22,6 +22,7 @@ import Hasura.EncJSON
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
+import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -141,8 +142,9 @@ bqDBMutationPlan ::
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _inputValidation _sourceName _sourceConfig _mrf _headers _gName =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _inputValidation _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain

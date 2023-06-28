@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -13,6 +15,7 @@ import Control.Concurrent.Async as Async
 import Control.Concurrent.Chan qualified as Chan
 import Control.Exception.Safe (bracket)
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.Parser.JSONPath (parseJSONPath)
 import Data.Text qualified as T
@@ -109,11 +112,19 @@ $(J.deriveToJSON hasuraJSON ''RequestBody)
 data TweetRow = TweetRow
   { _trId :: Maybe Int,
     _trUserId :: Maybe Int,
-    _trContent :: Text
+    _trContent :: Text,
+    _trEmail :: Maybe Text
   }
   deriving (Eq, Show)
 
 $(J.deriveJSON hasuraJSON ''TweetRow)
+
+data IdPk = IdPk
+  { _ipId :: Int
+  }
+  deriving (Eq, Show)
+
+$(J.deriveJSON hasuraJSON ''IdPk)
 
 data UserRow = UserRow
   { _urId :: Maybe Int,
@@ -163,6 +174,42 @@ isValidPhoneNumber =
           "^([9]{1})([234789]{1})([0-9]{8})$"
       )
 
+data WhereConditionForId
+  = WCEQUAL Int
+  | WCIN [Int]
+  | WCGT Int
+  deriving (Eq, Show, Generic)
+
+-- {"id":{"_eq":2}}
+instance J.FromJSON WhereConditionForId where
+  parseJSON = J.withObject "where condition" \o -> do
+    idCondition <- o J..: "id"
+    if
+      | KM.member "_eq" idCondition -> do
+          value <- idCondition J..: "_eq"
+          pure $ WCEQUAL value
+      | KM.member "_in" idCondition -> do
+          value <- idCondition J..: "_in"
+          pure $ WCIN $ value
+      | KM.member "_gt" idCondition -> do
+          value <- idCondition J..: "_gt"
+          pure $ WCGT $ value
+      | otherwise -> fail "invalid where condition"
+
+data UpdateMutation model modelPk = UpdateMutation
+  { _umSet :: model,
+    _umWhere :: Maybe WhereConditionForId,
+    _umPkColumns :: Maybe modelPk
+  }
+  deriving (Eq, Show, Generic)
+
+instance (J.FromJSON model, J.FromJSON modelPk) => J.FromJSON (UpdateMutation model modelPk) where
+  parseJSON = J.withObject "update mutation" \o -> do
+    _umSet <- o J..: "_set"
+    _umWhere <- o J..:? "where"
+    _umPkColumns <- o J..:? "pk_columns"
+    pure UpdateMutation {..}
+
 -- | This function starts a new thread with a minimal server on the
 -- first available port. It returns the corresponding 'Server'.
 --
@@ -210,9 +257,75 @@ runInputValidationWebhook = mkTestResource do
         jsonBody <- Spock.jsonBody'
         let rows :: [TweetRow] = _rbData jsonBody
         r <- runExceptT do
-          for rows $ \(TweetRow _id _userId content) ->
+          for rows $ \(TweetRow _id _userId content _) ->
             when (T.length content > 30)
               $ throwError ("Tweet should not contain more than 30 characters" :: Text)
+        either returnInvalid (const $ returnValid) r
+      Spock.post "/validateUpdateTweet" $ do
+        jsonBody <- Spock.jsonBody'
+        let rows :: [UpdateMutation TweetRow IdPk] = _rbData jsonBody
+        r <- runExceptT do
+          -- do not allow updates of more than 3 tweets at a single time
+          when (length rows > 3) $ throwError "Cannot update more than 3 tweets at a time"
+
+          -- validate the email and where condition for each update condition
+          for_ rows $ \(UpdateMutation tweetSetArg whereCondition pkColumns) -> do
+            -- check for invalid email
+            let email = _trEmail tweetSetArg
+            for_ email $ \email' ->
+              unless (isValidEmail email')
+                $ throwError
+                $ "Invalid email id "
+                <>> email'
+
+            -- do not allow update for id = 1
+            case whereCondition of
+              Nothing -> pure ()
+              Just whereCondition' ->
+                case whereCondition' of
+                  WCEQUAL value -> when (value == 1) $ throwError "Cannot update tweet with id 1"
+                  WCIN value -> when (1 `elem` value) $ throwError "Cannot update tweet with id 1"
+                  WCGT value -> when (value < 1) $ throwError "Cannot update tweet with id 1"
+
+            -- do not allow update of a tweet, when "id" (primary column) is 3
+            case pkColumns of
+              Nothing -> pure ()
+              Just pkCols -> do
+                when (_ipId pkCols == 3) $ throwError "Cannot update tweet with Primary Key (id) 3"
+
+        either returnInvalid (const $ returnValid) r
+      Spock.post "/validateUpdateUser" $ do
+        jsonBody <- Spock.jsonBody'
+        let rows :: [UpdateMutation UserRow IdPk] = _rbData jsonBody
+        r <- runExceptT do
+          -- do not allow updates of more than 3 tweets at a single time
+          when (length rows > 3) $ throwError "Cannot update more than 3 users at a time"
+
+          -- validate the email and where condition for each update condition
+          for_ rows $ \(UpdateMutation tweetSetArg whereCondition pkColumns) -> do
+            -- check for invalid email
+            let email = _urEmail tweetSetArg
+            for_ email $ \email' ->
+              unless (isValidEmail email')
+                $ throwError
+                $ "Invalid email id "
+                <>> email'
+
+            -- do not allow update for id = 1
+            case whereCondition of
+              Nothing -> pure ()
+              Just whereCondition' ->
+                case whereCondition' of
+                  WCEQUAL value -> when (value == 1) $ throwError "Cannot update user with id 1"
+                  WCIN value -> when (1 `elem` value) $ throwError "Cannot update user with id 1"
+                  WCGT value -> when (value < 1) $ throwError "Cannot update tweet user id 1"
+
+            -- do not allow update of a tweet, when "id" (primary column) is 3
+            case pkColumns of
+              Nothing -> pure ()
+              Just pkCols -> do
+                when (_ipId pkCols == 3) $ throwError "Cannot update user with Primary Key (id) 3"
+
         either returnInvalid (const $ returnValid) r
 
   let server = Server {port = fromIntegral port, urlPrefix, thread}

@@ -21,7 +21,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 
 fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
-fromUpdate (IR.AnnotatedUpdateG table updatePermFilter _ (IR.UpdateBatch updateOperations whereClause) _ allColumns _tCase) = do
+fromUpdate (IR.AnnotatedUpdateG table updatePermFilter _ (IR.UpdateBatch updateOperations whereClause) _ allColumns _tCase _validateInput) = do
   tableAlias <- generateAlias (TableTemplate (tableName table))
   runReaderT
     ( do

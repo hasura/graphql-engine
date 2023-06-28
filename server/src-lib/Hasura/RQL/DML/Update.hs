@@ -189,6 +189,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
         (convAnnBoolExpPartialSQL sessVarBldr)
         (upiCheck updPerm)
 
+  let validateInput = upiValidateInput updPerm
   return
     $ AnnotatedUpdateG
       tableName
@@ -202,6 +203,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       (mkDefaultMutFlds mAnnRetCols)
       allCols
       Nothing
+      validateInput
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =

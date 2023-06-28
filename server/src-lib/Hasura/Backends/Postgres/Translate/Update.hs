@@ -36,7 +36,7 @@ mkUpdateCTE ::
   (Backend ('Postgres pgKind)) =>
   AnnotatedUpdate ('Postgres pgKind) ->
   UpdateCTE
-mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase) =
+mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase _validateInput) =
   case updateVariant of
     SingleBatch update ->
       Update $ translateUpdate update

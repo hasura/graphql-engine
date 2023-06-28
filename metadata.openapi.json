@@ -1340,6 +1340,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -2399,6 +2402,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -3393,6 +3399,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -4454,6 +4463,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -6217,6 +6229,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -7600,6 +7615,9 @@
                         },
                         "description": "Preset columns",
                         "type": "object"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [

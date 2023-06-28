@@ -54,6 +54,8 @@ createPermissionMetadata testEnvironment (Types.UpdatePermission Types.UpdatePer
           updatePermissionSource
       requestType = backendType <> "_create_update_permission"
       qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName updatePermissionTable
+      validateInput =
+        updatePermissionValidationWebhook <&> \url -> object ["type" .= ("http" :: String), "definition" .= (object ["url" .= url])]
   [yaml|
     type: *requestType
     args:
@@ -65,6 +67,7 @@ createPermissionMetadata testEnvironment (Types.UpdatePermission Types.UpdatePer
         filter: *updatePermissionRows
         check: {}
         set: {}
+        validate_input: *validateInput
   |]
 createPermissionMetadata testEnvironment (Types.SelectPermission Types.SelectPermissionDetails {..}) = do
   let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
