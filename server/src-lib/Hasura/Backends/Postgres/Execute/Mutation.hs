@@ -23,6 +23,7 @@ module Hasura.Backends.Postgres.Execute.Mutation
     ValidateInsertInputLog (..),
     InsertValidationPayloadMap,
     validateUpdateMutation,
+    validateDeleteMutation,
     validateMutation,
   )
 where
@@ -60,16 +61,13 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Headers
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
-import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
-import Hasura.RQL.IR.Update qualified as IR
-import Hasura.RQL.IR.Value (UnpreparedValue)
-import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
@@ -398,7 +396,7 @@ validateUpdateMutation ::
   Timeout ->
   Bool ->
   [HTTP.Header] ->
-  IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
+  IR.AnnotatedUpdateG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m ()
 validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders updateOperation maybeSelSetArgs = do
@@ -426,6 +424,50 @@ validateUpdateMutation env manager logger userInfo resolvedWebHook confHeaders t
             case (HashMap.lookup $$(G.litName "updates") arguments) of
               Nothing -> return $ J.Null
               Just val -> (return $ J.object ["input" J..= graphQLToJSON val])
+      Nothing -> return J.Null
+  validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+
+validateDeleteMutation ::
+  forall m pgKind.
+  (MonadError QErr m, MonadIO m, Tracing.MonadTrace m) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  ResolvedWebhook ->
+  [HeaderConf] ->
+  Timeout ->
+  Bool ->
+  [HTTP.Header] ->
+  IR.AnnDelG ('Postgres pgKind) Void (IR.UnpreparedValue ('Postgres pgKind)) ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
+  m ()
+validateDeleteMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders deleteOperation maybeSelSetArgs = do
+  inputData <-
+    case maybeSelSetArgs of
+      Just arguments -> do
+        -- this constructs something like: {"where":{"id":{"_eq":10}}}
+        let deleteInputVal =
+              J.object
+                $ map
+                  (\(k, v) -> J.fromText (G.unName k) J..= graphQLToJSON v)
+                  (HashMap.toList $ arguments)
+        if (_adIsDeleteByPk deleteOperation)
+          then -- If the delete operation is delete_<table>_by_pk, then we need to
+          -- include the pk_columns field manually in the input payload. This
+          -- is needed, because unlike the update mutation, the pk_columns for
+          -- `delete_<table>_by_pk` is not present in the mutation arguments.
+          -- for eg: the `delete_<table>_by_pk` looks like:
+          --
+          -- mutation DeleteCustomerByPk {
+          --   delete_customer_by_pk(id: 1) {
+          --     id
+          --    }
+          -- }
+          do
+            let deleteInputValByPk = J.object ["pk_columns" J..= deleteInputVal]
+            return (J.object ["input" J..= [deleteInputValByPk]])
+          else return (J.object ["input" J..= [deleteInputVal]])
       Nothing -> return J.Null
   validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
 

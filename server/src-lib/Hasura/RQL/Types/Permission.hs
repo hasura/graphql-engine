@@ -515,7 +515,8 @@ type SelPermDef b = PermDef b SelPerm
 -- Delete permission
 data DelPerm (b :: BackendType) = DelPerm
   { dcFilter :: BoolExp b,
-    dcBackendOnly :: Bool -- see Note [Backend only permissions]
+    dcBackendOnly :: Bool, -- see Note [Backend only permissions]
+    dcValidateInput :: Maybe (ValidateInput InputWebhook)
   }
   deriving (Show, Eq, Generic)
 
@@ -527,6 +528,8 @@ instance (Backend b) => FromJSON (DelPerm b) where
       <*> o
       .:? "backend_only"
       .!= False
+      <*> o
+      .:? "validate_input"
 
 instance (Backend b) => ToJSON (DelPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -539,6 +542,8 @@ instance (Backend b) => HasCodec (DelPerm b) where
       .== dcFilter
         <*> optionalFieldWithOmittedDefault' "backend_only" False
       .== dcBackendOnly
+        <*> optionalField' "validate_input"
+      .== dcValidateInput
     where
       (.==) = (AC..=)
 

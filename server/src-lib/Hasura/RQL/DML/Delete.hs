@@ -80,6 +80,8 @@ validateDeleteQWith
       convAnnBoolExpPartialSQL sessVarBldr
         $ dpiFilter delPerm
 
+    let validateInput = dpiValidateInput delPerm
+
     return
       $ AnnDel
         tableName
@@ -87,6 +89,8 @@ validateDeleteQWith
         (mkDefaultMutFlds mAnnRetCols)
         allCols
         Nothing
+        validateInput
+        False
     where
       selNecessaryMsg =
         "; \"delete\" is only allowed if the role "

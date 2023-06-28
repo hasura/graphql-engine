@@ -216,8 +216,8 @@ instance
   ) =>
   OnlyRelevantEq (DelPermInfo b)
   where
-  (DelPermInfo tableL filterL backendOnlyL reqHeadersL)
-    ==~ (DelPermInfo tableR filterR backendOnlyR reqHeadersR) =
+  (DelPermInfo tableL filterL backendOnlyL reqHeadersL validateInputL)
+    ==~ (DelPermInfo tableR filterR backendOnlyR reqHeadersR validateInputR) =
       tableL
         == tableR
         && filterL
@@ -226,6 +226,8 @@ instance
         == backendOnlyR
         && reqHeadersL
         == reqHeadersR
+        && validateInputL
+        == validateInputR
 
 instance OnlyRelevantEq RemoteSchemaInputValueDefinition where
   RemoteSchemaInputValueDefinition defnL presetL

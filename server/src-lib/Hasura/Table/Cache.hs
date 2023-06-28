@@ -631,7 +631,8 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
   { dpiTable :: TableName b,
     dpiFilter :: AnnBoolExpPartialSQL b,
     dpiBackendOnly :: !Bool,
-    dpiRequiredHeaders :: HashSet Text
+    dpiRequiredHeaders :: HashSet Text,
+    dpiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Generic)
 
@@ -1295,4 +1296,4 @@ mkAdminRolePermInfo tableInfo =
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty Nothing
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
     u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty Nothing
-    d = DelPermInfo tableName annBoolExpTrue False mempty
+    d = DelPermInfo tableName annBoolExpTrue False mempty Nothing

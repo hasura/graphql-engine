@@ -210,6 +210,18 @@ instance (J.FromJSON model, J.FromJSON modelPk) => J.FromJSON (UpdateMutation mo
     _umPkColumns <- o J..:? "pk_columns"
     pure UpdateMutation {..}
 
+data DeleteMutation modelPk = DeleteMutation
+  { _dmWhere :: Maybe WhereConditionForId,
+    _dmPkColumns :: Maybe modelPk
+  }
+  deriving (Eq, Show, Generic)
+
+instance (J.FromJSON modelPk) => J.FromJSON (DeleteMutation modelPk) where
+  parseJSON = J.withObject "update mutation" \o -> do
+    _dmWhere <- o J..:? "where"
+    _dmPkColumns <- o J..:? "pk_columns"
+    pure DeleteMutation {..}
+
 -- | This function starts a new thread with a minimal server on the
 -- first available port. It returns the corresponding 'Server'.
 --
@@ -316,16 +328,37 @@ runInputValidationWebhook = mkTestResource do
               Nothing -> pure ()
               Just whereCondition' ->
                 case whereCondition' of
+                  -- do not allow update for id = 1
                   WCEQUAL value -> when (value == 1) $ throwError "Cannot update user with id 1"
-                  WCIN value -> when (1 `elem` value) $ throwError "Cannot update user with id 1"
-                  WCGT value -> when (value < 1) $ throwError "Cannot update tweet user id 1"
+                  WCIN value -> when (1 `elem` value) $ throwError "Cannot update tweet with id 1"
+                  WCGT value -> when (value < 1) $ throwError "Cannot update tweet with id 1"
 
             -- do not allow update of a tweet, when "id" (primary column) is 3
             case pkColumns of
               Nothing -> pure ()
               Just pkCols -> do
                 when (_ipId pkCols == 3) $ throwError "Cannot update user with Primary Key (id) 3"
+        either returnInvalid (const $ returnValid) r
+      Spock.post "/validateDeleteMutation" $ do
+        jsonBody <- Spock.jsonBody'
+        let rows :: [DeleteMutation IdPk] = _rbData jsonBody
+        r <- runExceptT do
+          -- validate the email and where condition for each delete condition
+          for_ rows $ \(DeleteMutation whereCondition pkColumns) -> do
+            -- do not allow delete for id = 1
+            case whereCondition of
+              Nothing -> pure ()
+              Just whereCondition' ->
+                case whereCondition' of
+                  WCEQUAL value -> when (value == 1) $ throwError ("Cannot delete tweet with id 1" :: Text)
+                  WCIN value -> when (1 `elem` value) $ throwError ("Cannot delete tweet with id 1" :: Text)
+                  WCGT value -> when (value < 1) $ throwError ("Cannot delete tweet with id 1" :: Text)
 
+            -- do not allow delete of a tweet, when "id" (primary column) is 3
+            case pkColumns of
+              Nothing -> pure ()
+              Just pkCols -> do
+                when (_ipId pkCols == 3) $ throwError "Cannot delete tweet with Primary Key (id) 3"
         either returnInvalid (const $ returnValid) r
 
   let server = Server {port = fromIntegral port, urlPrefix, thread}

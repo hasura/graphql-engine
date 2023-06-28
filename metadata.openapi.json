@@ -664,6 +664,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/BigqueryBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -1515,6 +1518,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/CitusBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -2512,6 +2518,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/CockroachBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -3763,6 +3772,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/DataconnectorBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -5343,6 +5355,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/MssqlBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [
@@ -6614,6 +6629,9 @@
                     },
                     "filter": {
                         "$ref": "#/components/schemas/PostgresBoolExp"
+                    },
+                    "validate_input": {
+                        "$ref": "#/components/schemas/ValidateInputInputWebhook"
                     }
                 },
                 "required": [

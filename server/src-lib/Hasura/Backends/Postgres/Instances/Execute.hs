@@ -239,13 +239,26 @@ convertDelete ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
+  InputValidationSetting ->
+  [HTTP.Header] ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertDelete userInfo deleteOperation stringifyNum = do
+convertDelete env manager logger userInfo deleteOperation stringifyNum inputValidationSetting reqHeaders selSetArguments = do
+  case inputValidationSetting of
+    IVSEnabled -> do
+      for_ (_adValidateInput deleteOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+        PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments
+    IVSDisabled -> pure ()
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   pure
@@ -384,7 +397,7 @@ pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting
   go resolvedConnectionTemplate <$> case mrf of
     MDBInsert s -> convertInsert env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders
     MDBUpdate s -> convertUpdate env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders selSetArguments
-    MDBDelete s -> convertDelete userInfo s stringifyNum
+    MDBDelete s -> convertDelete env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders selSetArguments
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where
     go resolvedConnectionTemplate v =

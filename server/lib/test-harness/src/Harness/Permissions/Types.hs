@@ -6,6 +6,8 @@ module Harness.Permissions.Types
     selectPermission,
     UpdatePermissionDetails (..),
     updatePermission,
+    DeletePermissionDetails (..),
+    deletePermission,
   )
 where
 
@@ -19,6 +21,7 @@ data Permission
   = SelectPermission SelectPermissionDetails
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
+  | DeletePermission DeletePermissionDetails
   deriving (Eq, Show)
 
 data SelectPermissionDetails = SelectPermissionDetails
@@ -49,6 +52,15 @@ data InsertPermissionDetails = InsertPermissionDetails
     insertPermissionColumns :: [Text],
     insertPermissionRows :: Value,
     insertPermissionValidationWebhook :: Maybe Text
+  }
+  deriving (Eq, Show)
+
+data DeletePermissionDetails = DeletePermissionDetails
+  { deletePermissionSource :: Maybe Text,
+    deletePermissionTable :: Text,
+    deletePermissionRole :: Text,
+    deletePermissionRows :: Value,
+    deletePermissionValidationWebhook :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -84,4 +96,14 @@ insertPermission =
       insertPermissionColumns = mempty,
       insertPermissionRows = object [],
       insertPermissionValidationWebhook = Nothing
+    }
+
+deletePermission :: DeletePermissionDetails
+deletePermission =
+  DeletePermissionDetails
+    { deletePermissionSource = Nothing,
+      deletePermissionTable = mempty,
+      deletePermissionRole = "test-role",
+      deletePermissionRows = object [],
+      deletePermissionValidationWebhook = Nothing
     }

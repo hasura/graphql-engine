@@ -9,6 +9,8 @@ module Hasura.RQL.IR.Delete
     adOutput,
     adAllCols,
     adNamingConvention,
+    adValidateInput,
+    adIsDeleteByPk,
   )
 where
 
@@ -20,14 +22,18 @@ import Hasura.RQL.IR.Returning
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.NamingCase (NamingCase)
+import Hasura.RQL.Types.Permission
 
 data AnnDelG (b :: BackendType) (r :: Type) v = AnnDel
   { _adTable :: TableName b,
     _adWhere :: (AnnBoolExp b v, AnnBoolExp b v),
     _adOutput :: MutationOutputG b r v,
     _adAllCols :: [ColumnInfo b],
-    _adNamingConvention :: Maybe NamingCase
+    _adNamingConvention :: Maybe NamingCase,
+    _adValidateInput :: Maybe (ValidateInput ResolvedWebhook),
+    _adIsDeleteByPk :: Bool
   }
   deriving (Functor, Foldable, Traversable)
 

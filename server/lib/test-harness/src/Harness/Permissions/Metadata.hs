@@ -92,6 +92,29 @@ createPermissionMetadata testEnvironment (Types.SelectPermission Types.SelectPer
         allow_aggregations: *selectPermissionAllowAggregations
         limit: *selectPermissionLimit
   |]
+createPermissionMetadata testEnvironment (Types.DeletePermission Types.DeletePermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnvironment
+      schemaName = Schema.getSchemaName testEnvironment
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName =
+        maybe
+          (BackendType.backendSourceName backendTypeMetadata)
+          Text.unpack
+          deletePermissionSource
+      requestType = backendType <> "_create_delete_permission"
+      qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName deletePermissionTable
+      validateInput =
+        deletePermissionValidationWebhook <&> \url -> object ["type" .= ("http" :: String), "definition" .= (object ["url" .= url])]
+  [yaml|
+    type: *requestType
+    args:
+      table: *qualifiedTable
+      source: *sourceName
+      role:  *deletePermissionRole
+      permission:
+        filter: *deletePermissionRows
+        validate_input: *validateInput
+  |]
 
 -- | Produce a JSON payload of the common `*_drop_*_permission` form.
 dropPermissionMetadata :: TestEnvironment -> Types.Permission -> Value
@@ -136,4 +159,18 @@ dropPermissionMetadata env (Types.UpdatePermission Types.UpdatePermissionDetails
       table: *qualifiedTable
       source: *sourceName
       role:  *updatePermissionRole
+  |]
+dropPermissionMetadata env (Types.DeletePermission Types.DeletePermissionDetails {..}) = do
+  let backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig env
+      schemaName = Schema.getSchemaName env
+      backendType = BackendType.backendTypeString backendTypeMetadata
+      sourceName = BackendType.backendSourceName backendTypeMetadata
+      requestType = backendType <> "_drop_delete_permission"
+      qualifiedTable = Schema.mkTableField backendTypeMetadata schemaName deletePermissionTable
+  [yaml|
+    type: *requestType
+    args:
+      table: *qualifiedTable
+      source: *sourceName
+      role:  *deletePermissionRole
   |]

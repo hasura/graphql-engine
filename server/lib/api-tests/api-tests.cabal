@@ -168,6 +168,7 @@ library
     Test.Mutations.Delete.FieldSpec
     Test.Mutations.Delete.NestedFieldSpec
     Test.Mutations.Delete.PrimaryKeySpec
+    Test.Mutations.Delete.ValidationSpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
     Test.Mutations.Insert.ValidationSpec

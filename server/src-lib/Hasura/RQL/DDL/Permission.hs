@@ -251,7 +251,7 @@ buildPermInfo e x1 x2 x3 roleName = \case
   SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
   InsPerm' p -> buildInsPermInfo e x1 x2 x3 p
   UpdPerm' p -> buildUpdPermInfo e x1 x2 x3 p
-  DelPerm' p -> buildDelPermInfo x1 x2 x3 p
+  DelPerm' p -> buildDelPermInfo e x1 x2 x3 p
 
 -- | Given the logical model's definition and the permissions as defined in the
 -- logical model's metadata, try to construct the permission definition.
@@ -660,18 +660,20 @@ buildDelPermInfo ::
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   DelPerm b ->
   m (WithDeps (DelPermInfo b))
-buildDelPermInfo source tn fieldInfoMap (DelPerm fltr backendOnly) = do
+buildDelPermInfo env source tn fieldInfoMap (DelPerm fltr backendOnly validateInput) = do
   (be, beDeps) <-
     withPathK "filter"
       $ procBoolExp source tn fieldInfoMap fltr
   let deps = mkParentDep @b source tn Seq.:<| beDeps
       depHeaders = getDependentHeaders fltr
-  return (DelPermInfo tn be backendOnly depHeaders, deps)
+  resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+  return (DelPermInfo tn be backendOnly depHeaders resolvedValidateInput, deps)
 
 data SetPermComment b = SetPermComment
   { apSource :: SourceName,

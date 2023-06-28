@@ -418,7 +418,7 @@ deleteFromTable scenario tableInfo fieldName description = runMaybeT $ do
     pure
       $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
       $ P.subselection fieldName description whereArg selection
-      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase)
+      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) False
       . fmap IR.MOutMultirowFields
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
@@ -455,7 +455,7 @@ deleteFromTableByPk scenario tableInfo fieldName description = runMaybeT $ do
   pure
     $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
     $ P.subselection fieldName description pkArgs selection
-    <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase)
+    <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) True
     . fmap IR.MOutSinglerowObject
 
 mkDeleteObject ::
@@ -464,15 +464,18 @@ mkDeleteObject ::
   [ColumnInfo b] ->
   DelPermInfo b ->
   Maybe NamingCase ->
+  Bool ->
   (AnnBoolExp b (IR.UnpreparedValue b), IR.MutationOutputG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)) ->
   IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
-mkDeleteObject table columns deletePerms tCase (whereExp, mutationOutput) =
+mkDeleteObject table columns deletePerms tCase isDeleteByPK (whereExp, mutationOutput) =
   IR.AnnDel
     { IR._adTable = table,
       IR._adWhere = (permissionFilter, whereExp),
       IR._adOutput = mutationOutput,
       IR._adAllCols = columns,
-      IR._adNamingConvention = tCase
+      IR._adNamingConvention = tCase,
+      IR._adValidateInput = dpiValidateInput deletePerms,
+      IR._adIsDeleteByPk = isDeleteByPK
     }
   where
     permissionFilter = fmap partialSQLExpToUnpreparedValue <$> dpiFilter deletePerms

@@ -324,15 +324,16 @@ sourcesToOrdJSONList sources =
           delPermDefToOrdJSON :: (Backend b) => DelPermDef b -> AO.Value
           delPermDefToOrdJSON = permDefToOrdJSON delPermToOrdJSON
             where
-              delPermToOrdJSON (DelPerm filter' backendOnly) =
+              delPermToOrdJSON (DelPerm filter' backendOnly validateInput) =
                 let backendOnlyPair =
                       if backendOnly
                         then Just ("backend_only", AO.toOrdered backendOnly)
                         else Nothing
+                    validateInputPair = (("validate_input",) . AO.toOrdered) <$> validateInput
                  in AO.object
                       $ [ ("filter", AO.toOrdered filter')
                         ]
-                      <> catMaybes [backendOnlyPair]
+                      <> catMaybes [backendOnlyPair, validateInputPair]
 
           permDefToOrdJSON :: (a b -> AO.Value) -> PermDef b a -> AO.Value
           permDefToOrdJSON permToOrdJSON (PermDef role permission comment) =
