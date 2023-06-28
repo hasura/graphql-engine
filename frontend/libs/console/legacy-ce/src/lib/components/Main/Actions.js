@@ -4,8 +4,6 @@ import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
-import { getRunSqlQuery } from '../Common/utils/v1QueryUtils';
-import { currentDriver } from '../../dataSources';
 import { defaultNotification, errorNotification } from './ConsoleNotification';
 import { updateConsoleNotificationsState } from '../../telemetry/Actions';
 import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
@@ -275,36 +273,6 @@ const setReadOnlyMode = data => ({
   type: SET_READ_ONLY_MODE,
   data,
 });
-
-export const fetchPostgresVersion = (dispatch, getState) => {
-  if (currentDriver !== 'postgres') return;
-
-  const req = getRunSqlQuery(
-    'SELECT version()',
-    getState().tables.currentDataSource,
-    false,
-    true
-  );
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    body: JSON.stringify(req),
-    headers: getState().tables.dataHeaders,
-  };
-
-  return dispatch(requestAction(Endpoints.query, options)).then(
-    ({ result }) => {
-      if (result.length > 1 && result[1].length) {
-        const matchRes = result[1][0].match(/[0-9]{1,}(\.[0-9]{1,})?/);
-        if (matchRes.length) {
-          dispatch({ type: POSTGRES_VERSION_SUCCESS, payload: matchRes[0] });
-          return;
-        }
-      }
-      dispatch({ type: POSTGRES_VERSION_ERROR });
-    }
-  );
-};
 
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {

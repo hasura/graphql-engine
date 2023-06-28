@@ -1,4 +1,3 @@
-import React, { useEffect } from 'react';
 import { Link } from 'react-router';
 import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 import globals from '../../../Globals';
@@ -8,27 +7,8 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.module.scss';
-import { isFeatureSupported } from '../../../dataSources';
-import { fetchPostgresVersion } from '../../Main/Actions';
-// import { useEnvironmentState } from '../../../features/ConnectDBRedesign/hooks';
 
-const DataPageContainer = ({
-  children,
-  location,
-  dispatch,
-  currentDataSource,
-}) => {
-  // const { consoleType } = useEnvironmentState();
-  useEffect(() => {
-    // TODO: handle for different drivers
-    if (
-      currentDataSource &&
-      isFeatureSupported('driver.fetchVersion.enabled')
-    ) {
-      dispatch(fetchPostgresVersion);
-    }
-  }, [dispatch, currentDataSource]);
-
+const DataPageContainer = ({ children, location, currentDataSource }) => {
   const currentLocation = location.pathname;
 
   let migrationTab = null;
