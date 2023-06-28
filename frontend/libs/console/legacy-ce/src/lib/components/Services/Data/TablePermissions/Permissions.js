@@ -37,6 +37,7 @@ import {
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   permToggleSelectField,
+  permValidateInputFields,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -105,6 +106,7 @@ import {
   MetadataSelectors,
   useMetadata,
 } from '../../../../features/hasura-metadata-api';
+import { ReduxInputValidation } from './InputValidation/ReduxInputValidation';
 
 const getPermissionModalEnabled = () => {
   const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
@@ -1912,7 +1914,6 @@ class Permissions extends Component {
       const permissionsModalDescription = getPermissionsModalDescription(
         this.state.permissionsModalScenario
       );
-
       return (
         <div
           id={'permission-edit-section'}
@@ -1935,6 +1936,25 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
+            {permissionsState?.query !== 'select' && (
+              <ReduxInputValidation
+                dispatch={dispatch}
+                permissionsState={permissionsState[query]?.validate_input}
+                updateFunction={values => {
+                  // update redux state for validation form (only if they change)
+                  dispatch(
+                    permValidateInputFields(
+                      values.enabled,
+                      values.definition.url,
+                      'http',
+                      values.definition.headers,
+                      values.definition.forward_client_headers,
+                      values.definition.timeout
+                    )
+                  );
+                }}
+              />
+            )}
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}

@@ -280,6 +280,16 @@ export interface ColumnPresetsExpression {
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#args-syntax
  */
+
+export interface ValidationInput {
+  type: 'http';
+  definition: {
+    url: string;
+    timeout: number;
+    headers: { key: string; value: string }[];
+    forward_client_headers: boolean;
+  };
+}
 export interface InsertPermissionEntry {
   /** Role */
   role: RoleName;
@@ -304,6 +314,7 @@ export interface InsertPermission {
    * and is set to true and request is made with x-hasura-admin-secret set if any auth is configured
    */
   backend_only?: boolean;
+  validation_input: ValidationInput;
 }
 
 /**
@@ -361,6 +372,7 @@ export interface UpdatePermission {
   columns: PGColumn[] | '*';
   /** Only the rows where this precondition holds true are updatable */
   filter?: { [key: string]: Record<string, any> | string | number };
+  validation_input: ValidationInput;
 }
 
 /**
@@ -381,6 +393,7 @@ export interface DeletePermissionEntry {
 export interface DeletePermission {
   /** Only the rows where this precondition holds true are updatable */
   filter?: { [key: string]: Record<string, any> | string | number };
+  validation_input: ValidationInput;
 }
 
 // //////////////////////////////

@@ -73,6 +73,7 @@ import {
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
   PERM_TOGGLE_BACKEND_ONLY,
+  PERM_VALIDATE_INPUT_FIELD,
   toggleField,
   toggleAllFields,
   getBasePermissionsState,
@@ -543,6 +544,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           modifyState.permissionsState,
           'backend_only',
           !isBackendOnly
+        ),
+      };
+    case PERM_VALIDATE_INPUT_FIELD:
+      return {
+        ...modifyState,
+        permissionsState: updatePermissionsState(
+          modifyState.permissionsState,
+          'validate_input',
+          action?.payload
         ),
       };
     /* Preset operations */
