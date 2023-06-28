@@ -73,10 +73,10 @@ Triggers system performance.
 
 ### Latency
 
-Latency for the Hasura Event Triggers system references the total time taken by the graphql engine in delivering the
-events. To monitor the latency, you can use the [`hasura_event_processing_time_seconds`](#event-processing-time) metric.
+Latency for the Event Triggers system is the time taken by Hasura GraphQL Engine to deliver events. To monitor this
+latency, you can use the [`hasura_event_processing_time_seconds`](#event-processing-time) metric.
 
-If the value of this metric is high, it maybe an indication that events are taking longer time to be processed and
+If the value of this metric is high, it may be an indication that events are taking a longer time to be processed and
 delivered.
 
 The following are few things you can do to analyze and diagnose the latency issue:
@@ -118,18 +118,17 @@ To monitor saturation, you can use the following:
 
 ### Traffic
 
-Traffic for Event Triggers means the number of new events created at a given point of time. Since it's complicated to
-figure out the number of events created, you can use the number of Event Triggers processed as a proxy for traffic.
+Traffic for Event Triggers is the number of new events created in a given time frame (like 1000 events per minute).
+Events can be created even if mutations don't go through Hasura i.e. using some other client. Hence, Hasura doesn't
+give the number of events as metrics, but you can find this out by using metadata APIs like
+[pg_get_event_logs](/latest/api-reference/metadata-api/event-triggers/#metadata-pg-get-event-logs). "Proxy"
+metrics for traffic are the number of mutations, number of events processed and number of events fetched per batch.
 
-To monitor traffic, you can use the [`hasura_event_processed_total`](#event-processed-total) metric.
+To monitor traffic, you can use the [`hasura_event_processed_total`](#event-processed-total) and the
+[`hasura_events_fetched_per_batch`](#events-fetched-per-batch) metrics.
 
-If the value of this metric is high (and above your established baseline), and the Hasura Event Triggers system is also
-saturated (`hasura_event_trigger_http_workers` nearing the configured HTTP worker pool size and
-`hasura_event_queue_time_seconds` is also high), then you may want to consider doing the following:
-
-1.  Increasing the number of HTTP workers by increasing the
-    [Events HTTP Pool Size](/deployment/graphql-engine-flags/reference.mdx/#events-http-pool-size)
-2.  [Scaling](/latest/faq/index/#faq-scaling) your Hasura instance horizontally to handle more events.
+If the value of `hasura_events_fetched_per_batch` is close to the configured max batch size, then it hints that there
+may be some pending events in the database yet to be fetched and processed.
 
 ### Errors
 
