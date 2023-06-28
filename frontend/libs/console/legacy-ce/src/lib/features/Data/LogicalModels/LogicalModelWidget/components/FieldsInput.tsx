@@ -117,7 +117,11 @@ export const FieldsInput = ({
             icon={<FaPlusCircle />}
             disabled={!types || types.length === 0}
             onClick={() => {
-              append({ name: '', type: 'text', nullable: true });
+              append({
+                name: '',
+                type: types?.[0] ?? undefined,
+                nullable: true,
+              });
             }}
           >
             Add Field
