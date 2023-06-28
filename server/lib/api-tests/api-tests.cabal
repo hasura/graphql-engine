@@ -20,6 +20,8 @@ common common-all
     -Wno-monomorphism-restriction
     -Wno-missing-kind-signatures
     -Wno-missing-safe-haskell-mode
+    -- please be quiet, Morpheus
+    -Wno-deprecations
     -- We want these warnings, but the code doesn't satisfy them yet:
     -Wno-missing-deriving-strategies
     -Wno-unused-packages
@@ -135,6 +137,7 @@ library
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
+    Test.Databases.Postgres.ArraySpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
     Test.Databases.Postgres.JsonbSpec
