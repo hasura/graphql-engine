@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.EventTrigger
@@ -50,7 +49,6 @@ import Autodocodec qualified as AC
 import Autodocodec.Extended (boolConstCodec)
 import Data.Aeson
 import Data.Aeson.Extended ((.=?))
-import Data.Aeson.TH
 import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -190,7 +188,12 @@ instance HasCodec RetryConf where
         <*> optionalField' "timeout_sec"
       AC..= rcTimeoutSec
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''RetryConf)
+instance FromJSON RetryConf where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON RetryConf where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data EventHeaderInfo = EventHeaderInfo
   { ehiHeaderConf :: HeaderConf,
@@ -200,7 +203,9 @@ data EventHeaderInfo = EventHeaderInfo
 
 instance NFData EventHeaderInfo
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''EventHeaderInfo)
+instance ToJSON EventHeaderInfo where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 data WebhookConf = WCValue InputWebhook | WCEnv Text
   deriving (Show, Eq, Generic)
@@ -227,7 +232,9 @@ data WebhookConfInfo = WebhookConfInfo
 
 instance NFData WebhookConfInfo
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookConfInfo)
+instance ToJSON WebhookConfInfo where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 -- | The table operations on which the event trigger will be invoked.
 data TriggerOpsDef (b :: BackendType) = TriggerOpsDef
@@ -507,9 +514,14 @@ instance Semigroup RecreateEventTriggers where
   RETDoNothing <> RETDoNothing = RETDoNothing
 
 data TriggerMetadata = TriggerMetadata {tmName :: TriggerName}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''TriggerMetadata)
+instance FromJSON TriggerMetadata where
+  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+
+instance ToJSON TriggerMetadata where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toEncoding = genericToEncoding hasuraJSON {omitNothingFields = True}
 
 -- | Change data for a particular row
 --
@@ -667,7 +679,9 @@ data EventLog = EventLog
   }
   deriving (Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''EventLog)
+instance ToJSON EventLog where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data GetEventInvocations (b :: BackendType) = GetEventInvocations
   { _geiName :: TriggerName,
@@ -712,7 +726,9 @@ data EventInvocationLog = EventInvocationLog
   }
   deriving (Generic)
 
-$(deriveToJSON hasuraJSON ''EventInvocationLog)
+instance ToJSON EventInvocationLog where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 data GetEventById (b :: BackendType) = GetEventById
   { _gebiSourceName :: SourceName,
@@ -752,4 +768,6 @@ data EventLogWithInvocations = EventLogWithInvocations
   }
   deriving (Generic)
 
-$(deriveToJSON hasuraJSON ''EventLogWithInvocations)
+instance ToJSON EventLogWithInvocations where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON

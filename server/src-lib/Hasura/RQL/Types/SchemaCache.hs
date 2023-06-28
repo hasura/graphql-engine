@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCache
@@ -117,7 +116,6 @@ where
 
 import Control.Lens (Traversal', at, preview, (^.))
 import Data.Aeson
-import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Int (Int64)
@@ -293,9 +291,11 @@ data CronTriggerInfo = CronTriggerInfo
     ctiRequestTransform :: Maybe RequestTransform,
     ctiResponseTransform :: Maybe MetadataResponseTransform
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''CronTriggerInfo)
+instance ToJSON CronTriggerInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 newtype SchemaCacheVer = SchemaCacheVer {unSchemaCacheVer :: Word64}
   deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
