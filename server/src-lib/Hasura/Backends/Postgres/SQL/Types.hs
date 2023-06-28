@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | Postgres SQL Types
 --
@@ -65,7 +64,6 @@ import Autodocodec.Extended (typeableName)
 import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
-import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Int
 import Data.List (uncons)
@@ -740,7 +738,12 @@ instance NFData QualifiedPGType
 
 instance Hashable QualifiedPGType
 
-$(deriveJSON hasuraJSON ''QualifiedPGType)
+instance FromJSON QualifiedPGType where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON QualifiedPGType where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 isBaseType :: QualifiedPGType -> Bool
 isBaseType (QualifiedPGType _ n ty) =
@@ -781,7 +784,12 @@ data PGRawFunctionInfo = PGRawFunctionInfo
 
 instance NFData PGRawFunctionInfo
 
-$(deriveJSON hasuraJSON ''PGRawFunctionInfo)
+instance FromJSON PGRawFunctionInfo where
+  parseJSON = genericParseJSON hasuraJSON
+
+instance ToJSON PGRawFunctionInfo where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 mkScalarTypeName :: (MonadError QErr m) => PGScalarType -> m G.Name
 mkScalarTypeName PGInteger = pure GName._Int
