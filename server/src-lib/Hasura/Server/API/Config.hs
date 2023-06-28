@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | API related to server configuration
 module Hasura.Server.API.Config
@@ -9,7 +8,7 @@ module Hasura.Server.API.Config
   )
 where
 
-import Data.Aeson.TH
+import Data.Aeson qualified as J
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.Prelude
@@ -29,16 +28,20 @@ data FeatureFlagInfo = FeatureFlagInfo
   }
   deriving (Show, Eq, Generic, Hashable)
 
-$(deriveToJSON hasuraJSON ''FeatureFlagInfo)
+instance J.ToJSON FeatureFlagInfo where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data JWTInfo = JWTInfo
   { jwtiClaimsNamespace :: !JWTNamespace,
     jwtiClaimsFormat :: !JWTClaimsFormat,
     jwtiClaimsMap :: !(Maybe JWTCustomClaimsMap)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''JWTInfo)
+instance J.ToJSON JWTInfo where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data ServerConfig = ServerConfig
   { scfgVersion :: !Version,
@@ -57,9 +60,11 @@ data ServerConfig = ServerConfig
     scfgDefaultNamingConvention :: !NamingCase,
     scfgFeatureFlags :: !(Set.HashSet FeatureFlagInfo)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''ServerConfig)
+instance J.ToJSON ServerConfig where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runGetConfig ::
   Options.InferFunctionPermissions ->

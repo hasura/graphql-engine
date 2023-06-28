@@ -27,7 +27,6 @@ module Hasura.Server.Telemetry.Counters
 where
 
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.IORef
 import Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
@@ -182,8 +181,19 @@ data ServiceTimingMetric = ServiceTimingMetric
   }
   deriving (Show, Generic, Eq, Ord)
 
-$(J.deriveJSON hasuraJSON ''RequestTimingsCount)
-$(J.deriveJSON hasuraJSON ''RequestDimensions)
+instance J.FromJSON RequestTimingsCount where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON RequestTimingsCount where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
+
+instance J.FromJSON RequestDimensions where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON RequestDimensions where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance J.ToJSON ServiceTimingMetric
 
