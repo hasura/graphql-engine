@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Execute.Action.Types
   ( ActionContext (..),
     ActionExecution (..),
@@ -20,7 +18,6 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Int (Int64)
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -71,9 +68,14 @@ data ActionExecutionPlan
   | AEPAsyncMutation !ActionId
 
 newtype ActionContext = ActionContext {_acName :: ActionName}
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
+instance J.FromJSON ActionContext where
+  parseJSON = J.genericParseJSON (J.aesonDrop 3 J.snakeCase)
+
+instance J.ToJSON ActionContext where
+  toJSON = J.genericToJSON (J.aesonDrop 3 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 3 J.snakeCase)
 
 -- _awpRequestQuery is Nothing is case of Asynchronous actions
 data ActionWebhookPayload = ActionWebhookPayload
@@ -82,18 +84,28 @@ data ActionWebhookPayload = ActionWebhookPayload
     _awpInput :: !J.Value,
     _awpRequestQuery :: !(Maybe GQLQueryText)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
+instance J.FromJSON ActionWebhookPayload where
+  parseJSON = J.genericParseJSON (J.aesonDrop 4 J.snakeCase)
+
+instance J.ToJSON ActionWebhookPayload where
+  toJSON = J.genericToJSON (J.aesonDrop 4 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 4 J.snakeCase)
 
 data ActionWebhookErrorResponse = ActionWebhookErrorResponse
   { _awerMessage :: !Text,
     _awerCode :: !(Maybe Text),
     _awerExtensions :: !(Maybe J.Value)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+instance J.FromJSON ActionWebhookErrorResponse where
+  parseJSON = J.genericParseJSON (J.aesonDrop 5 J.snakeCase)
+
+instance J.ToJSON ActionWebhookErrorResponse where
+  toJSON = J.genericToJSON (J.aesonDrop 5 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 5 J.snakeCase)
 
 type ActionWebhookResponse = J.Value
 
@@ -103,27 +115,36 @@ data ActionRequestInfo = ActionRequestInfo
     _areqiHeaders :: ![HeaderConf],
     _areqiTransformedRequest :: !(Maybe HTTP.Request)
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionRequestInfo)
+instance J.ToJSON ActionRequestInfo where
+  toJSON = J.genericToJSON (J.aesonDrop 6 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 6 J.snakeCase)
 
 data ActionResponseInfo = ActionResponseInfo
   { _aresiStatus :: !Int,
     _aresiBody :: !J.Value,
     _aresiHeaders :: ![HeaderConf]
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionResponseInfo)
+instance J.FromJSON ActionResponseInfo where
+  parseJSON = J.genericParseJSON (J.aesonDrop 6 J.snakeCase)
+
+instance J.ToJSON ActionResponseInfo where
+  toJSON = J.genericToJSON (J.aesonDrop 6 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 6 J.snakeCase)
 
 data ActionInternalError = ActionInternalError
   { _aieError :: !J.Value,
     _aieRequest :: !ActionRequestInfo,
     _aieResponse :: !(Maybe ActionResponseInfo)
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
+instance J.ToJSON ActionInternalError where
+  toJSON = J.genericToJSON (J.aesonDrop 4 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 4 J.snakeCase)
 
 -- * Action handler logging related
 
@@ -135,9 +156,11 @@ data ActionHandlerLog = ActionHandlerLog
     _ahlResponseSize :: !Int64,
     _ahlActionName :: !ActionName
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''ActionHandlerLog)
+instance J.ToJSON ActionHandlerLog where
+  toJSON = J.genericToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
 
 instance L.ToEngineLog ActionHandlerLog L.Hasura where
   toEngineLog ahl = (L.LevelInfo, L.ELTActionHandler, J.toJSON ahl)
