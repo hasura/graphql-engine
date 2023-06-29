@@ -62,6 +62,11 @@ ghcid-api-tests-run: start-api-tests-backends
 ghcid-test-harness:
 	$(call run_ghcid,test-harness)
 
+.PHONY: ghcid-pg-client
+## ghcid-pg-client: build and watch pg-client in ghcid
+ghcid-pg-client:
+	$(call run_ghcid,pg-client)
+
 .PHONY: ghcid-api-tests-pro
 ## ghcid-api-tests-pro: build and watch api-tests in pro
 ghcid-api-tests-pro:

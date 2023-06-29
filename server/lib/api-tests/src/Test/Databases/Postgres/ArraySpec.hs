@@ -9,9 +9,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.GraphqlEngine (postGraphql)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithVariables)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
@@ -60,6 +60,23 @@ spec = do
     )
     nestedArrayTests
 
+  -- CockroachDB does not support json arrays
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Postgres.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Citus.setupTablesAction schema testEnv
+                ]
+            }
+        ]
+    )
+    jsonArrayTests
+
 --------------------------------------------------------------------------------
 -- Schema
 
@@ -72,13 +89,22 @@ textArrayType =
         Schema.bstCockroach = Just "text[]"
       }
 
-nestedTextArrayType :: Schema.ScalarType
-nestedTextArrayType =
+nestedIntArrayType :: Schema.ScalarType
+nestedIntArrayType =
   Schema.TCustomType
     $ Schema.defaultBackendScalarType
-      { Schema.bstPostgres = Just "text[][]",
-        Schema.bstCitus = Just "text[][]",
-        Schema.bstCockroach = Just "text[]" -- nested arrays aren't supported in Cockroach, so we'll skip this test anyway
+      { Schema.bstPostgres = Just "int[][]",
+        Schema.bstCitus = Just "int[][]",
+        Schema.bstCockroach = Just "int[]" -- nested arrays aren't supported in Cockroach, so we'll skip this test anyway
+      }
+
+jsonArrayType :: Schema.ScalarType
+jsonArrayType =
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
+      { Schema.bstPostgres = Just "json[]",
+        Schema.bstCitus = Just "json[]",
+        Schema.bstCockroach = Just "json" -- arrays of json aren't supported in Cockroach, so we'll skip this test
       }
 
 schema :: [Schema.Table]
@@ -88,7 +114,8 @@ schema =
           [ Schema.column "id" Schema.defaultSerialType,
             Schema.column "name" Schema.TStr,
             Schema.column "emails" textArrayType,
-            Schema.column "grid" nestedTextArrayType
+            Schema.column "grid" nestedIntArrayType,
+            Schema.column "jsons" jsonArrayType
           ],
         Schema.tablePrimaryKey = ["id"]
       }
@@ -123,7 +150,8 @@ singleArrayTests = do
                       {
                         name: "Ash",
                         emails: "{ash@ash.com, ash123@ash.com}",
-                        grid: "{}"
+                        grid: "{}",
+                        jsons: "{}"
                       }
                     ]
                   ) {
@@ -138,7 +166,7 @@ singleArrayTests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "Using native GraphQL array syntax" \testEnvironment -> do
+    it "Text array using native GraphQL array syntax" \testEnvironment -> do
       let expected :: Value
           expected =
             [interpolateYaml|
@@ -161,7 +189,8 @@ singleArrayTests = do
                       {
                         name: "Ash",
                         emails: ["ash@ash.com", "ash123@ash.com"],
-                        grid: []
+                        grid: [],
+                        jsons: []
                       }
                     ]
                   ) {
@@ -172,6 +201,90 @@ singleArrayTests = do
                     }
                   }
                 }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+jsonArrayTests :: SpecWith TestEnvironment
+jsonArrayTests = do
+  describe "saves JSON arrays" $ do
+    it "JSON array using native GraphQL array syntax" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                insert_hasura_author:
+                  affected_rows: 1
+                  returning:
+                    - name: "Bruce"
+                      jsons: [{ name: "Mr Horse", age: 100}, { name: "Mr Dog", age: 1}]
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_author (
+                    objects: [
+                      {
+                        name: "Bruce",
+                        emails: ["something@something.com"]
+                        grid: [],
+                        jsons: ["{ \"name\": \"Mr Horse\", \"age\": 100}", "{\"name\":\"Mr Dog\", \"age\": 1}"]
+                      }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      name
+                      jsons
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "JSON array using native GraphQL array syntax and variable" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                insert_hasura_author:
+                  affected_rows: 1
+                  returning:
+                    - name: "Bruce"
+                      jsons: [{ name: "Mr Horse", age: 100}, "horses"]
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphqlWithVariables
+              testEnvironment
+              [graphql|
+                mutation json_variables_test($jsonArray: [json]) {
+                  insert_hasura_author (
+                    objects: [
+                      {
+                        name: "Bruce",
+                        emails: ["something2@something2.com"],
+                        grid: [],
+                        jsons: $jsonArray
+                      }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      name
+                      jsons
+                    }
+                  }
+                }
+              |]
+              [yaml|
+                jsonArray: [{ name: "Mr Horse", age: 100 }, "horses"]
               |]
 
       shouldReturnYaml testEnvironment actual expected
@@ -188,7 +301,8 @@ singleArrayTests = do
                       {
                         name: "contains",
                         emails: ["horse@horse.com", "dog@dog.com"],
-                        grid: []
+                        grid: [],
+                        jsons: []
                       }
                     ]
                   ) {
@@ -234,7 +348,8 @@ singleArrayTests = do
                       {
                         name: "contained_in",
                         emails: ["horse@horse2.com", "dog@dog2.com"],
-                        grid: []
+                        grid: [],
+                        jsons: []
                       }
                     ]
                   ) {
@@ -285,8 +400,8 @@ nestedArrayTests = do
                     affected_rows: 1
                     returning:
                       - name: "Ash"
-                        grid: [["one", "two", "three"],
-                              ["four", "five", "six"]]
+                        grid: [[1,2,3],
+                              [4,5,6]]
               |]
 
           actual :: IO Value
@@ -300,7 +415,8 @@ nestedArrayTests = do
                         {
                           name: "Ash",
                           emails: "{}",
-                          grid: "{{one,two,three},{four,five,six}}"
+                          grid: "{{1,2,3},{4,5,6}}",
+                          jsons: "{}"
                         }
                       ]
                     ) {
