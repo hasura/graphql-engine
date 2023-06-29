@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.SQL.GeoJSON
   ( Position (..),
     Point (..),
@@ -18,7 +16,6 @@ where
 import Control.Monad
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Aeson.Types qualified as J
 import Data.Vector qualified as V
 import Hasura.Prelude
@@ -129,28 +126,54 @@ newtype MultiPolygon = MultiPolygon {unMultiPolygon :: [Polygon]}
 data CRSNameProps = CRSNameProps
   { _cnpName :: !Text
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 data CRSLinkProps = CRSLinkProps
   { _clpHref :: !Text,
     _clpType :: !(Maybe Text)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
 data CRS
   = CRSName !CRSNameProps
   | CRSLink !CRSLinkProps
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSNameProps)
-$(J.deriveJSON (J.aesonPrefix J.camelCase) ''CRSLinkProps)
-$( J.deriveJSON
-     J.defaultOptions
-       { J.constructorTagModifier = J.camelCase . drop 3,
-         J.sumEncoding = J.TaggedObject "type" "properties"
-       }
-     ''CRS
- )
+instance J.FromJSON CRSNameProps where
+  parseJSON = J.genericParseJSON (J.aesonPrefix J.camelCase)
+
+instance J.ToJSON CRSNameProps where
+  toJSON = J.genericToJSON (J.aesonPrefix J.camelCase)
+  toEncoding = J.genericToEncoding (J.aesonPrefix J.camelCase)
+
+instance J.FromJSON CRSLinkProps where
+  parseJSON = J.genericParseJSON (J.aesonPrefix J.camelCase)
+
+instance J.ToJSON CRSLinkProps where
+  toJSON = J.genericToJSON (J.aesonPrefix J.camelCase)
+  toEncoding = J.genericToEncoding (J.aesonPrefix J.camelCase)
+
+instance J.FromJSON CRS where
+  parseJSON =
+    J.genericParseJSON
+      J.defaultOptions
+        { J.constructorTagModifier = J.camelCase . drop 3,
+          J.sumEncoding = J.TaggedObject "type" "properties"
+        }
+
+instance J.ToJSON CRS where
+  toJSON =
+    J.genericToJSON
+      J.defaultOptions
+        { J.constructorTagModifier = J.camelCase . drop 3,
+          J.sumEncoding = J.TaggedObject "type" "properties"
+        }
+  toEncoding =
+    J.genericToEncoding
+      J.defaultOptions
+        { J.constructorTagModifier = J.camelCase . drop 3,
+          J.sumEncoding = J.TaggedObject "type" "properties"
+        }
 
 data GeometryWithCRS = GeometryWithCRS
   { _gwcGeom :: !Geometry,
