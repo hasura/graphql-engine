@@ -101,7 +101,7 @@ export const TrackTablesContainer = ({
                         schema,
                         dataSourceName,
                         (table.table as PostgresTable).name,
-                        table.type === 'BASE TABLE'
+                        table.type !== 'VIEW'
                       )
                     )
                   );
