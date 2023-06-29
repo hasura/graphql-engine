@@ -11,16 +11,10 @@ sidebar_position: 3
 
 ## What is cached exactly?
 
-Hasura Caching is a type of response caching that helps you cache results of a given query. Hasura will cache the
-response of a given "unique" query, and only if the same query is made again (i.e., has the same cache key) will it hit
-the cache. We explain how the cache key is computed in the [next section](#how-is-the-cache-key-computed).
-
-This means that there is no sharing of the cache if:
-
-- the session variables differ, even if the GraphQL query, variables, operation name everything is the same
-- the GraphQL variables differ, even if the GraphQL query is the same
-- the operation name is different, even if the GraphQL query is the same
-- the GraphQL query differs only in one or a few fields
+Hasura Caching is a type of response caching that helps you store results of a given query in order to serve it more
+quickly to your users. Hasura will cache the response of a given query under a cache key, and when another request
+comes in which computes to the same cache key then it will deliver the cached result, without needing to query the
+underlying data source. We explain how the cache key is computed in the [next section](#how-is-the-cache-key-computed).
 
 ## How is the cache key computed?
 
@@ -32,11 +26,20 @@ The cache key is a hash of:
 - the GraphQL query
 - the GraphQL operation name
 - the GraphQL variables of the query
-- the [role and session variables](/auth/authorization/roles-variables.mdx) used in permissions of the query
+- the [role and session variables](/auth/authorization/roles-variables.mdx) used in the permissions of the query (not
+  necessarily all of the session variables)
 - request headers in case of [Remote Schemas](/remote-schemas/overview.mdx) or [Actions](/actions/overview.mdx) when
   `forward_client_headers` is `true`
 
 If the computed cache key is found in the cache, then there is a cache hit.
+
+This means that a cached result will not be delivered if:
+
+- the session variables needed in the permissions of the query differ, even if the GraphQL query, variables, operation
+  name and everything else is the same
+- the GraphQL variables differ, even if the GraphQL query is the same
+- the operation name is different, even if the GraphQL query is the same
+- the GraphQL query differs in one or more fields
 
 :::info TTL matters
 
@@ -159,12 +162,11 @@ query getNewlyJoinedUsers($minDate: timestamptz!, $maxDate: timestamptz!) @cache
 ### Role and session variables
 
 Hasura resolves [session variables](/auth/authorization/roles-variables.mdx) via the
-[authentication](/auth/authentication/index.mdx) process. The role and session variables are used to compute the cache
-key.
-
-A session variable will only influence the cache key for a query if it is referenced by the execution plan. In practice,
-this means that session variables are only factored into cache keys if they are referenced in the permissions for a
-query.
+[authentication](/auth/authentication/index.mdx) process. The role and (a subset of) session variables are used to
+compute the cache key. A session variable will be part of the the cache key only if it is needed by the permission
+rules for the query. Sessions variables which are not required in the execution plan for a query are not included in
+the cache key. Therefore, the same cached result can be returned for requests where the session variables only
+differ where they are not required in the query execution plan.
 
 For example, if a JWT resolves to say `x-hasura-user-id` and `x-hasura-org-id` session variables, but the query only
 uses the `x-hasura-user-id` in the permissions, then only the role and `x-hasura-user-id` would be used to compute the
