@@ -26,50 +26,50 @@
 </span><span id="line-26"></span><span class="hs-comment">--</span><span>
 </span><span id="line-27"></span><span class="hs-comment">-- Additionally, this function adds metadata regarding the request to the</span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- created span, and injects the trace context into the HTTP header.</span><span>
-</span><span id="line-29"></span><span id="local-6989586621687262203"><span id="local-6989586621687262207"><span class="annot"><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier hs-type">traceHTTPRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687262203"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262203"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-29"></span><span id="local-6989586621687267739"><span id="local-6989586621687267743"><span class="annot"><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier hs-type">traceHTTPRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687267739"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267739"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-31"></span><span>  </span><span class="annot"><span class="hs-comment">-- | http request that needs to be made</span></span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="hs-comment">-- | a function that takes the traced request and executes it</span></span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687262203"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262207"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><a href="#local-6989586621687262203"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262207"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-client-0.7.13.1-502ddd03dcb0699ad73741428897b95bce942b287e00ead925349aad45d2ca18/share/doc/html/src/Network.HTTP.Client.Types.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687267739"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267743"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="#local-6989586621687267739"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267743"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-36"></span><span id="traceHTTPRequest"><span class="annot"><span class="annottext">traceHTTPRequest :: forall (m :: * -&gt; *) a.
 (MonadIO m, MonadTrace m) =&gt;
 Request -&gt; (Request -&gt; m a) -&gt; m a
-</span><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier hs-var hs-var">traceHTTPRequest</span></a></span></span><span> </span><span id="local-6989586621687262342"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687262342"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687262343"><span class="annot"><span class="annottext">Request -&gt; m a
-</span><a href="#local-6989586621687262343"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687262344"><span class="annot"><span class="annottext">method :: Text
-</span><a href="#local-6989586621687262344"><span class="hs-identifier hs-var hs-var">method</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="Hasura.Tracing.Utils.html#traceHTTPRequest"><span class="hs-identifier hs-var hs-var">traceHTTPRequest</span></a></span></span><span> </span><span id="local-6989586621687267878"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621687267878"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687267879"><span class="annot"><span class="annottext">Request -&gt; m a
+</span><a href="#local-6989586621687267879"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687267880"><span class="annot"><span class="annottext">method :: Text
+</span><a href="#local-6989586621687267880"><span class="hs-identifier hs-var hs-var">method</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Getting ByteString Request ByteString -&gt; Request -&gt; ByteString
 forall s (m :: * -&gt; *) a. MonadReader s m =&gt; Getting a s a -&gt; m a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Getting ByteString Request ByteString
 Lens' Request ByteString
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.HTTP.Client.Transformable.html#method"><span class="hs-identifier hs-var">HTTP.method</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687262342"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span>      </span><span id="local-6989586621687262348"><span class="annot"><span class="annottext">uri :: Text
-</span><a href="#local-6989586621687262348"><span class="hs-identifier hs-var hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Getting Text Request Text -&gt; Request -&gt; Text
+</span><a href="#local-6989586621687267878"><span class="hs-identifier hs-var">req</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621687267884"><span class="annot"><span class="annottext">uri :: Text
+</span><a href="#local-6989586621687267884"><span class="hs-identifier hs-var hs-var">uri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Getting Text Request Text -&gt; Request -&gt; Text
 forall s (m :: * -&gt; *) a. MonadReader s m =&gt; Getting a s a -&gt; m a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Getter.html#view"><span class="hs-identifier hs-var">view</span></a></span><span> </span><span class="annot"><span class="annottext">Getting Text Request Text
 Lens' Request Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.HTTP.Client.Transformable.html#url"><span class="hs-identifier hs-var">HTTP.url</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687262342"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621687267878"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m a -&gt; m a
 forall (m :: * -&gt; *) a.
 (MonadIO m, MonadTrace m) =&gt;
 Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Tracing.Class.html#newSpan"><span class="hs-identifier hs-var">newSpan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687262344"><span class="hs-identifier hs-var">method</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687267880"><span class="hs-identifier hs-var">method</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687262348"><span class="hs-identifier hs-var">uri</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-40"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687262351"><span class="annot"><span class="annottext">reqBytes :: Int64
-</span><a href="#local-6989586621687262351"><span class="hs-identifier hs-var hs-var">reqBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Int64
+</span><a href="#local-6989586621687267884"><span class="hs-identifier hs-var">uri</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687267887"><span class="annot"><span class="annottext">reqBytes :: Int64
+</span><a href="#local-6989586621687267887"><span class="hs-identifier hs-var hs-var">reqBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Int64
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.HTTP.Client.Transformable.html#getReqSize"><span class="hs-identifier hs-var">HTTP.getReqSize</span></a></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687262342"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621687267878"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">TraceMetadata -&gt; m ()
 forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
 </span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -78,9 +78,9 @@ forall a. IsString a =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621687262351"><span class="hs-identifier hs-var">reqBytes</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-42"></span><span>    </span><span id="local-6989586621687262355"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687262355"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Maybe TraceContext -&gt; [Header])
+</span><a href="#local-6989586621687267887"><span class="hs-identifier hs-var">reqBytes</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-42"></span><span>    </span><span id="local-6989586621687267891"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621687267891"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Maybe TraceContext -&gt; [Header])
 -&gt; m (Maybe TraceContext) -&gt; m [Header]
 forall a b. (a -&gt; b) -&gt; m a -&gt; m b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -88,11 +88,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; (TraceContext -&gt; [Header]) -&gt; Maybe TraceContext -&gt; [Header]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">TraceContext -&gt; [Header]
-</span><a href="#local-6989586621687262357"><span class="hs-identifier hs-var">toHeaders</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m (Maybe TraceContext)
+</span><a href="#local-6989586621687267893"><span class="hs-identifier hs-var">toHeaders</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m (Maybe TraceContext)
 forall (m :: * -&gt; *). MonadTrace m =&gt; m (Maybe TraceContext)
 </span><a href="Hasura.Tracing.Class.html#currentContext"><span class="hs-identifier hs-var">currentContext</span></a></span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">Request -&gt; m a
-</span><a href="#local-6989586621687262343"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(Request -&gt; m a) -&gt; Request -&gt; m a
+</span><a href="#local-6989586621687267879"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(Request -&gt; m a) -&gt; Request -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
 -&gt; ([Header] -&gt; [Header]) -&gt; Request -&gt; Request
@@ -100,14 +100,14 @@ forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#over"><span class="hs-identifier hs-var">over</span></a></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
 Lens' Request [Header]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.HTTP.Client.Transformable.html#headers"><span class="hs-identifier hs-var">HTTP.headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621687262355"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
+</span><a href="#local-6989586621687267891"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [Header] -&gt; [Header]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621687262342"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621687267878"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621687262357"><span class="hs-identifier hs-type">toHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621687262357"><span class="annot"><span class="annottext">toHeaders :: TraceContext -&gt; [Header]
-</span><a href="#local-6989586621687262357"><span class="hs-identifier hs-var hs-var">toHeaders</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687262362"><span id="local-6989586621687262363"><span id="local-6989586621687262364"><span id="local-6989586621687262365"><span class="annot"><span class="annottext">Maybe SpanId
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621687267893"><span class="hs-identifier hs-type">toHeaders</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621687267893"><span class="annot"><span class="annottext">toHeaders :: TraceContext -&gt; [Header]
+</span><a href="#local-6989586621687267893"><span class="hs-identifier hs-var hs-var">toHeaders</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Context.html#TraceContext"><span class="hs-identifier hs-type">TraceContext</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687267898"><span id="local-6989586621687267899"><span id="local-6989586621687267900"><span id="local-6989586621687267901"><span class="annot"><span class="annottext">Maybe SpanId
 SamplingState
 SpanId
 TraceId
@@ -119,7 +119,7 @@ tcCurrentTrace :: TraceContext -&gt; TraceId
 tcCurrentSpan :: TraceContext -&gt; SpanId
 tcCurrentParent :: TraceContext -&gt; Maybe SpanId
 tcSamplingState :: TraceContext -&gt; SamplingState
-</span><a href="#local-6989586621687262362"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687267898"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">[Maybe Header] -&gt; [Header]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
@@ -129,13 +129,13 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-TraceId&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TraceId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#traceIdToHex"><span class="hs-identifier hs-var">traceIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621687262362"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687267898"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">Header -&gt; Maybe Header
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-SpanId&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621687262363"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687267899"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-50"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-ParentSpanId&quot;</span></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Header)
 -&gt; (SpanId -&gt; ByteString) -&gt; SpanId -&gt; Header
@@ -144,28 +144,28 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">(SpanId -&gt; Header) -&gt; Maybe SpanId -&gt; Maybe Header
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe SpanId
-</span><a href="#local-6989586621687262364"><span class="hs-identifier hs-var">tcCurrentParent</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687267900"><span class="hs-identifier hs-var">tcCurrentParent</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-51"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-Sampled&quot;</span></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Header) -&gt; Maybe ByteString -&gt; Maybe Header
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">SamplingState -&gt; Maybe ByteString
 forall s. IsString s =&gt; SamplingState -&gt; Maybe s
 </span><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier hs-var">samplingStateToHeader</span></a></span><span> </span><span class="annot"><span class="annottext">SamplingState
-</span><a href="#local-6989586621687262365"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span>
+</span><a href="#local-6989586621687267901"><span class="hs-identifier hs-var">tcSamplingState</span></a></span><span>
 </span><span id="line-52"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="annot"><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-type">attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687262270"><span class="annot"><a href="#local-6989586621687262270"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687262272"><span class="annot"><a href="#local-6989586621687262272"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#HasSourceConfiguration"><span class="hs-identifier hs-type">HasSourceConfiguration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262270"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262272"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687262270"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687262272"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="annot"><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-type">attachSourceConfigAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687267806"><span class="annot"><a href="#local-6989586621687267806"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687267808"><span class="annot"><a href="#local-6989586621687267808"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#HasSourceConfiguration"><span class="hs-identifier hs-type">HasSourceConfiguration</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267806"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267808"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687267806"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687267808"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span id="attachSourceConfigAttributes"><span class="annot"><span class="annottext">attachSourceConfigAttributes :: forall (b :: BackendType) (m :: * -&gt; *).
 (HasSourceConfiguration b, MonadTrace m) =&gt;
 SourceConfig b -&gt; m ()
-</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var hs-var">attachSourceConfigAttributes</span></a></span></span><span> </span><span id="local-6989586621687262383"><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687262383"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687262384"><span class="annot"><span class="annottext">backendSourceKind :: BackendSourceKind b
-</span><a href="#local-6989586621687262384"><span class="hs-identifier hs-var hs-var">backendSourceKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><a href="Hasura.Tracing.Utils.html#attachSourceConfigAttributes"><span class="hs-identifier hs-var hs-var">attachSourceConfigAttributes</span></a></span></span><span> </span><span id="local-6989586621687267919"><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687267919"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687267920"><span class="annot"><span class="annottext">backendSourceKind :: BackendSourceKind b
+</span><a href="#local-6989586621687267920"><span class="hs-identifier hs-var hs-var">backendSourceKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 HasSourceConfiguration b =&gt;
 SourceConfig b -&gt; BackendSourceKind b
-</span><a href="Hasura.RQL.Types.SourceConfiguration.html#sourceConfigBackendSourceKind"><span class="hs-identifier hs-var">sourceConfigBackendSourceKind</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687262270"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687262383"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="Hasura.RQL.Types.SourceConfiguration.html#sourceConfigBackendSourceKind"><span class="hs-identifier hs-var">sourceConfigBackendSourceKind</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687267806"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687267919"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><span class="annottext">TraceMetadata -&gt; m ()
 forall (m :: * -&gt; *). MonadTrace m =&gt; TraceMetadata -&gt; m ()
 </span><a href="Hasura.Tracing.Class.html#attachMetadata"><span class="hs-identifier hs-var">attachMetadata</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -174,5 +174,5 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendSourceKind b -&gt; Text) -&gt; BackendSourceKind b -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
-</span><a href="#local-6989586621687262384"><span class="hs-identifier hs-var">backendSourceKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621687267920"><span class="hs-identifier hs-var">backendSourceKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-58"></span></pre></body></html>
