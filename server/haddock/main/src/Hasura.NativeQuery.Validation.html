@@ -16,33 +16,33 @@
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-comment">-- | Check that the set of declared arguments and the set of used arguments (in the code)</span><span>
 </span><span id="line-18"></span><span class="hs-comment">--   is the same.</span><span>
-</span><span id="line-19"></span><span id="local-6989586621687148293"><span id="local-6989586621687148297"><span class="annot"><a href="Hasura.NativeQuery.Validation.html#validateArgumentDeclaration"><span class="hs-identifier hs-type">validateArgumentDeclaration</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687148293"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687148293"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687148297"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-22"></span><span>  </span><span class="annot"><a href="#local-6989586621687148293"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-19"></span><span id="local-6989586621687148356"><span id="local-6989586621687148360"><span class="annot"><a href="Hasura.NativeQuery.Validation.html#validateArgumentDeclaration"><span class="hs-identifier hs-type">validateArgumentDeclaration</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687148356"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687148356"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687148360"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="#local-6989586621687148356"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-23"></span><span id="validateArgumentDeclaration"><span class="annot"><span class="annottext">validateArgumentDeclaration :: forall (m :: * -&gt; *) (b :: BackendType).
 (MonadIO m, MonadError QErr m) =&gt;
 NativeQueryMetadata b -&gt; m ()
-</span><a href="Hasura.NativeQuery.Validation.html#validateArgumentDeclaration"><span class="hs-identifier hs-var hs-var">validateArgumentDeclaration</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687148361"><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
+</span><a href="Hasura.NativeQuery.Validation.html#validateArgumentDeclaration"><span class="hs-identifier hs-var hs-var">validateArgumentDeclaration</span></a></span></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Metadata.html#NativeQueryMetadata"><span class="hs-identifier hs-type">NativeQueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687148424"><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
 _nqmCode :: InterpolatedQuery ArgumentName
 _nqmCode :: forall (b :: BackendType).
 NativeQueryMetadata b -&gt; InterpolatedQuery ArgumentName
-</span><a href="#local-6989586621687148361"><span class="hs-identifier hs-var hs-var">_nqmCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687148363"><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
+</span><a href="#local-6989586621687148424"><span class="hs-identifier hs-var hs-var">_nqmCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687148426"><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
 _nqmArguments :: HashMap ArgumentName (NullableScalarType b)
 _nqmArguments :: forall (b :: BackendType).
 NativeQueryMetadata b
 -&gt; HashMap ArgumentName (NullableScalarType b)
-</span><a href="#local-6989586621687148363"><span class="hs-identifier hs-var hs-var">_nqmArguments</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621687148365"><span class="hs-identifier hs-type">occurringArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
-</span><span id="line-25"></span><span>      </span><span id="local-6989586621687148365"><span class="annot"><span class="annottext">occurringArguments :: Set ArgumentName
-</span><a href="#local-6989586621687148365"><span class="hs-identifier hs-var hs-var">occurringArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName -&gt; Set ArgumentName
+</span><a href="#local-6989586621687148426"><span class="hs-identifier hs-var hs-var">_nqmArguments</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621687148428"><span class="hs-identifier hs-type">occurringArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
+</span><span id="line-25"></span><span>      </span><span id="local-6989586621687148428"><span class="annot"><span class="annottext">occurringArguments :: Set ArgumentName
+</span><a href="#local-6989586621687148428"><span class="hs-identifier hs-var hs-var">occurringArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName -&gt; Set ArgumentName
 forall var. Ord var =&gt; InterpolatedQuery var -&gt; Set var
 </span><a href="Hasura.NativeQuery.InterpolatedQuery.html#getUniqueVariables"><span class="hs-identifier hs-var">getUniqueVariables</span></a></span><span> </span><span class="annot"><span class="annottext">InterpolatedQuery ArgumentName
-</span><a href="#local-6989586621687148361"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span>
+</span><a href="#local-6989586621687148424"><span class="hs-identifier hs-var">_nqmCode</span></a></span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span>      </span><span class="annot"><a href="#local-6989586621687148367"><span class="hs-identifier hs-type">declaredArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
-</span><span id="line-28"></span><span>      </span><span id="local-6989586621687148367"><span class="annot"><span class="annottext">declaredArguments :: Set ArgumentName
-</span><a href="#local-6989586621687148367"><span class="hs-identifier hs-var hs-var">declaredArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ArgumentName] -&gt; Set ArgumentName
+</span><span id="line-27"></span><span>      </span><span class="annot"><a href="#local-6989586621687148430"><span class="hs-identifier hs-type">declaredArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621687148430"><span class="annot"><span class="annottext">declaredArguments :: Set ArgumentName
+</span><a href="#local-6989586621687148430"><span class="hs-identifier hs-var hs-var">declaredArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ArgumentName] -&gt; Set ArgumentName
 forall a. Ord a =&gt; [a] -&gt; Set a
 </span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([ArgumentName] -&gt; Set ArgumentName)
 -&gt; [ArgumentName] -&gt; Set ArgumentName
@@ -50,29 +50,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b) -&gt; [ArgumentName]
 forall k v. HashMap k v -&gt; [k]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
-</span><a href="#local-6989586621687148363"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span>
+</span><a href="#local-6989586621687148426"><span class="hs-identifier hs-var">_nqmArguments</span></a></span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span>      </span><span class="annot"><a href="#local-6989586621687148370"><span class="hs-identifier hs-type">undeclaredArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621687148370"><span class="annot"><span class="annottext">undeclaredArguments :: Set ArgumentName
-</span><a href="#local-6989586621687148370"><span class="hs-identifier hs-var hs-var">undeclaredArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148365"><span class="hs-identifier hs-var">occurringArguments</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Set ArgumentName -&gt; Set ArgumentName
+</span><span id="line-30"></span><span>      </span><span class="annot"><a href="#local-6989586621687148433"><span class="hs-identifier hs-type">undeclaredArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621687148433"><span class="annot"><span class="annottext">undeclaredArguments :: Set ArgumentName
+</span><a href="#local-6989586621687148433"><span class="hs-identifier hs-var hs-var">undeclaredArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
+</span><a href="#local-6989586621687148428"><span class="hs-identifier hs-var">occurringArguments</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Set ArgumentName -&gt; Set ArgumentName
 forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
 </span><span class="hs-operator hs-var">`Set.difference`</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148367"><span class="hs-identifier hs-var">declaredArguments</span></a></span><span>
+</span><a href="#local-6989586621687148430"><span class="hs-identifier hs-var">declaredArguments</span></a></span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span>      </span><span class="annot"><a href="#local-6989586621687148372"><span class="hs-identifier hs-type">unusedArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621687148372"><span class="annot"><span class="annottext">unusedArguments :: Set ArgumentName
-</span><a href="#local-6989586621687148372"><span class="hs-identifier hs-var hs-var">unusedArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148367"><span class="hs-identifier hs-var">declaredArguments</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Set ArgumentName -&gt; Set ArgumentName
+</span><span id="line-33"></span><span>      </span><span class="annot"><a href="#local-6989586621687148435"><span class="hs-identifier hs-type">unusedArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621687148435"><span class="annot"><span class="annottext">unusedArguments :: Set ArgumentName
+</span><a href="#local-6989586621687148435"><span class="hs-identifier hs-var hs-var">unusedArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
+</span><a href="#local-6989586621687148430"><span class="hs-identifier hs-var">declaredArguments</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Set ArgumentName -&gt; Set ArgumentName
 forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
 </span><span class="hs-operator hs-var">`Set.difference`</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148365"><span class="hs-identifier hs-var">occurringArguments</span></a></span><span>
+</span><a href="#local-6989586621687148428"><span class="hs-identifier hs-var">occurringArguments</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Bool
 forall a. Set a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148370"><span class="hs-identifier hs-var">undeclaredArguments</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687148433"><span class="hs-identifier hs-var">undeclaredArguments</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; m ()
@@ -97,14 +97,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148370"><span class="hs-identifier hs-var">undeclaredArguments</span></a></span><span>
+</span><a href="#local-6989586621687148433"><span class="hs-identifier hs-var">undeclaredArguments</span></a></span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set ArgumentName -&gt; Bool
 forall a. Set a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148372"><span class="hs-identifier hs-var">unusedArguments</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687148435"><span class="hs-identifier hs-var">unusedArguments</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; m ()
@@ -129,5 +129,5 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src/Hasura.Base.ToErrorValue.html#toErrorValue"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">Set ArgumentName
-</span><a href="#local-6989586621687148372"><span class="hs-identifier hs-var">unusedArguments</span></a></span><span>
+</span><a href="#local-6989586621687148435"><span class="hs-identifier hs-var">unusedArguments</span></a></span><span>
 </span><span id="line-48"></span></pre></body></html>
