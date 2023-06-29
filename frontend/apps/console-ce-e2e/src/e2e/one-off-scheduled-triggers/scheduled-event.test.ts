@@ -48,10 +48,6 @@ describe('Create Scheduled trigger', () => {
     cy.log('**--- Expect success notification');
     cy.expectSuccessNotificationWithMessage('Event scheduled successfully');
 
-    cy.visit('/events/one-off-scheduled-events/pending', {
-      timeout: 10000,
-    });
-
     // expect scheduled event in pending events table
     cy.get('[data-test=event-filter-table').should('exist');
     cy.get('[data-test=event-filter-table')
