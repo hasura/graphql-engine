@@ -1998,7 +1998,20 @@ class Permissions extends Component {
             <br />
             <div className={styles.padd_left_remove}>
               <div className={`${styles.padd_remove} col-xs-12`}>
-                <h4 className={styles.subheading_text}>Permissions</h4>
+                <h4 className={styles.subheading_text}>
+                  Permissions{' '}
+                  {currentTableSchema?.table_type === 'VIEW' ? (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/schema/postgres/views/#pg-create-views"
+                      text="(Learn more about view permissions)"
+                    />
+                  ) : (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/auth/authorization/permissions/"
+                      text="(Learn more about table permissions)"
+                    />
+                  )}
+                </h4>
                 {getPermissionsTable(
                   currentTableSchema,
                   supportedQueryTypes,
