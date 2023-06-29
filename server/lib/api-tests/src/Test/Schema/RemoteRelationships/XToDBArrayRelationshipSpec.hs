@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -Wno-error=deprecations #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Tests for array remote relationships to databases. Remote relationships are
 -- relationships that are not local to a given source or remote schema, and are

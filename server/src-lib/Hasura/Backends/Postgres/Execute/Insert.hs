@@ -328,8 +328,18 @@ validateInsert insCols objRels addCols = do
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
+        is_after_parent
+          | AfterParent <- riInsertOrder relInfo = True
+          | otherwise = False
+
     withPathK relNameTxt
-      $ unless (null lColConflicts)
+      -- When inserting through relationships, we only care that inserted
+      -- columns don't overlap with those defining the relationship when the
+      -- remote table is inserted _before_ the parent table.
+      -- When the remote table is inserted _after_ the parent table it's the
+      -- parent table that (through some means) decide what the value of the
+      -- key is.
+      $ unless (null lColConflicts || is_after_parent)
       $ throw400 ValidationFailed
       $ "cannot insert object relationship "
       <> relName

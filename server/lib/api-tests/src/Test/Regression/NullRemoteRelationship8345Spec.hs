@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -Wno-error=deprecations #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Regression tests for issue 8345.
 module Test.Regression.NullRemoteRelationship8345Spec (spec) where

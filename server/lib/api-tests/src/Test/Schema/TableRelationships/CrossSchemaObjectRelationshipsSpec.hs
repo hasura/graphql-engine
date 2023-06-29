@@ -61,8 +61,12 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.Reference "author_id" "author" "id" ["thisschema"],
-            Schema.Reference "co_author_id" "author" "id" ["thisschema"]
+          [ (Schema.reference "author_id" "author" "id")
+              { Schema.referenceTargetQualifiers = ["thisschema"]
+              },
+            (Schema.reference "co_author_id" "author" "id")
+              { Schema.referenceTargetQualifiers = ["thisschema"]
+              }
           ],
         tableQualifiers = [Schema.TableQualifier "thatschema"],
         tableData =

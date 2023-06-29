@@ -20,8 +20,6 @@ common common-all
     -Wno-monomorphism-restriction
     -Wno-missing-kind-signatures
     -Wno-missing-safe-haskell-mode
-    -- please be quiet, Morpheus
-    -Wno-deprecations
     -- We want these warnings, but the code doesn't satisfy them yet:
     -Wno-missing-deriving-strategies
     -Wno-unused-packages
@@ -170,6 +168,7 @@ library
     Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Delete.ValidationSpec
     Test.Mutations.Insert.MultipleSpec
+    Test.Mutations.Insert.NestedSpec
     Test.Mutations.Insert.SingleSpec
     Test.Mutations.Insert.ValidationSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
