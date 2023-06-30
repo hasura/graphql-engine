@@ -135,23 +135,23 @@ Transform data in Postgres or run business logic on it to derive another dataset
 
 ## Demos
 
-Check out all the example applications in the [community/sample-apps](community/sample-apps) directory.
+Check out all the example applications in the [hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) repository.
 
 ### Realtime applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
   - [Try it out](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
 
 - Live location tracking app that shows a running vehicle changing the current GPS
   coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
 
 - A real-time dashboard for data aggregations on continuously changing data.
   - [Try it out](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
 
 ### Videos
 

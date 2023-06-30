@@ -124,23 +124,23 @@ Transformasi data di Postgres atau jalankan logika bisnis untuk menghasilkan set
 
 ## Demo
 
-Coba lihat seluruh contoh aplikasi pada direktori [_community/sample-apps_](../community/sample-apps).
+Coba lihat seluruh contoh aplikasi pada direktori [_hasura/sample-apps_](https://github.com/hasura/sample-apps/tree/main).
 
 ### Aplikasi _realtime_
 
 - Aplikasi _chat_ untuk grup yang dibuat menggunakan React. Termasuk indikator pengetikan, pengguna _online_ & notifikasi pesan baru.
   - [Coba aplikasinya](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-chat)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [Lihat-lihat API](https://realtime-chat.demo.hasura.io/console)
 
 - Aplikasi pelacak yang menyiarkan lokasi secara langsung dengan memperlihatkan kendaraan berjalan dengan posisi koordinat GPS yang berubah-ubah pada peta.
   - [Coba aplikasinya](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-location-tracking)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [Lihat-lihat API](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Sebuah dasbor _realtime_ untuk meng-agregasi data yang berubah secara terus menerus.
   - [Coba aplikasinya](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-poll)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
   - [Lihat-lihat API](https://realtime-poll.demo.hasura.io/console)
 
 ### Video

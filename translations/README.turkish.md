@@ -125,23 +125,23 @@ Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak sorgulana
 
 ## Demolar
 
-[community/sample-apps](../community/sample-apps) dizinindeki örnek uygulamalara göz atın.
+[hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) dizinindeki örnek uygulamalara göz atın.
 
 ### Gerçek zamanlı uygulamalar
 
 - React ile oluşturulmuş grup sohbet uygulaması. Yazma belirteci, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri içerir.
   - [Deneyin](https://realtime-chat.demo.hasura.io/)
-  - [Rehber](../community/sample-apps/realtime-chat)
+  - [Rehber](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [APİ'lere göz atın](https://realtime-chat.demo.hasura.io/console)
 
 - Bir harita üzerinde hareket eden mevcut GPS koordinatlarını değiştiren, çalışan bir aracı gösteren canlı konum izleme uygulaması.
   - [Deneyin](https://realtime-location-tracking.demo.hasura.io/)
-  - [Rehber](../community/sample-apps/realtime-location-tracking)
+  - [Rehber](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [APİ'lere göz ayın](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Sürekli değişen veriler üzerinde veri toplama için gerçek zamanlı bir kontrol paneli.
   - [Deneyin](https://realtime-poll.demo.hasura.io/)
-  - [Rehber](../community/sample-apps/realtime-poll)
+  - [Rehber](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
   - [APİ'lere göz atın](https://realtime-poll.demo.hasura.io/console)
 
 ### Videolar
