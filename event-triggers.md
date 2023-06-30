@@ -69,7 +69,7 @@ Trigger push notifications and emails based on database events. Try the demo and
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://serverless-push.demo.hasura.io/)
-* [Tutorial](community/sample-apps/serverless-push)
+* [Tutorial](https://github.com/hasura/sample-apps/tree/main/serverless-push)
 
 
 <!--
@@ -89,7 +89,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
 * [Try it out](https://serverless-etl.demo.hasura.io/)
-* [Tutorial](community/sample-apps/serverless-etl)
+* [Tutorial](https://github.com/hasura/sample-apps/tree/main/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 

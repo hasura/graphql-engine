@@ -95,7 +95,7 @@ Apart from the learn content, we have identified three other ways of contributin
 
 - [Boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates)
 
-- [Sample apps](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps)
+- [Sample apps](https://github.com/hasura/sample-apps/tree/main)
 
 - [Tools](community/tools)
 
