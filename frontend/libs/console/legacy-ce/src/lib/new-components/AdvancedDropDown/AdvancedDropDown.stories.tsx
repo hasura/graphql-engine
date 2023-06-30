@@ -232,8 +232,6 @@ export const CheckItem: StoryObj<typeof DropDown.Root> = {
     // expect false b/c starts out true
     await expect(bookmarkStatusElement()).toHaveTextContent('false');
 
-    await userEvent.click(trigger());
-
     await userEvent.click(await showFullUrls());
 
     // expect true b/c starts out false

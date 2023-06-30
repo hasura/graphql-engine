@@ -34,22 +34,20 @@ export const InputValidation = () => {
   return (
     <Collapsible
       triggerChildren={
-        <>
-          <h2 className="text-normal font-semibold flex items-center">
-            Input Validation
-            <div className="flex items-center">
-              <Badge className="mx-2 text-xs" color="blue">
-                BETA
-              </Badge>
-              <IconTooltip message="When enabled, the input data will be validated with provided configuration." />
-              {/* TODO: add doc link */}
-              {/* <LearnMoreLink href="" /> */}
-              <p className="italic text-normal font-normal pl-5">
-                {enabled ? `- enabled ` : `-disabled`}
-              </p>
-            </div>
-          </h2>
-        </>
+        <h2 className="text-normal font-semibold flex items-center">
+          Input Validation
+          <div className="flex items-center">
+            <Badge className="mx-2 text-xs" color="blue">
+              BETA
+            </Badge>
+            <IconTooltip message="When enabled, the input data will be validated with provided configuration." />
+            {/* TODO: add doc link */}
+            {/* <LearnMoreLink href="" /> */}
+            <p className="italic text-normal font-normal pl-5">
+              {enabled ? `- enabled ` : `-disabled`}
+            </p>
+          </div>
+        </h2>
       }
       chevronClass="text-xs mr-sm stroke-2"
     >
