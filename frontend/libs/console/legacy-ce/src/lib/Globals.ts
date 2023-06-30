@@ -8,8 +8,7 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
 import { SERVER_CONSOLE_MODE } from './constants';
-import { parseConsoleType, ConsoleType } from './utils/envUtils';
-import { QueryClient } from 'react-query';
+import { ConsoleType, parseConsoleType } from './utils/envUtils';
 
 export type LuxFeature =
   | 'DatadogIntegration'
@@ -180,7 +179,6 @@ export type EnvVars = {
 declare global {
   interface Window extends GlobalWindowHeap {
     __env: EnvVars;
-    reactQueryClient: QueryClient;
   }
   const CONSOLE_ASSET_VERSION: string;
 }
