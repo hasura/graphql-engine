@@ -15,12 +15,9 @@ spec =
     let expectations =
           [ ("text", PGText),
             ("text[]", PGArray PGText),
-            ("_text[]", PGUnknown "_text[]"),
-            ("array text", PGArray PGText),
-            ("TEXT", PGText),
             ("TEXT[]", PGArray PGText),
-            ("_TEXT[]", PGUnknown "_TEXT[]"),
-            ("ARRAY TEXT", PGArray PGText)
+            ("some_enum[]", PGArray (PGUnknown "some_enum")),
+            ("ST_GeomFromEWKT('SRID=4326;POINT(1 2)')", PGUnknown ("ST_GeomFromEWKT('SRID=4326;POINT(1 2)')"))
           ]
 
     traverse_
