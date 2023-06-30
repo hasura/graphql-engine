@@ -477,14 +477,13 @@ tests = do
 
               |]
             _ ->
+              -- We're not asserting on the message text, because it has
+              -- changed between postgres versions.
               [interpolateYaml|
                  errors:
                  - extensions:
                      code: constraint-violation
                      path: $.selectionSet.insert_hasura_bar.args.objects[0]
-                   message: Not-NULL violation. null value in column "id" of relation "bar" violates
-                     not-null constraint
-
               |]
 
     actual <- actualAct
@@ -558,14 +557,13 @@ tests = do
 
               |]
             _ ->
+              -- We're not asserting on the message text, because it has
+              -- changed between postgres versions.
               [interpolateYaml|
                  errors:
                  - extensions:
                      code: constraint-violation
                      path: $.selectionSet.insert_hasura_baz.args.objects[0].bar_by_id_to_id.data
-                   message: Not-NULL violation. null value in column "id" of relation "bar" violates
-                     not-null constraint
-
               |]
 
     actual <- actualAct
