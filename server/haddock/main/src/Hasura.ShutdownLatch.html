@@ -57,13 +57,13 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-28"></span><span class="annot"><span class="hs-comment">-- | Returns True if the latch is set for shutdown and vice-versa</span></span><span>
 </span><span id="line-29"></span><span class="annot"><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier hs-type">shuttingDown</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.ShutdownLatch.html#ShutdownLatch"><span class="hs-identifier hs-type">ShutdownLatch</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-30"></span><span id="shuttingDown"><span class="annot"><span class="annottext">shuttingDown :: ShutdownLatch -&gt; IO Bool
-</span><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier hs-var hs-var">shuttingDown</span></a></span></span><span> </span><span id="local-6989586621687263891"><span class="annot"><span class="annottext">ShutdownLatch
-</span><a href="#local-6989586621687263891"><span class="hs-identifier hs-var">latch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><a href="Hasura.ShutdownLatch.html#shuttingDown"><span class="hs-identifier hs-var hs-var">shuttingDown</span></a></span></span><span> </span><span id="local-6989586621687264065"><span class="annot"><span class="annottext">ShutdownLatch
+</span><a href="#local-6989586621687264065"><span class="hs-identifier hs-var">latch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; IO Bool -&gt; IO Bool
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; IO Bool
 forall a. MVar a -&gt; IO Bool
 </span><span class="hs-identifier hs-var">C.isEmptyMVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShutdownLatch -&gt; MVar ()
 </span><a href="Hasura.ShutdownLatch.html#unShutdownLatch"><span class="hs-identifier hs-var">unShutdownLatch</span></a></span><span> </span><span class="annot"><span class="annottext">ShutdownLatch
-</span><a href="#local-6989586621687263891"><span class="hs-identifier hs-var">latch</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687264065"><span class="hs-identifier hs-var">latch</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span></pre></body></html>
