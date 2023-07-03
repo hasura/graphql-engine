@@ -332,7 +332,27 @@ buildArrayLiteral ts =
       PGValLquery t -> TELit $ escape t
       PGValLtxtquery t -> TELit $ escape t
       PGValUnknown t -> TELit $ escape t
+      PGValJSON (PG.JSON j) -> case j of
+        -- this is delicate - we want to encode JSON
+        -- that is provided to HGE as raw JSON literals provided via variables,
+        -- and in stringified form as received when
+        -- inlined in a query. Therefore we need to check whether any string
+        -- receive is a genuine JSON string value, or a stringified rich value.
+        String s -> case decode (txtToLbs s) of
+          Just jv -> fromJson jv -- it was some actual JSON in disguise! encode it like usual
+          Nothing -> TELit $ escape (escape s) -- it's an actual JSON string, so add quotes again
+        _ -> fromJson j
+      PGValJSONB (PG.JSONB j) -> case j of
+        -- we do the same for JSONB as JSON
+        String s -> case decode (txtToLbs s) of
+          Just jv -> fromJsonb jv -- it was some actual JSON in disguise! encode it like usual
+          Nothing -> TELit $ escape (escape s) -- it's an actual JSON string, so add quotes again
+        _ -> fromJsonb j
       other -> txtEncodedVal other
+
+    fromJson = TELit . escape . bsToTxt . PE.encodingBytes . PE.json_ast
+    fromJsonb = TELit . escape . bsToTxt . PE.encodingBytes . PE.jsonb_ast
+
     inner = \case
       TENull -> "null"
       TELit t -> t

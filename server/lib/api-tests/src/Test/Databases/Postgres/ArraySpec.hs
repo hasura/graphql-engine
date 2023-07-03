@@ -9,9 +9,9 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.GraphqlEngine (postGraphql)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithVariables)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
@@ -24,18 +24,36 @@ spec = do
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Postgres.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Postgres.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ ->
+                        pure ()
+                    },
+                  Postgres.setupTablesAction schema testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Citus.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Citus.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ ->
+                        pure ()
+                    },
+                  Citus.setupTablesAction schema testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Cockroach.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Cockroach.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ ->
+                        pure ()
+                    },
+                  Cockroach.setupTablesAction schema testEnvironment
                 ]
             }
         ]
@@ -47,18 +65,60 @@ spec = do
   Fixture.run
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Postgres.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Postgres.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ ->
+                        pure ()
+                    },
+                  Postgres.setupTablesAction schema testEnvironment
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Citus.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Citus.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ ->
+                        pure ()
+                    },
+                  Citus.setupTablesAction schema testEnvironment
                 ]
             }
         ]
     )
     nestedArrayTests
+
+  -- CockroachDB does not support json arrays
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Postgres.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ -> pure ()
+                    },
+                  Postgres.setupTablesAction schema testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Fixture.SetupAction
+                    { Fixture.setupAction =
+                        Citus.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ -> pure ()
+                    },
+                  Citus.setupTablesAction schema testEnvironment
+                ]
+            }
+        ]
+    )
+    jsonArrayTests
+
+setup :: Text
+setup = "create type \"made_up_type\" as enum ('a', 'b', 'c');"
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -72,13 +132,31 @@ textArrayType =
         Schema.bstCockroach = Just "text[]"
       }
 
-nestedTextArrayType :: Schema.ScalarType
-nestedTextArrayType =
+nestedIntArrayType :: Schema.ScalarType
+nestedIntArrayType =
   Schema.TCustomType
     $ Schema.defaultBackendScalarType
-      { Schema.bstPostgres = Just "text[][]",
-        Schema.bstCitus = Just "text[][]",
-        Schema.bstCockroach = Just "text[]" -- nested arrays aren't supported in Cockroach, so we'll skip this test anyway
+      { Schema.bstPostgres = Just "int[][]",
+        Schema.bstCitus = Just "int[][]",
+        Schema.bstCockroach = Just "int[]" -- nested arrays aren't supported in Cockroach, so we'll skip this test anyway
+      }
+
+jsonArrayType :: Schema.ScalarType
+jsonArrayType =
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
+      { Schema.bstPostgres = Just "json[]",
+        Schema.bstCitus = Just "json[]",
+        Schema.bstCockroach = Just "json" -- arrays of json aren't supported in Cockroach, so we'll skip this test
+      }
+
+enumArrayType :: Schema.ScalarType
+enumArrayType =
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
+      { Schema.bstPostgres = Just "made_up_type[]",
+        Schema.bstCitus = Just "made_up_type[]",
+        Schema.bstCockroach = Just "made_up_type[]"
       }
 
 schema :: [Schema.Table]
@@ -88,7 +166,9 @@ schema =
           [ Schema.column "id" Schema.defaultSerialType,
             Schema.column "name" Schema.TStr,
             Schema.column "emails" textArrayType,
-            Schema.column "grid" nestedTextArrayType
+            Schema.column "grid" nestedIntArrayType,
+            Schema.column "jsons" jsonArrayType,
+            Schema.column "made_up" enumArrayType
           ],
         Schema.tablePrimaryKey = ["id"]
       }
@@ -123,7 +203,9 @@ singleArrayTests = do
                       {
                         name: "Ash",
                         emails: "{ash@ash.com, ash123@ash.com}",
-                        grid: "{}"
+                        grid: "{}",
+                        jsons: "{}",
+                        made_up: "{}"
                       }
                     ]
                   ) {
@@ -138,7 +220,47 @@ singleArrayTests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "Using native GraphQL array syntax" \testEnvironment -> do
+    it "Enum array using native GraphQL array syntax" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                insert_hasura_author:
+                  affected_rows: 1
+                  returning:
+                    - name: "Craig Cash"
+                      made_up: ["a","b", "c"]
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_author (
+                    objects: [
+                      {
+                        name: "Craig Cash",
+                        emails: [],
+                        grid: [],
+                        jsons: [],
+                        made_up: ["a","b","c"]
+                      }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      name
+                      made_up
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Text array using native GraphQL array syntax" \testEnvironment -> do
       let expected :: Value
           expected =
             [interpolateYaml|
@@ -161,7 +283,9 @@ singleArrayTests = do
                       {
                         name: "Ash",
                         emails: ["ash@ash.com", "ash123@ash.com"],
-                        grid: []
+                        grid: [],
+                        jsons: [],
+                        made_up: []
                       }
                     ]
                   ) {
@@ -172,6 +296,92 @@ singleArrayTests = do
                     }
                   }
                 }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+jsonArrayTests :: SpecWith TestEnvironment
+jsonArrayTests = do
+  describe "saves JSON arrays" $ do
+    it "JSON array using native GraphQL array syntax" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                insert_hasura_author:
+                  affected_rows: 1
+                  returning:
+                    - name: "Bruce"
+                      jsons: [{ name: "Mr Horse", age: 100}, { name: "Mr Dog", age: 1}]
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_hasura_author (
+                    objects: [
+                      {
+                        name: "Bruce",
+                        emails: ["something@something.com"]
+                        grid: [],
+                        jsons: ["{ \"name\": \"Mr Horse\", \"age\": 100}", "{\"name\":\"Mr Dog\", \"age\": 1}"],
+                        made_up: []
+                      }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      name
+                      jsons
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "JSON array using native GraphQL array syntax and variable" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                insert_hasura_author:
+                  affected_rows: 1
+                  returning:
+                    - name: "Bruce"
+                      jsons: [{ name: "Mr Horse", age: 100}, "horses"]
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphqlWithVariables
+              testEnvironment
+              [graphql|
+                mutation json_variables_test($jsonArray: [json]) {
+                  insert_hasura_author (
+                    objects: [
+                      {
+                        name: "Bruce",
+                        emails: ["something2@something2.com"],
+                        grid: [],
+                        jsons: $jsonArray,
+                        made_up: []
+                      }
+                    ]
+                  ) {
+                    affected_rows
+                    returning {
+                      name
+                      jsons
+                    }
+                  }
+                }
+              |]
+              [yaml|
+                jsonArray: [{ name: "Mr Horse", age: 100 }, "horses"]
               |]
 
       shouldReturnYaml testEnvironment actual expected
@@ -188,7 +398,9 @@ singleArrayTests = do
                       {
                         name: "contains",
                         emails: ["horse@horse.com", "dog@dog.com"],
-                        grid: []
+                        grid: [],
+                        jsons: [],
+                        made_up: []
                       }
                     ]
                   ) {
@@ -234,7 +446,9 @@ singleArrayTests = do
                       {
                         name: "contained_in",
                         emails: ["horse@horse2.com", "dog@dog2.com"],
-                        grid: []
+                        grid: [],
+                        jsons: [],
+                        made_up: []
                       }
                     ]
                   ) {
@@ -285,8 +499,8 @@ nestedArrayTests = do
                     affected_rows: 1
                     returning:
                       - name: "Ash"
-                        grid: [["one", "two", "three"],
-                              ["four", "five", "six"]]
+                        grid: [[1,2,3],
+                              [4,5,6]]
               |]
 
           actual :: IO Value
@@ -300,7 +514,9 @@ nestedArrayTests = do
                         {
                           name: "Ash",
                           emails: "{}",
-                          grid: "{{one,two,three},{four,five,six}}"
+                          grid: "{{1,2,3},{4,5,6}}",
+                          jsons: "{}",
+                          made_up: "{}"
                         }
                       ]
                     ) {
