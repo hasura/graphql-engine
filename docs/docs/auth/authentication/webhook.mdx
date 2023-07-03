@@ -249,9 +249,10 @@ Session variables from a webhook token can be cached to improve the performance 
 :::info Note
 
 - This feature is available for version `v2.22.0` and higher.
-- Webhook auth caching requires a [redis instance configured](deployment/graphql-engine-flags/reference.mdx#redis-url)
-  with the GraphQL Engine. If the redis instance is not configured or inaccessible, then the request goes through by
-  skipping the cache.
+- Webhook auth caching is available on Hasura Cloud without any configuration.
+- For self-hosted EE, it requires a [Redis instance
+  to be configured](deployment/graphql-engine-flags/reference.mdx#redis-url). If the Redis instance is not configured or
+  inaccessible, then the request will skip the cache.
 
 :::
 
