@@ -3,6 +3,7 @@ import globals from '../../../Globals';
 import { Button } from '../../../new-components/Button';
 import { useSetEmailAlertConfig } from '../hooks/useSetAlertConfig';
 import { ConfigKey } from '../types';
+import { Analytics } from '../../Analytics';
 
 type CustomDialogFooterProps = {
   onClose: () => void;
@@ -29,19 +30,21 @@ export const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
       </div>
       <div className="flex">
         <Button onClick={onClose}>Cancel</Button>
-        <div className="ml-2">
-          <Button
-            mode="primary"
-            onClick={e => {
-              e.preventDefault();
-              onSet();
-            }}
-            isLoading={setEmailAlertMutation.isLoading}
-            disabled={setEmailAlertMutation.isLoading}
-          >
-            Set
-          </Button>
-        </div>
+        <Analytics name="data-schema-registry-alerts-set-btn">
+          <div className="ml-2">
+            <Button
+              mode="primary"
+              onClick={e => {
+                e.preventDefault();
+                onSet();
+              }}
+              isLoading={setEmailAlertMutation.isLoading}
+              disabled={setEmailAlertMutation.isLoading}
+            >
+              Set
+            </Button>
+          </div>
+        </Analytics>
       </div>
     </div>
   );

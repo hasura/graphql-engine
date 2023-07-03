@@ -2,11 +2,16 @@ import React from 'react';
 import { SchemaRow } from './SchemaRow';
 import { useGetSchemaList } from '../hooks/useGetSchemaList';
 import { Button } from '../../../new-components/Button';
-import { Schema, RoleBasedSchema } from '../types';
+import { Schema, RoleBasedSchema, SchemaRegistryTag } from '../types';
 import { useDispatch } from 'react-redux';
 import _push from '../../../components/Services/Data/push';
 import globals from '../../../Globals';
 import { schemaListTransformFn, getPublishTime } from '../utils';
+import { FaPlusCircle } from 'react-icons/fa';
+import { AddSchemaRegistryTagDialog } from './AddSchemaRegistryTagDialog';
+import { IconTooltip } from '../../../new-components/Tooltip';
+import { SchemaTag } from './SchemaTag';
+import { Analytics } from '../../Analytics';
 
 export const SchemasList = () => {
   const projectID = globals.hasuraCloudProjectId || '';
@@ -41,6 +46,7 @@ export const Tabularised: React.VFC<{
   shouldLoadMore: boolean;
 }> = props => {
   const { schemas, loadMore, isLoadingMore, shouldLoadMore } = props;
+
   return (
     <div className="overflow-x-auto rounded-sm border-neutral-200 bg-gray-100 border w-3/5">
       <div className="w-full flex bg-gray-100 px-4 py-2">
@@ -52,21 +58,19 @@ export const Tabularised: React.VFC<{
           <span className="text-sm font-bold">DANGEROUS</span>
           <span className="text-sm font-bold">SAFE</span>
         </div>
-        {/* <div className="flex text-base w-[2%] justify-end">he</div> */}
       </div>
       <div className="flex flex-col w-full">
         {schemas.length ? (
           <div className="mb-md">
-            {schemas.map(schema => {
-              return (
-                <SchemaCard
-                  createdAt={schema.created_at}
-                  schemaId={schema.id}
-                  hash={schema.entry_hash}
-                  roleBasedSchemas={schema.roleBasedSchemas}
-                />
-              );
-            })}
+            {schemas.map(schema => (
+              <SchemaCard
+                createdAt={schema.created_at}
+                schemaId={schema.id}
+                hash={schema.entry_hash}
+                roleBasedSchemas={schema.roleBasedSchemas}
+                tags={schema.tags}
+              />
+            ))}
             {shouldLoadMore && (
               <div className="flex w-full justify-center items-center">
                 <Button
@@ -99,13 +103,53 @@ const SchemaCard: React.VFC<{
   hash: string;
   schemaId: string;
   roleBasedSchemas: RoleBasedSchema[];
+  tags: SchemaRegistryTag[];
 }> = props => {
-  const { createdAt, hash, roleBasedSchemas } = props;
+  const { createdAt, hash, roleBasedSchemas, tags, schemaId } = props;
+  const [isTagModalOpen, setIsTagModalOpen] = React.useState(false);
+
+  const [tagsList, setTagsList] = React.useState<SchemaRegistryTag[]>(tags);
 
   const dispatch = useDispatch();
 
+  const onRemoveTag = (id: string) => {
+    const filteredTags = tagsList.filter(
+      schemaRegistryTag => schemaRegistryTag.id !== id
+    );
+    setTagsList(filteredTags);
+  };
+
   return (
     <div className="w-full flex-col px-4 py-2 mb-2 bg-white">
+      {isTagModalOpen && (
+        <AddSchemaRegistryTagDialog
+          tagsList={tagsList}
+          setTagsList={setTagsList}
+          entryHash={hash}
+          onClose={() => {
+            setIsTagModalOpen(false);
+          }}
+        />
+      )}
+      <div className="flex justify-start">
+        <div className="ml-[-8px]">
+          {tagsList &&
+            tagsList.map(schemaRegistryTag => (
+              <div className="inline-flex mr-2">
+                <SchemaTag
+                  schemaRegistryTag={schemaRegistryTag}
+                  onRemove={onRemoveTag}
+                />
+              </div>
+            ))}
+        </div>
+        <Analytics name={`schema-registry-add-tag-btn-${schemaId}`}>
+          <div className="mt-[5px]" onClick={() => setIsTagModalOpen(true)}>
+            <IconTooltip message="Add a Tag" icon={<FaPlusCircle />} />
+          </div>
+        </Analytics>
+      </div>
+
       <div className="flex flex-col w-full">
         <div className="flex mt-4">
           <div className="flex-col w-1/2">
@@ -124,8 +168,8 @@ const SchemaCard: React.VFC<{
       <div className="flex-col w-full mt-8">
         <div className="font-bold text-gray-500">Roles</div>
         {roleBasedSchemas.length ? (
-          roleBasedSchemas.map((roleBasedSchema, index) => {
-            return (
+          roleBasedSchemas.map((roleBasedSchema, index) => (
+            <Analytics name={`schema-registry-details-${schemaId}`}>
               <div className="flex-col w-full">
                 <SchemaRow
                   role={roleBasedSchema.role || ''}
@@ -140,8 +184,8 @@ const SchemaCard: React.VFC<{
                   <div className="flex w-full border-b border-gray-300" />
                 ) : null}
               </div>
-            );
-          })
+            </Analytics>
+          ))
         ) : (
           <div className="white border-t border-neutral-200">
             <div className="p-xs" data-test="label-no-domain-found">

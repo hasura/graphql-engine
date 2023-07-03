@@ -162,6 +162,7 @@ export type EnvVars = {
   neonRootDomain?: string;
   allowedLuxFeatures?: LuxFeature[];
   userId?: string;
+  userEmail?: string;
   cdnAssets?: boolean;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
   launchDarklyClientId?: string;
@@ -225,6 +226,7 @@ const globals = {
     : '',
   userRole: window.__env?.userRole || undefined,
   userId: window.__env?.userId || undefined,
+  userEmail: window.__env?.userEmail || undefined,
   consoleType: window.__env?.consoleType // FIXME : this check can be removed when the all CLI environments are set with the console type, some CLI environments could have empty consoleType
     ? parseConsoleType(window.__env?.consoleType)
     : ('' as ConsoleType),
