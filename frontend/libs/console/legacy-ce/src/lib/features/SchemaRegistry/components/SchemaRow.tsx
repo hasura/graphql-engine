@@ -41,6 +41,7 @@ export const SchemaRow: React.VFC<{
           </>
         )}
       </div>
+
       {onClick && (
         <div
           className="flex text-base w-[2%] justify-end mt-[6px]"
