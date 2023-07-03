@@ -10965,6 +10965,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-truncate@npm:^2.3.4":
+  version: 2.3.4
+  resolution: "@types/react-truncate@npm:2.3.4"
+  dependencies:
+    "@types/react": "*"
+  checksum: 372fae364e1b3b6c34d70fff32c632b560ca4648ae64b319d9861b958bc6e1ed91fd200c848254f02e678c54afb47a638ec1ea1b40139fdc642170c8774d7145
+  languageName: node
+  linkType: hard
+
 "@types/react-window@npm:^1.8.5":
   version: 1.8.5
   resolution: "@types/react-window@npm:1.8.5"
@@ -19418,6 +19427,7 @@ __metadata:
     "@types/react-router-redux": 4.0.44
     "@types/react-select": 3.0.12
     "@types/react-toggle": 4.0.2
+    "@types/react-truncate": ^2.3.4
     "@types/react-window": ^1.8.5
     "@types/react-youtube": ^7.6.2
     "@types/redux-devtools": 3.0.47
@@ -19603,6 +19613,7 @@ __metadata:
     react-tabs: 3.1.0
     react-test-renderer: ^17.0.2
     react-toggle: 4.1.1
+    react-truncate: ^2.4.0
     react-window: ^1.8.9
     react-youtube: ^7.13.0
     redux: 4.1.0
@@ -30958,6 +30969,16 @@ __metadata:
     react: ">=16.6.0"
     react-dom: ">=16.6.0"
   checksum: 75602840106aa9c6545149d6d7ae1502fb7b7abadcce70a6954c4b64a438ff1cd16fc77a0a1e5197cdd72da398f39eb929ea06f9005c45b132ed34e056ebdeb1
+  languageName: node
+  linkType: hard
+
+"react-truncate@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "react-truncate@npm:2.4.0"
+  peerDependencies:
+    prop-types: <= 15.x.x
+    react: <= 16.x.x
+  checksum: fecd5b39115845c1bd36364ebe0a46b475d62f53df4d7a65fb5b3aa322bdd766d18025d50dcfb253fd7ff31cfdff81179c1ca56adccdc5db638c787800989652
   languageName: node
   linkType: hard
 
