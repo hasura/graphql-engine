@@ -27,9 +27,14 @@ query fetchRegistrySchemas($projectId: uuid!, $cursor: timestamptz!, $limit: Int
         schema_diff_data
       }
     }
+    schema_tags {
+      id
+      name
+      entry_hash
+      color
+    }
   }
 }
-
 `);
 
 export const FETCH_REGISTRY_SCHEMA_QUERY = gql(`
@@ -79,6 +84,24 @@ mutation UpsertEmailAlertConfig($projectId: uuid, $config: jsonb) {
     project_id
     alert_type
     config
+  }
+}
+`);
+
+export const ADD_SCHEMA_TAG = gql(`
+mutation AddSchemaTag($tagName: String!, $projectId: uuid!, $entryHash: String!, $color: String) {
+  insert_schema_registry_tags_one(object: {name: $tagName, project_id: $projectId, entry_hash: $entryHash, color: $color}) {
+    color
+    id
+    name
+  }
+}
+`);
+
+export const DELETE_SCHEMA_TAG = gql(`
+mutation DeleteSchemaTag($ID: uuid!) {
+  delete_schema_registry_tags_by_pk(id: $ID) {
+    id
   }
 }
 `);
