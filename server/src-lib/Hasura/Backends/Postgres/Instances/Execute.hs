@@ -92,7 +92,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinition (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -249,16 +248,12 @@ convertDelete ::
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   [HTTP.Header] ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertDelete env manager logger userInfo deleteOperation stringifyNum inputValidationSetting reqHeaders selSetArguments = do
-  case inputValidationSetting of
-    IVSEnabled -> do
-      for_ (_adValidateInput deleteOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
-        PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments
-    IVSDisabled -> pure ()
+convertDelete env manager logger userInfo deleteOperation stringifyNum reqHeaders selSetArguments = do
+  for_ (_adValidateInput deleteOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+    PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   pure
@@ -281,16 +276,12 @@ convertUpdate ::
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   [HTTP.Header] ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertUpdate env manager logger userInfo updateOperation stringifyNum inputValidationSetting reqHeaders selSetArguments = do
-  case inputValidationSetting of
-    IVSEnabled -> do
-      for_ (_auValidateInput updateOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
-        PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments
-    IVSDisabled -> pure ()
+convertUpdate env manager logger userInfo updateOperation stringifyNum reqHeaders selSetArguments = do
+  for_ (_auValidateInput updateOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+    PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
@@ -316,17 +307,13 @@ convertInsert ::
   UserInfo ->
   IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   [HTTP.Header] ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertInsert env manager logger userInfo insertOperation stringifyNum inputValidationSetting reqHeaders = do
-  case inputValidationSetting of
-    IVSEnabled -> do
-      -- Validate insert data
-      (_, res) <- flip runStateT InsOrdHashMap.empty $ validateInsertInput env manager logger userInfo (IR._aiData insertOperation) reqHeaders
-      for_ res $ \(rows, VIHttp ValidateInputHttpDefinition {..}) -> do
-        validateInsertRows env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders rows
-    IVSDisabled -> pure ()
+convertInsert env manager logger userInfo insertOperation stringifyNum reqHeaders = do
+  -- Validate insert data
+  (_, res) <- flip runStateT InsOrdHashMap.empty $ validateInsertInput env manager logger userInfo (IR._aiData insertOperation) reqHeaders
+  for_ res $ \(rows, VIHttp ValidateInputHttpDefinition {..}) -> do
+    validateInsertRows env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders rows
   queryTags <- ask
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
   pure
@@ -377,7 +364,6 @@ pgDBMutationPlan ::
   L.Logger L.Hasura ->
   UserInfo ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
@@ -385,7 +371,7 @@ pgDBMutationPlan ::
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig mrf reqHeaders operationName selSetArguments = do
+pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -395,9 +381,9 @@ pgDBMutationPlan env manager logger userInfo stringifyNum inputValidationSetting
             $ QueryOperationType G.OperationTypeMutation
      in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   go resolvedConnectionTemplate <$> case mrf of
-    MDBInsert s -> convertInsert env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders
-    MDBUpdate s -> convertUpdate env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders selSetArguments
-    MDBDelete s -> convertDelete env manager logger userInfo s stringifyNum inputValidationSetting reqHeaders selSetArguments
+    MDBInsert s -> convertInsert env manager logger userInfo s stringifyNum reqHeaders
+    MDBUpdate s -> convertUpdate env manager logger userInfo s stringifyNum reqHeaders selSetArguments
+    MDBDelete s -> convertDelete env manager logger userInfo s stringifyNum reqHeaders selSetArguments
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where
     go resolvedConnectionTemplate v =

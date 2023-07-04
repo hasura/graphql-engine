@@ -37,7 +37,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (InputValidationSetting)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -136,7 +135,6 @@ bqDBMutationPlan ::
   L.Logger L.Hasura ->
   UserInfo ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
@@ -144,7 +142,7 @@ bqDBMutationPlan ::
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _inputValidation _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain

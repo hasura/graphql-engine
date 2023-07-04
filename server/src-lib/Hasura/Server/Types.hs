@@ -21,8 +21,6 @@ module Hasura.Server.Types
     CloseWebsocketsOnMetadataChangeStatus (..),
     isCloseWebsocketsOnMetadataChangeStatusEnabled,
     MonadGetPolicies (..),
-    InputValidationSetting (..),
-    getInputValidationSetting,
   )
 where
 
@@ -89,7 +87,6 @@ data ExperimentalFeature
   | EFHideAggregationPredicates
   | EFHideStreamFields
   | EFGroupByAggregations
-  | EFInputValidation
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -104,7 +101,6 @@ experimentalFeatureKey = \case
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
   EFHideStreamFields -> "hide_stream_fields"
   EFGroupByAggregations -> "group_by_aggregations"
-  EFInputValidation -> "input_validation"
 
 instance Hashable ExperimentalFeature
 
@@ -229,12 +225,3 @@ instance (MonadGetPolicies m) => MonadGetPolicies (ExceptT e m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
-
-data InputValidationSetting
-  = IVSEnabled
-  | IVSDisabled
-  deriving (Eq, Show)
-
-getInputValidationSetting :: HashSet ExperimentalFeature -> InputValidationSetting
-getInputValidationSetting experimentalFeatures =
-  if EFInputValidation `elem` experimentalFeatures then IVSEnabled else IVSDisabled

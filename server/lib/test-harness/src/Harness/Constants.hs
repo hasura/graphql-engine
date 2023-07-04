@@ -296,7 +296,7 @@ serveOptions =
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
       soSchemaPollInterval = Interval $$(refineTH 10),
-      soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput, EFInputValidation],
+      soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = Init.DevModeEnabled,
       soAdminInternalErrors = Init.AdminInternalErrorsEnabled,

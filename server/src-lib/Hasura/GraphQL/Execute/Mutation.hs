@@ -82,7 +82,6 @@ convertMutationSelectionSet ::
   PrometheusMetrics ->
   GQLContext ->
   SQLGenCtx ->
-  InputValidationSetting ->
   UserInfo ->
   HTTP.RequestHeaders ->
   [G.Directive G.Name] ->
@@ -100,7 +99,6 @@ convertMutationSelectionSet
   prometheusMetrics
   gqlContext
   SQLGenCtx {stringifyNum}
-  inputValidationSetting
   userInfo
   reqHeaders
   directives
@@ -140,7 +138,7 @@ convertMutationSelectionSet
 
                   httpManager <- askHTTPManager
                   let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum inputValidationSetting sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
                   pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
             RFRemote remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
