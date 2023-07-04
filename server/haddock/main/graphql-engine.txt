@@ -21564,7 +21564,7 @@ selectTableAggregate :: (BackendTableSelectSchema b, MonadBuildSourceSchema b r 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 class (Backend b) => BackendLogicalModelSelectSchema (b :: BackendType)
 logicalModelArguments :: (BackendLogicalModelSelectSchema b, MonadBuildSourceSchema b r m n) => LogicalModelInfo b -> SchemaT r m (InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
-logicalModelSelectionSet :: (BackendLogicalModelSelectSchema b, MonadBuildSourceSchema b r m n) => InsOrdHashMap RelName (RelInfo b) -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelSelectionSet :: (BackendLogicalModelSelectSchema b, MonadBuildSourceSchema b r m n) => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 class (BackendLogicalModelSelectSchema b) => BackendNativeQuerySelectSchema (b :: BackendType)
 selectNativeQuery :: (BackendNativeQuerySelectSchema b, MonadBuildSourceSchema b r m n) => NativeQueryInfo b -> Name -> Nullable -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 selectNativeQueryObject :: (BackendNativeQuerySelectSchema b, MonadBuildSchema b r m n) => NativeQueryInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
@@ -21986,8 +21986,9 @@ buildLogicalModelIR :: LogicalModelInfo b -> LogicalModel b
 
 -- | top-level select permissions for a logical model
 buildLogicalModelPermissions :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (TablePermG b (UnpreparedValue b))
-buildLogicalModelFields :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => InsOrdHashMap RelName (RelInfo b) -> Nullable -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b), InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
-defaultLogicalModelSelectionSet :: forall b r m n. (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b) => InsOrdHashMap RelName (RelInfo b) -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelFieldParsers :: forall b r m n. MonadBuildSchema b r m n => Set RelName -> LogicalModelInfo b -> SchemaT r m [FieldParser MetadataObjId n (AnnotatedField b)]
+defaultLogicalModelSelectionSet :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
+logicalModelSelectionList :: (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => Nullable -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 defaultLogicalModelArgs :: forall b r m n. (MonadBuildSchema b r m n, AggregationPredicatesSchema b) => LogicalModelInfo b -> SchemaT r m (InputFieldsParser n (SelectArgs b))
 
 
@@ -21998,12 +21999,12 @@ defaultBuildStoredProcedureRootFields :: forall b r m n. (MonadBuildSchema b r m
 
 -- | Schema parsers for native queries.
 module Hasura.NativeQuery.Schema
-defaultSelectNativeQueryObject :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => NativeQueryInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+defaultSelectNativeQueryObject :: forall b r m n. (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b) => NativeQueryInfo b -> Name -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnObjectSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 -- | select a native query - implementation is the same for root fields and
 --   array relationships
-defaultSelectNativeQuery :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => NativeQueryInfo b -> Name -> Nullable -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-defaultBuildNativeQueryRootFields :: forall b r m n. (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+defaultSelectNativeQuery :: forall b r m n. (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b) => NativeQueryInfo b -> Name -> Nullable -> Maybe Description -> SchemaT r m (Maybe (FieldParser n (AnnSimpleSelectG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+defaultBuildNativeQueryRootFields :: forall b r m n. (MonadBuildSchema b r m n, BackendNativeQuerySelectSchema b) => NativeQueryInfo b -> SchemaT r m (Maybe (FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 
 
 -- | Generate the GraphQL schema types related to streaming subscriptions.
@@ -24580,22 +24581,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) TriggerOnReplication
-cteqCleanupConfig :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe Text)
-cetqWebhook :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe InputWebhook)
-cetqUpdate :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe (SubscribeOpSpec b_aslqf))
-cetqTable :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (TableName b_aslqf)
-cetqSource :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) SourceName
-cetqRetryConf :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe RequestTransform)
-cetqReplace :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) Bool
-cetqName :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) TriggerName
-cetqInsert :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe (SubscribeOpSpec b_aslqf))
-cetqHeaders :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe Bool)
-cetqDelete :: forall b_aslqf. Lens' (CreateEventTriggerQuery b_aslqf) (Maybe (SubscribeOpSpec b_aslqf))
+cteqTriggerOnReplication :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) TriggerOnReplication
+cteqCleanupConfig :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe Text)
+cetqWebhook :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe InputWebhook)
+cetqUpdate :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe (SubscribeOpSpec b_aslok))
+cetqTable :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (TableName b_aslok)
+cetqSource :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) SourceName
+cetqRetryConf :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe RequestTransform)
+cetqReplace :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) Bool
+cetqName :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) TriggerName
+cetqInsert :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe (SubscribeOpSpec b_aslok))
+cetqHeaders :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe Bool)
+cetqDelete :: forall b_aslok. Lens' (CreateEventTriggerQuery b_aslok) (Maybe (SubscribeOpSpec b_aslok))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
