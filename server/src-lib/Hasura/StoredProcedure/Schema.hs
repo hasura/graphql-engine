@@ -12,7 +12,7 @@ import Hasura.GraphQL.Schema.Common
     retrieve,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.LogicalModel.Schema
+import Hasura.LogicalModel.Schema (buildLogicalModelIR, buildLogicalModelPermissions, logicalModelSelectionList)
 import Hasura.LogicalModelResolver.Schema (argumentsSchema)
 import Hasura.Prelude
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -65,8 +65,8 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
       . fmap Just
       $ buildLogicalModelPermissions @b @r @m @n _spiReturns
 
-  (selectionSetParser, logicalModelsArgsParser) <-
-    MaybeT $ buildLogicalModelFields mempty NotNullable _spiReturns
+  selectionListParser <- MaybeT $ logicalModelSelectionList @b @r @m @n NotNullable _spiReturns
+  logicalModelsArgsParser <- lift $ logicalModelArguments @b @r @m @n _spiReturns
 
   let arguments spArgs =
         HashMap.mapWithKey
@@ -94,7 +94,7 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
           <$> logicalModelsArgsParser
           <*> storedProcedureArgsParser
       )
-      selectionSetParser
+      selectionListParser
     <&> \((lmArgs, spArgs), fields) ->
       QDBMultipleRows
         $ IR.AnnSelectG
