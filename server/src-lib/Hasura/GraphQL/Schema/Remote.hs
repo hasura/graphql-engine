@@ -268,12 +268,16 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
   buildField fieldConstructor fieldType
   where
     doNullability ::
-      forall a k.
+      forall k.
+      ('Input <: k) =>
       G.Nullability ->
-      Parser k n a ->
-      Parser k n a
-    doNullability (G.Nullability True) = nullableParser
-    doNullability (G.Nullability False) = id
+      Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
+      Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable))
+    doNullability (G.Nullability True) parser =
+      nullable parser `bind` \case
+        Just x -> pure x
+        Nothing -> pure $ Just (Altered False, G.VNull)
+    doNullability (G.Nullability False) parser = parser
 
     fieldConstructor ::
       forall k.
