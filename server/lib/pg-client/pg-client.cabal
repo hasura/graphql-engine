@@ -67,6 +67,7 @@ library
     , mmorph
     , monad-control
     , mtl
+    , postgres-options
     , postgresql-binary
     , postgresql-libpq
     , resource-pool

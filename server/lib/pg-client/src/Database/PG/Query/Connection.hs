@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
@@ -5,18 +6,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-
-{-# HLINT ignore "Use tshow" #-}
-{-# HLINT ignore "Use onLeft" #-}
 
 module Database.PG.Query.Connection
   ( initPQConn,
     defaultConnInfo,
     ConnInfo (..),
     ConnDetails (..),
+    extractConnOptions,
+    extractHost,
     ConnOptions (..),
     pgConnString,
     PGQuery (..),
@@ -59,11 +59,13 @@ import Data.Aeson.Casing (aesonDrop, snakeCase)
 import Data.Aeson.TH (mkToJSON)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
+import Data.ByteString.Char8 (unpack)
 import Data.Foldable (for_)
 import Data.HashTable.IO qualified as HIO
 import Data.Hashable (Hashable (hashWithSalt))
 import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Maybe (fromMaybe)
+import Data.Monoid (getLast)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
 import Data.Text qualified as Text
@@ -72,8 +74,13 @@ import Data.Text.Encoding.Error (lenientDecode)
 import Data.Time (NominalDiffTime, UTCTime)
 import Data.Word (Word16, Word32)
 import Database.PostgreSQL.LibPQ qualified as PQ
+import Database.PostgreSQL.Simple.Options qualified as Options
 import GHC.Generics (Generic)
 import Prelude
+
+{-# ANN module ("HLint: ignore Use tshow" :: String) #-}
+
+{-# ANN module ("HLint: ignore Use onLeft" :: String) #-}
 
 -------------------------------------------------------------------------------
 
@@ -91,6 +98,39 @@ data ConnDetails
   = CDDatabaseURI !ByteString
   | CDOptions !ConnOptions
   deriving stock (Eq, Read, Show)
+
+-- | If we connect with a 'CDDatabaseURI', we may still be able to create a
+-- 'ConnOptions' object from the URI.
+extractConnOptions :: ConnDetails -> Maybe ConnOptions
+extractConnOptions = \case
+  CDOptions options -> Just options
+  CDDatabaseURI uri -> do
+    options <- case Options.parseConnectionString (unpack uri) of
+      Right options -> Just options
+      Left _ -> Nothing
+
+    getLast do
+      connHost <- Options.host options
+      connPort <- Options.port options
+      connUser <- Options.user options
+      connPassword <- Options.password options
+      connDatabase <- Options.dbname options
+
+      let connOptions :: Maybe String
+          connOptions = getLast (Options.options options)
+
+      pure ConnOptions {..}
+
+-- | Attempt to extract a host name from a 'ConnDetails'. Note that this cannot
+-- just reuse 'extractConnOptions' as a URI may specify a host while not
+-- specifying a port, for example.
+extractHost :: ConnDetails -> Maybe String
+extractHost = \case
+  CDOptions options -> Just (connHost options)
+  CDDatabaseURI uri -> getLast do
+    case Options.parseConnectionString (unpack uri) of
+      Right options -> Options.host options
+      Left _ -> mempty
 
 data ConnInfo = ConnInfo
   { ciRetries :: !Int,
