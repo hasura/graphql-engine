@@ -31,6 +31,8 @@ import Control.Concurrent.STM qualified as STM
 import Control.Exception (mask_)
 import Control.Immortal qualified as Immortal
 import Data.Aeson.Extended qualified as J
+import Data.Aeson.Ordered qualified as JO
+import Data.Monoid (Endo)
 import Data.String
 import Data.Text.Extended
 import Data.UUID.V4 qualified as UUID
@@ -181,6 +183,7 @@ addLiveQuery ::
   IO GranularPrometheusMetricsState ->
   -- | the action to be executed when result changes
   OnChange ->
+  (Maybe (Endo JO.Value)) ->
   IO LiveQuerySubscriberDetails
 addLiveQuery
   logger
@@ -195,7 +198,8 @@ addLiveQuery
   requestId
   plan
   granularPrometheusMetricsState
-  onResultAction = do
+  onResultAction
+  modifier = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -238,6 +242,7 @@ addLiveQuery
             granularPrometheusMetricsState
             (_pOperationNamesMap poller)
             resolvedConnectionTemplate
+            modifier
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -260,7 +265,7 @@ addLiveQuery
       SubscriptionsState lqMap _ postPollHook _ = subscriptionState
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
       addToCohort subscriber handlerC =
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
@@ -296,6 +301,8 @@ addStreamSubscriptionQuery ::
   IO GranularPrometheusMetricsState ->
   -- | the action to be executed when result changes
   OnChange ->
+  -- | the modifier for adding typename for namespaced queries
+  (Maybe (Endo JO.Value)) ->
   IO StreamingSubscriberDetails
 addStreamSubscriptionQuery
   logger
@@ -311,7 +318,8 @@ addStreamSubscriptionQuery
   rootFieldName
   plan
   granularPrometheusMetricsState
-  onResultAction = do
+  onResultAction
+  modifier = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -356,6 +364,7 @@ addStreamSubscriptionQuery
             granularPrometheusMetricsState
             (_pOperationNamesMap handler)
             resolvedConnectionTemplate
+            modifier
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -380,7 +389,7 @@ addStreamSubscriptionQuery
       SubscriptionsState _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
       addToCohort subscriber handlerC = do
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC

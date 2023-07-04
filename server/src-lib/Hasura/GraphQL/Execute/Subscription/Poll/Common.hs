@@ -268,7 +268,8 @@ data PollerKey b =
   { _lgSource :: SourceName,
     _lgRole :: RoleName,
     _lgQuery :: Text,
-    _lgConnectionKey :: (ResolvedConnectionTemplate b)
+    _lgConnectionKey :: (ResolvedConnectionTemplate b),
+    _lgParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Generic)
 
@@ -279,7 +280,7 @@ deriving instance (Backend b) => Eq (PollerKey b)
 instance (Backend b) => Hashable (PollerKey b)
 
 instance J.ToJSON (PollerKey b) where
-  toJSON (PollerKey source role query _connectionKey) =
+  toJSON (PollerKey source role query _connectionKey _) =
     J.object
       [ "source" J..= source,
         "role" J..= role,
@@ -297,7 +298,7 @@ dumpPollerMap extended pollerMap =
   fmap J.toJSON $ do
     entries <- STM.atomically $ ListT.toList $ STMMap.listT pollerMap
     forM entries $ \(pollerKey, Poller cohortsMap _responseState ioState _paramQueryHash _opNames) ->
-      AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey) -> do
+      AB.dispatchAnyBackend @Backend (unBackendPollerKey pollerKey) $ \(PollerKey source role query _connectionKey _) -> do
         PollerIOState threadId pollerId <- STM.atomically $ STM.readTMVar ioState
         cohortsJ <-
           if extended

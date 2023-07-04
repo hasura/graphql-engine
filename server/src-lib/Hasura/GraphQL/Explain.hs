@@ -130,7 +130,7 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      validSubscription <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
+      (validSubscription, _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
