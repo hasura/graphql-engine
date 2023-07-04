@@ -87,7 +87,7 @@ instance ToEngineLog StartupLog Hasura where
 
 data PGLog = PGLog
   { plLogLevel :: !LogLevel,
-    plMessage :: !Text
+    plMessage :: !J.Value
   }
   deriving (Eq)
 

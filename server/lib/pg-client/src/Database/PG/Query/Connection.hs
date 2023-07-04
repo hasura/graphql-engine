@@ -54,7 +54,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT, runExceptT, withExceptT)
 import Control.Retry (RetryPolicyM)
 import Control.Retry qualified as Retry
-import Data.Aeson (ToJSON (toJSON), genericToJSON)
+import Data.Aeson (ToJSON (toJSON), Value (String), genericToJSON, object, (.=))
 import Data.Aeson.Casing (aesonDrop, snakeCase)
 import Data.Aeson.TH (mkToJSON)
 import Data.Bool (bool)
@@ -154,7 +154,7 @@ type PGRetryPolicyM m = RetryPolicyM m
 
 type PGRetryPolicy = PGRetryPolicyM (ExceptT PGErrInternal IO)
 
-newtype PGLogEvent = PLERetryMsg Text
+newtype PGLogEvent = PLERetryMsg Value
   deriving stock (Eq, Show)
 
 type PGLogger = PGLogEvent -> IO ()
@@ -178,12 +178,13 @@ readConnErr conn = do
 
 pgRetrying ::
   (MonadIO m) =>
+  Maybe String ->
   IO () ->
   PGRetryPolicyM m ->
   PGLogger ->
   m (Either PGConnErr a) ->
   m a
-pgRetrying resetFn retryP logger action = do
+pgRetrying host resetFn retryP logger action = do
   eRes <- Retry.retrying retryP shouldRetry $ const action
   either (liftIO . throwIO) return eRes
   where
@@ -195,9 +196,11 @@ pgRetrying resetFn retryP logger action = do
       liftIO $ do
         logger $
           PLERetryMsg $
-            "postgres connection failed, retrying("
-              <> Text.pack (show retryIterNo)
-              <> ")."
+            object
+              [ "message" .= String "Postgres connection failed",
+                "retry_attempt" .= retryIterNo,
+                "host" .= fromMaybe "Unknown or invalid host" host
+              ]
         resetFn
       return True
 
@@ -209,7 +212,7 @@ initPQConn ::
   IO PQ.Connection
 initPQConn ci logger =
   -- Retry if postgres connection error occurs
-  pgRetrying resetFn retryP logger $ do
+  pgRetrying host resetFn retryP logger $ do
     -- Initialise the connection
     conn <- PQ.connectdb (pgConnString $ ciDetails ci)
 
@@ -218,6 +221,7 @@ initPQConn ci logger =
     let connOk = s == PQ.ConnectionOk
     bool (whenConnNotOk conn) (whenConnOk conn) connOk
   where
+    host = extractHost (ciDetails ci)
     resetFn = return ()
     retryP = mkPGRetryPolicy $ ciRetries ci
 
@@ -336,8 +340,10 @@ retryOnConnErr ::
   PGConn ->
   PGExec a ->
   ExceptT PGErrInternal IO a
-retryOnConnErr pgConn action =
-  pgRetrying resetFn retryP logger $ do
+retryOnConnErr pgConn action = do
+  host <- lift $ fmap (fmap unpack) (PQ.host (pgPQConn pgConn))
+
+  pgRetrying host resetFn retryP logger $ do
     resE <- lift $ runExceptT action
     case resE of
       Right r -> return $ Right r
