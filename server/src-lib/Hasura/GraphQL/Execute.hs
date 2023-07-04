@@ -58,7 +58,7 @@ import Hasura.RQL.Types.Subscription
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Prometheus (PrometheusMetrics)
-import Hasura.Server.Types (InputValidationSetting, ReadOnlyMode (..), RequestId (..))
+import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (BackendOnlyFieldAccess (..), UserInfo (..))
 import Hasura.Tracing qualified as Tracing
@@ -322,7 +322,6 @@ getResolvedExecPlan ::
   PrometheusMetrics ->
   UserInfo ->
   SQLGenCtx ->
-  InputValidationSetting ->
   ReadOnlyMode ->
   SchemaCache ->
   SchemaCacheVer ->
@@ -339,7 +338,6 @@ getResolvedExecPlan
   prometheusMetrics
   userInfo
   sqlGenCtx
-  inputValidationSetting
   readOnlyMode
   sc
   _scVer
@@ -382,7 +380,6 @@ getResolvedExecPlan
               prometheusMetrics
               gCtx
               sqlGenCtx
-              inputValidationSetting
               userInfo
               reqHeaders
               directives

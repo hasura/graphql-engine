@@ -52,7 +52,6 @@ import Hasura.RQL.Types.Column qualified as RQLColumn
 import Hasura.RQL.Types.Common as RQLTypes
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types (InputValidationSetting)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client as HTTP
@@ -259,7 +258,6 @@ msDBMutationPlan ::
   L.Logger L.Hasura ->
   UserInfo ->
   Options.StringifyNumbers ->
-  InputValidationSetting ->
   SourceName ->
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
@@ -267,7 +265,7 @@ msDBMutationPlan ::
   Maybe G.Name ->
   Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo 'MSSQL)
-msDBMutationPlan _env _manager _logger userInfo stringifyNum _inputValidation sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs = do
+msDBMutationPlan _env _manager _logger userInfo stringifyNum sourceName sourceConfig mrf _headers _gName _maybeSelSetArgs = do
   go <$> case mrf of
     MDBInsert annInsert -> executeInsert userInfo stringifyNum sourceConfig annInsert
     MDBDelete annDelete -> executeDelete userInfo stringifyNum sourceConfig annDelete

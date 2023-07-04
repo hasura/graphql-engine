@@ -87,7 +87,7 @@ import Hasura.Server.Prometheus
     PrometheusMetrics (..),
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (InputValidationSetting, ReadOnlyMode (..), RequestId (..))
+import Hasura.Server.Types (ReadOnlyMode (..), RequestId (..))
 import Hasura.Services
 import Hasura.Session (SessionVariable, SessionVariableValue, SessionVariables, UserInfo (..), filterSessionVariables)
 import Hasura.Tracing (MonadTrace, attachMetadata)
@@ -295,7 +295,6 @@ runGQ ::
   -- `runGQBatched` and `runCustomEndpoint`.
   Env.Environment ->
   SQLGenCtx ->
-  InputValidationSetting ->
   SchemaCache ->
   SchemaCacheVer ->
   Init.AllowListStatus ->
@@ -310,7 +309,7 @@ runGQ ::
   E.GraphQLQueryType ->
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
+runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType)) <- withElapsedTime $ do
@@ -341,7 +340,6 @@ runGQ env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode promet
           prometheusMetrics
           userInfo
           sqlGenCtx
-          inputValidationSetting
           readOnlyMode
           sc
           scVer
@@ -711,7 +709,6 @@ runGQBatched ::
   ) =>
   Env.Environment ->
   SQLGenCtx ->
-  InputValidationSetting ->
   SchemaCache ->
   SchemaCacheVer ->
   Init.AllowListStatus ->
@@ -728,10 +725,10 @@ runGQBatched ::
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runGQBatched env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
+runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
@@ -744,7 +741,7 @@ runGQBatched env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
-      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx inputValidationSetting sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map

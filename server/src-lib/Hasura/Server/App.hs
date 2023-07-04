@@ -573,8 +573,7 @@ v1Alpha1GQHandler queryType query = do
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  let inputValidationSetting = getInputValidationSetting acExperimentalFeatures
-  GH.runGQBatched acEnvironment acSQLGenCtx inputValidationSetting schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
@@ -934,8 +933,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        let inputValidationSetting = getInputValidationSetting acExperimentalFeatures
-        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx inputValidationSetting schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do

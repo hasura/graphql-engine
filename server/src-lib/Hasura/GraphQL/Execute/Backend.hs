@@ -41,7 +41,6 @@ import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
@@ -93,7 +92,6 @@ class
     L.Logger L.Hasura ->
     UserInfo ->
     Options.StringifyNumbers ->
-    InputValidationSetting ->
     SourceName ->
     SourceConfig b ->
     MutationDB b Void (UnpreparedValue b) ->
