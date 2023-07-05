@@ -1,4 +1,9 @@
-import { Metadata, Source, Table } from '../hasura-metadata-types';
+import {
+  Metadata,
+  QualifiedFunction,
+  Source,
+  Table,
+} from '../hasura-metadata-types';
 import { areTablesEqual } from './areTablesEqual';
 
 /*
@@ -34,6 +39,15 @@ export const findMetadataTable = (
 ) =>
   findMetadataSource(dataSourceName, m)?.tables.find(t =>
     areTablesEqual(t.table, table)
+  );
+
+export const findMetadataFunction = (
+  dataSourceName: string,
+  qualifiedFunction: QualifiedFunction,
+  m: Metadata
+) =>
+  findMetadataSource(dataSourceName, m)?.functions?.find(fn =>
+    areTablesEqual(fn.function, qualifiedFunction)
   );
 
 export const getSupportsForeignKeys = (source: Source | undefined) =>

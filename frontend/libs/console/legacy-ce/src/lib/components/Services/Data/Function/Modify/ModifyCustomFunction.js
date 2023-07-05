@@ -30,8 +30,8 @@ import {
 } from '../../../../Common/utils/routesUtils';
 import SessionVarSection from './SessionVarSection';
 import RawSqlButton from '../../Common/Components/RawSqlButton';
-
-import { isFeatureSupported } from '../../../../../dataSources';
+import { isFeatureSupported, currentDriver } from '../../../../../dataSources';
+import { FunctionGraphQLCustomization } from './GraphQLCustomization/FunctionGraphQLCustomization';
 
 export const pageTitle = 'Custom Function';
 
@@ -254,6 +254,15 @@ class ModifyCustomFunction extends React.Component {
             </div>
           )}
 
+          <FunctionGraphQLCustomization
+            driver={currentDriver}
+            dataSourceName={currentSource}
+            qualifiedFunction={{
+              name: functionName,
+              schema,
+            }}
+          />
+
           <div className="w-full sm:w-6/12 mb-md">
             <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
               Function Definition:
@@ -303,8 +312,7 @@ const mapStateToProps = state => ({
   currentSchema: state.tables.currentSchema,
 });
 
-const modifyCustomFnConnector = connect(mapStateToProps);
 const ConnectedModifyCustomFunction =
-  modifyCustomFnConnector(ModifyCustomFunction);
+  connect(mapStateToProps)(ModifyCustomFunction);
 
 export default ConnectedModifyCustomFunction;
