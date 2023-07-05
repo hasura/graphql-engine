@@ -1,7 +1,7 @@
 ---
-sidebar_label: Google Workspace
-description: Google Workspace SSO tutorial for Hasura Enterprise Edition
-title: 'EE: Google Workspace SSO'
+sidebar_label: LDAP
+description: LDAP SSO tutorial for Hasura Enterprise Edition
+title: 'EE: LDAP SSO'
 keywords:
   - hasura
   - console
@@ -9,22 +9,20 @@ keywords:
   - enterprise
   - single sign on
   - SSO
-  - SAML
-  - google workspace
-sidebar_position: 6
-toc_max_heading_level: 2
+  - LDAP
+sidebar_position: 7
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Console SSO with Google Workspace
+# Console SSO with LDAP
 
 <div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
 
 ## Overview
 
-SSO can be configured with Google Workspace OAuth2 by setting up [Dex](https://dexidp.io/docs/) as an OAuth2 proxy.
-Access can be configured for all users of a domain or just for members of certain groups.
+SSO can be configured with LDAP by setting up [Dex](https://dexidp.io/docs/) as an OAuth2 proxy. Access can be
+configured for all users of a domain or only for members of certain groups.
 
 This guide assumes you have a Hasura GraphQL Engine instance running with a valid license key. If you don't have one,
 you can get a license key via a [30-day free trial](/enterprise/try-hasura-enterprise-edition.mdx) or by contacting the
@@ -32,21 +30,38 @@ you can get a license key via a [30-day free trial](/enterprise/try-hasura-enter
 
 :::info Supported from
 
-SSO for Google Workspace is supported from versions `v2.25.0` and above.
+SSO for LDAP is supported from versions `v2.25.0` and above.
 
 :::
 
-## Step 1: Configure Hasura
+## Get started
 
-The table below describes the configuration options for Google Workspace SSO. Hasura GraphQL Engine will expect these
-values to be set as the value of the
+You can try the SSO configuration with [this demo](https://github.com/hasura/ee-sso-demo). The demo uses
+[OpenLDAP](https://www.openldap.org/) to integrate with Dex. You can clone the repository, edit the EE License Key
+environment variable, and start up Docker Compose services.
+
+```bash
+git clone https://github.com/hasura/ee-sso-demo.git
+cd ee-sso-demo
+cp dotenv .env
+docker-compose up -d
+```
+
+Finally, browse `http://localhost:8080` and try the SSO login.
+
+## Walkthrough
+
+### Step 1: Configure Hasura
+
+The table below describes the configuration options for LDAP SSO. Hasura GraphQL Engine will expect these values to be
+set as the value of the
 [`HASURA_GRAPHQL_SSO_PROVIDERS` environment variable](/deployment/graphql-engine-flags/reference.mdx/#single-sign-on-providers):
 
 | Key                     | Example                                                                                             | Description                                                                                                                            |
 | ----------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `client_id`             | `dex-login`                                                                                         | Any name identifying the Dex client                                                                                                    |
-| `admin_roles`           | `hasura-admin@company.com`                                                                          | X-hasura-roles that should be given admin access to console                                                                            |
-| `name`                  | Google Workspace Login                                                                              | A display name for this login method on the console                                                                                    |
+| `admin_roles`           | `["admin", "admins"]`                                                                               | X-hasura-roles that should be given admin access to Console                                                                            |
+| `name`                  | Dex Login                                                                                           | A display name for this login method on the Console                                                                                    |
 | `authorization_url`     | `http://dex-endpoint-from-browser:port/dex/auth`                                                    | Endpoint of Dex for auth request, should be reachable from browser                                                                     |
 | `request_token_url`     | `http://dex-endpoint-from-browser:port/dex/token`                                                   | Endpoint of Dex for token request, should be reachable from browser                                                                    |
 | `scope`                 | `openid offline_access groups`                                                                      | Oauth2 scopes to be used against Dex                                                                                                   |
@@ -62,15 +77,15 @@ follows:
 [
   {
     "client_id": "dex-login",
-    "admin_roles": ["hasura-admin@company.com"],
-    "name": "Google Workspace Login",
-    "authorization_url": "http://127.0.0.1:5556/dex/auth",
-    "request_token_url": "http://127.0.0.1:5556/dex/token",
+    "admin_roles": ["admin", "admins"],
+    "name": "Dex Login",
+    "authorization_url": "http://localhost:5556/dex/auth",
+    "request_token_url": "http://localhost:5556/dex/token",
     "scope": "openid offline_access groups",
     "jwt_secret": {
       "type": "RS256",
-      "jwk_url": "http://127.0.0.1:5556/dex/keys",
-      "issuer": "http://127.0.0.1:5556:5556/dex",
+      "jwk_url": "http://dex:5556/dex/keys",
+      "issuer": "http://localhost:5556:5556/dex",
       "claims_map": {
         "x-hasura-allowed-roles": {
           "path": "$.groups"
@@ -91,12 +106,12 @@ For guidance on setting environment variables or flags for Hasura GraphQL Engine
 
 :::
 
-## Step 2: Configure Dex
+### Step 2: Configure Dex
 
-Your Dex configuration will need the following fields set to enable Google Workspace SSO. You can find a sample
-configuration file below. This file should be saved in the `/dex` directory of your container.
+Your Dex configuration will need the following fields set to enable LDAP SSO. You can find a sample configuration file
+below. This file should be saved in the `/dex` directory of your container.
 
-### Issuer
+#### Issuer
 
 The base path of Dex and the external name of the OpenID Connect service. This is the canonical URL that all clients
 **must** use to refer to Dex. If a path is provided, Dex's HTTP service will listen at a non-root URL. This is the
@@ -108,7 +123,7 @@ Example:
 http://dex-domain:5556/dex
 ```
 
-### Static clients
+#### Static clients
 
 This contains the `id` and `redirectURIs`. The `id` will reference the `client_id` in the Hasura configuration. The
 `redirectURIs` will be the oauth callback URL of Hasura Console, which is at
@@ -125,33 +140,128 @@ staticClients:
     public: true
 ```
 
-### Connectors
+#### Connectors
 
 The connectors field is an array of objects that define the various connectors being used in the Dex configuration. Each
-object in the array contains a type field that specifies the type of connector being used. Here, we'll use
-`type: google` along with a series of fields that are specific to the Google connector.
+object in the array contains a `type` field that specifies the type of connector being used. Here, we'll use
+`type: ldap` along with a series of fields that are specific to the LDAP connector.
 
 ```yaml
 connectors:
-  - type: google
-    id: google
-    name: Google
+  - type: ldap
+    name: OpenLDAP
+    id: ldap
     config:
-      issuer: https://accounts.google.com
-      # Connector config values starting with a "$" will read from the environment.
-      # The clientID and clientSecret are obtained through the Google Console.
-      clientID: <YOUR_CLIENT_ID>.apps.googleusercontent.com
-      clientSecret: <YOUR_CLIENT_SECRET>
-      redirectURI: http://127.0.0.1:5556/dex/callback
-      hostedDomains:
-        - company.com
-      groups:
-        - hasura-admin@company.com
-      serviceAccountFilePath: /dex/google-sa.json
-      adminEmail: groups-reader@company.com
+      # The following configurations seem to work with OpenLDAP:
+      #
+      # 1) Plain LDAP, without TLS:
+      host: ldap:389
+      insecureNoSSL: true
+      #
+      # 2) LDAPS without certificate validation:
+      #host: localhost:636
+      #insecureNoSSL: false
+      #insecureSkipVerify: true
+      #
+      # 3) LDAPS with certificate validation:
+      #host: YOUR-HOSTNAME:636
+      #insecureNoSSL: false
+      #insecureSkipVerify: false
+      #rootCAData: 'CERT'
+      # ...where CERT="$( base64 -w 0 your-cert.crt )"
+
+      # This would normally be a read-only user.
+      bindDN: cn=admin,dc=example,dc=org
+      bindPW: admin
+
+      usernamePrompt: Email Address
+
+      userSearch:
+        baseDN: ou=People,dc=example,dc=org
+        filter: '(objectClass=person)'
+        username: mail
+        # "DN" (case sensitive) is a special attribute name. It indicates that
+        # this value should be taken from the entity's DN not an attribute on
+        # the entity.
+        idAttr: DN
+        emailAttr: mail
+        nameAttr: cn
+
+      groupSearch:
+        baseDN: ou=Groups,dc=example,dc=org
+        filter: '(objectClass=groupOfNames)'
+
+        userMatchers:
+          # A user is a member of a group when their DN matches
+          # the value of a "member" attribute on the group entity.
+          - userAttr: DN
+            groupAttr: member
+
+        # The group name should be the "cn" value.
+        nameAttr: cn
 ```
 
-### Sample configuration file for Dex
+You need to configure mappings for the login form, user and groups attributes. For instance with the LDAP configuration:
+
+```ldif
+# User definitions
+
+dn: ou=People,dc=example,dc=org
+objectClass: organizationalUnit
+ou: People
+
+dn: cn=jane,ou=People,dc=example,dc=org
+objectClass: person
+objectClass: inetOrgPerson
+sn: doe
+cn: jane
+mail: janedoe@example.com
+userpassword: foo
+
+# Group definitions.
+
+dn: ou=Groups,dc=example,dc=org
+objectClass: organizationalUnit
+ou: Groups
+
+dn: cn=admins,ou=Groups,dc=example,dc=org
+objectClass: groupOfNames
+cn: admins
+member: cn=jane,ou=People,dc=example,dc=org
+```
+
+The attribute mappings configuration of Dex should be:
+
+```yaml
+usernamePrompt: Email Address
+
+userSearch:
+  baseDN: ou=People,dc=example,dc=org
+  filter: '(objectClass=person)'
+  # we want the user using email to login
+  username: mail
+  # "DN" (case sensitive) is a special attribute name. It indicates that
+  # this value should be taken from the entity's DN not an attribute on
+  # the entity.
+  idAttr: DN
+  emailAttr: mail
+  nameAttr: cn
+
+groupSearch:
+  baseDN: ou=Groups,dc=example,dc=org
+  filter: '(objectClass=groupOfNames)'
+
+  userMatchers:
+    # A user is a member of a group when their DN matches
+    # the value of a "member" attribute on the group entity.
+    - userAttr: DN
+      groupAttr: member
+
+  # The group name should be the "cn" value.
+  nameAttr: cn
+```
+
+#### Sample configuration file for Dex
 
 <details>
 <summary>Click here to see a sample configuration file for Dex.</summary>
@@ -161,7 +271,7 @@ connectors:
 # This is the canonical URL that all clients MUST use to refer to dex. If a
 # path is provided, dex's HTTP service will listen at a non-root URL.
 # Public URL that dex is available at
-issuer: http://127.0.0.1:5556/dex
+issuer: http://localhost:5556/dex
 
 # The storage configuration determines where dex stores its state. Supported
 # options include SQL flavors and Kubernetes third party resources.
@@ -209,50 +319,62 @@ staticClients:
     public: true
 
 connectors:
-  - type: google
-    id: google
-    name: Google
+  - type: ldap
+    name: OpenLDAP
+    id: ldap
     config:
-      issuer: https://accounts.google.com
-      # Connector config values starting with a "$" will read from the environment.
-      clientID: <YOUR_CLIENT_ID>
-      clientSecret: <YOUR_CLIENT_SECRET>
-      redirectURI: http://127.0.0.1:5556/dex/callback
-      hostedDomains:
-        - company.com
-      groups:
-        - hasura-admin@company.com
-      serviceAccountFilePath: /dex/google-sa.json
-      adminEmail: shahidh@hasura.io
+      # The following configurations seem to work with OpenLDAP:
+      #
+      # 1) Plain LDAP, without TLS:
+      host: ldap:389
+      insecureNoSSL: true
+      #
+      # 2) LDAPS without certificate validation:
+      #host: localhost:636
+      #insecureNoSSL: false
+      #insecureSkipVerify: true
+      #
+      # 3) LDAPS with certificate validation:
+      #host: YOUR-HOSTNAME:636
+      #insecureNoSSL: false
+      #insecureSkipVerify: false
+      #rootCAData: 'CERT'
+      # ...where CERT="$( base64 -w 0 your-cert.crt )"
+
+      # This would normally be a read-only user.
+      bindDN: cn=admin,dc=example,dc=org
+      bindPW: admin
+
+      usernamePrompt: Email Address
+
+      userSearch:
+        baseDN: ou=People,dc=example,dc=org
+        filter: '(objectClass=person)'
+        username: mail
+        # "DN" (case sensitive) is a special attribute name. It indicates that
+        # this value should be taken from the entity's DN not an attribute on
+        # the entity.
+        idAttr: DN
+        emailAttr: mail
+        nameAttr: cn
+
+      groupSearch:
+        baseDN: ou=Groups,dc=example,dc=org
+        filter: '(objectClass=groupOfNames)'
+
+        userMatchers:
+          # A user is a member of a group when their DN matches
+          # the value of a "member" attribute on the group entity.
+          - userAttr: DN
+            groupAttr: member
+
+        # The group name should be the "cn" value.
+        nameAttr: cn
 ```
 
 </details>
 
-## Step 3: Create a Service Account and Key
-
-To allow Dex to fetch group information from Google, you will need to configure a service account for Dex to use. This
-account needs Domain-Wide Delegation and permission to access the
-`https://www.googleapis.com/auth/admin.directory.group.readonly` API scope.
-
-To get group fetching set up:
-
-- Follow the [instructions ](https://developers.google.com/admin-sdk/directory/v1/guides/delegation) to set up a service
-  account with Domain-Wide Delegation:
-  - During service account creation, a JSON key file will be created that contains authentication information for the
-    service account. This needs storing in a location accessible by Dex and you will set the `serviceAccountFilePath` to
-    point at it.
-  - When delegating the API scopes to the service account, delegate the
-    `https://www.googleapis.com/auth/admin.directory.group.readonly` scope and only this scope. If you delegate more
-    scopes to the service account, it will not be able to access the API.
-- Enable the [Admin SDK ](https://console.developers.google.com/apis/library/admin.googleapis.com/).
-- Add the `serviceAccountFilePath` and `adminEmail` configuration options to your Dex config.
-  - `serviceAccountFilePath` should point to the location of the service account JSON key file.
-  - `adminEmail` should be the email of a Google Workspace user with a minimum of the `Groups Reader (BETA)` Role
-    assigned. The service account you created earlier will impersonate this user when making calls to the admin API. A
-    valid user should be able to retrieve a list of groups when
-    [testing the API ](https://developers.google.com/admin-sdk/directory/v1/reference/groups/list#try-it).
-
-## Step 4: Update your deployment
+### Step 3: Update your deployment
 
 Finally, you'll need to configure your deployment with these changes. Here is a Docker Compose example, with the
 configuration:
@@ -289,18 +411,17 @@ services:
       HASURA_GRAPHQL_METRICS_SECRET: <YOUR_METRICS_SECRET>
       HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
       HASURA_GRAPHQL_SSO_PROVIDERS:
-        '[{"client_id": "dex-login","admin_roles": ["hasura-admin@company.com"], "name": "Dex
-        Login","authorization_url": "http://127.0.0.1:5556/dex/auth","request_token_url":
-        "http://127.0.0.1:5556/dex/token","scope": "openid offline_access groups","jwt_secret": {"type":
-        "RS256","jwk_url": "http://dex:5556/dex/keys","issuer": "http://127.0.0.1:5556/dex","claims_map":
-        {"x-hasura-allowed-roles": { "path": "$.groups" },"x-hasura-default-role": { "path": "$.groups[0]" }}}}]'
+        '[{"client_id": "dex-login","admin_roles": ["admin", "authors"], "name": "Dex Login","authorization_url":
+        "http://127.0.0.1:5556/dex/auth","request_token_url": "http://127.0.0.1:5556/dex/token","scope": "openid
+        offline_access groups","jwt_secret": {"type": "RS256","jwk_url": "http://dex:5556/dex/keys","issuer":
+        "http://127.0.0.1:5556/dex","claims_map": {"x-hasura-allowed-roles": { "path": "$.groups"
+        },"x-hasura-default-role": { "path": "$.groups[0]" }}}}]'
 
   dex:
     image: dexidp/dex
     restart: always
     volumes:
       - ./dex/config.docker.yaml:/etc/dex/config.docker.yaml
-      - ./dex/google-sa.json:/dex/google-sa.json
     ports:
       - '5556:5556'
 
@@ -308,9 +429,9 @@ volumes:
   postgres_data:
 ```
 
-## Step 5: Log in
+### Step 4: Log in
 
-At this point, you should see a `Dex Login` option on the Hasura Console. Now, you're ready to log in with your Google
-Workspace account 🎉
+At this point, you should see a `Dex Login` option on the Hasura Console. Now, you're ready to log in with your LDAP
+account 🎉
 
 <Thumbnail src="/img/enterprise/Dex-sso.png" alt="Dex on Hasura Console" width="600px" />

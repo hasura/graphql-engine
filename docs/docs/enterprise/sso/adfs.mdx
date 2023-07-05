@@ -1,7 +1,7 @@
 ---
-sidebar_label: Google Workspace
-description: Google Workspace SSO tutorial for Hasura Enterprise Edition
-title: 'EE: Google Workspace SSO'
+sidebar_label: ADFS
+description: Active Directory Federation Services (ADFS) SSO tutorial for Hasura Enterprise Edition
+title: 'EE: ADFS SSO'
 keywords:
   - hasura
   - console
@@ -10,21 +10,21 @@ keywords:
   - single sign on
   - SSO
   - SAML
-  - google workspace
-sidebar_position: 6
+  - ADFS
+sidebar_position: 3
 toc_max_heading_level: 2
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Console SSO with Google Workspace
+# Console SSO with Active Directory Federation Services (ADFS)
 
 <div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
 
 ## Overview
 
-SSO can be configured with Google Workspace OAuth2 by setting up [Dex](https://dexidp.io/docs/) as an OAuth2 proxy.
-Access can be configured for all users of a domain or just for members of certain groups.
+SSO can be configured with ADFS SAML by setting up [Dex](https://dexidp.io/docs/) as an OAuth2 proxy. Access can be
+configured for all users of a domain or only for members of certain groups.
 
 This guide assumes you have a Hasura GraphQL Engine instance running with a valid license key. If you don't have one,
 you can get a license key via a [30-day free trial](/enterprise/try-hasura-enterprise-edition.mdx) or by contacting the
@@ -32,21 +32,77 @@ you can get a license key via a [30-day free trial](/enterprise/try-hasura-enter
 
 :::info Supported from
 
-SSO for Google Workspace is supported from versions `v2.25.0` and above.
+SSO for ADFS is supported from versions `v2.25.0` and above.
 
 :::
 
-## Step 1: Configure Hasura
+## Step 1: Configure ADFS
 
-The table below describes the configuration options for Google Workspace SSO. Hasura GraphQL Engine will expect these
-values to be set as the value of the
-[`HASURA_GRAPHQL_SSO_PROVIDERS` environment variable](/deployment/graphql-engine-flags/reference.mdx/#single-sign-on-providers):
+We assume that you have deployed the
+[ADFS service](https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/ad-fs-deployment-guide). To
+configure SAML for ADFS, you need to create a
+[Relying party trust](https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/operations/create-a-relying-party-trust)
+and make sure that:
+
+- The `Enable support for the SAML 2.0 WebSSO protocol` checkbox is checked.
+- The Dex callback URL is entered in the `Relying party SAML 2.0 SSO service URL` textbox.
+
+  <Thumbnail
+    src="/img/enterprise/sso-adfs-trust-party-url.png"
+    alt="Relying party SAML 2.0 SSO service URL"
+    width="600px"
+  />
+
+- On the `Configure Identifiers page`, add a `Relying party trust identifier`
+
+:::info You'll need this later
+
+You'll need the `Relying party trust identifier` to configure Dex's `entityIssuer`. Note this value.
+
+:::
+
+### Add Claims
+
+After creating the Relying Party Trust, select the `Relying Party Trusts` folder from AD FS Management, and choose
+`Edit Claim Rules` from the Actions sidebar to add claims.
+
+- To pass attributes of a user from LDAP, create a rule with the `Send LDAP Attributes as Claims` as a template.
+- Choose `Active Directory` as your Attribute Store.
+- Map your LDAP attributes to ongoing claim types. Dex only requires the `username`, `mail`, and role-equivalent fields.
+
+  <Thumbnail src="/img/enterprise/sso-adfs-add-claims.png" alt="Add claims for SSO ADFS" width="600px" />
+
+- Click on the `View Rule Language` button to get the attribute name. These were the attribute names that were mapped in
+  the previous step.
+
+  <Thumbnail src="/img/enterprise/sso-adfs-view-rule.png" alt="View XML attribute names" width="600px" />
+
+- Click `Finish` and `Apply` the change in the `Edit Claim Issuance Policy` window.
+
+### Export Signing Certificate
+
+Finally, you'll need to export the signing certificate from the ADFS console to mount it to Dex.
+
+<Thumbnail src="/img/enterprise/sso-adfs-certificates.png" alt="ADFS SSO Certificates" width="600px" />
+
+1. Go to `ADFS > Service > Certificates`. Select the `Token-signing` certificate, and right-click to select
+   `View Certificate`.
+2. On the `Details tab`, click `Copy to File...`. This launches the Certificate Export Wizard. Click `Next`.
+3. Choose `Base-64 encoded X.509 (.CER)` as the format you'd like to use. Click Next.
+4. Download to the location where Dex is deployed.
+
+## Step 2: Configure Hasura
+
+The table below describes the configuration options for ADFS SSO. Hasura GraphQL Engine will expect these values to be
+set as the value of the
+[`HASURA_GRAPHQL_SSO_PROVIDERS`](/deployment/graphql-engine-flags/reference.mdx/#single-sign-on-providers) environment
+variable:
 
 | Key                     | Example                                                                                             | Description                                                                                                                            |
 | ----------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `client_id`             | `dex-login`                                                                                         | Any name identifying the Dex client                                                                                                    |
-| `admin_roles`           | `hasura-admin@company.com`                                                                          | X-hasura-roles that should be given admin access to console                                                                            |
-| `name`                  | Google Workspace Login                                                                              | A display name for this login method on the console                                                                                    |
+| `admin_roles`           | `["admin"]`                                                                                         | X-hasura-roles that should be given admin access to Console                                                                            |
+| `name`                  | Dex Login                                                                                           | A display name for this login method on the Console                                                                                    |
 | `authorization_url`     | `http://dex-endpoint-from-browser:port/dex/auth`                                                    | Endpoint of Dex for auth request, should be reachable from browser                                                                     |
 | `request_token_url`     | `http://dex-endpoint-from-browser:port/dex/token`                                                   | Endpoint of Dex for token request, should be reachable from browser                                                                    |
 | `scope`                 | `openid offline_access groups`                                                                      | Oauth2 scopes to be used against Dex                                                                                                   |
@@ -62,15 +118,15 @@ follows:
 [
   {
     "client_id": "dex-login",
-    "admin_roles": ["hasura-admin@company.com"],
-    "name": "Google Workspace Login",
-    "authorization_url": "http://127.0.0.1:5556/dex/auth",
-    "request_token_url": "http://127.0.0.1:5556/dex/token",
+    "admin_roles": ["admin"],
+    "name": "Dex Login",
+    "authorization_url": "http://localhost:5556/dex/auth",
+    "request_token_url": "http://localhost:5556/dex/token",
     "scope": "openid offline_access groups",
     "jwt_secret": {
       "type": "RS256",
-      "jwk_url": "http://127.0.0.1:5556/dex/keys",
-      "issuer": "http://127.0.0.1:5556:5556/dex",
+      "jwk_url": "http://localhost:5556/dex/keys",
+      "issuer": "http://localhost:5556:5556/dex",
       "claims_map": {
         "x-hasura-allowed-roles": {
           "path": "$.groups"
@@ -91,10 +147,10 @@ For guidance on setting environment variables or flags for Hasura GraphQL Engine
 
 :::
 
-## Step 2: Configure Dex
+## Step 3: Configure Dex
 
-Your Dex configuration will need the following fields set to enable Google Workspace SSO. You can find a sample
-configuration file below. This file should be saved in the `/dex` directory of your container.
+Your Dex configuration will need the following fields set to enable ADFS SAML SSO. You can find a sample configuration
+file below. This file should be saved in the `/dex` directory of your container.
 
 ### Issuer
 
@@ -128,27 +184,23 @@ staticClients:
 ### Connectors
 
 The connectors field is an array of objects that define the various connectors being used in the Dex configuration. Each
-object in the array contains a type field that specifies the type of connector being used. Here, we'll use
-`type: google` along with a series of fields that are specific to the Google connector.
+object in the array contains a type field that specifies the type of connector being used. Here, we'll use `type: saml`
+along with a series of fields that are specific to the SAML connector.
 
 ```yaml
 connectors:
-  - type: google
-    id: google
-    name: Google
+  - type: saml
+    id: saml-auth0
+    name: Auth0 SAML
     config:
-      issuer: https://accounts.google.com
-      # Connector config values starting with a "$" will read from the environment.
-      # The clientID and clientSecret are obtained through the Google Console.
-      clientID: <YOUR_CLIENT_ID>.apps.googleusercontent.com
-      clientSecret: <YOUR_CLIENT_SECRET>
-      redirectURI: http://127.0.0.1:5556/dex/callback
-      hostedDomains:
-        - company.com
-      groups:
-        - hasura-admin@company.com
-      serviceAccountFilePath: /dex/google-sa.json
-      adminEmail: groups-reader@company.com
+      ssoURL: https://sts.example.local/adfs/ls/
+      ca: /etc/dex/saml-ca.pem
+      # insecureSkipSignatureValidation: true
+      redirectURI: http://localhost:5556/dex/callback
+      usernameAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+      emailAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+      groupsAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role
+      entityIssuer: https://sts.example.local/adfs/ls/
 ```
 
 ### Sample configuration file for Dex
@@ -161,7 +213,7 @@ connectors:
 # This is the canonical URL that all clients MUST use to refer to dex. If a
 # path is provided, dex's HTTP service will listen at a non-root URL.
 # Public URL that dex is available at
-issuer: http://127.0.0.1:5556/dex
+issuer: http://localhost:5556/dex
 
 # The storage configuration determines where dex stores its state. Supported
 # options include SQL flavors and Kubernetes third party resources.
@@ -209,48 +261,21 @@ staticClients:
     public: true
 
 connectors:
-  - type: google
-    id: google
-    name: Google
+  - type: saml
+    id: saml-auth0
+    name: Auth0 SAML
     config:
-      issuer: https://accounts.google.com
-      # Connector config values starting with a "$" will read from the environment.
-      clientID: <YOUR_CLIENT_ID>
-      clientSecret: <YOUR_CLIENT_SECRET>
-      redirectURI: http://127.0.0.1:5556/dex/callback
-      hostedDomains:
-        - company.com
-      groups:
-        - hasura-admin@company.com
-      serviceAccountFilePath: /dex/google-sa.json
-      adminEmail: shahidh@hasura.io
+      ssoURL: https://sts.example.local/adfs/ls/
+      ca: /etc/dex/adfs-saml.cer
+      # insecureSkipSignatureValidation: true
+      redirectURI: http://localhost:5556/dex/callback
+      usernameAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+      emailAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress
+      groupsAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role
+      entityIssuer: https://sts.example.local/adfs/ls/
 ```
 
 </details>
-
-## Step 3: Create a Service Account and Key
-
-To allow Dex to fetch group information from Google, you will need to configure a service account for Dex to use. This
-account needs Domain-Wide Delegation and permission to access the
-`https://www.googleapis.com/auth/admin.directory.group.readonly` API scope.
-
-To get group fetching set up:
-
-- Follow the [instructions ](https://developers.google.com/admin-sdk/directory/v1/guides/delegation) to set up a service
-  account with Domain-Wide Delegation:
-  - During service account creation, a JSON key file will be created that contains authentication information for the
-    service account. This needs storing in a location accessible by Dex and you will set the `serviceAccountFilePath` to
-    point at it.
-  - When delegating the API scopes to the service account, delegate the
-    `https://www.googleapis.com/auth/admin.directory.group.readonly` scope and only this scope. If you delegate more
-    scopes to the service account, it will not be able to access the API.
-- Enable the [Admin SDK ](https://console.developers.google.com/apis/library/admin.googleapis.com/).
-- Add the `serviceAccountFilePath` and `adminEmail` configuration options to your Dex config.
-  - `serviceAccountFilePath` should point to the location of the service account JSON key file.
-  - `adminEmail` should be the email of a Google Workspace user with a minimum of the `Groups Reader (BETA)` Role
-    assigned. The service account you created earlier will impersonate this user when making calls to the admin API. A
-    valid user should be able to retrieve a list of groups when
-    [testing the API ](https://developers.google.com/admin-sdk/directory/v1/reference/groups/list#try-it).
 
 ## Step 4: Update your deployment
 
@@ -300,7 +325,7 @@ services:
     restart: always
     volumes:
       - ./dex/config.docker.yaml:/etc/dex/config.docker.yaml
-      - ./dex/google-sa.json:/dex/google-sa.json
+      - ./dex/adfs-saml.cer:/dex/adfs-saml.cer
     ports:
       - '5556:5556'
 
@@ -310,7 +335,7 @@ volumes:
 
 ## Step 5: Log in
 
-At this point, you should see a `Dex Login` option on the Hasura Console. Now, you're ready to log in with your Google
-Workspace account 🎉
+At this point, you should see a `Dex Login` option on the Hasura Console. Now, you're ready to log in with your ADFS
+account 🎉
 
 <Thumbnail src="/img/enterprise/Dex-sso.png" alt="Dex on Hasura Console" width="600px" />
