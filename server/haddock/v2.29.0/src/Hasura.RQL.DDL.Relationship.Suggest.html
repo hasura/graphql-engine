@@ -1,0 +1,1282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DerivingStrategies #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | This module provides an API for suggesting relationships so that</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--   the console (or client) does not need to construct and submit relationship queries itself.</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--   This suggests reciprocal object relationships A -&gt; object -&gt; B -&gt; object -&gt; A if there is a unique</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--   constraint on the column(s) in A mapping A-&gt;B, and if not then a reciprocal array relationship</span><span>
+</span><span id="line-9"></span><span class="hs-comment">--   A -&gt; object -&gt; B -&gt; array -&gt; A is suggested.</span><span>
+</span><span id="line-10"></span><span class="hs-comment">--</span><span>
+</span><span id="line-11"></span><span class="hs-comment">--   All JSON fields to the main exported function `runSuggestRels` are optional and behave as follows:</span><span>
+</span><span id="line-12"></span><span class="hs-comment">--</span><span>
+</span><span id="line-13"></span><span class="hs-comment">--   * _srsSource: The source to suggest relationships for - Defaults to `defaultSource`</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--   * _srsTables: The tables to suggest relationships between - Defaults to all tables</span><span>
+</span><span id="line-15"></span><span class="hs-comment">--   * _srsOmitTracked: Only suggest untracked relationships - Defaults to False</span><span>
+</span><span id="line-16"></span><span class="hs-comment">--</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--   Autodocodec Codecs instances are implemented for these datatypes.</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.Relationship.Suggest</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier">SuggestRels</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#runSuggestRels"><span class="hs-identifier">runSuggestRels</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-5ef39ba2f8644163fcb391587f08e67fc415caabe4542ede83c35400dafb8ca3/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#preview"><span class="hs-identifier">preview</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.NonEmpty.html"><span class="hs-identifier">Data.HashMap.Strict.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MapNE</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.html"><span class="hs-identifier">Data.HashSet</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">H</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier">ToSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Tuple</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">swap</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier">RelInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#riMapping"><span class="hs-identifier">riMapping</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#riTarget"><span class="hs-identifier">riTarget</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelTarget"><span class="hs-identifier">RelTarget</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html"><span class="hs-identifier">Hasura.Table.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#ForeignKey"><span class="hs-identifier">ForeignKey</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#UniqueConstraint"><span class="hs-identifier">UniqueConstraint</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_cName"><span class="hs-identifier">_cName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_fkColumnMapping"><span class="hs-identifier">_fkColumnMapping</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_fkConstraint"><span class="hs-identifier">_fkConstraint</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_fkForeignTable"><span class="hs-identifier">_fkForeignTable</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#_ucColumns"><span class="hs-identifier">_ucColumns</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="annot"><span class="hs-comment">-- | Datatype used by Metadata API to represent Request for Suggested Relationships</span></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="SuggestRels"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-var">SuggestRels</span></a></span></span><span> </span><span id="local-6989586621687395086"><span class="annot"><a href="#local-6989586621687395086"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SuggestRels"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-var">SuggestRels</span></a></span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_srsSource"><span class="annot"><span class="annottext">forall (b :: BackendType). SuggestRels b -&gt; SourceName
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsSource"><span class="hs-identifier hs-var hs-var">_srsSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span id="_srsTables"><span class="annot"><span class="annottext">forall (b :: BackendType). SuggestRels b -&gt; Maybe [TableName b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsTables"><span class="hs-identifier hs-var hs-var">_srsTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395086"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span id="_srsOmitTracked"><span class="annot"><span class="annottext">forall (b :: BackendType). SuggestRels b -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsOmitTracked"><span class="hs-identifier hs-var hs-var">_srsOmitTracked</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395364"><span id="local-6989586621687395366"><span class="annot"><span class="annottext">(forall x. SuggestRels b -&gt; Rep (SuggestRels b) x)
+-&gt; (forall x. Rep (SuggestRels b) x -&gt; SuggestRels b)
+-&gt; Generic (SuggestRels b)
+forall x. Rep (SuggestRels b) x -&gt; SuggestRels b
+forall x. SuggestRels b -&gt; Rep (SuggestRels b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x. Rep (SuggestRels b) x -&gt; SuggestRels b
+forall (b :: BackendType) x. SuggestRels b -&gt; Rep (SuggestRels b) x
+$cfrom :: forall (b :: BackendType) x. SuggestRels b -&gt; Rep (SuggestRels b) x
+from :: forall x. SuggestRels b -&gt; Rep (SuggestRels b) x
+$cto :: forall (b :: BackendType) x. Rep (SuggestRels b) x -&gt; SuggestRels b
+to :: forall x. Rep (SuggestRels b) x -&gt; SuggestRels b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395371"><span id="local-6989586621687395377"><span class="annot"><span class="annottext">Value -&gt; Parser [SuggestRels b]
+Value -&gt; Parser (SuggestRels b)
+(Value -&gt; Parser (SuggestRels b))
+-&gt; (Value -&gt; Parser [SuggestRels b]) -&gt; FromJSON (SuggestRels b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SuggestRels b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SuggestRels b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SuggestRels b)
+parseJSON :: Value -&gt; Parser (SuggestRels b)
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SuggestRels b]
+parseJSONList :: Value -&gt; Parser [SuggestRels b]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395386"><span id="local-6989586621687395392"><span id="local-6989586621687395397"><span id="local-6989586621687395402"><span class="annot"><span class="annottext">[SuggestRels b] -&gt; Value
+[SuggestRels b] -&gt; Encoding
+SuggestRels b -&gt; Value
+SuggestRels b -&gt; Encoding
+(SuggestRels b -&gt; Value)
+-&gt; (SuggestRels b -&gt; Encoding)
+-&gt; ([SuggestRels b] -&gt; Value)
+-&gt; ([SuggestRels b] -&gt; Encoding)
+-&gt; ToJSON (SuggestRels b)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType). Backend b =&gt; [SuggestRels b] -&gt; Value
+forall (b :: BackendType). Backend b =&gt; [SuggestRels b] -&gt; Encoding
+forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Value
+forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Encoding
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Value
+toJSON :: SuggestRels b -&gt; Value
+$ctoEncoding :: forall (b :: BackendType). Backend b =&gt; SuggestRels b -&gt; Encoding
+toEncoding :: SuggestRels b -&gt; Encoding
+$ctoJSONList :: forall (b :: BackendType). Backend b =&gt; [SuggestRels b] -&gt; Value
+toJSONList :: [SuggestRels b] -&gt; Value
+$ctoEncodingList :: forall (b :: BackendType). Backend b =&gt; [SuggestRels b] -&gt; Encoding
+toEncodingList :: [SuggestRels b] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395414"><span class="annot"><span class="annottext">Typeable (SuggestRels b)
+Typeable (SuggestRels b)
+-&gt; (Proxy (SuggestRels b)
+    -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema (SuggestRels b)
+Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+forall {b :: BackendType}. Backend b =&gt; Typeable (SuggestRels b)
+forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy (SuggestRels b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-type">SuggestRels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395086"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687395107"><span id="local-6989586621687395427"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395107"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-type">SuggestRels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395107"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621687395458"><span class="annot"><span class="annottext">codec :: JSONCodec (SuggestRels b)
+</span><a href="#local-6989586621687395458"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec (SuggestRels b) (SuggestRels b)
+-&gt; JSONCodec (SuggestRels b)
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SuggestRels&quot;</span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Maybe [TableName b] -&gt; Bool -&gt; SuggestRels b
+forall (b :: BackendType).
+SourceName -&gt; Maybe [TableName b] -&gt; Bool -&gt; SuggestRels b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-var">SuggestRels</span></a></span><span>
+</span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">(SourceName -&gt; Maybe [TableName b] -&gt; Bool -&gt; SuggestRels b)
+-&gt; Codec Object (SuggestRels b) SourceName
+-&gt; Codec
+     Object
+     (SuggestRels b)
+     (Maybe [TableName b] -&gt; Bool -&gt; SuggestRels b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SourceName -&gt; Text -&gt; ObjectCodec SourceName SourceName
+forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The source to suggest relationships for - Defaults to 'default'.&quot;</span></span><span>
+</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec SourceName SourceName
+-&gt; (SuggestRels b -&gt; SourceName)
+-&gt; Codec Object (SuggestRels b) SourceName
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SuggestRels b -&gt; SourceName
+forall (b :: BackendType). SuggestRels b -&gt; SourceName
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsSource"><span class="hs-identifier hs-var">_srsSource</span></a></span><span>
+</span><span id="line-60"></span><span>            </span><span class="annot"><span class="annottext">Codec
+  Object
+  (SuggestRels b)
+  (Maybe [TableName b] -&gt; Bool -&gt; SuggestRels b)
+-&gt; Codec Object (SuggestRels b) (Maybe [TableName b])
+-&gt; Codec Object (SuggestRels b) (Bool -&gt; SuggestRels b)
+forall a b.
+Codec Object (SuggestRels b) (a -&gt; b)
+-&gt; Codec Object (SuggestRels b) a -&gt; Codec Object (SuggestRels b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text -&gt; ObjectCodec (Maybe [TableName b]) (Maybe [TableName b])
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull"><span class="hs-identifier hs-var">optionalFieldOrNull</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;tables&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The list of tables to suggest relationships for - Defaults to all tracked tables.&quot;</span></span><span>
+</span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec (Maybe [TableName b]) (Maybe [TableName b])
+-&gt; (SuggestRels b -&gt; Maybe [TableName b])
+-&gt; Codec Object (SuggestRels b) (Maybe [TableName b])
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SuggestRels b -&gt; Maybe [TableName b]
+forall (b :: BackendType). SuggestRels b -&gt; Maybe [TableName b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsTables"><span class="hs-identifier hs-var">_srsTables</span></a></span><span>
+</span><span id="line-62"></span><span>            </span><span class="annot"><span class="annottext">Codec Object (SuggestRels b) (Bool -&gt; SuggestRels b)
+-&gt; Codec Object (SuggestRels b) Bool
+-&gt; ObjectCodec (SuggestRels b) (SuggestRels b)
+forall a b.
+Codec Object (SuggestRels b) (a -&gt; b)
+-&gt; Codec Object (SuggestRels b) a -&gt; Codec Object (SuggestRels b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; Text -&gt; ObjectCodec Bool Bool
+forall output.
+(Eq output, HasCodec output) =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;omit_tracked&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Determines if currently tracked relationships should be ommited from suggestions - Defaults to false.&quot;</span></span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (SuggestRels b -&gt; Bool) -&gt; Codec Object (SuggestRels b) Bool
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SuggestRels b -&gt; Bool
+forall (b :: BackendType). SuggestRels b -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#_srsOmitTracked"><span class="hs-identifier hs-var">_srsOmitTracked</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">JSONCodec (SuggestRels b) -&gt; [Text] -&gt; JSONCodec (SuggestRels b)
+forall input output.
+ValueCodec input output -&gt; [Text] -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#%3C%3F%3F%3E"><span class="hs-operator hs-var">&lt;??&gt;</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+Item [Text]
+</span><span class="hs-string">&quot;API call to request suggestions for relationships&quot;</span></span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">newtype</span><span> </span><span id="SuggestedRelationships"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestedRelationships"><span class="hs-identifier hs-var">SuggestedRelationships</span></a></span></span><span> </span><span id="local-6989586621687395155"><span class="annot"><a href="#local-6989586621687395155"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Relationships"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationships"><span class="hs-identifier hs-var">Relationships</span></a></span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sRelationships"><span class="annot"><span class="annottext">forall (b :: BackendType).
+SuggestedRelationships b -&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#sRelationships"><span class="hs-identifier hs-var hs-var">sRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395469"><span id="local-6989586621687395471"><span class="annot"><span class="annottext">(forall x.
+ SuggestedRelationships b -&gt; Rep (SuggestedRelationships b) x)
+-&gt; (forall x.
+    Rep (SuggestedRelationships b) x -&gt; SuggestedRelationships b)
+-&gt; Generic (SuggestedRelationships b)
+forall x.
+Rep (SuggestedRelationships b) x -&gt; SuggestedRelationships b
+forall x.
+SuggestedRelationships b -&gt; Rep (SuggestedRelationships b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (SuggestedRelationships b) x -&gt; SuggestedRelationships b
+forall (b :: BackendType) x.
+SuggestedRelationships b -&gt; Rep (SuggestedRelationships b) x
+$cfrom :: forall (b :: BackendType) x.
+SuggestedRelationships b -&gt; Rep (SuggestedRelationships b) x
+from :: forall x.
+SuggestedRelationships b -&gt; Rep (SuggestedRelationships b) x
+$cto :: forall (b :: BackendType) x.
+Rep (SuggestedRelationships b) x -&gt; SuggestedRelationships b
+to :: forall x.
+Rep (SuggestedRelationships b) x -&gt; SuggestedRelationships b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395475"><span id="local-6989586621687395480"><span class="annot"><span class="annottext">Value -&gt; Parser [SuggestedRelationships b]
+Value -&gt; Parser (SuggestedRelationships b)
+(Value -&gt; Parser (SuggestedRelationships b))
+-&gt; (Value -&gt; Parser [SuggestedRelationships b])
+-&gt; FromJSON (SuggestedRelationships b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SuggestedRelationships b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SuggestedRelationships b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (SuggestedRelationships b)
+parseJSON :: Value -&gt; Parser (SuggestedRelationships b)
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [SuggestedRelationships b]
+parseJSONList :: Value -&gt; Parser [SuggestedRelationships b]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395488"><span id="local-6989586621687395493"><span id="local-6989586621687395498"><span id="local-6989586621687395503"><span class="annot"><span class="annottext">[SuggestedRelationships b] -&gt; Value
+[SuggestedRelationships b] -&gt; Encoding
+SuggestedRelationships b -&gt; Value
+SuggestedRelationships b -&gt; Encoding
+(SuggestedRelationships b -&gt; Value)
+-&gt; (SuggestedRelationships b -&gt; Encoding)
+-&gt; ([SuggestedRelationships b] -&gt; Value)
+-&gt; ([SuggestedRelationships b] -&gt; Encoding)
+-&gt; ToJSON (SuggestedRelationships b)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+[SuggestedRelationships b] -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+[SuggestedRelationships b] -&gt; Encoding
+forall (b :: BackendType).
+Backend b =&gt;
+SuggestedRelationships b -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+SuggestedRelationships b -&gt; Encoding
+$ctoJSON :: forall (b :: BackendType).
+Backend b =&gt;
+SuggestedRelationships b -&gt; Value
+toJSON :: SuggestedRelationships b -&gt; Value
+$ctoEncoding :: forall (b :: BackendType).
+Backend b =&gt;
+SuggestedRelationships b -&gt; Encoding
+toEncoding :: SuggestedRelationships b -&gt; Encoding
+$ctoJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+[SuggestedRelationships b] -&gt; Value
+toJSONList :: [SuggestedRelationships b] -&gt; Value
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[SuggestedRelationships b] -&gt; Encoding
+toEncodingList :: [SuggestedRelationships b] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395514"><span class="annot"><span class="annottext">Typeable (SuggestedRelationships b)
+Typeable (SuggestedRelationships b)
+-&gt; (Proxy (SuggestedRelationships b)
+    -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema (SuggestedRelationships b)
+Proxy (SuggestedRelationships b)
+-&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+forall {b :: BackendType}.
+Backend b =&gt;
+Typeable (SuggestedRelationships b)
+forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SuggestedRelationships b)
+-&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: forall (b :: BackendType).
+Backend b =&gt;
+Proxy (SuggestedRelationships b)
+-&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy (SuggestedRelationships b)
+-&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestedRelationships"><span class="hs-identifier hs-type">SuggestedRelationships</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687395162"><span id="local-6989586621687395524"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395162"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestedRelationships"><span class="hs-identifier hs-type">SuggestedRelationships</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395162"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621687395532"><span class="annot"><span class="annottext">codec :: JSONCodec (SuggestedRelationships b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec
+     (SuggestedRelationships b) (SuggestedRelationships b)
+-&gt; JSONCodec (SuggestedRelationships b)
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SuggestedRelationships&quot;</span></span><span>
+</span><span id="line-77"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[Relationship b] -&gt; SuggestedRelationships b
+forall (b :: BackendType).
+[Relationship b] -&gt; SuggestedRelationships b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationships"><span class="hs-identifier hs-var">Relationships</span></a></span><span>
+</span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">([Relationship b] -&gt; SuggestedRelationships b)
+-&gt; Codec Object (SuggestedRelationships b) [Relationship b]
+-&gt; ObjectCodec
+     (SuggestedRelationships b) (SuggestedRelationships b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec [Relationship b] [Relationship b]
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;relationships&quot;</span></span><span>
+</span><span id="line-79"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec [Relationship b] [Relationship b]
+-&gt; (SuggestedRelationships b -&gt; [Relationship b])
+-&gt; Codec Object (SuggestedRelationships b) [Relationship b]
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SuggestedRelationships b -&gt; [Relationship b]
+forall (b :: BackendType).
+SuggestedRelationships b -&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#sRelationships"><span class="hs-identifier hs-var">sRelationships</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">data</span><span> </span><span id="Relationship"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span></span><span> </span><span id="local-6989586621687395171"><span class="annot"><a href="#local-6989586621687395171"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Relationship"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rType"><span class="annot"><span class="annottext">forall (b :: BackendType). Relationship b -&gt; RelType
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rType"><span class="hs-identifier hs-var hs-var">rType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelType"><span class="hs-identifier hs-type">RelType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>    </span><span id="rFrom"><span class="annot"><span class="annottext">forall (b :: BackendType). Relationship b -&gt; Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rFrom"><span class="hs-identifier hs-var hs-var">rFrom</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395171"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>    </span><span id="rTo"><span class="annot"><span class="annottext">forall (b :: BackendType). Relationship b -&gt; Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rTo"><span class="hs-identifier hs-var hs-var">rTo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395171"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395539"><span id="local-6989586621687395541"><span class="annot"><span class="annottext">(forall x. Relationship b -&gt; Rep (Relationship b) x)
+-&gt; (forall x. Rep (Relationship b) x -&gt; Relationship b)
+-&gt; Generic (Relationship b)
+forall x. Rep (Relationship b) x -&gt; Relationship b
+forall x. Relationship b -&gt; Rep (Relationship b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (Relationship b) x -&gt; Relationship b
+forall (b :: BackendType) x.
+Relationship b -&gt; Rep (Relationship b) x
+$cfrom :: forall (b :: BackendType) x.
+Relationship b -&gt; Rep (Relationship b) x
+from :: forall x. Relationship b -&gt; Rep (Relationship b) x
+$cto :: forall (b :: BackendType) x.
+Rep (Relationship b) x -&gt; Relationship b
+to :: forall x. Rep (Relationship b) x -&gt; Relationship b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395545"><span id="local-6989586621687395550"><span class="annot"><span class="annottext">Value -&gt; Parser [Relationship b]
+Value -&gt; Parser (Relationship b)
+(Value -&gt; Parser (Relationship b))
+-&gt; (Value -&gt; Parser [Relationship b]) -&gt; FromJSON (Relationship b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [Relationship b]
+forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (Relationship b)
+$cparseJSON :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser (Relationship b)
+parseJSON :: Value -&gt; Parser (Relationship b)
+$cparseJSONList :: forall (b :: BackendType).
+Backend b =&gt;
+Value -&gt; Parser [Relationship b]
+parseJSONList :: Value -&gt; Parser [Relationship b]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395557"><span id="local-6989586621687395562"><span id="local-6989586621687395567"><span id="local-6989586621687395572"><span class="annot"><span class="annottext">[Relationship b] -&gt; Value
+[Relationship b] -&gt; Encoding
+Relationship b -&gt; Value
+Relationship b -&gt; Encoding
+(Relationship b -&gt; Value)
+-&gt; (Relationship b -&gt; Encoding)
+-&gt; ([Relationship b] -&gt; Value)
+-&gt; ([Relationship b] -&gt; Encoding)
+-&gt; ToJSON (Relationship b)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType). Backend b =&gt; [Relationship b] -&gt; Value
+forall (b :: BackendType).
+Backend b =&gt;
+[Relationship b] -&gt; Encoding
+forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Value
+forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Encoding
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Value
+toJSON :: Relationship b -&gt; Value
+$ctoEncoding :: forall (b :: BackendType). Backend b =&gt; Relationship b -&gt; Encoding
+toEncoding :: Relationship b -&gt; Encoding
+$ctoJSONList :: forall (b :: BackendType). Backend b =&gt; [Relationship b] -&gt; Value
+toJSONList :: [Relationship b] -&gt; Value
+$ctoEncodingList :: forall (b :: BackendType).
+Backend b =&gt;
+[Relationship b] -&gt; Encoding
+toEncodingList :: [Relationship b] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395583"><span class="annot"><span class="annottext">Typeable (Relationship b)
+Typeable (Relationship b)
+-&gt; (Proxy (Relationship b)
+    -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema (Relationship b)
+Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+forall {b :: BackendType}. Backend b =&gt; Typeable (Relationship b)
+forall (b :: BackendType).
+Backend b =&gt;
+Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: forall (b :: BackendType).
+Backend b =&gt;
+Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy (Relationship b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395171"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687395169"><span id="local-6989586621687395593"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621687395607"><span class="annot"><span class="annottext">codec :: JSONCodec (Relationship b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec (Relationship b) (Relationship b)
+-&gt; JSONCodec (Relationship b)
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Relationship&quot;</span></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">RelType -&gt; Mapping b -&gt; Mapping b -&gt; Relationship b
+forall (b :: BackendType).
+RelType -&gt; Mapping b -&gt; Mapping b -&gt; Relationship b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">(RelType -&gt; Mapping b -&gt; Mapping b -&gt; Relationship b)
+-&gt; Codec Object (Relationship b) RelType
+-&gt; Codec
+     Object (Relationship b) (Mapping b -&gt; Mapping b -&gt; Relationship b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec RelType RelType
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;type&quot;</span></span><span>
+</span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec RelType RelType
+-&gt; (Relationship b -&gt; RelType)
+-&gt; Codec Object (Relationship b) RelType
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Relationship b -&gt; RelType
+forall (b :: BackendType). Relationship b -&gt; RelType
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rType"><span class="hs-identifier hs-var">rType</span></a></span><span>
+</span><span id="line-97"></span><span>            </span><span class="annot"><span class="annottext">Codec
+  Object (Relationship b) (Mapping b -&gt; Mapping b -&gt; Relationship b)
+-&gt; Codec Object (Relationship b) (Mapping b)
+-&gt; Codec Object (Relationship b) (Mapping b -&gt; Relationship b)
+forall a b.
+Codec Object (Relationship b) (a -&gt; b)
+-&gt; Codec Object (Relationship b) a
+-&gt; Codec Object (Relationship b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (Mapping b) (Mapping b)
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;from&quot;</span></span><span>
+</span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec (Mapping b) (Mapping b)
+-&gt; (Relationship b -&gt; Mapping b)
+-&gt; Codec Object (Relationship b) (Mapping b)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Relationship b -&gt; Mapping b
+forall (b :: BackendType). Relationship b -&gt; Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rFrom"><span class="hs-identifier hs-var">rFrom</span></a></span><span>
+</span><span id="line-99"></span><span>            </span><span class="annot"><span class="annottext">Codec Object (Relationship b) (Mapping b -&gt; Relationship b)
+-&gt; Codec Object (Relationship b) (Mapping b)
+-&gt; ObjectCodec (Relationship b) (Relationship b)
+forall a b.
+Codec Object (Relationship b) (a -&gt; b)
+-&gt; Codec Object (Relationship b) a
+-&gt; Codec Object (Relationship b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (Mapping b) (Mapping b)
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;to&quot;</span></span><span>
+</span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec (Mapping b) (Mapping b)
+-&gt; (Relationship b -&gt; Mapping b)
+-&gt; Codec Object (Relationship b) (Mapping b)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Relationship b -&gt; Mapping b
+forall (b :: BackendType). Relationship b -&gt; Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rTo"><span class="hs-identifier hs-var">rTo</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">data</span><span> </span><span id="Mapping"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-var">Mapping</span></a></span></span><span> </span><span id="local-6989586621687395187"><span class="annot"><a href="#local-6989586621687395187"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Mapping"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-var">Mapping</span></a></span></span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="mTable"><span class="annot"><span class="annottext">forall (b :: BackendType). Mapping b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var hs-var">mTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span id="mColumns"><span class="annot"><span class="annottext">forall (b :: BackendType). Mapping b -&gt; [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var hs-var">mColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="mConstraintName"><span class="annot"><span class="annottext">forall (b :: BackendType). Mapping b -&gt; Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var hs-var">mConstraintName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395613"><span id="local-6989586621687395615"><span class="annot"><span class="annottext">(forall x. Mapping b -&gt; Rep (Mapping b) x)
+-&gt; (forall x. Rep (Mapping b) x -&gt; Mapping b)
+-&gt; Generic (Mapping b)
+forall x. Rep (Mapping b) x -&gt; Mapping b
+forall x. Mapping b -&gt; Rep (Mapping b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x. Rep (Mapping b) x -&gt; Mapping b
+forall (b :: BackendType) x. Mapping b -&gt; Rep (Mapping b) x
+$cfrom :: forall (b :: BackendType) x. Mapping b -&gt; Rep (Mapping b) x
+from :: forall x. Mapping b -&gt; Rep (Mapping b) x
+$cto :: forall (b :: BackendType) x. Rep (Mapping b) x -&gt; Mapping b
+to :: forall x. Rep (Mapping b) x -&gt; Mapping b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395619"><span id="local-6989586621687395624"><span class="annot"><span class="annottext">Value -&gt; Parser [Mapping b]
+Value -&gt; Parser (Mapping b)
+(Value -&gt; Parser (Mapping b))
+-&gt; (Value -&gt; Parser [Mapping b]) -&gt; FromJSON (Mapping b)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser [Mapping b]
+forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser (Mapping b)
+$cparseJSON :: forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser (Mapping b)
+parseJSON :: Value -&gt; Parser (Mapping b)
+$cparseJSONList :: forall (b :: BackendType). Backend b =&gt; Value -&gt; Parser [Mapping b]
+parseJSONList :: Value -&gt; Parser [Mapping b]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395631"><span id="local-6989586621687395636"><span id="local-6989586621687395641"><span id="local-6989586621687395646"><span class="annot"><span class="annottext">[Mapping b] -&gt; Value
+[Mapping b] -&gt; Encoding
+Mapping b -&gt; Value
+Mapping b -&gt; Encoding
+(Mapping b -&gt; Value)
+-&gt; (Mapping b -&gt; Encoding)
+-&gt; ([Mapping b] -&gt; Value)
+-&gt; ([Mapping b] -&gt; Encoding)
+-&gt; ToJSON (Mapping b)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall (b :: BackendType). Backend b =&gt; [Mapping b] -&gt; Value
+forall (b :: BackendType). Backend b =&gt; [Mapping b] -&gt; Encoding
+forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Value
+forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Encoding
+$ctoJSON :: forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Value
+toJSON :: Mapping b -&gt; Value
+$ctoEncoding :: forall (b :: BackendType). Backend b =&gt; Mapping b -&gt; Encoding
+toEncoding :: Mapping b -&gt; Encoding
+$ctoJSONList :: forall (b :: BackendType). Backend b =&gt; [Mapping b] -&gt; Value
+toJSONList :: [Mapping b] -&gt; Value
+$ctoEncodingList :: forall (b :: BackendType). Backend b =&gt; [Mapping b] -&gt; Encoding
+toEncodingList :: [Mapping b] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395657"><span class="annot"><span class="annottext">Typeable (Mapping b)
+Typeable (Mapping b)
+-&gt; (Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema (Mapping b)
+Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
+forall a.
+Typeable a
+-&gt; (Proxy a -&gt; Declare (Definitions Schema) NamedSchema)
+-&gt; ToSchema a
+forall {b :: BackendType}. Backend b =&gt; Typeable (Mapping b)
+forall (b :: BackendType).
+Backend b =&gt;
+Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
+$cdeclareNamedSchema :: forall (b :: BackendType).
+Backend b =&gt;
+Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
+declareNamedSchema :: Proxy (Mapping b) -&gt; Declare (Definitions Schema) NamedSchema
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395187"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687395186"><span id="local-6989586621687395667"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395186"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395186"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621687395683"><span class="annot"><span class="annottext">codec :: JSONCodec (Mapping b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec (Mapping b) (Mapping b) -&gt; JSONCodec (Mapping b)
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Mapping&quot;</span></span><span>
+</span><span id="line-115"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; [Column b] -&gt; Maybe Value -&gt; Mapping b
+forall (b :: BackendType).
+TableName b -&gt; [Column b] -&gt; Maybe Value -&gt; Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-var">Mapping</span></a></span><span>
+</span><span id="line-116"></span><span>          </span><span class="annot"><span class="annottext">(TableName b -&gt; [Column b] -&gt; Maybe Value -&gt; Mapping b)
+-&gt; Codec Object (Mapping b) (TableName b)
+-&gt; Codec
+     Object (Mapping b) ([Column b] -&gt; Maybe Value -&gt; Mapping b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (TableName b) (TableName b)
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;table&quot;</span></span><span>
+</span><span id="line-117"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec (TableName b) (TableName b)
+-&gt; (Mapping b -&gt; TableName b)
+-&gt; Codec Object (Mapping b) (TableName b)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Mapping b -&gt; TableName b
+forall (b :: BackendType). Mapping b -&gt; TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var">mTable</span></a></span><span>
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">Codec Object (Mapping b) ([Column b] -&gt; Maybe Value -&gt; Mapping b)
+-&gt; Codec Object (Mapping b) [Column b]
+-&gt; Codec Object (Mapping b) (Maybe Value -&gt; Mapping b)
+forall a b.
+Codec Object (Mapping b) (a -&gt; b)
+-&gt; Codec Object (Mapping b) a -&gt; Codec Object (Mapping b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec [Column b] [Column b]
+forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField%27"><span class="hs-identifier hs-var">requiredField'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;columns&quot;</span></span><span>
+</span><span id="line-119"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec [Column b] [Column b]
+-&gt; (Mapping b -&gt; [Column b]) -&gt; Codec Object (Mapping b) [Column b]
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Mapping b -&gt; [Column b]
+forall (b :: BackendType). Mapping b -&gt; [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var">mColumns</span></a></span><span>
+</span><span id="line-120"></span><span>            </span><span class="annot"><span class="annottext">Codec Object (Mapping b) (Maybe Value -&gt; Mapping b)
+-&gt; Codec Object (Mapping b) (Maybe Value)
+-&gt; ObjectCodec (Mapping b) (Mapping b)
+forall a b.
+Codec Object (Mapping b) (a -&gt; b)
+-&gt; Codec Object (Mapping b) a -&gt; Codec Object (Mapping b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec (Maybe Value) (Maybe Value)
+forall output.
+HasCodec output =&gt;
+Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull%27"><span class="hs-identifier hs-var">optionalFieldOrNull'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;constraint_name&quot;</span></span><span>
+</span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Value) (Maybe Value)
+-&gt; (Mapping b -&gt; Maybe Value)
+-&gt; Codec Object (Mapping b) (Maybe Value)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Mapping b -&gt; Maybe Value
+forall (b :: BackendType). Mapping b -&gt; Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var">mConstraintName</span></a></span><span>
+</span><span id="line-122"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-comment">--  | Most of the heavy lifting for this module occurs in this function.</span><span>
+</span><span id="line-125"></span><span class="hs-comment">--    Suggests reciprocal relationships for foreign keys.</span><span>
+</span><span id="line-126"></span><span class="hs-comment">--    Incorporates logic to omit previously-tracked relationships</span><span>
+</span><span id="line-127"></span><span class="hs-comment">--    and only considers required tables.</span><span>
+</span><span id="line-128"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsFK"><span class="hs-identifier hs-type">suggestRelsFK</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687395202"><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Omits currently tracked relationships from recommendations if True.</span></span><span>
+</span><span id="line-132"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#UniqueConstraint"><span class="hs-identifier hs-type">UniqueConstraint</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">H.HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-137"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.Table.Cache.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-140"></span><span id="suggestRelsFK"><span class="annot"><span class="annottext">suggestRelsFK :: forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; TableName b
+-&gt; HashSet (UniqueConstraint b)
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+-&gt; (TableName b -&gt; Bool)
+-&gt; ForeignKey b
+-&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsFK"><span class="hs-identifier hs-var hs-var">suggestRelsFK</span></a></span></span><span> </span><span id="local-6989586621687395728"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395728"><span class="hs-identifier hs-var">omitTracked</span></a></span></span><span> </span><span id="local-6989586621687395729"><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395729"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621687395730"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395730"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621687395731"><span class="annot"><span class="annottext">HashSet (UniqueConstraint b)
+</span><a href="#local-6989586621687395731"><span class="hs-identifier hs-var">uniqueConstraints</span></a></span></span><span> </span><span id="local-6989586621687395732"><span class="annot"><span class="annottext">HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395732"><span class="hs-identifier hs-var">tracked</span></a></span></span><span> </span><span id="local-6989586621687395733"><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395733"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span id="local-6989586621687395734"><span class="annot"><span class="annottext">ForeignKey b
+</span><a href="#local-6989586621687395734"><span class="hs-identifier hs-var">foreignKey</span></a></span></span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395733"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395730"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395733"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var">relatedTableName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- Neither table appears in tables list</span><span>
+</span><span id="line-142"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Maybe (TableCoreInfo b) -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isNothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe (TableCoreInfo b)
+</span><a href="#local-6989586621687395739"><span class="hs-identifier hs-var">relatedTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- There is no information for the related table</span><span>
+</span><span id="line-143"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395728"><span class="hs-identifier hs-var">omitTracked</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Maybe (Relationship b)] -&gt; [Relationship b]
+forall a. [Maybe a] -&gt; [a]
+forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Bool -&gt; Relationship b -&gt; Maybe (Relationship b)
+forall {a}. Bool -&gt; a -&gt; Maybe a
+</span><a href="#local-6989586621687395741"><span class="hs-identifier hs-var">discard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395742"><span class="hs-identifier hs-var">toTracked</span></a></span><span> </span><span class="annot"><span class="annottext">Relationship b
+</span><a href="#local-6989586621687395743"><span class="hs-identifier hs-var">toRelationship</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Relationship b -&gt; Maybe (Relationship b)
+forall {a}. Bool -&gt; a -&gt; Maybe a
+</span><a href="#local-6989586621687395741"><span class="hs-identifier hs-var">discard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395744"><span class="hs-identifier hs-var">fromTracked</span></a></span><span> </span><span class="annot"><span class="annottext">Relationship b
+</span><a href="#local-6989586621687395745"><span class="hs-identifier hs-var">fromRelationship</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- Discard tracked relationships if that's requested</span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Item [Relationship b]
+Relationship b
+</span><a href="#local-6989586621687395743"><span class="hs-identifier hs-var">toRelationship</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Item [Relationship b]
+Relationship b
+</span><a href="#local-6989586621687395745"><span class="hs-identifier hs-var">fromRelationship</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- Otherwise, return the reciprocal relationships</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621687395742"><span class="annot"><span class="annottext">toTracked :: Bool
+</span><a href="#local-6989586621687395742"><span class="hs-identifier hs-var hs-var">toTracked</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableName b, HashMap (Column b) (Column b))
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b)) -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#member"><span class="hs-identifier hs-var">H.member</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var">relatedTableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b)
+</span><a href="#local-6989586621687395747"><span class="hs-identifier hs-var">columnRelationships</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395732"><span class="hs-identifier hs-var">tracked</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621687395744"><span class="annot"><span class="annottext">fromTracked :: Bool
+</span><a href="#local-6989586621687395744"><span class="hs-identifier hs-var hs-var">fromTracked</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TableName b, HashMap (Column b) (Column b))
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b)) -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#member"><span class="hs-identifier hs-var">H.member</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395730"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b) -&gt; HashMap (Column b) (Column b)
+forall {v}. HashMap v (Column b) -&gt; HashMap (Column b) v
+</span><a href="#local-6989586621687395748"><span class="hs-identifier hs-var">invert</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b)
+</span><a href="#local-6989586621687395747"><span class="hs-identifier hs-var">columnRelationships</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395749"><span class="hs-identifier hs-var">trackedBack</span></a></span><span>
+</span><span id="line-148"></span><span>    </span><span id="local-6989586621687395743"><span class="annot"><span class="annottext">toRelationship :: Relationship b
+</span><a href="#local-6989586621687395743"><span class="hs-identifier hs-var hs-var">toRelationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-149"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span>
+</span><span id="line-150"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">rType :: RelType
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rType"><span class="hs-identifier hs-var">rType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelType
+</span><a href="Hasura.RQL.Types.Common.html#ObjRel"><span class="hs-identifier hs-var">ObjRel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-151"></span><span>          </span><span class="annot"><span class="annottext">rFrom :: Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rFrom"><span class="hs-identifier hs-var">rFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mTable :: TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var">mTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395730"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mColumns :: [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var">mColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687395751"><span class="hs-identifier hs-var">localColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mConstraintName :: Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var">mConstraintName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Maybe Value
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687395752"><span class="hs-identifier hs-var">constraintName</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>          </span><span class="annot"><span class="annottext">rTo :: Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rTo"><span class="hs-identifier hs-var">rTo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mTable :: TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var">mTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var">relatedTableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mColumns :: [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var">mColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687395753"><span class="hs-identifier hs-var">relatedColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mConstraintName :: Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var">mConstraintName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Value
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">}</span><span>
+</span><span id="line-153"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621687395745"><span class="annot"><span class="annottext">fromRelationship :: Relationship b
+</span><a href="#local-6989586621687395745"><span class="hs-identifier hs-var hs-var">fromRelationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-155"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span>
+</span><span id="line-156"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">rType :: RelType
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rType"><span class="hs-identifier hs-var">rType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Column b] -&gt; HashSet (Column b)
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">H.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687395751"><span class="hs-identifier hs-var">localColumns</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (Column b) -&gt; HashSet (HashSet (Column b)) -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#member"><span class="hs-operator hs-var">`H.member`</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (HashSet (Column b))
+</span><a href="#local-6989586621687395755"><span class="hs-identifier hs-var">uniqueConstraintColumns</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">RelType
+</span><a href="Hasura.RQL.Types.Common.html#ObjRel"><span class="hs-identifier hs-var">ObjRel</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">RelType
+</span><a href="Hasura.RQL.Types.Common.html#ArrRel"><span class="hs-identifier hs-var">ArrRel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">rTo :: Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rTo"><span class="hs-identifier hs-var">rTo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mTable :: TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var">mTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395730"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mColumns :: [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var">mColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687395751"><span class="hs-identifier hs-var">localColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mConstraintName :: Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var">mConstraintName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Maybe Value
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687395752"><span class="hs-identifier hs-var">constraintName</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>          </span><span class="annot"><span class="annottext">rFrom :: Mapping b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#rFrom"><span class="hs-identifier hs-var">rFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Mapping"><span class="hs-identifier hs-type">Mapping</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">mTable :: TableName b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mTable"><span class="hs-identifier hs-var">mTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var">relatedTableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mColumns :: [Column b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mColumns"><span class="hs-identifier hs-var">mColumns</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Column b]
+</span><a href="#local-6989586621687395753"><span class="hs-identifier hs-var">relatedColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">mConstraintName :: Maybe Value
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#mConstraintName"><span class="hs-identifier hs-var">mConstraintName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Value
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">}</span><span>
+</span><span id="line-159"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-160"></span><span>    </span><span id="local-6989586621687395747"><span class="annot"><span class="annottext">columnRelationships :: HashMap (Column b) (Column b)
+</span><a href="#local-6989586621687395747"><span class="hs-identifier hs-var hs-var">columnRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NEHashMap (Column b) (Column b) -&gt; HashMap (Column b) (Column b)
+forall k v. NEHashMap k v -&gt; HashMap k v
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.NonEmpty.html#toHashMap"><span class="hs-identifier hs-var">MapNE.toHashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ForeignKey b -&gt; NEHashMap (Column b) (Column b)
+forall (b :: BackendType).
+ForeignKey b -&gt; NEHashMap (Column b) (Column b)
+</span><a href="Hasura.Table.Cache.html#_fkColumnMapping"><span class="hs-identifier hs-var">_fkColumnMapping</span></a></span><span> </span><span class="annot"><span class="annottext">ForeignKey b
+</span><a href="#local-6989586621687395734"><span class="hs-identifier hs-var">foreignKey</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>    </span><span id="local-6989586621687395751"><span class="annot"><span class="annottext">localColumns :: [Column b]
+</span><a href="#local-6989586621687395751"><span class="hs-identifier hs-var hs-var">localColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b) -&gt; [Column b]
+forall k v. HashMap k v -&gt; [k]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b)
+</span><a href="#local-6989586621687395747"><span class="hs-identifier hs-var">columnRelationships</span></a></span><span>
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621687395753"><span class="annot"><span class="annottext">relatedColumns :: [Column b]
+</span><a href="#local-6989586621687395753"><span class="hs-identifier hs-var hs-var">relatedColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b) -&gt; [Column b]
+forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b)
+</span><a href="#local-6989586621687395747"><span class="hs-identifier hs-var">columnRelationships</span></a></span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621687395755"><span class="annot"><span class="annottext">uniqueConstraintColumns :: HashSet (HashSet (Column b))
+</span><a href="#local-6989586621687395755"><span class="hs-identifier hs-var hs-var">uniqueConstraintColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UniqueConstraint b -&gt; HashSet (Column b))
+-&gt; HashSet (UniqueConstraint b) -&gt; HashSet (HashSet (Column b))
+forall b a.
+(Hashable b, Eq b) =&gt;
+(a -&gt; b) -&gt; HashSet a -&gt; HashSet b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#map"><span class="hs-identifier hs-var">H.map</span></a></span><span> </span><span class="annot"><span class="annottext">UniqueConstraint b -&gt; HashSet (Column b)
+forall (b :: BackendType). UniqueConstraint b -&gt; HashSet (Column b)
+</span><a href="Hasura.Table.Cache.html#_ucColumns"><span class="hs-identifier hs-var">_ucColumns</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (UniqueConstraint b)
+</span><a href="#local-6989586621687395731"><span class="hs-identifier hs-var">uniqueConstraints</span></a></span><span>
+</span><span id="line-164"></span><span>    </span><span id="local-6989586621687395737"><span class="annot"><span class="annottext">relatedTableName :: TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var hs-var">relatedTableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ForeignKey b -&gt; TableName b
+forall (b :: BackendType). ForeignKey b -&gt; TableName b
+</span><a href="Hasura.Table.Cache.html#_fkForeignTable"><span class="hs-identifier hs-var">_fkForeignTable</span></a></span><span> </span><span class="annot"><span class="annottext">ForeignKey b
+</span><a href="#local-6989586621687395734"><span class="hs-identifier hs-var">foreignKey</span></a></span><span>
+</span><span id="line-165"></span><span>    </span><span id="local-6989586621687395739"><span class="annot"><span class="annottext">relatedTable :: Maybe (TableCoreInfo b)
+</span><a href="#local-6989586621687395739"><span class="hs-identifier hs-var hs-var">relatedTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; Maybe (TableCoreInfo b)
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395737"><span class="hs-identifier hs-var">relatedTableName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395729"><span class="hs-identifier hs-var">tables</span></a></span><span>
+</span><span id="line-166"></span><span>    </span><span id="local-6989586621687395752"><span class="annot"><span class="annottext">constraintName :: Value
+</span><a href="#local-6989586621687395752"><span class="hs-identifier hs-var hs-var">constraintName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConstraintName b -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Constraint b -&gt; ConstraintName b
+forall (b :: BackendType). Constraint b -&gt; ConstraintName b
+</span><a href="Hasura.Table.Cache.html#_cName"><span class="hs-identifier hs-var">_cName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ForeignKey b -&gt; Constraint b
+forall (b :: BackendType). ForeignKey b -&gt; Constraint b
+</span><a href="Hasura.Table.Cache.html#_fkConstraint"><span class="hs-identifier hs-var">_fkConstraint</span></a></span><span> </span><span class="annot"><span class="annottext">ForeignKey b
+</span><a href="#local-6989586621687395734"><span class="hs-identifier hs-var">foreignKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>    </span><span id="local-6989586621687395741"><span class="annot"><span class="annottext">discard :: Bool -&gt; a -&gt; Maybe a
+</span><a href="#local-6989586621687395741"><span class="hs-identifier hs-var hs-var">discard</span></a></span></span><span> </span><span id="local-6989586621687395763"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395763"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621687395764"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687395764"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; Maybe a -&gt; Bool -&gt; Maybe a
+forall a. a -&gt; a -&gt; Bool -&gt; a
+</span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="annot"><span class="annottext">Maybe a
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Maybe a
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687395764"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395763"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>    </span><span id="local-6989586621687395748"><span class="annot"><span class="annottext">invert :: HashMap v (Column b) -&gt; HashMap (Column b) v
+</span><a href="#local-6989586621687395748"><span class="hs-identifier hs-var hs-var">invert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Column b, v)] -&gt; HashMap (Column b) v
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(Column b, v)] -&gt; HashMap (Column b) v)
+-&gt; (HashMap v (Column b) -&gt; [(Column b, v)])
+-&gt; HashMap v (Column b)
+-&gt; HashMap (Column b) v
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">((v, Column b) -&gt; (Column b, v))
+-&gt; [(v, Column b)] -&gt; [(Column b, v)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(v, Column b) -&gt; (Column b, v)
+forall a b. (a, b) -&gt; (b, a)
+</span><span class="hs-identifier hs-var">swap</span></span><span> </span><span class="annot"><span class="annottext">([(v, Column b)] -&gt; [(Column b, v)])
+-&gt; (HashMap v (Column b) -&gt; [(v, Column b)])
+-&gt; HashMap v (Column b)
+-&gt; [(Column b, v)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap v (Column b) -&gt; [(v, Column b)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621687395749"><span class="annot"><span class="annottext">trackedBack :: HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395749"><span class="hs-identifier hs-var hs-var">trackedBack</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-170"></span><span>      </span><span class="annot"><span class="annottext">[(TableName b, HashMap (Column b) (Column b))]
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">H.fromList</span></a></span><span>
+</span><span id="line-171"></span><span>        </span><span class="annot"><span class="annottext">([(TableName b, HashMap (Column b) (Column b))]
+ -&gt; HashSet (TableName b, HashMap (Column b) (Column b)))
+-&gt; [(TableName b, HashMap (Column b) (Column b))]
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b)))
+-&gt; [FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b.
+Filterable f =&gt;
+(a -&gt; Maybe b) -&gt; f a -&gt; f b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RelInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b)))
+-&gt; FieldInfo b
+-&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+forall (b1 :: BackendType) b2.
+(RelInfo b1 -&gt; Maybe b2) -&gt; FieldInfo b1 -&gt; Maybe b2
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#relationships"><span class="hs-identifier hs-var">relationships</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
+RelInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#getRelationshipsInputs"><span class="hs-identifier hs-var">getRelationshipsInputs</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687395202"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>        </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))])
+-&gt; [FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[FieldInfo b]
+-&gt; (TableCoreInfo b -&gt; [FieldInfo b])
+-&gt; Maybe (TableCoreInfo b)
+-&gt; [FieldInfo b]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
+forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b])
+-&gt; (TableCoreInfo b -&gt; HashMap FieldName (FieldInfo b))
+-&gt; TableCoreInfo b
+-&gt; [FieldInfo b]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashMap FieldName (FieldInfo b)
+forall (b :: BackendType) field primaryKeyColumn.
+TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
+</span><a href="Hasura.Table.Cache.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (TableCoreInfo b)
+</span><a href="#local-6989586621687395739"><span class="hs-identifier hs-var">relatedTable</span></a></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- we're only interested in suggesting table-based relationships for now</span><span>
+</span><span id="line-175"></span><span id="local-6989586621687395272"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#getRelationshipsInputs"><span class="hs-identifier hs-type">getRelationshipsInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395272"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395272"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395272"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395272"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-178"></span><span id="getRelationshipsInputs"><span class="annot"><span class="annottext">getRelationshipsInputs :: forall (b :: BackendType).
+RelInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#getRelationshipsInputs"><span class="hs-identifier hs-var hs-var">getRelationshipsInputs</span></a></span></span><span> </span><span id="local-6989586621687395777"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621687395777"><span class="hs-identifier hs-var">ri</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; RelTarget b
+forall (b :: BackendType). RelInfo b -&gt; RelTarget b
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#riTarget"><span class="hs-identifier hs-var">riTarget</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621687395777"><span class="hs-identifier hs-var">ri</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-180"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelTargetTable"><span class="hs-identifier hs-type">RelTargetTable</span></a></span><span> </span><span id="local-6989586621687395779"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395779"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(TableName b, HashMap (Column b) (Column b))
+-&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395779"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; HashMap (Column b) (Column b)
+forall (b :: BackendType).
+RelInfo b -&gt; HashMap (Column b) (Column b)
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#riMapping"><span class="hs-identifier hs-var">riMapping</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621687395777"><span class="hs-identifier hs-var">ri</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>    </span><span class="annot"><span class="annottext">RelTarget b
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (TableName b, HashMap (Column b) (Column b))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsTable"><span class="hs-identifier hs-type">suggestRelsTable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687395285"><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-186"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-189"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-190"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-191"></span><span id="suggestRelsTable"><span class="annot"><span class="annottext">suggestRelsTable :: forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; (TableName b -&gt; Bool)
+-&gt; (TableName b, TableCoreInfo b)
+-&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsTable"><span class="hs-identifier hs-var hs-var">suggestRelsTable</span></a></span></span><span> </span><span id="local-6989586621687395798"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395798"><span class="hs-identifier hs-var">omitTracked</span></a></span></span><span> </span><span id="local-6989586621687395799"><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395799"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621687395800"><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395800"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687395801"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395801"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687395802"><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621687395802"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><span class="annottext">Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; TableName b
+-&gt; HashSet (UniqueConstraint b)
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+-&gt; (TableName b -&gt; Bool)
+-&gt; ForeignKey b
+-&gt; [Relationship b]
+forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; TableName b
+-&gt; HashSet (UniqueConstraint b)
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+-&gt; (TableName b -&gt; Bool)
+-&gt; ForeignKey b
+-&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsFK"><span class="hs-identifier hs-var">suggestRelsFK</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395798"><span class="hs-identifier hs-var">omitTracked</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395799"><span class="hs-identifier hs-var">tables</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621687395801"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (UniqueConstraint b)
+</span><a href="#local-6989586621687395803"><span class="hs-identifier hs-var">constraints</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395804"><span class="hs-identifier hs-var">tracked</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395800"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">(ForeignKey b -&gt; [Relationship b])
+-&gt; [ForeignKey b] -&gt; [Relationship b]
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">HashSet (ForeignKey b) -&gt; [ForeignKey b]
+forall a. HashSet a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">HashSet (ForeignKey b)
+</span><a href="#local-6989586621687395807"><span class="hs-identifier hs-var">foreignKeys</span></a></span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-194"></span><span>    </span><span id="local-6989586621687395807"><span class="annot"><span class="annottext">foreignKeys :: HashSet (ForeignKey b)
+</span><a href="#local-6989586621687395807"><span class="hs-identifier hs-var hs-var">foreignKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashSet (ForeignKey b)
+forall (b :: BackendType) field primaryKeyColumn.
+TableCoreInfoG b field primaryKeyColumn -&gt; HashSet (ForeignKey b)
+</span><a href="Hasura.Table.Cache.html#_tciForeignKeys"><span class="hs-identifier hs-var">_tciForeignKeys</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621687395802"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621687395803"><span class="annot"><span class="annottext">constraints :: HashSet (UniqueConstraint b)
+</span><a href="#local-6989586621687395803"><span class="hs-identifier hs-var hs-var">constraints</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashSet (UniqueConstraint b)
+forall (b :: BackendType) field primaryKeyColumn.
+TableCoreInfoG b field primaryKeyColumn
+-&gt; HashSet (UniqueConstraint b)
+</span><a href="Hasura.Table.Cache.html#_tciUniqueConstraints"><span class="hs-identifier hs-var">_tciUniqueConstraints</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621687395802"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621687395804"><span class="annot"><span class="annottext">tracked :: HashSet (TableName b, HashMap (Column b) (Column b))
+</span><a href="#local-6989586621687395804"><span class="hs-identifier hs-var hs-var">tracked</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-197"></span><span>      </span><span class="annot"><span class="annottext">[(TableName b, HashMap (Column b) (Column b))]
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">H.fromList</span></a></span><span>
+</span><span id="line-198"></span><span>        </span><span class="annot"><span class="annottext">([(TableName b, HashMap (Column b) (Column b))]
+ -&gt; HashSet (TableName b, HashMap (Column b) (Column b)))
+-&gt; [(TableName b, HashMap (Column b) (Column b))]
+-&gt; HashSet (TableName b, HashMap (Column b) (Column b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b)))
+-&gt; [FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b.
+Filterable f =&gt;
+(a -&gt; Maybe b) -&gt; f a -&gt; f b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RelInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b)))
+-&gt; FieldInfo b
+-&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+forall (b1 :: BackendType) b2.
+(RelInfo b1 -&gt; Maybe b2) -&gt; FieldInfo b1 -&gt; Maybe b2
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#relationships"><span class="hs-identifier hs-var">relationships</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
+RelInfo b -&gt; Maybe (TableName b, HashMap (Column b) (Column b))
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#getRelationshipsInputs"><span class="hs-identifier hs-var">getRelationshipsInputs</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687395285"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-199"></span><span>        </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))])
+-&gt; [FieldInfo b] -&gt; [(TableName b, HashMap (Column b) (Column b))]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
+forall k v. HashMap k v -&gt; [v]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span>
+</span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b])
+-&gt; HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashMap FieldName (FieldInfo b)
+forall (b :: BackendType) field primaryKeyColumn.
+TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
+</span><a href="Hasura.Table.Cache.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621687395802"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><span id="line-201"></span><span>
+</span><span id="line-202"></span><span id="local-6989586621687395270"><span id="local-6989586621687395271"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#relationships"><span class="hs-identifier hs-type">relationships</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395270"><span class="hs-identifier hs-type">b1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687395271"><span class="hs-identifier hs-type">b2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Table.Cache.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395270"><span class="hs-identifier hs-type">b1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687395271"><span class="hs-identifier hs-type">b2</span></a></span></span></span><span>
+</span><span id="line-203"></span><span id="relationships"><span class="annot"><span class="annottext">relationships :: forall (b1 :: BackendType) b2.
+(RelInfo b1 -&gt; Maybe b2) -&gt; FieldInfo b1 -&gt; Maybe b2
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#relationships"><span class="hs-identifier hs-var hs-var">relationships</span></a></span></span><span> </span><span id="local-6989586621687395820"><span class="annot"><span class="annottext">RelInfo b1 -&gt; Maybe b2
+</span><a href="#local-6989586621687395820"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RelInfo b1 -&gt; Maybe b2) -&gt; Maybe (RelInfo b1) -&gt; Maybe b2
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">(=&lt;&lt;)</span></span><span> </span><span class="annot"><span class="annottext">RelInfo b1 -&gt; Maybe b2
+</span><a href="#local-6989586621687395820"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (RelInfo b1) -&gt; Maybe b2)
+-&gt; (FieldInfo b1 -&gt; Maybe (RelInfo b1)) -&gt; FieldInfo b1 -&gt; Maybe b2
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Getting (First (RelInfo b1)) (FieldInfo b1) (RelInfo b1)
+-&gt; FieldInfo b1 -&gt; Maybe (RelInfo b1)
+forall s (m :: * -&gt; *) a.
+MonadReader s m =&gt;
+Getting (First a) s a -&gt; m (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#preview"><span class="hs-identifier hs-var">preview</span></a></span><span> </span><span class="annot"><span class="annottext">Getting (First (RelInfo b1)) (FieldInfo b1) (RelInfo b1)
+forall (b :: BackendType) (p :: * -&gt; * -&gt; *) (f :: * -&gt; *).
+(Choice p, Applicative f) =&gt;
+p (RelInfo b) (f (RelInfo b)) -&gt; p (FieldInfo b) (f (FieldInfo b))
+</span><a href="Hasura.Table.Cache.html#_FIRelationship"><span class="hs-identifier hs-var">_FIRelationship</span></a></span><span>
+</span><span id="line-204"></span><span>
+</span><span id="line-205"></span><span class="hs-comment">-- NOTE: This could be grouped by table instead of a list, console stakeholders are happy with this being a list.</span><span>
+</span><span id="line-206"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsResponse"><span class="hs-identifier hs-type">suggestRelsResponse</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-207"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687395314"><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-208"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-209"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-210"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Table.Cache.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-211"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-212"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestedRelationships"><span class="hs-identifier hs-type">SuggestedRelationships</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395314"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-213"></span><span id="suggestRelsResponse"><span class="annot"><span class="annottext">suggestRelsResponse :: forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; (TableName b -&gt; Bool)
+-&gt; SuggestedRelationships b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsResponse"><span class="hs-identifier hs-var hs-var">suggestRelsResponse</span></a></span></span><span> </span><span id="local-6989586621687395826"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395826"><span class="hs-identifier hs-var">omitTracked</span></a></span></span><span> </span><span id="local-6989586621687395827"><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395827"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span id="local-6989586621687395828"><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395828"><span class="hs-identifier hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">[Relationship b] -&gt; SuggestedRelationships b
+forall (b :: BackendType).
+[Relationship b] -&gt; SuggestedRelationships b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#Relationships"><span class="hs-identifier hs-var">Relationships</span></a></span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><span class="annottext">([Relationship b] -&gt; SuggestedRelationships b)
+-&gt; [Relationship b] -&gt; SuggestedRelationships b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; (TableName b -&gt; Bool)
+-&gt; (TableName b, TableCoreInfo b)
+-&gt; [Relationship b]
+forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; (TableName b -&gt; Bool)
+-&gt; (TableName b, TableCoreInfo b)
+-&gt; [Relationship b]
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsTable"><span class="hs-identifier hs-var">suggestRelsTable</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395826"><span class="hs-identifier hs-var">omitTracked</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395827"><span class="hs-identifier hs-var">tables</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Bool
+</span><a href="#local-6989586621687395828"><span class="hs-identifier hs-var">predicate</span></a></span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><span class="annottext">((TableName b, TableCoreInfo b) -&gt; [Relationship b])
+-&gt; [(TableName b, TableCoreInfo b)] -&gt; [Relationship b]
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+-&gt; [(TableName b, TableCoreInfo b)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395827"><span class="hs-identifier hs-var">tables</span></a></span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span id="local-6989586621687395316"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#tablePredicate"><span class="hs-identifier hs-type">tablePredicate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395316"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621687395316"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687395316"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span><span>
+</span><span id="line-219"></span><span id="tablePredicate"><span class="annot"><span class="annottext">tablePredicate :: forall a. Hashable a =&gt; Maybe [a] -&gt; a -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#tablePredicate"><span class="hs-identifier hs-var hs-var">tablePredicate</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe [a]
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-220"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#tablePredicate"><span class="hs-identifier hs-var">tablePredicate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687395837"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621687395837"><span class="hs-identifier hs-var">ns</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687395838"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687395838"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687395838"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; HashSet a -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#member"><span class="hs-operator hs-var">`H.member`</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet a
+</span><a href="#local-6989586621687395839"><span class="hs-identifier hs-var">hash</span></a></span><span>
+</span><span id="line-221"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-222"></span><span>    </span><span id="local-6989586621687395839"><span class="annot"><span class="annottext">hash :: HashSet a
+</span><a href="#local-6989586621687395839"><span class="hs-identifier hs-var hs-var">hash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; HashSet a
+forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">H.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621687395837"><span class="hs-identifier hs-var">ns</span></a></span><span>
+</span><span id="line-223"></span><span>
+</span><span id="line-224"></span><span class="annot"><span class="hs-comment">-- | The method invoked when dispatching on metadata calls in POST /v1/metadata</span></span><span>
+</span><span id="line-225"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#runSuggestRels"><span class="hs-identifier hs-type">runSuggestRels</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-226"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687395323"><span class="annot"><a href="#local-6989586621687395323"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687395320"><span class="annot"><a href="#local-6989586621687395320"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-227"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395320"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395320"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395323"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-228"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-type">SuggestRels</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687395323"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><a href="#local-6989586621687395320"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-230"></span><span id="runSuggestRels"><span class="annot"><span class="annottext">runSuggestRels :: forall (b :: BackendType) (m :: * -&gt; *).
+(MonadError QErr m, CacheRWM m, BackendMetadata b) =&gt;
+SuggestRels b -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#runSuggestRels"><span class="hs-identifier hs-var hs-var">runSuggestRels</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Suggest.html#SuggestRels"><span class="hs-identifier hs-type">SuggestRels</span></a></span><span> </span><span id="local-6989586621687395869"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687395869"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621687395870"><span class="annot"><span class="annottext">Maybe [TableName b]
+</span><a href="#local-6989586621687395870"><span class="hs-identifier hs-var">tablesM</span></a></span></span><span> </span><span id="local-6989586621687395871"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395871"><span class="hs-identifier hs-var">omitExistingB</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621687395872"><span class="annot"><span class="annottext">Maybe (HashMap (TableName b) (TableCoreInfo b))
+</span><a href="#local-6989586621687395872"><span class="hs-identifier hs-var">tableCacheM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(HashMap (TableName b) (TableInfo b)
+ -&gt; HashMap (TableName b) (TableCoreInfo b))
+-&gt; Maybe (HashMap (TableName b) (TableInfo b))
+-&gt; Maybe (HashMap (TableName b) (TableCoreInfo b))
+forall a b. (a -&gt; b) -&gt; Maybe a -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TableInfo b -&gt; TableCoreInfo b)
+-&gt; HashMap (TableName b) (TableInfo b)
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+forall a b.
+(a -&gt; b) -&gt; HashMap (TableName b) a -&gt; HashMap (TableName b) b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfo b
+forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
+</span><a href="Hasura.Table.Cache.html#_tiCoreInfo"><span class="hs-identifier hs-var">_tiCoreInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (HashMap (TableName b) (TableInfo b))
+ -&gt; Maybe (HashMap (TableName b) (TableCoreInfo b)))
+-&gt; m (Maybe (HashMap (TableName b) (TableInfo b)))
+-&gt; m (Maybe (HashMap (TableName b) (TableCoreInfo b)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
+(Backend b, CacheRM m) =&gt;
+SourceName -&gt; m (Maybe (TableCache b))
+</span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCache"><span class="hs-identifier hs-var">askTableCache</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687395323"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687395869"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><span id="line-232"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap (TableName b) (TableCoreInfo b))
+</span><a href="#local-6989586621687395872"><span class="hs-identifier hs-var">tableCacheM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-233"></span><span>    </span><span class="annot"><span class="annottext">Maybe (HashMap (TableName b) (TableCoreInfo b))
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m EncJSON
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Couldn't find any schema source information&quot;</span></span><span>
+</span><span id="line-234"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687395876"><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395876"><span class="hs-identifier hs-var">tableCache</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; m EncJSON) -&gt; EncJSON -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SuggestedRelationships b -&gt; EncJSON
+forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(SuggestedRelationships b -&gt; EncJSON)
+-&gt; SuggestedRelationships b -&gt; EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+Backend b =&gt;
+Bool
+-&gt; HashMap (TableName b) (TableCoreInfo b)
+-&gt; (TableName b -&gt; Bool)
+-&gt; SuggestedRelationships b
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#suggestRelsResponse"><span class="hs-identifier hs-var">suggestRelsResponse</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687395323"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687395871"><span class="hs-identifier hs-var">omitExistingB</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (TableName b) (TableCoreInfo b)
+</span><a href="#local-6989586621687395876"><span class="hs-identifier hs-var">tableCache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe [TableName b] -&gt; TableName b -&gt; Bool
+forall a. Hashable a =&gt; Maybe [a] -&gt; a -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Relationship.Suggest.html#tablePredicate"><span class="hs-identifier hs-var">tablePredicate</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [TableName b]
+</span><a href="#local-6989586621687395870"><span class="hs-identifier hs-var">tablesM</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-235"></span></pre></body></html>
