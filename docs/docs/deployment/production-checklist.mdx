@@ -69,6 +69,12 @@ You should [limit the number of rows](/auth/authorization/permissions/row-fetch-
 in one request, by setting the number in the select permission. This will prevent someone from accidentally or
 otherwise querying the entire table in one shot, thus adding load on Postgres.
 
+## Configure max connections
+
+Hasura does [connection pooling](https://hasura.io/docs/latest/databases/database-config/cloud-connection-pooling/) for
+Postgres and MS SQL Server databases. You should set an appropriate [total_max_connections](/api-reference/syntax-defs/#pgpoolsettings) (on Cloud) or [max_connections](/api-reference/syntax-defs/#pgpoolsettings) 
+(on self-hosted) to utilize the database efficiently.
+
 ## Disable APIs
 
 Hasura exposes many APIs which might not be relevant for a production instance that is only supposed to serve GraphQL.
