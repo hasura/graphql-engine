@@ -1,0 +1,345 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Optimisier API",
+    "description": "Optimiser",
+    "contact": { "name": "Team", "email": "test@test.com" },
+    "version": "0.1.4"
+  },
+  "paths": {
+    "/optimise": {
+      "post": {
+        "tags": ["optimise"],
+        "summary": "Optimise",
+        "operationId": "optimise_optimise_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OptimiserRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OptimiserResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPError" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["healthcheck"],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Feature": {
+        "title": "Feature",
+        "required": ["name", "feature_type", "start", "end", "optimise"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "description": "The name of the feature"
+          },
+          "feature_type": {
+            "title": "Feature Type",
+            "type": "string",
+            "description": "Feature type e.g. CDS"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer",
+            "description": "Nucleotide start position for feature "
+          },
+          "end": {
+            "title": "End",
+            "type": "integer",
+            "description": "Nucleotide end position for feature "
+          },
+          "optimise": {
+            "title": "Optimise",
+            "type": "boolean",
+            "description": "Mark this region for optimization?"
+          }
+        }
+      },
+      "HTTPError": {
+        "title": "HTTPError",
+        "required": ["detail"],
+        "type": "object",
+        "properties": { "detail": { "title": "Detail", "type": "string" } },
+        "description": "HTTP error schema to be used when an HTTPException is thrown."
+      },
+      "HTTPValidationError": {
+        "title": "HTTPValidationError",
+        "type": "object",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ValidationError" }
+          }
+        }
+      },
+      "OptimisationParams": {
+        "title": "OptimisationParams",
+        "type": "object",
+        "properties": {
+          "sequence_name": { "title": "Sequence Name", "type": "string" },
+          "sequence": { "title": "Sequence", "type": "string" },
+          "optimise_for_species": {
+            "title": "Optimise For Species",
+            "type": "string",
+            "description": "Species to codon optimise for"
+          },
+          "avoid_patterns": {
+            "title": "Avoid Patterns",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "An array of sequences to avoid"
+          },
+          "enforce_gc": {
+            "title": "Enforce Gc",
+            "type": "boolean",
+            "default": false
+          },
+          "hard_codons": {
+            "title": "Hard Codons",
+            "type": "array",
+            "items": { "type": "string" },
+            "default": ["CCA", "GCA", "CTA"]
+          },
+          "max_repeat_length": {
+            "title": "Max Repeat Length",
+            "type": "integer"
+          }
+        }
+      },
+      "OptimiserRequest": {
+        "title": "OptimiserRequest",
+        "required": [
+          "gene_name",
+          "sequence",
+          "optimise",
+          "features",
+          "optimisation_params"
+        ],
+        "type": "object",
+        "properties": {
+          "gene_name": {
+            "title": "Gene Name",
+            "type": "string",
+            "description": "The name of the gene"
+          },
+          "sequence": {
+            "title": "Sequence",
+            "type": "string",
+            "description": "The DNA sequence for optimisation"
+          },
+          "score": {
+            "title": "Score",
+            "type": "boolean",
+            "description": "Score this sequence?",
+            "default": true
+          },
+          "optimise": {
+            "title": "Optimise",
+            "type": "boolean",
+            "description": "Optimise this sequence?"
+          },
+          "features": {
+            "title": "Features",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Feature" },
+            "description": "List of gene features objects"
+          },
+          "optimisation_params": {
+            "title": "Optimisation Params",
+            "allOf": [{ "$ref": "#/components/schemas/OptimisationParams" }],
+            "description": "An object to hold parameters for optimisation"
+          },
+          "from_json": {
+            "title": "From Json",
+            "type": "boolean",
+            "description": "Input from JSON - to be removed in future versions",
+            "default": true
+          },
+          "to_json": {
+            "title": "To Json",
+            "type": "boolean",
+            "description": "Output to JSON - to be removed in future versions",
+            "default": true
+          }
+        }
+      },
+      "OptimiserResponse": {
+        "title": "OptimiserResponse",
+        "type": "object",
+        "properties": {
+          "gene_name": {
+            "title": "Gene Name",
+            "type": "string",
+            "description": "The name of the gene"
+          },
+          "pre_optimisation_sequence": {
+            "title": "Pre Optimisation Sequence",
+            "type": "string",
+            "description": "The raw (pre-optimisation) DNA sequence"
+          },
+          "post_optimisation_sequence": {
+            "title": "Post Optimisation Sequence",
+            "type": "string",
+            "description": "The modified (optimised) DNA sequence"
+          },
+          "pre_optimisation_penalties": {
+            "title": "Pre Optimisation Penalties",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Penalty" },
+            "description": "An array of objects holding negative scoring sequences found in the pre-optimised DNA sequence"
+          },
+          "pre_optimisation_score_detail": {
+            "title": "Pre Optimisation Score Detail",
+            "allOf": [{ "$ref": "#/components/schemas/ScoringResult" }],
+            "description": "A sequence score for the pre-optimised sequence"
+          },
+          "post_optimisation_penalties": {
+            "title": "Post Optimisation Penalties",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Penalty" },
+            "description": "An array of objects holding negative scoring sequences found in the optimised DNA sequence"
+          },
+          "post_optimisation_score_detail": {
+            "title": "Post Optimisation Score Detail",
+            "allOf": [{ "$ref": "#/components/schemas/ScoringResult" }],
+            "description": "A sequence score for the optimised sequence"
+          }
+        }
+      },
+      "Penalty": {
+        "title": "Penalty",
+        "required": ["start", "end", "group", "score", "strand"],
+        "type": "object",
+        "properties": {
+          "start": {
+            "title": "Start",
+            "type": "integer",
+            "description": "The start position for the penalty sequence"
+          },
+          "end": {
+            "title": "End",
+            "type": "integer",
+            "description": "The end position for the penalty sequence"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string",
+            "description": "The group that the penalty sequence belongs to"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number",
+            "description": "The score for this penalty sequence"
+          },
+          "strand": {
+            "title": "Strand",
+            "type": "string",
+            "description": "The strand of DNA that this penalty sequence is found on"
+          }
+        }
+      },
+      "ScoringResult": {
+        "title": "ScoringResult",
+        "required": ["score", "level", "description"],
+        "type": "object",
+        "properties": {
+          "score": {
+            "title": "Score",
+            "type": "number",
+            "description": "The score for this sequence"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string",
+            "description": "The level of the score"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "description": "The details of the score"
+          }
+        }
+      },
+      "ValidationError": {
+        "title": "ValidationError",
+        "required": ["loc", "msg", "type"],
+        "type": "object",
+        "properties": {
+          "loc": {
+            "title": "Location",
+            "type": "array",
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] }
+          },
+          "msg": { "title": "Message", "type": "string" },
+          "type": { "title": "Error Type", "type": "string" }
+        }
+      }
+    }
+  }
+}
