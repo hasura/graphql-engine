@@ -24,11 +24,15 @@ connected with the rest of the graph.
 For example, a custom `insertAuthor` action will be related to the `author` object in the schema. Hence, we would want
 to be able to get information about the `author` from the graph as a response of the `insertAuthor` mutation.
 
-:::info Supported databases
+## Support for Action relationships
 
-Currently, Action Relationships are only supported for Postgres databases.
+Below, you can find information about the different types of relationship patterns that are supported for Actions.
 
-:::
+| Relationship Type       | Description                                                                                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Action to Database      | **Joins are supported _from_ Actions _to_ tables in Postgres databases.** However, Action to database joins are not currently supported for other databases.                                                                               |
+| Action to Action        | Actions can be joined to each other by using a Hasura instance as a federation gateway, or "parent" supergraph. You can find more information about this pattern [here](/actions/action-relationships.mdx#action-to-action-relationships). |
+| Action to Remote Schema | An Action cannot be joined to a Remote Schema.                                                                                                                                                                                             |
 
 ## Using an Action's output types in relationships
 

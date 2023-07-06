@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.Metadata.Customization
   ( RemoteTypeCustomization (..),
     RemoteFieldCustomization (..),
@@ -10,7 +8,6 @@ where
 import Autodocodec (HasCodec, codec, hashMapCodec, object, optionalField', optionalFieldWith', requiredFieldWith', (.=))
 import Autodocodec.Extended (graphQLFieldNameCodec)
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -38,7 +35,9 @@ instance HasCodec RemoteTypeCustomization where
         <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec)
       .= _rtcMapping
 
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteTypeCustomization)
+instance J.ToJSON RemoteTypeCustomization where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 instance J.FromJSON RemoteTypeCustomization where
   parseJSON = J.withObject "RemoteTypeCustomization" $ \o ->
@@ -76,7 +75,9 @@ instance HasCodec RemoteFieldCustomization where
         <*> requiredFieldWith' "mapping" (hashMapCodec graphQLFieldNameCodec)
       .= _rfcMapping
 
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteFieldCustomization)
+instance J.ToJSON RemoteFieldCustomization where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 instance J.FromJSON RemoteFieldCustomization where
   parseJSON = J.withObject "RemoteFieldCustomization" $ \o ->
@@ -113,4 +114,9 @@ instance HasCodec RemoteSchemaCustomization where
         <*> optionalField' "field_names"
       .= _rscFieldNames
 
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomization)
+instance J.FromJSON RemoteSchemaCustomization where
+  parseJSON = J.genericParseJSON hasuraJSON {J.omitNothingFields = True}
+
+instance J.ToJSON RemoteSchemaCustomization where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}

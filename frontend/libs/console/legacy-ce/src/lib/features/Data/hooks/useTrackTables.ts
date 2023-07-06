@@ -32,10 +32,10 @@ export const useTrackTables = ({
 
   const trackTables = useCallback(
     ({
-      tablesToBeTracked,
+      tables,
       ...mutateOptions
     }: {
-      tablesToBeTracked: TrackableTable[];
+      tables: TrackableTable[];
     } & MetadataMigrationOptions<BulkKeepGoingResponse>) => {
       mutate(
         {
@@ -44,7 +44,7 @@ export const useTrackTables = ({
             resource_version,
             args: {
               allow_warnings: true,
-              tables: tablesToBeTracked.map(trackableTable => ({
+              tables: tables.map(trackableTable => ({
                 table: trackableTable.table,
                 source: dataSourceName,
                 configuration: trackableTable.configuration,
@@ -60,10 +60,10 @@ export const useTrackTables = ({
 
   const untrackTables = useCallback(
     ({
-      tablesToBeUntracked,
+      tables,
       ...mutateOptions
     }: {
-      tablesToBeUntracked: TrackableTable[];
+      tables: TrackableTable[];
     } & MetadataMigrationOptions) => {
       mutate(
         {
@@ -72,7 +72,7 @@ export const useTrackTables = ({
             resource_version,
             args: {
               allow_warnings: true,
-              tables: tablesToBeUntracked.map(untrackableTable => ({
+              tables: tables.map(untrackableTable => ({
                 table: untrackableTable.table,
                 source: dataSourceName,
                 configuration: untrackableTable.configuration,

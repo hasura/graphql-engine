@@ -187,9 +187,9 @@ buildGQLContext
     let hasuraContexts = fst <$> contexts
         relayContexts = snd <$> contexts
 
-    (adminErrs, adminIntrospection) <-
+    adminIntrospection <-
       case HashMap.lookup adminRoleName hasuraContexts of
-        Just (_context, errors, introspection) -> pure (errors, introspection)
+        Just (_context, _errors, introspection) -> pure introspection
         Nothing -> throw500 "buildGQLContext failed to build for the admin role"
     (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext (sqlGen, functionPermissions) sources allRemoteSchemas experimentalFeatures remoteSchemaPermissions
 
@@ -198,22 +198,22 @@ buildGQLContext
         res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
         case res of
           Left err ->
-            pure $ \_ ->
+            pure $ \_ _ ->
               unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
           Right now -> do
             let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
-                projectSchemaInfo = \metadataResourceVersion ->
+                projectSchemaInfo = \metadataResourceVersion inconsistentMetadata ->
                   ProjectGQLSchemaInformation
                     schemaRegistryMap
-                    (IsMetadataInconsistent $ checkMdErrs adminErrs)
+                    (IsMetadataInconsistent $ checkMdErrs inconsistentMetadata)
                     (calculateSchemaSDLHash (generateSDL adminIntrospection) adminRoleName)
                     metadataResourceVersion
                     now
             pure
-              $ \metadataResourceVersion ->
+              $ \metadataResourceVersion inconsistentMetadata ->
                 STM.atomically
                   $ STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx)
-                  $ projectSchemaInfo metadataResourceVersion
+                  $ projectSchemaInfo metadataResourceVersion inconsistentMetadata
 
     pure
       ( ( adminIntrospection,
@@ -230,7 +230,7 @@ buildGQLContext
         writeToSchemaRegistryAction
       )
     where
-      checkMdErrs = not . Set.null
+      checkMdErrs = not . null
 
       generateSchemaRegistryMap :: HashMap RoleName RoleContextValue -> SchemaRegistryMap
       generateSchemaRegistryMap mpr =

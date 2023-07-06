@@ -85,7 +85,7 @@ const getFkDefinition = (
 
       const sameToColumns = isEqual(
         toColumn.sort(),
-        suggestedRelationship.from.columns
+        suggestedRelationship.to.columns
       );
       const sameToTable = areTablesEqual(
         relationship.using.foreign_key_constraint_on.table,

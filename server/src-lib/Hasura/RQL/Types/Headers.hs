@@ -8,6 +8,8 @@ import Autodocodec (HasCodec (codec), bimapCodec, disjointEitherCodec, requiredF
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Text qualified as T
+import Data.URL.Template
+import Hasura.Base.Instances ()
 import Hasura.Prelude
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
@@ -19,7 +21,7 @@ instance Hashable HeaderConf
 
 type HeaderName = Text
 
-data HeaderValue = HVValue Text | HVEnv Text
+data HeaderValue = HVValue Template | HVEnv Text
   deriving (Show, Eq, Generic)
 
 instance NFData HeaderValue
@@ -61,7 +63,9 @@ instance FromJSON HeaderConf where
     valueFromEnv <- o .:? "value_from_env"
     case (value, valueFromEnv) of
       (Nothing, Nothing) -> fail "expecting value or value_from_env keys"
-      (Just val, Nothing) -> return $ HeaderConf name (HVValue val)
+      (Just val, Nothing) -> do
+        template <- parseJSON val
+        return $ HeaderConf name (HVValue template)
       (Nothing, Just val) -> do
         when (T.isPrefixOf "HASURA_GRAPHQL_" val)
           $ fail
@@ -72,5 +76,5 @@ instance FromJSON HeaderConf where
   parseJSON _ = fail "expecting object for headers"
 
 instance ToJSON HeaderConf where
-  toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
+  toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= toJSON val]
   toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]

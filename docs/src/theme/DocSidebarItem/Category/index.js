@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import clsx from 'clsx';
 import { ThemeClassNames, useThemeConfig, usePrevious, Collapsible, useCollapsible } from '@docusaurus/theme-common';
 import {
@@ -70,19 +70,24 @@ function CollapseButton({ categoryLabel, onClick }) {
 }
 export default function DocSidebarItemCategory({ item, onItemClick, activePath, level, index, ...props }) {
   const { items, label, collapsible, className, href } = item;
-  const { isDarkTheme } = useColorMode();
+  const { colorMode } = useColorMode();
+  const [definedColorMode, setDefinedColorMode] = useState('');
+
+  useEffect(() => {
+    setDefinedColorMode(colorMode);
+  }, [colorMode]);
 
   // Conditional rendering for sidebar icons
   function addIcons(className) {
     switch (className) {
       case 'enterprise-icon':
-        return isDarkTheme ? <EnterpriseDark /> : <EnterpriseLight />;
+        return definedColorMode === 'dark' ? <EnterpriseDark /> : <EnterpriseLight />;
       case 'cloud-icon':
-        return isDarkTheme ? <CloudDark /> : <CloudLight />;
+        return definedColorMode === 'dark' ? <CloudDark /> : <CloudLight />;
       case 'cloud-and-enterprise-icon':
         return (
           <div className={styles['cloud-ee-container']}>
-            {isDarkTheme ? (
+            {definedColorMode === 'dark' ? (
               <>
                 <CloudDark /> <EnterpriseDark />{' '}
               </>

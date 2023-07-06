@@ -133,7 +133,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..))
+import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..), ValidateInput (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
@@ -435,7 +435,8 @@ data InsPermInfo (b :: BackendType) = InsPermInfo
     ipiCheck :: AnnBoolExpPartialSQL b,
     ipiSet :: PreSetColsPartial b,
     ipiBackendOnly :: Bool,
-    ipiRequiredHeaders :: HS.HashSet Text
+    ipiRequiredHeaders :: HS.HashSet Text,
+    ipiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Generic)
 
@@ -594,7 +595,8 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
     upiCheck :: Maybe (AnnBoolExpPartialSQL b),
     upiSet :: PreSetColsPartial b,
     upiBackendOnly :: Bool,
-    upiRequiredHeaders :: HashSet Text
+    upiRequiredHeaders :: HashSet Text,
+    upiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Generic)
 
@@ -629,7 +631,8 @@ data DelPermInfo (b :: BackendType) = DelPermInfo
   { dpiTable :: TableName b,
     dpiFilter :: AnnBoolExpPartialSQL b,
     dpiBackendOnly :: !Bool,
-    dpiRequiredHeaders :: HashSet Text
+    dpiRequiredHeaders :: HashSet Text,
+    dpiValidateInput :: Maybe (ValidateInput ResolvedWebhook)
   }
   deriving (Generic)
 
@@ -1290,7 +1293,7 @@ mkAdminRolePermInfo tableInfo =
     computedFields' = HS.toMap computedFields $> Nothing
 
     tableName = _tciName tableInfo
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue HashMap.empty False mempty Nothing
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
-    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty
-    d = DelPermInfo tableName annBoolExpTrue False mempty
+    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty Nothing
+    d = DelPermInfo tableName annBoolExpTrue False mempty Nothing

@@ -628,3 +628,8 @@ _predicate = [G.name|predicate|]
 
 _filter :: G.Name
 _filter = [G.name|filter|]
+
+-- * Arrays
+
+__array :: G.Name
+__array = [G.name|_array|]

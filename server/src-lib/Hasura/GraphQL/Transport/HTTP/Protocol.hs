@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq (..),
     GQLBatchedReqs (..),
@@ -31,7 +29,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Encoding qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Either (isLeft)
 import Data.HashMap.Strict qualified as HashMap
@@ -74,7 +71,12 @@ data GQLReq a = GQLReq
   }
   deriving (Show, Eq, Generic, Functor, Lift)
 
-$(J.deriveJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''GQLReq)
+instance (J.FromJSON a) => J.FromJSON (GQLReq a) where
+  parseJSON = J.genericParseJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True}
+
+instance (J.ToJSON a) => J.ToJSON (GQLReq a) where
+  toJSON = J.genericToJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding (J.aesonPrefix J.camelCase) {J.omitNothingFields = True}
 
 instance (Hashable a) => Hashable (GQLReq a)
 

@@ -14,6 +14,13 @@ import {
   UseConsoleFormProps,
 } from './form.types';
 
+export type UseConsoleFormReturn = {
+  methods: ReturnType<typeof useReactHookForm>;
+  Form: <TFieldValues extends FieldValues>(
+    props: FormProps<TFieldValues>
+  ) => JSX.Element;
+};
+
 // available as a standlone if needed for advanced usage
 const ConsoleFormWrapper = <
   TFieldValues extends FieldValues,
@@ -44,7 +51,7 @@ const ConsoleFormWrapper = <
 
 export const useConsoleForm = <FormSchema extends Schema>(
   hookProps: UseConsoleFormProps<zodInfer<FormSchema>, FormSchema>
-) => {
+): UseConsoleFormReturn => {
   const { options = {}, schema } = hookProps;
 
   const methods = useReactHookForm<zodInfer<FormSchema>>({

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.MetadataAPI.Core
   ( AddRemoteSchemaQuery (..),
     RemoteSchemaNameQuery (..),
@@ -14,7 +12,7 @@ module Hasura.RemoteSchema.MetadataAPI.Core
   )
 where
 
-import Data.Aeson.TH qualified as J
+import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
@@ -50,14 +48,24 @@ data AddRemoteSchemaQuery = AddRemoteSchemaQuery
 
 instance NFData AddRemoteSchemaQuery
 
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
+instance J.FromJSON AddRemoteSchemaQuery where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON AddRemoteSchemaQuery where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 newtype RemoteSchemaNameQuery = RemoteSchemaNameQuery
   { _rsnqName :: RemoteSchemaName
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
+instance J.FromJSON RemoteSchemaNameQuery where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON RemoteSchemaNameQuery where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runAddRemoteSchema ::
   ( QErrM m,

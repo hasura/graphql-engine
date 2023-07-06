@@ -532,9 +532,6 @@ the `tags` table via a bridge table `article_tags`.
 
 ## Insert an object with an ARRAY field
 
-To insert fields of array types, you currently have to pass them as a
-[Postgres array literal](https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT).
-
 **Example:** Insert a new `author` with a text array `emails` field:
 
 <GraphiQLIDE
@@ -543,7 +540,7 @@ To insert fields of array types, you currently have to pass them as a
     objects: [
       {
         name: "Ash",
-        emails: "{ash@ash.com, ash123@ash.com}"
+        emails: ["ash@ash.com", "ash123@ash.com"]
       }
     ]
   ) {
@@ -609,6 +606,9 @@ Using variables:
   "emails": "{ash@ash.com, ash123@ash.com}"
 }`}
 />
+
+To insert fields of nested array types, you have to pass them as a
+[Postgres array literal](https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT).
 
 ## Set a field to its default value during insert
 

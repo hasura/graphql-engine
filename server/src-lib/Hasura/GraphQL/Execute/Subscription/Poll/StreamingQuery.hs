@@ -10,11 +10,12 @@ where
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
+import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as BS
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Split (chunksOf)
-import Data.Monoid (Sum (..))
+import Data.Monoid (Endo (..), Sum (..))
 import Data.Text.Extended
 import GHC.AssertNF.CPP
 import Hasura.Base.Error
@@ -254,8 +255,9 @@ pollStreamingQuery ::
   IO GranularPrometheusMetricsState ->
   TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
+  Maybe (Endo JO.Value) ->
   IO ()
-pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate = do
+pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate modifier = do
   operationNames <- STM.atomically $ TMap.getMap operationNames'
   (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
@@ -498,5 +500,5 @@ pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, 
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
+              (pure (applyModifier modifier respBS),cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
                 <$> HashMap.lookup cohortId cohortSnapshotMap

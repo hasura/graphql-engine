@@ -55,6 +55,7 @@ const Variables: React.FC<VariableComponentProps> = ({
               placeholder="Value..."
               onChange={updateVariableValue(v.name)}
               type="text"
+              className="my-1 w-full"
             />
           </td>
         </tr>

@@ -5,4 +5,7 @@ export {
 export { useEditOperationInQueryCollection } from './useEditOperationInQueryCollection';
 export { useMoveOperationsToQueryCollection } from './useMoveOperationsToQueryCollection';
 export { useOperationsFromQueryCollection } from './useOperationsFromQueryCollection';
-export { useRemoveOperationsFromQueryCollection } from './useRemoveOperationsFromQueryCollection';
+export {
+  useRemoveOperationsFromQueryCollection,
+  removeOperationsFromQueryCollectionMetadataArgs,
+} from './useRemoveOperationsFromQueryCollection';

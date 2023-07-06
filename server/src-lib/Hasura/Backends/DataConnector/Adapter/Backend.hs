@@ -8,6 +8,7 @@ module Hasura.Backends.DataConnector.Adapter.Backend
   )
 where
 
+import Control.Lens (view)
 import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
@@ -166,6 +167,9 @@ instance Backend 'DataConnector where
   defaultTriggerOnReplication = Nothing
 
   backendSupportsNestedObjects = pure ()
+
+  sourceSupportsSchemalessTables =
+    view $ DC.scCapabilities . API.cDataSchema . API.dscSupportsSchemalessTables
 
 instance HasSourceConfiguration 'DataConnector where
   type SourceConfig 'DataConnector = DC.SourceConfig

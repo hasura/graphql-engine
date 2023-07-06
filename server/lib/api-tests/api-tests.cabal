@@ -135,6 +135,7 @@ library
     Test.Databases.BigQuery.Queries.SpatialTypesSpec
     Test.Databases.BigQuery.Queries.TypeInterpretationSpec
     Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
+    Test.Databases.Postgres.ArraySpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
     Test.Databases.Postgres.JsonbSpec
@@ -165,11 +166,15 @@ library
     Test.Mutations.Delete.FieldSpec
     Test.Mutations.Delete.NestedFieldSpec
     Test.Mutations.Delete.PrimaryKeySpec
+    Test.Mutations.Delete.ValidationSpec
     Test.Mutations.Insert.MultipleSpec
+    Test.Mutations.Insert.NestedSpec
     Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Insert.ValidationSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
+    Test.Mutations.Update.ValidationSpec
     Test.Mutations.Upsert.OnConflictSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.PortedFromPytest.TestGraphQLQueryFunctions
@@ -211,11 +216,12 @@ library
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.OptimizePermissionFiltersSpec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.RootExistElementAliasing9457Spec
+    Test.Regression.SqlServerIdentifierQuotingSpec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.Regression.SqlServerIdentifierQuotingSpec
     Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
     Test.Schema.ComputedFields.AggregationSpec
     Test.Schema.ComputedFields.ScalarSpec

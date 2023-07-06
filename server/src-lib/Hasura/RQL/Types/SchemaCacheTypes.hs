@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SchemaCacheTypes
@@ -24,7 +23,6 @@ module Hasura.RQL.Types.SchemaCacheTypes
 where
 
 import Data.Aeson
-import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Functor.Const
 import Data.Text qualified as T
@@ -247,7 +245,9 @@ data SchemaDependency = SchemaDependency
   }
   deriving (Show, Eq, Generic)
 
-$(deriveToJSON hasuraJSON ''SchemaDependency)
+instance ToJSON SchemaDependency where
+  toJSON = genericToJSON hasuraJSON
+  toEncoding = genericToEncoding hasuraJSON
 
 instance Hashable SchemaDependency
 

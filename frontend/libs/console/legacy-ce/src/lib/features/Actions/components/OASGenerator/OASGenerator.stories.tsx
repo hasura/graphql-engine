@@ -5,7 +5,7 @@ import { handlers } from '../../../../mocks/metadata.mock';
 import { within, userEvent } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { OASGenerator, OASGeneratorProps } from './OASGenerator';
-import petstore from './petstore.json';
+import petstore from './fixtures/petstore.json';
 
 const meta = {
   title: 'Features/Actions/OASGenerator',

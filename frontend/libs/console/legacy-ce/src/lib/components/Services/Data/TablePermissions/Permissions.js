@@ -37,6 +37,7 @@ import {
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   permToggleSelectField,
+  permValidateInputFields,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -102,16 +103,10 @@ import {
   getPermissionsModalDescription,
 } from './RootFieldPermissions/PermissionsConfirmationModal.utils';
 import {
-  FeatureFlagToast,
-  useFeatureFlags,
-  availableFeatureFlagIds,
-  FeatureFlagFloatingButton,
-} from '../../../../features/FeatureFlags';
-import { PermissionsTab } from '../../../../features/Permissions/PermissionsTab';
-import {
   MetadataSelectors,
   useMetadata,
 } from '../../../../features/hasura-metadata-api';
+import { ReduxInputValidation } from './InputValidation/ReduxInputValidation';
 
 const getPermissionModalEnabled = () => {
   const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
@@ -1399,7 +1394,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 value={preset.column}
                 onChange={setPresetColumn}
                 data-preset-column={preset.column}
@@ -1420,7 +1415,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 onChange={setPresetType}
                 data-preset-column={preset.column}
                 data-test={'column-presets-type-' + index}
@@ -1919,7 +1914,6 @@ class Permissions extends Component {
       const permissionsModalDescription = getPermissionsModalDescription(
         this.state.permissionsModalScenario
       );
-
       return (
         <div
           id={'permission-edit-section'}
@@ -1942,6 +1936,25 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
+            {permissionsState?.query !== 'select' && (
+              <ReduxInputValidation
+                dispatch={dispatch}
+                permissionsState={permissionsState[query]?.validate_input}
+                updateFunction={values => {
+                  // update redux state for validation form (only if they change)
+                  dispatch(
+                    permValidateInputFields(
+                      values.enabled,
+                      values.definition.url,
+                      'http',
+                      values.definition.headers,
+                      values.definition.forward_client_headers,
+                      values.definition.timeout
+                    )
+                  );
+                }}
+              />
+            )}
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
@@ -1977,66 +1990,52 @@ class Permissions extends Component {
     const supportedQueryTypes =
       dataSource.getTableSupportedQueries(currentTableSchema);
 
-    const table = {
-      name: this.props.tableName,
-      [this.props.isBigQuery ? 'dataset' : 'schema']: this.props.currentSchema,
-    };
-
     return (
-      <>
-        <RightContainer
-          style={
-            // Remove overflow for the new UI because it causes a double scrollbar and broken layout
-            this.props.showNewUI
-              ? {
-                  overflow: 'unset',
-                }
-              : undefined
-          }
-        >
-          <Analytics name="Permissions" {...REDACT_EVERYTHING}>
-            <div className={clsx(styles.container, 'bootstrap-jail')}>
-              {getHeader(currentTableSchema)}
-              <br />
-              {this.props.showNewUI ? (
-                <PermissionsTab
-                  dataSourceName={this.props.currentSource}
-                  table={table}
-                />
-              ) : (
-                <>
-                  <div className={styles.padd_left_remove}>
-                    <div className={`${styles.padd_remove} col-xs-12`}>
-                      <h4 className={styles.subheading_text}>Permissions</h4>
-                      {getPermissionsTable(
-                        currentTableSchema,
-                        supportedQueryTypes,
-                        allRoles
-                      )}
-                      {getBulkSection(currentTableSchema)}
-                      {getEditSection(
-                        currentTableSchema,
-                        supportedQueryTypes,
-                        allRoles
-                      )}
-                    </div>
-                  </div>
-                  <div className={`${styles.fixed} hidden`}>
-                    {getAlertHtml(
-                      ongoingRequest,
-                      lastError,
-                      lastSuccess,
-                      lastFormError
-                    )}
-                  </div>
-                </>
+      <RightContainer>
+        <Analytics name="Permissions" {...REDACT_EVERYTHING}>
+          <div className={clsx(styles.container, 'bootstrap-jail')}>
+            {getHeader(currentTableSchema)}
+            <br />
+            <div className={styles.padd_left_remove}>
+              <div className={`${styles.padd_remove} col-xs-12`}>
+                <h4 className={styles.subheading_text}>
+                  Permissions{' '}
+                  {currentTableSchema?.table_type === 'VIEW' ? (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/schema/postgres/views/#pg-create-views"
+                      text="(Learn more about view permissions)"
+                    />
+                  ) : (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/auth/authorization/permissions/"
+                      text="(Learn more about table permissions)"
+                    />
+                  )}
+                </h4>
+                {getPermissionsTable(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+                {getBulkSection(currentTableSchema)}
+                {getEditSection(
+                  currentTableSchema,
+                  supportedQueryTypes,
+                  allRoles
+                )}
+              </div>
+            </div>
+            <div className={`${styles.fixed} hidden`}>
+              {getAlertHtml(
+                ongoingRequest,
+                lastError,
+                lastSuccess,
+                lastFormError
               )}
             </div>
-          </Analytics>
-        </RightContainer>
-        <FeatureFlagToast flagId={availableFeatureFlagIds.permissionsNewUI} />
-        <FeatureFlagFloatingButton />
-      </>
+          </div>
+        </Analytics>
+      </RightContainer>
     );
   }
 }
@@ -2075,30 +2074,14 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const PermissionsWrapper = props => {
-  const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
-    useFeatureFlags();
-
   const { data: source, isLoading: isLoadingMetadata } = useMetadata(
     MetadataSelectors.findSource(props.currentSource)
   );
   const isBigQuery = source?.kind === 'bigquery';
 
-  if (isFeatureFlagsLoading || isLoadingMetadata) return <div>Loading...</div>;
+  if (isLoadingMetadata) return <div>Loading...</div>;
 
-  const newPermissionsTabIsEnabled =
-    featureFlagsData &&
-    featureFlagsData?.length > 0 &&
-    featureFlagsData.find(
-      featureFlag => featureFlag.id === availableFeatureFlagIds.permissionsNewUI
-    )?.state?.enabled;
-
-  return (
-    <Permissions
-      {...props}
-      showNewUI={newPermissionsTabIsEnabled}
-      isBigQuery={isBigQuery}
-    />
-  );
+  return <Permissions {...props} isBigQuery={isBigQuery} />;
 };
 
 const permissionsConnector = connect => {

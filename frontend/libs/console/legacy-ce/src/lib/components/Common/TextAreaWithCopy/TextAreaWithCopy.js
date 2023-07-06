@@ -16,7 +16,9 @@ class TextAreaWithCopy extends React.Component {
     if (copyText.length > 0) {
       switch (textLanguage) {
         case 'sql':
-          text = sqlFormatter.format(copyText, { language: textLanguage });
+          text = copyText
+            ? sqlFormatter.format(copyText, { language: textLanguage })
+            : '';
           break;
         default:
           text = copyText;

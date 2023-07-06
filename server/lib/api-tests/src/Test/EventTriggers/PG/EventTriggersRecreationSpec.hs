@@ -28,7 +28,7 @@ spec =
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.mkLocalTestEnvironment = const Webhook.run,
+            { Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
                   Fixture.SetupAction

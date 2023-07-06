@@ -51,112 +51,23 @@ For more details on how Hasura executes subscriptions, refer to the
 
 <ProductBadge self />
 
-Hasura exposes a set of Prometheus Metrics that can be used to monitor the subscriptions system and help diagnose
-performance issues.
+Hasura EE exposes a set of [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx/#subscription-metrics)
+that can be used to monitor the subscriptions system and help diagnose performance issues.
 
-### Active Subscriptions
+:::info More on Observability
 
-Current number of active subscriptions, representing the subscription load on the server.
+To find out more about observability, including best practices, check out
+[observability docs section](/observability/overview.mdx).
 
-|        |                                                                                            |
-| ------ | ------------------------------------------------------------------------------------------ |
-| Name   | `hasura_active_subscriptions`                                                              |
-| Type   | Gauge                                                                                      |
-| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+The following metrics can be used to monitor the performance of subscriptions:
 
-### Active Subscription Pollers
+:::
 
-Current number of active subscription pollers. A subscription poller
-[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
-similar subscriptions together. The value of this metric should be proportional to the number of uniquely parameterized
-subscriptions (i.e., subscriptions with the same selection set, but with different input arguments and session variables
-are multiplexed on the same poller). If this metric is high then it may be an indication that there are too many
-uniquely parameterized subscriptions which could be optimized for better performance.
-
-|        |                                              |
-| ------ | -------------------------------------------- |
-| Name   | `hasura_active_subscription_pollers`         |
-| Type   | Gauge                                        |
-| Labels | `subscription_kind`: streaming \| live-query |
-
-### Active Subscription Pollers in Error State
-
-Current number of active subscription pollers that are in the error state. A subscription poller
-[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
-similar subscriptions together. A non-zero value of this metric indicates that there are runtime errors in atleast one
-of the subscription pollers that are running in Hasura. In most of the cases, runtime errors in subscriptions are caused
-due to the changes at the data model layer and fixing the issue at the data model layer should automatically fix the
-runtime errors.
-
-|        |                                                     |
-| ------ | --------------------------------------------------- |
-| Name   | `hasura_active_subscription_pollers_in_error_state` |
-| Type   | Gauge                                               |
-| Labels | `subscription_kind`: streaming \| live-query        |
-
-### Subscription Total Time
-
-The time taken to complete running of one subscription poller.
-
-A subscription poller
-[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
-similar subscriptions together. This subscription poller runs every 1 second by default and queries the database with
-the multiplexed query to fetch the latest data. In a polling instance, the poller not only queries the database but does
-other operations like splitting similar queries into batches (by default 100) before fetching their data from the
-database, etc. **This metric is the total time taken to complete all the operations in a single poll.**
-
-In a single poll, the subscription poller splits the different variables for the multiplexed query into batches (by
-default 100) and executes the batches. We use the `hasura_subscription_db_execution_time_seconds` metric to observe the
-time taken for each batch to execute on the database. This means for a single poll there can be multiple values for
-`hasura_subscription_db_execution_time_seconds` metric.
-
-Let's look at an example to understand these metrics better:
-
-Say we have 650 subscriptions with the same selection set but different input arguments. These 650 subscriptions will be
-grouped to form one multiplexed query. A single poller would be created to run this multiplexed query. This poller will
-run every 1 second.
-
-The default batch size in hasura is 100, so the 650 subscriptions will be split into 7 batches for execution during a
-single poll.
-
-During a single poll:
-
-- Batch 1: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
-- Batch 2: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
-- Batch 3: `hasura_subscription_db_execution_time_seconds` = 0.003 seconds
-- Batch 4: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
-- Batch 5: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
-- Batch 6: `hasura_subscription_db_execution_time_seconds` = 0.001 seconds
-- Batch 7: `hasura_subscription_db_execution_time_seconds` = 0.002 seconds
-
-The `hasura_subscription_total_time_seconds` would be sum of all the database execution times shown in the batches, plus
-some extra process time for other tasks the poller does during a single poll. In this case, it would be approximately
-0.013 seconds.
-
-|        |                                                                                            |
-| ------ | ------------------------------------------------------------------------------------------ |
-| Name   | `hasura_subscription_total_time_seconds`                                                   |
-| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
-| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
-
-### Subscription Database Execution Time
-
-The time taken to run the subscription's multiplexed query in the database for a single batch.
-
-A subscription poller
-[multiplexes](https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md#idea-3-batch-multiple-live-queries-into-one-sql-query)
-similar subscriptions together. During every run (every 1 second by default), the poller splits the different variables
-for the multiplexed query into batches (by default 100) and execute the batches. This metric observes the time taken for
-each batch to execute on the database.
-
-If this metric is high, then it may be an indication that the database is not performing as expected, you should
-consider investigating the subscription query and see if indexes can help improve performance.
-
-|        |                                                                                            |
-| ------ | ------------------------------------------------------------------------------------------ |
-| Name   | `hasura_subscription_db_execution_time_seconds`                                            |
-| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
-| Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
+- [`hasura_active_subscriptions`](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscriptions)
+- [`hasura_active_subscription_pollers`](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscription-pollers)
+- [`hasura_active_subscription_pollers_in_error_state`](/observability/enterprise-edition/prometheus/metrics.mdx#active-subscription-pollers-in-error-state)
+- [`hasura_subscription_db_execution_time_seconds`](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-database-execution-time)
+- [`hasura_subscription_total_time_seconds`](/observability/enterprise-edition/prometheus/metrics.mdx#subscription-total-time)
 
 ## Golden Signals for subscriptions
 
@@ -191,7 +102,7 @@ number of Hasura instances to handle the load.
 
 Errors in subscriptions can be monitored using the following metrics
 
-- [`hasura_graphql_requests_total{type="subscription",response_status="error"}`](/observability/prometheus/metrics.mdx#hasura-graphql-requests-total):
+- [`hasura_graphql_requests_total{type="subscription",response_status="error"}`](/observability/enterprise-edition/prometheus/metrics.mdx#hasura-graphql-requests-total):
   Total number of errors that happen before the subscription is started (i.e. validation, parsing and authorization
   errors).
 - [`hasura_active_subscription_pollers_in_error_state`](#active-subscription-pollers-in-error-state): Number of
@@ -210,7 +121,7 @@ To monitor the saturation for subscriptions, you can monitor the following:
 
 - CPU and memory usage of Hasura instances.
 - For postgres backends, you can monitor the
-  [`hasura_postgres_connections`](/observability/prometheus/metrics.mdx#hasura-postgres-connections) metric to see the
+  [`hasura_postgres_connections`](/observability/enterprise-edition/prometheus/metrics.mdx#hasura-postgres-connections) metric to see the
   number of connections opened by Hasura with the database.
 - P99 of the [`hasura_subscription_total_time_seconds`](#subscription-total-time) metric.
 

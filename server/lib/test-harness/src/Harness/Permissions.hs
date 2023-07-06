@@ -5,9 +5,11 @@ module Harness.Permissions
     Types.SelectPermissionDetails (..),
     Types.UpdatePermissionDetails (..),
     Types.InsertPermissionDetails (..),
+    Types.DeletePermissionDetails (..),
     Types.selectPermission,
     Types.updatePermission,
     Types.insertPermission,
+    Types.deletePermission,
     Metadata.createPermissionMetadata,
     Metadata.dropPermissionMetadata,
   )

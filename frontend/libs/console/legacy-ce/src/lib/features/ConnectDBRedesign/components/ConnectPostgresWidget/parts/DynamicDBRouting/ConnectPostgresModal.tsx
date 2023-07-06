@@ -46,7 +46,7 @@ export const ConnectPostgresModal = (props: ConnectPostgresModalProps) => {
 
   return (
     <Form
-      onSubmit={values => {
+      onSubmit={(values: z.infer<typeof schema>) => {
         if (alreadyUseNames?.includes(values.name)) {
           setError('name', {
             type: 'manual',

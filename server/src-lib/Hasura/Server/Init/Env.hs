@@ -346,8 +346,8 @@ instance FromEnv Logging.LogLevel where
     "error" -> Right Logging.LevelError
     _ -> Left "Valid log levels: debug, info, warn or error"
 
-instance FromEnv Template.URLTemplate where
-  fromEnv = Template.parseURLTemplate . Text.pack
+instance FromEnv Template.Template where
+  fromEnv = Template.parseTemplate . Text.pack
 
 instance (Num a, Ord a, FromEnv a) => FromEnv (Refined NonNegative a) where
   fromEnv s =

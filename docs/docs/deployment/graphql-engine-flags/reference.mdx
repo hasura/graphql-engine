@@ -113,7 +113,7 @@ When you use [webhook or JWT mode for authentication](/auth/authentication/index
 
 ### Admin Secrets
 
-A list of valid admin [secret keys](/security/multiple-admin-secrets.mdx) any one of which can be used to access the
+A list of valid admin [secret keys](/auth/authentication/multiple-admin-secrets.mdx) any one of which can be used to access the
 Hasura instance.
 
 |                     |                                |
@@ -367,7 +367,7 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 
 ### Enable High-cardinality Labels for Metrics
 
-Enable high-cardinality labels for [Prometheus Metrics](/observability/prometheus/metrics.mdx). Enabling this setting
+Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx). Enabling this setting
 will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription metrics).
 
 |                     |                                                         |
@@ -381,7 +381,7 @@ will add more labels to some of the metrics (e.g. `operation_name` label for Gra
 
 ### Enable Log Compression
 
-Enable sending compressed logs to [metrics server](/observability/prometheus/metrics.mdx).
+Enable sending compressed logs to [metrics server](/observability/enterprise-edition/prometheus/metrics.mdx).
 
 |                     |                                            |
 | ------------------- | ------------------------------------------ |
@@ -578,7 +578,7 @@ Having an [admin secret](#admin-secret-key) set is mandatory for setting this va
 
 ### JWT Secrets
 
-List of [JWT secrets](/security/multiple-jwt-secrets.mdx) to authenticate with different JWT issuers.
+List of [JWT secrets](/auth/authentication/multiple-jwt-secrets.mdx) to authenticate with different JWT issuers.
 
 |                     |                                                                                                                                                                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -624,7 +624,7 @@ This variable sets the level for [Hasura's logs](/deployment/logging.mdx#logging
 
 ### Max Cache Size
 
-The [maximum cache size](/enterprise/caching.mdx), measured in MB, for queries.
+The [maximum cache size](/caching/enterprise-caching.mdx), measured in MB, for queries.
 
 |                     |                                                                                                   |
 | ------------------- | ------------------------------------------------------------------------------------------------- |
@@ -804,7 +804,7 @@ The maximum number of query plans that can be cached, where `0` disables the cac
 
 ### Rate-Limit Redis TLS Hostname
 
-The hostname to use for SNI when connecting to a rate-limiting [Redis instance over TLS](/enterprise/caching.mdx).
+The hostname to use for SNI when connecting to a rate-limiting [Redis instance over TLS](/caching/enterprise-caching.mdx).
 
 |                     |                                                |
 | ------------------- | ---------------------------------------------- |
@@ -816,7 +816,7 @@ The hostname to use for SNI when connecting to a rate-limiting [Redis instance o
 
 ### Rate-Limit Redis URL
 
-The [Redis URL](/enterprise/caching.mdx) to use for rate limiting.
+The [Redis URL](/caching/enterprise-caching.mdx) to use for rate limiting.
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
@@ -829,7 +829,7 @@ The [Redis URL](/enterprise/caching.mdx) to use for rate limiting.
 
 ### Rate-Limit Redis Use TLS
 
-Whether to use TLS to connect to a caching [Redis instance](/enterprise/caching.mdx).
+Whether to use TLS to connect to a caching [Redis instance](/caching/enterprise-caching.mdx).
 
 |                     |                                              |
 | ------------------- | -------------------------------------------- |
@@ -860,7 +860,7 @@ The [URL for a read replica](/databases/database-config/read-replicas.mdx#adding
 
 ### Redis TLS Hostname
 
-The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/enterprise/caching.mdx).
+The hostname to use for SNI when connecting to a [caching Redis instance over TLS](/caching/enterprise-caching.mdx).
 
 |                     |                                     |
 | ------------------- | ----------------------------------- |
@@ -873,7 +873,7 @@ The hostname to use for SNI when connecting to a [caching Redis instance over TL
 ### Redis TLS Shared CA Store Path
 
 The path to a shared CA store to use to connect to both (caching and rate-limiting)
-[Redis URLs over TLS](/enterprise/caching.mdx).
+[Redis URLs over TLS](/caching/enterprise-caching.mdx).
 
 |                     |                                                              |
 | ------------------- | ------------------------------------------------------------ |
@@ -885,8 +885,8 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 
 ### Redis URL
 
-The Redis URL to use for [query caching](/enterprise/caching.mdx) and
-[Webhook Auth Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
+The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and [Webhook Auth
+Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |

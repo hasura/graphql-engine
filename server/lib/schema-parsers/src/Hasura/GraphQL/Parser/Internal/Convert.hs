@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Parser.Internal.Convert
   ( jsonToGraphQL,
     valueToJSON,
+    graphQLToJSON,
   )
 where
 
@@ -37,17 +38,19 @@ valueToJSON expectedType inputVal = do
       JSONValue j -> j
       GraphQLValue g -> graphQLToJSON g
 
-    graphQLToJSON :: G.Value Variable -> J.Value
-    graphQLToJSON = \case
-      G.VNull -> J.Null
-      G.VInt i -> J.toJSON i
-      G.VFloat f -> J.toJSON f
-      G.VString t -> J.toJSON t
-      G.VBoolean b -> J.toJSON b
-      G.VEnum (G.EnumValue n) -> J.toJSON n
-      G.VList values -> J.toJSON $ graphQLToJSON <$> values
-      G.VObject objects -> J.toJSON $ graphQLToJSON <$> objects
-      G.VVariable variable -> valueToJSON' $ absurd <$> vValue variable
+graphQLToJSON :: G.Value Variable -> J.Value
+graphQLToJSON = \case
+  G.VNull -> J.Null
+  G.VInt i -> J.toJSON i
+  G.VFloat f -> J.toJSON f
+  G.VString t -> J.toJSON t
+  G.VBoolean b -> J.toJSON b
+  G.VEnum (G.EnumValue n) -> J.toJSON n
+  G.VList values -> J.toJSON $ graphQLToJSON <$> values
+  G.VObject objects -> J.toJSON $ graphQLToJSON <$> objects
+  G.VVariable variable -> case absurd <$> vValue variable of
+    JSONValue j -> j
+    GraphQLValue g -> graphQLToJSON g
 
 jsonToGraphQL :: J.Value -> Either ErrorMessage (G.Value Void)
 jsonToGraphQL = \case

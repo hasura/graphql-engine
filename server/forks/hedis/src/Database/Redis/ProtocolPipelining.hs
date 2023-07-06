@@ -132,7 +132,7 @@ connGetReplies conn@Conn{..} = go S.empty (SingleLine "previous of first")
           Scanner.Done rest' r -> do
             -- r is the same as 'head' of 'connPending'. Since we just
             -- received r, we remove it from the pending list.
-            atomicModifyIORef' connPending $ \(_:rs) -> (rs, ())
+            atomicModifyIORef' connPending $ (\rs -> (rs, ())) . tail
             -- We now expect one less reply from Redis. We don't count to
             -- negative, which would otherwise occur during pubsub.
             atomicModifyIORef' connPendingCnt $ \n -> (max 0 (n-1), ())

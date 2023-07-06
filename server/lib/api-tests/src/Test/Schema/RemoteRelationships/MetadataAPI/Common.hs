@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# OPTIONS_GHC -Wno-error=deprecations #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | This file contains all the contexts for setting up remote relationships between
 -- different kinds of sources.

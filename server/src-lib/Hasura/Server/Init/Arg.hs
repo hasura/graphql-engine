@@ -104,7 +104,7 @@ retriesNumOption =
       Config._helpMessage = "No.of retries if Postgres connection error occurs (default: 1)"
     }
 
-parseDatabaseUrl :: Opt.Parser (Maybe Template.URLTemplate)
+parseDatabaseUrl :: Opt.Parser (Maybe Template.Template)
 parseDatabaseUrl =
   Opt.optional
     $ Opt.option

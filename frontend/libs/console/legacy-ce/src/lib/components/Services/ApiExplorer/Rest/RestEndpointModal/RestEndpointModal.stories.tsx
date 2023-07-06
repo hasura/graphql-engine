@@ -1,25 +1,25 @@
 import React from 'react';
-import z from 'zod';
-import { ComponentMeta } from '@storybook/react';
-import { RestEndpointModal, modalSchema } from './RestEndpointModal';
-import { SimpleForm } from '../../../../../new-components/Form';
+import { RestEndpointModal } from './RestEndpointModal';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { handlers } from '../../../../../mocks/metadata.mock';
+import { Meta } from '@storybook/react';
+import { rest } from 'msw';
+import introspectionSchema from '../../../../../features/RestEndpoints/hooks/mocks/introspectionWithoutCustomizations.json';
 
 export default {
   title: 'Features/REST endpoints/Modal',
   component: RestEndpointModal,
-} as ComponentMeta<typeof RestEndpointModal>;
-
-const modalInitialValues: z.infer<typeof modalSchema> = {
-  tableName: 'Table',
-  methods: ['CREATE', 'DELETE'],
-};
+  decorators: [ReactQueryDecorator()],
+  parameters: {
+    msw: [
+      ...handlers({ delay: 500 }),
+      rest.post(`http://localhost:8080/v1/graphql`, async (req, res, ctx) => {
+        return res(ctx.json(introspectionSchema));
+      }),
+    ],
+  },
+} as Meta<typeof RestEndpointModal>;
 
 export const Base = () => (
-  <SimpleForm
-    schema={modalSchema}
-    options={{ defaultValues: modalInitialValues }}
-    onSubmit={() => {}}
-  >
-    <RestEndpointModal />
-  </SimpleForm>
+  <RestEndpointModal tableName="user" onClose={() => {}} />
 );

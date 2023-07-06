@@ -12,12 +12,53 @@ const wrapRoot = (root: string, operation: string) => {
   return root ? `${root} { ${operation} }` : operation;
 };
 
-const extractFields = (operation: any, microfiber: any) => {
-  const type = microfiber.getType(recursiveType(operation.type));
+export type Operation = {
+  name: string;
+  type: GraphQLType;
+  args: Field[];
+};
+
+type Field = {
+  type: GraphQLType;
+  name: string;
+};
+
+type MicrofiberType = {
+  fields: Field[];
+};
+
+/**
+ * Given an operation , it extract all the scalar fields of the type of the operation.
+ * This exlcudes, for example, all the relationship fields
+ */
+const extractFields = (operation: Operation, microfiber: any) => {
+  const type: MicrofiberType = microfiber.getType(
+    recursiveType(operation.type)
+  );
   const fields = type?.fields
-    ?.filter((field: any) => recursiveType(field.type)?.kind === 'SCALAR')
+    ?.filter(field => recursiveType(field.type)?.kind === 'SCALAR')
     ?.map((f: { name: string }) => f.name);
   return { fields };
+};
+
+/**
+ * This function builds parts of the query for a given operation.
+ * It process the args and produces as output the fields of the operation,
+ * the fields of the query and the URL path
+ */
+const buildArgs = (fields: Field[]) => {
+  const args = fields?.map(arg => ({
+    name: arg.name,
+    type: recursiveType(arg.type)?.name,
+  }));
+
+  const operationArgs = args?.map(arg => `${arg.name}: $${arg.name}`);
+
+  const queryArgs = args?.map(arg => `$${arg.name}: ${arg.type}!`);
+
+  const path = fields?.map(arg => `:${arg.name}`).join('/');
+
+  return { queryArgs, operationArgs, path };
 };
 
 export const recursiveType = (type?: GraphQLType): GraphQLType | undefined => {
@@ -38,12 +79,10 @@ export const generateViewEndpoint: Generator['generator'] = (
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
-  const idType = recursiveType(
-    operation.args?.find((arg: any) => arg.name === 'id')?.type
-  )?.name;
+  const { queryArgs, operationArgs, path } = buildArgs(operation.args);
 
   const grapqhlOperation = `
-    ${operation.name}(id: $id) {
+    ${operation.name}(${operationArgs}) {
       ${fields?.join('\n')}
     }
   `;
@@ -51,14 +90,14 @@ export const generateViewEndpoint: Generator['generator'] = (
   const query: Query = {
     name: operation.name,
     query: formatSdl(`
-      query ${operation.name}($id: ${idType}!) {
+      query ${operation.name}(${queryArgs}) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
   };
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/:id`,
+    url: `${table}/${path}`,
     methods: ['GET'],
     definition: {
       query: {
@@ -117,12 +156,11 @@ export const generateDeleteEndpoint: Generator['generator'] = (
   microfiber
 ) => {
   const { fields } = extractFields(operation, microfiber);
-  const idType = recursiveType(
-    operation.args?.find((arg: any) => arg.name === 'id')?.type
-  )?.name;
+
+  const { queryArgs, operationArgs, path } = buildArgs(operation.args);
 
   const grapqhlOperation = `
-    ${operation.name}(id: $id) {
+    ${operation.name}(${operationArgs}) {
       ${fields?.join('\n')}
     }
   `;
@@ -130,14 +168,14 @@ export const generateDeleteEndpoint: Generator['generator'] = (
   const query: Query = {
     name: operation.name,
     query: formatSdl(`
-      mutation ${operation.name}($id: ${idType}!) {
+      mutation ${operation.name}(${queryArgs}) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
   };
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/:id`,
+    url: `${table}/${path}`,
     methods: ['DELETE'],
     definition: {
       query: {
@@ -159,7 +197,7 @@ export const generateInsertEndpoint: Generator['generator'] = (
 ) => {
   const { fields } = extractFields(operation, microfiber);
   const inputType = recursiveType(
-    operation.args?.find((arg: any) => arg.name === 'object')?.type
+    operation.args?.find(arg => arg.name === 'object')?.type
   )?.name;
 
   const grapqhlOperation = `
@@ -199,16 +237,26 @@ export const generateUpdateEndpoint: Generator['generator'] = (
   microfiber
 ) => {
   const { fields } = extractFields(operation, microfiber);
-  const idType = recursiveType(
-    operation.args?.find((arg: any) => arg.name === 'pk_columns')?.type
+
+  const pkTypeName = recursiveType(
+    operation.args?.find(arg => arg.name === 'pk_columns')?.type
   )?.name;
 
+  const pkType = microfiber.getType({
+    kind: 'INPUT_OBJECT',
+    name: pkTypeName,
+  });
+
+  const { queryArgs, operationArgs, path } = buildArgs(pkType?.inputFields);
+
   const inputType = recursiveType(
-    operation.args?.find((arg: any) => arg.name === '_set')?.type
+    operation.args?.find(arg => arg.name === '_set')?.type
   )?.name;
 
   const grapqhlOperation = `
-    ${operation.name}(pk_columns: $id, _set: $object) {
+    ${operation.name}(pk_columns: {
+      ${operationArgs}
+    }, _set: $object) {
       ${fields?.join('\n')}
     }
   `;
@@ -216,14 +264,14 @@ export const generateUpdateEndpoint: Generator['generator'] = (
   const query: Query = {
     name: operation.name,
     query: formatSdl(`
-      mutation ${operation.name}($id: ${idType}!, $object: ${inputType}!) {
+      mutation ${operation.name}(${queryArgs}, $object: ${inputType}!) {
           ${wrapRoot(root, grapqhlOperation)}
       }`),
   };
 
   const restEndpoint: RestEndpoint = {
     name: operation.name,
-    url: `${table}/:id`,
+    url: `${table}/${path}`,
     methods: ['POST'],
     definition: {
       query: {

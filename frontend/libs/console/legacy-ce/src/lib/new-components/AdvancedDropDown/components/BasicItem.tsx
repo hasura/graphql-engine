@@ -15,10 +15,10 @@ export const BasicItem: React.FC<{
   return (
     <DropdownMenu.Item
       disabled={disabled}
-      className="group/item outline-none cursor-pointer"
+      className="group/item outline-none"
       onClick={onClick}
     >
-      <StyleWrappers.Item dangerous={dangerous} link={link}>
+      <StyleWrappers.Item dangerous={dangerous} link={link} disabled={disabled}>
         {children}
       </StyleWrappers.Item>
     </DropdownMenu.Item>

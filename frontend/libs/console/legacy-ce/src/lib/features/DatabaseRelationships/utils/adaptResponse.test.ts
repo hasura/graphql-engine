@@ -126,6 +126,74 @@ describe('adaptLocalArrayRelationshipWithFkConstraint', () => {
 
     expect(result).toEqual(expected);
   });
+
+  describe('scenario two', () => {
+    it('returns the correct array relationships', () => {
+      const table: Table = { name: 'table_a', schema: 'public' };
+      const dataSourceName = 'aPostgres';
+      const relationship: LocalTableArrayRelationship = {
+        name: 'table_a_table_cs',
+        using: {
+          foreign_key_constraint_on: {
+            column: 'id_a',
+            table: { name: 'table_c', schema: 'public' },
+          },
+        },
+      };
+      const suggestedRelationships: SuggestedRelationship[] = [
+        {
+          type: 'array',
+          from: {
+            table: { schema: 'public', name: 'table_a' },
+            columns: ['id'],
+          },
+          to: {
+            table: { schema: 'public', name: 'table_c' },
+            columns: ['id_a'],
+            constraint_name: 'table_c_id_a_fkey',
+          },
+        },
+        {
+          type: 'array',
+          from: {
+            table: { schema: 'public', name: 'table_b' },
+            columns: ['id'],
+          },
+          to: {
+            table: { schema: 'public', name: 'table_c' },
+            columns: ['id_b'],
+            constraint_name: 'table_c_id_b_fkey',
+          },
+        },
+      ];
+
+      const expected: LocalRelationship = {
+        name: 'table_a_table_cs',
+        fromSource: 'aPostgres',
+        fromTable: { schema: 'public', name: 'table_a' },
+        relationshipType: 'Array',
+        type: 'localRelationship',
+        definition: {
+          toTable: { schema: 'public', name: 'table_c' },
+          toColumns: ['id_a'],
+          fromTable: { schema: 'public', name: 'table_a' },
+          fromColumns: ['id'],
+          mapping: { id_a: 'id' },
+        },
+      };
+
+      const result = adaptLocalArrayRelationshipWithFkConstraint({
+        table,
+        dataSourceName,
+        relationship,
+        suggestedRelationships,
+      });
+
+      console.log(result);
+
+      expect(result).toEqual(expected);
+    });
+  });
 });
 
 describe('adaptLocalObjectRelationshipWithFkConstraint', () => {

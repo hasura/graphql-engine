@@ -73,7 +73,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Eventing (EventId (..))
-import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.Webhook.Transform (MetadataResponseTransform, RequestTransform)

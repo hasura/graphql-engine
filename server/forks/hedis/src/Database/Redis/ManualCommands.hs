@@ -847,8 +847,8 @@ instance RedisResult StreamsRecord where
         return StreamsRecord{..}
         where
             decodeKeyValues :: [ByteString] -> [(ByteString, ByteString)]
-            decodeKeyValues bs = map (\[x,y] -> (x,y)) $ chunksOfTwo bs
-            chunksOfTwo (x:y:rest) = [x,y]:chunksOfTwo rest
+            decodeKeyValues bs = chunksOfTwo bs
+            chunksOfTwo (x:y:rest) = (x, y) : chunksOfTwo rest
             chunksOfTwo _ = []
     decode a = Left a
 

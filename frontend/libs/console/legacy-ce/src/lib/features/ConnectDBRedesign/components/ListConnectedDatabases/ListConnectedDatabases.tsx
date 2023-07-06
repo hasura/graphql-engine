@@ -108,6 +108,8 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         resourceName: databaseItem.dataSourceName,
         resourceType: 'Data Source',
         destroyTerm: 'remove',
+        appendTerm:
+          'Any metadata dependent objects (relationships, permissions etc.) from other sources will also be dropped as a result.',
         onConfirm: async () => {
           let success = true;
 

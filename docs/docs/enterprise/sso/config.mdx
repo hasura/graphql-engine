@@ -19,6 +19,17 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 <div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
 
+## Authorization Flow
+
+<Thumbnail src="/img/enterprise/sso-auth-flow-oauth.png" alt="SSO OAuth flow" />
+
+1. First of all, the GraphQL Engine server needs to know the authentication context and verification secrets of the
+   Identity Provider (IdP). If the JSON Web Key Sets (JWKS) are exposed on the remote URL, the server will fetch the JWT
+   secret on start up.
+2. When clicking on the SSO login button, the Console initiates the Authorization Code flow with the IdP.
+3. On successful authorization, the IdP issues a JWT ID token to the Console with an `admin` or equivalent role.
+4. The Console then uses the JWT to execute Metadata and GraphQL API calls.
+
 ## Configuration
 
 ### Configuring the identity provider
@@ -75,6 +86,18 @@ portal to other identity providers. Hasura talks to the middleware to authorize 
 about how the middleware handles external providers. Dex supports [SAML 2.0](https://dexidp.io/docs/connectors/saml/),
 [LDAP](https://dexidp.io/docs/connectors/ldap/) protocols, as well as identity providers like GitHub, Google, and Active
 Directory.
+
+The authorization flow is similar to the OAuth / OpenID Connect flow, with an extra step to authenticate the IdP through
+middleware.
+
+<Thumbnail src="/img/enterprise/sso-auth-flow-middleware.png" alt="SSO middleware authentication flow" />
+
+1. Configure GraphQL Engine with the JWT Secret and Login URL of the middleware.
+2. When clicking on the SSO login button, the Console initiates the Authorization Code flow with the middleware.
+3. The middleware handles the authorization with the IdP.
+4. On successful authorization, the middleware converts the profile of the IdP to a JWT ID token and issues it to the
+   Console.
+5. The Console then uses the JWT to execute Metadata and GraphQL API calls.
 
 ### SAML configuration
 

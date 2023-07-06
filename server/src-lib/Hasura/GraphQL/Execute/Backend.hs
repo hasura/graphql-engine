@@ -15,6 +15,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Ordered qualified as JO
+import Data.Environment qualified as Env
 import Data.Kind (Type)
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
@@ -24,7 +25,9 @@ import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
+import Hasura.GraphQL.Parser.Variable qualified as G
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR
@@ -40,7 +43,9 @@ import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 -- | This typeclass enacapsulates how a given backend translates a root field into an execution
@@ -77,9 +82,14 @@ class
   mkDBMutationPlan ::
     forall m.
     ( MonadError QErr m,
+      MonadIO m,
       MonadQueryTags m,
-      MonadReader QueryTagsComment m
+      MonadReader QueryTagsComment m,
+      Tracing.MonadTrace m
     ) =>
+    Env.Environment ->
+    HTTP.Manager ->
+    L.Logger L.Hasura ->
     UserInfo ->
     Options.StringifyNumbers ->
     SourceName ->
@@ -87,6 +97,7 @@ class
     MutationDB b Void (UnpreparedValue b) ->
     [HTTP.Header] ->
     Maybe G.Name ->
+    Maybe (HashMap G.Name (G.Value G.Variable)) ->
     m (DBStepInfo b)
   mkLiveQuerySubscriptionPlan ::
     forall m.

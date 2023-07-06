@@ -8,6 +8,7 @@ import algoliasearch from 'algoliasearch';
 import styles from './styles.module.scss';
 import Light404 from '@site/static/img/light-404.png';
 import Dark404 from '@site/static/img/dark-404.png';
+import Link from "@docusaurus/Link";
 
 export default function NotFound() {
   // State for handling search results
@@ -81,6 +82,9 @@ export default function NotFound() {
                       : ``}
                   </Translate>
                 </p>
+                <div className={styles['homeLink']}>
+                  <Link to='/latest/index'>Hasura Docs Home</Link>
+                </div>
                 <ul className={styles['results']}>
                   {searchResults &&
                     searchResults.map((result) => (

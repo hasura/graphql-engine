@@ -43,7 +43,7 @@ import Hasura.RQL.DML.Update
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion))
+import Hasura.RQL.Types.SchemaCache (MetadataWithResourceVersion (MetadataWithResourceVersion), SchemaCache (scInconsistentObjs))
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.Server.Types
@@ -124,13 +124,13 @@ runQuery appContext schemaCache rqlQuery = do
 
   let dynamicConfig = buildCacheDynamicConfig appContext
   MetadataWithResourceVersion metadata currentResourceVersion <- Tracing.newSpan "fetchMetadata" $ liftEitherM fetchMetadata
-  ((result, updatedMetadata), updatedCache, invalidations, sourcesIntrospection) <-
+  ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
     runQueryM (acSQLGenCtx appContext) rqlQuery
       -- We can use defaults here unconditionally, since there is no MD export function in V2Query
       & runMetadataT metadata (acMetadataDefaults appContext)
       & runCacheRWT dynamicConfig schemaCache
-  when (queryModifiesSchema rqlQuery) $ do
-    case appEnvEnableMaintenanceMode of
+  if queryModifiesSchema rqlQuery
+    then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <-
@@ -138,17 +138,30 @@ runQuery appContext schemaCache rqlQuery = do
             $ liftEitherM
             $ setMetadata currentResourceVersion updatedMetadata
 
+        (_, modSchemaCache', _, _, _) <-
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
+
         -- save sources introspection to stored-introspection DB
         Tracing.newSpan "storeSourcesIntrospection"
           $ saveSourcesIntrospection (_lsLogger appEnvLoggers) sourcesIntrospection newResourceVersion
+
+        -- run schema registry action
+        Tracing.newSpan "runSchemaRegistryAction"
+          $ for_ schemaRegistryAction
+          $ \action -> do
+            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache'))
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
           $ liftEitherM
           $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+
+        pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->
         throw500 "metadata cannot be modified in maintenance mode"
-  pure (result, updatedCache)
+    else pure (result, modSchemaCache)
 
 queryModifiesSchema :: RQLQuery -> Bool
 queryModifiesSchema = \case

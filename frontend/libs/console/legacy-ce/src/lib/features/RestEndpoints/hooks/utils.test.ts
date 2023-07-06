@@ -281,8 +281,8 @@ describe('generateUpdateEndpoint', () => {
     expect(query).toEqual({
       name: 'update_user_by_pk',
       query:
-        formatSdl(`mutation update_user_by_pk($id: user_pk_columns_input!, $object: user_set_input!) {
-      update_user_by_pk(pk_columns: $id, _set: $object) {
+        formatSdl(`mutation update_user_by_pk($id: Int!, $object: user_set_input!) {
+      update_user_by_pk(pk_columns: {id: $id}, _set: $object) {
         address
         bool
         count
@@ -322,9 +322,9 @@ describe('generateUpdateEndpoint', () => {
     expect(query).toEqual({
       name: 'a_update_user_by_pk_b',
       query:
-        formatSdl(`mutation a_update_user_by_pk_b($id: c_user_pk_columns_input_d!, $object: c_user_set_input_d!) {
+        formatSdl(`mutation a_update_user_by_pk_b($id: Int!, $object: c_user_set_input_d!) {
       root_ {
-        a_update_user_by_pk_b(pk_columns: $id, _set: $object) {
+        a_update_user_by_pk_b(pk_columns: {id: $id}, _set: $object) {
           address
           bool
           count

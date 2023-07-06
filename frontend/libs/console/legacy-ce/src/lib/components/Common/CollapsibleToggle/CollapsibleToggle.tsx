@@ -1,5 +1,6 @@
+import clsx from 'clsx';
 import React from 'react';
-import { FaChevronRight } from 'react-icons/fa';
+import { BsChevronRight } from 'react-icons/bs';
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -77,7 +78,12 @@ class CollapsibleToggle extends React.Component<
       >
         <summary className="cursor-pointer flex items-start" data-test={testId}>
           <span className="inline-block text-xs mr-sm mt-0.5">
-            <FaChevronRight className={`${isOpen && 'rotate-90'}`} />
+            <BsChevronRight
+              className={clsx(
+                'transition ease-in-out text-gray-600 text-xs stroke-2 ',
+                isOpen ? 'rotate-90' : 'rotate-0'
+              )}
+            />
           </span>
           <span className="inline-block">{getTitle()}</span>
         </summary>

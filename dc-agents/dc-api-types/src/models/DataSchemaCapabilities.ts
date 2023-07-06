@@ -14,5 +14,9 @@ export type DataSchemaCapabilities = {
    * Whether tables can have primary keys
    */
   supports_primary_keys?: boolean;
+  /**
+   * Whether the database supports tables with no defined schema
+   */
+  supports_schemaless_tables?: boolean;
 };
 

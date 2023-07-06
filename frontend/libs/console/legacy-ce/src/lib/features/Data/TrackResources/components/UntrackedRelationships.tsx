@@ -35,15 +35,12 @@ export const UntrackedRelationships: React.VFC<UntrackedRelationshipsProps> = ({
   const [selectedRelationship, setSelectedRelationship] =
     useState<SuggestedRelationshipWithName | null>(null);
 
-  const {
-    suggestedRelationships,
-    isLoadingSuggestedRelationships,
-    // onAddMultipleSuggestedRelationships,
-  } = useAllSuggestedRelationships({
-    dataSourceName,
-    isEnabled: true,
-    omitTracked: true,
-  });
+  const { suggestedRelationships, isLoadingSuggestedRelationships } =
+    useAllSuggestedRelationships({
+      dataSourceName,
+      isEnabled: true,
+      omitTracked: true,
+    });
 
   const { createTableRelationships, isLoading } =
     useCreateTableRelationships(dataSourceName);

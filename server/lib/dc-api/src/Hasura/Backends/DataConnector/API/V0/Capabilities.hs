@@ -27,6 +27,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     dscSupportsPrimaryKeys,
     dscSupportsForeignKeys,
     dscColumnNullability,
+    dscSupportsSchemalessTables,
     defaultDataSchemaCapabilities,
     ColumnNullability (..),
     QueryCapabilities (..),
@@ -136,7 +137,8 @@ instance HasCodec Capabilities where
 data DataSchemaCapabilities = DataSchemaCapabilities
   { _dscSupportsPrimaryKeys :: Bool,
     _dscSupportsForeignKeys :: Bool,
-    _dscColumnNullability :: ColumnNullability
+    _dscColumnNullability :: ColumnNullability,
+    _dscSupportsSchemalessTables :: Bool
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -144,7 +146,7 @@ data DataSchemaCapabilities = DataSchemaCapabilities
 
 defaultDataSchemaCapabilities :: DataSchemaCapabilities
 defaultDataSchemaCapabilities =
-  DataSchemaCapabilities False False NullableAndNonNullableColumns
+  DataSchemaCapabilities False False NullableAndNonNullableColumns False
 
 instance HasCodec DataSchemaCapabilities where
   codec =
@@ -153,6 +155,7 @@ instance HasCodec DataSchemaCapabilities where
         <$> optionalFieldWithOmittedDefault "supports_primary_keys" (_dscSupportsPrimaryKeys defaultDataSchemaCapabilities) "Whether tables can have primary keys" .= _dscSupportsPrimaryKeys
         <*> optionalFieldWithOmittedDefault "supports_foreign_keys" (_dscSupportsForeignKeys defaultDataSchemaCapabilities) "Whether tables can have foreign keys" .= _dscSupportsForeignKeys
         <*> optionalFieldWithOmittedDefault "column_nullability" (_dscColumnNullability defaultDataSchemaCapabilities) "The sort of column nullability that is supported" .= _dscColumnNullability
+        <*> optionalFieldWithOmittedDefault "supports_schemaless_tables" (_dscSupportsSchemalessTables defaultDataSchemaCapabilities) "Whether the database supports tables with no defined schema" .= _dscSupportsSchemalessTables
 
 data ColumnNullability
   = OnlyNullableColumns

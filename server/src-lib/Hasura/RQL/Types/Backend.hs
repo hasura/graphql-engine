@@ -425,5 +425,8 @@ class
   default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)
   backendSupportsNestedObjects = throw400 InvalidConfiguration "Nested objects not supported"
 
+  sourceSupportsSchemalessTables :: SourceConfig b -> Bool
+  sourceSupportsSchemalessTables = const False
+
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

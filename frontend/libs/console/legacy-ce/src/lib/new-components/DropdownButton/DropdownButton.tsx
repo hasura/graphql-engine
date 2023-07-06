@@ -7,11 +7,13 @@ import { DropdownMenu, DropdownMenuProps } from '../DropdownMenu';
 interface DropdownButtonProps extends React.ComponentProps<typeof Button> {
   items: React.ReactNode[][];
   options?: DropdownMenuProps['options'];
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const DropdownButton: React.FC<DropdownButtonProps> = ({
   items,
   options = {},
+  size,
   ...rest
 }) => {
   const dropdownMenuOptions = produce(options, draft => {
@@ -30,7 +32,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
         icon={
           <FaChevronDown className="transition-transform group-radix-state-open:rotate-180 w-3 h-3" />
         }
-        size="sm"
+        size={size ?? 'sm'}
         {...rest}
       />
     </DropdownMenu>

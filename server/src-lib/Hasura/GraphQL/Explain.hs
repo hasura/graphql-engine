@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Explain
   ( explainGQLQuery,
     GQLExplain,
@@ -8,7 +6,6 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
@@ -46,12 +43,14 @@ data GQLExplain = GQLExplain
     _gqeUser :: !(Maybe (HashMap.HashMap Text Text)),
     _gqeIsRelay :: !(Maybe Bool)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$( J.deriveJSON
-     hasuraJSON {J.omitNothingFields = True}
-     ''GQLExplain
- )
+instance J.FromJSON GQLExplain where
+  parseJSON = J.genericParseJSON hasuraJSON {J.omitNothingFields = True}
+
+instance J.ToJSON GQLExplain where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 -- NOTE: This function has a 'MonadTrace' constraint in master, but we don't need it
 -- here. We should evaluate if we need it here.
@@ -131,7 +130,7 @@ explainGQLQuery sc agentLicenseKey reqHeaders (GQLExplain query userVarsRaw mayb
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API
       -- RequestContext are not necessary for EXPLAIN API
-      validSubscription <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
+      (validSubscription, _) <- E.buildSubscriptionPlan userInfo unpreparedQueries parameterizedQueryHash reqHeaders (_unOperationName <$> _grOperationName query)
       case validSubscription of
         E.SEAsyncActionsWithNoRelationships _ -> throw400 NotSupported "async action query fields without relationships to table cannot be explained"
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do

@@ -41,5 +41,7 @@ mkAnnotatedDelete AnnotatedDeleteBuilder {..} =
       _adWhere = (BoolAnd [], E.toBoolExp adbWhere),
       _adOutput = adbOutput,
       _adAllCols = adbColumns,
-      _adNamingConvention = Nothing
+      _adNamingConvention = Nothing,
+      _adValidateInput = Nothing,
+      _adIsDeleteByPk = False
     }

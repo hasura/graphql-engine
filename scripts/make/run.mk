@@ -19,6 +19,7 @@ run-oss-server: $(CONSOLE_CE_ASSETS_PATH) remove-tix-file
 	cabal run graphql-engine:exe:graphql-engine -- \
 		--database-url '$(HGE_POSTGRES_URL)' \
 		serve \
+		--dev-mode \
 		--enable-console --console-assets-dir '$(CONSOLE_CE_ASSETS_PATH)' \
 		--enabled-log-types '$(ENABLED_LOG_TYPES)'
 

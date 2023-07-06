@@ -2,6 +2,7 @@ import React from 'react';
 import { CountLabel } from './CountLabel';
 import { SchemaChange } from '../types';
 import { FaChevronRight } from 'react-icons/fa';
+import { Analytics } from '../../Analytics';
 
 export const SchemaRow: React.VFC<{
   role: string;
@@ -41,14 +42,17 @@ export const SchemaRow: React.VFC<{
           </>
         )}
       </div>
+
       {onClick && (
-        <div
-          className="flex text-base w-[2%] justify-end mt-[6px]"
-          role="button"
-          onClick={onClick}
-        >
-          <FaChevronRight />
-        </div>
+        <Analytics name="schema-registry-details-btn">
+          <div
+            className="flex text-base w-[2%] justify-end mt-[6px]"
+            role="button"
+            onClick={onClick}
+          >
+            <FaChevronRight />
+          </div>
+        </Analytics>
       )}
       {!onClick && <div className="flex w-[4%] justify-end"></div>}
     </div>

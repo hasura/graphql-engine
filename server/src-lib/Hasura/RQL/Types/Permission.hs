@@ -7,6 +7,8 @@ module Hasura.RQL.Types.Permission
     DelPermDef,
     InsPerm (..),
     InsPermDef,
+    ValidateInput (..),
+    ValidateInputHttpDefinition (..),
     PermColSpec (..),
     PermDef (..),
     PermType (..),
@@ -30,7 +32,7 @@ where
 
 import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
-import Autodocodec.Extended (optionalFieldOrIncludedNull')
+import Autodocodec.Extended (optionalFieldOrIncludedNull', typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (snakeCase)
@@ -39,6 +41,7 @@ import Data.Hashable
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
+import Data.Typeable (Typeable)
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -48,6 +51,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.Roles (RoleName)
 import PostgreSQL.Binary.Decoding qualified as PD
 
@@ -267,7 +271,8 @@ data InsPerm (b :: BackendType) = InsPerm
   { ipCheck :: BoolExp b,
     ipSet :: Maybe (ColumnValues b Value),
     ipColumns :: Maybe (PermColSpec b),
-    ipBackendOnly :: Bool -- see Note [Backend only permissions]
+    ipBackendOnly :: Bool, -- see Note [Backend only permissions]
+    ipValidateInput :: Maybe (ValidateInput InputWebhook)
   }
   deriving (Show, Eq, Generic)
 
@@ -283,6 +288,8 @@ instance (Backend b) => FromJSON (InsPerm b) where
       <*> o
       .:? "backend_only"
       .!= False
+      <*> o
+      .:? "validate_input"
 
 instance (Backend b) => ToJSON (InsPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -299,6 +306,8 @@ instance (Backend b) => HasCodec (InsPerm b) where
       AC..= ipColumns
         <*> optionalFieldWithDefault' "backend_only" False
       AC..= ipBackendOnly
+        <*> optionalField' "validate_input"
+      AC..= ipValidateInput
 
 type InsPermDef b = PermDef b InsPerm
 
@@ -336,6 +345,76 @@ isRootFieldAllowed :: (Eq rootField) => rootField -> AllowedRootFields rootField
 isRootFieldAllowed rootField = \case
   ARFAllowAllRootFields -> True
   ARFAllowConfiguredRootFields allowedRootFields -> rootField `elem` allowedRootFields
+
+-- Input validation for inserts
+data ValidateInputHttpDefinition webhook = ValidateInputHttpDefinition
+  { _vihdUrl :: webhook,
+    _vihdHeaders :: [HeaderConf],
+    _vihdTimeout :: Timeout,
+    _vihdForwardClientHeaders :: Bool
+  }
+  deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+
+instance (NFData webhook) => NFData (ValidateInputHttpDefinition webhook)
+
+instance (FromJSON webhook) => FromJSON (ValidateInputHttpDefinition webhook) where
+  parseJSON = withObject "ValidateInputHttpDefinition" $ \o ->
+    ValidateInputHttpDefinition
+      <$> o
+      .: "url"
+      <*> o
+      .:? "headers"
+      .!= []
+      <*> o
+      .:? "timeout"
+      .!= (Timeout 10)
+      <*> o
+      .:? "forward_client_headers"
+      .!= False
+
+instance (ToJSON webhook) => ToJSON (ValidateInputHttpDefinition webhook) where
+  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+
+instance (HasCodec webhook) => HasCodec (ValidateInputHttpDefinition webhook) where
+  codec =
+    AC.object "ValidateInputHttpDefinition"
+      $ ValidateInputHttpDefinition
+      <$> requiredField' "url"
+      AC..= _vihdUrl
+        <*> optionalFieldWithOmittedDefault' "headers" []
+      AC..= _vihdHeaders
+        <*> optionalFieldWithOmittedDefault' "timeout" (Timeout 10)
+      AC..= _vihdTimeout
+        <*> optionalFieldWithOmittedDefault' "forward_client_headers" False
+      AC..= _vihdForwardClientHeaders
+
+data ValidateInput webhook
+  = VIHttp (ValidateInputHttpDefinition webhook)
+  deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+
+instance (NFData webhook) => NFData (ValidateInput webhook)
+
+instance (FromJSON webhook) => FromJSON (ValidateInput webhook) where
+  parseJSON = withObject "ValidateInput" $ \o -> do
+    ty <- o .: "type"
+    case ty of
+      "http" -> VIHttp <$> o .: "definition"
+      _ -> fail $ "expecting only 'http' for 'type' but got " <> ty
+
+instance (ToJSON webhook) => ToJSON (ValidateInput webhook) where
+  toJSON v =
+    let (ty, def) = case v of
+          VIHttp def' -> (String "http", toJSON def')
+     in object ["type" .= ty, "definition" .= def]
+
+instance (HasCodec webhook, Typeable webhook) => HasCodec (ValidateInput webhook) where
+  codec =
+    AC.object ("ValidateInput" <> typeableName @webhook)
+      $ VIHttp
+      <$ requiredFieldWith' "type" (AC.literalTextCodec "http")
+      AC..= const "http"
+        <*> requiredField' "definition"
+      AC..= ((\(VIHttp def) -> def))
 
 -- Select constraint
 data SelPerm (b :: BackendType) = SelPerm
@@ -436,7 +515,8 @@ type SelPermDef b = PermDef b SelPerm
 -- Delete permission
 data DelPerm (b :: BackendType) = DelPerm
   { dcFilter :: BoolExp b,
-    dcBackendOnly :: Bool -- see Note [Backend only permissions]
+    dcBackendOnly :: Bool, -- see Note [Backend only permissions]
+    dcValidateInput :: Maybe (ValidateInput InputWebhook)
   }
   deriving (Show, Eq, Generic)
 
@@ -448,6 +528,8 @@ instance (Backend b) => FromJSON (DelPerm b) where
       <*> o
       .:? "backend_only"
       .!= False
+      <*> o
+      .:? "validate_input"
 
 instance (Backend b) => ToJSON (DelPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -460,6 +542,8 @@ instance (Backend b) => HasCodec (DelPerm b) where
       .== dcFilter
         <*> optionalFieldWithOmittedDefault' "backend_only" False
       .== dcBackendOnly
+        <*> optionalField' "validate_input"
+      .== dcValidateInput
     where
       (.==) = (AC..=)
 
@@ -476,7 +560,8 @@ data UpdPerm (b :: BackendType) = UpdPerm
     -- but Nothing should be equivalent to the expression which always
     -- returns true.
     ucCheck :: Maybe (BoolExp b),
-    ucBackendOnly :: Bool -- see Note [Backend only permissions]
+    ucBackendOnly :: Bool, -- see Note [Backend only permissions]
+    ucValidateInput :: Maybe (ValidateInput InputWebhook)
   }
   deriving (Show, Eq, Generic)
 
@@ -494,6 +579,8 @@ instance (Backend b) => FromJSON (UpdPerm b) where
       <*> o
       .:? "backend_only"
       .!= False
+      <*> o
+      .:? "validate_input"
 
 instance (Backend b) => ToJSON (UpdPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -514,6 +601,8 @@ instance (Backend b) => HasCodec (UpdPerm b) where
       AC..= ucCheck
         <*> optionalFieldWithOmittedDefault' "backend_only" False
       AC..= ucBackendOnly
+        <*> optionalField' "validate_input"
+      AC..= ucValidateInput
 
 type UpdPermDef b = PermDef b UpdPerm
 

@@ -25,6 +25,11 @@ import Thumbnail from '@site/src/components/Thumbnail';
 With Hasura Enterprise Edition, you can enable SSO (Single Sign-On) on the Hasura Console with your identity management
 system through the [OAuth 2.0](https://oauth.net) / [OpenID Connect](https://openid.net/connect) protocol.
 
+Hasura provides full support for OAuth 2.0 as a Single Sign-On (SSO) solution without the need for additional tooling or
+services. OAuth 2.0 is an industry-standard protocol that enables secure and delegated access to protected resources.
+
+Hasura SSO can also be extended to use additional providers by leveraging [Dex](https://github.com/dexidp/dex).
+
 :::info Supported from
 
 SSO is supported from versions `v2.24.0-beta.1` and above.
@@ -46,4 +51,9 @@ To get started, either use our general configuration guide or follow the specifi
 provider:
 
 - [Single Sign-on configuration](/enterprise/sso/config.mdx)
+- [Enable ADFS Single Sign-on](/enterprise/sso/adfs.mdx)
+- [Enable Auth0 Single Sign-on](/enterprise/sso/auth0.mdx)
 - [Enable Azure AD Single Sign-on](/enterprise/sso/azure-ad.mdx)
+- [Enable Google Workspace Single Sign-on](/enterprise/sso/google-workspace.mdx)
+- [Enable LDAP Single Sign-on](/enterprise/sso/ldap.mdx)
+- [Troubleshooting](/enterprise/sso/troubleshooting.mdx)

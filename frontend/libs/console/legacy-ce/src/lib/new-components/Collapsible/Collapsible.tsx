@@ -9,6 +9,10 @@ export type CollapsibleProps = {
    */
   disabled?: boolean;
   /**
+   * Allows styling to chevron icon
+   */
+  chevronClass?: string;
+  /**
    * The collapse trigger children
    */
   triggerChildren: React.ReactNode;
@@ -42,6 +46,7 @@ export const Collapsible: React.VFC<CollapsibleProps> = ({
   triggerChildren,
   children,
   disabled = false,
+  chevronClass,
   defaultOpen = false,
   disableContentStyles = false,
   animationSpeed = 'default',
@@ -75,8 +80,9 @@ export const Collapsible: React.VFC<CollapsibleProps> = ({
       >
         <Chevron
           className={clsx(
-            'transition ease-in-out text-gray-600 mr-2',
-            open ? 'rotate-90' : 'rotate-0'
+            'transition ease-in-out text-gray-600',
+            open ? 'rotate-90' : 'rotate-0',
+            chevronClass ? chevronClass : 'mr-2'
           )}
         />
         {doNotWrapChildren ? triggerChildren : <span>{triggerChildren}</span>}

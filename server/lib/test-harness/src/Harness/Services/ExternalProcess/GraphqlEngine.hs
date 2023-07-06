@@ -203,6 +203,8 @@ spawnServer testEnv (HgeConfig {hgeConfigEnvironmentVars}) = do
             "-Heartbeat",
             "serve",
             "--enable-console",
+            "--console-assets-dir",
+            "frontend/dist/apps/server-assets-console-ce",
             "--server-port",
             show port,
             "--metadata-database-url",

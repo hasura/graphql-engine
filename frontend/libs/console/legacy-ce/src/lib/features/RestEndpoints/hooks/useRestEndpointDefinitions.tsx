@@ -3,6 +3,7 @@ import { useIntrospectionSchema } from '../../../components/Services/Actions/Com
 import { useEffect, useState } from 'react';
 import { Query, RestEndpoint } from '../../hasura-metadata-types';
 import {
+  Operation,
   generateDeleteEndpoint,
   generateInsertEndpoint,
   generateUpdateEndpoint,
@@ -10,8 +11,9 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { formatSdl } from 'format-graphql';
+import { useMetadata } from '../../MetadataAPI';
 
-export type EndpointType = 'VIEW' | 'VIEW_ALL' | 'CREATE' | 'UPDATE' | 'DELETE';
+export type EndpointType = 'READ' | 'READ_ALL' | 'CREATE' | 'UPDATE' | 'DELETE';
 
 export type EndpointDefinition = {
   restEndpoint: RestEndpoint;
@@ -19,7 +21,9 @@ export type EndpointDefinition = {
 };
 
 type EndpointDefinitions = {
-  [key: string]: Partial<Record<EndpointType, EndpointDefinition>>;
+  [key: string]: Partial<
+    Record<EndpointType, EndpointDefinition & { exists: boolean }>
+  >;
 };
 
 export type Generator = {
@@ -27,7 +31,7 @@ export type Generator = {
   generator: (
     root: string,
     table: string,
-    operation: any,
+    operation: Operation,
     microfiber: any
   ) => EndpointDefinition;
 };
@@ -85,11 +89,11 @@ export const getOperations = (microfiber: any) => {
 };
 
 const generators: Record<EndpointType, Generator> = {
-  VIEW: {
+  READ: {
     regExp: /fetch data from the table: "(.+)" using primary key columns$/,
     generator: generateViewEndpoint,
   },
-  VIEW_ALL: {
+  READ_ALL: {
     regExp: /fetch data from the table: "(.+)"$/,
     generator: generateViewAllEndpoint,
   },
@@ -115,9 +119,13 @@ export const useRestEndpointDefinitions = () => {
     error,
   } = useIntrospectionSchema();
 
+  const { data: metadata } = useMetadata();
+
   const [data, setData] = useState<EndpointDefinitions>();
 
   useEffect(() => {
+    const existingRestEndpoints = metadata?.metadata?.rest_endpoints || [];
+
     if (introspectionSchema) {
       const response: EndpointDefinitions = {};
       const microfiber = new Microfiber(introspectionSchema);
@@ -131,7 +139,7 @@ export const useRestEndpointDefinitions = () => {
 
       for (const operation of operations.operations) {
         for (const endpointType in generators) {
-          const match = operation.description.match(
+          const match = operation.description?.match(
             generators[endpointType as EndpointType].regExp
           );
           const table = match?.[1];
@@ -147,14 +155,21 @@ export const useRestEndpointDefinitions = () => {
 
             response[table] = {
               ...(response[table] || {}),
-              [endpointType]: definition,
+              [endpointType]: {
+                ...definition,
+                exists: existingRestEndpoints.some(
+                  endpoint =>
+                    endpoint.definition.query.query_name ===
+                    definition.query.name
+                ),
+              },
             };
           }
         }
       }
       setData(response);
     }
-  }, [introspectionSchema]);
+  }, [introspectionSchema, metadata]);
 
   return {
     data,

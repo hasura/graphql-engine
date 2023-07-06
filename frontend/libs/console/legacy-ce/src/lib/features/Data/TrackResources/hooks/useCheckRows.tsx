@@ -3,9 +3,12 @@ import produce from 'immer';
 import React from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
 import { DropdownMenu } from '../../../../new-components/DropdownMenu';
+import { FaFilter } from 'react-icons/fa';
+import { BsCheck2All } from 'react-icons/bs';
 
 export const useCheckRows = <T,>(
   data: (T & { id: string })[],
+  filteredData: (T & { id: string })[],
   allData: (T & { id: string })[]
 ) => {
   const [checkedIds, setCheckedIds] = useState<string[]>([]);
@@ -15,7 +18,8 @@ export const useCheckRows = <T,>(
   // Derived statuses
   const allChecked =
     (data.length > 0 && checkedIds.length === data.length) ||
-    (allData.length > 0 && checkedIds.length === allData.length);
+    (allData.length > 0 && checkedIds.length === allData.length) ||
+    (filteredData.length > 0 && checkedIds.length === filteredData.length);
 
   // Input field determinate status
   const partialSelection =
@@ -38,9 +42,19 @@ export const useCheckRows = <T,>(
     );
   };
 
-  const toggleAll = (useOriginalList?: boolean) => {
+  const toggleAll = (props?: {
+    useOriginalList?: boolean;
+    useAllFilteredList?: boolean;
+  }) => {
+    const { useOriginalList, useAllFilteredList } = props ?? {};
+
     if (useOriginalList) {
       setCheckedIds(allData.map(item => item.id));
+      return;
+    }
+
+    if (useAllFilteredList) {
+      setCheckedIds(filteredData.map(item => item.id));
       return;
     }
 
@@ -75,9 +89,20 @@ export const useCheckRows = <T,>(
       <DropdownMenu
         items={[
           [
-            <span className="py-1.5" onClick={() => toggleAll(true)}>
-              All {allData.length} items
-            </span>,
+            <div
+              className="py-1.5 gap-2 flex items-center"
+              onClick={() => toggleAll({ useAllFilteredList: true })}
+            >
+              <FaFilter /> All {filteredData.length} results (filtered)
+            </div>,
+          ],
+          [
+            <div
+              className="py-1.5 gap-2 flex items-center"
+              onClick={() => toggleAll({ useOriginalList: true })}
+            >
+              <BsCheck2All /> All {allData.length} items
+            </div>,
           ],
         ]}
       >

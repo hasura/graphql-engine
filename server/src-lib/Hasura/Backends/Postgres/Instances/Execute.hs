@@ -16,6 +16,7 @@ where
 
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.IntMap qualified as IntMap
@@ -23,7 +24,7 @@ import Data.Sequence qualified as Seq
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate (QueryContext (..), QueryOperationType (..))
-import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction)
+import Hasura.Backends.Postgres.Execute.Insert (convertToSQLTransaction, validateInsertInput, validateInsertRows)
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.Execute.Prepare
   ( PlanningSt (..),
@@ -67,17 +68,15 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
   )
 import Hasura.GraphQL.Namespace qualified as G
+import Hasura.GraphQL.Parser.Variable qualified as G
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
   ( QueryTagsComment (..),
     emptyQueryTagsComment,
   )
 import Hasura.RQL.IR
-import Hasura.RQL.IR.Delete qualified as IR
-import Hasura.RQL.IR.Insert qualified as IR
-import Hasura.RQL.IR.Returning qualified as IR
-import Hasura.RQL.IR.Select qualified as IR
-import Hasura.RQL.IR.Update qualified as IR
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
@@ -90,11 +89,13 @@ import Hasura.RQL.Types.Common
     JsonAggSelect (..),
     SourceName,
   )
+import Hasura.RQL.Types.Permission (ValidateInput (..), ValidateInputHttpDefinition (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (UserInfo (..))
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 data PreparedSql = PreparedSql
@@ -237,13 +238,22 @@ convertDelete ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
+  [HTTP.Header] ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertDelete userInfo deleteOperation stringifyNum = do
+convertDelete env manager logger userInfo deleteOperation stringifyNum reqHeaders selSetArguments = do
+  for_ (_adValidateInput deleteOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+    PGE.validateDeleteMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders deleteOperation selSetArguments
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
   pure
@@ -256,13 +266,22 @@ convertUpdate ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
+  [HTTP.Header] ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertUpdate userInfo updateOperation stringifyNum = do
+convertUpdate env manager logger userInfo updateOperation stringifyNum reqHeaders selSetArguments = do
+  for_ (_auValidateInput updateOperation) $ \(VIHttp ValidateInputHttpDefinition {..}) -> do
+    PGE.validateUpdateMutation env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders updateOperation selSetArguments
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
   if Postgres.updateVariantIsEmpty $ IR._auUpdateVariant updateOperation
@@ -276,15 +295,25 @@ convertUpdate userInfo updateOperation stringifyNum = do
 convertInsert ::
   forall pgKind m.
   ( MonadError QErr m,
+    MonadIO m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   Options.StringifyNumbers ->
+  [HTTP.Header] ->
   m (OnBaseMonad (PG.TxET QErr) EncJSON)
-convertInsert userInfo insertOperation stringifyNum = do
+convertInsert env manager logger userInfo insertOperation stringifyNum reqHeaders = do
+  -- Validate insert data
+  (_, res) <- flip runStateT InsOrdHashMap.empty $ validateInsertInput env manager logger userInfo (IR._aiData insertOperation) reqHeaders
+  for_ res $ \(rows, VIHttp ValidateInputHttpDefinition {..}) -> do
+    validateInsertRows env manager logger userInfo _vihdUrl _vihdHeaders _vihdTimeout _vihdForwardClientHeaders reqHeaders rows
   queryTags <- ask
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
   pure
@@ -324,10 +353,15 @@ convertFunction userInfo jsonAggSelect unpreparedQuery = do
 pgDBMutationPlan ::
   forall pgKind m.
   ( MonadError QErr m,
+    MonadIO m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    Tracing.MonadTrace m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   Options.StringifyNumbers ->
   SourceName ->
@@ -335,8 +369,9 @@ pgDBMutationPlan ::
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName = do
+pgDBMutationPlan env manager logger userInfo stringifyNum sourceName sourceConfig mrf reqHeaders operationName selSetArguments = do
   resolvedConnectionTemplate <-
     let connectionTemplateResolver =
           connectionTemplateConfigResolver (_pscConnectionTemplateConfig sourceConfig)
@@ -346,9 +381,9 @@ pgDBMutationPlan userInfo stringifyNum sourceName sourceConfig mrf reqHeaders op
             $ QueryOperationType G.OperationTypeMutation
      in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
   go resolvedConnectionTemplate <$> case mrf of
-    MDBInsert s -> convertInsert userInfo s stringifyNum
-    MDBUpdate s -> convertUpdate userInfo s stringifyNum
-    MDBDelete s -> convertDelete userInfo s stringifyNum
+    MDBInsert s -> convertInsert env manager logger userInfo s stringifyNum reqHeaders
+    MDBUpdate s -> convertUpdate env manager logger userInfo s stringifyNum reqHeaders selSetArguments
+    MDBDelete s -> convertDelete env manager logger userInfo s stringifyNum reqHeaders selSetArguments
     MDBFunction returnsSet s -> convertFunction userInfo returnsSet s
   where
     go resolvedConnectionTemplate v =

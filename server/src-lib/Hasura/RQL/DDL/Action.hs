@@ -22,7 +22,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List.NonEmpty qualified as NEList
 import Data.Text.Extended
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class
@@ -195,7 +195,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
             <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
   resolvedWebhook <- resolveWebhook env _adHandler
-  let webhookEnvRecord = EnvRecord (printURLTemplate $ unInputWebhook _adHandler) resolvedWebhook
+  let webhookEnvRecord = EnvRecord (printTemplate $ unInputWebhook _adHandler) resolvedWebhook
   pure
     ( ActionDefinition
         resolvedArguments

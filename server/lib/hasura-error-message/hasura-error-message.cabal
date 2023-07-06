@@ -1,0 +1,112 @@
+cabal-version:  3.6
+
+name:           hasura-error-message
+version:        1.0.0
+description:    An error message type that makes it difficult to convert back to text.
+homepage:       https://github.com/hasura/github-engine#readme
+bug-reports:    https://github.com/hasura/github-engine/issues
+author:         Hasura, Inc.
+maintainer:     Hasura, Inc.
+build-type:     Simple
+extra-source-files:
+    ../../../LICENSE
+
+source-repository head
+  type: git
+  location: https://github.com/hasura/github-engine
+
+flag optimize-hasura
+  description: Compile hasura code with appropriate optimizations
+  manual: False
+  default: True
+
+flag profiling
+  description: Configures the project to be profiling-compatible
+  manual: True
+  default: False
+
+common common-all
+  ghc-options:
+    -foptimal-applicative-do
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-implicit-prelude
+
+library
+  import: common-all
+  exposed-modules:
+      Hasura.Base.ErrorMessage
+      Hasura.Base.ErrorValue
+      Hasura.Base.ToErrorValue
+  other-modules:
+      Paths_hasura_error_message
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , text
+    , unordered-containers
+    , containers
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  default-language: Haskell2010
+
+test-suite hasura-error-message-tests
+  import: common-all
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Hasura.Base.ErrorMessageSpec
+      Paths_hasura_error_message
+  hs-source-dirs:
+      test
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  build-tool-depends: hspec-discover:hspec-discover
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , hashable
+    , hasura-error-message
+    , hspec
+    , text
+    , unordered-containers
+    , vector
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  default-language: Haskell2010

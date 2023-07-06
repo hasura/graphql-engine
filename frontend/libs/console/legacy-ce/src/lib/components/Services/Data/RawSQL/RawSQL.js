@@ -42,6 +42,7 @@ import { unsupportedRawSQLDrivers } from './utils';
 import { nativeDrivers } from '../../../../features/DataSource';
 import { useRunSQL } from './hooks/useRunSQL';
 import { useFireNotification } from '../../../../new-components/Notifications';
+import _push from '../push';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (
@@ -205,9 +206,11 @@ const RawSQL = ({
           selectedDriver
         )
       );
+      dispatch(_push('/data/sql'));
       return;
     }
     dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
+    dispatch(_push('/data/sql'));
   };
 
   const getMigrationWarningModal = () => {
@@ -629,16 +632,32 @@ RawSQL.propTypes = {
   statementTimeout: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = state => ({
-  ...state.rawSQL,
-  migrationMode: state.main.migrationMode,
-  currentSchema: state.tables.currentSchema,
-  allSchemas: state.tables.allSchemas,
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-  sources: getDataSources(state),
-  currentDataSource: state.tables.currentDataSource,
-  metadataSources: state.metadata.metadataObject.sources,
-});
+const mapStateToProps = state => {
+  const nativeSources = state.metadata.metadataObject.sources.filter(source =>
+    nativeDrivers.includes(source.kind)
+  );
+
+  const sources = getDataSources(state).filter(source =>
+    nativeDrivers.includes(source.driver)
+  );
+
+  const currentDataSource = sources.find(
+    source => source.name === state.tables.currentDataSource
+  )
+    ? state.tables.currentDataSource
+    : sources?.[0]?.name || '';
+
+  return {
+    ...state.rawSQL,
+    migrationMode: state.main.migrationMode,
+    currentSchema: state.tables.currentSchema,
+    allSchemas: state.tables.allSchemas,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    sources,
+    currentDataSource,
+    metadataSources: nativeSources,
+  };
+};
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
 

@@ -57,11 +57,8 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.Reference
-              { Schema.referenceLocalColumn = "author_id",
-                Schema.referenceTargetTable = "author",
-                Schema.referenceTargetColumn = "id",
-                Schema.referenceTargetQualifiers = ["thisschema"]
+          [ (Schema.reference "author_id" "author" "id")
+              { Schema.referenceTargetQualifiers = ["thisschema"]
               }
           ],
         tableData =

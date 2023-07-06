@@ -1,0 +1,147 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`optimizer API should generate correctly 1`] = `
+{
+  "action": "type Mutation {
+  optimiseOptimisePost(optimiserRequestInput: OptimiserRequestInput!): OptimiserResponse
+}
+",
+  "actionType": "mutation",
+  "baseUrl": "",
+  "description": "",
+  "headers": [],
+  "method": "POST",
+  "operationId": "optimise_optimise_post",
+  "path": "/optimise",
+  "queryParams": [],
+  "requestTransforms": {
+    "type": "json",
+    "value": "{
+  "gene_name": {{$body.input.optimiserRequestInput?['geneName']}},
+  "sequence": {{$body.input.optimiserRequestInput?['sequence']}},
+  "score": {{$body.input.optimiserRequestInput?['score']}},
+  "optimise": {{$body.input.optimiserRequestInput?['optimise']}},
+  "features": {{if inverse(empty($body.input.optimiserRequestInput?['features']))}} {{ range _, features := $body.input.optimiserRequestInput?['features']}} {
+    "name": {{features?['name']}},
+    "feature_type": {{features?['featureType']}},
+    "start": {{features?['start']}},
+    "end": {{features?['end']}},
+    "optimise": {{features?['optimise']}}
+    } {{end}} {{else}} null {{end}},
+  "optimisation_params": {{$body.input.optimiserRequestInput?['optimisationParams']}},
+  "from_json": {{$body.input.optimiserRequestInput?['fromJson']}},
+  "to_json": {{$body.input.optimiserRequestInput?['toJson']}}
+}",
+  },
+  "responseTransforms": "{
+  "geneName": {{$body?['gene_name']}},
+  "preOptimisationSequence": {{$body?['pre_optimisation_sequence']}},
+  "postOptimisationSequence": {{$body?['post_optimisation_sequence']}},
+  "preOptimisationPenalties": {{if inverse(empty($body?['pre_optimisation_penalties']))}} {{ range _, preOptimisationPenalties := $body?['pre_optimisation_penalties']}} {
+    "start": {{pre_optimisation_penalties?['start']}},
+    "end": {{pre_optimisation_penalties?['end']}},
+    "group": {{pre_optimisation_penalties?['group']}},
+    "score": {{pre_optimisation_penalties?['score']}},
+    "strand": {{pre_optimisation_penalties?['strand']}}
+    } {{end}} {{else}} null {{end}},
+  "preOptimisationScoreDetail": {{$body?['pre_optimisation_score_detail']}},
+  "postOptimisationPenalties": {{if inverse(empty($body?['post_optimisation_penalties']))}} {{ range _, postOptimisationPenalties := $body?['post_optimisation_penalties']}} {
+    "start": {{post_optimisation_penalties?['start']}},
+    "end": {{post_optimisation_penalties?['end']}},
+    "group": {{post_optimisation_penalties?['group']}},
+    "score": {{post_optimisation_penalties?['score']}},
+    "strand": {{post_optimisation_penalties?['strand']}}
+    } {{end}} {{else}} null {{end}},
+  "postOptimisationScoreDetail": {{$body?['post_optimisation_score_detail']}}
+}",
+  "sampleInput": "{
+  "action": {
+    "name": "optimiseOptimisePost"
+  },
+  "input": {
+    "optimiserRequestInput": {
+      "fromJson": false,
+      "geneName": "geneName",
+      "optimisationParams": {
+        "avoidPatterns": [
+          "foo",
+          "bar"
+        ],
+        "enforceGc": false,
+        "hardCodons": [
+          "foo",
+          "bar"
+        ],
+        "maxRepeatLength": 10,
+        "optimiseForSpecies": "optimiseForSpecies",
+        "sequence": "sequence",
+        "sequenceName": "sequenceName"
+      },
+      "optimise": false,
+      "score": false,
+      "sequence": "sequence",
+      "toJson": false
+    }
+  }
+}",
+  "types": "input FeatureInput {
+  end: Int!
+  featureType: String!
+  name: String!
+  optimise: Boolean!
+  start: Int!
+}
+
+input OptimisationParamsInput {
+  avoidPatterns: [String]
+  enforceGc: Boolean
+  hardCodons: [String]
+  maxRepeatLength: Int
+  optimiseForSpecies: String
+  sequence: String
+  sequenceName: String
+}
+
+input OptimiserRequestInput {
+  features: [FeatureInput]!
+  fromJson: Boolean
+  geneName: String!
+  optimisationParams: OptimisationParamsInput!
+  optimise: Boolean!
+  score: Boolean
+  sequence: String!
+  toJson: Boolean
+}
+
+type OptimiserResponse {
+  geneName: String
+  postOptimisationPenalties: [Penalty]
+  postOptimisationScoreDetail: PostOptimisationScoreDetail
+  postOptimisationSequence: String
+  preOptimisationPenalties: [Penalty]
+  preOptimisationScoreDetail: PreOptimisationScoreDetail
+  preOptimisationSequence: String
+}
+
+type Penalty {
+  end: Int!
+  group: String!
+  score: Float!
+  start: Int!
+  strand: String!
+}
+
+type PostOptimisationScoreDetail {
+  description: String!
+  level: String!
+  score: Float!
+}
+
+type PreOptimisationScoreDetail {
+  description: String!
+  level: String!
+  score: Float!
+}
+",
+}
+`;

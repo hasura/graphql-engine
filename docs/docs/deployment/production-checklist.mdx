@@ -65,9 +65,16 @@ get a bird's eye view on all the permissions set across all tables and roles. Pa
 
 ### Limit number of rows returned
 
-You should [limit the number of rows](/auth/authorization/permissions/row-fetch-limit.mdx) that can be accessed
-in one request, by setting the number in the select permission. This will prevent someone from accidentally or
-otherwise querying the entire table in one shot, thus adding load on Postgres.
+You should [limit the number of rows](/auth/authorization/permissions/row-fetch-limit.mdx) that can be accessed in one
+request, by setting the number in the select permission. This will prevent someone from accidentally or otherwise
+querying the entire table in one shot, thus adding load on Postgres.
+
+## Configure max connections
+
+Hasura utilizes [connection pooling](https://hasura.io/docs/latest/databases/database-config/cloud-connection-pooling/)
+for Postgres and MS SQL Server databases. You should set an appropriate
+[`total_max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Cloud) or
+[`max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Self-hosted) to use the database efficiently.
 
 ## Disable APIs
 

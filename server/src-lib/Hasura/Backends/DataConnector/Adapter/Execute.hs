@@ -77,7 +77,7 @@ instance BackendExecute 'DataConnector where
             dbsiResolvedConnectionTemplate = ()
           }
 
-  mkDBMutationPlan UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName = do
+  mkDBMutationPlan _env _manager _logger UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName _maybeSelSetArgs = do
     mutationPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkMutationPlan _uiSession mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure

@@ -318,6 +318,10 @@ mkTableField backendTypeMetadata schemaName tableName =
         BackendType.Cockroach -> nativeFieldName
         BackendType.DataConnector _ -> dcFieldName
 
+mkInsertionOrder :: InsertOrder -> Text
+mkInsertionOrder BeforeParent = "before_parent"
+mkInsertionOrder AfterParent = "after_parent"
+
 -- | Unified track object relationships
 trackObjectRelationships :: (HasCallStack) => Table -> TestEnvironment -> IO ()
 trackObjectRelationships tbl@(Table {tableName, tableReferences, tableManualRelationships}) testEnvironment = do
@@ -342,21 +346,30 @@ trackObjectRelationships tbl@(Table {tableName, tableReferences, tableManualRela
             foreign_key_constraint_on: *referenceLocalColumn
       |]
 
-  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-          Just schema -> schema
-          Nothing -> getSchemaName testEnvironment
-        relationshipName = mkObjectRelationshipName ref
-        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-        manualConfiguration :: J.Value
-        manualConfiguration =
-          J.object
-            [ "remote_table" .= targetTableField,
-              "column_mapping"
-                .= J.object [K.fromText referenceLocalColumn .= referenceTargetColumn]
-            ]
-        payload =
-          [yaml|
+  for_ tableManualRelationships
+    $ \ref@Reference
+         { referenceLocalColumn,
+           referenceTargetTable,
+           referenceTargetColumn,
+           referenceTargetQualifiers,
+           referenceInsertionOrder
+         } -> do
+        let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+              Just schema -> schema
+              Nothing -> getSchemaName testEnvironment
+            relationshipName = mkObjectRelationshipName ref
+            insertion_order = mkInsertionOrder referenceInsertionOrder
+            targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
+            manualConfiguration :: J.Value
+            manualConfiguration =
+              J.object
+                [ "remote_table" .= targetTableField,
+                  "column_mapping"
+                    .= J.object [K.fromText referenceLocalColumn .= referenceTargetColumn],
+                  "insertion_order" .= J.String insertion_order
+                ]
+            payload =
+              [yaml|
             type: *requestType
             args:
               source: *source
@@ -366,7 +379,7 @@ trackObjectRelationships tbl@(Table {tableName, tableReferences, tableManualRela
                 manual_configuration: *manualConfiguration
           |]
 
-    GraphqlEngine.postMetadata_ testEnvironment payload
+        GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Helper to create the array relationship name
 mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text
@@ -386,15 +399,21 @@ trackArrayRelationships tbl@(Table {tableName, tableReferences, tableManualRelat
       tableField = mkTableField backendTypeMetadata localSchema tableName
       requestType = backendType <> "_create_array_relationship"
 
-  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-          Just schema -> schema
-          Nothing -> getSchemaName testEnvironment
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-    GraphqlEngine.postMetadata_
-      testEnvironment
-      [yaml|
+  for_ tableReferences
+    $ \Reference
+         { referenceLocalColumn,
+           referenceTargetTable,
+           referenceTargetColumn,
+           referenceTargetQualifiers
+         } -> do
+        let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+              Just schema -> schema
+              Nothing -> getSchemaName testEnvironment
+            relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+            targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
         type: *requestType
         args:
           source: *source
@@ -406,22 +425,31 @@ trackArrayRelationships tbl@(Table {tableName, tableReferences, tableManualRelat
               column: *referenceLocalColumn
       |]
 
-  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-          Just schema -> schema
-          Nothing -> getSchemaName testEnvironment
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-        manualConfiguration :: J.Value
-        manualConfiguration =
-          J.object
-            [ "remote_table"
-                .= tableField,
-              "column_mapping"
-                .= J.object [K.fromText referenceTargetColumn .= referenceLocalColumn]
-            ]
-        payload =
-          [yaml|
+  for_ tableManualRelationships
+    $ \Reference
+         { referenceLocalColumn,
+           referenceTargetTable,
+           referenceTargetColumn,
+           referenceTargetQualifiers,
+           referenceInsertionOrder
+         } -> do
+        let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
+              Just schema -> schema
+              Nothing -> getSchemaName testEnvironment
+            relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+            targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
+            insertion_order = mkInsertionOrder referenceInsertionOrder
+            manualConfiguration :: J.Value
+            manualConfiguration =
+              J.object
+                [ "remote_table"
+                    .= tableField,
+                  "column_mapping"
+                    .= J.object [K.fromText referenceTargetColumn .= referenceLocalColumn],
+                  "insertion_order" .= J.String insertion_order
+                ]
+            payload =
+              [yaml|
 type: *requestType
 args:
   source: *source
@@ -431,7 +459,7 @@ args:
     manual_configuration: *manualConfiguration
 |]
 
-    GraphqlEngine.postMetadata_ testEnvironment payload
+        GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Unified untrack relationships
 untrackRelationships :: (HasCallStack) => Table -> TestEnvironment -> IO ()

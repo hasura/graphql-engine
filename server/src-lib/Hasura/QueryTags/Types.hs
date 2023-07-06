@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.QueryTags.Types
   ( QueryTagsConfig (..),
     QueryTagsFormat (..),
@@ -11,7 +9,6 @@ import Autodocodec (HasCodec (codec), named, optionalFieldWithDefault', stringCo
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as T
 import Hasura.Prelude
@@ -87,7 +84,9 @@ instance Hashable QueryTagsConfig
 
 instance NFData QueryTagsConfig
 
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''QueryTagsConfig)
+instance ToJSON QueryTagsConfig where
+  toJSON = genericToJSON (J.aesonDrop 4 J.snakeCase)
+  toEncoding = genericToEncoding (J.aesonDrop 4 J.snakeCase)
 
 instance FromJSON QueryTagsConfig where
   parseJSON = withObject "QueryTagsConfig" $ \o ->

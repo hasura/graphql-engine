@@ -175,6 +175,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           (pure GranularMetricsOff)
           emptyOperationNamesMap
           Nothing
+          Nothing
 
       mkSubscriber sId =
         let wsId = maybe (error "Invalid UUID") WS.mkUnsafeWSId $ UUID.fromString "ec981f92-8d5a-47ab-a306-80af7cfb1113"
@@ -404,6 +405,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               subscriptionQueryPlan
               (pure GranularMetricsOff)
               (const (pure ()))
+              Nothing
 
       it "concurrently adding two subscribers should retain both of them in the poller map" $ do
         -- Adding two subscribers that query identical queries should be adding them into the same

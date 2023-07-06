@@ -21,7 +21,6 @@ import Autodocodec.Class (HasCodec (codec))
 import Autodocodec.Extended (typeableName)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd.Autodocodec (insertionOrderedElemsCodec)
 import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
@@ -75,7 +74,9 @@ instance HasCodec RemoteSchemaDef where
         <*> optionalField' "customization"
       .= _rsdCustomization
 
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaDef)
+instance J.ToJSON RemoteSchemaDef where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}
 
 instance J.FromJSON RemoteSchemaDef where
   parseJSON = J.withObject "Object" $ \o ->

@@ -23,6 +23,7 @@ export const createAddOperationToQueryCollectionMetadataArgs = (
     },
   })),
 ];
+
 export const useAddOperationsToQueryCollection = () => {
   const { mutate, ...rest } = useMetadataMigration();
 

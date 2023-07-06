@@ -52,5 +52,5 @@ export const useCreateRestEndpoints = () => {
     [endpointDefinitions, mutate, metadata]
   );
 
-  return { createRestEndpoints, isReady, ...rest };
+  return { createRestEndpoints, endpointDefinitions, isReady, ...rest };
 };

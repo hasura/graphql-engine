@@ -63,8 +63,8 @@ schema =
             Schema.column "user_id" Schema.TInt
           ],
         tableReferences =
-          [ Schema.Reference "organization_id" "organization" "id" [],
-            Schema.Reference "user_id" "user" "id" []
+          [ Schema.reference "organization_id" "organization" "id",
+            Schema.reference "user_id" "user" "id"
           ],
         tableData =
           [ [Schema.VInt 1, Schema.VInt 1],
@@ -81,7 +81,7 @@ schema =
             Schema.column "public" Schema.TBool
           ],
         tableReferences =
-          [ Schema.Reference "organization_id" "organization" "id" []
+          [ Schema.reference "organization_id" "organization" "id"
           ],
         tableData =
           [ [Schema.VInt 1, Schema.VInt 1, Schema.VStr "First data", Schema.VBool True],

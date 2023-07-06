@@ -342,10 +342,12 @@ data WSActions a = WSActions
 
 data WSErrorMessage = ClientMessageParseFailed | ConnInitFailed
 
-mkWSServerErrorCode :: WSErrorMessage -> ConnErrMsg -> ServerErrorCode
-mkWSServerErrorCode errorMessage connErrMsg = case errorMessage of
+mkWSServerErrorCode :: WSSubProtocol -> WSErrorMessage -> ConnErrMsg -> ServerErrorCode
+mkWSServerErrorCode subProtocol errorMessage connErrMsg = case errorMessage of
   ClientMessageParseFailed -> (GenericError4400 $ ("Parsing client message failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
-  ConnInitFailed -> (GenericError4400 $ ("Connection initialization failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
+  ConnInitFailed -> case subProtocol of
+    Apollo -> (GenericError4400 $ ("Connection initialization failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
+    GraphQLWS -> Forbidden4403
 
 type OnConnH m a = WSId -> WS.RequestHead -> IpAddress -> WSActions a -> m (Either WS.RejectRequest (AcceptWith a))
 

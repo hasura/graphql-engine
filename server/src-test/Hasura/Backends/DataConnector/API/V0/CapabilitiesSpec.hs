@@ -62,6 +62,7 @@ genDataSchemaCapabilities =
     <$> Gen.bool
     <*> Gen.bool
     <*> genColumnNullability
+    <*> Gen.bool
 
 genColumnNullability :: (MonadGen m) => m ColumnNullability
 genColumnNullability =

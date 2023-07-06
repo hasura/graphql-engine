@@ -17,11 +17,14 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
+import Data.Aeson.Ordered qualified as JO
 import Data.Containers.ListUtils (nubOrd)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
+import Data.List (elemIndex)
+import Data.Monoid (Endo (..))
 import Data.Tagged qualified as Tagged
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
@@ -98,7 +101,7 @@ data ResolvedExecutionPlan
   | -- | mutation execution; only __typename introspection supported
     MutationExecutionPlan EB.ExecutionPlan
   | -- | either action query or live query execution; remote schemas and introspection not supported
-    SubscriptionExecutionPlan SubscriptionExecution
+    SubscriptionExecutionPlan (SubscriptionExecution, Maybe (Endo JO.Value))
 
 newtype MultiplexedSubscriptionQueryPlan (b :: BackendType)
   = MultiplexedSubscriptionQueryPlan (ES.SubscriptionQueryPlan b (EB.MultiplexedQuery b))
@@ -126,13 +129,13 @@ buildSubscriptionPlan ::
   ParameterizedQueryHash ->
   [HTTP.Header] ->
   Maybe G.Name ->
-  m SubscriptionExecution
+  m (SubscriptionExecution, Maybe (Endo JO.Value))
 buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders operationName = do
-  ((liveQueryOnSourceFields, noRelationActionFields), streamingFields) <- foldlM go ((mempty, mempty), mempty) (InsOrdHashMap.toList rootFields)
+  (((liveQueryOnSourceFields, noRelationActionFields), streamingFields), modifier) <- foldlM go (((mempty, mempty), mempty), mempty) (InsOrdHashMap.toList rootFields)
 
   if
     | null liveQueryOnSourceFields && null streamingFields ->
-        pure $ SEAsyncActionsWithNoRelationships noRelationActionFields
+        pure $ (SEAsyncActionsWithNoRelationships noRelationActionFields, modifier)
     | null noRelationActionFields -> do
         if
           | null liveQueryOnSourceFields -> do
@@ -158,6 +161,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
                           )
                           queryTagsComment
                   pure
+                    $ (,modifier)
                     $ SEOnSourceDB
                     $ SSStreaming rootFieldName
                     $ (sourceName, subscriptionPlan)
@@ -165,6 +169,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
           | null streamingFields -> do
               let allActionIds = HS.fromList $ map fst $ lefts $ toList liveQueryOnSourceFields
               pure
+                $ (,modifier)
                 $ SEOnSourceDB
                 $ SSLivequery allActionIds
                 $ \actionLogMap -> do
@@ -191,18 +196,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
           "async action queries with no relationships aren't expected to mix with normal source database queries"
   where
     go ::
-      ( ( RootFieldMap
-            ( Either
-                (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
-            ),
-          RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
-        ),
-        RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
-      ) ->
-      (RootFieldAlias, IR.QueryRootField IR.UnpreparedValue) ->
-      m
-        ( ( RootFieldMap
+      ( ( ( RootFieldMap
               ( Either
                   (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue ('Postgres 'Vanilla))))
                   (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
@@ -210,10 +204,34 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
             RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
           ),
           RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
+        ),
+        Maybe (Endo JO.Value)
+      ) ->
+      (RootFieldAlias, IR.QueryRootField IR.UnpreparedValue) ->
+      m
+        ( ( ( RootFieldMap
+                ( Either
+                    (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue ('Postgres 'Vanilla))))
+                    (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
+                ),
+              RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
+            ),
+            RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
+          ),
+          Maybe (Endo JO.Value)
         )
-    go (accLiveQueryFields, accStreamingFields) (gName, field) = case field of
+    go ((accLiveQueryFields, accStreamingFields), modifier) (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
-      IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+      IR.RFRaw val -> do
+        when (isNothing (_rfaNamespace gName)) do
+          throw400 NotSupported "Introspection at root field level is not supported over subscriptions"
+        let fieldIndex = fromMaybe 0 $ elemIndex gName $ InsOrdHashMap.keys rootFields
+            newModifier oldResponse =
+              case JO.asObject oldResponse of
+                Left (_err :: String) -> oldResponse
+                Right responseObj ->
+                  JO.Object $ JO.insert (fieldIndex, G.unName $ _rfaAlias gName) val responseObj
+        pure ((accLiveQueryFields, accStreamingFields), Just (Endo newModifier) <> modifier)
       IR.RFMulti _ -> throw400 NotSupported "not supported over subscriptions"
       IR.RFDB src e -> do
         let subscriptionType =
@@ -230,8 +248,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
             $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
           pure $ IR.SourceConfigWith srcConfig queryTagsConfig (IR.QDBR newQDB)
         case subscriptionType of
-          Streaming -> pure (accLiveQueryFields, InsOrdHashMap.insert gName (src, newQDB) accStreamingFields)
-          LiveQuery -> pure (first (InsOrdHashMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields)
+          Streaming -> pure ((accLiveQueryFields, InsOrdHashMap.insert gName (src, newQDB) accStreamingFields), modifier)
+          LiveQuery -> pure ((first (InsOrdHashMap.insert gName (Right (src, newQDB))) accLiveQueryFields, accStreamingFields), modifier)
       IR.RFAction action -> do
         let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
         unless (isNothing remoteJoins)
@@ -241,9 +259,9 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash reqHeaders oper
             let actionId = IR._aaaqActionId q
             case EA.resolveAsyncActionQuery userInfo q of
               EA.AAQENoRelationships respMaker ->
-                pure $ (second (InsOrdHashMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields)
+                pure $ ((second (InsOrdHashMap.insert gName (actionId, respMaker)) accLiveQueryFields, accStreamingFields), modifier)
               EA.AAQEOnSourceDB srcConfig dbExecution ->
-                pure $ (first (InsOrdHashMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accLiveQueryFields, accStreamingFields)
+                pure $ ((first (InsOrdHashMap.insert gName (Left (actionId, (srcConfig, dbExecution)))) accLiveQueryFields, accStreamingFields), modifier)
           IR.AQQuery _ -> throw400 NotSupported "query actions cannot be run as a subscription"
 
     buildAction ::

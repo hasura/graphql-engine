@@ -22,12 +22,14 @@ export type CustomFieldNamesFormProps = {
   callToAction?: string;
   callToActionLoadingText?: string;
   callToDeny?: string;
+  isLoading: boolean;
 };
 
 export const CustomFieldNamesForm: React.VFC<
   CustomFieldNamesFormProps
 > = props => {
   const {
+    isLoading,
     onClose,
     callToAction = 'Save',
     callToActionLoadingText = 'Saving...',
@@ -149,8 +151,8 @@ export const CustomFieldNamesForm: React.VFC<
             </div>
           </div>
         </div>
-        {/* 
-              Implementing a custom footer here because there's no way to submit the form from the footer buttons otherwise. 
+        {/*
+              Implementing a custom footer here because there's no way to submit the form from the footer buttons otherwise.
               Since this creates buttons within the form, the form submit is automatically triggered when these buttons are clicked.
               The only other approach would be to wrap the form around the entire dialog.
               However, if this is done, the form stays rendered in memory when the dialog is opened and closed and must be manually reset and reinit'd each time it happens
@@ -158,6 +160,7 @@ export const CustomFieldNamesForm: React.VFC<
             */}
         <Dialog.Footer
           callToAction={callToAction}
+          isLoading={isLoading}
           callToActionLoadingText={callToActionLoadingText}
           callToDeny={callToDeny}
           onClose={onClose}

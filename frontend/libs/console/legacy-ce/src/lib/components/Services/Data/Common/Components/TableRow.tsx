@@ -1,9 +1,12 @@
 import React, { useRef } from 'react';
+import Truncate from 'react-truncate';
 
 import { TypedInput } from './TypedInput';
 import { TableColumn } from '../../../../../dataSources/types';
 import { focusYellowRing } from '../../constants';
 import { isColumnAutoIncrement } from './utils';
+import { IconTooltip } from '../../../../../new-components/Tooltip/IconTooltip';
+import { FaEye } from 'react-icons/fa';
 
 const getColumnInfo = (
   col: TableColumn,
@@ -109,8 +112,20 @@ export const TableRow: React.FC<TableRowProps> = ({
 
   return (
     <div className="items-center flex pb-xs">
-      <div className="w-2/12 overflow-hidden text-ellipsis" title={colName}>
-        {colName}
+      <div className="w-2/12 relative mr-1">
+        <Truncate
+          lines={1}
+          ellipsis={
+            <span>
+              ...
+              <div className="absolute top-[4px] -left-8 opacity-60 hover:opacity-100">
+                <IconTooltip icon={<FaEye />} message={colName} />
+              </div>
+            </span>
+          }
+        >
+          {colName}
+        </Truncate>
       </div>
       <div>
         <input

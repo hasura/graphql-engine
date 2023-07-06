@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 -- | This file contains the handlers that are used within websocket server.
@@ -30,6 +29,7 @@ import Control.Monad.Trans.Control qualified as MC
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Encoding qualified as J
+import Data.Aeson.Ordered qualified as JO
 import Data.Aeson.TH qualified as J
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as LBS
@@ -39,6 +39,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
+import Data.Monoid (Endo (..))
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
@@ -647,14 +648,23 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                in getResponse
           sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
-    E.SubscriptionExecutionPlan subExec -> do
+    E.SubscriptionExecutionPlan (subExec, modifier) -> do
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
           liftIO do
             let allActionIds = map fst $ toList actions
             case NE.nonEmpty allActionIds of
-              Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
+              Nothing -> do
+                -- This means there is no async action query field present and there is no live-query or streaming
+                -- subscription present. Now, we need to check if the modifier is present or not. If it is present,
+                -- then we need to send the modified empty object. If it is not present, then we need to send
+                -- the completed message.
+                case modifier of
+                  Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
+                  Just modifier' -> do
+                    let serverMsg = sendDataMsg $ DataMsg opId $ Right . encJToLBS . encJFromOrderedValue $ appEndo modifier' $ JO.Object $ JO.empty
+                    sendMsg wsConn serverMsg
               Just actionIds -> do
                 let sendResponseIO actionLogMap = do
                       (dTime, resultsE) <- withElapsedTime
@@ -690,7 +700,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState
+          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
           lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -704,7 +714,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                 let asyncActionQueryLive =
                       ES.LAAQOnSourceDB
                         $ ES.LiveAsyncActionQueryOnSource lqId actionLogMap
-                        $ restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed)
+                        $ restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed) modifier
 
                     onUnexpectedException err = do
                       sendError requestId err
@@ -717,7 +727,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSStreaming rootFieldName streamQueryBuilder) -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState
+          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState modifier
 
       liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionSuccess gqlMetrics)
       liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
@@ -905,11 +915,11 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       liftIO $ sendCompleted Nothing Nothing
       throwError ()
 
-    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName lqId actionLogMap = do
+    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName modifier lqId actionLogMap = do
       ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionsState lqId granularPrometheusMetricsState maybeOperationName
-      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState
+      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
 
-    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState = do
+    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
 
       for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists) -> do
@@ -934,6 +944,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               liveQueryPlan
               granularPrometheusMetricsState
               (onChange opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
+              modifier
 
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically
@@ -942,7 +953,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           STMMap.insert (LiveQuerySubscriber lqId, opName) opId opMap
         pure lqId
 
-    startStreamingQuery rootFieldName (sourceName, E.SubscriptionQueryPlan exists) parameterizedQueryHash requestId granularPrometheusMetricsState = do
+    startStreamingQuery rootFieldName (sourceName, E.SubscriptionQueryPlan exists) parameterizedQueryHash requestId granularPrometheusMetricsState modifier = do
       let !opName = _grOperationName q
           subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
       -- NOTE!: we mask async exceptions higher in the call stack, but it's
@@ -965,6 +976,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             streamQueryPlan
             granularPrometheusMetricsState
             (onChange opName parameterizedQueryHash $ ES._sqpNamespace streamQueryPlan)
+            modifier
       liftIO $ $assertNFHere (streamSubscriberId, opName) -- so we don't write thunks to mutable vars
       STM.atomically
         $

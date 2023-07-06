@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.Metadata.Permission
   ( RemoteSchemaPermissionDefinition (..),
     RemoteSchemaPermissionMetadata (..),
@@ -9,7 +7,6 @@ where
 import Autodocodec (HasCodec (codec), object, optionalField', requiredField', requiredFieldWith, (.=))
 import Autodocodec.Extended (graphQLSchemaDocumentCodec)
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Hasura.Prelude
 import Hasura.RQL.Types.Roles (RoleName)
 import Language.GraphQL.Draft.Printer qualified as G
@@ -61,4 +58,9 @@ instance HasCodec RemoteSchemaPermissionMetadata where
         <*> optionalField' "comment"
       .= _rspmComment
 
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaPermissionMetadata)
+instance J.FromJSON RemoteSchemaPermissionMetadata where
+  parseJSON = J.genericParseJSON hasuraJSON {J.omitNothingFields = True}
+
+instance J.ToJSON RemoteSchemaPermissionMetadata where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding hasuraJSON {J.omitNothingFields = True}

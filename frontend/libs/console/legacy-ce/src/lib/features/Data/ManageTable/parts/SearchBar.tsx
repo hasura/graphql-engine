@@ -4,11 +4,12 @@ import { Input } from '../../../../new-components/Form';
 
 type SearchBarProps = {
   onSearch: (searchText: string) => void;
+  defaultValue?: string;
 };
 
-export const SearchBar = ({ onSearch }: SearchBarProps) => {
+export const SearchBar = ({ onSearch, defaultValue }: SearchBarProps) => {
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [value, setValue] = React.useState('');
+  const [value, setValue] = React.useState(defaultValue ?? '');
   return (
     <div className="flex gap-2">
       <Input

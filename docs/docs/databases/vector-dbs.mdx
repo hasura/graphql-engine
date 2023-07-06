@@ -1,0 +1,129 @@
+---
+sidebar_label: Vector Databases
+keywords:
+  - hasura
+  - docs
+  - databases
+  - vector databases
+  - ai
+  - machine learning
+sidebar_position: 1.45
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# How Does Hasura Work With Vector Databases?
+
+## What are vectors?
+
+Vectors are mathematical representations for unstructured data like text, audio, or video data. Vectors generated from
+deep neural network models like large language models (LLMs) are of a high-dimension to capture multiple latent
+features, which can be then used to classify text, or cluster related text.
+
+Word vectors are numerical representations of individual words that capture their meaning and usage patterns. Each word
+is represented as a vector in a high-dimensional space, where the dimensions correspond to different features or
+attributes of the word, such as its context, syntactic role, and semantic properties.
+
+## Vectors in the context of Large Language Models
+
+LLMs are trained on public datasets and until a certain point in time. They can’t be used to answer
+questions on your new organizational data.
+
+For instance, at the moment, the last training date for OpenAI's `text-davinci-003` model was June 2021 and so it has
+no idea about events in 2023.
+
+However, we can steer an LLM to answer queries relevant to our new data by providing the context in which it should
+answer the question. This is typically done by providing additional information that it can use. But, given the
+limitation on the input size we have to pick the right data to feed to it as context.
+
+We do this by taking all the textual data and chunking it, which is an important strategy for your LLM application.
+
+Now when an input user query comes in, we search for chunks that have similar context and feed to our LLMs.
+
+## Why do we need vector databases?
+
+Vector databases are optimized to search for similar vectors.
+
+Chunking and then searching for relevant chunks can’t be done at query time for large systems with a large amount of
+text.
+
+We first chunk and then store all chunked vectors in vector databases so that we can find relevant chunks using semantic
+search at the time of query.
+
+## How does Hasura work with a vector databases?
+
+Hasura connects with vector databases just the same way as you would any other relational database. Supported vector
+databases will be available for you to integrate in the `Connect Database` section in Console.
+
+To demo these features please [check out our blog post](https://hasura.io/blog/hasura-brings-the-power-of-generative-ai-to-your-data/)
+on how to set it up with Weaviate.
+
+### Step 1: Select the driver
+
+In our case the driver is Weaviate:
+
+<Thumbnail src="/img/databases/vector-dbs/vector-db-connect-db.png" alt="Add database source" width="700px" />
+
+### Step 2: Connect your database
+
+At this step you have to configure few parameters such as:
+
+- API to access your vector db
+- Host of your vector db
+- URL scheme: http/https
+- The model you would like to use for factorizing text. In this demo example, we only support OpenAI. Hence it
+  requests you to provide OpenAI key.
+
+<Thumbnail src="/img/databases/vector-dbs/connect-weaveate-database.png" alt="Connect Weaviate database" width="1000px" />
+
+### Step 3: Review your database in the `Data Manager` tab
+
+<Thumbnail src="/img/databases/vector-dbs/data-manager-tab.png" alt="Data manager tab" width="1000px" />
+
+### Step 4: Create your vector database table (schema)
+
+You will need to define the schema in your vector database. For a walkthrough of setting up a Weaviate schema, refer
+to the [tutorial](https://weaviate.io/developers/weaviate/configuration/schema-configuration).
+
+### Step 5:  Track your tables
+
+In order (for schemas) to be accessible for querying using Graph QL you will need to track them.
+
+<Thumbnail src="/img/databases/vector-dbs/track-tables.png" alt="Connect Weaviate database" width="1000px" />
+
+
+### Step 6: Define the remote relationship
+
+Define the remote relationship from your vector database to your relational database
+
+<Thumbnail src="/img/databases/vector-dbs/define-remote-relationship.png" alt="Define remote relationship"
+           width="1000px" />
+
+
+### Step 7: Go nuts! Query query query!
+
+You can now query across both your vector database and your existing relational database tables as if they were in
+one location.
+
+We have 2 tables in our relational database:
+
+1. Candidate 1
+
+<Thumbnail src="/img/databases/vector-dbs/candidate.png" alt="Candidate 1 table" width="425px" />
+
+2. Application 2
+
+<Thumbnail src="/img/databases/vector-dbs/application.png" alt="Application 2 table" width="700px" />
+
+Our vector database stores the resume as:
+
+<Thumbnail src="/img/databases/vector-dbs/resume-store.png" alt="Resume store" width="1000px" />
+
+In our GraphQL query we are able to fetch all the candidate and application information for a resume. Hasura brings
+them all together to provide this seamless querying experience.
+
+<Thumbnail src="/img/databases/vector-dbs/execute-query.png" alt="Execute query" width="1000px" />
+
+
+
+

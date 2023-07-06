@@ -63,7 +63,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.ByteArray.Encoding qualified as BAE
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Internal qualified as B
@@ -111,15 +110,30 @@ newtype RawJWT = RawJWT BL.ByteString
 data JWTClaimsFormat
   = JCFJson
   | JCFStringifiedJson
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$( J.deriveJSON
-     J.defaultOptions
-       { J.sumEncoding = J.ObjectWithSingleField,
-         J.constructorTagModifier = J.snakeCase . drop 3
-       }
-     ''JWTClaimsFormat
- )
+instance J.FromJSON JWTClaimsFormat where
+  parseJSON =
+    J.genericParseJSON
+      J.defaultOptions
+        { J.sumEncoding = J.ObjectWithSingleField,
+          J.constructorTagModifier = J.snakeCase . drop 3
+        }
+
+instance J.ToJSON JWTClaimsFormat where
+  toJSON =
+    J.genericToJSON
+      J.defaultOptions
+        { J.sumEncoding = J.ObjectWithSingleField,
+          J.constructorTagModifier = J.snakeCase . drop 3
+        }
+
+  toEncoding =
+    J.genericToEncoding
+      J.defaultOptions
+        { J.sumEncoding = J.ObjectWithSingleField,
+          J.constructorTagModifier = J.snakeCase . drop 3
+        }
 
 data JWTHeader
   = JHAuthorization
@@ -304,9 +318,13 @@ data HasuraClaims = HasuraClaims
   { _cmAllowedRoles :: ![RoleName],
     _cmDefaultRole :: !RoleName
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON hasuraJSON ''HasuraClaims)
+instance J.FromJSON HasuraClaims where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON HasuraClaims where
+  toJSON = J.genericToJSON hasuraJSON
 
 -- | An action that fetches the JWKs and updates the expiry time and JWKs in the
 -- IORef

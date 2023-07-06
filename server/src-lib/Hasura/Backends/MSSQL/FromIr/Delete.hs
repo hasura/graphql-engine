@@ -12,7 +12,7 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
 
 fromDelete :: IR.AnnDel 'MSSQL -> FromIr Delete
-fromDelete (IR.AnnDel table (permFilter, whereClause) _ allColumns _) = do
+fromDelete (IR.AnnDel table (permFilter, whereClause) _ allColumns _ _validateInput _isDeleteByPrimaryKey) = do
   tableAlias <- generateAlias (TableTemplate (tableName table))
   runReaderT
     ( do

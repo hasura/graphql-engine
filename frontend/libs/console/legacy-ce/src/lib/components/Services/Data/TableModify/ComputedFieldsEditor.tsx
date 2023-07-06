@@ -1,6 +1,5 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import { OptionTypeBase } from 'react-select';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -222,7 +221,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
       };
 
       const handleFnSchemaChange = (
-        selectedOption: string | OptionTypeBase | null | undefined
+        selectedOption: string | any | null | undefined
       ) => {
         // fetch schema fn
 
@@ -251,7 +250,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
       };
 
       const handleFnNameChange = (
-        selectedOption: string | OptionTypeBase | null | undefined
+        selectedOption: string | any | null | undefined
       ) => {
         const newState = [...stateComputedFields];
 

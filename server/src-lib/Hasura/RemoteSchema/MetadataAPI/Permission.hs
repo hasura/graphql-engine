@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.MetadataAPI.Permission
   ( AddRemoteSchemaPermission (..),
     DropRemoteSchemaPermissions (..),
@@ -9,7 +7,7 @@ module Hasura.RemoteSchema.MetadataAPI.Permission
 where
 
 import Control.Lens ((^.))
-import Data.Aeson.TH qualified as J
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -35,7 +33,12 @@ data AddRemoteSchemaPermission = AddRemoteSchemaPermission
 
 instance NFData AddRemoteSchemaPermission
 
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
+instance J.FromJSON AddRemoteSchemaPermission where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON AddRemoteSchemaPermission where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
   { _drspRemoteSchema :: RemoteSchemaName,
@@ -45,7 +48,12 @@ data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
 
 instance NFData DropRemoteSchemaPermissions
 
-$(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
+instance J.FromJSON DropRemoteSchemaPermissions where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON DropRemoteSchemaPermissions where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runAddRemoteSchemaPermissions ::
   ( QErrM m,

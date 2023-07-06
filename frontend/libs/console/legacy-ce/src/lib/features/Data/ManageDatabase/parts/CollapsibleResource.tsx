@@ -7,23 +7,21 @@ import { IconTooltip } from '../../../../new-components/Tooltip';
 
 export const CollapsibleResource: React.FC<
   {
-    title: string;
+    title: React.ReactNode;
     tooltip: string;
   } & Omit<CollapsibleProps, 'triggerChildren'>
 > = ({ title, tooltip, children, ...rest }) => (
   <Collapsible
     triggerChildren={
-      <div>
-        <div className="flex mb-1 items-center">
-          <div className="font-semibold inline-flex items-center text-lg">
-            {title}
-          </div>
-          <IconTooltip
-            icon={<RiInformationFill />}
-            message={tooltip}
-            side="right"
-          />
+      <div className="flex mb-1 items-center">
+        <div className="font-semibold inline-flex items-center text-lg">
+          {title}
         </div>
+        <IconTooltip
+          icon={<RiInformationFill />}
+          message={tooltip}
+          side="right"
+        />
       </div>
     }
     {...rest}

@@ -200,13 +200,13 @@ export const CheckItem: StoryObj<typeof DropDown.Root> = {
         <DropDown.Root trigger={<Trigger />}>
           <DropDown.CheckItem
             checked={bookmarksChecked}
-            onCheckChange={checked => setBookmarksChecked(checked)}
+            onCheckChange={setBookmarksChecked}
           >
             Show Bookmarks
           </DropDown.CheckItem>
           <DropDown.CheckItem
             checked={urlsChecked}
-            onCheckChange={checked => setUrlsChecked(checked)}
+            onCheckChange={setUrlsChecked}
           >
             Show Full URLs
           </DropDown.CheckItem>
@@ -231,8 +231,6 @@ export const CheckItem: StoryObj<typeof DropDown.Root> = {
 
     // expect false b/c starts out true
     await expect(bookmarkStatusElement()).toHaveTextContent('false');
-
-    await userEvent.click(trigger());
 
     await userEvent.click(await showFullUrls());
 

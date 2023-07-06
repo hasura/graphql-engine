@@ -4,6 +4,7 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Text qualified as J
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
@@ -21,6 +22,8 @@ import Hasura.EncJSON
 import Hasura.Function.Cache
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
+import Hasura.GraphQL.Parser.Variable qualified as G
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
   ( emptyQueryTagsComment,
@@ -36,6 +39,7 @@ import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Client as HTTP
 import Network.HTTP.Types qualified as HTTP
 
 instance BackendExecute 'BigQuery where
@@ -126,6 +130,9 @@ bqDBMutationPlan ::
   forall m.
   ( MonadError E.QErr m
   ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
   UserInfo ->
   Options.StringifyNumbers ->
   SourceName ->
@@ -133,8 +140,9 @@ bqDBMutationPlan ::
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   [HTTP.Header] ->
   Maybe G.Name ->
+  Maybe (HashMap G.Name (G.Value G.Variable)) ->
   m (DBStepInfo 'BigQuery)
-bqDBMutationPlan _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName =
+bqDBMutationPlan _env _manager _logger _userInfo _stringifyNum _sourceName _sourceConfig _mrf _headers _gName _maybeSelSetArgs =
   throw500 "mutations are not supported in BigQuery; this should be unreachable"
 
 -- explain

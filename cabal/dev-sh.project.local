@@ -23,6 +23,10 @@ package *
   -- optimizations disabled. See https://gitlab.haskell.org/ghc/ghc/-/issues/16932
   ghc-options: -fsolve-constant-dicts
 
+-- Set common options for local libraries
+program-options
+  ghc-options: -j -Werror
+
 -- NOTE: new-build may report a misleading 'Build profile: -O1'
 -- See:https://github.com/haskell/cabal/issues/6221
 flags: -optimize-hasura
@@ -32,20 +36,12 @@ package graphql-engine
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
   coverage: true
-  -- to match CI:
-  ghc-options: -Werror
-  -- For compile-time performance (see cabal.project.ci.local):
-  ghc-options: -j
 
 package graphql-engine-pro
   -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
   -- which is not what we originally wanted. But building the test modules
   -- themselves with coverage is actually nice for validation.
   coverage: true
-  -- to match CI:
-  ghc-options: -Werror
-  -- For compile-time performance (see cabal.project.ci.local):
-  ghc-options: -j
 
 -- By default GHC is dynamically linked, so to run TemplateHaskell you need dynamic versions of
 -- libraries. But, also by default, cabal links executables statically, which requires static
@@ -66,43 +62,6 @@ package Spock
   library-vanilla: False
 package hasql-pool
   library-vanilla: False
-
--- Set common options to internal libraries
-package aeson-ordered
-  ghc-options: -j -Werror
-
-package api-tests
-  ghc-options: -j -Werror
-
-package arrows-extra
-  ghc-options: -j -Werror
-
-package dc-api
-  ghc-options: -j -Werror
-
-package graphql-parser
-  ghc-options: -j -Werror
-
-package error-message
-  ghc-options: -j -Werror
-
-package incremental
-  ghc-options: -j -Werror
-
-package hasura-prelude
-  ghc-options: -j -Werror
-
-package schema-parsers
-  ghc-options: -j -Werror
-
-package pg-client
-  ghc-options: -j -Werror
-
-package resource-pool
-  ghc-options: -j -Werror
-
-package test-harness
-  ghc-options: -j -Werror
 
 package mysql
   extra-include-dirs:

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | The RQL query ('/v1/query')
 module Hasura.Server.API.Query
   ( RQLQuery,
@@ -10,9 +8,8 @@ module Hasura.Server.API.Query
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson
-import Data.Aeson.Casing
-import Data.Aeson.TH
+import Data.Aeson qualified as J
+import Data.Aeson.Casing qualified as J (snakeCase)
 import Data.Environment qualified as Env
 import Data.Has (Has)
 import Hasura.App.State
@@ -135,46 +132,44 @@ data RQLQueryV1
   | RQDropRestEndpoint !DropEndpoint
   | RQDumpInternalState !DumpInternalState
   | RQSetCustomTypes !CustomTypes
+  deriving stock (Generic)
 
 data RQLQueryV2
   = RQV2TrackTable !(TrackTableV2 ('Postgres 'Vanilla))
   | RQV2SetTableCustomFields !SetTableCustomFields -- deprecated
   | RQV2TrackFunction !(Functions.TrackFunctionV2 ('Postgres 'Vanilla))
   | RQV2ReplaceMetadata !ReplaceMetadataV2
+  deriving stock (Generic)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
 
--- Since at least one of the following mutually recursive instances is defined
--- via TH, after 9.0 they must all be defined within the same TH splice.
-$( concat
-     <$> sequence
-       [ [d|
-           instance FromJSON RQLQuery where
-             parseJSON = withObject "Object" $ \o -> do
-               mVersion <- o .:? "version"
-               let version = fromMaybe VIVersion1 mVersion
-                   val = Object o
-               case version of
-                 VIVersion1 -> RQV1 <$> parseJSON val
-                 VIVersion2 -> RQV2 <$> parseJSON val
-           |],
-         deriveFromJSON
-           defaultOptions
-             { constructorTagModifier = snakeCase . drop 2,
-               sumEncoding = TaggedObject "type" "args"
-             }
-           ''RQLQueryV1,
-         deriveFromJSON
-           defaultOptions
-             { constructorTagModifier = snakeCase . drop 4,
-               sumEncoding = TaggedObject "type" "args",
-               tagSingleConstructors = True
-             }
-           ''RQLQueryV2
-       ]
- )
+instance J.FromJSON RQLQuery where
+  parseJSON = J.withObject "Object" $ \o -> do
+    mVersion <- o J..:? "version"
+    let version = fromMaybe VIVersion1 mVersion
+        val = J.Object o
+    case version of
+      VIVersion1 -> RQV1 <$> J.parseJSON val
+      VIVersion2 -> RQV2 <$> J.parseJSON val
+
+instance J.FromJSON RQLQueryV1 where
+  parseJSON =
+    J.genericParseJSON
+      J.defaultOptions
+        { J.constructorTagModifier = J.snakeCase . drop 2,
+          J.sumEncoding = J.TaggedObject "type" "args"
+        }
+
+instance J.FromJSON RQLQueryV2 where
+  parseJSON =
+    J.genericParseJSON
+      J.defaultOptions
+        { J.constructorTagModifier = J.snakeCase . drop 4,
+          J.sumEncoding = J.TaggedObject "type" "args",
+          J.tagSingleConstructors = True
+        }
 
 runQuery ::
   ( MonadIO m,
@@ -211,24 +206,35 @@ runQuery appContext sc query = do
   let dynamicConfig = buildCacheDynamicConfig appContext
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
-  ((result, updatedMetadata), updatedCache, invalidations, sourcesIntrospection) <-
+  ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
     runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
       & runCacheRWT dynamicConfig sc
-  when (queryModifiesSchemaCache query) $ do
-    case appEnvEnableMaintenanceMode of
+  if queryModifiesSchemaCache query
+    then case appEnvEnableMaintenanceMode of
       MaintenanceModeDisabled -> do
         -- set modified metadata in storage
         newResourceVersion <- liftEitherM $ setMetadata currentResourceVersion updatedMetadata
+
+        (_, modSchemaCache', _, _, _) <-
+          Tracing.newSpan "setMetadataResourceVersionInSchemaCache"
+            $ setMetadataResourceVersionInSchemaCache newResourceVersion
+            & runCacheRWT dynamicConfig modSchemaCache
+
         -- save sources introspection to stored-introspection DB
         saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
+        -- run schema registry action
+        for_ schemaRegistryAction $ \action -> do
+          liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache'))
         -- notify schema cache sync
         liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
+
+        pure (result, modSchemaCache')
       MaintenanceModeEnabled () ->
         throw500 "metadata cannot be modified in maintenance mode"
-  pure (result, updatedCache)
+    else pure (result, modSchemaCache)
 
 -- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
 -- so, it needs to acquire the global lock on the schema cache so that other queries do not modify

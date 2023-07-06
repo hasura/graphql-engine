@@ -5,11 +5,17 @@
 -- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Insert
   ( convertToSQLTransaction,
+    validateInsertInput,
+    validateInsertRows,
   )
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J
+import Data.Environment qualified as Env
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.List qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
@@ -18,7 +24,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types as PGTypes hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.BoolExp qualified as PGT
 import Hasura.Backends.Postgres.Translate.Insert qualified as PGT
@@ -28,20 +34,24 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Headers
 import Hasura.RQL.Types.NamingCase (NamingCase)
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client.Transformable qualified as HTTP
 
 convertToSQLTransaction ::
   forall pgKind m.
@@ -88,7 +98,7 @@ insertMultipleObjects ::
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum tCase =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    IR.AnnotatedInsertData insObjs table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) = multiObjIns
+    IR.AnnotatedInsertData insObjs table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) _validateInput = multiObjIns
     allInsObjRels = concatMap IR.getInsertObjectRelationships insObjs
     allInsArrRels = concatMap IR.getInsertArrayRelationships insObjs
     anyRelsToInsert = not $ null allInsArrRels && null allInsObjRels
@@ -114,7 +124,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
-        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause)
+        let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos _pk _extra presetRow (BackendInsert conflictClause) _validateInput
         insertObject singleObj additionalColumns userInfo planVars stringifyNum tCase
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
@@ -169,7 +179,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
 
     return (totAffRows, colValM)
   where
-    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) = singleObjIns
+    IR.AnnotatedInsertData (IR.Single annObj) table checkCond allColumns _pk _extra presetValues (BackendInsert onConflict) _validateInput = singleObjIns
     columns = HashMap.fromList $ IR.getInsertColumns annObj
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
@@ -185,12 +195,6 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     afterInsertDepCols =
       flip (getColInfos @('Postgres pgKind)) allColumns
         $ concatMap (HashMap.keys . riMapping . IR._riRelationInfo) allAfterInsertRels
-
-    objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
-    objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
-
-    singleToMulti :: forall a b. IR.SingleObjectInsert b a -> IR.MultiObjectInsert b a
-    singleToMulti annIns = annIns {IR._aiInsertObject = [IR.unSingle $ IR._aiInsertObject annIns]}
 
     withArrRels ::
       Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal) ->
@@ -216,6 +220,12 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
       "cannot proceed to insert array relations since insert to table "
         <> table
         <<> " affects zero rows"
+
+objToArr :: forall a b. IR.ObjectRelationInsert b a -> IR.ArrayRelationInsert b a
+objToArr IR.RelationInsert {..} = IR.RelationInsert (singleToMulti _riInsertData) _riRelationInfo
+  where
+    singleToMulti :: IR.SingleObjectInsert b a -> IR.MultiObjectInsert b a
+    singleToMulti annIns = annIns {IR._aiInsertObject = [IR.unSingle $ IR._aiInsertObject annIns]}
 
 insertObjRel ::
   forall pgKind m.
@@ -318,8 +328,18 @@ validateInsert insCols objRels addCols = do
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
+        is_after_parent
+          | AfterParent <- riInsertOrder relInfo = True
+          | otherwise = False
+
     withPathK relNameTxt
-      $ unless (null lColConflicts)
+      -- When inserting through relationships, we only care that inserted
+      -- columns don't overlap with those defining the relationship when the
+      -- remote table is inserted _before_ the parent table.
+      -- When the remote table is inserted _after_ the parent table it's the
+      -- parent table that (through some means) decide what the value of the
+      -- key is.
+      $ unless (null lColConflicts || is_after_parent)
       $ throw400 ValidationFailed
       $ "cannot insert object relationship "
       <> relName
@@ -378,3 +398,80 @@ decodeEncJSON =
   either (throw500 . T.pack) decodeValue
     . J.eitherDecode
     . encJToLBS
+
+validateInsertInput ::
+  forall m pgKind.
+  ( MonadError QErr m,
+    MonadIO m,
+    Tracing.MonadTrace m,
+    MonadState (PGE.InsertValidationPayloadMap pgKind) m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  IR.MultiObjectInsert ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) ->
+  [HTTP.Header] ->
+  m ()
+validateInsertInput env manager logger userInfo IR.AnnotatedInsertData {..} reqHeaders = do
+  for_ _aiValidateInput $ \validateInput -> do
+    validatePaylodMap <- get
+    case InsOrdHashMap.lookup _aiTableName validatePaylodMap of
+      Nothing -> modify $ InsOrdHashMap.insert _aiTableName (_aiInsertObject, validateInput)
+      Just _ -> modify $ InsOrdHashMap.adjust (\(insertedRows, validateInputDef) -> (insertedRows <> _aiInsertObject, validateInputDef)) _aiTableName
+
+  -- Validate the nested insert data
+  -- for each row
+  for_ _aiInsertObject $ \row ->
+    -- for each field
+    for_ row $ \case
+      IR.AIColumn {} -> pure () -- ignore columns
+      IR.AIObjectRelationship _ objectRelationInsert -> do
+        let multiObjectInsert = IR._riInsertData $ objToArr objectRelationInsert
+        validateInsertInput env manager logger userInfo multiObjectInsert reqHeaders
+      IR.AIArrayRelationship _ arrayRelationInsert ->
+        validateInsertInput env manager logger userInfo (IR._riInsertData arrayRelationInsert) reqHeaders
+
+validateInsertRows ::
+  forall m pgKind.
+  ( MonadError QErr m,
+    MonadIO m,
+    Tracing.MonadTrace m
+  ) =>
+  Env.Environment ->
+  HTTP.Manager ->
+  L.Logger L.Hasura ->
+  UserInfo ->
+  ResolvedWebhook ->
+  [HeaderConf] ->
+  Timeout ->
+  Bool ->
+  [HTTP.Header] ->
+  [IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))] ->
+  m ()
+validateInsertRows env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders rows = do
+  let inputData = J.object ["input" J..= map convertInsertRow rows]
+  PGE.validateMutation env manager logger userInfo resolvedWebHook confHeaders timeout forwardClientHeaders reqHeaders inputData
+  where
+    convertInsertRow :: IR.AnnotatedInsertRow ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)) -> J.Value
+    convertInsertRow fields = J.object $ flip mapMaybe fields $ \field ->
+      let (fieldName, maybeFieldValue) = case field of
+            IR.AIColumn (column, value) -> (toTxt column, convertValue value)
+            IR.AIObjectRelationship _ objectRelationInsert ->
+              let relationshipName = riName $ IR._riRelationInfo objectRelationInsert
+                  insertRow = IR.unSingle $ IR._aiInsertObject $ IR._riInsertData objectRelationInsert
+               in -- We want to follow the GQL types. And since nested objects (object and array relationships)
+                  -- are always included inside 'data', we add the "data" key here.
+                  (toTxt relationshipName, Just $ J.object ["data" J..= convertInsertRow insertRow])
+            IR.AIArrayRelationship _ arrayRelationInsert ->
+              let relationshipName = riName $ IR._riRelationInfo arrayRelationInsert
+                  insertRows = IR._aiInsertObject $ IR._riInsertData arrayRelationInsert
+               in (toTxt relationshipName, Just $ J.object ["data" J..= map convertInsertRow insertRows])
+       in maybeFieldValue <&> \fieldValue -> (J.fromText fieldName J..= fieldValue)
+
+    convertValue :: IR.UnpreparedValue ('Postgres pgKind) -> Maybe J.Value
+    convertValue = \case
+      IR.UVParameter _ columnValue -> Just $ pgScalarValueToJson $ cvValue columnValue
+      IR.UVLiteral sqlExp -> Just $ J.toJSON sqlExp
+      IR.UVSession -> Nothing
+      IR.UVSessionVar {} -> Nothing

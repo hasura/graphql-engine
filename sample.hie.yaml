@@ -28,10 +28,10 @@ cradle:
     - path: "server/lib/aeson-ordered/src"
       component: "aeson-ordered:lib:aeson-ordered"
 
-    - path: "server/lib/error-message/src"
-      component: "error-message:lib:error-message"
-    - path: "server/lib/error-message/test"
-      component: "error-message:test:error-message-tests"
+    - path: "server/lib/hasura-error-message/src"
+      component: "hasura-error-message:lib:hasura-error-message"
+    - path: "server/lib/hasura-error-message/test"
+      component: "hasura-error-message:test:hasura-error-message-tests"
 
     - path: "server/lib/schema-parsers/src"
       component: "schema-parsers:lib:schema-parsers"

@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Server.CheckUpdates
   ( checkForUpdates,
   )
@@ -11,7 +9,6 @@ import Control.Exception (try)
 import Control.Lens
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Either (fromRight)
 import Data.Text qualified as T
 import Data.Text.Conversions (toText)
@@ -27,11 +24,16 @@ import System.Log.FastLogger qualified as FL
 newtype UpdateInfo = UpdateInfo
   { _uiLatest :: Version
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
 -- note that this is erroneous and should drop three characters or use
 -- aesonPrefix, but needs to remain like this for backwards compatibility
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''UpdateInfo)
+instance J.FromJSON UpdateInfo where
+  parseJSON = J.genericParseJSON (J.aesonDrop 2 J.snakeCase)
+
+instance J.ToJSON UpdateInfo where
+  toJSON = J.genericToJSON (J.aesonDrop 2 J.snakeCase)
+  toEncoding = J.genericToEncoding (J.aesonDrop 2 J.snakeCase)
 
 checkForUpdates :: LoggerCtx a -> HTTP.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do

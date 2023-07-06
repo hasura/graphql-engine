@@ -86,7 +86,7 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
 
   const listProps = usePaginatedSearchableList({
     data: functionsWithId,
-    searchFn: (query, item) => {
+    filterFn: (query, item) => {
       return item.name.toLowerCase().includes(query.toLowerCase());
     },
   });

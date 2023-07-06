@@ -16,11 +16,12 @@ import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Class (MonadTrans (lift))
 import Control.Monad.Trans.Except (runExceptT)
 import Data.ByteString.Char8 qualified as BS
+import Data.String (fromString)
 import Database.PG.Query
 import Interrupt (specInterrupt)
 import Jsonb (specJsonb)
 import System.Environment qualified as Env
-import Test.Hspec (describe, hspec, it, shouldReturn)
+import Test.Hspec (describe, hspec, it, shouldBe, shouldReturn)
 import Timeout (specTimeout)
 import Prelude
 
@@ -36,7 +37,7 @@ The tests in this module expect a postgres instance running. No setup is
 required, these tests do not run any query on the database. The only requirement
 is that the environment variable DATABASE_URL is set such that it is a valid
 connection string to this instance (e.g.
-"postgres://user:pass@127.0.0.1:5432/instance?sslmode=disable").
+"postgresql://user:pass@127.0.0.1:5432/instance?sslmode=disable").
 
 TODO: run these tests as part of CI.
 -}
@@ -54,6 +55,28 @@ main = hspec $ do
       releaseAndAcquireWithTimeout `shouldReturn` Nothing
     it "time out works correctly" do
       releaseAndAcquireWithTimeoutNegative `shouldReturn` Nothing
+
+    let uriConnDetails :: ConnDetails
+        uriConnDetails =
+          CDDatabaseURI $
+            fromString
+              "postgresql://user:pass@127.0.0.1:5432/instance?sslmode=disable"
+
+    it "parses a host name correctly" do
+      extractHost uriConnDetails `shouldBe` Just "127.0.0.1"
+
+    it "parses connection options correctly" do
+      extractConnOptions uriConnDetails
+        `shouldBe` Just
+          ConnOptions
+            { connHost = "127.0.0.1",
+              connPort = 5432,
+              connUser = "user",
+              connPassword = "pass",
+              connDatabase = "instance",
+              connOptions = Nothing
+            }
+
   specInterrupt
   specTimeout
   specJsonb
@@ -63,7 +86,11 @@ mkPool = do
   dbUri <- BS.pack <$> Env.getEnv "DATABASE_URL"
   initPGPool (connInfo dbUri) connParams logger
   where
-    connInfo uri = ConnInfo {ciRetries, ciDetails = mkDetails uri}
+    connInfo uri =
+      ConnInfo
+        { ciRetries,
+          ciDetails = mkDetails uri
+        }
     ciRetries = 0
     mkDetails = CDDatabaseURI
     logger = mempty

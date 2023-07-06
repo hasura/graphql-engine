@@ -18,9 +18,13 @@ module Database.MSSQL.Transaction
   )
 where
 
+import Autodocodec (HasCodec (codec), bimapCodec, textCodec, (<?>))
+import Autodocodec.Aeson qualified as AC
 import Control.Exception (try)
 import Control.Monad.Morph (MFunctor (hoist))
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson qualified as J
+import Data.Text qualified as T
 import Database.MSSQL.Pool
 import Database.ODBC.SQLServer (FromRow)
 import Database.ODBC.SQLServer qualified as ODBC
@@ -243,16 +247,61 @@ data TransactionState
     -- rollback of the transaction.
     TSUncommittable
 
+-- | <https://learn.microsoft.com/en-us/sql/t-sql/statements/set-transaction-isolation-level-transact-sql>
 data TxIsolation
-  = ReadCommitted
+  = ReadUncommitted
+  | ReadCommitted
   | RepeatableRead
+  | Snapshot
   | Serializable
+  deriving (Eq, Generic)
 
 instance Show TxIsolation where
   show = \case
+    ReadUncommitted -> "READ UNCOMMITTED"
     ReadCommitted -> "READ COMMITTED"
     RepeatableRead -> "REPEATABLE READ"
+    Snapshot -> "SNAPSHOT"
     Serializable -> "SERIALIZABLE"
+
+instance Hashable TxIsolation
+
+instance NFData TxIsolation
+
+instance HasCodec TxIsolation where
+  codec =
+    bimapCodec
+      decode
+      encode
+      textCodec
+      <?> "Isolation level"
+    where
+      decode :: Text -> Either String TxIsolation
+      decode = \case
+        "read-uncommitted" -> Right ReadUncommitted
+        "read-committed" -> Right ReadCommitted
+        "repeatable-read" -> Right RepeatableRead
+        "snapshot" -> Right Snapshot
+        "serializable" -> Right Serializable
+        _ ->
+          Left
+            $ T.unpack
+            $ "Unexpected options for isolation_level. Expected "
+            <> "'read-uncommited' | 'read-committed' | 'repeatable-read' | 'snapshot' | 'serializable'"
+      encode :: TxIsolation -> Text
+      encode = \case
+        ReadUncommitted -> "read-uncommitted"
+        ReadCommitted -> "read-committed"
+        RepeatableRead -> "repeatable-read"
+        Snapshot -> "snapshot"
+        Serializable -> "serializable"
+
+instance J.ToJSON TxIsolation where
+  toJSON = AC.toJSONViaCodec
+  toEncoding = AC.toEncodingViaCodec
+
+instance J.FromJSON TxIsolation where
+  parseJSON = AC.parseJSONViaCodec
 
 -- | Wraps an action in a transaction. Rolls back on errors.
 asTransaction ::

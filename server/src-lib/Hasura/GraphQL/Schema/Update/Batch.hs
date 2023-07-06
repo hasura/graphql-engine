@@ -25,9 +25,10 @@ import Hasura.RQL.IR.Update.Batch (UpdateBatch (..))
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..))
-import Hasura.RQL.Types.Common (Comment (..))
+import Hasura.RQL.Types.Common (Comment (..), ResolvedWebhook)
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
@@ -61,14 +62,14 @@ buildAnnotatedUpdateGField scenario tableInfo fieldName description parseOutput 
       columns = tableColumns tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
       tableName = tableInfoName tableInfo
+      validateInput = upiValidateInput updatePerms
 
   guard $ isMutable viIsUpdatable viewInfo
-
   outputParser <- parseOutput
   updateVariantParser <- mkUpdateVariantParser updatePerms
   pure
     $ P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName))
-    $ mkAnnotatedUpdateG tableName columns updatePerms (Just tCase)
+    $ mkAnnotatedUpdateG tableName columns updatePerms (Just tCase) validateInput
     <$> P.subselection fieldName description updateVariantParser outputParser
 
 -- | Construct a root field, normally called update_tablename, that can be used
@@ -199,11 +200,12 @@ mkAnnotatedUpdateG ::
   [ColumnInfo b] ->
   UpdPermInfo b ->
   (Maybe NamingCase) ->
+  Maybe (ValidateInput ResolvedWebhook) ->
   ( UpdateVariant b (UnpreparedValue b),
     MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
   ) ->
   AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
-mkAnnotatedUpdateG _auTable _auAllCols updatePerms _auNamingConvention (_auUpdateVariant, _auOutput) =
+mkAnnotatedUpdateG _auTable _auAllCols updatePerms _auNamingConvention _auValidateInput (_auUpdateVariant, _auOutput) =
   AnnotatedUpdateG {..}
   where
     _auUpdatePermissions = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms

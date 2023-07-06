@@ -1,8 +1,8 @@
 import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
 import { CreateBooleanMap } from '../../../../../components/Common/utils/tsUtils';
 import {
-  GraphQLSanitizedInputField,
   Select,
+  GraphQLSanitizedInputField,
 } from '../../../../../new-components/Form';
 import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 import { LogicalModel } from '../../../../hasura-metadata-types';

@@ -1529,10 +1529,14 @@ relationshipField table ri = runMaybeT do
           ( OptimizePermissionFilters,
             BoolAnd
               [ BoolField
+                  -- We want to match on relationships that appear in permissions of the _current_ table.
+                  -- Therefore we need to inspect `rfFilter`, rather than `rfTargetTablePermissions`,
+                  -- which encodes the permissions on the _target_ table, which are always necessarily
+                  -- empty, since they are not included in the permission definitions of the _current_ table.
                   ( AVRelationship
                       remoteRI
                       RelationshipFilters
-                        { rfTargetTablePermissions,
+                        { rfTargetTablePermissions = BoolAnd [],
                           rfFilter
                         }
                     )
@@ -1548,8 +1552,8 @@ relationshipField table ri = runMaybeT do
                     _ -> Nothing
                in if (remoteTableName == Just table)
                     && (riMapping remoteRI `HashMap.isInverseOf` riMapping ri)
-                    && (thisTablePerm == rfTargetTablePermissions)
-                    then rfFilter
+                    && (thisTablePerm == rfFilter)
+                    then BoolAnd []
                     else x
           _ -> x
       deduplicatePermissions' :: SelectExp b -> SelectExp b

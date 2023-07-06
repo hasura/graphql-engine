@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.SQL.Types
   ( ToSQL (..),
     toSQLTxt,
@@ -10,7 +8,6 @@ where
 
 import Autodocodec (Autodocodec (..), HasCodec (codec), dimapCodec, named, textCodec)
 import Data.Aeson
-import Data.Aeson.TH
 import Hasura.Prelude
 import Text.Builder qualified as TB
 
@@ -44,7 +41,12 @@ instance (NFData a) => NFData (CollectableType a)
 
 instance (Hashable a) => Hashable (CollectableType a)
 
-$(deriveJSON defaultOptions {constructorTagModifier = drop 6} ''CollectableType)
+instance (FromJSON a) => FromJSON (CollectableType a) where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = drop 6}
+
+instance (ToJSON a) => ToJSON (CollectableType a) where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = drop 6}
+  toEncoding = genericToEncoding defaultOptions {constructorTagModifier = drop 6}
 
 instance (ToSQL a) => ToSQL (CollectableType a) where
   toSQL = \case

@@ -70,6 +70,7 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString qualified as B
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (Hashable (hashWithSalt))
 import Hasura.GraphQL.Parser (InputValue (..), Variable (..))
 import Hasura.Prelude
 import Hasura.Server.Utils (cryptoHash)
@@ -122,6 +123,9 @@ parameterizedQueryHashListToObject =
 
 newtype ParameterizedQueryHash = ParameterizedQueryHash {unParamQueryHash :: B.ByteString}
   deriving (Show, Eq, Ord)
+
+instance Hashable ParameterizedQueryHash where
+  hashWithSalt salt = hashWithSalt salt . unParamQueryHash
 
 instance J.ToJSON ParameterizedQueryHash where
   toJSON = J.String . bsToTxt . unParamQueryHash

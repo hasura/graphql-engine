@@ -10,6 +10,7 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
 where
 
 import Data.Aeson
+import Data.Environment qualified as Env
 import Data.Graph qualified as G
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -193,13 +194,14 @@ buildTablePermissions ::
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableCoreCache b ->
   FieldInfoMap (FieldInfo b) ->
   TablePermissionInputs b ->
   OrderedRoles ->
   m (RolePermInfoMap b)
-buildTablePermissions source tableCache tableFields tablePermissions orderedRoles = do
+buildTablePermissions env source tableCache tableFields tablePermissions orderedRoles = do
   let alignedPermissions = alignPermissions tablePermissions
       go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
@@ -266,6 +268,7 @@ buildTablePermissions source tableCache tableFields tablePermissions orderedRole
         (info, dependencies) <-
           runTableCoreCacheRT
             ( buildPermInfo
+                env
                 source
                 table
                 tableFields

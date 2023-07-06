@@ -138,7 +138,7 @@ import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..), (<<>))
 import Data.These
 import Data.Time.Clock
-import Data.URL.Template (printURLTemplate)
+import Data.URL.Template (printTemplate)
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -385,7 +385,7 @@ processOneOffScheduledEvents
               scheduledTriggerMetrics
     where
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
-      getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
+      getTemplateFromUrl url = printTemplate $ unInputWebhook url
       mkInvalidEnvVarErrMsg envVarErrorValues = "The value for environment variables not found: " <> (getInvalidEnvVarText envVarErrorValues)
       mkErrorObject :: Text -> J.Value
       mkErrorObject errorMessage =

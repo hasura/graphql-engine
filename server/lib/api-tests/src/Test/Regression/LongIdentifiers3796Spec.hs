@@ -117,12 +117,10 @@ longtable =
         ],
       tablePrimaryKey = ["id"],
       tableReferences =
-        [ Schema.Reference
-            { referenceLocalColumn = "regular_id",
-              referenceTargetTable = "regular_table_with_a_long_name_to_test_rename_identifiers",
-              referenceTargetColumn = "id",
-              referenceTargetQualifiers = mempty
-            }
+        [ Schema.reference
+            "regular_id"
+            "regular_table_with_a_long_name_to_test_rename_identifiers"
+            "id"
         ],
       tableData =
         [ [Schema.VInt 1, Schema.VInt 1, Schema.VInt 1, Schema.VInt 1],
@@ -155,18 +153,14 @@ multitable =
         ],
       tablePrimaryKey = ["id"],
       tableReferences =
-        [ Schema.Reference
-            { referenceLocalColumn = "reference_for_longtable_id",
-              referenceTargetTable = "i_need_a_table_with_a_long_name_to_test_rename_identifiers",
-              referenceTargetColumn = "id",
-              referenceTargetQualifiers = mempty
-            },
-          Schema.Reference
-            { referenceLocalColumn = "reference_for_longtable2_id",
-              referenceTargetTable = "i_need_a_table_with_a_long_name_to_test_rename_identifiers2",
-              referenceTargetColumn = "id",
-              referenceTargetQualifiers = mempty
-            }
+        [ Schema.reference
+            "reference_for_longtable_id"
+            "i_need_a_table_with_a_long_name_to_test_rename_identifiers"
+            "id",
+          Schema.reference
+            "reference_for_longtable2_id"
+            "i_need_a_table_with_a_long_name_to_test_rename_identifiers2"
+            "id"
         ],
       tableData =
         [ [Schema.VInt 1, Schema.VInt 1, Schema.VInt 1],

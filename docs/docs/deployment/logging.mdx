@@ -74,7 +74,7 @@ The Enterprise Edition log-types that can be enabled/disabled are:
 | `api-limit-log`        | Logs errors in [API limit](/security/api-limits.mdx)                                                                          | `error`                     |
 | `livequery-poller-log` | Logs information for active subscriptions (poller-id, generated sql, polling time, subscriber count, subscription kind, etc.) | `info`                      |
 | `response-caching-log` | Logs response information and errors from [query caching](/caching/overview.mdx)                                              | `info`, `error` and `debug` |
-| `tracing-log`          | Logs information about [tracing spans](/observability/tracing.mdx)                                                            | `info`                      |
+| `tracing-log`          | Logs information about [tracing spans](/observability/cloud-monitoring/tracing.mdx)                                           | `info`                      |
 | `metrics`              | Logs tenant metrics information                                                                                               | `info`                      |
 | `health-check-log`     | Logs source Health Check events which includes health status of a data source                                                 | `info` and `warn`           |
 
@@ -924,4 +924,4 @@ The `subscription_options` field is an object with the following properties:
 You can integrate the logs emitted by the Hasura Engine with external monitoring tools for better visibility as per your
 convenience.
 
-For some examples, see [Guides: Integrating with monitoring frameworks](/observability/integrations/index.mdx)
+For some examples, see [Guides: Integrating with monitoring frameworks](/observability/cloud/index.mdx)

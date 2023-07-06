@@ -56,31 +56,32 @@ library
     Database.PG.Query.Transaction
 
   build-depends:
-    , aeson              >=1.0
-    , aeson-casing       >=0.1
-    , async              >=2
-    , base               >=4.7
-    , bytestring         >=0.10
-    , ekg-core           >=0.1
-    , hashable           >=1.2
-    , hashtables         >=1.2
-    , mmorph             >=1.1
-    , monad-control      >=1.0
-    , mtl                >=2.2
-    , postgresql-binary  >=0.12
-    , postgresql-libpq   >=0.9
-    , resource-pool      >=0.2
-    , retry              >=0.9
-    , safe-exceptions    >=0.1
-    , scientific         >=0.3
-    , template-haskell   >=2.11
-    , text               >=1.2
-    , text-builder       >=0.6
-    , time               >=1.6
-    , transformers       >=0.5
-    , transformers-base  >=0.4
-    , uuid               >=1.3
-    , vector             >=0.12
+    , aeson
+    , aeson-casing
+    , async
+    , base
+    , bytestring
+    , ekg-core
+    , hashable
+    , hashtables
+    , mmorph
+    , monad-control
+    , mtl
+    , postgres-options
+    , postgresql-binary
+    , postgresql-libpq
+    , resource-pool
+    , retry
+    , safe-exceptions
+    , scientific
+    , template-haskell
+    , text
+    , text-builder
+    , time
+    , transformers
+    , transformers-base
+    , uuid
+    , vector
 
 test-suite pg-client-tests
   import:         common-all
@@ -116,7 +117,7 @@ benchmark pg-client-bench
     , bytestring
     , file-embed
     , hasql
-    , hasql-pool ==0.5.2.2
+    , hasql-pool
     , hasql-transaction
     , pg-client
     , tasty-bench

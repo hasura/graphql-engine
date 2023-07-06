@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- | CORS (Cross Origin Resource Sharing) related configuration
 module Hasura.Server.Cors
@@ -17,7 +16,6 @@ where
 import Control.Applicative (optional)
 import Data.Aeson ((.:))
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Attoparsec.Text qualified as AT
 import Data.Char qualified as C
 import Data.HashSet qualified as Set
@@ -32,15 +30,25 @@ data DomainParts = DomainParts
   }
   deriving (Show, Eq, Generic, Hashable)
 
-$(J.deriveJSON hasuraJSON ''DomainParts)
+instance J.FromJSON DomainParts where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON DomainParts where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data Domains = Domains
   { dmFqdns :: !(Set.HashSet Text),
     dmWildcards :: !(Set.HashSet DomainParts)
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(J.deriveJSON hasuraJSON ''Domains)
+instance J.FromJSON Domains where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON Domains where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data CorsConfig
   = CCAllowAll

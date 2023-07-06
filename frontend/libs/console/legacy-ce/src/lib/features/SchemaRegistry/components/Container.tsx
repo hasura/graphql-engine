@@ -8,6 +8,7 @@ import { IconTooltip } from '../../../new-components/Tooltip';
 import { AlertsDialog } from './AlertsDialog';
 import { Badge } from '../../../new-components/Badge';
 import { SCHEMA_REGISTRY_REF_URL } from '../constants';
+import { Analytics } from '../../Analytics';
 
 const Header: React.VFC = () => {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -21,16 +22,18 @@ const Header: React.VFC = () => {
             BETA
           </Badge>
         </div>
-        <div
-          className="flex text-lg mt-2 mr-2 cursor-pointer"
-          role="button"
-          onClick={() => setIsAlertModalOpen(true)}
-        >
-          <IconTooltip
-            message="Alerts on GraphQL schema changes"
-            icon={<FaBell />}
-          />
-        </div>
+        <Analytics name="data-schema-registry-alerts-btn">
+          <div
+            className="flex text-lg mt-2 mr-2 cursor-pointer"
+            role="button"
+            onClick={() => setIsAlertModalOpen(true)}
+          >
+            <IconTooltip
+              message="Alerts on GraphQL schema changes"
+              icon={<FaBell />}
+            />
+          </div>
+        </Analytics>
       </div>
       <a
         className="text-muted w-auto"

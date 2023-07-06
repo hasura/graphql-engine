@@ -10,12 +10,14 @@ module Harness.Yaml
     shouldAtLeastBe,
     Visual (..),
     parseToMatch,
+    ignoreWhitespace,
   )
 where
 
 import Data.Aeson (Value (..))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
+import Data.Char
 import Data.Has
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With)
@@ -132,6 +134,12 @@ shouldReturnYamlFInternal options transform actualIO expected = do
 shouldBeYaml :: (HasCallStack) => Value -> Value -> IO ()
 shouldBeYaml actual expected = do
   shouldBe (Visual actual) (Visual expected)
+
+ignoreWhitespace :: Value -> Value
+ignoreWhitespace (J.Array sub) = J.Array (fmap ignoreWhitespace sub)
+ignoreWhitespace (J.Object sub) = J.Object (fmap ignoreWhitespace sub)
+ignoreWhitespace (J.String sub) = J.String (T.filter (not . isSpace) sub)
+ignoreWhitespace x = x
 
 -- | Assert that the expected json value should be a subset of the actual value, in the sense of 'jsonSubsetOf'.
 shouldAtLeastBe :: (HasCallStack) => Value -> Value -> IO ()

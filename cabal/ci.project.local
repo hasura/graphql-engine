@@ -6,7 +6,6 @@ package *
   ghc-options:
     -- We compile with package-level parallelism, so just use a small amount
     -- of module-level parallelism for dependencies:
-    -- TODO: tune me
     -j2
     -- For performance, with `-j`:
     +RTS -A64m -n2m -RTS
@@ -14,50 +13,13 @@ package *
 -- Enable optimizations in all local (hasura) packages:
 flags: +optimize-hasura
 
+-- Set common options
+program-options
+  ghc-options: -j -Werror
+
 package graphql-engine
-  ghc-options:
-    -- At this point though we definitely want full module-level parallelism:
-    -j
-    -Werror
   tests: true
   benchmarks: true
-
--- Set common options to internal libraries
-package aeson-ordered
-  ghc-options: -j -Werror
-
-package api-tests
-  ghc-options: -j -Werror
-
-package arrows-extra
-  ghc-options: -j -Werror
-
-package dc-api
-  ghc-options: -j -Werror
-
-package graphql-parser
-  ghc-options: -j -Werror
-
-package hasura-error-message
-  ghc-options: -j -Werror
-
-package hasura-incremental
-  ghc-options: -j -Werror
-
-package hasura-prelude
-  ghc-options: -j -Werror
-
-package hasura-schema-parsers
-  ghc-options: -j -Werror
-
-package pg-client
-  ghc-options: -j -Werror
-
-package resource-pool
-  ghc-options: -j -Werror
-
-package test-harness
-  ghc-options: -j -Werror
 
 -- %%%-BEGIN-PRO-ONLY-CONTENT-%%%
 
@@ -69,8 +31,4 @@ package test-harness
 -- `copy.bara.sky`), so please take care when manipulating this label!
 
 package graphql-engine-pro
-  ghc-options:
-    -- At this point though we definitely want full module-level parallelism:
-    -j
-    -Werror
   tests: true

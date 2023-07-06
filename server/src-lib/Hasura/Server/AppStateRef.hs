@@ -32,6 +32,7 @@ import Control.Concurrent.STM qualified as STM
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.IORef
 import Hasura.App.State
+import Hasura.Base.Error
 import Hasura.Logging qualified as L
 import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
@@ -106,49 +107,25 @@ initialiseAppStateRef (TLSAllowListRef tlsAllowListRef) metricsConfigRefM server
     liftIO $ writeIORef metricsConfigRef (scMetricsConfig <$> getSchemaCache ref)
   pure ref
 
--- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
--- given action.
---
--- An internal lock ensures that at most one update to the 'AppStateRef' may
--- proceed at a time.
+-- TODO: This function might not be needed at all. This function is used only in `refreshSchemaCache` and we
+-- can use `withSchemaCacheReadUpdate` there.
 withSchemaCacheUpdate ::
-  (MonadIO m, MonadBaseControl IO m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   (AppStateRef impl) ->
   L.Logger L.Hasura ->
   Maybe (STM.TVar Bool) ->
   m (a, RebuildableSchemaCache) ->
   m a
-withSchemaCacheUpdate (AppStateRef lock cacheRef metadataVersionGauge) logger mLogCheckerTVar action =
-  withMVarMasked lock $ const do
-    (!res, !newSC) <- action
-    liftIO do
-      -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \appState ->
-        let !newVer = incSchemaCacheVer (snd $ asSchemaCache appState)
-         in appState {asSchemaCache = (newSC, newVer)}
+withSchemaCacheUpdate asr logger mLogCheckerTVar action =
+  withSchemaCacheReadUpdate asr logger mLogCheckerTVar (const action)
 
-      -- update metric with new metadata version
-      updateMetadataVersionGauge metadataVersionGauge newSC
-
-      let inconsistentObjectsList = scInconsistentObjs $ lastBuiltSchemaCache newSC
-          logInconsistentMetadata' = logInconsistentMetadata logger inconsistentObjectsList
-      -- log any inconsistent objects only once and not everytime this method is called
-      case mLogCheckerTVar of
-        Nothing -> logInconsistentMetadata'
-        Just logCheckerTVar -> do
-          logCheck <- STM.readTVarIO logCheckerTVar
-          if null inconsistentObjectsList && logCheck
-            then do
-              STM.atomically $ STM.writeTVar logCheckerTVar False
-            else do
-              unless (logCheck || null inconsistentObjectsList) $ do
-                STM.atomically $ STM.writeTVar logCheckerTVar True
-                logInconsistentMetadata'
-
-    pure res
-
+-- | Set the 'AppStateRef' to the 'RebuildableSchemaCache' produced by the
+-- given action.
+--
+-- An internal lock ensures that at most one update to the 'AppStateRef' may
+-- proceed at a time.
 withSchemaCacheReadUpdate ::
-  (MonadIO m, MonadBaseControl IO m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   (AppStateRef impl) ->
   L.Logger L.Hasura ->
   Maybe (STM.TVar Bool) ->
@@ -158,6 +135,8 @@ withSchemaCacheReadUpdate (AppStateRef lock cacheRef metadataVersionGauge) logge
   withMVarMasked lock $ const do
     (rebuildableSchemaCache, _) <- asSchemaCache <$> liftIO (readIORef cacheRef)
     (!res, !newSC) <- action rebuildableSchemaCache
+    when (scMetadataResourceVersion (lastBuiltSchemaCache newSC) == MetadataResourceVersion (-1))
+      $ throw500 "Programming error: attempting to save Schema Cache with incorrect mrv. Please report this to Hasura."
     liftIO do
       -- update schemacache in IO reference
       modifyIORef' cacheRef $ \appState ->

@@ -7,7 +7,7 @@ import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';
 import { ModifyTableProps } from '../ModifyTable';
 
-const RootField: React.VFC<{ property: string; value: string }> = ({
+export const RootField: React.VFC<{ property: string; value: string }> = ({
   property,
   value,
 }) => (

@@ -55,7 +55,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column hiding (EnumValueInfo)
 import Hasura.RQL.Types.Column qualified as Column
-import Hasura.RQL.Types.Common (RelName)
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Relationships.Local
@@ -324,7 +323,6 @@ class (Backend b) => BackendLogicalModelSelectSchema (b :: BackendType) where
 
   logicalModelSelectionSet ::
     (MonadBuildSourceSchema b r m n) =>
-    InsOrdHashMap RelName (RelInfo b) ->
     LogicalModelInfo b ->
     SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 

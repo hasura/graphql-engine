@@ -125,12 +125,32 @@ keywords:
 | isolation_level         | false    | `read-committed` \| `repeatable-read` \| `serializable`                              | The transaction isolation level in which the queries made to the source will be run with (default: `read-committed`).                                                                                               |
 | ssl_configuration       | false    | [PGCertSettings](#pgcertsettings)                                                    | The client SSL certificate settings for the database (_Only available in Cloud_).                                                                                                                                   |
 
+:::info Note
+
+When `use_prepared_statements` is `true`, all SQL queries compiled from GraphQL queries will be
+[prepared](https://www.postgresql.org/docs/current/sql-prepare.html) before being executed, meaning that the
+database server will cache queries and query plans.
+
+This can result in an improvement in performance when serving mostly complex queries with little variation. But it's
+a trade-off that increases memory usage, and under other circumstances the result is not a net performance gain.
+And because the prepared statements cache is local to each database connection, the connection pool parameters also
+influence its efficiency.
+
+The only way to reasonably know if enabling prepared statements will increase the performance of a Hasura GraphQL
+Engine instance is to benchmark it under a representative query load.
+
+This option interacts with the [Query Tags](/observability/cloud-monitoring/query-tags.mdx) feature (see for details),
+and the two generally shouldn't be enabled at the same time.
+
+:::
+
 ## MsSQLSourceConnectionInfo {#mssqlsourceconnectioninfo}
 
-| Key               | Required | Schema                                  | Description                                                   |
-| ----------------- | -------- | --------------------------------------- | ------------------------------------------------------------- |
-| connection_string | true     | `String` \| [FromEnv](#fromenv)         | The database connection string, or as an environment variable |
-| pool_settings     | false    | [MsSQLPoolSettings](#mssqlpoolsettings) | Connection pool settings                                      |
+| Key               | Required | Schema                                                                                     | Description                                                                                                           |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| connection_string | true     | `String` \| [FromEnv](#fromenv)                                                            | The database connection string, or as an environment variable                                                         |
+| pool_settings     | false    | [MsSQLPoolSettings](#mssqlpoolsettings)                                                    | Connection pool settings                                                                                              |
+| isolation_level   | false    | `read-uncommited` \| `read-committed` \| `repeatable-read` \| `snapshot` \| `serializable` | The transaction isolation level in which the queries made to the source will be run with (default: `read-committed`). |
 
 ## FromEnv {#fromenv}
 
@@ -155,7 +175,7 @@ keywords:
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                                                                                                |
 | total_max_connections | false    | `Integer` | Maximum number of total connections to be maintained across any number of Hasura Cloud instances (default: 1000). Takes precedence over `max_connections` in Cloud projects. _(Only available in Hasura Cloud)_                                                   |
 | idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                                                                                                       |
-| retries               | false    | `Integer` | Number of retries to perform (default: 1)                                                                                                                                                                                                                         |
+| retries               | false    | `Integer` | Number of retries to perform when failing to acquire connection (default: 1). Note that this configuration does not affect user/statement errors on PG.                                                                                                                                                                                                                         |
 | pool_timeout          | false    | `Integer` | Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)                                                                                                                                                           |
 | connection_lifetime   | false    | `Integer` | Time from connection creation after which the connection should be destroyed and a new one created. A value of 0 indicates we should never destroy an active connection. If 0 is passed, memory from large query results may not be reclaimed. (default: 600 sec) |
 
@@ -1166,6 +1186,11 @@ Template example: `https://{{ACTION_API_DOMAIN}}/create-user`
 | ----- | -------- | ------ | ------------------- |
 | name  | true     | String | Name of the header  |
 | value | true     | String | Value of the header |
+
+The `value` field supports templating environment variables enclosed in
+`{{` and `}}`.
+
+Template example: `header-{{HEADER_FROM_ENV}}`
 
 ## HeaderFromEnv {#headerfromenv}
 

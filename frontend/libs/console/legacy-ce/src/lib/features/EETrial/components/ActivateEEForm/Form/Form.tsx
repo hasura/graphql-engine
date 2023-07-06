@@ -2,7 +2,7 @@ import React from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  AdvancedSelectField,
+  SelectField,
   CheckboxesField,
   InputField,
 } from '../../../../../new-components/Form';
@@ -307,7 +307,7 @@ export const RegistrationForm: React.FC<Props> = (props: Props) => {
           name="ee-registration-form-hasura-use-case"
           passHtmlAttributesToChildren
         >
-          <AdvancedSelectField
+          <SelectField
             name="hasuraUseCase"
             options={[
               { value: 'data-api', label: 'Data API on my databases' },

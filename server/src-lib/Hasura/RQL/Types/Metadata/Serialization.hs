@@ -260,15 +260,16 @@ sourcesToOrdJSONList sources =
           insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
           insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
             where
-              insPermToOrdJSON (InsPerm check set columns backendOnly) =
+              insPermToOrdJSON (InsPerm check set columns backendOnly validateInput) =
                 let columnsPair = ("columns",) . AO.toOrdered <$> columns
                     backendOnlyPair =
                       if backendOnly
                         then Just ("backend_only", AO.toOrdered backendOnly)
                         else Nothing
+                    validateInputPair = (("validate_input",) . AO.toOrdered) <$> validateInput
                  in AO.object
                       $ [("check", AO.toOrdered check)]
-                      <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair]
+                      <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair, validateInputPair]
 
           selPermDefToOrdJSON :: (Backend b) => SelPermDef b -> AO.Value
           selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
@@ -307,30 +308,32 @@ sourcesToOrdJSONList sources =
           updPermDefToOrdJSON :: forall b. (Backend b) => UpdPermDef b -> AO.Value
           updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
             where
-              updPermToOrdJSON (UpdPerm columns set fltr check backendOnly) =
+              updPermToOrdJSON (UpdPerm columns set fltr check backendOnly validateInput) =
                 let backendOnlyPair =
                       if backendOnly
                         then Just ("backend_only", AO.toOrdered backendOnly)
                         else Nothing
+                    validateInputPair = (("validate_input",) . AO.toOrdered) <$> validateInput
                  in AO.object
                       $ [ ("columns", AO.toOrdered columns),
                           ("filter", AO.toOrdered fltr),
                           ("check", AO.toOrdered check)
                         ]
-                      <> catMaybes [maybeSetToMaybeOrdPair @b set, backendOnlyPair]
+                      <> catMaybes [maybeSetToMaybeOrdPair @b set, backendOnlyPair, validateInputPair]
 
           delPermDefToOrdJSON :: (Backend b) => DelPermDef b -> AO.Value
           delPermDefToOrdJSON = permDefToOrdJSON delPermToOrdJSON
             where
-              delPermToOrdJSON (DelPerm filter' backendOnly) =
+              delPermToOrdJSON (DelPerm filter' backendOnly validateInput) =
                 let backendOnlyPair =
                       if backendOnly
                         then Just ("backend_only", AO.toOrdered backendOnly)
                         else Nothing
+                    validateInputPair = (("validate_input",) . AO.toOrdered) <$> validateInput
                  in AO.object
                       $ [ ("filter", AO.toOrdered filter')
                         ]
-                      <> catMaybes [backendOnlyPair]
+                      <> catMaybes [backendOnlyPair, validateInputPair]
 
           permDefToOrdJSON :: (a b -> AO.Value) -> PermDef b a -> AO.Value
           permDefToOrdJSON permToOrdJSON (PermDef role permission comment) =

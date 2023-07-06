@@ -2,10 +2,10 @@ import {
   LogicalModelWithSource,
   NativeQueryWithSource,
 } from '../Data/LogicalModels/types';
-import { Metadata, Table } from '../hasura-metadata-types';
+import { Metadata, QualifiedFunction, Table } from '../hasura-metadata-types';
 import * as utils from './utils';
 
-/* 
+/*
 
 How do I implement my custom selector apart from the ones provided here?
 
@@ -33,6 +33,11 @@ export const getTables = (dataSourceName: string) => (m: Metadata) =>
 export const findTable =
   (dataSourceName: string, table: Table) => (m: Metadata) =>
     utils.findMetadataTable(dataSourceName, table, m);
+
+export const findFunction =
+  (dataSourceName: string, qualifiedFunction: QualifiedFunction) =>
+  (m: Metadata) =>
+    utils.findMetadataFunction(dataSourceName, qualifiedFunction, m);
 
 export const resourceVersion = () => (m: Metadata) => m?.resource_version;
 

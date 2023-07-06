@@ -93,6 +93,17 @@ export function comparatorsFromSchema(schema: GraphQLSchema): Comparators {
   }, {});
 }
 
+const commonOperators = [
+  '_eq',
+  '_ne',
+  '_gt',
+  '_lt',
+  '_gte',
+  '_lte',
+  '_in',
+  '_nin',
+];
+
 const whitelist: Record<string, string[]> = {
   jsonb: [
     '_is_null',
@@ -105,8 +116,9 @@ const whitelist: Record<string, string[]> = {
   // JSON does not seem to come with any operators
   // To match the old implementation, which does not provide any operators, we do not whitelist any for now
   json: [],
-  geography: ['_st_d_within', '_is_null', '_st_intersects'],
+  geography: [...commonOperators, '_st_d_within', '_is_null', '_st_intersects'],
   geometry: [
+    ...commonOperators,
     '_is_null',
     '_st_d_within',
     '_st_within',

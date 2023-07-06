@@ -728,7 +728,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
                           -<
                             err400 NotExists $ "no such table/view exists in source: " <>> _tbiName table
                       Just metadataTable ->
-                        buildRawTableInfo -< (table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels)
+                        buildRawTableInfo -< (source, table, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels)
                 )
             |)
               (mkTableMetadataObject source tableName)
@@ -761,14 +761,15 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
       ErrorA
         QErr
         arr
-        ( TableBuildInput b,
+        ( SourceName,
+          TableBuildInput b,
           DBTableMetadata b,
           SourceConfig b,
           Inc.Dependency Inc.InvalidationKey,
           LogicalModels b
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
-    buildRawTableInfo = Inc.cache proc (tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels) -> do
+    buildRawTableInfo = Inc.cache proc (sourceName, tableBuildInput, metadataTable, sourceConfig, reloadMetadataInvalidationKey, logicalModels) -> do
       let TableBuildInput name isEnum config apolloFedConfig mLogicalModelName = tableBuildInput
       columns <-
         liftEitherA
@@ -778,6 +779,14 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               pure $ _ptmiColumns metadataTable
             Just logicalModelName -> do
               -- A logical model was specified: use columns from the logical model
+              --
+              -- If the source does not support schemaless tables then we throw an error.
+              -- This is not strictly necessary - the logical model could be used even with sources
+              -- that always provide a table schema.  For now, we want to limit this functionality to
+              -- databases such as MongoDB that don't always provide a schema. In future we may want
+              -- to relax this.
+              unless (sourceSupportsSchemalessTables @b sourceConfig)
+                $ throw400 InvalidConfiguration ("The source " <> sourceName <<> " does not support schemaless tables")
               logicalModel <-
                 InsOrdHashMap.lookup logicalModelName logicalModels
                   `onNothing` throw400 InvalidConfiguration ("The logical mode " <> logicalModelName <<> " could not be found")

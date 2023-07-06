@@ -463,7 +463,7 @@ You can use any SQL that you could potentially use in a parameterized query, wit
 
 The query can take arguments, which are specified in the metadata. These arguments can be used in the SQL using the
 syntax `{{argument_name}}`. This syntax resembles popular string templating languages such as Mustache, but **does not
-use string interpolation**. Instead, it works in exactly the same way as prepared statements in the database, and so
+use string interpolation**. Instead, it works in exactly the same way as parameterized queries in the database, and so
 arguments do not need escaping or quoting in the SQL itself. They will be treated as variables of the correct type.
 
 This does mean that arguments cannot be used for elements of the SQL that deal with structure. For example, you cannot

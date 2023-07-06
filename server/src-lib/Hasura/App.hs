@@ -604,11 +604,10 @@ buildFirstSchemaCache
   httpManager
   mSchemaRegistryContext = do
     let cacheBuildParams = CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver cacheStaticConfig
-        buildReason = CatalogSync
     result <-
       runExceptT
         $ runCacheBuild cacheBuildParams
-        $ buildRebuildableSchemaCacheWithReason buildReason logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
+        $ buildRebuildableSchemaCache logger env metadataWithVersion cacheDynamicConfig mSchemaRegistryContext
     result `onLeft` \err -> do
       -- TODO: we used to bundle the first schema cache build with the catalog
       -- migration, using the same error handler for both, meaning that an
@@ -1466,7 +1465,7 @@ mkPgSourceResolver pgLogger env _ config = runExceptT do
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT do
-  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
+  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} isolationLevel = connInfo
       connOptions =
         MSPool.ConnectionOptions
           { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
@@ -1474,6 +1473,6 @@ mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT
             _coIdleTime = _mpsIdleTimeout
           }
   (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
-  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
+  let mssqlExecCtx = mkMSSQLExecCtx isolationLevel mssqlPool NeverResizePool
       numReadReplicas = 0
   pure $ MSSQLSourceConfig connString mssqlExecCtx numReadReplicas

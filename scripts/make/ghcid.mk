@@ -30,6 +30,10 @@ define run_ghcid
 	ghcid -c "cabal repl $(1) $(CABAL_REPL_FLAGS)" $(GHCID_FLAGS);
 endef
 
+define run_ghcid_run_main
+	ghcid -c "cabal repl $(1) $(CABAL_REPL_FLAGS)" $(GHCID_FLAGS) -r;
+endef
+
 .PHONY: ghcid-library
 ## ghcid-library: build and watch library in ghcid
 ghcid-library:
@@ -45,10 +49,23 @@ ghcid-tests:
 ghcid-api-tests:
 	$(call run_ghcid,api-tests:lib:api-tests)
 
+.PHONY: ghcid-api-tests-run
+## ghcid-api-tests-run: build and watch api-tests in ghcid, and run them
+ghcid-api-tests-run: start-api-tests-backends
+	HASURA_TEST_LOGTYPE=STDOUT \
+	GRAPHQL_ENGINE=$(GRAPHQL_ENGINE_PATH) \
+	POSTGRES_AGENT=$(POSTGRES_AGENT_PATH) \
+  	$(call run_ghcid_run_main,api-tests:lib:api-tests)
+
 .PHONY: ghcid-test-harness
 ## ghcid-test-harness: build and watch test-harness in ghcid
 ghcid-test-harness:
 	$(call run_ghcid,test-harness)
+
+.PHONY: ghcid-pg-client
+## ghcid-pg-client: build and watch pg-client in ghcid
+ghcid-pg-client:
+	$(call run_ghcid,pg-client)
 
 .PHONY: ghcid-api-tests-pro
 ## ghcid-api-tests-pro: build and watch api-tests in pro

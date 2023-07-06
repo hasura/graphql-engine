@@ -6,6 +6,7 @@ module Harness.Schema.Table
     table,
     Reference (..),
     reference,
+    InsertOrder (..),
     Column (..),
     ScalarType (..),
     defaultSerialType,
@@ -90,12 +91,16 @@ table tableName =
       tableQualifiers = []
     }
 
+data InsertOrder = BeforeParent | AfterParent
+  deriving (Show, Eq)
+
 -- | Foreign keys for backends that support it.
 data Reference = Reference
   { referenceLocalColumn :: Text,
     referenceTargetTable :: Text,
     referenceTargetColumn :: Text,
-    referenceTargetQualifiers :: [Text]
+    referenceTargetQualifiers :: [Text],
+    referenceInsertionOrder :: InsertOrder
   }
   deriving (Show, Eq)
 
@@ -105,7 +110,8 @@ reference localColumn targetTable targetColumn =
     { referenceLocalColumn = localColumn,
       referenceTargetTable = targetTable,
       referenceTargetColumn = targetColumn,
-      referenceTargetQualifiers = mempty
+      referenceTargetQualifiers = mempty,
+      referenceInsertionOrder = BeforeParent
     }
 
 -- | Type representing manual relationship between tables. This is

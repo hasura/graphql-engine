@@ -1,4 +1,8 @@
-import { exportMetadata } from '../../../../../features/DataSource';
+import {
+  DataSource,
+  Feature,
+  exportMetadata,
+} from '../../../../../features/DataSource';
 import { useHttpClient } from '../../../../../features/Network';
 import { Dispatch } from '../../../../../types';
 import { useCallback } from 'react';
@@ -26,6 +30,11 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
       if (!metadataSource)
         throw Error('useGDCTreeClick: source was not found in metadata');
 
+      const capabilities =
+        (await DataSource(httpClient).getDriverCapabilities(
+          metadataSource.kind ?? ''
+        )) ?? Feature.NotImplemented;
+
       /**
        * Handling click for GDC DBs
        */
@@ -37,7 +46,7 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
             getRoute().table(
               database,
               rest.table,
-              defaultTab(metadataSource.kind)
+              defaultTab(metadataSource.kind, capabilities)
             )
           )
         );

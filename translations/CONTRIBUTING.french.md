@@ -80,7 +80,7 @@ Nous avons identifié :
 
 - [boilerplates](../community/boilerplates)
 
-- [sample-apps](../community/sample-apps) 
+- [sample-apps](https://github.com/hasura/sample-apps/tree/main)
 
 - [outils](../community/tools) 
 

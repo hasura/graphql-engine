@@ -31,6 +31,8 @@ import Control.Concurrent.STM qualified as STM
 import Control.Exception (mask_)
 import Control.Immortal qualified as Immortal
 import Data.Aeson.Extended qualified as J
+import Data.Aeson.Ordered qualified as JO
+import Data.Monoid (Endo)
 import Data.String
 import Data.Text.Extended
 import Data.UUID.V4 qualified as UUID
@@ -40,7 +42,7 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Execute.Subscription.Poll
-import Hasura.GraphQL.Execute.Subscription.Poll.Common (PollerResponseState (PRSSuccess))
+import Hasura.GraphQL.Execute.Subscription.Poll.Common (PollerResponseState (PRSError, PRSSuccess))
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
@@ -181,6 +183,7 @@ addLiveQuery ::
   IO GranularPrometheusMetricsState ->
   -- | the action to be executed when result changes
   OnChange ->
+  (Maybe (Endo JO.Value)) ->
   IO LiveQuerySubscriberDetails
 addLiveQuery
   logger
@@ -195,7 +198,8 @@ addLiveQuery
   requestId
   plan
   granularPrometheusMetricsState
-  onResultAction = do
+  onResultAction
+  modifier = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -238,6 +242,7 @@ addLiveQuery
             granularPrometheusMetricsState
             (_pOperationNamesMap poller)
             resolvedConnectionTemplate
+            modifier
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -260,7 +265,7 @@ addLiveQuery
       SubscriptionsState lqMap _ postPollHook _ = subscriptionState
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
       addToCohort subscriber handlerC =
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
@@ -296,6 +301,8 @@ addStreamSubscriptionQuery ::
   IO GranularPrometheusMetricsState ->
   -- | the action to be executed when result changes
   OnChange ->
+  -- | the modifier for adding typename for namespaced queries
+  (Maybe (Endo JO.Value)) ->
   IO StreamingSubscriberDetails
 addStreamSubscriptionQuery
   logger
@@ -311,7 +318,8 @@ addStreamSubscriptionQuery
   rootFieldName
   plan
   granularPrometheusMetricsState
-  onResultAction = do
+  onResultAction
+  modifier = do
     -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
 
     -- disposable subscriber UUID:
@@ -356,6 +364,7 @@ addStreamSubscriptionQuery
             granularPrometheusMetricsState
             (_pOperationNamesMap handler)
             resolvedConnectionTemplate
+            modifier
           sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
@@ -380,7 +389,7 @@ addStreamSubscriptionQuery
       SubscriptionsState _ streamQueryMap postPollHook _ = subscriptionState
       SubscriptionQueryPlan (ParameterizedSubscriptionQueryPlan role query) sourceConfig cohortId resolvedConnectionTemplate cohortKey _ = plan
 
-      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate
+      handlerId = BackendPollerKey $ AB.mkAnyBackend @b $ PollerKey source role (toTxt query) resolvedConnectionTemplate parameterizedQueryHash
 
       addToCohort subscriber handlerC = do
         TMap.insert subscriber (_sId subscriber) $ _cNewSubscribers handlerC
@@ -411,7 +420,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
       detM <- getQueryDet lqMap
       case detM of
         Nothing -> return (pure ())
-        Just (Poller cohorts _ ioState parameterizedQueryHash operationNamesMap, cohort) -> do
+        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, cohort) -> do
           TMap.lookup maybeOperationName operationNamesMap >>= \case
             -- If only one operation name is present in the map, delete it
             Just 1 -> TMap.delete maybeOperationName operationNamesMap
@@ -421,7 +430,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
             -- removed
             Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
             Nothing -> return ()
-          cleanHandlerC cohorts ioState cohort parameterizedQueryHash
+          cleanHandlerC cohorts pollerState ioState cohort parameterizedQueryHash
   liftIO $ EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
   liftIO $ EKG.Gauge.dec $ smActiveLiveQueries serverMetrics
   where
@@ -435,7 +444,7 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
           cohortM <- TMap.lookup cohortId (_pCohorts poller)
           return $ (poller,) <$> cohortM
 
-    cleanHandlerC cohortMap ioState handlerC parameterizedQueryHash = do
+    cleanHandlerC cohortMap pollerState ioState handlerC parameterizedQueryHash = do
       let curOps = _cExistingSubscribers handlerC
           newOps = _cNewSubscribers handlerC
       TMap.delete sinkId curOps
@@ -461,6 +470,11 @@ removeLiveQuery logger serverMetrics prometheusMetrics lqState lqId@(SubscriberD
               Just threadRef -> do
                 Immortal.stop threadRef
                 liftIO $ do
+                  pollerLastState <- STM.readTVarIO pollerState
+                  when (pollerLastState == PRSError)
+                    $ Prometheus.Gauge.dec
+                    $ submActiveLiveQueryPollersInError
+                    $ pmSubscriptionMetrics prometheusMetrics
                   Prometheus.Gauge.dec $ submActiveLiveQueryPollers $ pmSubscriptionMetrics prometheusMetrics
                   let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
                   recordMetricWithLabel
@@ -502,7 +516,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
       detM <- getQueryDet streamQMap
       case detM of
         Nothing -> return (pure ())
-        Just (Poller cohorts _ ioState parameterizedQueryHash operationNamesMap, currentCohortId, cohort) -> do
+        Just (Poller cohorts pollerState ioState parameterizedQueryHash operationNamesMap, currentCohortId, cohort) -> do
           TMap.lookup maybeOperationName operationNamesMap >>= \case
             -- If only one operation name is present in the map, delete it
             Just 1 -> TMap.delete maybeOperationName operationNamesMap
@@ -512,7 +526,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
             -- removed
             Just _ -> TMap.adjust (\v -> v - 1) maybeOperationName operationNamesMap
             Nothing -> return ()
-          cleanHandlerC cohorts ioState (cohort, currentCohortId) parameterizedQueryHash
+          cleanHandlerC cohorts pollerState ioState (cohort, currentCohortId) parameterizedQueryHash
   liftIO $ do
     EKG.Gauge.dec $ smActiveSubscriptions serverMetrics
     EKG.Gauge.dec $ smActiveStreamingSubscriptions serverMetrics
@@ -529,7 +543,7 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
           cohortM <- TMap.lookup updatedCohortId (_pCohorts poller)
           return $ (poller,updatedCohortId,) <$> cohortM
 
-    cleanHandlerC cohortMap ioState (handlerC, currentCohortId) parameterizedQueryHash = do
+    cleanHandlerC cohortMap pollerState ioState (handlerC, currentCohortId) parameterizedQueryHash = do
       let curOps = _cExistingSubscribers handlerC
           newOps = _cNewSubscribers handlerC
       TMap.delete sinkId curOps
@@ -555,6 +569,11 @@ removeStreamingQuery logger serverMetrics prometheusMetrics subscriptionState (S
               Just threadRef -> do
                 Immortal.stop threadRef
                 liftIO $ do
+                  pollerLastState <- STM.readTVarIO pollerState
+                  when (pollerLastState == PRSError)
+                    $ Prometheus.Gauge.dec
+                    $ submActiveStreamingPollersInError
+                    $ pmSubscriptionMetrics prometheusMetrics
                   Prometheus.Gauge.dec $ submActiveStreamingPollers $ pmSubscriptionMetrics prometheusMetrics
                   let numSubscriptionMetric = submActiveSubscriptions $ pmSubscriptionMetrics $ prometheusMetrics
                   recordMetricWithLabel

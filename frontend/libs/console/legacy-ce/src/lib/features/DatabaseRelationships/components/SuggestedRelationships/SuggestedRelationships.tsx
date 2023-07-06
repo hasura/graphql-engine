@@ -12,13 +12,11 @@ import {
 } from 'react-icons/fa';
 import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 import { getSupportsForeignKeys } from '../../../hasura-metadata-api/utils';
-import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
 import { getTableDisplayName } from '../../utils/helpers';
 import {
   SuggestedRelationshipWithName,
   useSuggestedRelationships,
 } from './hooks/useSuggestedRelationships';
-import type { LocalRelationship } from '../../types';
 import Skeleton from 'react-loading-skeleton';
 import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
 
@@ -31,17 +29,6 @@ export const SuggestedRelationships = ({
   dataSourceName,
   table,
 }: SuggestedRelationshipsProps) => {
-  const { data: existingRelationships } = useListAllDatabaseRelationships({
-    dataSourceName,
-    table,
-  });
-  const localRelationships = existingRelationships.filter(rel => {
-    if (rel.type === 'localRelationship') {
-      return true;
-    }
-    return false;
-  }) as LocalRelationship[];
-
   const { data: source } = useMetadata(
     MetadataSelectors.findSource(dataSourceName)
   );
@@ -52,7 +39,6 @@ export const SuggestedRelationships = ({
     useSuggestedRelationships({
       dataSourceName,
       table,
-      existingRelationships: localRelationships,
       isEnabled: supportsForeignKeys,
     });
 

@@ -1,6 +1,8 @@
 import { Oas3 } from '@hasura/open-api-to-graphql';
 import { ParameterObject } from '@hasura/open-api-to-graphql';
-import petStore from './petstore.json';
+import petStore from './fixtures/petstore.json';
+// test case from this issue https://github.com/hasura/graphql-engine/issues/9734
+import optimizer from './fixtures/optimizer.json';
 import { generateAction, generateQueryParams, parseOas } from './utils';
 
 const tags: ParameterObject = {
@@ -117,5 +119,15 @@ describe('generateQueryParams', () => {
     expect(queryParams).toBe(
       '{{ concat ([concat({{ range _, x := $body.input?.tags }} "tags={{x}}&" {{ end }}), "status={{$body.input?.status}}&"]) }}'
     );
+  });
+});
+
+describe('optimizer API', () => {
+  it('should generate correctly', async () => {
+    const action = await generateAction(
+      optimizer as unknown as Oas3,
+      'optimise_optimise_post'
+    );
+    expect(action).toMatchSnapshot();
   });
 });

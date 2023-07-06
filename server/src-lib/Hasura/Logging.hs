@@ -1,5 +1,4 @@
 {-# LANGUAGE NumericUnderscores #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Logging
@@ -52,7 +51,6 @@ import Control.FoldDebounce qualified as FDebounce
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Aeson.Types qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
@@ -97,6 +95,7 @@ data instance EngineLogType Hasura
   | ELTActionHandler
   | ELTDataConnectorLog
   | ELTJwkRefreshLog
+  | ELTValidateInputLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -115,6 +114,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTActionHandler -> "action-handler-log"
     ELTDataConnectorLog -> "data-connector-log"
     ELTJwkRefreshLog -> "jwk-refresh-log"
+    ELTValidateInputLog -> "validate-insert-input-log"
     ELTInternal t -> Witch.from t
 
 instance J.ToJSON (EngineLogType Hasura) where
@@ -210,7 +210,8 @@ userAllowedLogTypes =
     ELTLivequeryPollerLog,
     ELTActionHandler,
     ELTDataConnectorLog,
-    ELTJwkRefreshLog
+    ELTJwkRefreshLog,
+    ELTValidateInputLog
   ]
 
 data LogLevel
@@ -236,18 +237,14 @@ data EngineLog impl = EngineLog
     _elType :: !(EngineLogType impl),
     _elDetail :: !J.Value
   }
+  deriving stock (Generic)
 
 deriving instance (Show (EngineLogType impl)) => Show (EngineLog impl)
 
 deriving instance (Eq (EngineLogType impl)) => Eq (EngineLog impl)
 
--- Empty splice to bring all the above definitions in scope.
---
--- TODO: Restructure the code so that we can avoid this.
-$(pure [])
-
 instance (J.ToJSON (EngineLogType impl)) => J.ToJSON (EngineLog impl) where
-  toJSON = $(J.mkToJSON hasuraJSON ''EngineLog)
+  toJSON = J.genericToJSON hasuraJSON
 
 -- | Typeclass representing any data type that can be converted to @EngineLog@ for the purpose of
 -- logging

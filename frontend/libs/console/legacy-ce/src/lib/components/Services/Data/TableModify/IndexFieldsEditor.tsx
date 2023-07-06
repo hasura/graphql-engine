@@ -1,6 +1,6 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import Select, { ValueType } from 'react-select';
+import Select, { OnChangeValue } from 'react-select';
 
 import { Button } from '../../../../new-components/Button';
 import { Index, IndexType, Table } from '../../../../dataSources/types';
@@ -112,9 +112,13 @@ interface CreateIndexProps {
     label: string;
     value: IndexType;
   }>;
-  onChangeIndextypeSelect: (value: ValueType<IndexColumnsSelect>) => void;
+  onChangeIndextypeSelect: (
+    value: OnChangeValue<IndexColumnsSelect, boolean>
+  ) => void;
   updateIndexName: (name: string) => void;
-  onChangeIndexColumnsSelect: (value: ValueType<IndexColumnsSelect>) => void;
+  onChangeIndexColumnsSelect: (
+    value: OnChangeValue<IndexColumnsSelect, boolean>
+  ) => void;
   toggleIndexCheckboxState: (currentValue: boolean) => () => void;
 }
 
@@ -249,7 +253,9 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
     })
   );
 
-  const onChangeIndexColumnsSelect = (value: ValueType<IndexColumnsSelect>) => {
+  const onChangeIndexColumnsSelect = (
+    value: OnChangeValue<IndexColumnsSelect, boolean>
+  ) => {
     if (value) {
       indexStateDispatch({
         type: 'Indexes/UPDATE_INDEX_COLUMNS',
@@ -259,7 +265,9 @@ const FieldsEditor: React.FC<IndexFieldsEditorProps> = props => {
       });
     }
   };
-  const onChangeIndextypeSelect = (value: ValueType<IndexColumnsSelect>) => {
+  const onChangeIndextypeSelect = (
+    value: OnChangeValue<IndexColumnsSelect, boolean>
+  ) => {
     if (value) {
       indexStateDispatch({
         type: 'Indexes/UPDATE_INDEX_TYPE',

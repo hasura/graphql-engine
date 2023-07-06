@@ -6,6 +6,8 @@ module Harness.Permissions.Types
     selectPermission,
     UpdatePermissionDetails (..),
     updatePermission,
+    DeletePermissionDetails (..),
+    deletePermission,
   )
 where
 
@@ -19,6 +21,7 @@ data Permission
   = SelectPermission SelectPermissionDetails
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
+  | DeletePermission DeletePermissionDetails
   deriving (Eq, Show)
 
 data SelectPermissionDetails = SelectPermissionDetails
@@ -37,7 +40,8 @@ data UpdatePermissionDetails = UpdatePermissionDetails
     updatePermissionTable :: Text,
     updatePermissionRole :: Text,
     updatePermissionColumns :: [Text],
-    updatePermissionRows :: Value
+    updatePermissionRows :: Value,
+    updatePermissionValidationWebhook :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -46,7 +50,17 @@ data InsertPermissionDetails = InsertPermissionDetails
     insertPermissionTable :: Text,
     insertPermissionRole :: Text,
     insertPermissionColumns :: [Text],
-    insertPermissionRows :: Value
+    insertPermissionRows :: Value,
+    insertPermissionValidationWebhook :: Maybe Text
+  }
+  deriving (Eq, Show)
+
+data DeletePermissionDetails = DeletePermissionDetails
+  { deletePermissionSource :: Maybe Text,
+    deletePermissionTable :: Text,
+    deletePermissionRole :: Text,
+    deletePermissionRows :: Value,
+    deletePermissionValidationWebhook :: Maybe Text
   }
   deriving (Eq, Show)
 
@@ -69,7 +83,8 @@ updatePermission =
       updatePermissionTable = mempty,
       updatePermissionRole = "test-role",
       updatePermissionColumns = mempty,
-      updatePermissionRows = object []
+      updatePermissionRows = object [],
+      updatePermissionValidationWebhook = Nothing
     }
 
 insertPermission :: InsertPermissionDetails
@@ -79,5 +94,16 @@ insertPermission =
       insertPermissionTable = mempty,
       insertPermissionRole = "test-role",
       insertPermissionColumns = mempty,
-      insertPermissionRows = object []
+      insertPermissionRows = object [],
+      insertPermissionValidationWebhook = Nothing
+    }
+
+deletePermission :: DeletePermissionDetails
+deletePermission =
+  DeletePermissionDetails
+    { deletePermissionSource = Nothing,
+      deletePermissionTable = mempty,
+      deletePermissionRole = "test-role",
+      deletePermissionRows = object [],
+      deletePermissionValidationWebhook = Nothing
     }

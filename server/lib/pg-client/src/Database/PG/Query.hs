@@ -21,6 +21,8 @@ import Database.PG.Query.Connection
     PrepArg,
     ResultOk (..),
     Template,
+    extractConnOptions,
+    extractHost,
     pgConnString,
   )
 import Database.PG.Query.Listen

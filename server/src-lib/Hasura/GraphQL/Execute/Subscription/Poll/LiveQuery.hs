@@ -10,15 +10,17 @@ where
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
+import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as BS
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.Split (chunksOf)
-import Data.Monoid (Sum (..))
+import Data.Monoid (Endo (..), Sum (..))
 import Data.Text.Extended
 import GHC.AssertNF.CPP
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options
+import Hasura.GraphQL.Execute.Subscription.Plan (applyModifier)
 import Hasura.GraphQL.Execute.Subscription.Poll.Common hiding (Cohort (..), CohortMap, CohortSnapshot (..))
 import Hasura.GraphQL.Execute.Subscription.Poll.Common qualified as C
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
@@ -91,8 +93,9 @@ pollLiveQuery ::
   IO GranularPrometheusMetricsState ->
   TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
+  (Maybe (Endo JO.Value)) ->
   IO ()
-pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate modifier = do
   operationNamesMap <- STM.atomically $ TMap.getMap operationNamesMap'
   (totalTime, (snapshotTime, batchesDetails)) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
@@ -218,5 +221,5 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize),)
+              (pure (applyModifier modifier respBS),cohortId,Just (respHash, respSize),)
                 <$> HashMap.lookup cohortId cohortSnapshotMap

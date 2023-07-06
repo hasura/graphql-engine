@@ -76,7 +76,7 @@ const testRemoveQueryAndModel = async ({
 
   const c = within(canvasElement);
 
-  await c.findAllByText('Native Queries', undefined, { timeout: 3000 });
+  await c.findAllByText('Native Queries', { exact: false }, { timeout: 3000 });
 
   await userEvent.click(
     (
@@ -94,7 +94,7 @@ const testRemoveQueryAndModel = async ({
     await dismissToast();
   }
 
-  await userEvent.click(await c.findByText('Logical Models (4)'));
+  await userEvent.click(await c.findByText('Logical Models', { exact: false }));
 
   await userEvent.click((await c.findAllByText('Remove'))[0]);
 

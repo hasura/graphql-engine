@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 -- |
 --  Send anonymized metrics to the telemetry server regarding usage of various
@@ -31,7 +30,6 @@ import Control.Concurrent.Extended qualified as C
 import Control.Exception (try)
 import Control.Lens
 import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as Aeson
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.Int (Int64)
@@ -112,15 +110,22 @@ instance ToEngineLog TelemetryLog Hasura where
 newtype ServerTelemetryRow = ServerTelemetryRow
   { _strServerMetrics :: ServerTelemetry
   }
+  deriving (Generic)
 
 data ServerTelemetry = ServerTelemetry
   { _stResourceCpu :: Maybe Int,
     _stResourceMemory :: Maybe Int64,
     _stResourceCheckerErrorCode :: Maybe ResourceCheckerError
   }
+  deriving (Generic)
 
-$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetry)
-$(Aeson.deriveToJSON hasuraJSON ''ServerTelemetryRow)
+instance J.ToJSON ServerTelemetry where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
+
+instance J.ToJSON ServerTelemetryRow where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 mkHttpError ::
   Text ->

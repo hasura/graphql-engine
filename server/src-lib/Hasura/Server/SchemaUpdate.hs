@@ -1,6 +1,3 @@
-{-# LANGUAGE CPP #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread,
     startSchemaSyncProcessorThread,
@@ -16,7 +13,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Managed (ManagedT)
 import Data.Aeson
 import Data.Aeson.Casing
-import Data.Aeson.TH
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Text qualified as T
@@ -48,14 +44,21 @@ import Refined (NonNegative, Refined, unrefine)
 data ThreadError
   = TEPayloadParse !Text
   | TEQueryError !QErr
+  deriving (Generic)
 
-$( deriveToJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 2,
-         sumEncoding = TaggedObject "type" "info"
-       }
-     ''ThreadError
- )
+instance ToJSON ThreadError where
+  toJSON =
+    genericToJSON
+      defaultOptions
+        { constructorTagModifier = snakeCase . drop 2,
+          sumEncoding = TaggedObject "type" "info"
+        }
+  toEncoding =
+    genericToEncoding
+      defaultOptions
+        { constructorTagModifier = snakeCase . drop 2,
+          sumEncoding = TaggedObject "type" "info"
+        }
 
 logThreadStarted ::
   (MonadIO m) =>
@@ -291,7 +294,7 @@ refreshSchemaCache
         let dynamicConfig = buildCacheDynamicConfig appContext
         -- the instance which triggered the schema sync event would have stored
         -- the source introspection, hence we can ignore it here
-        (msg, cache, _, _sourcesIntrospection) <-
+        (msg, cache, _, _sourcesIntrospection, _schemaRegistryAction) <-
           runCacheRWT dynamicConfig rebuildableCache $ do
             schemaCache <- askSchemaCache
             let engineResourceVersion = scMetadataResourceVersion schemaCache

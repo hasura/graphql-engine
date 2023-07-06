@@ -119,7 +119,7 @@ describe('Create event trigger with shortest possible path', () => {
     );
     cy.get('[data-test=edit-operations]').click();
     cy.get('[name=update]').click();
-    cy.get('[name=column-id]').click();
+    cy.get('[name=column-id]', { timeout: 1000 }).click();
     cy.findByRole('button', { name: 'Save' }).click();
 
     // modify the retry config
