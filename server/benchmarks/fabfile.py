@@ -196,7 +196,10 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                         ImageId=runner_image_id,
                         MinCount=1, MaxCount=1,
                         # NOTE: benchmarks are tuned very specifically to this instance type  and
-                        # the other settings here (see bench.hs):
+                        # the other settings here (see bench.sh):
+                        #   Lately AWS seems to be running out of capacity and so we may need to research 
+                        # (check numa configuration, etc) and switch to one of these:
+                        #   https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/processor_state_control.html
                         InstanceType='c4.8xlarge',
                         KeyName='hasura-benchmarks-runner',
                         InstanceInitiatedShutdownBehavior='terminate',
