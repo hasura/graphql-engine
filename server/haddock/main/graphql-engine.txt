@@ -27296,7 +27296,7 @@ withAppContextUpdate :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -
 --   
 --   An internal lock ensures that at most one update to the
 --   <a>AppStateRef</a> may proceed at a time.
-updateAppStateRef :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> RebuildableAppContext impl -> RebuildableSchemaCache -> m ()
+updateAppStateRef :: (MonadIO m, MonadBaseControl IO m) => AppStateRef impl -> Logger Hasura -> (RebuildableAppContext impl -> m (RebuildableAppContext impl, RebuildableSchemaCache)) -> m ()
 
 
 -- | Send anonymized metrics to the telemetry server regarding usage of
