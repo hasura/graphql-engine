@@ -42,6 +42,7 @@ import { unsupportedRawSQLDrivers } from './utils';
 import { nativeDrivers } from '../../../../features/DataSource';
 import { useRunSQL } from './hooks/useRunSQL';
 import { useFireNotification } from '../../../../new-components/Notifications';
+import _push from '../push';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (
@@ -205,9 +206,11 @@ const RawSQL = ({
           selectedDriver
         )
       );
+      dispatch(_push('/data/sql'));
       return;
     }
     dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
+    dispatch(_push('/data/sql'));
   };
 
   const getMigrationWarningModal = () => {
