@@ -12,7 +12,22 @@ export const queryCollectionInitialData: Partial<Metadata['metadata']> = {
       name: 'allowed-queries',
       definition: {
         queries: [
-          { name: 'MyQuery', query: 'query MyQuery { user { email name}}' },
+          {
+            name: 'MyQuery',
+            query: `mutation update_user_by_pk($id: Int!, $object: user_set_input!) {
+  update_user_by_pk(pk_columns: {id: $id}, _set: $object) {
+    address
+    bool
+    count
+    date
+    email
+    id
+    name
+    uuid
+  }
+}
+`,
+          },
           { name: 'MyQuery2', query: 'query MyQuery2 { user { email name}}' },
           { name: 'MyQuery3', query: 'query MyQuery3 { user { email name}}' },
         ],

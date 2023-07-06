@@ -41,7 +41,20 @@ describe('useOperationsFromQueryCollection with no query collections', () => {
 
     const operations = result.current.data!;
 
-    expect(operations[0].query).toEqual('query MyQuery { user { email name}}');
+    expect(operations[0].query)
+      .toEqual(`mutation update_user_by_pk($id: Int!, $object: user_set_input!) {
+  update_user_by_pk(pk_columns: {id: $id}, _set: $object) {
+    address
+    bool
+    count
+    date
+    email
+    id
+    name
+    uuid
+  }
+}
+`);
 
     expect(operations).toHaveLength(3);
   });

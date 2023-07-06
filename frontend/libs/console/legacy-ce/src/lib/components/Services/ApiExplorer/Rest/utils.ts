@@ -280,7 +280,7 @@ export const supportedNumericTypes = [
   'decimal',
 ];
 
-const getValueWithType = (variableData: VariableState) => {
+export const getValueWithType = (variableData: VariableState) => {
   if (variableData.type === 'Boolean') {
     if (variableData.value.trim().toLowerCase() === 'false') {
       return false;
