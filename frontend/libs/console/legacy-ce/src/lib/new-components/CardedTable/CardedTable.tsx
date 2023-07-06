@@ -107,12 +107,16 @@ const Body = ({ data, showActionCell = false }: BodyProps) => {
     <TableBody>
       {data.map((row, rowIndex) => {
         return (
-          <TableBodyRow>
-            {row.map((cell, index) => {
-              if (showActionCell && index + 1 === row.length) {
-                return <TableBodyActionCell>{cell}</TableBodyActionCell>;
+          <TableBodyRow key={rowIndex}>
+            {row.map((cell, cellIndex) => {
+              if (showActionCell && cellIndex + 1 === row.length) {
+                return (
+                  <TableBodyActionCell key={cellIndex}>
+                    {cell}
+                  </TableBodyActionCell>
+                );
               }
-              return <TableBodyCell>{cell}</TableBodyCell>;
+              return <TableBodyCell key={cellIndex}>{cell}</TableBodyCell>;
             })}
           </TableBodyRow>
         );
