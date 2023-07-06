@@ -20176,9 +20176,6 @@ CronTriggerInfo :: TriggerName -> CronSchedule -> Maybe Value -> STRetryConf -> 
 [ctiComment] :: CronTriggerInfo -> Maybe Text
 [ctiRequestTransform] :: CronTriggerInfo -> Maybe RequestTransform
 [ctiResponseTransform] :: CronTriggerInfo -> Maybe MetadataResponseTransform
-data SchemaCacheVer
-initSchemaCacheVer :: SchemaCacheVer
-incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 type ActionCache = HashMap ActionName ActionInfo
 type InheritedRolesCache = HashMap RoleName (HashSet RoleName)
 
@@ -20376,12 +20373,6 @@ instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.MetadataWithResourceVersion
 instance GHC.Generics.Generic Hasura.RQL.Types.SchemaCache.CronTriggerInfo
 instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.CronTriggerInfo
 instance GHC.Show.Show Hasura.RQL.Types.SchemaCache.CronTriggerInfo
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.SchemaCache.SchemaCacheVer
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.SchemaCache.SchemaCacheVer
-instance Data.Hashable.Class.Hashable Hasura.RQL.Types.SchemaCache.SchemaCacheVer
-instance GHC.Classes.Ord Hasura.RQL.Types.SchemaCache.SchemaCacheVer
-instance GHC.Classes.Eq Hasura.RQL.Types.SchemaCache.SchemaCacheVer
-instance GHC.Show.Show Hasura.RQL.Types.SchemaCache.SchemaCacheVer
 instance Control.Monad.Trans.Class.MonadTrans (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b)
 instance Hasura.Backends.Postgres.Connection.MonadTx.MonadTx m => Hasura.Backends.Postgres.Connection.MonadTx.MonadTx (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
 instance Control.Monad.Writer.Class.MonadWriter w m => Control.Monad.Writer.Class.MonadWriter w (Hasura.RQL.Types.SchemaCache.TableCoreCacheRT b m)
@@ -24581,22 +24572,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) TriggerOnReplication
-cteqCleanupConfig :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe Text)
-cetqWebhook :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe InputWebhook)
-cetqUpdate :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe (SubscribeOpSpec b_aslps))
-cetqTable :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (TableName b_aslps)
-cetqSource :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) SourceName
-cetqRetryConf :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe RequestTransform)
-cetqReplace :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) Bool
-cetqName :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) TriggerName
-cetqInsert :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe (SubscribeOpSpec b_aslps))
-cetqHeaders :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe Bool)
-cetqDelete :: forall b_aslps. Lens' (CreateEventTriggerQuery b_aslps) (Maybe (SubscribeOpSpec b_aslps))
+cteqTriggerOnReplication :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) TriggerOnReplication
+cteqCleanupConfig :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe Text)
+cetqWebhook :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe InputWebhook)
+cetqUpdate :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
+cetqTable :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (TableName b_asl2N)
+cetqSource :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) SourceName
+cetqRetryConf :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe RequestTransform)
+cetqReplace :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) Bool
+cetqName :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) TriggerName
+cetqInsert :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
+cetqHeaders :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe Bool)
+cetqDelete :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -27238,8 +27229,8 @@ withSchemaCacheReadUpdate :: (MonadIO m, MonadBaseControl IO m, MonadError QErr 
 readAppContextRef :: AppStateRef impl -> IO (RebuildableAppContext impl)
 
 -- | Read the contents of the <a>AppStateRef</a> to get the latest
---   <a>RebuildableSchemaCache</a> and <a>SchemaCacheVer</a>
-getRebuildableSchemaCacheWithVersion :: AppStateRef impl -> IO (RebuildableSchemaCache, SchemaCacheVer)
+--   <a>RebuildableSchemaCache</a> and <tt>SchemaCacheVer</tt>
+getRebuildableSchemaCacheWithVersion :: AppStateRef impl -> IO RebuildableSchemaCache
 
 -- | Reference to a TLS AllowList, used for dynamic TLS settings in the
 --   app's HTTP Manager.
@@ -27284,7 +27275,7 @@ getSchemaCache :: AppStateRef impl -> IO SchemaCache
 
 -- | Read the latest <a>SchemaCache</a> and its version from the
 --   <a>AppStateRef</a>.
-getSchemaCacheWithVersion :: AppStateRef impl -> IO (SchemaCache, SchemaCacheVer)
+getSchemaCacheWithVersion :: AppStateRef impl -> IO SchemaCache
 
 -- | Read the latest <a>AppContext</a> from the <a>AppStateRef</a>.
 getAppContext :: AppStateRef impl -> IO AppContext
@@ -27475,7 +27466,7 @@ checkQueryInAllowlist :: MonadError QErr m => AllowListStatus -> AllowlistMode -
 --   
 --   Labelling it as inlineable fixed a performance regression on GHC
 --   8.10.7.
-getResolvedExecPlan :: forall m. (MonadError QErr m, MonadMetadataStorage m, MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadGQLExecutionCheck m, MonadQueryTags m, ProvidesNetwork m) => Environment -> Logger Hasura -> PrometheusMetrics -> UserInfo -> SQLGenCtx -> ReadOnlyMode -> SchemaCache -> SchemaCacheVer -> GraphQLQueryType -> [Header] -> GQLReqUnparsed -> SingleOperation -> Maybe Name -> RequestId -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
+getResolvedExecPlan :: forall m. (MonadError QErr m, MonadMetadataStorage m, MonadIO m, MonadBaseControl IO m, MonadTrace m, MonadGQLExecutionCheck m, MonadQueryTags m, ProvidesNetwork m) => Environment -> Logger Hasura -> PrometheusMetrics -> UserInfo -> SQLGenCtx -> ReadOnlyMode -> SchemaCache -> GraphQLQueryType -> [Header] -> GQLReqUnparsed -> SingleOperation -> Maybe Name -> RequestId -> m (ParameterizedQueryHash, ResolvedExecutionPlan)
 
 module Hasura.GraphQL.Transport.WebSocket.Types
 newtype WsHeaders
@@ -27592,7 +27583,7 @@ runSessVarPred :: SessVarPred -> SessionVariables -> SessionVariables
 filterVariablesFromQuery :: [RootField (QueryDBRoot (RemoteRelationshipField UnpreparedValue) UnpreparedValue) (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable) (ActionQuery (RemoteRelationshipField UnpreparedValue)) d] -> SessVarPred
 
 -- | Run (execute) a single GraphQL query
-runGQ :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> SchemaCacheVer -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> UserInfo -> IpAddress -> [Header] -> GraphQLQueryType -> GQLReqUnparsed -> m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
+runGQ :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> UserInfo -> IpAddress -> [Header] -> GraphQLQueryType -> GQLReqUnparsed -> m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
 coalescePostgresMutations :: ExecutionPlan -> Maybe (SourceConfig ('Postgres 'Vanilla), ResolvedConnectionTemplate ('Postgres 'Vanilla), InsOrdHashMap RootFieldAlias (DBStepInfo ('Postgres 'Vanilla)))
 extractFieldFromResponse :: forall m. Monad m => RootFieldAlias -> ResultCustomizer -> ByteString -> ExceptT (Either GQExecError QErr) m Value
 buildRaw :: Applicative m => Value -> m AnnotatedResponsePart
@@ -27600,7 +27591,7 @@ encodeAnnotatedResponseParts :: RootFieldMap AnnotatedResponsePart -> EncJSON
 encodeEncJSONResults :: RootFieldMap EncJSON -> EncJSON
 
 -- | Run (execute) a batched GraphQL query (see <a>GQLBatchedReqs</a>).
-runGQBatched :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> SchemaCacheVer -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> ResponseInternalErrorsConfig -> UserInfo -> IpAddress -> [Header] -> GraphQLQueryType -> GQLBatchedReqs (GQLReq GQLQueryText) -> m (HttpLogGraphQLInfo, HttpResponse EncJSON)
+runGQBatched :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QErr m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadTrace m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> ResponseInternalErrorsConfig -> UserInfo -> IpAddress -> [Header] -> GraphQLQueryType -> GQLBatchedReqs (GQLReq GQLQueryText) -> m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 instance GHC.Base.Monoid Hasura.GraphQL.Transport.HTTP.SessVarPred
 instance GHC.Base.Semigroup Hasura.GraphQL.Transport.HTTP.SessVarPred
 instance Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery m => Hasura.GraphQL.Transport.HTTP.MonadExecuteQuery (Control.Monad.Trans.Reader.ReaderT r m)
@@ -27619,7 +27610,7 @@ RestRequest :: Text -> method -> [(Text, Either Text Value)] -> RestRequest meth
 
 -- | Implements all the custom endpoints by looking up the path/methods in
 --   the endpoint trie and delegating to the graphql handler.
-runCustomEndpoint :: forall m. (MonadIO m, MonadError QErr m, MonadTrace m, MonadBaseControl IO m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> SchemaCacheVer -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> UserInfo -> [Header] -> IpAddress -> RestRequest EndpointMethod -> EndpointTrie GQLQueryWithText -> m (HttpLogGraphQLInfo, HttpResponse EncJSON)
+runCustomEndpoint :: forall m. (MonadIO m, MonadError QErr m, MonadTrace m, MonadBaseControl IO m, MonadGQLExecutionCheck m, MonadQueryLog m, MonadExecutionLog m, MonadExecuteQuery m, MonadMetadataStorage m, MonadQueryTags m, HasResourceLimits m, ProvidesNetwork m) => Environment -> SQLGenCtx -> SchemaCache -> AllowListStatus -> ReadOnlyMode -> PrometheusMetrics -> Logger Hasura -> Maybe (CredentialCache AgentLicenseKey) -> RequestId -> UserInfo -> [Header] -> IpAddress -> RestRequest EndpointMethod -> EndpointTrie GQLQueryWithText -> m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 instance Data.Traversable.Traversable Hasura.Server.Rest.RestRequest
 instance Data.Foldable.Foldable Hasura.Server.Rest.RestRequest
 instance GHC.Base.Functor Hasura.Server.Rest.RestRequest
