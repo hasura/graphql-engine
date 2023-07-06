@@ -584,7 +584,8 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         for bench_name, metrics in benchmarks:
             bench_name_pretty = bench_name.replace('-k6-custom','').replace('_',' ') # need at least 40 chars
             if "throughput" in benchmark_set_name:
-                col = highlight_lax
+                # invert the sign so we color properly, since higher throughput is better:
+                col = lambda v: highlight_lax(-v)
             else:
                 col = highlight_sensitive
 
