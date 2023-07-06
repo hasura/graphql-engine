@@ -289,7 +289,7 @@ refreshSchemaCache
     respErr <- runExceptT
       $ withSchemaCacheUpdate appStateRef logger (Just logTVar)
       $ do
-        rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
+        rebuildableCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
         let dynamicConfig = buildCacheDynamicConfig appContext
         -- the instance which triggered the schema sync event would have stored

@@ -342,7 +342,6 @@ getResolvedExecPlan ::
   SQLGenCtx ->
   ReadOnlyMode ->
   SchemaCache ->
-  SchemaCacheVer ->
   ET.GraphQLQueryType ->
   [HTTP.Header] ->
   GQLReqUnparsed ->
@@ -358,7 +357,6 @@ getResolvedExecPlan
   sqlGenCtx
   readOnlyMode
   sc
-  _scVer
   queryType
   reqHeaders
   reqUnparsed

@@ -2,9 +2,6 @@
 
 module Hasura.RQL.Types.SchemaCache
   ( SchemaCache (..),
-    SchemaCacheVer,
-    initSchemaCacheVer,
-    incSchemaCacheVer,
     TableConfig (..),
     emptyTableConfig,
     getAllRemoteSchemas,
@@ -296,16 +293,6 @@ data CronTriggerInfo = CronTriggerInfo
 instance ToJSON CronTriggerInfo where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
-
-newtype SchemaCacheVer = SchemaCacheVer {unSchemaCacheVer :: Word64}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
-
-initSchemaCacheVer :: SchemaCacheVer
-initSchemaCacheVer = SchemaCacheVer 0
-
-incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
-incSchemaCacheVer (SchemaCacheVer prev) =
-  SchemaCacheVer $ prev + 1
 
 type ActionCache = HashMap.HashMap ActionName ActionInfo -- info of all actions
 

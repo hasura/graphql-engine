@@ -464,7 +464,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       withComplete $ sendStartErr e
 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
-  (sc, scVer) <- liftIO $ getSchemaCacheWithVersion appStateRef
+  sc <- liftIO $ getSchemaCacheWithVersion appStateRef
 
   operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
@@ -498,7 +498,6 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         sqlGenCtx
         readOnlyMode
         sc
-        scVer
         queryType
         reqHdrs
         q
