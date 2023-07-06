@@ -108,7 +108,7 @@ data HTTPErr (a :: TriggerTypes)
 instance J.ToJSON (HTTPErr a) where
   toJSON err = toObj $ case err of
     (HClient httpException) ->
-      ("client", J.toJSON httpException)
+      ("client", getHttpExceptionJson (ShowErrorInfo True) httpException)
     (HStatus resp) ->
       ("status", J.toJSON resp)
     (HOther e) -> ("internal", J.toJSON e)
