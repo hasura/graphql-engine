@@ -276,11 +276,12 @@ updateAppStateRef ::
   (MonadIO m, MonadBaseControl IO m) =>
   AppStateRef impl ->
   L.Logger L.Hasura ->
-  RebuildableAppContext impl ->
-  RebuildableSchemaCache ->
+  (RebuildableAppContext impl -> m (RebuildableAppContext impl, RebuildableSchemaCache)) ->
   m ()
-updateAppStateRef (AppStateRef lock cacheRef metadataVersionGauge) logger !newAppCtx !newSC =
+updateAppStateRef appStateRef@(AppStateRef lock cacheRef metadataVersionGauge) logger action =
   withMVarMasked lock $ const do
+    rebuildableAppContext <- liftIO $ readAppContextRef appStateRef
+    (!newAppCtx, !newSC) <- action rebuildableAppContext
     liftIO do
       -- update schemacache in IO reference
       modifyIORef' cacheRef $ \appState ->
