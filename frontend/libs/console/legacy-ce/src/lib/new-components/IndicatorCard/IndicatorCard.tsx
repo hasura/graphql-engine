@@ -62,7 +62,7 @@ export const IndicatorCard = ({
       {showIcon ? (
         <div
           className={clsx(
-            'flex items-center justify-center h-xl w-xl rounded-full mr-md',
+            'flex items-center justify-center h-xl w-xl rounded-full mr-md flex-shrink-0',
             iconColorsPerStatus[status]
           )}
         >

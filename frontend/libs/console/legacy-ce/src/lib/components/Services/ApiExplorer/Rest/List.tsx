@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { Link } from 'react-router';
+import { Link, RouteComponentProps } from 'react-router';
 import { FaEdit, FaTimes } from 'react-icons/fa';
 import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
@@ -11,18 +11,28 @@ import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
 import URLPreview from './URLPreview';
 import { allowedQueriesCollection } from '../../../../metadata/utils';
-import { dropRESTEndpoint } from '../../../../metadata/actions';
+import { dropRESTEndpoint, exportMetadata } from '../../../../metadata/actions';
 import _push from '../../Data/push';
 import Landing from './Landing';
 import { badgeSort } from './utils';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import { ExportOpenApiButton } from './Form/ExportOpenAPI';
 
-const ListComponent: React.FC<Props> = ({
+interface ListComponentProps extends Props {
+  location: RouteComponentProps<unknown, unknown>['location'];
+}
+const ListComponent: React.FC<ListComponentProps> = ({
+  location,
   restEndpoints,
   queryCollections,
   dispatch,
 }) => {
+  // refetch metadata on mount
+  useEffect(() => {
+    dispatch(exportMetadata());
+  }, []);
+
+  const highlighted = (location.query?.highlight as string)?.split(',') || [];
   const allowedQueries = queryCollections?.find(
     collection => collection.name === allowedQueriesCollection
   );
@@ -42,6 +52,10 @@ const ListComponent: React.FC<Props> = ({
   const onClickEdit = (link: string) => () => {
     dispatch(_push(`/api/rest/edit/${link}`));
   };
+
+  const sortedEndpoints = [...restEndpoints].sort(endpoint =>
+    highlighted.includes(endpoint.name) ? -1 : 1
+  );
 
   return (
     <Analytics name="RestList" {...REDACT_EVERYTHING}>
@@ -80,7 +94,7 @@ const ListComponent: React.FC<Props> = ({
               </th>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {restEndpoints.map(endpoint => (
+              {sortedEndpoints.map(endpoint => (
                 <tr key={`rest_list_endpoint_${endpoint.name}`}>
                   {/* Details */}
                   <td className="px-sm py-xs max-w-xs align-top">
@@ -94,7 +108,14 @@ const ListComponent: React.FC<Props> = ({
                           },
                         }}
                       >
-                        <h4>{endpoint.name}</h4>
+                        <h4>
+                          {endpoint.name}{' '}
+                          {highlighted.includes(endpoint.name) && (
+                            <span className="relative bottom-2 text-green-700">
+                              ●
+                            </span>
+                          )}
+                        </h4>
                       </Link>
                     </div>
                     {endpoint.comment && <p>{endpoint.comment}</p>}
