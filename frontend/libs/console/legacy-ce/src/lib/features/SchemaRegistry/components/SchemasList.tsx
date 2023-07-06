@@ -65,7 +65,6 @@ export const Tabularised: React.VFC<{
             {schemas.map(schema => (
               <SchemaCard
                 createdAt={schema.created_at}
-                schemaId={schema.id}
                 hash={schema.entry_hash}
                 roleBasedSchemas={schema.roleBasedSchemas}
                 tags={schema.tags}
@@ -101,11 +100,10 @@ export const Tabularised: React.VFC<{
 const SchemaCard: React.VFC<{
   createdAt: string;
   hash: string;
-  schemaId: string;
   roleBasedSchemas: RoleBasedSchema[];
   tags: SchemaRegistryTag[];
 }> = props => {
-  const { createdAt, hash, roleBasedSchemas, tags, schemaId } = props;
+  const { createdAt, hash, roleBasedSchemas, tags } = props;
   const [isTagModalOpen, setIsTagModalOpen] = React.useState(false);
 
   const [tagsList, setTagsList] = React.useState<SchemaRegistryTag[]>(tags);
@@ -143,7 +141,7 @@ const SchemaCard: React.VFC<{
               </div>
             ))}
         </div>
-        <Analytics name={`schema-registry-add-tag-btn-${schemaId}`}>
+        <Analytics name="schema-registry-add-tag-btn">
           <div className="mt-[5px]" onClick={() => setIsTagModalOpen(true)}>
             <IconTooltip message="Add a Tag" icon={<FaPlusCircle />} />
           </div>
@@ -169,22 +167,20 @@ const SchemaCard: React.VFC<{
         <div className="font-bold text-gray-500">Roles</div>
         {roleBasedSchemas.length ? (
           roleBasedSchemas.map((roleBasedSchema, index) => (
-            <Analytics name={`schema-registry-details-${schemaId}`}>
-              <div className="flex-col w-full">
-                <SchemaRow
-                  role={roleBasedSchema.role || ''}
-                  changes={roleBasedSchema.changes}
-                  onClick={() => {
-                    dispatch(
-                      _push(`/settings/schema-registry/${roleBasedSchema.id}`)
-                    );
-                  }}
-                />
-                {!(index + 1 === roleBasedSchemas.length) ? (
-                  <div className="flex w-full border-b border-gray-300" />
-                ) : null}
-              </div>
-            </Analytics>
+            <div className="flex-col w-full">
+              <SchemaRow
+                role={roleBasedSchema.role || ''}
+                changes={roleBasedSchema.changes}
+                onClick={() => {
+                  dispatch(
+                    _push(`/settings/schema-registry/${roleBasedSchema.id}`)
+                  );
+                }}
+              />
+              {!(index + 1 === roleBasedSchemas.length) ? (
+                <div className="flex w-full border-b border-gray-300" />
+              ) : null}
+            </div>
           ))
         ) : (
           <div className="white border-t border-neutral-200">
