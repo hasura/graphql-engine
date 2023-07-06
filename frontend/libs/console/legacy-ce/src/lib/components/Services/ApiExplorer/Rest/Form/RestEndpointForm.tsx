@@ -12,6 +12,19 @@ import {
 } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
 import globals from '../../../../../Globals';
+import { FaArrowRight, FaMagic } from 'react-icons/fa';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import clsx from 'clsx';
+
+const editorOptions = {
+  minLines: 10,
+  maxLines: 10,
+  showLineNumbers: true,
+  useSoftTabs: true,
+  showPrintMargin: false,
+  showGutter: true,
+  wrap: true,
+};
 
 type RestEndpointFormProps = {
   /**
@@ -74,7 +87,11 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
   onCancel = () => {},
 }) => {
   const {
-    methods: { setFocus },
+    methods: {
+      setFocus,
+      watch,
+      formState: { errors },
+    },
     Form,
   } = useConsoleForm({
     schema: validationSchema,
@@ -87,30 +104,67 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
     setFocus('name');
   }, []);
 
+  const request = watch('request');
+
   const prependLabel = `${globals.dataApiUrl}/api/rest/`.replace(/\/\//, '/');
 
   return (
     <Form onSubmit={onSubmit} className="p-9">
-      <div className="space-y-2 w-full max-w-xl">
-        <h1 className="text-xl font-semibold mb-sm">
+      <div className="pb-2">
+        <h1 className="text-xl font-semibold mb-0">
           {{ create: 'Create', edit: 'Edit' }[mode]} Endpoint
         </h1>
-        <InputField name="name" label="Name *" placeholder="Name" />
+        <p className="text-gray-500 mt-0">
+          {{ create: 'Create', edit: 'Edit' }[mode]} REST Endpoints on top of
+          existing GraphQL queries and mutations
+        </p>
+        <hr className="mb-4 mt-2 -mx-9" />
+      </div>
+      <div className="space-y-2 w-full max-w-3xl">
+        <div className="relative">
+          <CodeEditorField
+            name="request"
+            label="GraphQL Request"
+            placeholder="Paste GraphQL query here"
+            tooltip="The request your endpoint will run. All variables will be mapped to REST endpoint variables."
+            description="Support GraphQL queries and mutations."
+            editorOptions={editorOptions}
+          />
+          <div className="text-sm absolute top-6 right-0 mt-2 mr-2">
+            <a href="/api/api-explorer?mode=rest">
+              {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
+              <FaArrowRight />
+            </a>
+          </div>
+        </div>
+        <InputField name="name" label="Name" placeholder="Name" />
         <Textarea
           name="comment"
-          label="Description"
+          label="Description (Optional)"
           placeholder="Description"
         />
-        <InputField
-          name="url"
-          label="Location *"
-          placeholder="Location"
-          description={`This is the location of your endpoint (must be unique). Any parameterized variables (eg. ${prependLabel}example/:id will be made available to your request.`}
-          prependLabel={prependLabel}
-        />
+        <div>
+          <InputField
+            name="url"
+            label="URL Path"
+            placeholder="Location"
+            description={`This is the location of your endpoint (must be unique).`}
+            prependLabel={prependLabel}
+          />
+          <IndicatorCard
+            className={clsx(errors?.url ? 'mt-1' : '-mt-4', 'py-3')}
+            showIcon
+            status="info"
+            customIcon={FaMagic}
+            headline="No Parameterized variable specification needed"
+          >
+            All parameterized variables in your GraphQL query will be
+            auto-specifed in the URL
+          </IndicatorCard>
+        </div>
         <CheckboxesField
           name="methods"
-          label="Methods *"
+          label="Methods"
           options={[
             { value: 'GET', label: 'GET' },
             { value: 'POST', label: 'POST' },
@@ -119,11 +173,6 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             { value: 'DELETE', label: 'DELETE' },
           ]}
           orientation="horizontal"
-        />
-        <CodeEditorField
-          name="request"
-          label="GraphQL Request *"
-          tooltip="The request your endpoint will run. All variables will be mapped to REST endpoint variables."
         />
         <div className="flex gap-4">
           <Button type="button" onClick={onCancel} disabled={loading}>
