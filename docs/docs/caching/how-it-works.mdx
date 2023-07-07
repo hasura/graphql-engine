@@ -172,6 +172,14 @@ For example, if a JWT resolves to say `x-hasura-user-id` and `x-hasura-org-id` s
 uses the `x-hasura-user-id` in the permissions, then only the role and `x-hasura-user-id` would be used to compute the
 cache key.
 
+
+:::tip Public data and session variables
+
+Public data usually do not have any permission rules and hence are easily reused for all requests (irrespective of user).
+This data can be used in landing pages, item listings, news feeds, etc.
+
+:::
+
 ### Request headers
 Request headers (ignoring `x-request-id` header) are added to the cache key computation, when executing Remote Schema
 or Action queries, if they have `forward_client_headers` set to `true`.
