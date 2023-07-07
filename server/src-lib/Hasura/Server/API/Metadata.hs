@@ -582,6 +582,7 @@ dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
 -- run the schema cache validation once. This allows us to combine drop and
 -- re-add commands to do edits, or add two interdependent items at once.
 runBulkAtomic ::
+  forall m.
   ( HasFeatureFlagChecker m,
     MonadError QErr m,
     CacheRWM m,
@@ -611,10 +612,26 @@ runBulkAtomic cmds = do
 
   pure successMsg
   where
-    getMetadataModifierForCommand ::
-      (HasFeatureFlagChecker m, MonadError QErr m) => RQLMetadataRequest -> m (Metadata -> m (MetadataObjId, MetadataModifier))
+    getMetadataModifierForCommand :: RQLMetadataRequest -> m (Metadata -> m (MetadataObjId, MetadataModifier))
     getMetadataModifierForCommand = \case
       RMV1 v -> case v of
+        -- Whoa there, cowboy! Chances are you're here to add table tracking to
+        -- the list of things that bulk_atomic can do. Before you do that,
+        -- though, there is a big, particularly-Citus-shaped problem you might
+        -- need to consider:
+        --
+        -- \* There are specific validation rules around how Citus handles
+        --   relationships (see 'validateRel' in 'PostgresMetadata'), which
+        --   will either need to be deferred until the end of the bulk /or/
+        --   moved to the schema cache.
+        -- \* This would also introduce the possibility of a table state that is
+        --   eventually consistent but currently inconsistent: I add table X, a
+        --   relationship between X and Y, and then I add table Y. Currently,
+        --   this can't be done, so all validation checks in
+        --   'execCreateRelationship' remain as they are in the @run@ versions.
+
+        RMCreateObjectRelationship q -> pure $ dispatchMetadata (execCreateRelationship ObjRel . unCreateObjRel) q
+        RMCreateArrayRelationship q -> pure $ dispatchMetadata (execCreateRelationship ArrRel . unCreateArrRel) q
         RMTrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execTrackNativeQuery q
         RMUntrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execUntrackNativeQuery q
         RMTrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execTrackLogicalModel q

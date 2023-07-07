@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Relationship
   ( CreateArrRel (..),
     CreateObjRel (..),
+    execCreateRelationship,
     runCreateRelationship,
     defaultBuildObjectRelationshipInfo,
     defaultBuildArrayRelationshipInfo,
@@ -53,13 +54,18 @@ newtype CreateArrRel b = CreateArrRel {unCreateArrRel :: WithTable b (ArrRelDef 
 newtype CreateObjRel b = CreateObjRel {unCreateObjRel :: WithTable b (ObjRelDef b)}
   deriving newtype (FromJSON)
 
-runCreateRelationship ::
-  forall m b a.
-  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
+execCreateRelationship ::
+  forall b m a.
+  ( BackendMetadata b,
+    CacheRM m,
+    MonadError QErr m,
+    ToJSON a
+  ) =>
   RelType ->
   WithTable b (RelDef a) ->
-  m EncJSON
-runCreateRelationship relType (WithTable source tableName relDef) = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execCreateRelationship relType (WithTable source tableName relDef) _ = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
@@ -99,10 +105,23 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
         (Right value)
       pure $ tmArrayRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ tableMetadataSetter @b source tableName
-    %~ addRelationshipToMetadata
+  let metadataModifier = MetadataModifier do
+        tableMetadataSetter @b source tableName
+          %~ addRelationshipToMetadata
+
+  pure (metadataObj, metadataModifier)
+
+runCreateRelationship ::
+  forall m b a.
+  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
+  RelType ->
+  WithTable b (RelDef a) ->
+  m EncJSON
+runCreateRelationship relType withTable = do
+  (metadataObj, metadataModifier) <-
+    getMetadata >>= execCreateRelationship relType withTable
+
+  buildSchemaCacheFor metadataObj metadataModifier
   pure successMsg
 
 defaultBuildObjectRelationshipInfo ::

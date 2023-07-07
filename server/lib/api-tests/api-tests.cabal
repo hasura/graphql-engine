@@ -96,6 +96,7 @@ library
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
     Test.API.GraphQL.ContentLengthSpec
+    Test.API.Metadata.BulkAtomicSpec
     Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
