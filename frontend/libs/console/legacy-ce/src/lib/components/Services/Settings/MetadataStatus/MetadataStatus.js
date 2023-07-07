@@ -192,8 +192,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const verifyAndDropAll = () => {
-    const confirmMessage =
-      'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
+    const confirmMessage = `This will drop all the inconsistent objects in your metadata. This includes all inconsistent sources - databases, remote schemas, actions etc. and any Hasura features related to these objects. This action is irreversible.`;
     const isOk = getConfirmation(confirmMessage);
     const callback = () => setIsLoading(false);
     if (isOk) {
