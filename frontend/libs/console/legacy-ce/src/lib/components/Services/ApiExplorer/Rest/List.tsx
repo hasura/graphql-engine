@@ -61,11 +61,18 @@ const ListComponent: React.FC<ListComponentProps> = ({
     <Analytics name="RestList" {...REDACT_EVERYTHING}>
       <div className="pl-md pt-md pr-md">
         <div className="flex">
-          <h2 className="text-xl font-bold">REST Endpoints</h2>
+          <h2 className="text-xl font-bold pr-2">REST Endpoints</h2>
+          <Button
+            mode="primary"
+            size="sm"
+            onClick={() => dispatch(_push('/api/rest/create'))}
+          >
+            Create REST
+          </Button>
         </div>
-        <div className="pt-md">
-          Create endpoints from GraphQL queries using{' '}
-          <Link to="/api/api-explorer">GraphiQL</Link>.
+        <div className="">
+          Create Rest endpoints on the top of existing GraphQL queries
+          andmutations{' '}
           <div className="w-8/12 mt-sm">
             REST endpoints allow for the creation of a REST interface to your
             saved GraphQL queries and mutations. Endpoints are generated from

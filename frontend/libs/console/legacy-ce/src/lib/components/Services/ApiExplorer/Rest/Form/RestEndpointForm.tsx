@@ -15,6 +15,7 @@ import globals from '../../../../../Globals';
 import { FaArrowRight, FaMagic } from 'react-icons/fa';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import clsx from 'clsx';
+import { Link } from 'react-router';
 
 const editorOptions = {
   minLines: 10,
@@ -131,10 +132,10 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             editorOptions={editorOptions}
           />
           <div className="text-sm absolute top-6 right-0 mt-2 mr-2">
-            <a href="/api/api-explorer?mode=rest">
+            <Link to="/api/api-explorer?mode=rest">
               {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
               <FaArrowRight />
-            </a>
+            </Link>
           </div>
         </div>
         <InputField name="name" label="Name" placeholder="Name" />
