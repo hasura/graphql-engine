@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { Driver } from '../../../../../../dataSources';
+import omit from 'lodash/omit';
 import { RootField } from '../../../../../../features/Data/ModifyTable/components/TableRootFields';
+import { isGDCTable } from '../../../../../../features/DataSource/utils';
 import {
   MetadataSelectors,
   useMetadata,
 } from '../../../../../../features/hasura-metadata-api';
-import { QualifiedFunction } from '../../../../../../features/hasura-metadata-types';
+import {
+  QualifiedFunction,
+  SupportedDrivers,
+} from '../../../../../../features/hasura-metadata-types';
 import { Button } from '../../../../../../new-components/Button';
 import { Dialog } from '../../../../../../new-components/Dialog';
 import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
 import { hasuraToast } from '../../../../../../new-components/Toasts';
 import { IconTooltip } from '../../../../../../new-components/Tooltip';
-import { isObject } from '../../../../../Common/utils/jsUtils';
+import { isArray, isObject } from '../../../../../Common/utils/jsUtils';
 import {
   CustomFunctionFieldsForm,
   CustomFunctionFieldsFormValues,
@@ -19,7 +23,7 @@ import {
 import { useSetFunctionCustomization } from './hooks/useSetFunctionCustomization';
 
 export type FunctionGraphQLCustomizationProps = {
-  driver: Driver;
+  driver: SupportedDrivers;
   dataSourceName: string;
   qualifiedFunction: QualifiedFunction;
 };
@@ -27,6 +31,10 @@ export type FunctionGraphQLCustomizationProps = {
 const getFunctionName = (fn: QualifiedFunction) => {
   if (isObject(fn) && 'name' in fn) {
     return fn.name as string;
+  }
+
+  if (isArray(fn)) {
+    return fn.join('.');
   }
 
   return '';
@@ -55,8 +63,8 @@ export const FunctionGraphQLCustomization = ({
   const isCustomized =
     metadataFunction?.configuration?.custom_name ||
     (metadataFunction?.configuration?.custom_root_fields &&
-      Object.keys(metadataFunction?.configuration?.custom_root_fields)
-        .length === 0);
+      Object.keys(metadataFunction?.configuration?.custom_root_fields).length >
+        0);
 
   const functionName = getFunctionName(metadataFunction?.function);
 
@@ -90,18 +98,28 @@ export const FunctionGraphQLCustomization = ({
         : {}),
     };
 
-    const configuration = {
+    const newFieldsConfiguration = {
       ...(data.custom_name ? { custom_name: data.custom_name } : {}),
       ...(areCustomRootFieldsDefined
         ? { custom_root_fields: customRootFields }
         : {}),
     };
 
+    const previousConfiguration = omit(
+      metadataFunction?.configuration ? metadataFunction.configuration : {},
+      ['custom_name', 'custom_root_fields']
+    );
+
     return onSetFunctionCustomization({
       driver,
       dataSourceName,
-      functionName,
-      configuration,
+      functionName: isGDCTable(qualifiedFunction)
+        ? qualifiedFunction
+        : functionName,
+      configuration: {
+        ...previousConfiguration,
+        ...newFieldsConfiguration,
+      },
     });
   };
 
