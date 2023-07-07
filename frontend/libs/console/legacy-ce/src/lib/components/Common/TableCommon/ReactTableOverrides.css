@@ -14,10 +14,14 @@
 }
 
 .ReactTable .pagination-top {
-  top: -20px;
+  top: 0;
   position: sticky;
   background-color: #f8fafb;
   z-index: 1;
+}
+
+.table-browse-rows-container .ReactTable .pagination-top {
+  top: -20px;
 }
 
 .ReactTable .rt-noData {
@@ -51,8 +55,11 @@
   box-shadow: none;
   min-height: 32px;
   position: sticky;
-  top: 40px;
   z-index: 1;
+}
+
+.table-browse-rows-container .ReactTable .rt-thead.-header {
+  top: 38px;
 }
 
 .ReactTable .-pagination {
