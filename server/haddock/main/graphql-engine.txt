@@ -21084,8 +21084,12 @@ BatchExecutionDetails :: Maybe DiffTime -> DiffTime -> DiffTime -> BatchId -> [C
 -- | execution details of the cohorts belonging to this batch
 [_bedCohorts] :: BatchExecutionDetails -> [CohortExecutionDetails]
 [_bedBatchResponseSizeBytes] :: BatchExecutionDetails -> Maybe Int
+data PollDetailsError
+PollDetailsError :: BatchId -> QErr -> PollDetailsError
+[_pdeBatchId] :: PollDetailsError -> BatchId
+[_pdeErrorDetails] :: PollDetailsError -> QErr
 data PollDetails
-PollDetails :: PollerId -> SubscriptionType -> Text -> DiffTime -> [BatchExecutionDetails] -> DiffTime -> SubscriptionsOptions -> SourceName -> RoleName -> ParameterizedQueryHash -> PollDetails
+PollDetails :: PollerId -> SubscriptionType -> Text -> DiffTime -> [BatchExecutionDetails] -> DiffTime -> SubscriptionsOptions -> SourceName -> RoleName -> ParameterizedQueryHash -> LogLevel -> Maybe [PollDetailsError] -> PollDetails
 
 -- | the unique ID (basically a thread that run as a <a>Poller</a>) for the
 --   <a>Poller</a>
@@ -21112,6 +21116,8 @@ PollDetails :: PollerId -> SubscriptionType -> Text -> DiffTime -> [BatchExecuti
 [_pdSource] :: PollDetails -> SourceName
 [_pdRole] :: PollDetails -> RoleName
 [_pdParameterizedQueryHash] :: PollDetails -> ParameterizedQueryHash
+[_pdLogLevel] :: PollDetails -> LogLevel
+[_pdErrors] :: PollDetails -> Maybe [PollDetailsError]
 type SubscriptionPostPollHook = PollDetails -> IO ()
 defaultSubscriptionPostPollHook :: Logger Hasura -> SubscriptionPostPollHook
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.SubscriberId
@@ -21142,11 +21148,14 @@ instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.CohortEx
 instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.CohortExecutionDetails
 instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchExecutionDetails
 instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.BatchExecutionDetails
+instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetailsError
 instance GHC.Classes.Eq Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails
 instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Show.Show (Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey b)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey b)
 instance Hasura.Logging.ToEngineLog Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetails Hasura.Logging.Hasura
+instance GHC.Show.Show Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetailsError
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.PollDetailsError
 instance Hasura.RQL.Types.Backend.Backend b => Data.Hashable.Class.Hashable (Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey b)
 instance Data.Aeson.Types.ToJSON.ToJSON (Hasura.GraphQL.Execute.Subscription.Poll.Common.PollerKey b)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Subscription.Poll.Common.ResponseHash
@@ -24572,22 +24581,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) TriggerOnReplication
-cteqCleanupConfig :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe Text)
-cetqWebhook :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe InputWebhook)
-cetqUpdate :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
-cetqTable :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (TableName b_asl2N)
-cetqSource :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) SourceName
-cetqRetryConf :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe RequestTransform)
-cetqReplace :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) Bool
-cetqName :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) TriggerName
-cetqInsert :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
-cetqHeaders :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe Bool)
-cetqDelete :: forall b_asl2N. Lens' (CreateEventTriggerQuery b_asl2N) (Maybe (SubscribeOpSpec b_asl2N))
+cteqTriggerOnReplication :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) TriggerOnReplication
+cteqCleanupConfig :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe Text)
+cetqWebhook :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe InputWebhook)
+cetqUpdate :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe (SubscribeOpSpec b_aslxE))
+cetqTable :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (TableName b_aslxE)
+cetqSource :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) SourceName
+cetqRetryConf :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe RequestTransform)
+cetqReplace :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) Bool
+cetqName :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) TriggerName
+cetqInsert :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe (SubscribeOpSpec b_aslxE))
+cetqHeaders :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe Bool)
+cetqDelete :: forall b_aslxE. Lens' (CreateEventTriggerQuery b_aslxE) (Maybe (SubscribeOpSpec b_aslxE))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
