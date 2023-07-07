@@ -56,6 +56,7 @@ server/CURRENT_VERSION
 
 # ignored to prevent accidental unzips of the .gz version from being committed
 Chinook.xml
+chinook.db
 
 # log output from tests-hspec runs
 tests-hspec.log
@@ -69,3 +70,5 @@ node_modules
 # ticky profiles, e.g. from dev.sh --prof-ticky
 *.ticky
 *.ticky.modules
+
+yarn-error.log
