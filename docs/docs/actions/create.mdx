@@ -208,6 +208,16 @@ The above definition means:
 - It returns an output type called `LoginResponse`.
 - `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
 
+:::info Note
+
+When using a [numeric](/schema/postgres/postgresql-types.mdx#numeric) value in an [Action](/actions/overview.mdx), the
+value is [coerced](https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion) to its expected scalar type based
+on type of the input value supplied (from the Action payload). As stated in the spec, a GraphQL service (such as Hasura)
+will attempt to coerce numeric values to `Int`, `Float`, or `String` types, so long as its reasonable and doesn't result
+in the loss of data. Otherwise, the service will throw an error.
+
+:::
+
 ### Step 2: Create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.
@@ -447,6 +457,16 @@ The above definition means:
 - It accepts an argument called `numbers` which is a list of integers.
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
+
+:::info Note
+
+When using a [numeric](/schema/postgres/postgresql-types.mdx#numeric) value in an [Action](/actions/overview.mdx), the
+value is [coerced](https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion) to its expected scalar type based
+on type of the input value supplied (from the Action payload). As stated in the spec, a GraphQL service (such as Hasura)
+will attempt to coerce numeric values to `Int`, `Float`, or `String` types, so long as its reasonable and doesn't result
+in the loss of data. Otherwise, the service will throw an error.
+
+:::
 
 You can also use Type Generator feature to generate the types for your Action:
 

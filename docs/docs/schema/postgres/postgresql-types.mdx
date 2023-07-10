@@ -12,8 +12,7 @@ keywords:
 
 ## Introduction {#types-table}
 
-List of PostgreSQL types supported by the Hasura GraphQL Engine with
-their equivalent Hasura types:
+List of PostgreSQL types supported by the Hasura GraphQL Engine with their equivalent Hasura types:
 
 | Name                                    | Aliases            | Description                                                 | Hasura Type                                                                                                                   |
 | --------------------------------------- | ------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -93,10 +92,9 @@ objects: [
 
 :::info Note
 
-To avoid loss of data when retrieving IEEE 754 style data from the
-database, please refer to the [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for instructions
-on setting the `extra_float_digits` parameter, which has a bad default
-value in PostgreSQL 11 and older.
+To avoid loss of data when retrieving IEEE 754 style data from the database, please refer to the
+[GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for instructions on setting the
+`extra_float_digits` parameter, which has a bad default value in PostgreSQL 11 and older.
 
 :::
 
@@ -114,10 +112,19 @@ objects: [
 ]
 ```
 
+:::info Note
+
+When using a [numeric](/schema/postgres/postgresql-types.mdx#numeric) value in an [Action](/actions/overview.mdx), the
+value is [coerced](https://spec.graphql.org/October2021/#sec-Scalars.Input-Coercion) to its expected scalar type based
+on type of the input value supplied (from the Action payload). As stated in the spec, a GraphQL service (such as Hasura)
+will attempt to coerce numeric values to `Int`, `Float`, or `String` types, so long as its reasonable and doesn't result
+in the loss of data. Otherwise, the service will throw an error.
+
+:::
+
 ## Bool {#bool}
 
-GraphQL default Scalar with name **Boolean**. The **Boolean** scalar
-type represents `true` or `false`.
+GraphQL default Scalar with name **Boolean**. The **Boolean** scalar type represents `true` or `false`.
 
 E.g.
 
@@ -131,8 +138,7 @@ objects: [
 
 ## Char {#char}
 
-GraphQL custom scalar with name **character**. It is a `String` with
-single character.
+GraphQL custom scalar with name **character**. It is a `String` with single character.
 
 E.g.
 
@@ -146,10 +152,8 @@ objects: [
 
 ## String {#string}
 
-GraphQL default scalar with name **String**. The **String** scalar type
-represents textual data, represented as UTF-8 character sequences. The
-String type is most often used by GraphQL to represent free-form
-human-readable text.
+GraphQL default scalar with name **String**. The **String** scalar type represents textual data, represented as UTF-8
+character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
 
 E.g.
 
@@ -163,8 +167,7 @@ objects: [
 
 ## Date {#date}
 
-GraphQL custom scalar with name **date**. Date (no time of day). Allowed
-values are yyyy-mm-dd.
+GraphQL custom scalar with name **date**. Date (no time of day). Allowed values are yyyy-mm-dd.
 
 E.g.
 
@@ -178,9 +181,8 @@ objects: [
 
 ## Time with time zone {#timetz}
 
-GraphQL custom scalar type with name **timetz**. Time of day only, with
-time zone. Allowed values should be of ISO8601 format (e.g. 17:30:15Z,
-17:30:15+05:30, 17:30:15.234890+05:30).
+GraphQL custom scalar type with name **timetz**. Time of day only, with time zone. Allowed values should be of ISO8601
+format (e.g. 17:30:15Z, 17:30:15+05:30, 17:30:15.234890+05:30).
 
 E.g.
 
@@ -194,10 +196,8 @@ objects: [
 
 ## Timestamp with time zone {#timestamptz}
 
-GraphQL custom scalar type with name **timestamptz**. Both date and
-time, with time zone. Allowed values should be of ISO8601 format (e.g.
-2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30,
-2016-07-20T17:30:15.234890+05:30).
+GraphQL custom scalar type with name **timestamptz**. Both date and time, with time zone. Allowed values should be of
+ISO8601 format (e.g. 2016-07-20T17:30:15Z, 2016-07-20T17:30:15+05:30, 2016-07-20T17:30:15.234890+05:30).
 
 E.g.
 
@@ -211,8 +211,7 @@ objects: [
 
 ## JSON {#json}
 
-GraphQL custom scalar type with name **json**. It is a stringified json
-value.
+GraphQL custom scalar type with name **json**. It is a stringified json value.
 
 E.g.
 
@@ -226,8 +225,7 @@ objects: [
 
 ## JSONB {#jsonb}
 
-GraphQL custom scalar type with name **jsonb**. Value should be given
-through a variable of type **jsonb**.
+GraphQL custom scalar type with name **jsonb**. Value should be given through a variable of type **jsonb**.
 
 E.g.
 
@@ -254,9 +252,8 @@ variables:
 
 ## Geometry {#geometry}
 
-GraphQL custom scalar type `geometry` is generated for a `GEOMETRY`
-column on a PostGIS enabled Postgres instance. Value should be given as
-GeoJSON.
+GraphQL custom scalar type `geometry` is generated for a `GEOMETRY` column on a PostGIS enabled Postgres instance. Value
+should be given as GeoJSON.
 
 E.g.
 
@@ -284,9 +281,8 @@ variables:
 
 ## Geography {#geography}
 
-GraphQL custom scalar type `geography` is generated for a `GEOGRAPHY`
-column on a PostGIS enabled Postgres instance. Value should be given as
-GeoJSON.
+GraphQL custom scalar type `geography` is generated for a `GEOGRAPHY` column on a PostGIS enabled Postgres instance.
+Value should be given as GeoJSON.
 
 E.g.
 
@@ -314,9 +310,8 @@ variables:
 
 ## Implicitly supported types {#implicit}
 
-All `Implicit` types in the [above table](#types-table) are implicitly
-supported by the GraphQL Engine. You have to provide the value as a
-**String**.
+All `Implicit` types in the [above table](#types-table) are implicitly supported by the GraphQL Engine. You have to
+provide the value as a **String**.
 
 E.g. For time without time zone type
 
@@ -340,8 +335,8 @@ objects: [
 ]
 ```
 
-Typically, implicit types only support reading and writing, but not more complex
-operations such as boolean comparisons (except for equality) or aggregations.
+Typically, implicit types only support reading and writing, but not more complex operations such as boolean comparisons
+(except for equality) or aggregations.
 
 :::info Note
 
