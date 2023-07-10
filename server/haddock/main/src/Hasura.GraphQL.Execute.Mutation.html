@@ -42,11 +42,11 @@
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.html"><span class="hs-identifier">Network.HTTP.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span id="local-6989586621687542805"><span class="annot"><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationAction"><span class="hs-identifier hs-type">convertMutationAction</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687542805"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542805"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542805"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542805"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-45"></span><span id="local-6989586621687543998"><span class="annot"><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationAction"><span class="hs-identifier hs-type">convertMutationAction</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687543998"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687543998"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687543998"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687543998"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-51"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -55,7 +55,7 @@
 </span><span id="line-55"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#RequestHeaders"><span class="hs-identifier hs-type">HTTP.RequestHeaders</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-type">GH.GQLQueryText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="#local-6989586621687542805"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecutionPlan"><span class="hs-identifier hs-type">ActionExecutionPlan</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="#local-6989586621687543998"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.Types.html#ActionExecutionPlan"><span class="hs-identifier hs-type">ActionExecutionPlan</span></a></span></span><span>
 </span><span id="line-59"></span><span id="convertMutationAction"><span class="annot"><span class="annottext">convertMutationAction :: forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m, MonadMetadataStorage m,
  ProvidesNetwork m) =&gt;
@@ -67,22 +67,22 @@ Environment
 -&gt; Maybe GQLQueryText
 -&gt; ActionMutation Void
 -&gt; m ActionExecutionPlan
-</span><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationAction"><span class="hs-identifier hs-var hs-var">convertMutationAction</span></a></span></span><span> </span><span id="local-6989586621687543058"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687543058"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687543059"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687543059"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687543060"><span class="annot"><span class="annottext">PrometheusMetrics
-</span><a href="#local-6989586621687543060"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span></span><span> </span><span id="local-6989586621687543061"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543061"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687543062"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543062"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687543063"><span class="annot"><span class="annottext">Maybe GQLQueryText
-</span><a href="#local-6989586621687543063"><span class="hs-identifier hs-var">gqlQueryText</span></a></span></span><span> </span><span id="local-6989586621687543064"><span class="annot"><span class="annottext">ActionMutation Void
-</span><a href="#local-6989586621687543064"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621687543065"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621687543065"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Manager
+</span><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationAction"><span class="hs-identifier hs-var hs-var">convertMutationAction</span></a></span></span><span> </span><span id="local-6989586621687544251"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687544251"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687544252"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687544252"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687544253"><span class="annot"><span class="annottext">PrometheusMetrics
+</span><a href="#local-6989586621687544253"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span></span><span> </span><span id="local-6989586621687544254"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687544254"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687544255"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687544255"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621687544256"><span class="annot"><span class="annottext">Maybe GQLQueryText
+</span><a href="#local-6989586621687544256"><span class="hs-identifier hs-var">gqlQueryText</span></a></span></span><span> </span><span id="local-6989586621687544257"><span class="annot"><span class="annottext">ActionMutation Void
+</span><a href="#local-6989586621687544257"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687544258"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621687544258"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Manager
 forall (m :: * -&gt; *). ProvidesNetwork m =&gt; m Manager
 </span><a href="Hasura.Services.Network.html#askHTTPManager"><span class="hs-identifier hs-var">askHTTPManager</span></a></span><span>
 </span><span id="line-61"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionMutation Void
-</span><a href="#local-6989586621687543064"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-type">AMSync</span></a></span><span> </span><span id="local-6989586621687543068"><span class="annot"><span class="annottext">AnnActionExecution Void
-</span><a href="#local-6989586621687543068"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687544257"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-type">AMSync</span></a></span><span> </span><span id="local-6989586621687544261"><span class="annot"><span class="annottext">AnnActionExecution Void
+</span><a href="#local-6989586621687544261"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">ActionExecutionPlan -&gt; m ActionExecutionPlan
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -102,15 +102,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe GQLQueryText
 -&gt; ActionExecution
 </span><a href="Hasura.GraphQL.Execute.Action.html#resolveActionExecution"><span class="hs-identifier hs-var">resolveActionExecution</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621687543065"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687543058"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687543059"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
-</span><a href="#local-6989586621687543060"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void
-</span><a href="#local-6989586621687543068"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">ActionExecContext
-</span><a href="#local-6989586621687543071"><span class="hs-identifier hs-var">actionExecContext</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe GQLQueryText
-</span><a href="#local-6989586621687543063"><span class="hs-identifier hs-var">gqlQueryText</span></a></span><span>
-</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-type">AMAsync</span></a></span><span> </span><span id="local-6989586621687543073"><span class="annot"><span class="annottext">AnnActionMutationAsync
-</span><a href="#local-6989586621687543073"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687544258"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687544251"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687544252"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
+</span><a href="#local-6989586621687544253"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void
+</span><a href="#local-6989586621687544261"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">ActionExecContext
+</span><a href="#local-6989586621687544264"><span class="hs-identifier hs-var">actionExecContext</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe GQLQueryText
+</span><a href="#local-6989586621687544256"><span class="hs-identifier hs-var">gqlQueryText</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-type">AMAsync</span></a></span><span> </span><span id="local-6989586621687544266"><span class="annot"><span class="annottext">AnnActionMutationAsync
+</span><a href="#local-6989586621687544266"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">ActionId -&gt; ActionExecutionPlan
 </span><a href="Hasura.GraphQL.Execute.Action.Types.html#AEPAsyncMutation"><span class="hs-identifier hs-var">AEPAsyncMutation</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionId -&gt; ActionExecutionPlan)
 -&gt; m ActionId -&gt; m ActionExecutionPlan
@@ -122,30 +122,30 @@ forall (m :: * -&gt; *).
 AnnActionMutationAsync
 -&gt; RequestHeaders -&gt; SessionVariables -&gt; m ActionId
 </span><a href="Hasura.GraphQL.Execute.Action.html#resolveActionMutationAsync"><span class="hs-identifier hs-var">resolveActionMutationAsync</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync
-</span><a href="#local-6989586621687543073"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543062"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621687543077"><span class="hs-identifier hs-var">userSession</span></a></span><span>
+</span><a href="#local-6989586621687544266"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687544255"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621687544270"><span class="hs-identifier hs-var">userSession</span></a></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621687543077"><span class="annot"><span class="annottext">userSession :: SessionVariables
-</span><a href="#local-6989586621687543077"><span class="hs-identifier hs-var hs-var">userSession</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621687544270"><span class="annot"><span class="annottext">userSession :: SessionVariables
+</span><a href="#local-6989586621687544270"><span class="hs-identifier hs-var hs-var">userSession</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.RQL.Types.Session.html#_uiSession"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543061"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621687543071"><span class="annot"><span class="annottext">actionExecContext :: ActionExecContext
-</span><a href="#local-6989586621687543071"><span class="hs-identifier hs-var hs-var">actionExecContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; SessionVariables -&gt; ActionExecContext
+</span><a href="#local-6989586621687544254"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621687544264"><span class="annot"><span class="annottext">actionExecContext :: ActionExecContext
+</span><a href="#local-6989586621687544264"><span class="hs-identifier hs-var hs-var">actionExecContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; SessionVariables -&gt; ActionExecContext
 </span><a href="Hasura.RQL.Types.Action.html#ActionExecContext"><span class="hs-identifier hs-var">ActionExecContext</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543062"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
+</span><a href="#local-6989586621687544255"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.RQL.Types.Session.html#_uiSession"><span class="hs-identifier hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543061"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687544254"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationSelectionSet"><span class="hs-identifier hs-type">convertMutationSelectionSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687542840"><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-75"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-76"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-77"></span><span>    </span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-78"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687544033"><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><a href="Hasura.QueryTags.html#MonadQueryTags"><span class="hs-identifier hs-type">MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-80"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -162,7 +162,7 @@ AnnActionMutationAsync
 </span><span id="line-92"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Graphql Operation Name</span></span><span>
 </span><span id="line-94"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionPlan"><span class="hs-identifier hs-type">ExecutionPlan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionPlan"><span class="hs-identifier hs-type">ExecutionPlan</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span><span id="convertMutationSelectionSet"><span class="annot"><span class="annottext">convertMutationSelectionSet :: forall (m :: * -&gt; *).
 (MonadTrace m, MonadIO m, MonadError QErr m,
  MonadMetadataStorage m, MonadGQLExecutionCheck m, MonadQueryTags m,
@@ -183,38 +183,38 @@ Environment
 -&gt; Maybe Name
 -&gt; m (ExecutionPlan, ParameterizedQueryHash)
 </span><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationSelectionSet"><span class="hs-identifier hs-var hs-var">convertMutationSelectionSet</span></a></span></span><span>
-</span><span id="line-97"></span><span>  </span><span id="local-6989586621687543192"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687543192"><span class="hs-identifier hs-var">env</span></a></span></span><span>
-</span><span id="line-98"></span><span>  </span><span id="local-6989586621687543193"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687543193"><span class="hs-identifier hs-var">logger</span></a></span></span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621687543194"><span class="annot"><span class="annottext">PrometheusMetrics
-</span><a href="#local-6989586621687543194"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span></span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621687543195"><span class="annot"><span class="annottext">GQLContext
-</span><a href="#local-6989586621687543195"><span class="hs-identifier hs-var">gqlContext</span></a></span></span><span>
-</span><span id="line-101"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-type">SQLGenCtx</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687543197"><span class="annot"><span class="annottext">StringifyNumbers
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621687544385"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687544385"><span class="hs-identifier hs-var">env</span></a></span></span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621687544386"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687544386"><span class="hs-identifier hs-var">logger</span></a></span></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621687544387"><span class="annot"><span class="annottext">PrometheusMetrics
+</span><a href="#local-6989586621687544387"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span></span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621687544388"><span class="annot"><span class="annottext">GQLContext
+</span><a href="#local-6989586621687544388"><span class="hs-identifier hs-var">gqlContext</span></a></span></span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-type">SQLGenCtx</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687544390"><span class="annot"><span class="annottext">StringifyNumbers
 stringifyNum :: StringifyNumbers
 stringifyNum :: SQLGenCtx -&gt; StringifyNumbers
-</span><a href="#local-6989586621687543197"><span class="hs-identifier hs-var hs-var">stringifyNum</span></a></span></span><span class="hs-special">}</span><span>
-</span><span id="line-102"></span><span>  </span><span id="local-6989586621687543199"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543199"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span>
-</span><span id="line-103"></span><span>  </span><span id="local-6989586621687543200"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543200"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621687543201"><span class="annot"><span class="annottext">[Directive Name]
-</span><a href="#local-6989586621687543201"><span class="hs-identifier hs-var">directives</span></a></span></span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621687543202"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621687543202"><span class="hs-identifier hs-var">fields</span></a></span></span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621687543203"><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621687543203"><span class="hs-identifier hs-var">varDefs</span></a></span></span><span>
-</span><span id="line-107"></span><span>  </span><span id="local-6989586621687543204"><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687543204"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span></span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621687543205"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687543205"><span class="hs-identifier hs-var">introspectionDisabledRoles</span></a></span></span><span>
-</span><span id="line-109"></span><span>  </span><span id="local-6989586621687543206"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687543206"><span class="hs-identifier hs-var">reqId</span></a></span></span><span>
-</span><span id="line-110"></span><span>  </span><span id="local-6989586621687543207"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687543207"><span class="hs-identifier hs-var">maybeOperationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621687543208"><span class="annot"><span class="annottext">ParserFn (RootFieldMap (MutationRootField UnpreparedValue))
-</span><a href="#local-6989586621687543208"><span class="hs-identifier hs-var">mutationParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687544390"><span class="hs-identifier hs-var hs-var">stringifyNum</span></a></span></span><span class="hs-special">}</span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621687544392"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687544392"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span>
+</span><span id="line-103"></span><span>  </span><span id="local-6989586621687544393"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687544393"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621687544394"><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621687544394"><span class="hs-identifier hs-var">directives</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621687544395"><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621687544395"><span class="hs-identifier hs-var">fields</span></a></span></span><span>
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621687544396"><span class="annot"><span class="annottext">[VariableDefinition]
+</span><a href="#local-6989586621687544396"><span class="hs-identifier hs-var">varDefs</span></a></span></span><span>
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621687544397"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687544397"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span></span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621687544398"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687544398"><span class="hs-identifier hs-var">introspectionDisabledRoles</span></a></span></span><span>
+</span><span id="line-109"></span><span>  </span><span id="local-6989586621687544399"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687544399"><span class="hs-identifier hs-var">reqId</span></a></span></span><span>
+</span><span id="line-110"></span><span>  </span><span id="local-6989586621687544400"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687544400"><span class="hs-identifier hs-var">maybeOperationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621687544401"><span class="annot"><span class="annottext">ParserFn (RootFieldMap (MutationRootField UnpreparedValue))
+</span><a href="#local-6989586621687544401"><span class="hs-identifier hs-var">mutationParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-112"></span><span>      </span><span class="annot"><span class="annottext">Maybe (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
 -&gt; m (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
 -&gt; m (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
@@ -223,7 +223,7 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Maybe
      (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
 </span><a href="Hasura.GraphQL.Context.html#gqlMutationParser"><span class="hs-identifier hs-var">gqlMutationParser</span></a></span><span> </span><span class="annot"><span class="annottext">GQLContext
-</span><a href="#local-6989586621687543195"><span class="hs-identifier hs-var">gqlContext</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687544388"><span class="hs-identifier hs-var">gqlContext</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">(m (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
  -&gt; m (ParserFn (RootFieldMap (MutationRootField UnpreparedValue))))
 -&gt; m (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
@@ -237,9 +237,9 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;no mutations exist&quot;</span></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687543213"><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621687543213"><span class="hs-identifier hs-var">resolvedDirectives</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687543214"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543214"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
+</span><span id="line-115"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687544406"><span class="annot"><span class="annottext">[Directive Variable]
+</span><a href="#local-6989586621687544406"><span class="hs-identifier hs-var">resolvedDirectives</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687544407"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544407"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
 -&gt; VariableValues
 -&gt; [Directive Name]
 -&gt; SelectionSet NoFragments Name
@@ -252,19 +252,19 @@ forall (m :: * -&gt; *) (fragments :: * -&gt; *).
 -&gt; SelectionSet fragments Name
 -&gt; m ([Directive Variable], SelectionSet fragments Variable)
 </span><a href="Hasura.GraphQL.Execute.Resolve.html#resolveVariables"><span class="hs-identifier hs-var">resolveVariables</span></a></span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621687543203"><span class="hs-identifier hs-var">varDefs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VariableValues -&gt; Maybe VariableValues -&gt; VariableValues
+</span><a href="#local-6989586621687544396"><span class="hs-identifier hs-var">varDefs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VariableValues -&gt; Maybe VariableValues -&gt; VariableValues
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">VariableValues
 forall k v. HashMap k v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#empty"><span class="hs-identifier hs-var">HashMap.empty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLReqUnparsed -&gt; Maybe VariableValues
 forall a. GQLReq a -&gt; Maybe VariableValues
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grVariables"><span class="hs-identifier hs-var">GH._grVariables</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687543204"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
-</span><a href="#local-6989586621687543201"><span class="hs-identifier hs-var">directives</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621687543202"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><a href="#local-6989586621687544397"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Name]
+</span><a href="#local-6989586621687544394"><span class="hs-identifier hs-var">directives</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621687544395"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-116"></span><span>    </span><span class="hs-comment">-- Parse the GraphQL query into the RQL AST</span><span>
-</span><span id="line-117"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687543219"><span class="annot"><span class="annottext">RootFieldMap (MutationRootField UnpreparedValue)
-</span><a href="#local-6989586621687543219"><span class="hs-identifier hs-var">unpreparedQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687544412"><span class="annot"><span class="annottext">RootFieldMap (MutationRootField UnpreparedValue)
+</span><a href="#local-6989586621687544412"><span class="hs-identifier hs-var">unpreparedQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-118"></span><span>      </span><span class="annot"><span class="annottext">Text
 -&gt; m (RootFieldMap (MutationRootField UnpreparedValue))
 -&gt; m (RootFieldMap (MutationRootField UnpreparedValue))
@@ -286,12 +286,12 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
 -&gt; m (RootFieldMap (MutationRootField UnpreparedValue))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParserFn (RootFieldMap (MutationRootField UnpreparedValue))
-</span><a href="#local-6989586621687543208"><span class="hs-identifier hs-var">mutationParser</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543214"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span>
+</span><a href="#local-6989586621687544401"><span class="hs-identifier hs-var">mutationParser</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544407"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span>    </span><span class="hs-comment">-- Process directives on the mutation</span><span>
-</span><span id="line-121"></span><span>    </span><span id="local-6989586621687543222"><span class="annot"><span class="annottext">DirectiveMap
-</span><a href="#local-6989586621687543222"><span class="hs-identifier hs-var">_dirMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either ParseError DirectiveMap -&gt; m DirectiveMap
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621687544415"><span class="annot"><span class="annottext">DirectiveMap
+</span><a href="#local-6989586621687544415"><span class="hs-identifier hs-var">_dirMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either ParseError DirectiveMap -&gt; m DirectiveMap
 forall (m :: * -&gt; *) a.
 MonadError QErr m =&gt;
 Either ParseError a -&gt; m a
@@ -311,17 +311,17 @@ forall (m :: * -&gt; *) origin. MonadParse m =&gt; [Directive origin m]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Directives.html#customDirectives"><span class="hs-identifier hs-var">customDirectives</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecutableDirectiveLocation -&gt; DirectiveLocation
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#DLExecutable"><span class="hs-identifier hs-var">G.DLExecutable</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutableDirectiveLocation
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#EDLMUTATION"><span class="hs-identifier hs-var">G.EDLMUTATION</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Directive Variable]
-</span><a href="#local-6989586621687543213"><span class="hs-identifier hs-var">resolvedDirectives</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-122"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687543227"><span class="annot"><span class="annottext">parameterizedQueryHash :: ParameterizedQueryHash
-</span><a href="#local-6989586621687543227"><span class="hs-identifier hs-var hs-var">parameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable -&gt; ParameterizedQueryHash
+</span><a href="#local-6989586621687544406"><span class="hs-identifier hs-var">resolvedDirectives</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687544420"><span class="annot"><span class="annottext">parameterizedQueryHash :: ParameterizedQueryHash
+</span><a href="#local-6989586621687544420"><span class="hs-identifier hs-var hs-var">parameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable -&gt; ParameterizedQueryHash
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#calculateParameterizedQueryHash"><span class="hs-identifier hs-var">calculateParameterizedQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543214"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span>
+</span><a href="#local-6989586621687544407"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span>
 </span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span>        </span><span id="local-6989586621687543229"><span class="annot"><span class="annottext">resolveExecutionSteps :: RootFieldAlias
+</span><span id="line-124"></span><span>        </span><span id="local-6989586621687544422"><span class="annot"><span class="annottext">resolveExecutionSteps :: RootFieldAlias
 -&gt; MutationRootField UnpreparedValue -&gt; m ExecutionStep
-</span><a href="#local-6989586621687543229"><span class="hs-identifier hs-var hs-var">resolveExecutionSteps</span></a></span></span><span> </span><span id="local-6989586621687543230"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543230"><span class="hs-identifier hs-var">rootFieldName</span></a></span></span><span> </span><span id="local-6989586621687543231"><span class="annot"><span class="annottext">MutationRootField UnpreparedValue
-</span><a href="#local-6989586621687543231"><span class="hs-identifier hs-var">rootFieldUnpreparedValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m ExecutionStep -&gt; m ExecutionStep
+</span><a href="#local-6989586621687544422"><span class="hs-identifier hs-var hs-var">resolveExecutionSteps</span></a></span></span><span> </span><span id="local-6989586621687544423"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687544423"><span class="hs-identifier hs-var">rootFieldName</span></a></span></span><span> </span><span id="local-6989586621687544424"><span class="annot"><span class="annottext">MutationRootField UnpreparedValue
+</span><a href="#local-6989586621687544424"><span class="hs-identifier hs-var">rootFieldUnpreparedValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m ExecutionStep -&gt; m ExecutionStep
 forall (m :: * -&gt; *) a.
 (MonadIO m, MonadTrace m) =&gt;
 Text -&gt; m a -&gt; m a
@@ -329,15 +329,15 @@ Text -&gt; m a -&gt; m a
 </span><span class="hs-string">&quot;Resolve execution step for &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RootFieldAlias -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543230"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687544423"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-125"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MutationRootField UnpreparedValue
-</span><a href="#local-6989586621687543231"><span class="hs-identifier hs-var">rootFieldUnpreparedValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-126"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFDB"><span class="hs-identifier hs-type">RFDB</span></a></span><span> </span><span id="local-6989586621687543233"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687543233"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621687543234"><span class="annot"><span class="annottext">AnyBackend
+</span><a href="#local-6989586621687544424"><span class="hs-identifier hs-var">rootFieldUnpreparedValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-126"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFDB"><span class="hs-identifier hs-type">RFDB</span></a></span><span> </span><span id="local-6989586621687544426"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687544426"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621687544427"><span class="annot"><span class="annottext">AnyBackend
   (SourceConfigWith
      (MutationDBRoot
         (RemoteRelationshipField UnpreparedValue) UnpreparedValue))
-</span><a href="#local-6989586621687543234"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687544427"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-127"></span><span>              </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
@@ -346,31 +346,31 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
   (SourceConfigWith
      (MutationDBRoot
         (RemoteRelationshipField UnpreparedValue) UnpreparedValue))
-</span><a href="#local-6989586621687543234"><span class="hs-identifier hs-var">exists</span></a></span><span>
-</span><span id="line-129"></span><span>                </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-type">SourceConfigWith</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687543262"><span id="local-6989586621687543263"><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687543263"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687543262"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687543264"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621687543264"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBR"><span class="hs-identifier hs-type">MDBR</span></a></span><span> </span><span id="local-6989586621687543266"><span class="annot"><span class="annottext">MutationDB
+</span><a href="#local-6989586621687544427"><span class="hs-identifier hs-var">exists</span></a></span><span>
+</span><span id="line-129"></span><span>                </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-type">SourceConfigWith</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687544455"><span id="local-6989586621687544456"><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687544456"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceConfiguration.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687544455"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687544457"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621687544457"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBR"><span class="hs-identifier hs-type">MDBR</span></a></span><span> </span><span id="local-6989586621687544459"><span class="annot"><span class="annottext">MutationDB
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
-</span><a href="#local-6989586621687543266"><span class="hs-identifier hs-var">db</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-130"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687543267"><span class="annot"><span class="annottext">mReqId :: Maybe RequestId
-</span><a href="#local-6989586621687543267"><span class="hs-identifier hs-var hs-var">mReqId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687544459"><span class="hs-identifier hs-var">db</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-130"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687544460"><span class="annot"><span class="annottext">mReqId :: Maybe RequestId
+</span><a href="#local-6989586621687544460"><span class="hs-identifier hs-var hs-var">mReqId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-131"></span><span>                        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
 </span><a href="Hasura.QueryTags.Types.html#_qtcOmitRequestId"><span class="hs-identifier hs-var">_qtcOmitRequestId</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryTagsConfig -&gt; Bool) -&gt; Maybe QueryTagsConfig -&gt; Maybe Bool
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621687543264"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687544457"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-132"></span><span>                          </span><span class="hs-comment">-- we include the request id only if a user explicitly wishes for it to be included.</span><span>
 </span><span id="line-133"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RequestId -&gt; Maybe RequestId
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687543206"><span class="hs-identifier hs-var">reqId</span></a></span><span>
+</span><a href="#local-6989586621687544399"><span class="hs-identifier hs-var">reqId</span></a></span><span>
 </span><span id="line-134"></span><span>                          </span><span class="annot"><span class="annottext">Maybe Bool
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe RequestId
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-135"></span><span>                      </span><span id="local-6989586621687543269"><span class="annot"><span class="annottext">mutationQueryTagsAttributes :: QueryTagsAttributes
-</span><a href="#local-6989586621687543269"><span class="hs-identifier hs-var hs-var">mutationQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTags -&gt; QueryTagsAttributes
+</span><span id="line-135"></span><span>                      </span><span id="local-6989586621687544462"><span class="annot"><span class="annottext">mutationQueryTagsAttributes :: QueryTagsAttributes
+</span><a href="#local-6989586621687544462"><span class="hs-identifier hs-var hs-var">mutationQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QueryTags -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#encodeQueryTags"><span class="hs-identifier hs-var">encodeQueryTags</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryTags -&gt; QueryTagsAttributes)
 -&gt; QueryTags -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -383,12 +383,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; ParameterizedQueryHash
 -&gt; MutationMetadata
 </span><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-var">MutationMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RequestId
-</span><a href="#local-6989586621687543267"><span class="hs-identifier hs-var">mReqId</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687543207"><span class="hs-identifier hs-var">maybeOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543230"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621687543227"><span class="hs-identifier hs-var">parameterizedQueryHash</span></a></span><span>
-</span><span id="line-136"></span><span>                      </span><span id="local-6989586621687543273"><span class="annot"><span class="annottext">queryTagsComment :: QueryTagsComment
-</span><a href="#local-6989586621687543273"><span class="hs-identifier hs-var hs-var">queryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tagged m QueryTagsComment -&gt; QueryTagsComment
+</span><a href="#local-6989586621687544460"><span class="hs-identifier hs-var">mReqId</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687544400"><span class="hs-identifier hs-var">maybeOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687544423"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><a href="#local-6989586621687544420"><span class="hs-identifier hs-var">parameterizedQueryHash</span></a></span><span>
+</span><span id="line-136"></span><span>                      </span><span id="local-6989586621687544466"><span class="annot"><span class="annottext">queryTagsComment :: QueryTagsComment
+</span><a href="#local-6989586621687544466"><span class="hs-identifier hs-var hs-var">queryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tagged m QueryTagsComment -&gt; QueryTagsComment
 forall {k} (s :: k) b. Tagged s b -&gt; b
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/tagged-0.8.6.1-3bb7dacdf91e581268bd20d9f035bdfb4bd7c0a3e6f88e36a98f69cab4f08522/share/doc/html/src/Data.Tagged.html#untag"><span class="hs-identifier hs-var">Tagged.untag</span></a></span><span> </span><span class="annot"><span class="annottext">(Tagged m QueryTagsComment -&gt; QueryTagsComment)
 -&gt; Tagged m QueryTagsComment -&gt; QueryTagsComment
@@ -397,12 +397,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 MonadQueryTags m =&gt;
 QueryTagsAttributes
 -&gt; Maybe QueryTagsConfig -&gt; Tagged m QueryTagsComment
-</span><a href="Hasura.QueryTags.html#createQueryTags"><span class="hs-identifier hs-var">createQueryTags</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687542840"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes
-</span><a href="#local-6989586621687543269"><span class="hs-identifier hs-var">mutationQueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621687543264"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span>
-</span><span id="line-137"></span><span>                      </span><span class="hs-special">(</span><span id="local-6989586621687543276"><span class="annot"><span class="annottext">MutationDB b Void (UnpreparedValue b)
-</span><a href="#local-6989586621687543276"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687543277"><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543277"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MutationDB
+</span><a href="Hasura.QueryTags.html#createQueryTags"><span class="hs-identifier hs-var">createQueryTags</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687544033"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsAttributes
+</span><a href="#local-6989586621687544462"><span class="hs-identifier hs-var">mutationQueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621687544457"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span>
+</span><span id="line-137"></span><span>                      </span><span class="hs-special">(</span><span id="local-6989586621687544469"><span class="annot"><span class="annottext">MutationDB b Void (UnpreparedValue b)
+</span><a href="#local-6989586621687544469"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687544470"><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544470"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MutationDB
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 -&gt; (MutationDB b Void (UnpreparedValue b), Maybe RemoteJoins)
 forall (b :: BackendType).
@@ -412,20 +412,20 @@ MutationDB
 -&gt; (MutationDB b Void (UnpreparedValue b), Maybe RemoteJoins)
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#getRemoteJoinsMutationDB"><span class="hs-identifier hs-var">RJ.getRemoteJoinsMutationDB</span></a></span><span> </span><span class="annot"><span class="annottext">MutationDB
   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
-</span><a href="#local-6989586621687543266"><span class="hs-identifier hs-var">db</span></a></span><span>
+</span><a href="#local-6989586621687544459"><span class="hs-identifier hs-var">db</span></a></span><span>
 </span><span id="line-138"></span><span>
-</span><span id="line-139"></span><span>                  </span><span id="local-6989586621687543279"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621687543279"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Manager
+</span><span id="line-139"></span><span>                  </span><span id="local-6989586621687544472"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621687544472"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Manager
 forall (m :: * -&gt; *). ProvidesNetwork m =&gt; m Manager
 </span><a href="Hasura.Services.Network.html#askHTTPManager"><span class="hs-identifier hs-var">askHTTPManager</span></a></span><span>
-</span><span id="line-140"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687543280"><span class="annot"><span class="annottext">selSetArguments :: Maybe (HashMap Name (Value Variable))
-</span><a href="#local-6989586621687543280"><span class="hs-identifier hs-var hs-var">selSetArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><span id="line-140"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687544473"><span class="annot"><span class="annottext">selSetArguments :: Maybe (HashMap Name (Value Variable))
+</span><a href="#local-6989586621687544473"><span class="hs-identifier hs-var hs-var">selSetArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
 -&gt; RootFieldAlias -&gt; Maybe (HashMap Name (Value Variable))
 </span><a href="Hasura.GraphQL.Execute.Mutation.html#getSelSetArgsFromRootField"><span class="hs-identifier hs-var">getSelSetArgsFromRootField</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543214"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543230"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
-</span><span id="line-141"></span><span>                  </span><span id="local-6989586621687543282"><span class="annot"><span class="annottext">DBStepInfo b
-</span><a href="#local-6989586621687543282"><span class="hs-identifier hs-var">dbStepInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ReaderT QueryTagsComment m (DBStepInfo b)
+</span><a href="#local-6989586621687544407"><span class="hs-identifier hs-var">resolvedSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687544423"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
+</span><span id="line-141"></span><span>                  </span><span id="local-6989586621687544475"><span class="annot"><span class="annottext">DBStepInfo b
+</span><a href="#local-6989586621687544475"><span class="hs-identifier hs-var">dbStepInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ReaderT QueryTagsComment m (DBStepInfo b)
  -&gt; QueryTagsComment -&gt; m (DBStepInfo b))
 -&gt; QueryTagsComment
 -&gt; ReaderT QueryTagsComment m (DBStepInfo b)
@@ -435,7 +435,7 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 -&gt; QueryTagsComment -&gt; m (DBStepInfo b)
 forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><span class="hs-identifier hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsComment
-</span><a href="#local-6989586621687543273"><span class="hs-identifier hs-var">queryTagsComment</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT QueryTagsComment m (DBStepInfo b) -&gt; m (DBStepInfo b))
+</span><a href="#local-6989586621687544466"><span class="hs-identifier hs-var">queryTagsComment</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT QueryTagsComment m (DBStepInfo b) -&gt; m (DBStepInfo b))
 -&gt; ReaderT QueryTagsComment m (DBStepInfo b) -&gt; m (DBStepInfo b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
@@ -453,18 +453,18 @@ Environment
 -&gt; Maybe Name
 -&gt; Maybe (HashMap Name (Value Variable))
 -&gt; m (DBStepInfo b)
-</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBMutationPlan"><span class="hs-identifier hs-var">mkDBMutationPlan</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687543262"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687543192"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621687543279"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687543193"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543199"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621687543197"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621687543233"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
-</span><a href="#local-6989586621687543263"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">MutationDB b Void (UnpreparedValue b)
-</span><a href="#local-6989586621687543276"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543200"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621687543207"><span class="hs-identifier hs-var">maybeOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name (Value Variable))
-</span><a href="#local-6989586621687543280"><span class="hs-identifier hs-var">selSetArguments</span></a></span><span>
+</span><a href="Hasura.GraphQL.Execute.Backend.html#mkDBMutationPlan"><span class="hs-identifier hs-var">mkDBMutationPlan</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687544455"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687544385"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621687544472"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687544386"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687544392"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687544390"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687544426"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig b
+</span><a href="#local-6989586621687544456"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">MutationDB b Void (UnpreparedValue b)
+</span><a href="#local-6989586621687544469"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687544393"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687544400"><span class="hs-identifier hs-var">maybeOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name (Value Variable))
+</span><a href="#local-6989586621687544473"><span class="hs-identifier hs-var">selSetArguments</span></a></span><span>
 </span><span id="line-142"></span><span>                  </span><span class="annot"><span class="annottext">ExecutionStep -&gt; m ExecutionStep
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -478,15 +478,15 @@ forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
 i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">DBStepInfo b
-</span><a href="#local-6989586621687543282"><span class="hs-identifier hs-var">dbStepInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543277"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span>
-</span><span id="line-143"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRemote"><span class="hs-identifier hs-type">RFRemote</span></a></span><span> </span><span id="local-6989586621687543289"><span class="annot"><span class="annottext">RemoteSchemaRootField
+</span><a href="#local-6989586621687544475"><span class="hs-identifier hs-var">dbStepInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544470"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span>
+</span><span id="line-143"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRemote"><span class="hs-identifier hs-type">RFRemote</span></a></span><span> </span><span id="local-6989586621687544482"><span class="annot"><span class="annottext">RemoteSchemaRootField
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621687543289"><span class="hs-identifier hs-var">remoteField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-144"></span><span>              </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">RemoteSchemaRootField</span></a></span><span> </span><span id="local-6989586621687543291"><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687543291"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span> </span><span id="local-6989586621687543292"><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621687543292"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span id="local-6989586621687543293"><span class="annot"><span class="annottext">GraphQLField (RemoteRelationshipField UnpreparedValue) Variable
-</span><a href="#local-6989586621687543293"><span class="hs-identifier hs-var">resolvedRemoteField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StateT
+</span><a href="#local-6989586621687544482"><span class="hs-identifier hs-var">remoteField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-144"></span><span>              </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">RemoteSchemaRootField</span></a></span><span> </span><span id="local-6989586621687544484"><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687544484"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span> </span><span id="local-6989586621687544485"><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621687544485"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span id="local-6989586621687544486"><span class="annot"><span class="annottext">GraphQLField (RemoteRelationshipField UnpreparedValue) Variable
+</span><a href="#local-6989586621687544486"><span class="hs-identifier hs-var">resolvedRemoteField</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StateT
   RemoteJSONVariableMap
   m
   (RemoteSchemaRootField
@@ -526,18 +526,18 @@ UserInfo
 -&gt; StateT
      RemoteJSONVariableMap m (RemoteSchemaRootField r Variable)
 </span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteField"><span class="hs-identifier hs-var">resolveRemoteField</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543199"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaRootField
+</span><a href="#local-6989586621687544392"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaRootField
   (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable
-</span><a href="#local-6989586621687543289"><span class="hs-identifier hs-var">remoteField</span></a></span><span>
-</span><span id="line-145"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687543296"><span class="annot"><span class="annottext">GraphQLField Void Variable
-</span><a href="#local-6989586621687543296"><span class="hs-identifier hs-var">noRelsRemoteField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687543297"><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543297"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GraphQLField (RemoteRelationshipField UnpreparedValue) Variable
+</span><a href="#local-6989586621687544482"><span class="hs-identifier hs-var">remoteField</span></a></span><span>
+</span><span id="line-145"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687544489"><span class="annot"><span class="annottext">GraphQLField Void Variable
+</span><a href="#local-6989586621687544489"><span class="hs-identifier hs-var">noRelsRemoteField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687544490"><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544490"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GraphQLField (RemoteRelationshipField UnpreparedValue) Variable
 -&gt; (GraphQLField Void Variable, Maybe RemoteJoins)
 forall var.
 GraphQLField (RemoteRelationshipField UnpreparedValue) var
 -&gt; (GraphQLField Void var, Maybe RemoteJoins)
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#getRemoteJoinsGraphQLField"><span class="hs-identifier hs-var">RJ.getRemoteJoinsGraphQLField</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField (RemoteRelationshipField UnpreparedValue) Variable
-</span><a href="#local-6989586621687543293"><span class="hs-identifier hs-var">resolvedRemoteField</span></a></span><span>
+</span><a href="#local-6989586621687544486"><span class="hs-identifier hs-var">resolvedRemoteField</span></a></span><span>
 </span><span id="line-146"></span><span>              </span><span class="annot"><span class="annottext">ExecutionStep -&gt; m ExecutionStep
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -553,48 +553,48 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe OperationName
 -&gt; ExecutionStep
 </span><a href="Hasura.GraphQL.Execute.Remote.html#buildExecStepRemote"><span class="hs-identifier hs-var">buildExecStepRemote</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687543291"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621687543292"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">OperationType
+</span><a href="#local-6989586621687544484"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621687544485"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">OperationType
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#OperationTypeMutation"><span class="hs-identifier hs-var">G.OperationTypeMutation</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField Void Variable
-</span><a href="#local-6989586621687543296"><span class="hs-identifier hs-var">noRelsRemoteField</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543297"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLReqUnparsed -&gt; Maybe OperationName
+</span><a href="#local-6989586621687544489"><span class="hs-identifier hs-var">noRelsRemoteField</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544490"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLReqUnparsed -&gt; Maybe OperationName
 forall a. GQLReq a -&gt; Maybe OperationName
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grOperationName"><span class="hs-identifier hs-var">GH._grOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687543204"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-148"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-type">RFAction</span></a></span><span> </span><span id="local-6989586621687543303"><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
-</span><a href="#local-6989586621687543303"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-149"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687543304"><span class="annot"><span class="annottext">ActionMutation Void
-</span><a href="#local-6989586621687543304"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687543305"><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543305"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
+</span><a href="#local-6989586621687544397"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-type">RFAction</span></a></span><span> </span><span id="local-6989586621687544496"><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
+</span><a href="#local-6989586621687544496"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-149"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687544497"><span class="annot"><span class="annottext">ActionMutation Void
+</span><a href="#local-6989586621687544497"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687544498"><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544498"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
 -&gt; (ActionMutation Void, Maybe RemoteJoins)
 </span><a href="Hasura.GraphQL.Execute.RemoteJoin.Collect.html#getRemoteJoinsActionMutation"><span class="hs-identifier hs-var">RJ.getRemoteJoinsActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">ActionMutation (RemoteRelationshipField UnpreparedValue)
-</span><a href="#local-6989586621687543303"><span class="hs-identifier hs-var">action</span></a></span><span>
-</span><span id="line-150"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621687543307"><span class="annot"><span class="annottext">ActionName
-</span><a href="#local-6989586621687543307"><span class="hs-identifier hs-var">actionName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687543308"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687543308"><span class="hs-identifier hs-var">_fch</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ActionName, Bool) -&gt; m (ActionName, Bool)
+</span><a href="#local-6989586621687544496"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-150"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621687544500"><span class="annot"><span class="annottext">ActionName
+</span><a href="#local-6989586621687544500"><span class="hs-identifier hs-var">actionName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687544501"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687544501"><span class="hs-identifier hs-var">_fch</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ActionName, Bool) -&gt; m (ActionName, Bool)
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">((ActionName, Bool) -&gt; m (ActionName, Bool))
 -&gt; (ActionName, Bool) -&gt; m (ActionName, Bool)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionMutation Void
-</span><a href="#local-6989586621687543304"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-151"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-type">AMSync</span></a></span><span> </span><span id="local-6989586621687543309"><span class="annot"><span class="annottext">AnnActionExecution Void
-</span><a href="#local-6989586621687543309"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnActionExecution Void -&gt; ActionName
+</span><a href="#local-6989586621687544497"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-151"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-type">AMSync</span></a></span><span> </span><span id="local-6989586621687544502"><span class="annot"><span class="annottext">AnnActionExecution Void
+</span><a href="#local-6989586621687544502"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnActionExecution Void -&gt; ActionName
 forall r. AnnActionExecution r -&gt; ActionName
 </span><a href="Hasura.RQL.IR.Action.html#_aaeName"><span class="hs-identifier hs-var">_aaeName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void
-</span><a href="#local-6989586621687543309"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void -&gt; Bool
+</span><a href="#local-6989586621687544502"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void -&gt; Bool
 forall r. AnnActionExecution r -&gt; Bool
 </span><a href="Hasura.RQL.IR.Action.html#_aaeForwardClientHeaders"><span class="hs-identifier hs-var">_aaeForwardClientHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionExecution Void
-</span><a href="#local-6989586621687543309"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-152"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-type">AMAsync</span></a></span><span> </span><span id="local-6989586621687543312"><span class="annot"><span class="annottext">AnnActionMutationAsync
-</span><a href="#local-6989586621687543312"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; ActionName
+</span><a href="#local-6989586621687544502"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-type">AMAsync</span></a></span><span> </span><span id="local-6989586621687544505"><span class="annot"><span class="annottext">AnnActionMutationAsync
+</span><a href="#local-6989586621687544505"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; ActionName
 </span><a href="Hasura.RQL.IR.Action.html#_aamaName"><span class="hs-identifier hs-var">_aamaName</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync
-</span><a href="#local-6989586621687543312"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; Bool
+</span><a href="#local-6989586621687544505"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; Bool
 </span><a href="Hasura.RQL.IR.Action.html#_aamaForwardClientHeaders"><span class="hs-identifier hs-var">_aamaForwardClientHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">AnnActionMutationAsync
-</span><a href="#local-6989586621687543312"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-153"></span><span>              </span><span id="local-6989586621687543315"><span class="annot"><span class="annottext">ActionExecutionPlan
-</span><a href="#local-6989586621687543315"><span class="hs-identifier hs-var">plan</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687544505"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-153"></span><span>              </span><span id="local-6989586621687544508"><span class="annot"><span class="annottext">ActionExecutionPlan
+</span><a href="#local-6989586621687544508"><span class="hs-identifier hs-var">plan</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
 -&gt; Logger Hasura
 -&gt; PrometheusMetrics
 -&gt; UserInfo
@@ -614,17 +614,17 @@ Environment
 -&gt; ActionMutation Void
 -&gt; m ActionExecutionPlan
 </span><a href="Hasura.GraphQL.Execute.Mutation.html#convertMutationAction"><span class="hs-identifier hs-var">convertMutationAction</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687543192"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687543193"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
-</span><a href="#local-6989586621687543194"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543199"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621687543200"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLQueryText -&gt; Maybe GQLQueryText
+</span><a href="#local-6989586621687544385"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687544386"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">PrometheusMetrics
+</span><a href="#local-6989586621687544387"><span class="hs-identifier hs-var">prometheusMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687544392"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621687544393"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLQueryText -&gt; Maybe GQLQueryText
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLReqUnparsed -&gt; GQLQueryText
 forall a. GQLReq a -&gt; a
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grQuery"><span class="hs-identifier hs-var">GH._grQuery</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687543204"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionMutation Void
-</span><a href="#local-6989586621687543304"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span>
+</span><a href="#local-6989586621687544397"><span class="hs-identifier hs-var">gqlUnparsed</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ActionMutation Void
+</span><a href="#local-6989586621687544497"><span class="hs-identifier hs-var">noRelsDBAST</span></a></span><span>
 </span><span id="line-154"></span><span>              </span><span class="annot"><span class="annottext">ExecutionStep -&gt; m ExecutionStep
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -634,14 +634,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ActionExecutionPlan
 -&gt; ActionsInfo -&gt; Maybe RemoteJoins -&gt; ExecutionStep
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExecStepAction"><span class="hs-identifier hs-var">ExecStepAction</span></a></span><span> </span><span class="annot"><span class="annottext">ActionExecutionPlan
-</span><a href="#local-6989586621687543315"><span class="hs-identifier hs-var">plan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionName -&gt; Bool -&gt; ActionsInfo
+</span><a href="#local-6989586621687544508"><span class="hs-identifier hs-var">plan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ActionName -&gt; Bool -&gt; ActionsInfo
 </span><a href="Hasura.RQL.Types.Action.html#ActionsInfo"><span class="hs-identifier hs-var">ActionsInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ActionName
-</span><a href="#local-6989586621687543307"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687543308"><span class="hs-identifier hs-var">_fch</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621687543305"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span> </span><span class="hs-comment">-- `_fch` represents the `forward_client_headers` option from the action</span><span>
+</span><a href="#local-6989586621687544500"><span class="hs-identifier hs-var">actionName</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687544501"><span class="hs-identifier hs-var">_fch</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621687544498"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span> </span><span class="hs-comment">-- `_fch` represents the `forward_client_headers` option from the action</span><span>
 </span><span id="line-155"></span><span>              </span><span class="hs-comment">-- definition which is currently being ignored for actions that are mutations</span><span>
-</span><span id="line-156"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRaw"><span class="hs-identifier hs-type">RFRaw</span></a></span><span> </span><span id="local-6989586621687543320"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687543320"><span class="hs-identifier hs-var">customFieldVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Either QErr ExecutionStep
+</span><span id="line-156"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRaw"><span class="hs-identifier hs-type">RFRaw</span></a></span><span> </span><span id="local-6989586621687544513"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687544513"><span class="hs-identifier hs-var">customFieldVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Either QErr ExecutionStep
  -&gt; (QErr -&gt; m ExecutionStep) -&gt; m ExecutionStep)
 -&gt; (QErr -&gt; m ExecutionStep)
 -&gt; Either QErr ExecutionStep
@@ -669,13 +669,13 @@ UserInfo
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; m (Either QErr ExecutionStep)
 </span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var">executeIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687543199"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687543320"><span class="hs-identifier hs-var">customFieldVal</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687543205"><span class="hs-identifier hs-var">introspectionDisabledRoles</span></a></span><span>
-</span><span id="line-157"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFMulti"><span class="hs-identifier hs-type">RFMulti</span></a></span><span> </span><span id="local-6989586621687543326"><span class="annot"><span class="annottext">[MutationRootField UnpreparedValue]
-</span><a href="#local-6989586621687543326"><span class="hs-identifier hs-var">lst</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-158"></span><span>              </span><span id="local-6989586621687543327"><span class="annot"><span class="annottext">[ExecutionStep]
-</span><a href="#local-6989586621687543327"><span class="hs-identifier hs-var">allSteps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(MutationRootField UnpreparedValue -&gt; m ExecutionStep)
+</span><a href="#local-6989586621687544392"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687544513"><span class="hs-identifier hs-var">customFieldVal</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687544398"><span class="hs-identifier hs-var">introspectionDisabledRoles</span></a></span><span>
+</span><span id="line-157"></span><span>            </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFMulti"><span class="hs-identifier hs-type">RFMulti</span></a></span><span> </span><span id="local-6989586621687544519"><span class="annot"><span class="annottext">[MutationRootField UnpreparedValue]
+</span><a href="#local-6989586621687544519"><span class="hs-identifier hs-var">lst</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-158"></span><span>              </span><span id="local-6989586621687544520"><span class="annot"><span class="annottext">[ExecutionStep]
+</span><a href="#local-6989586621687544520"><span class="hs-identifier hs-var">allSteps</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(MutationRootField UnpreparedValue -&gt; m ExecutionStep)
 -&gt; [MutationRootField UnpreparedValue] -&gt; m [ExecutionStep]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
@@ -685,9 +685,9 @@ Applicative f =&gt;
 (a -&gt; f b) -&gt; [a] -&gt; f [b]
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RootFieldAlias
 -&gt; MutationRootField UnpreparedValue -&gt; m ExecutionStep
-</span><a href="#local-6989586621687543229"><span class="hs-identifier hs-var">resolveExecutionSteps</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543230"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[MutationRootField UnpreparedValue]
-</span><a href="#local-6989586621687543326"><span class="hs-identifier hs-var">lst</span></a></span><span>
+</span><a href="#local-6989586621687544422"><span class="hs-identifier hs-var">resolveExecutionSteps</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687544423"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[MutationRootField UnpreparedValue]
+</span><a href="#local-6989586621687544519"><span class="hs-identifier hs-var">lst</span></a></span><span>
 </span><span id="line-159"></span><span>              </span><span class="annot"><span class="annottext">ExecutionStep -&gt; m ExecutionStep
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -696,11 +696,11 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ExecutionStep] -&gt; ExecutionStep
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExecStepMulti"><span class="hs-identifier hs-var">ExecStepMulti</span></a></span><span> </span><span class="annot"><span class="annottext">[ExecutionStep]
-</span><a href="#local-6989586621687543327"><span class="hs-identifier hs-var">allSteps</span></a></span><span>
+</span><a href="#local-6989586621687544520"><span class="hs-identifier hs-var">allSteps</span></a></span><span>
 </span><span id="line-160"></span><span>
 </span><span id="line-161"></span><span>    </span><span class="hs-comment">-- Transform the RQL AST into a prepared SQL query</span><span>
-</span><span id="line-162"></span><span>    </span><span id="local-6989586621687543330"><span class="annot"><span class="annottext">ExecutionPlan
-</span><a href="#local-6989586621687543330"><span class="hs-identifier hs-var">txs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621687544523"><span class="annot"><span class="annottext">ExecutionPlan
+</span><a href="#local-6989586621687544523"><span class="hs-identifier hs-var">txs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias
   -&gt; MutationRootField UnpreparedValue -&gt; m ExecutionStep)
  -&gt; RootFieldMap (MutationRootField UnpreparedValue)
  -&gt; m ExecutionPlan)
@@ -717,7 +717,7 @@ forall (f :: * -&gt; *) k a b.
 Applicative f =&gt;
 (k -&gt; a -&gt; f b) -&gt; InsOrdHashMap k a -&gt; f (InsOrdHashMap k b)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#traverseWithKey"><span class="hs-identifier hs-var">InsOrdHashMap.traverseWithKey</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldMap (MutationRootField UnpreparedValue)
-</span><a href="#local-6989586621687543219"><span class="hs-identifier hs-var">unpreparedQueries</span></a></span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias
+</span><a href="#local-6989586621687544412"><span class="hs-identifier hs-var">unpreparedQueries</span></a></span><span> </span><span class="annot"><span class="annottext">((RootFieldAlias
   -&gt; MutationRootField UnpreparedValue -&gt; m ExecutionStep)
  -&gt; m ExecutionPlan)
 -&gt; (RootFieldAlias
@@ -726,74 +726,74 @@ Applicative f =&gt;
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
 -&gt; MutationRootField UnpreparedValue -&gt; m ExecutionStep
-</span><a href="#local-6989586621687543229"><span class="hs-identifier hs-var">resolveExecutionSteps</span></a></span><span>
+</span><a href="#local-6989586621687544422"><span class="hs-identifier hs-var">resolveExecutionSteps</span></a></span><span>
 </span><span id="line-163"></span><span>    </span><span class="annot"><span class="annottext">(ExecutionPlan, ParameterizedQueryHash)
 -&gt; m (ExecutionPlan, ParameterizedQueryHash)
 forall a. a -&gt; m a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecutionPlan
-</span><a href="#local-6989586621687543330"><span class="hs-identifier hs-var">txs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621687543227"><span class="hs-identifier hs-var">parameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687544523"><span class="hs-identifier hs-var">txs</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><a href="#local-6989586621687544420"><span class="hs-identifier hs-var">parameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>
 </span><span id="line-165"></span><span class="hs-comment">-- | Extract the arguments from the selection set for a root field</span><span>
 </span><span id="line-166"></span><span class="hs-comment">-- This is used to validate the arguments of a mutation.</span><span>
 </span><span id="line-167"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Mutation.html#getSelSetArgsFromRootField"><span class="hs-identifier hs-type">getSelSetArgsFromRootField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionSet"><span class="hs-identifier hs-type">G.SelectionSet</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#NoFragments"><span class="hs-identifier hs-type">G.NoFragments</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">G.Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#Value"><span class="hs-identifier hs-type">G.Value</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">G.Variable</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span id="getSelSetArgsFromRootField"><span class="annot"><span class="annottext">getSelSetArgsFromRootField :: SelectionSet NoFragments Variable
 -&gt; RootFieldAlias -&gt; Maybe (HashMap Name (Value Variable))
-</span><a href="Hasura.GraphQL.Execute.Mutation.html#getSelSetArgsFromRootField"><span class="hs-identifier hs-var hs-var">getSelSetArgsFromRootField</span></a></span></span><span> </span><span id="local-6989586621687543332"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543332"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span id="local-6989586621687543333"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543333"><span class="hs-identifier hs-var">rootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-169"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687543334"><span class="annot"><span class="annottext">maybeSelSet :: Maybe (Selection NoFragments Variable)
-</span><a href="#local-6989586621687543334"><span class="hs-identifier hs-var hs-var">maybeSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Mutation.html#getSelSetArgsFromRootField"><span class="hs-identifier hs-var hs-var">getSelSetArgsFromRootField</span></a></span></span><span> </span><span id="local-6989586621687544525"><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544525"><span class="hs-identifier hs-var">selSet</span></a></span></span><span> </span><span id="local-6989586621687544526"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621687544526"><span class="hs-identifier hs-var">rootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-169"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687544527"><span class="annot"><span class="annottext">maybeSelSet :: Maybe (Selection NoFragments Variable)
+</span><a href="#local-6989586621687544527"><span class="hs-identifier hs-var hs-var">maybeSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-170"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621687543333"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687544526"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-171"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span id="local-6989586621687543336"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543336"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span id="local-6989586621687544529"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544529"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; Maybe (Selection NoFragments Variable)
 forall {t :: * -&gt; *} {frag :: * -&gt; *} {var}.
 Foldable t =&gt;
 Name -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
-</span><a href="#local-6989586621687543337"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543336"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543332"><span class="hs-identifier hs-var">selSet</span></a></span><span>
-</span><span id="line-172"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687543338"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543338"><span class="hs-identifier hs-var">namespace</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687543339"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543339"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-173"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687543340"><span class="annot"><span class="annottext">namespaceSelSet :: Maybe (Selection NoFragments Variable)
-</span><a href="#local-6989586621687543340"><span class="hs-identifier hs-var hs-var">namespaceSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544530"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544529"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544525"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><span id="line-172"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687544531"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544531"><span class="hs-identifier hs-var">namespace</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687544532"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544532"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-173"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687544533"><span class="annot"><span class="annottext">namespaceSelSet :: Maybe (Selection NoFragments Variable)
+</span><a href="#local-6989586621687544533"><span class="hs-identifier hs-var hs-var">namespaceSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; Maybe (Selection NoFragments Variable)
 forall {t :: * -&gt; *} {frag :: * -&gt; *} {var}.
 Foldable t =&gt;
 Name -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
-</span><a href="#local-6989586621687543337"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543338"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
-</span><a href="#local-6989586621687543332"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><a href="#local-6989586621687544530"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544531"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544525"><span class="hs-identifier hs-var">selSet</span></a></span><span>
 </span><span id="line-174"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Selection NoFragments Variable)
-</span><a href="#local-6989586621687543340"><span class="hs-identifier hs-var">namespaceSelSet</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-175"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687543342"><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621687543342"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544533"><span class="hs-identifier hs-var">namespaceSelSet</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-175"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687544535"><span class="annot"><span class="annottext">Field NoFragments Variable
+</span><a href="#local-6989586621687544535"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; SelectionSet NoFragments Variable
 -&gt; Maybe (Selection NoFragments Variable)
 forall {t :: * -&gt; *} {frag :: * -&gt; *} {var}.
 Foldable t =&gt;
 Name -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
-</span><a href="#local-6989586621687543337"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543339"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; SelectionSet NoFragments Variable
+</span><a href="#local-6989586621687544530"><span class="hs-identifier hs-var">getSelSet</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544532"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; SelectionSet NoFragments Variable
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; SelectionSet frag var
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#_fSelectionSet"><span class="hs-identifier hs-var">G._fSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621687543342"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687544535"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>              </span><span class="annot"><span class="annottext">Maybe (Selection NoFragments Variable)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Selection NoFragments Variable)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-177"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Selection NoFragments Variable)
-</span><a href="#local-6989586621687543334"><span class="hs-identifier hs-var">maybeSelSet</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-178"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687543344"><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621687543344"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621687544527"><span class="hs-identifier hs-var">maybeSelSet</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-178"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687544537"><span class="annot"><span class="annottext">Field NoFragments Variable
+</span><a href="#local-6989586621687544537"><span class="hs-identifier hs-var">fld</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
 -&gt; Maybe (HashMap Name (Value Variable))
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Variable)
@@ -805,16 +805,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (frag :: * -&gt; *) var.
 Field frag var -&gt; HashMap Name (Value var)
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#_fArguments"><span class="hs-identifier hs-var">G._fArguments</span></a></span><span> </span><span class="annot"><span class="annottext">Field NoFragments Variable
-</span><a href="#local-6989586621687543344"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687544537"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-179"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Selection NoFragments Variable)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name (Value Variable))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-180"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-181"></span><span>    </span><span id="local-6989586621687543337"><span class="annot"><span class="annottext">getSelSet :: Name -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
-</span><a href="#local-6989586621687543337"><span class="hs-identifier hs-var hs-var">getSelSet</span></a></span></span><span> </span><span id="local-6989586621687543351"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543351"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621687543352"><span class="annot"><span class="annottext">t (Selection frag var)
-</span><a href="#local-6989586621687543352"><span class="hs-identifier hs-var">set</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Selection frag var -&gt; Bool)
+</span><span id="line-181"></span><span>    </span><span id="local-6989586621687544530"><span class="annot"><span class="annottext">getSelSet :: Name -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
+</span><a href="#local-6989586621687544530"><span class="hs-identifier hs-var hs-var">getSelSet</span></a></span></span><span> </span><span id="local-6989586621687544544"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544544"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621687544545"><span class="annot"><span class="annottext">t (Selection frag var)
+</span><a href="#local-6989586621687544545"><span class="hs-identifier hs-var">set</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Selection frag var -&gt; Bool)
  -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var))
 -&gt; t (Selection frag var)
 -&gt; (Selection frag var -&gt; Bool)
@@ -824,34 +824,34 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 -&gt; t (Selection frag var) -&gt; Maybe (Selection frag var)
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">find</span></span><span> </span><span class="annot"><span class="annottext">t (Selection frag var)
-</span><a href="#local-6989586621687543352"><span class="hs-identifier hs-var">set</span></a></span><span> </span><span class="annot"><span class="annottext">((Selection frag var -&gt; Bool) -&gt; Maybe (Selection frag var))
+</span><a href="#local-6989586621687544545"><span class="hs-identifier hs-var">set</span></a></span><span> </span><span class="annot"><span class="annottext">((Selection frag var -&gt; Bool) -&gt; Maybe (Selection frag var))
 -&gt; (Selection frag var -&gt; Bool) -&gt; Maybe (Selection frag var)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-182"></span><span>      </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687543354"><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621687543354"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-182"></span><span>      </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#SelectionField"><span class="hs-identifier hs-type">G.SelectionField</span></a></span><span> </span><span id="local-6989586621687544547"><span class="annot"><span class="annottext">Field frag var
+</span><a href="#local-6989586621687544547"><span class="hs-identifier hs-var">fld</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-183"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Field frag var -&gt; Maybe Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Maybe Name
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#_fAlias"><span class="hs-identifier hs-var">G._fAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621687543354"><span class="hs-identifier hs-var">fld</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687544547"><span class="hs-identifier hs-var">fld</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-184"></span><span>          </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543351"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621687544544"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Field frag var -&gt; Name
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Name
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#_fName"><span class="hs-identifier hs-var">G._fName</span></a></span><span> </span><span class="annot"><span class="annottext">Field frag var
-</span><a href="#local-6989586621687543354"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-185"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687543358"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543358"><span class="hs-identifier hs-var">aliasName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><a href="#local-6989586621687544547"><span class="hs-identifier hs-var">fld</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-185"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687544551"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687544551"><span class="hs-identifier hs-var">aliasName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543351"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621687544544"><span class="hs-identifier hs-var">alias</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687543358"><span class="hs-identifier hs-var">aliasName</span></a></span><span>
+</span><a href="#local-6989586621687544551"><span class="hs-identifier hs-var">aliasName</span></a></span><span>
 </span><span id="line-186"></span><span>      </span><span class="annot"><span class="annottext">Selection frag var
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
