@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span class="hs-comment">-- | TODO (from master): Limitation: This parses the query, which is not ideal if we already</span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- have the query cached. The parsing happens unnecessary. But getting this to</span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- either return a plan or parse was tricky and complicated.</span><span>
-</span><span id="line-31"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687502703"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadGQLExecutionCheck"><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-var">MonadGQLExecutionCheck</span></a></span></span><span> </span><span id="local-6989586621687502703"><span class="annot"><a href="#local-6989586621687502703"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687505120"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadGQLExecutionCheck"><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-var">MonadGQLExecutionCheck</span></a></span></span><span> </span><span id="local-6989586621687505120"><span class="annot"><a href="#local-6989586621687505120"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-32"></span><span>  </span><span id="checkGQLExecution"><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-type">checkGQLExecution</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -39,36 +39,36 @@
 </span><span id="line-39"></span><span>    </span><span class="annot"><span class="hs-comment">-- | the unparsed GraphQL query string (and related values)</span></span><span>
 </span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqUnparsed"><span class="hs-identifier hs-type">GQLReqUnparsed</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-41"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><a href="#local-6989586621687502703"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="#local-6989586621687505120"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReqParsed"><span class="hs-identifier hs-type">GQLReqParsed</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span>  </span><span id="executeIntrospection"><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-type">executeIntrospection</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.GraphqlSchemaIntrospection.html#SetGraphqlIntrospectionOptions"><span class="hs-identifier hs-type">SetGraphqlIntrospectionOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><a href="#local-6989586621687502703"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionStep"><span class="hs-identifier hs-type">ExecutionStep</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="#local-6989586621687505120"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionStep"><span class="hs-identifier hs-type">ExecutionStep</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span>  </span><span id="checkGQLBatchedReqs"><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-type">checkGQLBatchedReqs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-51"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-52"></span><span>    </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier hs-type">RequestId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-53"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GQLReq</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLQueryText"><span class="hs-identifier hs-type">GQLQueryText</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-54"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621687502703"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621687505120"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687502722"><span id="local-6989586621687502723"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502722"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621687502723"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502722"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621687502764"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687505139"><span id="local-6989586621687505140"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505139"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621687505140"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505139"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621687505181"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
 -&gt; ([Header], IpAddress)
 -&gt; AllowListStatus
 -&gt; SchemaCache
 -&gt; GQLReqUnparsed
 -&gt; RequestId
 -&gt; ReaderT r m (Either QErr GQLReqParsed)
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687502765"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502765"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687502766"><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502766"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687502767"><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502767"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687502768"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502768"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687502769"><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502769"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687502770"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502770"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687505182"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505182"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687505183"><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505183"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687505184"><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505184"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687505185"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505185"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687505186"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505186"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687505187"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505187"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr GQLReqParsed)
 -&gt; ReaderT r m (Either QErr GQLReqParsed)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
@@ -97,21 +97,21 @@ UserInfo
 -&gt; RequestId
 -&gt; m (Either QErr GQLReqParsed)
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var">checkGQLExecution</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502765"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502766"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502767"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502768"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502769"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502770"><span class="hs-identifier hs-var">requestId</span></a></span><span>
+</span><a href="#local-6989586621687505182"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505183"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505184"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505185"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505186"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505187"><span class="hs-identifier hs-var">requestId</span></a></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621687502775"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621687505192"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
 -&gt; Value
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; ReaderT r m (Either QErr ExecutionStep)
-</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687502776"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502776"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502777"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502777"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687502778"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502778"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687505193"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505193"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505194"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505194"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687505195"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505195"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ExecutionStep)
 -&gt; ReaderT r m (Either QErr ExecutionStep)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
@@ -134,20 +134,20 @@ UserInfo
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; m (Either QErr ExecutionStep)
 </span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var">executeIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502776"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502777"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502778"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
+</span><a href="#local-6989586621687505193"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505194"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505195"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621687502782"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621687505199"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
 -&gt; RequestId
 -&gt; [GQLReqUnparsed]
 -&gt; SchemaCache
 -&gt; ReaderT r m (Either QErr ())
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687502783"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502783"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502784"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502784"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687502785"><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502785"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687502786"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502786"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687505200"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505200"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505201"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505201"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687505202"><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505202"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687505203"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505203"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; ReaderT r m (Either QErr ())
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
@@ -169,26 +169,26 @@ UserInfo
 -&gt; SchemaCache
 -&gt; m (Either QErr ())
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var">checkGQLBatchedReqs</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502783"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502784"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502785"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502786"><span class="hs-identifier hs-var">sc</span></a></span><span>
+</span><a href="#local-6989586621687505200"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505201"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505202"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505203"><span class="hs-identifier hs-var">sc</span></a></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687502737"><span id="local-6989586621687502738"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502737"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621687502738"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502737"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621687502800"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687505154"><span id="local-6989586621687505155"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621687505155"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621687505217"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
 -&gt; ([Header], IpAddress)
 -&gt; AllowListStatus
 -&gt; SchemaCache
 -&gt; GQLReqUnparsed
 -&gt; RequestId
 -&gt; ExceptT e m (Either QErr GQLReqParsed)
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687502801"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502801"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687502802"><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502802"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687502803"><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502803"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687502804"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502804"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687502805"><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502805"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687502806"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502806"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687505218"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505218"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687505219"><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505219"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687505220"><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505220"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687505221"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505221"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687505222"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505222"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687505223"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505223"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr GQLReqParsed)
 -&gt; ExceptT e m (Either QErr GQLReqParsed)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ExceptT e m a
@@ -217,21 +217,21 @@ UserInfo
 -&gt; RequestId
 -&gt; m (Either QErr GQLReqParsed)
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var">checkGQLExecution</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502801"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502802"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502803"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502804"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502805"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502806"><span class="hs-identifier hs-var">requestId</span></a></span><span>
+</span><a href="#local-6989586621687505218"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505219"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505220"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505221"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505222"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505223"><span class="hs-identifier hs-var">requestId</span></a></span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span>  </span><span id="local-6989586621687502810"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687505227"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
 -&gt; Value
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; ExceptT e m (Either QErr ExecutionStep)
-</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687502811"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502811"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502812"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502812"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687502813"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502813"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687505228"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505228"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505229"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505229"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687505230"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505230"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ExecutionStep)
 -&gt; ExceptT e m (Either QErr ExecutionStep)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ExceptT e m a
@@ -254,20 +254,20 @@ UserInfo
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; m (Either QErr ExecutionStep)
 </span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var">executeIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502811"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502812"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502813"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
+</span><a href="#local-6989586621687505228"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505229"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505230"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
 </span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span>  </span><span id="local-6989586621687502817"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621687505234"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
 -&gt; RequestId
 -&gt; [GQLReqUnparsed]
 -&gt; SchemaCache
 -&gt; ExceptT e m (Either QErr ())
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687502818"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502818"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502819"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502819"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687502820"><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502820"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687502821"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502821"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687505235"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505235"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505236"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505236"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687505237"><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505237"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687505238"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505238"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; ExceptT e m (Either QErr ())
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ExceptT e m a
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
@@ -289,26 +289,26 @@ UserInfo
 -&gt; SchemaCache
 -&gt; m (Either QErr ())
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var">checkGQLBatchedReqs</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502818"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502819"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502820"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502821"><span class="hs-identifier hs-var">sc</span></a></span><span>
+</span><a href="#local-6989586621687505235"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505236"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505237"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505238"><span class="hs-identifier hs-var">sc</span></a></span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687502743"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687502743"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-78"></span><span>  </span><span id="local-6989586621687502835"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
+</span><span id="line-77"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687505160"><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505160"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">MonadGQLExecutionCheck</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.Monad.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687505160"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>  </span><span id="local-6989586621687505252"><span class="annot"><span class="annottext">checkGQLExecution :: UserInfo
 -&gt; ([Header], IpAddress)
 -&gt; AllowListStatus
 -&gt; SchemaCache
 -&gt; GQLReqUnparsed
 -&gt; RequestId
 -&gt; TraceT m (Either QErr GQLReqParsed)
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687502836"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502836"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687502837"><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502837"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687502838"><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502838"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687502839"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502839"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687502840"><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502840"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687502841"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502841"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLExecution</span></a></span></span><span> </span><span id="local-6989586621687505253"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505253"><span class="hs-identifier hs-var">ui</span></a></span></span><span> </span><span id="local-6989586621687505254"><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505254"><span class="hs-identifier hs-var">det</span></a></span></span><span> </span><span id="local-6989586621687505255"><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505255"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span> </span><span id="local-6989586621687505256"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505256"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span id="local-6989586621687505257"><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505257"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span id="local-6989586621687505258"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505258"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr GQLReqParsed) -&gt; TraceT m (Either QErr GQLReqParsed)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
@@ -336,21 +336,21 @@ UserInfo
 -&gt; RequestId
 -&gt; m (Either QErr GQLReqParsed)
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLExecution"><span class="hs-identifier hs-var">checkGQLExecution</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502836"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
-</span><a href="#local-6989586621687502837"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687502838"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502839"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
-</span><a href="#local-6989586621687502840"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502841"><span class="hs-identifier hs-var">requestId</span></a></span><span>
+</span><a href="#local-6989586621687505253"><span class="hs-identifier hs-var">ui</span></a></span><span> </span><span class="annot"><span class="annottext">([Header], IpAddress)
+</span><a href="#local-6989586621687505254"><span class="hs-identifier hs-var">det</span></a></span><span> </span><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687505255"><span class="hs-identifier hs-var">enableAL</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505256"><span class="hs-identifier hs-var">sc</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReqUnparsed
+</span><a href="#local-6989586621687505257"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505258"><span class="hs-identifier hs-var">requestId</span></a></span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621687502845"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621687505262"><span class="annot"><span class="annottext">executeIntrospection :: UserInfo
 -&gt; Value
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; TraceT m (Either QErr ExecutionStep)
-</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687502846"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502846"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502847"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502847"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687502848"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502848"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var hs-var hs-var hs-var">executeIntrospection</span></a></span></span><span> </span><span id="local-6989586621687505263"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505263"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505264"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505264"><span class="hs-identifier hs-var">introspectionQuery</span></a></span></span><span> </span><span id="local-6989586621687505265"><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505265"><span class="hs-identifier hs-var">rolesDisabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ExecutionStep)
 -&gt; TraceT m (Either QErr ExecutionStep)
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
@@ -373,20 +373,20 @@ UserInfo
 -&gt; SetGraphqlIntrospectionOptions
 -&gt; m (Either QErr ExecutionStep)
 </span><a href="Hasura.GraphQL.Execute.Common.html#executeIntrospection"><span class="hs-identifier hs-var">executeIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502846"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621687502847"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
-</span><a href="#local-6989586621687502848"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
+</span><a href="#local-6989586621687505263"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687505264"><span class="hs-identifier hs-var">introspectionQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
+</span><a href="#local-6989586621687505265"><span class="hs-identifier hs-var">rolesDisabled</span></a></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621687502852"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621687505269"><span class="annot"><span class="annottext">checkGQLBatchedReqs :: UserInfo
 -&gt; RequestId
 -&gt; [GQLReqUnparsed]
 -&gt; SchemaCache
 -&gt; TraceT m (Either QErr ())
-</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687502853"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502853"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687502854"><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502854"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687502855"><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502855"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687502856"><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502856"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkGQLBatchedReqs</span></a></span></span><span> </span><span id="local-6989586621687505270"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621687505270"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621687505271"><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505271"><span class="hs-identifier hs-var">requestId</span></a></span></span><span> </span><span id="local-6989586621687505272"><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505272"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span id="local-6989586621687505273"><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505273"><span class="hs-identifier hs-var">sc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; TraceT m (Either QErr ())
 forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; TraceT m a
 forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
@@ -408,8 +408,8 @@ UserInfo
 -&gt; SchemaCache
 -&gt; m (Either QErr ())
 </span><a href="Hasura.GraphQL.Execute.Common.html#checkGQLBatchedReqs"><span class="hs-identifier hs-var">checkGQLBatchedReqs</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621687502853"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621687502854"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
-</span><a href="#local-6989586621687502855"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
-</span><a href="#local-6989586621687502856"><span class="hs-identifier hs-var">sc</span></a></span><span>
+</span><a href="#local-6989586621687505270"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
+</span><a href="#local-6989586621687505271"><span class="hs-identifier hs-var">requestId</span></a></span><span> </span><span class="annot"><span class="annottext">[GQLReqUnparsed]
+</span><a href="#local-6989586621687505272"><span class="hs-identifier hs-var">reqs</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCache
+</span><a href="#local-6989586621687505273"><span class="hs-identifier hs-var">sc</span></a></span><span>
 </span><span id="line-86"></span></pre></body></html>
