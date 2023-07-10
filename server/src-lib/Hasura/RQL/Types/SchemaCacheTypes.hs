@@ -66,7 +66,7 @@ instance (Backend b) => Hashable (TableObjId b)
 data LogicalModelObjId (b :: BackendType)
   = LMOPerm RoleName PermType
   | LMOCol (Column b)
-  | LMOInnerLogicalModel LogicalModelName
+  | LMOReferencedLogicalModel LogicalModelName
   deriving (Generic)
 
 deriving stock instance (Backend b) => Eq (LogicalModelObjId b)
@@ -77,8 +77,9 @@ instance (Backend b) => Hashable (LogicalModelObjId b)
 -- used to track dependencies between items in the resolved schema. For
 -- instance, we use `NQOCol` along with `TOCol` from `TableObjId` to ensure
 -- that the two columns that join an array relationship actually exist.
-newtype NativeQueryObjId (b :: BackendType)
+data NativeQueryObjId (b :: BackendType)
   = NQOCol (Column b)
+  | NQOReferencedLogicalModel LogicalModelName
   deriving (Generic)
 
 deriving instance (Backend b) => Eq (NativeQueryObjId b)
@@ -138,6 +139,8 @@ reportSchemaObj = \case
         SOINativeQuery nqn -> "native query " <> toTxt nqn
         SOINativeQueryObj nqn (NQOCol cn) ->
           "column " <> toTxt nqn <> "." <> toTxt cn
+        SOINativeQueryObj nqn (NQOReferencedLogicalModel inner) ->
+          "inner logical model " <> toTxt nqn <> "." <> toTxt inner
         SOIStoredProcedure spn -> "stored procedure " <> toTxt spn
         SOIStoredProcedureObj spn (SPOCol cn) ->
           "column " <> toTxt spn <> "." <> toTxt cn
@@ -146,7 +149,7 @@ reportSchemaObj = \case
           "logical model column " <> toTxt lm <> "." <> toTxt cn
         SOILogicalModelObj lm (LMOPerm rn pt) ->
           "permission " <> toTxt lm <> "." <> roleNameToTxt rn <> "." <> permTypeToCode pt
-        SOILogicalModelObj lm (LMOInnerLogicalModel inner) ->
+        SOILogicalModelObj lm (LMOReferencedLogicalModel inner) ->
           "inner logical model " <> toTxt lm <> "." <> toTxt inner
         SOITableObj tn (TOCol cn) ->
           "column " <> toTxt tn <> "." <> toTxt cn
@@ -210,7 +213,7 @@ data DependencyReason
   | DRRemoteRelationship
   | DRParentRole
   | DRLogicalModel
-  | DRInnerLogicalModel
+  | DRReferencedLogicalModel
   deriving (Show, Eq, Generic)
 
 instance Hashable DependencyReason
@@ -234,7 +237,7 @@ reasonToTxt = \case
   DRRemoteRelationship -> "remote_relationship"
   DRParentRole -> "parent_role"
   DRLogicalModel -> "logical_model"
-  DRInnerLogicalModel -> "inner_logical_model"
+  DRReferencedLogicalModel -> "inner_logical_model"
 
 instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt

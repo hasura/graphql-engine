@@ -50,10 +50,11 @@ import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelType (..), LogicalModelTypeArray (..), LogicalModelTypeReference (..))
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName (..), LogicalModelType (..), LogicalModelTypeArray (..), LogicalModelTypeReference (..))
+import Hasura.LogicalModelResolver.Metadata (InlineLogicalModelMetadata (..), LogicalModelIdentifier (..))
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DDL.Action
@@ -896,6 +897,15 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       -- provided via metadata. If two logical models have the same name the one from metadata is preferred.
       let unifiedLogicalModels = logicalModels <> introspectedLogicalModels
 
+      let getLogicalModelTypeDependencies ::
+            LogicalModelType b ->
+            S.Set LogicalModelName
+          getLogicalModelTypeDependencies = \case
+            LogicalModelTypeScalar _ -> mempty
+            LogicalModelTypeArray (LogicalModelTypeArrayC ltmaArray _) ->
+              getLogicalModelTypeDependencies ltmaArray
+            LogicalModelTypeReference (LogicalModelTypeReferenceC lmtrr _) -> S.singleton lmtrr
+
       logicalModelCacheMaybes <-
         interpretWriter
           -< for
@@ -905,32 +915,30 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 logicalModelPermissions <-
                   flip runReaderT sourceConfig $ buildLogicalModelPermissions sourceName tableCoreInfos _lmmName _lmmFields _lmmSelectPermissions orderedRoles
 
-                let recurseLogicalModelDependencies = \case
-                      LogicalModelTypeScalar _ -> pure ()
-                      LogicalModelTypeArray (LogicalModelTypeArrayC ltmaArray _) ->
-                        recurseLogicalModelDependencies ltmaArray
-                      LogicalModelTypeReference (LogicalModelTypeReferenceC lmtrr _) -> do
-                        let metadataObject =
-                              MetadataObject
-                                ( MOSourceObjId sourceName
-                                    $ AB.mkAnyBackend
-                                    $ SMOLogicalModelObj @b _lmmName
-                                    $ LMMOInnerLogicalModel lmtrr
-                                )
-                                ( toJSON lmm
-                                )
+                let recordDependency logicalModelName = do
+                      let metadataObject =
+                            MetadataObject
+                              ( MOSourceObjId sourceName
+                                  $ AB.mkAnyBackend
+                                  $ SMOLogicalModelObj @b _lmmName
+                                  $ LMMOReferencedLogicalModel logicalModelName
+                              )
+                              ( toJSON lmm
+                              )
 
-                        let sourceObject :: SchemaObjId
-                            sourceObject =
-                              SOSourceObj sourceName
-                                $ AB.mkAnyBackend
-                                $ SOILogicalModelObj @b _lmmName
-                                $ LMOInnerLogicalModel lmtrr
+                          sourceObject :: SchemaObjId
+                          sourceObject =
+                            SOSourceObj sourceName
+                              $ AB.mkAnyBackend
+                              $ SOILogicalModelObj @b _lmmName
+                              $ LMOReferencedLogicalModel logicalModelName
 
-                        recordDependenciesM metadataObject sourceObject
-                          $ Seq.singleton (SchemaDependency sourceObject DRInnerLogicalModel)
+                      recordDependenciesM metadataObject sourceObject
+                        $ Seq.singleton (SchemaDependency sourceObject DRReferencedLogicalModel)
 
-                mapM_ (recurseLogicalModelDependencies . lmfType) _lmmFields
+                -- record a dependency with each Logical Model our types
+                -- reference
+                mapM_ recordDependency (concatMap (S.toList . getLogicalModelTypeDependencies . lmfType) _lmmFields)
 
                 pure
                   LogicalModelInfo
@@ -963,29 +971,73 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       $ AB.mkAnyBackend
                       $ SOINativeQuery @b _nqmRootFieldName
 
-                  dependency :: SchemaDependency
-                  dependency =
-                    SchemaDependency
-                      { sdObjId =
-                          SOSourceObj sourceName
-                            $ AB.mkAnyBackend
-                            $ SOILogicalModel @b _nqmReturns,
-                        sdReason = DRLogicalModel
-                      }
+                  -- we only have a dependency if we used a named Logical Model
+                  maybeDependency :: Maybe SchemaDependency
+                  maybeDependency = case _nqmReturns of
+                    LMILogicalModelName logicalModelName ->
+                      Just
+                        $ SchemaDependency
+                          { sdObjId =
+                              SOSourceObj sourceName
+                                $ AB.mkAnyBackend
+                                $ SOILogicalModel @b logicalModelName,
+                            sdReason = DRLogicalModel
+                          }
+                    LMIInlineLogicalModel _ -> Nothing
 
               withRecordInconsistencyM metadataObject $ do
                 unless (_cscAreNativeQueriesEnabled cacheStaticConfig (reify $ backendTag @b))
                   $ throw400 InvalidConfiguration "The Native Queries feature is disabled"
 
-                logicalModel <-
-                  onNothing
-                    (HashMap.lookup _nqmReturns logicalModelsCache)
-                    (throw400 InvalidConfiguration ("The logical model " <> toTxt _nqmReturns <> " could not be found"))
+                logicalModel <- case _nqmReturns of
+                  LMILogicalModelName logicalModelName ->
+                    onNothing
+                      (HashMap.lookup logicalModelName logicalModelsCache)
+                      (throw400 InvalidConfiguration ("The logical model " <> toTxt logicalModelName <> " could not be found"))
+                  LMIInlineLogicalModel (InlineLogicalModelMetadata {_ilmmFields, _ilmmSelectPermissions}) -> do
+                    let logicalModelName = LogicalModelName (getNativeQueryName _nqmRootFieldName)
 
+                        recordDependency innerLogicalModelName = do
+                          let nqMetadataObject =
+                                MetadataObject
+                                  ( MOSourceObjId sourceName
+                                      $ AB.mkAnyBackend
+                                      $ SMONativeQueryObj @b _nqmRootFieldName
+                                      $ NQMOReferencedLogicalModel innerLogicalModelName
+                                  )
+                                  ( toJSON preValidationNativeQuery
+                                  )
+
+                              nqSourceObject :: SchemaObjId
+                              nqSourceObject =
+                                SOSourceObj sourceName
+                                  $ AB.mkAnyBackend
+                                  $ SOINativeQueryObj @b _nqmRootFieldName
+                                  $ NQOReferencedLogicalModel innerLogicalModelName
+
+                          recordDependenciesM nqMetadataObject nqSourceObject
+                            $ Seq.singleton (SchemaDependency nqSourceObject DRReferencedLogicalModel)
+
+                    logicalModelPermissions <-
+                      flip runReaderT sourceConfig $ buildLogicalModelPermissions sourceName tableCoreInfos logicalModelName _ilmmFields _ilmmSelectPermissions orderedRoles
+
+                    -- record a dependency with each Logical Model our types reference
+                    mapM_ recordDependency (concatMap (S.toList . getLogicalModelTypeDependencies . lmfType) _ilmmFields)
+
+                    pure
+                      $ LogicalModelInfo
+                        { _lmiName = logicalModelName,
+                          _lmiFields = _ilmmFields,
+                          _lmiDescription = _nqmDescription,
+                          _lmiPermissions = logicalModelPermissions
+                        }
                 nqmCode <- validateNativeQuery @b env (_smConfiguration sourceMetadata) logicalModel preValidationNativeQuery
 
-                recordDependenciesM metadataObject schemaObjId
-                  $ Seq.singleton dependency
+                case maybeDependency of
+                  Just dependency ->
+                    recordDependenciesM metadataObject schemaObjId
+                      $ Seq.singleton dependency
+                  Nothing -> pure ()
 
                 arrayRelationships <-
                   traverse

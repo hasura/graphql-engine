@@ -873,8 +873,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -1830,8 +1830,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -2830,8 +2830,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -3985,8 +3985,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -5667,8 +5667,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",
@@ -6941,8 +6941,8 @@
                         "type": "array"
                     },
                     "returns": {
-                        "description": "Return type (table) of the expression",
-                        "type": "string"
+                        "additionalProperties": true,
+                        "description": "Return type (table) of the expression\nA name or definition of a Logical Model\nvalue with unspecified type - this is a placeholder that will eventually be replaced with a more detailed description"
                     },
                     "root_field_name": {
                         "description": "Root field name for the native query",

@@ -723,6 +723,7 @@ purgeMetadataObj = \case
           $ nativeQueryMetadataSetter @b source nativeQueryName
           %~ case nativeQueryMetadataObjId of
             NQMORel rn _ -> dropNativeQueryRelationshipInMetadata rn
+            NQMOReferencedLogicalModel _ -> id
       SMOStoredProcedure sp -> dropStoredProcedureInMetadata @b source sp
       SMOLogicalModel lm -> dropLogicalModelInMetadata @b source lm
       SMOLogicalModelObj logicalModelName logicalModelMetadataObjId ->
@@ -731,7 +732,7 @@ purgeMetadataObj = \case
           %~ case logicalModelMetadataObjId of
             LMMOPerm roleName permType ->
               dropLogicalModelPermissionInMetadata roleName permType
-            LMMOInnerLogicalModel _ -> id
+            LMMOReferencedLogicalModel _ -> id
       SMOTableObj qt tableObj ->
         MetadataModifier
           $ tableMetadataSetter @b source qt

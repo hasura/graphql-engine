@@ -14,6 +14,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Metadata
+import Hasura.LogicalModelResolver.Metadata
 import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
 import Hasura.NativeQuery.Metadata
 import Hasura.Prelude hiding (first)
@@ -80,7 +81,7 @@ spec = do
           NativeQueryMetadata
             { _nqmRootFieldName = NativeQueryName (G.unsafeMkName "root_field_name"),
               _nqmCode = InterpolatedQuery mempty,
-              _nqmReturns = LogicalModelName (G.unsafeMkName "logical_model_name"),
+              _nqmReturns = LMILogicalModelName $ LogicalModelName (G.unsafeMkName "logical_model_name"),
               _nqmArguments = mempty,
               _nqmArrayRelationships = mempty,
               _nqmObjectRelationships = mempty,
