@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Schema.Options
     IncludeUpdateManyFields (..),
     BigQueryStringNumericInput (..),
     IncludeGroupByAggregateFields (..),
+    UsePostgresArrays (..),
   )
 where
 
@@ -29,7 +30,8 @@ data SchemaOptions = SchemaOptions
     soIncludeAggregationPredicates :: IncludeAggregationPredicates,
     soIncludeStreamFields :: IncludeStreamFields,
     soBigQueryStringNumericInput :: BigQueryStringNumericInput,
-    soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields
+    soIncludeGroupByAggregateFields :: IncludeGroupByAggregateFields,
+    soPostgresArrays :: UsePostgresArrays
   }
 
 -- | Should we represent numbers in our responses as numbers, or strings?
@@ -143,4 +145,12 @@ data BigQueryStringNumericInput
 data IncludeGroupByAggregateFields
   = IncludeGroupByAggregateFields
   | ExcludeGroupByAggregateFields
+  deriving (Eq, Show)
+
+-- | if we use Postgres arrays then an array of `text` becomes `[String!]`,
+-- however we want users to have the option to make it output `_text` like it
+-- did before for compatibility.
+data UsePostgresArrays
+  = UsePostgresArrays
+  | DontUsePostgresArrays
   deriving (Eq, Show)
