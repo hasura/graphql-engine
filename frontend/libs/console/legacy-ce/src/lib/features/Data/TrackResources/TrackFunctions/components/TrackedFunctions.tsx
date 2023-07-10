@@ -118,7 +118,14 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
                     [
                       <span
                         className="py-2"
-                        onClick={() => invalidateMetadata()}
+                        onClick={() =>
+                          invalidateMetadata({
+                            componentName: 'TrackedFunctions',
+                            reasons: [
+                              'Refreshing tracked functions on dropdown menu item click.',
+                            ],
+                          })
+                        }
                       >
                         Refresh
                       </span>,

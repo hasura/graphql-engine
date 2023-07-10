@@ -1,17 +1,13 @@
 import { useCallback } from 'react';
-import {
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../../hasura-metadata-api';
-import { Table } from '../../../hasura-metadata-types';
 import { useMetadataMigration } from '../../../MetadataAPI';
+import { useMetadata } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 
 export const useUntrackTable = (props?: {
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) => {
   const { mutate, ...rest } = useMetadataMigration();
-  const invalidateMetadata = useInvalidateMetadata();
 
   const { onSuccess, onError } = props ?? {};
 
@@ -37,7 +33,6 @@ export const useUntrackTable = (props?: {
         },
         {
           onSuccess: () => {
-            invalidateMetadata();
             onSuccess?.();
           },
           onError: err => {

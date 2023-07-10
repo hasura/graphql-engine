@@ -1,5 +1,4 @@
 import { getDriverPrefix } from '../../../../../../../features/DataSource';
-import { useInvalidateMetadata } from '../../../../../../../features/hasura-metadata-api';
 import {
   QualifiedFunction,
   SupportedDrivers,
@@ -40,11 +39,8 @@ type Props = {
 export const useSetFunctionCustomization = ({ onSuccess, onError }: Props) => {
   const dispatch = useAppDispatch();
 
-  const invalidateMetadata = useInvalidateMetadata();
-
   const mutation = useMetadataMigration({
     onSuccess: () => {
-      invalidateMetadata();
       dispatch(updateSchemaInfo()).then(() => {
         if (onSuccess) {
           onSuccess();

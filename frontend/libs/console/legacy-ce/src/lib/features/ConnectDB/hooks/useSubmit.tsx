@@ -1,13 +1,13 @@
 import { useQueryClient } from 'react-query';
+import { useDispatch } from 'react-redux';
 import { push } from 'react-router-redux';
-import { SupportedDrivers } from '../../hasura-metadata-types';
-import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
 import { APIError } from '../../../hooks/error';
+import { exportMetadata } from '../../../metadata/actions';
 import { useFireNotification } from '../../../new-components/Notifications';
 import { getDriverPrefix } from '../../DataSource';
-import { exportMetadata } from '../../../metadata/actions';
+import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
+import { SupportedDrivers } from '../../hasura-metadata-types';
 import { useAvailableDrivers } from './useAvailableDrivers';
-import { useDispatch } from 'react-redux';
 
 type UseRedirectArgs = {
   redirectWithLatencyCheck: boolean;
@@ -48,7 +48,6 @@ export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
   const redirect = useRedirect({ redirectWithLatencyCheck: false });
-  const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
@@ -59,8 +58,6 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['export_metadata']);
-
       fireNotification({
         type: 'success',
         title: 'Success',

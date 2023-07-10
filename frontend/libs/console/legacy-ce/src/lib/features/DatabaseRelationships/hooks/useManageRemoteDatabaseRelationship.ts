@@ -1,14 +1,13 @@
-import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from 'react-query';
+import { useMetadataMigration } from '../../MetadataAPI';
 import { useMetadata } from '../../hasura-metadata-api';
 import { RemoteDatabaseRelationship } from '../types';
 import {
   generateRemoteRelationshipCreateRequest,
-  generateRemoteRelationshipEditRequest,
   generateRemoteRelationshipDeleteRequest,
+  generateRemoteRelationshipEditRequest,
 } from '../utils/generateRequest';
-import { generateQueryKeys } from '../utils/queryClientUtils';
 
 export const useManageRemoteDatabaseRelationship = ({
   dataSourceName,
@@ -31,7 +30,6 @@ export const useManageRemoteDatabaseRelationship = ({
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
-        queryClient.invalidateQueries(generateQueryKeys.metadata());
         onSuccess?.();
       },
       onError: (err: Error) => {

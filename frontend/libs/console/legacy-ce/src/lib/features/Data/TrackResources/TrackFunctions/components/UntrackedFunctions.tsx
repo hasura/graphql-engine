@@ -163,7 +163,14 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
                       [
                         <span
                           className="py-2"
-                          onClick={() => invalidateMetadata()}
+                          onClick={() =>
+                            invalidateMetadata({
+                              componentName: 'UntrackedFunctions',
+                              reasons: [
+                                'Refreshing untracked functions on Dropdown Menu item click.',
+                              ],
+                            })
+                          }
                         >
                           Refresh
                         </span>,

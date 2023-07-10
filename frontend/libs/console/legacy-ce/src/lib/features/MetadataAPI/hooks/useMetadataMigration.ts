@@ -5,6 +5,7 @@ import Endpoints from '../../../Endpoints';
 import { Api } from '../../../hooks/apiUtils';
 import { useConsoleConfig } from '../../../hooks/useEnvVars';
 import { allowedMetadataTypes, MetadataResponse } from '../types';
+import { useInvalidateMetadata } from '../../hasura-metadata-api';
 
 const maxAllowedLength = 255;
 const unixEpochLength = 14;
@@ -46,7 +47,8 @@ export function useMetadataMigration<
   metadataMigrationOptions: MetadataMigrationOptions<
     ResponseType,
     ArgsType
-  > = {}
+  > = {},
+  additionalQueryKeysToInvalidate?: string[]
 ) {
   const { errorTransform, ...mutationOptions } = metadataMigrationOptions;
 
@@ -57,11 +59,14 @@ export function useMetadataMigration<
     string
   >;
   const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
+  let lastBody: any = null;
 
   return useMutation(
     async props => {
       const { query } = props;
       const body = query;
+      lastBody = body;
       const result = await Api.post<ResponseType>(
         {
           url: Endpoints.metadata,
@@ -94,10 +99,20 @@ export function useMetadataMigration<
           });
         }
 
-        /*
-          Get the latest metadata from server (this will NOT update metadata that is in the redux state, to do that please pass a custom onSuccess)
-        */
-        queryClient.refetchQueries(['metadata'], { active: true });
+        invalidateMetadata({
+          componentName: 'useMetadataMigration()',
+          reasons: [
+            'Metadata migration occurred',
+            `Migration Type: ${lastBody.type}`,
+            `Migration Body:`,
+            JSON.stringify(lastBody, null, 2),
+          ],
+          additionalQueryKeys:
+            additionalQueryKeysToInvalidate &&
+            additionalQueryKeysToInvalidate?.length > 0
+              ? additionalQueryKeysToInvalidate
+              : undefined,
+        });
 
         const { onSuccess } = mutationOptions ?? {};
         if (onSuccess) {

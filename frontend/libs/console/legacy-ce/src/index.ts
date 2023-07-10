@@ -177,6 +177,6 @@ export {
   removeLSItem,
 } from './lib/utils/localStorage';
 
-export { listenForStoreMetadataChanges } from './lib/store.utils';
+export { reduxStoreListener } from './lib/store/utils/';
 
 export { default as App } from './lib/components/App/App';

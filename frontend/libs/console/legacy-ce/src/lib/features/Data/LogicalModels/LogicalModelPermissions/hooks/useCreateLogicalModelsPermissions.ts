@@ -1,13 +1,11 @@
 import { useCallback } from 'react';
-import { useMetadataMigration } from '../../../../MetadataAPI';
-import { exportMetadata } from '../../../../DataSource';
-import { useHttpClient } from '../../../../Network';
-import { getCreateLogicalModelBody } from './utils/getCreateLogicalModelBody';
-import { LogicalModel, Source } from '../../../../hasura-metadata-types';
-import { useQueryClient } from 'react-query';
 import { useFireNotification } from '../../../../../new-components/Notifications/index';
-import { METADATA_QUERY_KEY } from '../../../../hasura-metadata-api/useMetadata';
+import { exportMetadata } from '../../../../DataSource';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useHttpClient } from '../../../../Network';
+import { LogicalModel, Source } from '../../../../hasura-metadata-types';
 import { errorTransform } from './utils/errorTransform';
+import { getCreateLogicalModelBody } from './utils/getCreateLogicalModelBody';
 
 const useCreateLogicalModelsPermissions = ({
   logicalModels,
@@ -21,7 +19,6 @@ const useCreateLogicalModelsPermissions = ({
   });
   const { fireNotification } = useFireNotification();
   const httpClient = useHttpClient();
-  const queryClient = useQueryClient();
 
   const create = useCallback(
     async ({ permission, logicalModelName, onSuccess }) => {
@@ -60,7 +57,6 @@ const useCreateLogicalModelsPermissions = ({
               });
             },
             onSettled: async () => {
-              await queryClient.invalidateQueries([METADATA_QUERY_KEY]);
               onSuccess?.();
             },
           }

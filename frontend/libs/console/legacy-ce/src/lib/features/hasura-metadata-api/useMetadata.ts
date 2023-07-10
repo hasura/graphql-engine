@@ -1,10 +1,10 @@
-import { exportMetadata } from './exportMetadata';
-import { Metadata } from '../hasura-metadata-types';
-import { useHttpClient } from '../Network';
-import { useCallback } from 'react';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { APIError } from '../../hooks/error';
 import { useAppDispatch } from '../../storeHooks';
+import { useHttpClient } from '../Network';
+import { Metadata } from '../hasura-metadata-types';
+import { exportMetadata } from './exportMetadata';
+import { getCurrentReduxResourceVersion } from '../../store/utils/';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -14,17 +14,9 @@ export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
   Default stale time is 5 minutes, but can be adjusted using the staleTime arg
 */
 
-export const METADATA_QUERY_KEY = 'export_metadata';
+export type MetadataQueryKey = 'export_metadata';
 
-export const useInvalidateMetadata = () => {
-  const queryClient = useQueryClient();
-  const invalidate = useCallback(
-    () => queryClient.invalidateQueries([METADATA_QUERY_KEY]),
-    [queryClient]
-  );
-
-  return invalidate;
-};
+export const METADATA_QUERY_KEY: MetadataQueryKey = 'export_metadata';
 
 type Options = {
   staleTime?: number;
@@ -39,7 +31,7 @@ export const useMetadata = <FinalResult = Metadata>(
   }
 ) => {
   const httpClient = useHttpClient();
-  const invalidateMetadata = useInvalidateMetadata();
+
   const dispatch = useAppDispatch();
 
   const queryReturn = useQuery<Metadata, APIError, FinalResult>({
@@ -47,10 +39,12 @@ export const useMetadata = <FinalResult = Metadata>(
     queryFn: async () => {
       const result = await exportMetadata({ httpClient });
 
-      dispatch({
-        type: 'Metadata/EXPORT_METADATA_SUCCESS',
-        data: result,
-      });
+      if (result.resource_version !== getCurrentReduxResourceVersion()) {
+        dispatch({
+          type: 'Metadata/EXPORT_METADATA_SUCCESS',
+          data: result,
+        });
+      }
 
       return result;
     },
@@ -62,6 +56,5 @@ export const useMetadata = <FinalResult = Metadata>(
 
   return {
     ...queryReturn,
-    invalidateMetadata,
   };
 };

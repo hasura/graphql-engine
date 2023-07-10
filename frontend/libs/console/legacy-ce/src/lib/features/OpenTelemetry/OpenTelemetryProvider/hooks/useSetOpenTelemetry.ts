@@ -1,9 +1,8 @@
 import type { SetOpenTelemetryQuery } from '../../../hasura-metadata-types';
 
-import { useMetadataVersion, useMetadataMigration } from '../../../MetadataAPI';
+import { useMetadataMigration, useMetadataVersion } from '../../../MetadataAPI';
 
 import { useFireNotification } from '../../../../new-components/Notifications';
-import { useInvalidateMetadata } from '../../../hasura-metadata-api';
 
 import type { FormValues } from '../../OpenTelemetry/components/Form/schema';
 
@@ -22,7 +21,6 @@ function errorTransform(error: unknown) {
 export function useSetOpenTelemetry() {
   const mutation = useMetadataMigration({ errorTransform });
   const { data: version } = useMetadataVersion();
-  const invalidateMetadata = useInvalidateMetadata();
 
   const { fireNotification } = useFireNotification();
 
@@ -45,7 +43,6 @@ export function useSetOpenTelemetry() {
         {
           onSuccess: () => {
             resolve();
-            invalidateMetadata();
 
             fireNotification({
               title: 'Success!',

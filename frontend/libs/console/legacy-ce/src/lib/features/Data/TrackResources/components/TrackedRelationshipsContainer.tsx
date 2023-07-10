@@ -1,18 +1,12 @@
-import React, { useEffect } from 'react';
-import { useTrackedRelationships } from './hooks/useTrackedRelationships';
-import { useInvalidateMetadata } from '../../../hasura-metadata-api';
-import { useMetadata } from '../../../MetadataAPI';
+import React from 'react';
+
+import {
+  MetadataSelectors,
+  useMetadata,
+  useSyncResourceVersionOnMount,
+} from '../../../hasura-metadata-api';
 import { TrackedRelationships } from './TrackedRelationships';
-
-const useInvalidateMetadataOnLoad = () => {
-  const invalidateMetadata = useInvalidateMetadata();
-
-  // just invalidate metadata when this screen loads for the first time
-  // why? because the user might be coming from a redux based paged and the resource_version might gone out of sync
-  useEffect(() => {
-    invalidateMetadata();
-  }, [invalidateMetadata]);
-};
+import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 
 interface TrackedRelationshipsContainerProps {
   dataSourceName: string;
@@ -21,7 +15,9 @@ interface TrackedRelationshipsContainerProps {
 export const TrackedRelationshipsContainer: React.VFC<
   TrackedRelationshipsContainerProps
 > = ({ dataSourceName }) => {
-  useInvalidateMetadataOnLoad();
+  useSyncResourceVersionOnMount({
+    componentName: 'TrackedRelationshipsContainer',
+  });
 
   const {
     data: relationships,
@@ -29,18 +25,9 @@ export const TrackedRelationshipsContainer: React.VFC<
     refetchRelationships,
   } = useTrackedRelationships(dataSourceName);
 
-  const {
-    data: metadataDataSource,
-    refetch: refetchMetadata,
-    isLoading: isLoadingMetadata,
-  } = useMetadata(m => {
-    return {
-      resource_version: m.resource_version,
-      source: m.metadata.sources.find(s => s.name === dataSourceName),
-    };
-  });
-  const metadataSource = metadataDataSource?.source;
-  const driver = metadataSource?.kind;
+  const { data: metadataSource, isLoading: isLoadingMetadata } = useMetadata(
+    MetadataSelectors.findSource(dataSourceName)
+  );
 
   return (
     <TrackedRelationships
@@ -49,9 +36,8 @@ export const TrackedRelationshipsContainer: React.VFC<
       relationships={relationships}
       onUpdate={async () => {
         await refetchRelationships();
-        await refetchMetadata();
       }}
-      driver={driver}
+      driver={metadataSource?.kind}
     />
   );
 };

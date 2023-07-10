@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { InjectedRouter, Link, withRouter } from 'react-router';
 import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
@@ -8,22 +8,20 @@ import {
   useEnvironmentState,
   usePushRoute,
 } from '../../../ConnectDBRedesign/hooks';
-import {
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../../hasura-metadata-api';
+import { useMetadata } from '../../../hasura-metadata-api';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
 import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
 
+import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
+import { useSyncResourceVersionOnMount } from '../../../hasura-metadata-api';
+import { RouteWrapper } from '../components/RouteWrapper';
+import { NATIVE_QUERY_ROUTES } from '../constants';
 import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
 import { ListLogicalModels } from './components/ListLogicalModels';
 import { ListNativeQueries } from './components/ListNativeQueries';
 import { ListStoredProcedures } from './components/ListStoredProcedures';
-import { NATIVE_QUERY_ROUTES } from '../constants';
-import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
-import { RouteWrapper } from '../components/RouteWrapper';
-import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
 
 export const LandingPage = ({ pathname }: { pathname: string }) => {
   const push = usePushRoute();
@@ -41,15 +39,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
       .flat()
   );
 
-  const invalidateMetadata = useInvalidateMetadata();
-  useEffect(() => {
-    /**
-     * Workaround to avoid that a metadata migration that happened in the legacy part of the Console (i.e. Run SQL)
-     * might affect the metadata migrations in the child components of this page,
-     * resulting in the error "metadata resource version referenced (x) did not match current version"
-     */
-    invalidateMetadata();
-  }, []);
+  useSyncResourceVersionOnMount({ componentName: 'LandingPage' });
 
   const nativeQueries = data?.queries ?? [];
   const logicalModels = data?.models ?? [];

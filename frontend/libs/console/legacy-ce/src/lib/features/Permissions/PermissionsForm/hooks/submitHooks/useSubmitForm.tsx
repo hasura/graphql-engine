@@ -1,15 +1,15 @@
-import { useQueryClient } from 'react-query';
 import { AxiosInstance } from 'axios';
+import { useQueryClient } from 'react-query';
 
-import { useMetadataMigration } from '../../../../MetadataAPI';
-import { exportMetadata } from '../../../../DataSource';
-import { useHttpClient } from '../../../../Network';
 import { useFireNotification } from '../../../../../new-components/Notifications';
-import { AccessType, QueryType } from '../../../types';
-import { api } from '../../api';
-import { isPermission, keyToPermission } from '../../../utils';
-import { PermissionsSchema } from '../../../schema';
+import { exportMetadata } from '../../../../DataSource';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useHttpClient } from '../../../../Network';
 import { Table } from '../../../../hasura-metadata-types';
+import { PermissionsSchema } from '../../../schema';
+import { AccessType, QueryType } from '../../../types';
+import { isPermission, keyToPermission } from '../../../utils';
+import { api } from '../../api';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;
@@ -68,11 +68,12 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
     args;
 
   const queryClient = useQueryClient();
+
   const httpClient = useHttpClient();
 
   const { fireNotification } = useFireNotification();
 
-  const mutate = useMetadataMigration();
+  const mutate = useMetadataMigration(undefined, ['roles']);
 
   const submit = async (formData: PermissionsSchema) => {
     const { metadata, resource_version } = await exportMetadata({
@@ -129,7 +130,6 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
           });
         },
         onSettled: () => {
-          queryClient.invalidateQueries(['export_metadata', 'roles']);
           queryClient.invalidateQueries([
             dataSourceName,
             'permissionFormData',

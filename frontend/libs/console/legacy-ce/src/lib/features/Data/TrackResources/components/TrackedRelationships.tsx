@@ -1,38 +1,35 @@
 import React, { useEffect, useState } from 'react';
+import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
+import { APIError } from '../../../../hooks/error';
+import { Badge } from '../../../../new-components/Badge';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { exportMetadata } from '../../../DataSource';
+import { RelationshipMapping } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/RelationshipMapping';
+import { RowActions } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/RowActions';
+import { TargetName } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/TargetName';
+import { RenderWidget } from '../../../DatabaseRelationships/components/RenderWidget/RenderWidget';
+import { NOTIFICATIONS } from '../../../DatabaseRelationships/components/constants';
+import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
+import { MODE, Relationship } from '../../../DatabaseRelationships/types';
+import {
+  generateDeleteLocalRelationshipRequest,
+  generateRemoteRelationshipDeleteRequest,
+} from '../../../DatabaseRelationships/utils/generateRequest';
+import { useMetadataMigration } from '../../../MetadataAPI';
+import { useHttpClient } from '../../../Network';
+import { BulkKeepGoingResponse, Source } from '../../../hasura-metadata-types';
 import {
   DEFAULT_PAGE_NUMBER,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZES,
 } from '../constants';
-import { FaAngleLeft, FaAngleRight } from 'react-icons/fa';
 import { paginate } from '../utils';
 import { SearchBar } from './SearchBar';
-import { Badge } from '../../../../new-components/Badge';
-import { hasuraToast } from '../../../../new-components/Toasts';
-import { TargetName } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/TargetName';
-import { RelationshipMapping } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/RelationshipMapping';
-import { RowActions } from '../../../DatabaseRelationships/components/AvailableRelationshipsList/parts/RowActions';
-import { MODE, Relationship } from '../../../DatabaseRelationships/types';
-import { RenderWidget } from '../../../DatabaseRelationships/components/RenderWidget/RenderWidget';
-import { NOTIFICATIONS } from '../../../DatabaseRelationships/components/constants';
-import { useFireNotification } from '../../../../new-components/Notifications';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import {
-  generateDeleteLocalRelationshipRequest,
-  generateRemoteRelationshipDeleteRequest,
-} from '../../../DatabaseRelationships/utils/generateRequest';
-import { exportMetadata } from '../../../DataSource';
-import { useHttpClient } from '../../../Network';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { MetadataDataSource } from '../../../../metadata/types';
-import Skeleton from 'react-loading-skeleton';
-import { generateQueryKeys } from '../../../DatabaseRelationships/utils/queryClientUtils';
-import { useQueryClient } from 'react-query';
-import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
-import { APIError } from '../../../../hooks/error';
-import { BulkKeepGoingResponse } from '../../../hasura-metadata-types';
 
 const getQueryFunction = (relationship: Relationship) => {
   if (relationship.type === 'localRelationship') {
@@ -58,7 +55,7 @@ type RelationshipAction = {
 
 interface TrackedRelationshipsProps {
   dataSourceName: string;
-  driver?: MetadataDataSource['kind'];
+  driver?: Source['kind'];
   isLoading: boolean;
   onUpdate: () => void;
   relationships: Relationship[];
@@ -73,7 +70,6 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
 }) => {
   const httpClient = useHttpClient();
   const { mutateAsync } = useMetadataMigration<BulkKeepGoingResponse>();
-  const queryClient = useQueryClient();
 
   const [isTrackingSelectedRelationships, setTrackingSelectedRelationships] =
     useState(false);
@@ -161,6 +157,8 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
               ).length;
               const plural = successfullyTrackedCounter > 1 ? 's' : '';
 
+              onUpdate();
+
               hasuraToast({
                 type: 'success',
                 title: 'Successfully untracked',
@@ -174,13 +172,8 @@ export const TrackedRelationships: React.VFC<TrackedRelationshipsProps> = ({
                 message: (err as APIError).message,
               });
             },
-            onSettled: () => {
-              queryClient.invalidateQueries(generateQueryKeys.metadata());
-            },
           }
         );
-
-        onUpdate();
       }
     } catch (err) {
       console.error(err);

@@ -4,7 +4,10 @@ export {
   useInconsistentMetadata,
   useInvalidateInconsistentMetadata,
 } from './useInconsistentMetadata';
-export { useMetadata, useInvalidateMetadata } from './useMetadata';
+export { useMetadata } from './useMetadata';
+export type { MetadataQueryKey } from './useMetadata';
+export { useInvalidateMetadata } from './useInvalidateMetadata';
+export { useSyncResourceVersionOnMount } from './useSyncResourceVersionOnMount';
 export { areTablesEqual } from './areTablesEqual';
 export { MetadataSelectors };
 export { MetadataUtils };

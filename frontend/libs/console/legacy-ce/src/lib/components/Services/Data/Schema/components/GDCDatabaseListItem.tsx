@@ -1,11 +1,10 @@
+import React from 'react';
+import { FaExclamationTriangle } from 'react-icons/fa';
 import { Source } from '../../../../../features/hasura-metadata-types';
 import { exportMetadata } from '../../../../../metadata/actions';
 import { Button } from '../../../../../new-components/Button';
 import { Tooltip } from '../../../../../new-components/Tooltip';
 import { Dispatch } from '../../../../../types';
-import React from 'react';
-import { FaExclamationTriangle } from 'react-icons/fa';
-import { useQueryClient } from 'react-query';
 import _push from '../../push';
 import { isInconsistentSource } from '../../utils';
 import { useDropSource } from '../hooks/useDropSource';
@@ -17,16 +16,15 @@ type GDCDatabaseListItemItemProps = {
   dispatch: Dispatch;
 };
 
+// This appears to be dead code that's not referenced or implemented anywhere:
 export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
   dataSource,
   inconsistentObjects,
   dispatch,
 }) => {
-  const queryClient = useQueryClient();
   const { dropSource, isLoading: isDropSourceInProgress } = useDropSource({
     customOnSuccess: () => {
       dispatch(exportMetadata());
-      queryClient.invalidateQueries(['export_metadata']);
     },
   });
 

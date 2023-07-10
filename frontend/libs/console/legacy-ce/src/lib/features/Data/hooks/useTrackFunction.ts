@@ -1,17 +1,13 @@
 import { useCallback } from 'react';
 import {
-  MetadataFunction,
-  QualifiedFunction,
-} from '../../hasura-metadata-types';
-import {
   MetadataMigrationOptions,
   useMetadataMigration,
 } from '../../MetadataAPI/hooks/useMetadataMigration';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import {
-  MetadataSelectors,
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../hasura-metadata-api';
+  MetadataFunction,
+  QualifiedFunction,
+} from '../../hasura-metadata-types';
 import { transformErrorResponse } from '../errorUtils';
 
 export type MetadataFunctionPayload = {
@@ -25,12 +21,9 @@ export const useTrackFunction = ({
   dataSourceName,
   ...globalMutateOptions
 }: { dataSourceName: string } & MetadataMigrationOptions) => {
-  const invalidateMetadata = useInvalidateMetadata();
-
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
     onSuccess: (data, variables, ctx) => {
-      invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variables, ctx);
     },
     errorTransform: transformErrorResponse,
