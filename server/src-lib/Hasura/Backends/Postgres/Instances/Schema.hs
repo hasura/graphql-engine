@@ -437,13 +437,26 @@ columnParser columnType nullability = case columnType of
     -- TODO: introduce new dedicated scalars for Postgres column types.
     (name, schemaType) <- case scalarType of
       PGArray innerScalar -> do
-        name <- mkScalarTypeName innerScalar
-        pure
-          ( name,
-            P.TList
-              P.NonNullable
-              (P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)
-          )
+        -- postgres arrays break introspection for some clients so allow them
+        -- to disable it
+        disableArrays <- retrieve Options.soPostgresArrays
+        case disableArrays of
+          Options.UsePostgresArrays -> do
+            name <- mkScalarTypeName innerScalar
+            pure
+              ( name,
+                P.TList
+                  P.NonNullable
+                  (P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)
+              )
+          Options.DontUsePostgresArrays -> do
+            -- previously, we represented text[] as `_text` - recover this
+            -- naming:
+            arrayName <- mkScalarTypeName (PGUnknown $ "_" <> pgScalarTypeToText innerScalar)
+            pure
+              ( arrayName,
+                P.TNamed P.NonNullable $ P.Definition arrayName Nothing Nothing [] P.TIScalar
+              )
       _ -> do
         name <- mkScalarTypeName scalarType
         pure (name, P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)

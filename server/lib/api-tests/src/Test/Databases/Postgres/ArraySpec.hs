@@ -15,7 +15,7 @@ import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldBeYaml, shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
@@ -23,102 +23,89 @@ spec :: SpecWith GlobalTestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Postgres.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        pure ()
-                    },
-                  Postgres.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Citus.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        pure ()
-                    },
-                  Citus.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Cockroach.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        pure ()
-                    },
-                  Cockroach.setupTablesAction schema testEnvironment
-                ]
-            }
+        [ postgresFixture,
+          citusFixture,
+          cockroachFixture
         ]
     )
     singleArrayTests
+
+  -- run these tests with Arrays switched off
+  Fixture.hgeWithEnv [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "disable_postgres_arrays")]
+    $ Fixture.run
+      ( NE.fromList
+          [postgresFixture, citusFixture]
+      )
+    $ do
+      singleArrayTests -- we check these still work with the flag on
+      introspectionWithDisabledFeatureTests
+
+  -- CockroachDB introspection looks different, let's not do it
+  Fixture.run
+    ( NE.fromList
+        [postgresFixture, citusFixture]
+    )
+    introspectionTests
 
   -- CockroachDB does not support nested arrays
   -- https://www.cockroachlabs.com/docs/stable/array.html
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Postgres.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        pure ()
-                    },
-                  Postgres.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Citus.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        pure ()
-                    },
-                  Citus.setupTablesAction schema testEnvironment
-                ]
-            }
-        ]
+        [postgresFixture, citusFixture]
     )
     nestedArrayTests
 
   -- CockroachDB does not support json arrays
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Postgres.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ -> pure ()
-                    },
-                  Postgres.setupTablesAction schema testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Fixture.SetupAction
-                    { Fixture.setupAction =
-                        Citus.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ -> pure ()
-                    },
-                  Citus.setupTablesAction schema testEnvironment
-                ]
-            }
-        ]
+        [postgresFixture, citusFixture]
     )
     jsonArrayTests
 
+postgresFixture :: Fixture.Fixture ()
+postgresFixture =
+  (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+    { Fixture.setupTeardown = \(testEnvironment, _) ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction =
+                Postgres.run_ testEnvironment setup,
+              Fixture.teardownAction = \_ ->
+                pure ()
+            },
+          Postgres.setupTablesAction schema testEnvironment
+        ]
+    }
+
+citusFixture :: Fixture.Fixture ()
+citusFixture =
+  (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+    { Fixture.setupTeardown = \(testEnvironment, _) ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction =
+                Citus.run_ testEnvironment setup,
+              Fixture.teardownAction = \_ ->
+                pure ()
+            },
+          Citus.setupTablesAction schema testEnvironment
+        ]
+    }
+
+cockroachFixture :: Fixture.Fixture ()
+cockroachFixture =
+  (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+    { Fixture.setupTeardown = \(testEnvironment, _) ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction =
+                Cockroach.run_ testEnvironment setup,
+              Fixture.teardownAction = \_ ->
+                pure ()
+            },
+          Cockroach.setupTablesAction schema testEnvironment
+        ]
+    }
+
 setup :: Text
-setup = "create type \"made_up_type\" as enum ('a', 'b', 'c');"
+setup = "create type \"_made_up_type\" as enum ('a', 'b', 'c');"
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -154,9 +141,9 @@ enumArrayType :: Schema.ScalarType
 enumArrayType =
   Schema.TCustomType
     $ Schema.defaultBackendScalarType
-      { Schema.bstPostgres = Just "made_up_type[]",
-        Schema.bstCitus = Just "made_up_type[]",
-        Schema.bstCockroach = Just "made_up_type[]"
+      { Schema.bstPostgres = Just "_made_up_type[]",
+        Schema.bstCitus = Just "_made_up_type[]",
+        Schema.bstCockroach = Just "_made_up_type[]"
       }
 
 schema :: [Schema.Table]
@@ -530,3 +517,279 @@ nestedArrayTests = do
                 |]
 
       shouldReturnYaml testEnvironment actual expected
+
+introspectionTests :: SpecWith TestEnvironment
+introspectionTests = do
+  describe "Array types become GraphQL arrays via introspection" $ do
+    it "Produces GraphQL arrays" $ \testEnvironment -> do
+      let queryTypesIntrospection :: Value
+          queryTypesIntrospection =
+            [graphql|
+                  {
+                    __type(name:"hasura_author") {
+                      kind
+                      name
+                      fields {
+                        name
+                        type {
+                          kind
+                          name
+                          ofType {
+                            kind
+                            name
+                            ofType {
+                              kind
+                              name
+                              ofType {
+                                kind
+                                name
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                |]
+
+          expected =
+            [yaml|
+                {
+                  "data": {
+                    "__type": {
+                      "name": "hasura_author",
+                      "kind": "OBJECT",
+                      "fields": [
+                        {
+                          "name": "emails",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "LIST",
+                              "name": null,
+                              "ofType": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                  "kind": "SCALAR",
+                                  "name": "String",
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "name": "grid",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "LIST",
+                              "name": null,
+                              "ofType": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                  "kind": "SCALAR",
+                                  "name": "Int",
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "name": "id",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "Int",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "jsons",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "LIST",
+                              "name": null,
+                              "ofType": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                  "kind": "SCALAR",
+                                  "name": "json",
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "name": "made_up",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "LIST",
+                              "name": null,
+                              "ofType": {
+                                "kind": "NON_NULL",
+                                "name": null,
+                                "ofType": {
+                                  "kind": "SCALAR",
+                                  "name": "_made_up_type",
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "String",
+                              "ofType": null
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+                |]
+
+      actual <- postGraphql testEnvironment queryTypesIntrospection
+
+      actual `shouldBeYaml` expected
+
+introspectionWithDisabledFeatureTests :: SpecWith TestEnvironment
+introspectionWithDisabledFeatureTests = do
+  describe "Array types remain unknown types via introspection" $ do
+    it "Produces unknown types" $ \testEnvironment -> do
+      let queryTypesIntrospection :: Value
+          queryTypesIntrospection =
+            [graphql|
+                  {
+                    __type(name:"hasura_author") {
+                      kind
+                      name
+                      fields {
+                        name
+                        type {
+                          kind
+                          name
+                          ofType {
+                            kind
+                            name
+                            ofType {
+                              kind
+                              name
+                              ofType {
+                                kind
+                                name
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                |]
+
+          expected =
+            [yaml|
+                {
+                  "data": {
+                    "__type": {
+                      "name": "hasura_author",
+                      "kind": "OBJECT",
+                      "fields": [
+                        {
+                          "name": "emails",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "_text",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "grid",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "_integer",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "id",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "Int",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "jsons",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "_json",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "made_up",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "__made_up_type",
+                              "ofType": null
+                            }
+                          }
+                        },
+                        {
+                          "name": "name",
+                          "type": {
+                            "kind": "NON_NULL",
+                            "name": null,
+                            "ofType": {
+                              "kind": "SCALAR",
+                              "name": "String",
+                              "ofType": null
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+                |]
+
+      actual <- postGraphql testEnvironment queryTypesIntrospection
+
+      actual `shouldBeYaml` expected

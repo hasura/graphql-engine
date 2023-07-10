@@ -268,7 +268,11 @@ buildSchemaOptions
         soIncludeGroupByAggregateFields =
           if EFGroupByAggregations `Set.member` expFeatures
             then Options.IncludeGroupByAggregateFields
-            else Options.ExcludeGroupByAggregateFields
+            else Options.ExcludeGroupByAggregateFields,
+        soPostgresArrays =
+          if EFDisablePostgresArrays `Set.member` expFeatures
+            then Options.DontUsePostgresArrays
+            else Options.UsePostgresArrays
       }
 
 -- | Build the @QueryHasura@ context for a given role.
