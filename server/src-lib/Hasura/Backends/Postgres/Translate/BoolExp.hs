@@ -373,10 +373,10 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
     mkCompExp :: SQLExpression ('Postgres pgKind) -> OpExpG ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts -> mkCastsExp casts
-      AEQ False val -> equalsBoolExpBuilder lhs val
-      AEQ True val -> S.BECompare S.SEQ lhs val
-      ANE False val -> notEqualsBoolExpBuilder lhs val
-      ANE True val -> S.BECompare S.SNE lhs val
+      AEQ NullableComparison val -> equalsBoolExpBuilder lhs val
+      AEQ NonNullableComparison val -> S.BECompare S.SEQ lhs val
+      ANE NullableComparison val -> notEqualsBoolExpBuilder lhs val
+      ANE NonNullableComparison val -> S.BECompare S.SNE lhs val
       AIN val -> S.BECompareAny S.SEQ lhs val
       ANIN val -> S.BENot $ S.BECompareAny S.SEQ lhs val
       AGT val -> S.BECompare S.SGT lhs val

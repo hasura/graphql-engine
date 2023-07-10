@@ -333,8 +333,8 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
                 genA
           )
           defaultRange
-    aeq = AEQ <$> bool_ <*> genA
-    ane = ANE <$> bool_ <*> genA
+    aeq = AEQ <$> nullableComparison <*> genA
+    ane = ANE <$> nullableComparison <*> genA
     ain = AIN <$> genA
     anin = ANIN <$> genA
     agt = AGT <$> genA
@@ -352,6 +352,11 @@ genOpExpG genTableName genColumn genScalarType genBooleanOperators genA =
     anIsNull = pure ANISNULL
     anIsNotNull = pure ANISNOTNULL
     aBackendSpecific = ABackendSpecific <$> genBooleanOperators
+
+    nullableComparison =
+      bool_ <&> \case
+        True -> NonNullableComparison
+        False -> NullableComparison
 
     genRootOrCurrent = element [IsRoot, IsCurrent]
 

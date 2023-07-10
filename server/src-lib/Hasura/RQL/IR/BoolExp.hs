@@ -19,6 +19,7 @@ module Hasura.RQL.IR.BoolExp
     CastExp,
     OpExpG (..),
     opExpDepCol,
+    ComparisonNullability (..),
     STIntersectsNbandGeommin (..),
     STIntersectsGeomminNband (..),
     ComputedFieldBoolExp (..),
@@ -252,13 +253,26 @@ hasStaticExp = getAny . foldMap (Any . isStaticValue)
 -- | Operand for cast operator
 type CastExp backend field = HashMap.HashMap (ScalarType backend) [OpExpG backend field]
 
+data ComparisonNullability = NonNullableComparison | NullableComparison
+  deriving (Generic)
+
+deriving instance Show ComparisonNullability
+
+deriving instance Eq ComparisonNullability
+
+instance NFData ComparisonNullability
+
+instance Hashable ComparisonNullability
+
+instance ToJSON ComparisonNullability
+
 -- | This type represents the boolean operators that can be applied on values of a column. This type
 -- only contains the common core, that we expect to be ultimately entirely supported in most if not
 -- all backends. Backends can extend this with the @BooleanOperators@ type in @Backend@.
 data OpExpG (backend :: BackendType) field
   = ACast (CastExp backend field)
-  | AEQ Bool field
-  | ANE Bool field
+  | AEQ ComparisonNullability field
+  | ANE ComparisonNullability field
   | AIN field
   | ANIN field
   | AGT field

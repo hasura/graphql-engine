@@ -57,7 +57,7 @@ import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
-import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
+import Hasura.RQL.IR.BoolExp (ComparisonNullability (..), OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Backend (FunctionReturnType (..), functionGraphQLName)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (..), BackendType (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
@@ -459,7 +459,7 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
     parseOperations :: J.Value -> m [OpExpG 'DataConnector v]
     parseOperations = \case
       J.Object o -> traverse (parseOperation . first K.toText) $ KM.toList o
-      v -> pure . AEQ False <$> parseWithTy columnType v
+      v -> pure . AEQ NullableComparison <$> parseWithTy columnType v
 
     parseOperation :: (Text, J.Value) -> m (OpExpG 'DataConnector v)
     parseOperation (opStr, val) = withPathK opStr
@@ -508,8 +508,8 @@ parseBoolExpOperations' rhsParser rootFieldInfoMap fieldInfoMap columnRef value 
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
-        parseEq = AEQ False <$> parseOne
-        parseNeq = ANE False <$> parseOne
+        parseEq = AEQ NullableComparison <$> parseOne
+        parseNeq = ANE NullableComparison <$> parseOne
         parseIn = AIN <$> parseManyWithType columnType
         parseNin = ANIN <$> parseManyWithType columnType
         parseGt = AGT <$> parseOne

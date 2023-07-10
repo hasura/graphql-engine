@@ -32,6 +32,7 @@ module Hasura.RQL.Types.Column
     ColumnValues,
     ColumnReference (..),
     columnReferenceType,
+    columnReferenceNullable,
     NestedArrayInfo (..),
     StructuredColumnInfo (..),
     _SCIScalarColumn,
@@ -443,6 +444,12 @@ data ColumnReference (b :: BackendType)
   = ColumnReferenceColumn (ColumnInfo b)
   | ColumnReferenceComputedField ComputedFieldName (ScalarType b)
   | ColumnReferenceCast (ColumnReference b) (ColumnType b)
+
+-- | Whether the column referred to might be null. Currently we can only tell
+-- for references that refer to proper relation columns.
+columnReferenceNullable :: ColumnReference (b :: BackendType) -> Maybe Bool
+columnReferenceNullable (ColumnReferenceColumn ci) = Just $ ciIsNullable ci
+columnReferenceNullable _ = Nothing
 
 columnReferenceType :: ColumnReference backend -> ColumnType backend
 columnReferenceType = \case

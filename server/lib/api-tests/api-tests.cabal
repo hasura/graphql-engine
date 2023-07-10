@@ -192,6 +192,7 @@ library
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
+    Test.Queries.PermissionsKnowAboutColumnNullabilitySpec
     Test.Queries.Relationship.PermissionRootReferenceSpec
     Test.Queries.Simple.JSONSpec
     Test.Queries.Simple.ObjectQueriesSpec

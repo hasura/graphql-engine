@@ -32,7 +32,7 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
     parseOperations :: ColumnType 'BigQuery -> J.Value -> m [OpExpG 'BigQuery v]
     parseOperations columnType = \case
       J.Object o -> mapM (parseOperation columnType . first K.toText) $ KM.toList o
-      v -> pure . AEQ False <$> parseWithTy columnType v
+      v -> pure . AEQ NullableComparison <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'BigQuery -> (Text, J.Value) -> m (OpExpG 'BigQuery v)
     parseOperation columnType (opStr, val) = withPathK opStr
@@ -61,8 +61,8 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
-        parseEq = AEQ False <$> parseOne
-        parseNeq = ANE False <$> parseOne
+        parseEq = AEQ NullableComparison <$> parseOne
+        parseNeq = ANE NullableComparison <$> parseOne
         parseIn = AIN <$> parseManyWithType colTy
         parseNin = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne

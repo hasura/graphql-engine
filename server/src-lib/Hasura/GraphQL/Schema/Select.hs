@@ -243,7 +243,7 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
           $ BoolField
           . AVColumn columnInfo
           . pure
-          . AEQ True
+          . AEQ NonNullableComparison
           . IR.mkParameter
           <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     pure

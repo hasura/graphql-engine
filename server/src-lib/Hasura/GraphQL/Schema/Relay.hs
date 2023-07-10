@@ -226,4 +226,4 @@ nodeField sourceCache context options = do
           $ IR.BoolField
           $ IR.AVColumn
             columnInfo
-            [IR.AEQ True $ IR.UVParameter IR.FreshVar $ ColumnValue columnType parsedValue]
+            [IR.AEQ IR.NonNullableComparison $ IR.UVParameter IR.FreshVar $ ColumnValue columnType parsedValue]

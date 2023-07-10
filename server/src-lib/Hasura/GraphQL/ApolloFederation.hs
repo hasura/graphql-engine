@@ -115,7 +115,7 @@ modifyApolloFedParserFunc
           $ IR.BoolField
           . IR.AVColumn columnInfo
           . pure
-          . IR.AEQ True
+          . IR.AEQ IR.NonNullableComparison
           . IR.mkParameter
           $ ValueNoOrigin
           $ ColumnValue {..}

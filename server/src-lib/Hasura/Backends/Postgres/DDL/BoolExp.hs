@@ -55,7 +55,7 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
     parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
       Object o -> mapM (parseOperation column . first K.toText) (KM.toList o)
-      val -> pure . AEQ False <$> rhsParser columnType val
+      val -> pure . AEQ NullableComparison <$> rhsParser columnType val
       where
         columnType = CollectableTypeScalar $ columnReferenceType column
 
@@ -169,10 +169,13 @@ parseBoolExpOperations rhsParser rootFieldInfoMap fim columnRef value = do
         x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         colTy = columnReferenceType column
+        colNonNullable = case fromMaybe True $ columnReferenceNullable column of
+          True -> NullableComparison
+          False -> NonNullableComparison
 
         parseIsNull = bool ANISNOTNULL ANISNULL <$> parseVal -- is null
-        parseEq = AEQ False <$> parseOne -- equals
-        parseNe = ANE False <$> parseOne -- <>
+        parseEq = AEQ colNonNullable <$> parseOne -- equals
+        parseNe = ANE colNonNullable <$> parseOne -- <>
         parseIn = AIN <$> parseManyWithType colTy -- in an array
         parseNin = ANIN <$> parseManyWithType colTy -- not in an array
         parseGt = AGT <$> parseOne -- >
