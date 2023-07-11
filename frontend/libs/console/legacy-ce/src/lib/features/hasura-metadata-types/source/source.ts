@@ -53,6 +53,7 @@ export type MetadataFunction = {
       table: Table;
     };
   };
+  permissions?: Record<string, string>[];
 };
 
 export type Source = {

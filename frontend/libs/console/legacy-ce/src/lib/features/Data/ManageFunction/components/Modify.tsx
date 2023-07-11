@@ -5,12 +5,15 @@ import {
   SupportedDrivers,
 } from '../../../hasura-metadata-types';
 import { ModifyFunctionConfiguration } from './ModifyFunctionConfiguration';
+import { ModifyFunctionPermissionsDialog } from '../FunctionPermissions/ModifyFunctionPermissionsDialog';
 import { IconTooltip } from '../../../../new-components/Tooltip';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaKey } from 'react-icons/fa';
 import { DisplayConfigurationDetails } from './DisplayConfigurationDetails';
 import { FunctionGraphQLCustomization } from '../../../../components/Services/Data/Function/Modify/GraphQLCustomization/FunctionGraphQLCustomization';
 import { useMetadata } from '../../../hasura-metadata-api';
+import { findSource } from '../../../hasura-metadata-api/selectors';
 import Skeleton from 'react-loading-skeleton';
+import { FunctionName } from '../../../../metadata/types';
 
 export type ModifyProps = {
   dataSourceName: string;
@@ -26,6 +29,9 @@ export const Modify = (props: ModifyProps) => {
 
   const [isEditConfigurationModalOpen, setIsEditConfigurationModalOpen] =
     useState(false);
+  const [isPermissionsEditorModalOpen, setIsPermissionsEditorModalOpen] =
+    useState(false);
+  const { data } = useMetadata(m => findSource(props.dataSourceName)(m));
 
   return (
     <div className="py-4">
@@ -36,19 +42,34 @@ export const Modify = (props: ModifyProps) => {
         </div>
 
         <DisplayConfigurationDetails {...props} />
-        <div className="flex justify-end">
+        <div className="flex gap-2 justify-end">
           <Button
             onClick={() => setIsEditConfigurationModalOpen(true)}
             icon={<FaEdit />}
           >
             Edit Configuration
           </Button>
+          {data?.kind === 'snowflake' && (
+            <Button
+              onClick={() => setIsPermissionsEditorModalOpen(true)}
+              icon={<FaKey />}
+            >
+              Edit Permissions
+            </Button>
+          )}
         </div>
         {isEditConfigurationModalOpen && (
           <ModifyFunctionConfiguration
             {...props}
             onSuccess={() => setIsEditConfigurationModalOpen(false)}
             onClose={() => setIsEditConfigurationModalOpen(false)}
+          />
+        )}
+        {isPermissionsEditorModalOpen && (
+          <ModifyFunctionPermissionsDialog
+            dataSourceName={props.dataSourceName}
+            qualifiedFunction={props.qualifiedFunction as FunctionName[]}
+            onClose={() => setIsPermissionsEditorModalOpen(false)}
           />
         )}
 
