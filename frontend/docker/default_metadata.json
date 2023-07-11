@@ -54,6 +54,23 @@
         }
       },
       {
+        "name": "aCockroach",
+        "kind": "cockroach",
+        "tables": [],
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgres://root@cockroachdb:26257/defaultdb",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "cockroach"
+          }
+        }
+      },
+      {
         "name": "aSqlite",
         "kind": "sqlite",
         "tables": [],
