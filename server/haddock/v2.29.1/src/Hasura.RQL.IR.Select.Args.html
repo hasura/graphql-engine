@@ -1,0 +1,691 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DuplicateRecordFields #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="annot"><span class="hs-comment">-- | Removed from `RQL.IR.Select` to speed up compilation</span></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Select.Args</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgs"><span class="hs-identifier">SelectArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier">SelectArgsG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier">SelectStreamArgsG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgs"><span class="hs-identifier">SelectStreamArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier">StreamCursorItem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#noSelectArgs"><span class="hs-identifier">noSelectArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html"><span class="hs-identifier">Hasura.RQL.IR.Select.OrderBy</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html"><span class="hs-identifier">Hasura.RQL.Types.Subscription</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- Select arguments</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="SelectStreamArgsG"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-var">SelectStreamArgsG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687219413"><span class="annot"><a href="#local-6989586621687219413"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687219414"><span class="annot"><a href="#local-6989586621687219414"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectStreamArgsG"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-var">SelectStreamArgsG</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | optional filter to filter the stream results</span></span><span>
+</span><span id="line-29"></span><span>    </span><span id="%24sel%3A_ssaWhere%3ASelectStreamArgsG"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+SelectStreamArgsG b v -&gt; Maybe (AnnBoolExp b v)
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_ssaWhere%3ASelectStreamArgsG"><span class="hs-identifier hs-var hs-var">_ssaWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219413"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219414"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><span class="hs-comment">-- | maximum number of rows to be returned in a single fetch</span></span><span>
+</span><span id="line-31"></span><span>    </span><span id="%24sel%3A_ssaBatchSize%3ASelectStreamArgsG"><span class="annot"><span class="annottext">forall (b :: BackendType) v. SelectStreamArgsG b v -&gt; Int
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_ssaBatchSize%3ASelectStreamArgsG"><span class="hs-identifier hs-var hs-var">_ssaBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-comment">-- | info related to the cursor column, a single item data type</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-comment">--   currently because only single column cursors are supported</span><span>
+</span><span id="line-34"></span><span>    </span><span id="%24sel%3A_ssaCursorArg%3ASelectStreamArgsG"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+SelectStreamArgsG b v -&gt; StreamCursorItem b
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_ssaCursorArg%3ASelectStreamArgsG"><span class="hs-identifier hs-var hs-var">_ssaCursorArg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier hs-type">StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219413"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687219614"><span id="local-6989586621687219616"><span class="annot"><span class="annottext">(forall x. SelectStreamArgsG b v -&gt; Rep (SelectStreamArgsG b v) x)
+-&gt; (forall x.
+    Rep (SelectStreamArgsG b v) x -&gt; SelectStreamArgsG b v)
+-&gt; Generic (SelectStreamArgsG b v)
+forall x. Rep (SelectStreamArgsG b v) x -&gt; SelectStreamArgsG b v
+forall x. SelectStreamArgsG b v -&gt; Rep (SelectStreamArgsG b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (SelectStreamArgsG b v) x -&gt; SelectStreamArgsG b v
+forall (b :: BackendType) v x.
+SelectStreamArgsG b v -&gt; Rep (SelectStreamArgsG b v) x
+$cfrom :: forall (b :: BackendType) v x.
+SelectStreamArgsG b v -&gt; Rep (SelectStreamArgsG b v) x
+from :: forall x. SelectStreamArgsG b v -&gt; Rep (SelectStreamArgsG b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (SelectStreamArgsG b v) x -&gt; SelectStreamArgsG b v
+to :: forall x. Rep (SelectStreamArgsG b v) x -&gt; SelectStreamArgsG b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219621"><span id="local-6989586621687219629"><span class="annot"><span class="annottext">(forall a b.
+ (a -&gt; b) -&gt; SelectStreamArgsG b a -&gt; SelectStreamArgsG b b)
+-&gt; (forall a b.
+    a -&gt; SelectStreamArgsG b b -&gt; SelectStreamArgsG b a)
+-&gt; Functor (SelectStreamArgsG b)
+forall a b. a -&gt; SelectStreamArgsG b b -&gt; SelectStreamArgsG b a
+forall a b.
+(a -&gt; b) -&gt; SelectStreamArgsG b a -&gt; SelectStreamArgsG b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; SelectStreamArgsG b b -&gt; SelectStreamArgsG b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; SelectStreamArgsG b a -&gt; SelectStreamArgsG b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; SelectStreamArgsG b a -&gt; SelectStreamArgsG b b
+fmap :: forall a b.
+(a -&gt; b) -&gt; SelectStreamArgsG b a -&gt; SelectStreamArgsG b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; SelectStreamArgsG b b -&gt; SelectStreamArgsG b a
+&lt;$ :: forall a b. a -&gt; SelectStreamArgsG b b -&gt; SelectStreamArgsG b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219637"><span id="local-6989586621687219643"><span id="local-6989586621687219655"><span id="local-6989586621687219660"><span id="local-6989586621687219665"><span id="local-6989586621687219668"><span id="local-6989586621687219671"><span id="local-6989586621687219674"><span id="local-6989586621687219677"><span id="local-6989586621687219680"><span id="local-6989586621687219683"><span id="local-6989586621687219688"><span id="local-6989586621687219691"><span id="local-6989586621687219696"><span id="local-6989586621687219701"><span id="local-6989586621687219706"><span id="local-6989586621687219711"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; SelectStreamArgsG b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; (forall a. SelectStreamArgsG b a -&gt; [a])
+-&gt; (forall a. SelectStreamArgsG b a -&gt; Bool)
+-&gt; (forall a. SelectStreamArgsG b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; SelectStreamArgsG b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectStreamArgsG b a -&gt; a)
+-&gt; Foldable (SelectStreamArgsG b)
+forall a. Eq a =&gt; a -&gt; SelectStreamArgsG b a -&gt; Bool
+forall a. Num a =&gt; SelectStreamArgsG b a -&gt; a
+forall a. Ord a =&gt; SelectStreamArgsG b a -&gt; a
+forall m. Monoid m =&gt; SelectStreamArgsG b m -&gt; m
+forall a. SelectStreamArgsG b a -&gt; Bool
+forall a. SelectStreamArgsG b a -&gt; Int
+forall a. SelectStreamArgsG b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; SelectStreamArgsG b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectStreamArgsG b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectStreamArgsG b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+SelectStreamArgsG b m -&gt; m
+forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; Bool
+forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; Int
+forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+SelectStreamArgsG b m -&gt; m
+fold :: forall m. Monoid m =&gt; SelectStreamArgsG b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectStreamArgsG b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectStreamArgsG b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; SelectStreamArgsG b a -&gt; a
+$ctoList :: forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; [a]
+toList :: forall a. SelectStreamArgsG b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; Bool
+null :: forall a. SelectStreamArgsG b a -&gt; Bool
+$clength :: forall (b :: BackendType) a.
+Backend b =&gt;
+SelectStreamArgsG b a -&gt; Int
+length :: forall a. SelectStreamArgsG b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; SelectStreamArgsG b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; SelectStreamArgsG b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectStreamArgsG b a -&gt; a
+maximum :: forall a. Ord a =&gt; SelectStreamArgsG b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectStreamArgsG b a -&gt; a
+minimum :: forall a. Ord a =&gt; SelectStreamArgsG b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectStreamArgsG b a -&gt; a
+sum :: forall a. Num a =&gt; SelectStreamArgsG b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectStreamArgsG b a -&gt; a
+product :: forall a. Num a =&gt; SelectStreamArgsG b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219722"><span id="local-6989586621687219736"><span id="local-6989586621687219742"><span id="local-6989586621687219747"><span class="annot"><span class="annottext">Functor (SelectStreamArgsG b)
+Foldable (SelectStreamArgsG b)
+Functor (SelectStreamArgsG b)
+-&gt; Foldable (SelectStreamArgsG b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; SelectStreamArgsG b a -&gt; f (SelectStreamArgsG b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    SelectStreamArgsG b (f a) -&gt; f (SelectStreamArgsG b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; SelectStreamArgsG b a -&gt; m (SelectStreamArgsG b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    SelectStreamArgsG b (m a) -&gt; m (SelectStreamArgsG b a))
+-&gt; Traversable (SelectStreamArgsG b)
+forall (b :: BackendType).
+Backend b =&gt;
+Functor (SelectStreamArgsG b)
+forall (b :: BackendType).
+Backend b =&gt;
+Foldable (SelectStreamArgsG b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+SelectStreamArgsG b (m a) -&gt; m (SelectStreamArgsG b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+SelectStreamArgsG b (f a) -&gt; f (SelectStreamArgsG b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; SelectStreamArgsG b a -&gt; m (SelectStreamArgsG b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; SelectStreamArgsG b a -&gt; f (SelectStreamArgsG b b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectStreamArgsG b (m a) -&gt; m (SelectStreamArgsG b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectStreamArgsG b (f a) -&gt; f (SelectStreamArgsG b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectStreamArgsG b a -&gt; m (SelectStreamArgsG b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectStreamArgsG b a -&gt; f (SelectStreamArgsG b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; SelectStreamArgsG b a -&gt; f (SelectStreamArgsG b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectStreamArgsG b a -&gt; f (SelectStreamArgsG b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+SelectStreamArgsG b (f a) -&gt; f (SelectStreamArgsG b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectStreamArgsG b (f a) -&gt; f (SelectStreamArgsG b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; SelectStreamArgsG b a -&gt; m (SelectStreamArgsG b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectStreamArgsG b a -&gt; m (SelectStreamArgsG b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+SelectStreamArgsG b (m a) -&gt; m (SelectStreamArgsG b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectStreamArgsG b (m a) -&gt; m (SelectStreamArgsG b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">type</span><span> </span><span id="SelectStreamArgs"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgs"><span class="hs-identifier hs-var">SelectStreamArgs</span></a></span></span><span> </span><span id="local-6989586621687219753"><span class="annot"><a href="#local-6989586621687219753"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219753"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219753"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621687219495"><span id="local-6989586621687219496"><span id="local-6989586621687219759"><span id="local-6989586621687219767"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219495"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219495"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219496"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687219496"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219495"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219496"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span id="local-6989586621687219503"><span id="local-6989586621687219504"><span id="local-6989586621687219775"><span id="local-6989586621687219785"><span id="local-6989586621687219789"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219503"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219503"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219504"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621687219504"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectStreamArgsG"><span class="hs-identifier hs-type">SelectStreamArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219503"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219504"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">data</span><span> </span><span id="SelectArgsG"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-var">SelectArgsG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687219505"><span class="annot"><a href="#local-6989586621687219505"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687219506"><span class="annot"><a href="#local-6989586621687219506"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectArgs"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgs"><span class="hs-identifier hs-var">SelectArgs</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3A_saWhere%3ASelectArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+SelectArgsG b v -&gt; Maybe (AnnBoolExp b v)
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_saWhere%3ASelectArgs"><span class="hs-identifier hs-var hs-var">_saWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219505"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219506"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span id="%24sel%3A_saOrderBy%3ASelectArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+SelectArgsG b v -&gt; Maybe (NonEmpty (AnnotatedOrderByItemG b v))
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_saOrderBy%3ASelectArgs"><span class="hs-identifier hs-var hs-var">_saOrderBy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219505"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219506"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span id="%24sel%3A_saLimit%3ASelectArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) v. SelectArgsG b v -&gt; Maybe Int
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_saLimit%3ASelectArgs"><span class="hs-identifier hs-var hs-var">_saLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span id="%24sel%3A_saOffset%3ASelectArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) v. SelectArgsG b v -&gt; Maybe Int64
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_saOffset%3ASelectArgs"><span class="hs-identifier hs-var hs-var">_saOffset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>    </span><span id="%24sel%3A_saDistinct%3ASelectArgs"><span class="annot"><span class="annottext">forall (b :: BackendType) v.
+SelectArgsG b v -&gt; Maybe (NonEmpty (Column b))
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_saDistinct%3ASelectArgs"><span class="hs-identifier hs-var hs-var">_saDistinct</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219505"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687219799"><span id="local-6989586621687219801"><span class="annot"><span class="annottext">(forall x. SelectArgsG b v -&gt; Rep (SelectArgsG b v) x)
+-&gt; (forall x. Rep (SelectArgsG b v) x -&gt; SelectArgsG b v)
+-&gt; Generic (SelectArgsG b v)
+forall x. Rep (SelectArgsG b v) x -&gt; SelectArgsG b v
+forall x. SelectArgsG b v -&gt; Rep (SelectArgsG b v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) v x.
+Rep (SelectArgsG b v) x -&gt; SelectArgsG b v
+forall (b :: BackendType) v x.
+SelectArgsG b v -&gt; Rep (SelectArgsG b v) x
+$cfrom :: forall (b :: BackendType) v x.
+SelectArgsG b v -&gt; Rep (SelectArgsG b v) x
+from :: forall x. SelectArgsG b v -&gt; Rep (SelectArgsG b v) x
+$cto :: forall (b :: BackendType) v x.
+Rep (SelectArgsG b v) x -&gt; SelectArgsG b v
+to :: forall x. Rep (SelectArgsG b v) x -&gt; SelectArgsG b v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219805"><span id="local-6989586621687219817"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; SelectArgsG b a -&gt; SelectArgsG b b)
+-&gt; (forall a b. a -&gt; SelectArgsG b b -&gt; SelectArgsG b a)
+-&gt; Functor (SelectArgsG b)
+forall a b. a -&gt; SelectArgsG b b -&gt; SelectArgsG b a
+forall a b. (a -&gt; b) -&gt; SelectArgsG b a -&gt; SelectArgsG b b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; SelectArgsG b b -&gt; SelectArgsG b a
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; SelectArgsG b a -&gt; SelectArgsG b b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+$cfmap :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; SelectArgsG b a -&gt; SelectArgsG b b
+fmap :: forall a b. (a -&gt; b) -&gt; SelectArgsG b a -&gt; SelectArgsG b b
+$c&lt;$ :: forall (b :: BackendType) a b.
+Backend b =&gt;
+a -&gt; SelectArgsG b b -&gt; SelectArgsG b a
+&lt;$ :: forall a b. a -&gt; SelectArgsG b b -&gt; SelectArgsG b a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219828"><span id="local-6989586621687219834"><span id="local-6989586621687219855"><span id="local-6989586621687219860"><span id="local-6989586621687219869"><span id="local-6989586621687219872"><span id="local-6989586621687219875"><span id="local-6989586621687219878"><span id="local-6989586621687219881"><span id="local-6989586621687219884"><span id="local-6989586621687219887"><span id="local-6989586621687219896"><span id="local-6989586621687219899"><span id="local-6989586621687219904"><span id="local-6989586621687219909"><span id="local-6989586621687219914"><span id="local-6989586621687219919"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; SelectArgsG b m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a)
+-&gt; (forall a. SelectArgsG b a -&gt; [a])
+-&gt; (forall a. SelectArgsG b a -&gt; Bool)
+-&gt; (forall a. SelectArgsG b a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; SelectArgsG b a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; SelectArgsG b a -&gt; a)
+-&gt; (forall a. Ord a =&gt; SelectArgsG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectArgsG b a -&gt; a)
+-&gt; (forall a. Num a =&gt; SelectArgsG b a -&gt; a)
+-&gt; Foldable (SelectArgsG b)
+forall a. Eq a =&gt; a -&gt; SelectArgsG b a -&gt; Bool
+forall a. Num a =&gt; SelectArgsG b a -&gt; a
+forall a. Ord a =&gt; SelectArgsG b a -&gt; a
+forall m. Monoid m =&gt; SelectArgsG b m -&gt; m
+forall a. SelectArgsG b a -&gt; Bool
+forall a. SelectArgsG b a -&gt; Int
+forall a. SelectArgsG b a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; SelectArgsG b a -&gt; Bool
+forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectArgsG b a -&gt; a
+forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectArgsG b a -&gt; a
+forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+SelectArgsG b m -&gt; m
+forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; Bool
+forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; Int
+forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; [a]
+forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+$cfold :: forall (b :: BackendType) m.
+(Backend b, Monoid m) =&gt;
+SelectArgsG b m -&gt; m
+fold :: forall m. Monoid m =&gt; SelectArgsG b m -&gt; m
+$cfoldMap :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; SelectArgsG b a -&gt; m
+$cfoldr :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+$cfoldr' :: forall (b :: BackendType) a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+$cfoldl :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+$cfoldl' :: forall (b :: BackendType) b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; SelectArgsG b a -&gt; b
+$cfoldr1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; SelectArgsG b a -&gt; a
+$ctoList :: forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; [a]
+toList :: forall a. SelectArgsG b a -&gt; [a]
+$cnull :: forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; Bool
+null :: forall a. SelectArgsG b a -&gt; Bool
+$clength :: forall (b :: BackendType) a. Backend b =&gt; SelectArgsG b a -&gt; Int
+length :: forall a. SelectArgsG b a -&gt; Int
+$celem :: forall (b :: BackendType) a.
+(Backend b, Eq a) =&gt;
+a -&gt; SelectArgsG b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; SelectArgsG b a -&gt; Bool
+$cmaximum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectArgsG b a -&gt; a
+maximum :: forall a. Ord a =&gt; SelectArgsG b a -&gt; a
+$cminimum :: forall (b :: BackendType) a.
+(Backend b, Ord a) =&gt;
+SelectArgsG b a -&gt; a
+minimum :: forall a. Ord a =&gt; SelectArgsG b a -&gt; a
+$csum :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectArgsG b a -&gt; a
+sum :: forall a. Num a =&gt; SelectArgsG b a -&gt; a
+$cproduct :: forall (b :: BackendType) a.
+(Backend b, Num a) =&gt;
+SelectArgsG b a -&gt; a
+product :: forall a. Num a =&gt; SelectArgsG b a -&gt; a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687219929"><span id="local-6989586621687219950"><span id="local-6989586621687219956"><span id="local-6989586621687219961"><span class="annot"><span class="annottext">Functor (SelectArgsG b)
+Foldable (SelectArgsG b)
+Functor (SelectArgsG b)
+-&gt; Foldable (SelectArgsG b)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; SelectArgsG b a -&gt; f (SelectArgsG b b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    SelectArgsG b (f a) -&gt; f (SelectArgsG b a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; SelectArgsG b a -&gt; m (SelectArgsG b b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    SelectArgsG b (m a) -&gt; m (SelectArgsG b a))
+-&gt; Traversable (SelectArgsG b)
+forall (b :: BackendType). Backend b =&gt; Functor (SelectArgsG b)
+forall (b :: BackendType). Backend b =&gt; Foldable (SelectArgsG b)
+forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+SelectArgsG b (m a) -&gt; m (SelectArgsG b a)
+forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+SelectArgsG b (f a) -&gt; f (SelectArgsG b a)
+forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; SelectArgsG b a -&gt; m (SelectArgsG b b)
+forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; SelectArgsG b a -&gt; f (SelectArgsG b b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectArgsG b (m a) -&gt; m (SelectArgsG b a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectArgsG b (f a) -&gt; f (SelectArgsG b a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectArgsG b a -&gt; m (SelectArgsG b b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectArgsG b a -&gt; f (SelectArgsG b b)
+$ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; SelectArgsG b a -&gt; f (SelectArgsG b b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; SelectArgsG b a -&gt; f (SelectArgsG b b)
+$csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+SelectArgsG b (f a) -&gt; f (SelectArgsG b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+SelectArgsG b (f a) -&gt; f (SelectArgsG b a)
+$cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; SelectArgsG b a -&gt; m (SelectArgsG b b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; SelectArgsG b a -&gt; m (SelectArgsG b b)
+$csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+SelectArgsG b (m a) -&gt; m (SelectArgsG b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+SelectArgsG b (m a) -&gt; m (SelectArgsG b a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span id="local-6989586621687219969"><span id="local-6989586621687219980"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687219559"><span id="local-6989586621687219560"><span class="annot"><a href="#local-6989586621687219559"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219559"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219559"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219560"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219559"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219560"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219559"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219560"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687219580"><span id="local-6989586621687219581"><span id="local-6989586621687219996"><span id="local-6989586621687220003"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219580"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219580"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219581"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219580"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219581"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219580"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219581"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621687220044"><span id="local-6989586621687220056"><span id="local-6989586621687220060"><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621687219585"><span id="local-6989586621687219586"><span class="annot"><a href="#local-6989586621687219585"><span class="hs-keyword hs-type hs-type">stock</span></a></span></span></span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219585"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219585"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219586"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByItemG"><span class="hs-identifier hs-type">AnnotatedOrderByItemG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219585"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219586"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219585"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219586"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">type</span><span> </span><span id="SelectArgs"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgs"><span class="hs-identifier hs-var">SelectArgs</span></a></span></span><span> </span><span id="local-6989586621687220066"><span class="annot"><a href="#local-6989586621687220066"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687220066"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SQLExpression"><span class="hs-identifier hs-type">SQLExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687220066"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621687219587"><span id="local-6989586621687219588"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#noSelectArgs"><span class="hs-identifier hs-type">noSelectArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#SelectArgsG"><span class="hs-identifier hs-type">SelectArgsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219587"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219588"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-87"></span><span id="noSelectArgs"><span class="annot"><span class="annottext">noSelectArgs :: forall (backend :: BackendType) v. SelectArgsG backend v
+</span><a href="Hasura.RQL.IR.Select.Args.html#noSelectArgs"><span class="hs-identifier hs-var hs-var">noSelectArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp backend v)
+-&gt; Maybe (NonEmpty (AnnotatedOrderByItemG backend v))
+-&gt; Maybe Int
+-&gt; Maybe Int64
+-&gt; Maybe (NonEmpty (Column backend))
+-&gt; SelectArgsG backend v
+forall (b :: BackendType) v.
+Maybe (AnnBoolExp b v)
+-&gt; Maybe (NonEmpty (AnnotatedOrderByItemG b v))
+-&gt; Maybe Int
+-&gt; Maybe Int64
+-&gt; Maybe (NonEmpty (Column b))
+-&gt; SelectArgsG b v
+</span><a href="Hasura.RQL.IR.Select.Args.html#SelectArgs"><span class="hs-identifier hs-var">SelectArgs</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp backend v)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty (AnnotatedOrderByItemG backend v))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int64
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty (Column backend))
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="annot"><span class="hs-comment">-- | Cursor for streaming subscription</span></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="StreamCursorItem"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier hs-var">StreamCursorItem</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687219591"><span class="annot"><a href="#local-6989586621687219591"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StreamCursorItem"><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier hs-var">StreamCursorItem</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="hs-comment">-- | Specifies how the cursor item should be ordered</span></span><span>
+</span><span id="line-92"></span><span>    </span><span id="%24sel%3A_sciOrdering%3AStreamCursorItem"><span class="annot"><span class="annottext">forall (b :: BackendType). StreamCursorItem b -&gt; CursorOrdering
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_sciOrdering%3AStreamCursorItem"><span class="hs-identifier hs-var hs-var">_sciOrdering</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Column info of the cursor item</span></span><span>
+</span><span id="line-94"></span><span>    </span><span id="%24sel%3A_sciColInfo%3AStreamCursorItem"><span class="annot"><span class="annottext">forall (b :: BackendType). StreamCursorItem b -&gt; ColumnInfo b
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_sciColInfo%3AStreamCursorItem"><span class="hs-identifier hs-var hs-var">_sciColInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219591"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="hs-comment">-- | Initial value of the cursor item from where the streaming should start</span></span><span>
+</span><span id="line-96"></span><span>    </span><span id="%24sel%3A_sciInitialValue%3AStreamCursorItem"><span class="annot"><span class="annottext">forall (b :: BackendType). StreamCursorItem b -&gt; ColumnValue b
+</span><a href="Hasura.RQL.IR.Select.Args.html#%24sel%3A_sciInitialValue%3AStreamCursorItem"><span class="hs-identifier hs-var hs-var">_sciInitialValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219591"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687220072"><span id="local-6989586621687220074"><span class="annot"><span class="annottext">(forall x. StreamCursorItem b -&gt; Rep (StreamCursorItem b) x)
+-&gt; (forall x. Rep (StreamCursorItem b) x -&gt; StreamCursorItem b)
+-&gt; Generic (StreamCursorItem b)
+forall x. Rep (StreamCursorItem b) x -&gt; StreamCursorItem b
+forall x. StreamCursorItem b -&gt; Rep (StreamCursorItem b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (StreamCursorItem b) x -&gt; StreamCursorItem b
+forall (b :: BackendType) x.
+StreamCursorItem b -&gt; Rep (StreamCursorItem b) x
+$cfrom :: forall (b :: BackendType) x.
+StreamCursorItem b -&gt; Rep (StreamCursorItem b) x
+from :: forall x. StreamCursorItem b -&gt; Rep (StreamCursorItem b) x
+$cto :: forall (b :: BackendType) x.
+Rep (StreamCursorItem b) x -&gt; StreamCursorItem b
+to :: forall x. Rep (StreamCursorItem b) x -&gt; StreamCursorItem b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span id="local-6989586621687219494"><span id="local-6989586621687220078"><span id="local-6989586621687220086"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219494"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier hs-type">StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219494"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span id="local-6989586621687219502"><span id="local-6989586621687220090"><span id="local-6989586621687220099"><span id="local-6989586621687220102"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219502"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.Args.html#StreamCursorItem"><span class="hs-identifier hs-type">StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687219502"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-103"></span></pre></body></html>

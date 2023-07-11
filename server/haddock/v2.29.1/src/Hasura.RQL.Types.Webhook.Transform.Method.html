@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DeriveGeneric #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Method</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier">Method</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier">MethodTransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier">dimapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html"><span class="hs-identifier">Autodocodec.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#caseInsensitiveTextCodec"><span class="hs-identifier">caseInsensitiveTextCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.html"><span class="hs-identifier">Data.CaseInsensitive</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ci-info-0.1.0.0/opt/doc/html/ci-info/src/CI.html"><span class="hs-identifier">CI</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Class</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Request</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier">RequestTransformCtx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- | The actual request method we are transforming.</span><span>
+</span><span id="line-23"></span><span class="hs-comment">--</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- This newtype is necessary because otherwise we end up with an</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- orphan instance.</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">newtype</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.Internal.html#CI"><span class="hs-identifier hs-type">CI.CI</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">T.Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191688"><span id="local-6989586621687191690"><span class="annot"><span class="annottext">(forall x. Method -&gt; Rep Method x)
+-&gt; (forall x. Rep Method x -&gt; Method) -&gt; Generic Method
+forall x. Rep Method x -&gt; Method
+forall x. Method -&gt; Rep Method x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Method -&gt; Rep Method x
+from :: forall x. Method -&gt; Rep Method x
+$cto :: forall x. Rep Method x -&gt; Method
+to :: forall x. Rep Method x -&gt; Method
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191694"><span id="local-6989586621687191700"><span id="local-6989586621687191705"><span class="annot"><span class="annottext">Int -&gt; Method -&gt; ShowS
+[Method] -&gt; ShowS
+Method -&gt; String
+(Int -&gt; Method -&gt; ShowS)
+-&gt; (Method -&gt; String) -&gt; ([Method] -&gt; ShowS) -&gt; Show Method
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Method -&gt; ShowS
+showsPrec :: Int -&gt; Method -&gt; ShowS
+$cshow :: Method -&gt; String
+show :: Method -&gt; String
+$cshowList :: [Method] -&gt; ShowS
+showList :: [Method] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191713"><span id="local-6989586621687191719"><span class="annot"><span class="annottext">Method -&gt; Method -&gt; Bool
+(Method -&gt; Method -&gt; Bool)
+-&gt; (Method -&gt; Method -&gt; Bool) -&gt; Eq Method
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Method -&gt; Method -&gt; Bool
+== :: Method -&gt; Method -&gt; Bool
+$c/= :: Method -&gt; Method -&gt; Bool
+/= :: Method -&gt; Method -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191727"><span class="annot"><span class="annottext">Method -&gt; ()
+(Method -&gt; ()) -&gt; NFData Method
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: Method -&gt; ()
+rnf :: Method -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687191745"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621687191754"><span class="annot"><span class="annottext">codec :: JSONCodec Method
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(CI Text -&gt; Method)
+-&gt; (Method -&gt; CI Text)
+-&gt; Codec Value (CI Text) (CI Text)
+-&gt; JSONCodec Method
+forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; Method
+</span><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span><span> </span><span class="annot"><span class="annottext">Method -&gt; CI Text
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Codec Value (CI Text) (CI Text)
+forall a. (FoldCase a, HasCodec a) =&gt; JSONCodec (CI a)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#caseInsensitiveTextCodec"><span class="hs-identifier hs-var">caseInsensitiveTextCodec</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687191757"><span id="local-6989586621687191761"><span id="local-6989586621687191764"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621687191768"><span class="annot"><span class="annottext">toJSON :: Method -&gt; Value
+</span><a href="#local-6989586621687191768"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (Method -&gt; Text) -&gt; Method -&gt; Value
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; Text
+forall s. CI s -&gt; s
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.Internal.html#original"><span class="hs-identifier hs-var">CI.original</span></a></span><span> </span><span class="annot"><span class="annottext">(CI Text -&gt; Text) -&gt; (Method -&gt; CI Text) -&gt; Method -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Method -&gt; CI Text
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687191775"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621687191783"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Method
+</span><a href="#local-6989586621687191783"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser Method) -&gt; Value -&gt; Parser Method
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withText"><span class="hs-identifier hs-var">J.withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Method&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Method -&gt; Parser Method
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Method -&gt; Parser Method)
+-&gt; (Text -&gt; Method) -&gt; Text -&gt; Parser Method
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CI Text -&gt; Method
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">(CI Text -&gt; Method) -&gt; (Text -&gt; CI Text) -&gt; Text -&gt; Method
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; CI Text
+forall s. FoldCase s =&gt; s -&gt; CI s
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.Internal.html#mk"><span class="hs-identifier hs-var">CI.mk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="annot"><span class="hs-comment">-- | The defunctionalized transformation on 'Method'.</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">newtype</span><span> </span><span id="MethodTransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-var">MethodTransformFn</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Replace the HTTP existing 'Method' with a new one.</span></span><span>
+</span><span id="line-43"></span><span>    </span><span id="Replace"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-var">Replace</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191789"><span id="local-6989586621687191792"><span class="annot"><span class="annottext">MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+(MethodTransformFn -&gt; MethodTransformFn -&gt; Bool)
+-&gt; (MethodTransformFn -&gt; MethodTransformFn -&gt; Bool)
+-&gt; Eq MethodTransformFn
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+== :: MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+$c/= :: MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+/= :: MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191796"><span id="local-6989586621687191798"><span class="annot"><span class="annottext">(forall x. MethodTransformFn -&gt; Rep MethodTransformFn x)
+-&gt; (forall x. Rep MethodTransformFn x -&gt; MethodTransformFn)
+-&gt; Generic MethodTransformFn
+forall x. Rep MethodTransformFn x -&gt; MethodTransformFn
+forall x. MethodTransformFn -&gt; Rep MethodTransformFn x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. MethodTransformFn -&gt; Rep MethodTransformFn x
+from :: forall x. MethodTransformFn -&gt; Rep MethodTransformFn x
+$cto :: forall x. Rep MethodTransformFn x -&gt; MethodTransformFn
+to :: forall x. Rep MethodTransformFn x -&gt; MethodTransformFn
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191801"><span id="local-6989586621687191806"><span id="local-6989586621687191810"><span class="annot"><span class="annottext">Int -&gt; MethodTransformFn -&gt; ShowS
+[MethodTransformFn] -&gt; ShowS
+MethodTransformFn -&gt; String
+(Int -&gt; MethodTransformFn -&gt; ShowS)
+-&gt; (MethodTransformFn -&gt; String)
+-&gt; ([MethodTransformFn] -&gt; ShowS)
+-&gt; Show MethodTransformFn
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; MethodTransformFn -&gt; ShowS
+showsPrec :: Int -&gt; MethodTransformFn -&gt; ShowS
+$cshow :: MethodTransformFn -&gt; String
+show :: MethodTransformFn -&gt; String
+$cshowList :: [MethodTransformFn] -&gt; ShowS
+showList :: [MethodTransformFn] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191813"><span class="annot"><span class="annottext">MethodTransformFn -&gt; ()
+(MethodTransformFn -&gt; ()) -&gt; NFData MethodTransformFn
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: MethodTransformFn -&gt; ()
+rnf :: MethodTransformFn -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191818"><span id="local-6989586621687191822"><span class="annot"><span class="annottext">Value -&gt; Parser [MethodTransformFn]
+Value -&gt; Parser MethodTransformFn
+(Value -&gt; Parser MethodTransformFn)
+-&gt; (Value -&gt; Parser [MethodTransformFn])
+-&gt; FromJSON MethodTransformFn
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser MethodTransformFn
+parseJSON :: Value -&gt; Parser MethodTransformFn
+$cparseJSONList :: Value -&gt; Parser [MethodTransformFn]
+parseJSONList :: Value -&gt; Parser [MethodTransformFn]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191827"><span id="local-6989586621687191831"><span id="local-6989586621687191835"><span id="local-6989586621687191839"><span class="annot"><span class="annottext">[MethodTransformFn] -&gt; Value
+[MethodTransformFn] -&gt; Encoding
+MethodTransformFn -&gt; Value
+MethodTransformFn -&gt; Encoding
+(MethodTransformFn -&gt; Value)
+-&gt; (MethodTransformFn -&gt; Encoding)
+-&gt; ([MethodTransformFn] -&gt; Value)
+-&gt; ([MethodTransformFn] -&gt; Encoding)
+-&gt; ToJSON MethodTransformFn
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: MethodTransformFn -&gt; Value
+toJSON :: MethodTransformFn -&gt; Value
+$ctoEncoding :: MethodTransformFn -&gt; Encoding
+toEncoding :: MethodTransformFn -&gt; Encoding
+$ctoJSONList :: [MethodTransformFn] -&gt; Value
+toJSONList :: [MethodTransformFn] -&gt; Value
+$ctoEncodingList :: [MethodTransformFn] -&gt; Encoding
+toEncodingList :: [MethodTransformFn] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687191845"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-type">MethodTransformFn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621687191850"><span class="annot"><span class="annottext">codec :: JSONCodec MethodTransformFn
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Method -&gt; MethodTransformFn)
+-&gt; (MethodTransformFn -&gt; Method)
+-&gt; JSONCodec Method
+-&gt; JSONCodec MethodTransformFn
+forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Method -&gt; MethodTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-var">Replace</span></a></span><span> </span><span class="annot"><span class="annottext">MethodTransformFn -&gt; Method
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">JSONCodec Method
+forall value. HasCodec value =&gt; JSONCodec value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- NOTE: GHC does not let us attach Haddock documentation to data family</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- instances, so 'MethodTransformFn' is defined separately from this</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- wrapper.</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MethodTransformFn_"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-var">MethodTransformFn_</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-type">MethodTransformFn</span></a></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191853"><span id="local-6989586621687191856"><span class="annot"><span class="annottext">TransformFn Method -&gt; TransformFn Method -&gt; Bool
+(TransformFn Method -&gt; TransformFn Method -&gt; Bool)
+-&gt; (TransformFn Method -&gt; TransformFn Method -&gt; Bool)
+-&gt; Eq (TransformFn Method)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TransformFn Method -&gt; TransformFn Method -&gt; Bool
+== :: TransformFn Method -&gt; TransformFn Method -&gt; Bool
+$c/= :: TransformFn Method -&gt; TransformFn Method -&gt; Bool
+/= :: TransformFn Method -&gt; TransformFn Method -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191860"><span id="local-6989586621687191862"><span class="annot"><span class="annottext">(forall x. TransformFn Method -&gt; Rep (TransformFn Method) x)
+-&gt; (forall x. Rep (TransformFn Method) x -&gt; TransformFn Method)
+-&gt; Generic (TransformFn Method)
+forall x. Rep (TransformFn Method) x -&gt; TransformFn Method
+forall x. TransformFn Method -&gt; Rep (TransformFn Method) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TransformFn Method -&gt; Rep (TransformFn Method) x
+from :: forall x. TransformFn Method -&gt; Rep (TransformFn Method) x
+$cto :: forall x. Rep (TransformFn Method) x -&gt; TransformFn Method
+to :: forall x. Rep (TransformFn Method) x -&gt; TransformFn Method
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191865"><span id="local-6989586621687191869"><span id="local-6989586621687191873"><span class="annot"><span class="annottext">Int -&gt; TransformFn Method -&gt; ShowS
+[TransformFn Method] -&gt; ShowS
+TransformFn Method -&gt; String
+(Int -&gt; TransformFn Method -&gt; ShowS)
+-&gt; (TransformFn Method -&gt; String)
+-&gt; ([TransformFn Method] -&gt; ShowS)
+-&gt; Show (TransformFn Method)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TransformFn Method -&gt; ShowS
+showsPrec :: Int -&gt; TransformFn Method -&gt; ShowS
+$cshow :: TransformFn Method -&gt; String
+show :: TransformFn Method -&gt; String
+$cshowList :: [TransformFn Method] -&gt; ShowS
+showList :: [TransformFn Method] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687191876"><span class="annot"><span class="annottext">TransformFn Method -&gt; ()
+(TransformFn Method -&gt; ()) -&gt; NFData (TransformFn Method)
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: TransformFn Method -&gt; ()
+rnf :: TransformFn Method -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191881"><span id="local-6989586621687191885"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Method]
+Value -&gt; Parser (TransformFn Method)
+(Value -&gt; Parser (TransformFn Method))
+-&gt; (Value -&gt; Parser [TransformFn Method])
+-&gt; FromJSON (TransformFn Method)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser (TransformFn Method)
+parseJSON :: Value -&gt; Parser (TransformFn Method)
+$cparseJSONList :: Value -&gt; Parser [TransformFn Method]
+parseJSONList :: Value -&gt; Parser [TransformFn Method]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687191890"><span id="local-6989586621687191894"><span id="local-6989586621687191898"><span id="local-6989586621687191902"><span class="annot"><span class="annottext">[TransformFn Method] -&gt; Value
+[TransformFn Method] -&gt; Encoding
+TransformFn Method -&gt; Value
+TransformFn Method -&gt; Encoding
+(TransformFn Method -&gt; Value)
+-&gt; (TransformFn Method -&gt; Encoding)
+-&gt; ([TransformFn Method] -&gt; Value)
+-&gt; ([TransformFn Method] -&gt; Encoding)
+-&gt; ToJSON (TransformFn Method)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: TransformFn Method -&gt; Value
+toJSON :: TransformFn Method -&gt; Value
+$ctoEncoding :: TransformFn Method -&gt; Encoding
+toEncoding :: TransformFn Method -&gt; Encoding
+$ctoJSONList :: [TransformFn Method] -&gt; Value
+toJSONList :: [TransformFn Method] -&gt; Value
+$ctoEncodingList :: [TransformFn Method] -&gt; Encoding
+toEncodingList :: [TransformFn Method] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Method.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span>
+</span><span id="line-58"></span></pre></body></html>
