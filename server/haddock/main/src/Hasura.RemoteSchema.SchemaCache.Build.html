@@ -37,24 +37,24 @@
 </span><span id="line-37"></span><span class="hs-comment">-- Resolves a user specified `RemoteSchemaMetadata` into information rich `RemoteSchemaCtx`</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- However, given the nature of remote relationships, we cannot fully 'resolve' them, so</span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- we resolve of remote relationships as much as possible.</span><span>
-</span><span id="line-40"></span><span id="local-6989586621687499152"><span id="local-6989586621687499158"><span id="local-6989586621687499162"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemas"><span class="hs-identifier hs-type">buildRemoteSchemas</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621687499152"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499152"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectItem"><span class="hs-identifier hs-type">CollectItem</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687499152"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-44"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">Inc.ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499158"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499152"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687499158"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-46"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687499158"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687499162"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499162"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499158"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499158"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-40"></span><span id="local-6989586621687498977"><span id="local-6989586621687498983"><span id="local-6989586621687498987"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemas"><span class="hs-identifier hs-type">buildRemoteSchemas</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621687498977"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498977"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectItem"><span class="hs-identifier hs-type">CollectItem</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687498977"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#ArrowCache"><span class="hs-identifier hs-type">Inc.ArrowCache</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498983"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498977"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687498983"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/monad-control-1.0.3.1-92f8a47f193bc8ca499a8b94581fad6cb68b7a26370b271798ac2ec617c05064/share/doc/html/src/Control.Monad.Trans.Control.html#MonadBaseControl"><span class="hs-identifier hs-type">MonadBaseControl</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687498983"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687498987"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498987"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498983"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498983"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-53"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Dependency.html#Dependency"><span class="hs-identifier hs-type">Inc.Dependency</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">Inc.InvalidationKey</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#OrderedRoles"><span class="hs-identifier hs-type">OrderedRoles</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-55"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499162"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadataG"><span class="hs-identifier hs-type">RemoteSchemaMetadataG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498987"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span>    </span><span class="annot"><a href="#local-6989586621687499152"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#PartiallyResolvedRemoteSchemaCtxG"><span class="hs-identifier hs-type">PartiallyResolvedRemoteSchemaCtxG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499162"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="#local-6989586621687498977"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#PartiallyResolvedRemoteSchemaCtxG"><span class="hs-identifier hs-type">PartiallyResolvedRemoteSchemaCtxG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687498987"><span class="hs-identifier hs-type">remoteRelationshipDefinition</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-58"></span><span id="buildRemoteSchemas"><span class="annot"><span class="annottext">buildRemoteSchemas :: forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *)
        remoteRelationshipDefinition.
 (ArrowChoice arr, ArrowDistribute arr,
@@ -72,9 +72,9 @@ Logger Hasura
         RemoteSchemaName
         (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition,
          MetadataObject))
-</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemas"><span class="hs-identifier hs-var hs-var">buildRemoteSchemas</span></a></span></span><span> </span><span id="local-6989586621687499547"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687499547"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687499548"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499548"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemas"><span class="hs-identifier hs-var hs-var">buildRemoteSchemas</span></a></span></span><span> </span><span id="local-6989586621687499372"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621687499372"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621687499373"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687499373"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">(RemoteSchemaMetadataG remoteRelationshipDefinition
  -&gt; RemoteSchemaName)
 -&gt; (RemoteSchemaMetadataG remoteRelationshipDefinition
@@ -106,24 +106,24 @@ forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaName
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmName"><span class="hs-identifier hs-var">_rsmName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG remoteRelationshipDefinition
 -&gt; MetadataObject
 forall {r}. ToJSON r =&gt; RemoteSchemaMetadataG r -&gt; MetadataObject
-</span><a href="#local-6989586621687499551"><span class="hs-identifier hs-var">mkRemoteSchemaMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">arr
+</span><a href="#local-6989586621687499376"><span class="hs-identifier hs-var">mkRemoteSchemaMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">arr
   ((Dependency (HashMap RemoteSchemaName InvalidationKey),
     OrderedRoles, Maybe (HashMap RemoteSchemaName ByteString)),
    RemoteSchemaMetadataG remoteRelationshipDefinition)
   (Maybe
      (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition))
-</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var">buildRemoteSchema</span></a></span><span>
+</span><a href="#local-6989586621687499377"><span class="hs-identifier hs-var">buildRemoteSchema</span></a></span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-61"></span><span>    </span><span class="hs-comment">-- We want to cache this call because it fetches the remote schema over</span><span>
 </span><span id="line-62"></span><span>    </span><span class="hs-comment">-- HTTP, and we don&#8217;t want to re-run that if the remote schema definition</span><span>
 </span><span id="line-63"></span><span>    </span><span class="hs-comment">-- hasn&#8217;t changed.</span><span>
-</span><span id="line-64"></span><span>    </span><span id="local-6989586621687499552"><span class="annot"><span class="annottext">buildRemoteSchema :: arr
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621687499377"><span class="annot"><span class="annottext">buildRemoteSchema :: arr
   ((Dependency (HashMap RemoteSchemaName InvalidationKey),
     OrderedRoles, Maybe (HashMap RemoteSchemaName ByteString)),
    RemoteSchemaMetadataG remoteRelationshipDefinition)
   (Maybe
      (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition))
-</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var hs-var">buildRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
+</span><a href="#local-6989586621687499377"><span class="hs-identifier hs-var hs-var">buildRemoteSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">arr
   ((Dependency (HashMap RemoteSchemaName InvalidationKey),
     OrderedRoles, Maybe (HashMap RemoteSchemaName ByteString)),
    RemoteSchemaMetadataG remoteRelationshipDefinition)
@@ -139,16 +139,16 @@ forall a b. (Given Accesses =&gt; Eq a) =&gt; arr a b -&gt; arr a b
 forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a b.
 (ArrowCache m arr, Given Accesses =&gt; Eq a) =&gt;
 arr a b -&gt; arr a b
-</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687499554"><span class="annot"><span class="annottext">Dependency (HashMap RemoteSchemaName InvalidationKey)
-</span><a href="#local-6989586621687499554"><span class="hs-identifier hs-var">invalidationKeys</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499555"><span class="annot"><span class="annottext">OrderedRoles
-</span><a href="#local-6989586621687499555"><span class="hs-identifier hs-var">orderedRoles</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499556"><span class="annot"><span class="annottext">Maybe (HashMap RemoteSchemaName ByteString)
-</span><a href="#local-6989586621687499556"><span class="hs-identifier hs-var">storedIntrospection</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499557"><span class="annot"><span class="annottext">remoteSchema :: RemoteSchemaMetadataG remoteRelationshipDefinition
-</span><a href="#local-6989586621687499557"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-type">RemoteSchemaMetadata</span></a></span><span> </span><span id="local-6989586621687499559"><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621687499560"><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621687499560"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span id="local-6989586621687499561"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687499561"><span class="hs-identifier hs-var">_comment</span></a></span></span><span> </span><span id="local-6989586621687499562"><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
-</span><a href="#local-6989586621687499562"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span id="local-6989586621687499563"><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
-</span><a href="#local-6989586621687499563"><span class="hs-identifier hs-var">relationships</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Cache.html#cache"><span class="hs-identifier hs-var">Inc.cache</span></a></span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687499379"><span class="annot"><span class="annottext">Dependency (HashMap RemoteSchemaName InvalidationKey)
+</span><a href="#local-6989586621687499379"><span class="hs-identifier hs-var">invalidationKeys</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499380"><span class="annot"><span class="annottext">OrderedRoles
+</span><a href="#local-6989586621687499380"><span class="hs-identifier hs-var">orderedRoles</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499381"><span class="annot"><span class="annottext">Maybe (HashMap RemoteSchemaName ByteString)
+</span><a href="#local-6989586621687499381"><span class="hs-identifier hs-var">storedIntrospection</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499382"><span class="annot"><span class="annottext">remoteSchema :: RemoteSchemaMetadataG remoteRelationshipDefinition
+</span><a href="#local-6989586621687499382"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaMetadata"><span class="hs-identifier hs-type">RemoteSchemaMetadata</span></a></span><span> </span><span id="local-6989586621687499384"><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621687499385"><span class="annot"><span class="annottext">RemoteSchemaDef
+</span><a href="#local-6989586621687499385"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span id="local-6989586621687499386"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687499386"><span class="hs-identifier hs-var">_comment</span></a></span></span><span> </span><span id="local-6989586621687499387"><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
+</span><a href="#local-6989586621687499387"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span id="local-6989586621687499388"><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
+</span><a href="#local-6989586621687499388"><span class="hs-identifier hs-var">relationships</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">arr (Dependency (Maybe InvalidationKey)) (Maybe InvalidationKey)
 forall a. Eq a =&gt; arr (Dependency a) a
 forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
@@ -161,16 +161,16 @@ forall a k v.
 (Select a, Selector a ~ ConstS k v) =&gt;
 k -&gt; Dependency a -&gt; Dependency v
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Dependency.html#selectKeyD"><span class="hs-identifier hs-var">Inc.selectKeyD</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Dependency (HashMap RemoteSchemaName InvalidationKey)
-</span><a href="#local-6989586621687499554"><span class="hs-identifier hs-var">invalidationKeys</span></a></span><span>
-</span><span id="line-66"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499566"><span class="annot"><span class="annottext">metadataObj :: MetadataObject
-</span><a href="#local-6989586621687499566"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG remoteRelationshipDefinition
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Dependency (HashMap RemoteSchemaName InvalidationKey)
+</span><a href="#local-6989586621687499379"><span class="hs-identifier hs-var">invalidationKeys</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499391"><span class="annot"><span class="annottext">metadataObj :: MetadataObject
+</span><a href="#local-6989586621687499391"><span class="hs-identifier hs-var hs-var">metadataObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG remoteRelationshipDefinition
 -&gt; MetadataObject
 forall {r}. ToJSON r =&gt; RemoteSchemaMetadataG r -&gt; MetadataObject
-</span><a href="#local-6989586621687499551"><span class="hs-identifier hs-var">mkRemoteSchemaMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG remoteRelationshipDefinition
-</span><a href="#local-6989586621687499557"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span>
-</span><span id="line-67"></span><span>      </span><span id="local-6989586621687499567"><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499567"><span class="hs-identifier hs-var">upstreamResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+</span><a href="#local-6989586621687499376"><span class="hs-identifier hs-var">mkRemoteSchemaMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG remoteRelationshipDefinition
+</span><a href="#local-6989586621687499382"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span id="local-6989586621687499392"><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
+</span><a href="#local-6989586621687499392"><span class="hs-identifier hs-var">upstreamResponse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
   (m (Either
         QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)))
   (Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo))
@@ -187,7 +187,7 @@ forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 -&gt; ExceptT
      QErr m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 forall {m :: * -&gt; *} {a}. TraceT m a -&gt; m a
-</span><a href="#local-6989586621687499570"><span class="hs-identifier hs-var">noopTrace</span></a></span><span> </span><span class="annot"><span class="annottext">(TraceT
+</span><a href="#local-6989586621687499395"><span class="hs-identifier hs-var">noopTrace</span></a></span><span> </span><span class="annot"><span class="annottext">(TraceT
    (ExceptT QErr m)
    (IntrospectionResult, ByteString, RemoteSchemaInfo)
  -&gt; ExceptT
@@ -209,16 +209,16 @@ Environment
 -&gt; RemoteSchemaDef
 -&gt; m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 </span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-var">addRemoteSchemaP2Setup</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499548"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621687499560"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-68"></span><span>      </span><span id="local-6989586621687499571"><span class="annot"><span class="annottext">Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499571"><span class="hs-identifier hs-var">remoteSchemaContextParts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687499373"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
+</span><a href="#local-6989586621687499385"><span class="hs-identifier hs-var">defn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621687499396"><span class="annot"><span class="annottext">Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
+</span><a href="#local-6989586621687499396"><span class="hs-identifier hs-var">remoteSchemaContextParts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-69"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499567"><span class="hs-identifier hs-var">upstreamResponse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-70"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687499572"><span class="annot"><span class="annottext">upstream :: (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499572"><span class="hs-identifier hs-var">upstream</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntrospectionResult
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499573"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499573"><span class="hs-identifier hs-var">byteString</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687499392"><span class="hs-identifier hs-var">upstreamResponse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687499397"><span class="annot"><span class="annottext">upstream :: (IntrospectionResult, ByteString, RemoteSchemaInfo)
+</span><a href="#local-6989586621687499397"><span class="hs-identifier hs-var">upstream</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntrospectionResult
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499398"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499398"><span class="hs-identifier hs-var">byteString</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-71"></span><span>            </span><span class="hs-comment">-- Collect upstream introspection response to persist in the storage</span><span>
 </span><span id="line-72"></span><span>            </span><span class="annot"><span class="annottext">arr (Seq CollectItem) ()
@@ -232,12 +232,12 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; EncJSON -&gt; StoredIntrospectionItem
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#RemoteSchemaIntrospectionItem"><span class="hs-identifier hs-var">RemoteSchemaIntrospectionItem</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; StoredIntrospectionItem)
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; StoredIntrospectionItem)
 -&gt; EncJSON -&gt; StoredIntrospectionItem
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; EncJSON
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#encJFromLBS"><span class="hs-identifier hs-var">encJFromLBS</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499573"><span class="hs-identifier hs-var">byteString</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499398"><span class="hs-identifier hs-var">byteString</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>            </span><span class="annot"><span class="annottext">arr
   (Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo))
   (Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo))
@@ -246,19 +246,19 @@ forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 -&gt; Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499572"><span class="hs-identifier hs-var">upstream</span></a></span><span>
-</span><span id="line-74"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687499578"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687499397"><span class="hs-identifier hs-var">upstream</span></a></span><span>
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687499403"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-75"></span><span>            </span><span class="hs-comment">-- If upstream is not available, try to lookup from stored introspection</span><span>
 </span><span id="line-76"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
 -&gt; HashMap RemoteSchemaName ByteString -&gt; Maybe ByteString
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap RemoteSchemaName ByteString -&gt; Maybe ByteString)
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap RemoteSchemaName ByteString -&gt; Maybe ByteString)
 -&gt; Maybe (HashMap RemoteSchemaName ByteString) -&gt; Maybe ByteString
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap RemoteSchemaName ByteString)
-</span><a href="#local-6989586621687499556"><span class="hs-identifier hs-var">storedIntrospection</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687499381"><span class="hs-identifier hs-var">storedIntrospection</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-77"></span><span>              </span><span class="annot"><span class="annottext">Maybe ByteString
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>                </span><span class="hs-comment">-- If no stored introspection exist, re-throw the upstream exception</span><span>
@@ -287,12 +287,12 @@ ErrorA QErr arr (e, s) a -&gt; arr (e, (MetadataObject, s)) (Maybe a)
 forall a. ErrorA QErr arr QErr a
 forall e (arr :: * -&gt; * -&gt; *) a. ArrowError e arr =&gt; arr e a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#throwA"><span class="hs-identifier hs-var">throwA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|)</span><span> </span><span class="annot"><span class="annottext">MetadataObject
-</span><a href="#local-6989586621687499566"><span class="hs-identifier hs-var">metadataObj</span></a></span><span>
-</span><span id="line-80"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687499585"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499585"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-81"></span><span>                </span><span id="local-6989586621687499586"><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499586"><span class="hs-identifier hs-var">processedIntrospection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|)</span><span> </span><span class="annot"><span class="annottext">MetadataObject
+</span><a href="#local-6989586621687499391"><span class="hs-identifier hs-var">metadataObj</span></a></span><span>
+</span><span id="line-80"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687499410"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499410"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>                </span><span id="local-6989586621687499411"><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
+</span><a href="#local-6989586621687499411"><span class="hs-identifier hs-var">processedIntrospection</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-82"></span><span>                  </span><span class="annot"><span class="annottext">arr
   (m (Either
         QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)))
@@ -306,18 +306,18 @@ arr (m a) a
         QErr (IntrospectionResult, ByteString, RemoteSchemaInfo))
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-84"></span><span>                      </span><span id="local-6989586621687499587"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
-</span><a href="#local-6989586621687499587"><span class="hs-identifier hs-var">rsDef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
+</span><span id="line-84"></span><span>                      </span><span id="local-6989586621687499412"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
+</span><a href="#local-6989586621687499412"><span class="hs-identifier hs-var">rsDef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment
 -&gt; RemoteSchemaDef -&gt; ExceptT QErr m ValidatedRemoteSchemaDef
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Environment -&gt; RemoteSchemaDef -&gt; m ValidatedRemoteSchemaDef
 </span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#validateRemoteSchemaDef"><span class="hs-identifier hs-var">validateRemoteSchemaDef</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499548"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621687499560"><span class="hs-identifier hs-var">defn</span></a></span><span>
-</span><span id="line-85"></span><span>                      </span><span class="hs-special">(</span><span id="local-6989586621687499589"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499589"><span class="hs-identifier hs-var">ir</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499590"><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687499590"><span class="hs-identifier hs-var">rsi</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499373"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
+</span><a href="#local-6989586621687499385"><span class="hs-identifier hs-var">defn</span></a></span><span>
+</span><span id="line-85"></span><span>                      </span><span class="hs-special">(</span><span id="local-6989586621687499414"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499414"><span class="hs-identifier hs-var">ir</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499415"><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687499415"><span class="hs-identifier hs-var">rsi</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString
 -&gt; ValidatedRemoteSchemaDef
 -&gt; ExceptT QErr m (IntrospectionResult, RemoteSchemaInfo)
 forall (m :: * -&gt; *).
@@ -326,30 +326,30 @@ ByteString
 -&gt; ValidatedRemoteSchemaDef
 -&gt; m (IntrospectionResult, RemoteSchemaInfo)
 </span><a href="Hasura.GraphQL.RemoteServer.html#stitchRemoteSchema"><span class="hs-identifier hs-var">stitchRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499585"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
-</span><a href="#local-6989586621687499587"><span class="hs-identifier hs-var">rsDef</span></a></span><span>
+</span><a href="#local-6989586621687499410"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
+</span><a href="#local-6989586621687499412"><span class="hs-identifier hs-var">rsDef</span></a></span><span>
 </span><span id="line-86"></span><span>                      </span><span class="annot"><span class="annottext">(IntrospectionResult, ByteString, RemoteSchemaInfo)
 -&gt; ExceptT
      QErr m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 forall a. a -&gt; ExceptT QErr m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499589"><span class="hs-identifier hs-var">ir</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499585"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687499590"><span class="hs-identifier hs-var">rsi</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499414"><span class="hs-identifier hs-var">ir</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499410"><span class="hs-identifier hs-var">storedRawIntrospection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687499415"><span class="hs-identifier hs-var">rsi</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>                </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either QErr (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499586"><span class="hs-identifier hs-var">processedIntrospection</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-88"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687499592"><span class="annot"><span class="annottext">(IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499592"><span class="hs-identifier hs-var">processed</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-89"></span><span>                    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499593"><span class="annot"><span class="annottext">inconsistencyMessage :: Text
-</span><a href="#local-6989586621687499593"><span class="hs-identifier hs-var hs-var">inconsistencyMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687499411"><span class="hs-identifier hs-var">processedIntrospection</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-88"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687499417"><span class="annot"><span class="annottext">(IntrospectionResult, ByteString, RemoteSchemaInfo)
+</span><a href="#local-6989586621687499417"><span class="hs-identifier hs-var">processed</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-89"></span><span>                    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499418"><span class="annot"><span class="annottext">inconsistencyMessage :: Text
+</span><a href="#local-6989586621687499418"><span class="hs-identifier hs-var hs-var">inconsistencyMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-90"></span><span>                          </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#unwords"><span class="hs-identifier hs-var">T.unwords</span></a></span><span>
 </span><span id="line-91"></span><span>                            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;remote schema &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RemoteSchemaName -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-92"></span><span>                              </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is inconsistent because of stale remote schema introspection is used.&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-93"></span><span>                              </span><span class="annot"><span class="annottext">Text
@@ -359,7 +359,7 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var">qeError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span><span>
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span><span>
 </span><span id="line-95"></span><span>                            </span><span class="hs-special">]</span><span>
 </span><span id="line-96"></span><span>                    </span><span class="hs-comment">-- Still record inconsistency to notify the user obout the usage of stored stale data</span><span>
 </span><span id="line-97"></span><span>                    </span><span class="annot"><span class="annottext">arr ((Maybe Value, [MetadataObject]), Text) ()
@@ -374,9 +374,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; Maybe QErrExtra
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#qeInternal"><span class="hs-identifier hs-var">qeInternal</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">MetadataObject
-</span><a href="#local-6989586621687499566"><span class="hs-identifier hs-var">metadataObj</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687499593"><span class="hs-identifier hs-var">inconsistencyMessage</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">MetadataObject
+</span><a href="#local-6989586621687499391"><span class="hs-identifier hs-var">metadataObj</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687499418"><span class="hs-identifier hs-var">inconsistencyMessage</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span><span>                    </span><span class="annot"><span class="annottext">arr (m ()) ()
 forall (m :: * -&gt; *) (arr :: * -&gt; * -&gt; *) a.
 ArrowKleisli m arr =&gt;
@@ -391,15 +391,15 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621687499547"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(StoredIntrospectionLog -&gt; m ()) -&gt; StoredIntrospectionLog -&gt; m ()
+</span><a href="#local-6989586621687499372"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(StoredIntrospectionLog -&gt; m ()) -&gt; StoredIntrospectionLog -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; QErr -&gt; StoredIntrospectionLog
 </span><a href="Hasura.Logging.html#StoredIntrospectionLog"><span class="hs-identifier hs-var">StoredIntrospectionLog</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Using stored introspection for remote schema &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; RemoteSchemaName -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span><span>
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span><span>
 </span><span id="line-99"></span><span>                    </span><span class="annot"><span class="annottext">arr
   (Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo))
   (Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo))
@@ -408,9 +408,9 @@ forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 -&gt; Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499592"><span class="hs-identifier hs-var">processed</span></a></span><span>
-</span><span id="line-100"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687499602"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499602"><span class="hs-identifier hs-var">_processError</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687499417"><span class="hs-identifier hs-var">processed</span></a></span><span>
+</span><span id="line-100"></span><span>                  </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687499427"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621687499427"><span class="hs-identifier hs-var">_processError</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-101"></span><span>                    </span><span class="hs-comment">-- Unable to process stored introspection, give up and re-throw upstream exception</span><span>
 </span><span id="line-102"></span><span>                    </span><span class="hs-glyph">(|</span><span> </span><span class="annot"><span class="annottext">ErrorA
   QErr
@@ -437,10 +437,10 @@ ErrorA QErr arr (e, s) a -&gt; arr (e, (MetadataObject, s)) (Maybe a)
 forall a. ErrorA QErr arr QErr a
 forall e (arr :: * -&gt; * -&gt; *) a. ArrowError e arr =&gt; arr e a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#throwA"><span class="hs-identifier hs-var">throwA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|)</span><span> </span><span class="annot"><span class="annottext">MetadataObject
-</span><a href="#local-6989586621687499566"><span class="hs-identifier hs-var">metadataObj</span></a></span><span>
+</span><a href="#local-6989586621687499403"><span class="hs-identifier hs-var">upstreamError</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|)</span><span> </span><span class="annot"><span class="annottext">MetadataObject
+</span><a href="#local-6989586621687499391"><span class="hs-identifier hs-var">metadataObj</span></a></span><span>
 </span><span id="line-103"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="#local-6989586621687499571"><span class="hs-identifier hs-var">remoteSchemaContextParts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687499396"><span class="hs-identifier hs-var">remoteSchemaContextParts</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">Maybe (IntrospectionResult, ByteString, RemoteSchemaInfo)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">arr
   (Maybe
@@ -452,13 +452,13 @@ forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
   (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-105"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499605"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499605"><span class="hs-identifier hs-var">introspection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499606"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499606"><span class="hs-identifier hs-var">rawIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499607"><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687499607"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-105"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499430"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499430"><span class="hs-identifier hs-var">introspection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499431"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499431"><span class="hs-identifier hs-var">rawIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499432"><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687499432"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-106"></span><span>          </span><span class="hs-comment">-- we then resolve permissions</span><span>
-</span><span id="line-107"></span><span>          </span><span id="local-6989586621687499608"><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
-</span><a href="#local-6989586621687499608"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
+</span><span id="line-107"></span><span>          </span><span id="local-6989586621687499433"><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
+</span><a href="#local-6989586621687499433"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">arr
   ((RemoteSchemaName, IntrospectionResult, OrderedRoles),
    [(RemoteSchemaName, RemoteSchemaPermissionMetadata)])
   (HashMap RoleName IntrospectionResult)
@@ -471,25 +471,25 @@ arr
    [(RemoteSchemaName, RemoteSchemaPermissionMetadata)])
   (HashMap RoleName IntrospectionResult)
 </span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemaPermissions"><span class="hs-identifier hs-var">buildRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499605"><span class="hs-identifier hs-var">introspection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OrderedRoles
-</span><a href="#local-6989586621687499555"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaPermissionMetadata
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499430"><span class="hs-identifier hs-var">introspection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OrderedRoles
+</span><a href="#local-6989586621687499380"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaPermissionMetadata
  -&gt; (RemoteSchemaName, RemoteSchemaPermissionMetadata))
 -&gt; [RemoteSchemaPermissionMetadata]
 -&gt; [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
-</span><a href="#local-6989586621687499562"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[RemoteSchemaPermissionMetadata]
+</span><a href="#local-6989586621687499387"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span>          </span><span class="hs-comment">-- resolve remote relationships</span><span>
-</span><span id="line-109"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499610"><span class="annot"><span class="annottext">transformedRelationships :: InsOrdHashMap
+</span><span id="line-109"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499435"><span class="annot"><span class="annottext">transformedRelationships :: InsOrdHashMap
   Name
   (InsOrdHashMap
      RelName
      (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition))
-</span><a href="#local-6989586621687499610"><span class="hs-identifier hs-var hs-var">transformedRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
-</span><a href="#local-6989586621687499563"><span class="hs-identifier hs-var">relationships</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
+</span><a href="#local-6989586621687499435"><span class="hs-identifier hs-var hs-var">transformedRelationships</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
+</span><a href="#local-6989586621687499388"><span class="hs-identifier hs-var">relationships</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaRemoteRelationships remoteRelationshipDefinition
 -&gt; (RemoteSchemaTypeRelationships remoteRelationshipDefinition
     -&gt; InsOrdHashMap
          RelName
@@ -500,13 +500,13 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
         RelName
         (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
-</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.RemoteRelationship.html#RemoteSchemaTypeRelationships"><span class="hs-identifier hs-type">RemoteSchemaTypeRelationships</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687499613"><span id="local-6989586621687499614"><span class="annot"><span class="annottext">Name
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.RemoteRelationship.html#RemoteSchemaTypeRelationships"><span class="hs-identifier hs-type">RemoteSchemaTypeRelationships</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687499438"><span id="local-6989586621687499439"><span class="annot"><span class="annottext">Name
 RemoteRelationships remoteRelationshipDefinition
 _rstrsName :: Name
 _rstrsRelationships :: RemoteRelationships remoteRelationshipDefinition
 _rstrsName :: forall r. RemoteSchemaTypeRelationships r -&gt; Name
 _rstrsRelationships :: forall r. RemoteSchemaTypeRelationships r -&gt; RemoteRelationships r
-</span><a href="#local-6989586621687499613"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687499438"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; RemoteRelationshipG remoteRelationshipDefinition
 -&gt; PartiallyResolvedRemoteRelationship remoteRelationshipDefinition
 forall remoteRelationshipDefinition.
@@ -514,7 +514,7 @@ Name
 -&gt; RemoteRelationshipG remoteRelationshipDefinition
 -&gt; PartiallyResolvedRemoteRelationship remoteRelationshipDefinition
 </span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#PartiallyResolvedRemoteRelationship"><span class="hs-identifier hs-var">PartiallyResolvedRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621687499613"><span class="hs-identifier hs-var">_rstrsName</span></a></span><span> </span><span class="annot"><span class="annottext">(RemoteRelationshipG remoteRelationshipDefinition
+</span><a href="#local-6989586621687499438"><span class="hs-identifier hs-var">_rstrsName</span></a></span><span> </span><span class="annot"><span class="annottext">(RemoteRelationshipG remoteRelationshipDefinition
  -&gt; PartiallyResolvedRemoteRelationship
       remoteRelationshipDefinition)
 -&gt; RemoteRelationships remoteRelationshipDefinition
@@ -523,36 +523,36 @@ Name
      (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">RemoteRelationships remoteRelationshipDefinition
-</span><a href="#local-6989586621687499614"><span class="hs-identifier hs-var">_rstrsRelationships</span></a></span><span>
-</span><span id="line-110"></span><span>              </span><span id="local-6989586621687499619"><span class="annot"><span class="annottext">remoteSchemaContext :: PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition
-</span><a href="#local-6989586621687499619"><span class="hs-identifier hs-var hs-var">remoteSchemaContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687499439"><span class="hs-identifier hs-var">_rstrsRelationships</span></a></span><span>
+</span><span id="line-110"></span><span>              </span><span id="local-6989586621687499444"><span class="annot"><span class="annottext">remoteSchemaContext :: PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition
+</span><a href="#local-6989586621687499444"><span class="hs-identifier hs-var hs-var">remoteSchemaContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-111"></span><span>                </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaCtx"><span class="hs-identifier hs-type">RemoteSchemaCtx</span></a></span><span>
 </span><span id="line-112"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_rscName :: RemoteSchemaName
-</span><a href="#local-6989586621687499621"><span class="hs-identifier hs-var">_rscName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499446"><span class="hs-identifier hs-var">_rscName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499384"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-113"></span><span>                    </span><span class="annot"><span class="annottext">_rscIntroOriginal :: IntrospectionResult
-</span><a href="#local-6989586621687499622"><span class="hs-identifier hs-var">_rscIntroOriginal</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499605"><span class="hs-identifier hs-var">introspection</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499447"><span class="hs-identifier hs-var">_rscIntroOriginal</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499430"><span class="hs-identifier hs-var">introspection</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-114"></span><span>                    </span><span class="annot"><span class="annottext">_rscInfo :: RemoteSchemaInfo
-</span><a href="#local-6989586621687499623"><span class="hs-identifier hs-var">_rscInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621687499607"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499448"><span class="hs-identifier hs-var">_rscInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621687499432"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-115"></span><span>                    </span><span class="annot"><span class="annottext">_rscRawIntrospectionResult :: ByteString
-</span><a href="#local-6989586621687499624"><span class="hs-identifier hs-var">_rscRawIntrospectionResult</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621687499606"><span class="hs-identifier hs-var">rawIntrospection</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499449"><span class="hs-identifier hs-var">_rscRawIntrospectionResult</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621687499431"><span class="hs-identifier hs-var">rawIntrospection</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-116"></span><span>                    </span><span class="annot"><span class="annottext">_rscPermissions :: HashMap RoleName IntrospectionResult
-</span><a href="#local-6989586621687499625"><span class="hs-identifier hs-var">_rscPermissions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
-</span><a href="#local-6989586621687499608"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687499450"><span class="hs-identifier hs-var">_rscPermissions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
+</span><a href="#local-6989586621687499433"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>                    </span><span class="annot"><span class="annottext">_rscRemoteRelationships :: InsOrdHashMap
   Name
   (InsOrdHashMap
      RelName
      (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition))
-</span><a href="#local-6989586621687499626"><span class="hs-identifier hs-var">_rscRemoteRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap
+</span><a href="#local-6989586621687499451"><span class="hs-identifier hs-var">_rscRemoteRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap
   Name
   (InsOrdHashMap
      RelName
      (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition))
-</span><a href="#local-6989586621687499610"><span class="hs-identifier hs-var">transformedRelationships</span></a></span><span>
+</span><a href="#local-6989586621687499435"><span class="hs-identifier hs-var">transformedRelationships</span></a></span><span>
 </span><span id="line-118"></span><span>                  </span><span class="hs-special">}</span><span>
 </span><span id="line-119"></span><span>          </span><span class="annot"><span class="annottext">arr
   (Maybe
@@ -565,41 +565,41 @@ forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
      (PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition
-</span><a href="#local-6989586621687499619"><span class="hs-identifier hs-var">remoteSchemaContext</span></a></span><span>
+</span><a href="#local-6989586621687499444"><span class="hs-identifier hs-var">remoteSchemaContext</span></a></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span>    </span><span class="hs-comment">-- TODO continue propagating MonadTrace up calls so that we can get tracing</span><span>
 </span><span id="line-122"></span><span>    </span><span class="hs-comment">-- for remote schema introspection. This will require modifying CacheBuild.</span><span>
 </span><span id="line-123"></span><span>    </span><span class="hs-comment">-- TODO(Antoine): do this when changing CacheBuild to be on top of the app's m.</span><span>
-</span><span id="line-124"></span><span>    </span><span id="local-6989586621687499570"><span class="annot"><span class="annottext">noopTrace :: TraceT m a -&gt; m a
-</span><a href="#local-6989586621687499570"><span class="hs-identifier hs-var hs-var">noopTrace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceT m a -&gt; m a
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621687499395"><span class="annot"><span class="annottext">noopTrace :: TraceT m a -&gt; m a
+</span><a href="#local-6989586621687499395"><span class="hs-identifier hs-var hs-var">noopTrace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TraceT m a -&gt; m a
 forall {m :: * -&gt; *} {a}. TraceT m a -&gt; m a
 </span><a href="Hasura.Tracing.Monad.html#ignoreTraceT"><span class="hs-identifier hs-var">Tracing.ignoreTraceT</span></a></span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span>    </span><span id="local-6989586621687499551"><span class="annot"><span class="annottext">mkRemoteSchemaMetadataObject :: RemoteSchemaMetadataG r -&gt; MetadataObject
-</span><a href="#local-6989586621687499551"><span class="hs-identifier hs-var hs-var">mkRemoteSchemaMetadataObject</span></a></span></span><span> </span><span id="local-6989586621687499634"><span class="annot"><span class="annottext">RemoteSchemaMetadataG r
-</span><a href="#local-6989586621687499634"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-126"></span><span>    </span><span id="local-6989586621687499376"><span class="annot"><span class="annottext">mkRemoteSchemaMetadataObject :: RemoteSchemaMetadataG r -&gt; MetadataObject
+</span><a href="#local-6989586621687499376"><span class="hs-identifier hs-var hs-var">mkRemoteSchemaMetadataObject</span></a></span></span><span> </span><span id="local-6989586621687499459"><span class="annot"><span class="annottext">RemoteSchemaMetadataG r
+</span><a href="#local-6989586621687499459"><span class="hs-identifier hs-var">remoteSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-var">MetadataObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MORemoteSchema"><span class="hs-identifier hs-var">MORemoteSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaMetadataG r -&gt; RemoteSchemaName
 forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaName
 </span><a href="Hasura.RemoteSchema.Metadata.Core.html#_rsmName"><span class="hs-identifier hs-var">_rsmName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG r
-</span><a href="#local-6989586621687499634"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaMetadataG r -&gt; Value
+</span><a href="#local-6989586621687499459"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaMetadataG r -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaMetadataG r
-</span><a href="#local-6989586621687499634"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499459"><span class="hs-identifier hs-var">remoteSchema</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-128"></span><span>
 </span><span id="line-129"></span><span class="annot"><span class="hs-comment">-- | Resolves a RemoteSchemaPermission metadata object into a 'GraphQL schema'.</span></span><span>
-</span><span id="line-130"></span><span id="local-6989586621687499302"><span id="local-6989586621687499303"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemaPermissions"><span class="hs-identifier hs-type">buildRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-131"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621687499302"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-132"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499302"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-133"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectItem"><span class="hs-identifier hs-type">CollectItem</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687499302"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-134"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Extended.html#ArrowKleisli"><span class="hs-identifier hs-type">ArrowKleisli</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499303"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499302"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-135"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499303"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-130"></span><span id="local-6989586621687499127"><span id="local-6989586621687499128"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemaPermissions"><span class="hs-identifier hs-type">buildRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ArrowChoice</span></span><span> </span><span class="annot"><a href="#local-6989586621687499127"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/incremental-1.0.0/opt/doc/html/incremental/src/Hasura.Incremental.Internal.Rule.html#ArrowDistribute"><span class="hs-identifier hs-type">Inc.ArrowDistribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499127"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CollectItem"><span class="hs-identifier hs-type">CollectItem</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687499127"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>    </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/arrows-extra-1.0.0/opt/doc/html/arrows-extra/src/Control.Arrow.Extended.html#ArrowKleisli"><span class="hs-identifier hs-type">ArrowKleisli</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499128"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499127"><span class="hs-identifier hs-type">arr</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499128"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-136"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-comment">-- this ridiculous duplication of [(RemoteSchemaName, RemoteSchemaPermissionMetadata)]</span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-comment">-- instead of just [RemoteSchemaName] is because buildInfoMap doesn't pass `e` to the</span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-comment">-- mkMetadataObject function. However, that change is very invasive.</span><span>
-</span><span id="line-140"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#OrderedRoles"><span class="hs-identifier hs-type">OrderedRoles</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687499302"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span></span></span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#OrderedRoles"><span class="hs-identifier hs-type">OrderedRoles</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687499127"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap.HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span></span></span><span>
 </span><span id="line-141"></span><span id="buildRemoteSchemaPermissions"><span class="annot"><span class="annottext">buildRemoteSchemaPermissions :: forall (arr :: * -&gt; * -&gt; *) (m :: * -&gt; *).
 (ArrowChoice arr, ArrowDistribute arr,
  ArrowWriter (Seq CollectItem) arr, ArrowKleisli m arr,
@@ -608,13 +608,13 @@ arr
   ((RemoteSchemaName, IntrospectionResult, OrderedRoles),
    [(RemoteSchemaName, RemoteSchemaPermissionMetadata)])
   (HashMap RoleName IntrospectionResult)
-</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemaPermissions"><span class="hs-identifier hs-var hs-var">buildRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687499712"><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499712"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499713"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499713"><span class="hs-identifier hs-var">originalIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499714"><span class="annot"><span class="annottext">OrderedRoles
-</span><a href="#local-6989586621687499714"><span class="hs-identifier hs-var">orderedRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499715"><span class="annot"><span class="annottext">[(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
-</span><a href="#local-6989586621687499715"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621687499716"><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
-</span><a href="#local-6989586621687499716"><span class="hs-identifier hs-var">metadataPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#buildRemoteSchemaPermissions"><span class="hs-identifier hs-var hs-var">buildRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687499537"><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499537"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499538"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499538"><span class="hs-identifier hs-var">originalIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499539"><span class="annot"><span class="annottext">OrderedRoles
+</span><a href="#local-6989586621687499539"><span class="hs-identifier hs-var">orderedRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499540"><span class="annot"><span class="annottext">[(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
+</span><a href="#local-6989586621687499540"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621687499541"><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
+</span><a href="#local-6989586621687499541"><span class="hs-identifier hs-var">metadataPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">((RemoteSchemaName, RemoteSchemaPermissionMetadata) -&gt; RoleName)
 -&gt; ((RemoteSchemaName, RemoteSchemaPermissionMetadata)
     -&gt; MetadataObject)
@@ -645,19 +645,19 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaName, RemoteSchemaPermissionMetadata)
 -&gt; MetadataObject
-</span><a href="#local-6989586621687499721"><span class="hs-identifier hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">arr
+</span><a href="#local-6989586621687499546"><span class="hs-identifier hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">arr
   (IntrospectionResult,
    (RemoteSchemaName, RemoteSchemaPermissionMetadata))
   (Maybe IntrospectionResult)
-</span><a href="#local-6989586621687499722"><span class="hs-identifier hs-var">buildRemoteSchemaPermission</span></a></span><span>
+</span><a href="#local-6989586621687499547"><span class="hs-identifier hs-var">buildRemoteSchemaPermission</span></a></span><span>
 </span><span id="line-144"></span><span>      </span><span class="hs-glyph">-&lt;</span><span>
 </span><span id="line-145"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499713"><span class="hs-identifier hs-var">originalIntrospection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
-</span><a href="#local-6989586621687499715"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499538"><span class="hs-identifier hs-var">originalIntrospection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[(RemoteSchemaName, RemoteSchemaPermissionMetadata)]
+</span><a href="#local-6989586621687499540"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>  </span><span class="hs-comment">-- convert to the intermediate form `CheckPermission` whose `Semigroup`</span><span>
 </span><span id="line-147"></span><span>  </span><span class="hs-comment">-- instance is used to combine permissions</span><span>
-</span><span id="line-148"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499723"><span class="annot"><span class="annottext">metadataCheckPermissionsMap :: HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499723"><span class="hs-identifier hs-var hs-var">metadataCheckPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; CheckPermission IntrospectionResult
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499548"><span class="annot"><span class="annottext">metadataCheckPermissionsMap :: HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499548"><span class="hs-identifier hs-var hs-var">metadataCheckPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult -&gt; CheckPermission IntrospectionResult
 forall permissionType.
 permissionType -&gt; CheckPermission permissionType
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#CPDefined"><span class="hs-identifier hs-var">CPDefined</span></a></span><span> </span><span class="annot"><span class="annottext">(IntrospectionResult -&gt; CheckPermission IntrospectionResult)
@@ -665,9 +665,9 @@ permissionType -&gt; CheckPermission permissionType
 -&gt; HashMap RoleName (CheckPermission IntrospectionResult)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName IntrospectionResult
-</span><a href="#local-6989586621687499716"><span class="hs-identifier hs-var">metadataPermissionsMap</span></a></span><span>
-</span><span id="line-149"></span><span>  </span><span id="local-6989586621687499725"><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499725"><span class="hs-identifier hs-var">allRolesUnresolvedPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621687499541"><span class="hs-identifier hs-var">metadataPermissionsMap</span></a></span><span>
+</span><span id="line-149"></span><span>  </span><span id="local-6989586621687499550"><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499550"><span class="hs-identifier hs-var">allRolesUnresolvedPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-150"></span><span>    </span><span class="annot"><span class="annottext">arr
   (m (HashMap RoleName (CheckPermission IntrospectionResult)))
   (HashMap RoleName (CheckPermission IntrospectionResult))
@@ -686,12 +686,12 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) b a.
 (Foldable t, Monad m) =&gt;
 (b -&gt; a -&gt; m b) -&gt; b -&gt; t a -&gt; m b
 </span><span class="hs-identifier hs-var">foldM</span></span><span>
-</span><span id="line-153"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687499727"><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499727"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621687499729"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499729"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span> </span><span id="local-6989586621687499731"><span class="annot"><span class="annottext">HashSet RoleName
-</span><a href="#local-6989586621687499731"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-154"></span><span>              </span><span id="local-6989586621687499732"><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
-</span><a href="#local-6989586621687499732"><span class="hs-identifier hs-var">rolePermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (CheckPermission IntrospectionResult)
+</span><span id="line-153"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687499552"><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#Role"><span class="hs-identifier hs-type">Role</span></a></span><span> </span><span id="local-6989586621687499554"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499554"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Roles.html#ParentRoles"><span class="hs-identifier hs-type">ParentRoles</span></a></span><span> </span><span id="local-6989586621687499556"><span class="annot"><span class="annottext">HashSet RoleName
+</span><a href="#local-6989586621687499556"><span class="hs-identifier hs-var">parentRoles</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-154"></span><span>              </span><span id="local-6989586621687499557"><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
+</span><a href="#local-6989586621687499557"><span class="hs-identifier hs-var">rolePermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (CheckPermission IntrospectionResult)
 -&gt; m (CheckPermission IntrospectionResult)
 -&gt; m (CheckPermission IntrospectionResult)
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
@@ -700,15 +700,15 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Maybe (CheckPermission IntrospectionResult)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499729"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499727"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499554"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (CheckPermission IntrospectionResult)
  -&gt; m (CheckPermission IntrospectionResult))
 -&gt; m (CheckPermission IntrospectionResult)
 -&gt; m (CheckPermission IntrospectionResult)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-155"></span><span>                </span><span id="local-6989586621687499734"><span class="annot"><span class="annottext">[CheckPermission IntrospectionResult]
-</span><a href="#local-6989586621687499734"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-155"></span><span>                </span><span id="local-6989586621687499559"><span class="annot"><span class="annottext">[CheckPermission IntrospectionResult]
+</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-156"></span><span>                  </span><span class="annot"><span class="annottext">[RoleName]
 -&gt; (RoleName -&gt; m (CheckPermission IntrospectionResult))
 -&gt; m [CheckPermission IntrospectionResult]
@@ -719,13 +719,13 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 forall a. HashSet a -&gt; [a]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">HashSet RoleName
-</span><a href="#local-6989586621687499731"><span class="hs-identifier hs-var">parentRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((RoleName -&gt; m (CheckPermission IntrospectionResult))
+</span><a href="#local-6989586621687499556"><span class="hs-identifier hs-var">parentRoles</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((RoleName -&gt; m (CheckPermission IntrospectionResult))
  -&gt; m [CheckPermission IntrospectionResult])
 -&gt; (RoleName -&gt; m (CheckPermission IntrospectionResult))
 -&gt; m [CheckPermission IntrospectionResult]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687499737"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499737"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687499562"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499562"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-157"></span><span>                    </span><span class="annot"><span class="annottext">Maybe (CheckPermission IntrospectionResult)
 -&gt; m (CheckPermission IntrospectionResult)
 -&gt; m (CheckPermission IntrospectionResult)
@@ -735,8 +735,8 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Maybe (CheckPermission IntrospectionResult)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499737"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499727"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499562"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>                      </span><span class="annot"><span class="annottext">(m (CheckPermission IntrospectionResult)
  -&gt; m (CheckPermission IntrospectionResult))
 -&gt; m (CheckPermission IntrospectionResult)
@@ -753,9 +753,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-160"></span><span>                      </span><span class="annot"><span class="annottext">Text -&gt; RoleName -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499737"><span class="hs-keyword hs-var">role</span></a></span><span>
-</span><span id="line-161"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499739"><span class="annot"><span class="annottext">combinedPermission :: Maybe (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499739"><span class="hs-identifier hs-var hs-var">combinedPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499562"><span class="hs-keyword hs-var">role</span></a></span><span>
+</span><span id="line-161"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499564"><span class="annot"><span class="annottext">combinedPermission :: Maybe (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499564"><span class="hs-identifier hs-var hs-var">combinedPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (CheckPermission IntrospectionResult)
 -&gt; CheckPermission IntrospectionResult
 forall a. Semigroup a =&gt; NonEmpty a -&gt; a
 </span><span class="hs-identifier hs-var">sconcat</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty (CheckPermission IntrospectionResult)
@@ -767,7 +767,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; Maybe (NonEmpty (CheckPermission IntrospectionResult))
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[CheckPermission IntrospectionResult]
-</span><a href="#local-6989586621687499734"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
+</span><a href="#local-6989586621687499559"><span class="hs-identifier hs-var">parentRolePermissions</span></a></span><span>
 </span><span id="line-162"></span><span>                </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
 -&gt; m (CheckPermission IntrospectionResult)
 forall a. a -&gt; m a
@@ -784,7 +784,7 @@ forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
 forall permissionType. CheckPermission permissionType
 </span><a href="Hasura.RQL.Types.Roles.Internal.html#CPUndefined"><span class="hs-identifier hs-var">CPUndefined</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499739"><span class="hs-identifier hs-var">combinedPermission</span></a></span><span>
+</span><a href="#local-6989586621687499564"><span class="hs-identifier hs-var">combinedPermission</span></a></span><span>
 </span><span id="line-163"></span><span>              </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
 -&gt; m (HashMap RoleName (CheckPermission IntrospectionResult))
 forall a. a -&gt; m a
@@ -802,18 +802,18 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#insert"><span class="hs-identifier hs-var">HashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499729"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
-</span><a href="#local-6989586621687499732"><span class="hs-identifier hs-var">rolePermission</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499727"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span>
+</span><a href="#local-6989586621687499554"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
+</span><a href="#local-6989586621687499557"><span class="hs-identifier hs-var">rolePermission</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
+</span><a href="#local-6989586621687499552"><span class="hs-identifier hs-var">accumulatedRolePermMap</span></a></span><span>
 </span><span id="line-164"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-165"></span><span>          </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499723"><span class="hs-identifier hs-var">metadataCheckPermissionsMap</span></a></span><span>
+</span><a href="#local-6989586621687499548"><span class="hs-identifier hs-var">metadataCheckPermissionsMap</span></a></span><span>
 </span><span id="line-166"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderedRoles -&gt; [Role]
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#_unOrderedRoles"><span class="hs-identifier hs-var">_unOrderedRoles</span></a></span><span> </span><span class="annot"><span class="annottext">OrderedRoles
-</span><a href="#local-6989586621687499714"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499539"><span class="hs-identifier hs-var">orderedRoles</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-167"></span><span>  </span><span class="hs-comment">-- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)</span><span>
-</span><span id="line-168"></span><span>  </span><span id="local-6989586621687499746"><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
-</span><a href="#local-6989586621687499746"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-168"></span><span>  </span><span id="local-6989586621687499571"><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
+</span><a href="#local-6989586621687499571"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-169"></span><span>    </span><span class="annot"><span class="annottext">arr
   (Writer (Seq CollectItem) [(RoleName, Maybe IntrospectionResult)])
   [(RoleName, Maybe IntrospectionResult)]
@@ -833,15 +833,15 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 -&gt; [(RoleName, CheckPermission IntrospectionResult)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RoleName (CheckPermission IntrospectionResult)
-</span><a href="#local-6989586621687499725"><span class="hs-identifier hs-var">allRolesUnresolvedPermissionsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687499749"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499749"><span class="hs-identifier hs-var">roleName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499750"><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
-</span><a href="#local-6989586621687499750"><span class="hs-identifier hs-var">checkPermission</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-171"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499751"><span class="annot"><span class="annottext">inconsistentRoleEntity :: InconsistentRoleEntity
-</span><a href="#local-6989586621687499751"><span class="hs-identifier hs-var hs-var">inconsistentRoleEntity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; InconsistentRoleEntity
+</span><a href="#local-6989586621687499550"><span class="hs-identifier hs-var">allRolesUnresolvedPermissionsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687499574"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499574"><span class="hs-identifier hs-var">roleName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499575"><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
+</span><a href="#local-6989586621687499575"><span class="hs-identifier hs-var">checkPermission</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-171"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499576"><span class="annot"><span class="annottext">inconsistentRoleEntity :: InconsistentRoleEntity
+</span><a href="#local-6989586621687499576"><span class="hs-identifier hs-var hs-var">inconsistentRoleEntity</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; InconsistentRoleEntity
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentRemoteSchemaPermission"><span class="hs-identifier hs-var">InconsistentRemoteSchemaPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499712"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span>
-</span><span id="line-172"></span><span>        </span><span id="local-6989586621687499753"><span class="annot"><span class="annottext">Maybe IntrospectionResult
-</span><a href="#local-6989586621687499753"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
+</span><a href="#local-6989586621687499537"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span>
+</span><span id="line-172"></span><span>        </span><span id="local-6989586621687499578"><span class="annot"><span class="annottext">Maybe IntrospectionResult
+</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
 -&gt; RoleName
 -&gt; InconsistentRoleEntity
 -&gt; WriterT (Seq CollectItem) Identity (Maybe IntrospectionResult)
@@ -850,17 +850,17 @@ MonadWriter (Seq CollectItem) m =&gt;
 CheckPermission p
 -&gt; RoleName -&gt; InconsistentRoleEntity -&gt; m (Maybe p)
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Permission.html#resolveCheckPermission"><span class="hs-identifier hs-var">resolveCheckPermission</span></a></span><span> </span><span class="annot"><span class="annottext">CheckPermission IntrospectionResult
-</span><a href="#local-6989586621687499750"><span class="hs-identifier hs-var">checkPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499749"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">InconsistentRoleEntity
-</span><a href="#local-6989586621687499751"><span class="hs-identifier hs-var">inconsistentRoleEntity</span></a></span><span>
+</span><a href="#local-6989586621687499575"><span class="hs-identifier hs-var">checkPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499574"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">InconsistentRoleEntity
+</span><a href="#local-6989586621687499576"><span class="hs-identifier hs-var">inconsistentRoleEntity</span></a></span><span>
 </span><span id="line-173"></span><span>        </span><span class="annot"><span class="annottext">(RoleName, Maybe IntrospectionResult)
 -&gt; WriterT
      (Seq CollectItem) Identity (RoleName, Maybe IntrospectionResult)
 forall a. a -&gt; WriterT (Seq CollectItem) Identity a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499749"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe IntrospectionResult
-</span><a href="#local-6989586621687499753"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499574"><span class="hs-identifier hs-var">roleName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe IntrospectionResult
+</span><a href="#local-6989586621687499578"><span class="hs-identifier hs-var">resolvedCheckPermission</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-174"></span><span>  </span><span class="annot"><span class="annottext">arr
   (HashMap RoleName IntrospectionResult)
   (HashMap RoleName IntrospectionResult)
@@ -878,49 +878,49 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap RoleName (Maybe IntrospectionResult)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[(RoleName, Maybe IntrospectionResult)]
-</span><a href="#local-6989586621687499746"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span><span>
+</span><a href="#local-6989586621687499571"><span class="hs-identifier hs-var">resolvedPermissions</span></a></span><span>
 </span><span id="line-175"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-176"></span><span>    </span><span id="local-6989586621687499722"><span class="annot"><span class="annottext">buildRemoteSchemaPermission :: arr
+</span><span id="line-176"></span><span>    </span><span id="local-6989586621687499547"><span class="annot"><span class="annottext">buildRemoteSchemaPermission :: arr
   (IntrospectionResult,
    (RemoteSchemaName, RemoteSchemaPermissionMetadata))
   (Maybe IntrospectionResult)
-</span><a href="#local-6989586621687499722"><span class="hs-identifier hs-var hs-var">buildRemoteSchemaPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499797"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499797"><span class="hs-identifier hs-var">originalIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499798"><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499798"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499799"><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
-</span><a href="#local-6989586621687499799"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-177"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621687499801"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499801"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621687499802"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
-</span><a href="#local-6989586621687499802"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687499547"><span class="hs-identifier hs-var hs-var">buildRemoteSchemaPermission</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499622"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499622"><span class="hs-identifier hs-var">originalIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499623"><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499623"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499624"><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
+</span><a href="#local-6989586621687499624"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-177"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621687499626"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499626"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621687499627"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
+</span><a href="#local-6989586621687499627"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
-</span><a href="#local-6989586621687499799"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span>
-</span><span id="line-178"></span><span>          </span><span id="local-6989586621687499803"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
-</span><a href="#local-6989586621687499803"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaName, RemoteSchemaPermissionMetadata)
+</span><a href="#local-6989586621687499624"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span>
+</span><span id="line-178"></span><span>          </span><span id="local-6989586621687499628"><span class="annot"><span class="annottext">metadataObject :: MetadataObject
+</span><a href="#local-6989586621687499628"><span class="hs-identifier hs-var hs-var">metadataObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaName, RemoteSchemaPermissionMetadata)
 -&gt; MetadataObject
-</span><a href="#local-6989586621687499721"><span class="hs-identifier hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499798"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
-</span><a href="#local-6989586621687499799"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-179"></span><span>          </span><span id="local-6989586621687499804"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
-</span><a href="#local-6989586621687499804"><span class="hs-identifier hs-var hs-var">schemaObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; SchemaObjId
+</span><a href="#local-6989586621687499546"><span class="hs-identifier hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499623"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionMetadata
+</span><a href="#local-6989586621687499624"><span class="hs-identifier hs-var">remoteSchemaPerm</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>          </span><span id="local-6989586621687499629"><span class="annot"><span class="annottext">schemaObject :: SchemaObjId
+</span><a href="#local-6989586621687499629"><span class="hs-identifier hs-var hs-var">schemaObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SORemoteSchemaPermission"><span class="hs-identifier hs-var">SORemoteSchemaPermission</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499798"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499801"><span class="hs-identifier hs-var">roleName</span></a></span><span>
-</span><span id="line-180"></span><span>          </span><span id="local-6989586621687499806"><span class="annot"><span class="annottext">providedSchemaDoc :: SchemaDocument
-</span><a href="#local-6989586621687499806"><span class="hs-identifier hs-var hs-var">providedSchemaDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition -&gt; SchemaDocument
+</span><a href="#local-6989586621687499623"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499626"><span class="hs-identifier hs-var">roleName</span></a></span><span>
+</span><span id="line-180"></span><span>          </span><span id="local-6989586621687499631"><span class="annot"><span class="annottext">providedSchemaDoc :: SchemaDocument
+</span><a href="#local-6989586621687499631"><span class="hs-identifier hs-var hs-var">providedSchemaDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition -&gt; SchemaDocument
 </span><a href="Hasura.RemoteSchema.Metadata.Permission.html#_rspdSchema"><span class="hs-identifier hs-var">_rspdSchema</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
-</span><a href="#local-6989586621687499802"><span class="hs-identifier hs-var">defn</span></a></span><span>
-</span><span id="line-181"></span><span>          </span><span id="local-6989586621687499808"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
-</span><a href="#local-6989586621687499808"><span class="hs-identifier hs-var hs-var">addPermContext</span></a></span></span><span> </span><span id="local-6989586621687499809"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687499809"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687499627"><span class="hs-identifier hs-var">defn</span></a></span><span>
+</span><span id="line-181"></span><span>          </span><span id="local-6989586621687499633"><span class="annot"><span class="annottext">addPermContext :: Text -&gt; Text
+</span><a href="#local-6989586621687499633"><span class="hs-identifier hs-var hs-var">addPermContext</span></a></span></span><span> </span><span id="local-6989586621687499634"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687499634"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;in remote schema permission for role &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499801"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687499626"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687499809"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621687499634"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-182"></span><span>      </span><span class="hs-glyph">(|</span><span>
 </span><span id="line-183"></span><span>        </span><span class="annot"><span class="annottext">ErrorA QErr arr (a, ()) IntrospectionResult
 -&gt; arr (a, (MetadataObject, ())) (Maybe IntrospectionResult)
@@ -932,9 +932,9 @@ forall (arr :: * -&gt; * -&gt; *) e s a.
 ErrorA QErr arr (e, s) a -&gt; arr (e, (MetadataObject, s)) (Maybe a)
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withRecordInconsistency"><span class="hs-identifier hs-var">withRecordInconsistency</span></a></span><span>
 </span><span id="line-184"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-185"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621687499818"><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499818"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499819"><span class="annot"><span class="annottext">SchemaDependency
-</span><a href="#local-6989586621687499819"><span class="hs-keyword hs-var">dependency</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-185"></span><span>              </span><span class="hs-special">(</span><span id="local-6989586621687499643"><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499643"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687499644"><span class="annot"><span class="annottext">SchemaDependency
+</span><a href="#local-6989586621687499644"><span class="hs-keyword hs-var">dependency</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-186"></span><span>                </span><span class="annot"><span class="annottext">ErrorA
   QErr
   arr
@@ -950,7 +950,7 @@ arr (ExceptT e m a) a
 -&gt; ExceptT QErr m (IntrospectionResult, SchemaDependency)
 forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#modifyErr"><span class="hs-identifier hs-var">modifyErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><a href="#local-6989586621687499808"><span class="hs-identifier hs-var">addPermContext</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (IntrospectionResult, SchemaDependency)
+</span><a href="#local-6989586621687499633"><span class="hs-identifier hs-var">addPermContext</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (IntrospectionResult, SchemaDependency)
  -&gt; ExceptT QErr m (IntrospectionResult, SchemaDependency))
 -&gt; ExceptT QErr m (IntrospectionResult, SchemaDependency)
 -&gt; ExceptT QErr m (IntrospectionResult, SchemaDependency)
@@ -968,76 +968,76 @@ RoleName
 -&gt; SchemaDocument
 -&gt; m (IntrospectionResult, SchemaDependency)
 </span><a href="Hasura.RemoteSchema.SchemaCache.Permission.html#resolveRoleBasedRemoteSchema"><span class="hs-identifier hs-var">resolveRoleBasedRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499801"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499798"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499797"><span class="hs-identifier hs-var">originalIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDocument
-</span><a href="#local-6989586621687499806"><span class="hs-identifier hs-var">providedSchemaDoc</span></a></span><span>
+</span><a href="#local-6989586621687499626"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499623"><span class="hs-identifier hs-var">remoteSchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
+</span><a href="#local-6989586621687499622"><span class="hs-identifier hs-var">originalIntrospection</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaDocument
+</span><a href="#local-6989586621687499631"><span class="hs-identifier hs-var">providedSchemaDoc</span></a></span><span>
 </span><span id="line-189"></span><span>              </span><span class="annot"><span class="annottext">ErrorA
   QErr arr (MetadataObject, SchemaObjId, Seq SchemaDependency) ()
 forall (arr :: * -&gt; * -&gt; *).
 ArrowWriter (Seq CollectItem) arr =&gt;
 arr (MetadataObject, SchemaObjId, Seq SchemaDependency) ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependencies"><span class="hs-identifier hs-var">recordDependencies</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataObject
-</span><a href="#local-6989586621687499803"><span class="hs-identifier hs-var">metadataObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaObjId
-</span><a href="#local-6989586621687499804"><span class="hs-identifier hs-var">schemaObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaDependency -&gt; Seq SchemaDependency
+</span><a href="#local-6989586621687499628"><span class="hs-identifier hs-var">metadataObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaObjId
+</span><a href="#local-6989586621687499629"><span class="hs-identifier hs-var">schemaObject</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaDependency -&gt; Seq SchemaDependency
 forall a. a -&gt; Seq a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SchemaDependency
-</span><a href="#local-6989586621687499819"><span class="hs-keyword hs-var">dependency</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687499644"><span class="hs-keyword hs-var">dependency</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-190"></span><span>              </span><span class="annot"><span class="annottext">ErrorA QErr arr IntrospectionResult IntrospectionResult
 forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
 </span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">IntrospectionResult
-</span><a href="#local-6989586621687499818"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span><span>
+</span><a href="#local-6989586621687499643"><span class="hs-identifier hs-var">resolvedSchemaIntrospection</span></a></span><span>
 </span><span id="line-191"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-192"></span><span>        </span><span class="hs-glyph">|)</span><span>
 </span><span id="line-193"></span><span>        </span><span class="annot"><span class="annottext">MetadataObject
-</span><a href="#local-6989586621687499803"><span class="hs-identifier hs-var">metadataObject</span></a></span><span>
+</span><a href="#local-6989586621687499628"><span class="hs-identifier hs-var">metadataObject</span></a></span><span>
 </span><span id="line-194"></span><span>
-</span><span id="line-195"></span><span>    </span><span class="annot"><a href="#local-6989586621687499721"><span class="hs-identifier hs-type">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-195"></span><span>    </span><span class="annot"><a href="#local-6989586621687499546"><span class="hs-identifier hs-type">mkRemoteSchemaPermissionMetadataObject</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-196"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-type">RemoteSchemaName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-197"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-type">MetadataObject</span></a></span><span>
-</span><span id="line-198"></span><span>    </span><span id="local-6989586621687499721"><span class="annot"><span class="annottext">mkRemoteSchemaPermissionMetadataObject :: (RemoteSchemaName, RemoteSchemaPermissionMetadata)
+</span><span id="line-198"></span><span>    </span><span id="local-6989586621687499546"><span class="annot"><span class="annottext">mkRemoteSchemaPermissionMetadataObject :: (RemoteSchemaName, RemoteSchemaPermissionMetadata)
 -&gt; MetadataObject
-</span><a href="#local-6989586621687499721"><span class="hs-identifier hs-var hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499823"><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499823"><span class="hs-identifier hs-var">rsName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621687499824"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499824"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621687499825"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
-</span><a href="#local-6989586621687499825"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687499546"><span class="hs-identifier hs-var hs-var">mkRemoteSchemaPermissionMetadataObject</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687499648"><span class="annot"><span class="annottext">RemoteSchemaName
+</span><a href="#local-6989586621687499648"><span class="hs-identifier hs-var">rsName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Permission.html#RemoteSchemaPermissionMetadata"><span class="hs-identifier hs-type">RemoteSchemaPermissionMetadata</span></a></span><span> </span><span id="local-6989586621687499649"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499649"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span id="local-6989586621687499650"><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
+</span><a href="#local-6989586621687499650"><span class="hs-identifier hs-var">defn</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-199"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499826"><span class="annot"><span class="annottext">objectId :: MetadataObjId
-</span><a href="#local-6989586621687499826"><span class="hs-identifier hs-var hs-var">objectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; MetadataObjId
+</span><span id="line-199"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687499651"><span class="annot"><span class="annottext">objectId :: MetadataObjId
+</span><a href="#local-6989586621687499651"><span class="hs-identifier hs-var hs-var">objectId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RoleName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MORemoteSchemaPermissions"><span class="hs-identifier hs-var">MORemoteSchemaPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaName
-</span><a href="#local-6989586621687499823"><span class="hs-identifier hs-var">rsName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621687499824"><span class="hs-identifier hs-var">roleName</span></a></span><span>
+</span><a href="#local-6989586621687499648"><span class="hs-identifier hs-var">rsName</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621687499649"><span class="hs-identifier hs-var">roleName</span></a></span><span>
 </span><span id="line-200"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">MetadataObjId -&gt; Value -&gt; MetadataObject
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MetadataObject"><span class="hs-identifier hs-var">MetadataObject</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
-</span><a href="#local-6989586621687499826"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; MetadataObject) -&gt; Value -&gt; MetadataObject
+</span><a href="#local-6989586621687499651"><span class="hs-identifier hs-var">objectId</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; MetadataObject) -&gt; Value -&gt; MetadataObject
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissionDefinition
-</span><a href="#local-6989586621687499825"><span class="hs-identifier hs-var">defn</span></a></span><span>
+</span><a href="#local-6989586621687499650"><span class="hs-identifier hs-var">defn</span></a></span><span>
 </span><span id="line-201"></span><span>
-</span><span id="line-202"></span><span id="local-6989586621687499265"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-type">addRemoteSchemaP2Setup</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-203"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499265"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687499265"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499265"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499265"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-202"></span><span id="local-6989586621687499090"><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-type">addRemoteSchemaP2Setup</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-203"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499090"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621687499090"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Services.Network.html#ProvidesNetwork"><span class="hs-identifier hs-type">ProvidesNetwork</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499090"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.Class.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687499090"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-204"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-205"></span><span>  </span><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Core.html#RemoteSchemaDef"><span class="hs-identifier hs-type">RemoteSchemaDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-206"></span><span>  </span><span class="annot"><a href="#local-6989586621687499265"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-206"></span><span>  </span><span class="annot"><a href="#local-6989586621687499090"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#IntrospectionResult"><span class="hs-identifier hs-type">IntrospectionResult</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RemoteSchema.SchemaCache.Types.html#RemoteSchemaInfo"><span class="hs-identifier hs-type">RemoteSchemaInfo</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-207"></span><span id="addRemoteSchemaP2Setup"><span class="annot"><span class="annottext">addRemoteSchemaP2Setup :: forall (m :: * -&gt; *).
 (QErrM m, MonadIO m, ProvidesNetwork m, MonadTrace m) =&gt;
 Environment
 -&gt; RemoteSchemaDef
 -&gt; m (IntrospectionResult, ByteString, RemoteSchemaInfo)
-</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-var hs-var">addRemoteSchemaP2Setup</span></a></span></span><span> </span><span id="local-6989586621687499840"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499840"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687499841"><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621687499841"><span class="hs-identifier hs-var">def</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-208"></span><span>  </span><span id="local-6989586621687499842"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
-</span><a href="#local-6989586621687499842"><span class="hs-identifier hs-var">rsi</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; RemoteSchemaDef -&gt; m ValidatedRemoteSchemaDef
+</span><a href="Hasura.RemoteSchema.SchemaCache.Build.html#addRemoteSchemaP2Setup"><span class="hs-identifier hs-var hs-var">addRemoteSchemaP2Setup</span></a></span></span><span> </span><span id="local-6989586621687499665"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687499665"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687499666"><span class="annot"><span class="annottext">RemoteSchemaDef
+</span><a href="#local-6989586621687499666"><span class="hs-identifier hs-var">def</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-208"></span><span>  </span><span id="local-6989586621687499667"><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
+</span><a href="#local-6989586621687499667"><span class="hs-identifier hs-var">rsi</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; RemoteSchemaDef -&gt; m ValidatedRemoteSchemaDef
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 Environment -&gt; RemoteSchemaDef -&gt; m ValidatedRemoteSchemaDef
 </span><a href="Hasura.RemoteSchema.SchemaCache.Types.html#validateRemoteSchemaDef"><span class="hs-identifier hs-var">validateRemoteSchemaDef</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499840"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
-</span><a href="#local-6989586621687499841"><span class="hs-identifier hs-var">def</span></a></span><span>
+</span><a href="#local-6989586621687499665"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaDef
+</span><a href="#local-6989586621687499666"><span class="hs-identifier hs-var">def</span></a></span><span>
 </span><span id="line-209"></span><span>  </span><span class="annot"><span class="annottext">Environment
 -&gt; ValidatedRemoteSchemaDef
 -&gt; m (IntrospectionResult, ByteString, RemoteSchemaInfo)
@@ -1047,6 +1047,6 @@ Environment
 -&gt; ValidatedRemoteSchemaDef
 -&gt; m (IntrospectionResult, ByteString, RemoteSchemaInfo)
 </span><a href="Hasura.GraphQL.RemoteServer.html#fetchRemoteSchema"><span class="hs-identifier hs-var">fetchRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687499840"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
-</span><a href="#local-6989586621687499842"><span class="hs-identifier hs-var">rsi</span></a></span><span>
+</span><a href="#local-6989586621687499665"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">ValidatedRemoteSchemaDef
+</span><a href="#local-6989586621687499667"><span class="hs-identifier hs-var">rsi</span></a></span><span>
 </span><span id="line-210"></span></pre></body></html>

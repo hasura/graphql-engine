@@ -22047,7 +22047,7 @@ module Hasura.LogicalModel.Schema
 buildLogicalModelIR :: LogicalModelInfo b -> LogicalModel b
 
 -- | top-level select permissions for a logical model
-buildLogicalModelPermissions :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (TablePermG b (UnpreparedValue b))
+buildLogicalModelPermissions :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Maybe (TablePermG b (UnpreparedValue b)))
 logicalModelFieldParsers :: forall b r m n. MonadBuildSchema b r m n => Set RelName -> LogicalModelInfo b -> SchemaT r m [FieldParser MetadataObjId n (AnnotatedField b)]
 defaultLogicalModelSelectionSet :: forall b r m n. MonadBuildSchema b r m n => LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
 logicalModelSelectionList :: (MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) => Nullable -> LogicalModelInfo b -> SchemaT r m (Maybe (Parser 'Output n (AnnotatedFields b)))
@@ -24644,22 +24644,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) TriggerOnReplication
-cteqCleanupConfig :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe Text)
-cetqWebhook :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe InputWebhook)
-cetqUpdate :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe (SubscribeOpSpec b_aspdX))
-cetqTable :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (TableName b_aspdX)
-cetqSource :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) SourceName
-cetqRetryConf :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe RequestTransform)
-cetqReplace :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) Bool
-cetqName :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) TriggerName
-cetqInsert :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe (SubscribeOpSpec b_aspdX))
-cetqHeaders :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe Bool)
-cetqDelete :: forall b_aspdX. Lens' (CreateEventTriggerQuery b_aspdX) (Maybe (SubscribeOpSpec b_aspdX))
+cteqTriggerOnReplication :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) TriggerOnReplication
+cteqCleanupConfig :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe Text)
+cetqWebhook :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe InputWebhook)
+cetqUpdate :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe (SubscribeOpSpec b_aspbg))
+cetqTable :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (TableName b_aspbg)
+cetqSource :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) SourceName
+cetqRetryConf :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe RequestTransform)
+cetqReplace :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) Bool
+cetqName :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) TriggerName
+cetqInsert :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe (SubscribeOpSpec b_aspbg))
+cetqHeaders :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe Bool)
+cetqDelete :: forall b_aspbg. Lens' (CreateEventTriggerQuery b_aspbg) (Maybe (SubscribeOpSpec b_aspbg))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
