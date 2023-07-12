@@ -443,7 +443,6 @@ onStart ::
 onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
-  let opName = _grOperationName q
 
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
   -- we process all operations on a websocket connection serially:
@@ -484,7 +483,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     pure (reqParsed, queryParts)
 
   let gqlOpType = G._todType queryParts
-      maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+      opName = getOpNameFromParsedReq reqParsed
+      maybeOperationName = _unOperationName <$> opName
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
     Tracing.attachMetadata [("graphql.operation.name", unName nm)]
@@ -699,7 +699,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-          opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
+          opMetadataE <- liftIO $ startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
           lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -713,7 +713,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                 let asyncActionQueryLive =
                       ES.LAAQOnSourceDB
                         $ ES.LiveAsyncActionQueryOnSource lqId actionLogMap
-                        $ restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed) modifier
+                        $ restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed) modifier
 
                     onUnexpectedException err = do
                       sendError requestId err
@@ -914,16 +914,15 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       liftIO $ sendCompleted Nothing Nothing
       throwError ()
 
-    restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName modifier lqId actionLogMap = do
+    restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName modifier lqId actionLogMap = do
       ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionsState lqId granularPrometheusMetricsState maybeOperationName
-      either (const Nothing) Just <$> startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
+      either (const Nothing) Just <$> startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
 
-    startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier = do
+    startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
 
       for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists) -> do
-        let !opName = _grOperationName q
-            subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
+        let subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
         !lqId <- liftIO $ AB.dispatchAnyBackend @BackendTransport

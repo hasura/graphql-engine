@@ -328,7 +328,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
     let gqlOpType = G._todType queryParts
     observeGQLQueryError gqlMetrics (Just gqlOpType) $ do
       -- 3. Construct the remainder of the execution plan.
-      let maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+      let maybeOperationName = _unOperationName <$> getOpNameFromParsedReq reqParsed
       for_ maybeOperationName $ \nm ->
         -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
         attachMetadata [("graphql.operation.name", G.unName nm)]
