@@ -1,7 +1,7 @@
 import type { ExecutorContext } from '@nrwl/devkit';
 import runCommands from 'nx/src/executors/run-commands/run-commands.impl';
 import { FsTree } from 'nx/src/generators/tree';
-
+import fetch from 'node-fetch';
 import type { ChromaticExecutorSchema } from './schema';
 import { postChromatic, preChromatic } from './chromatic';
 import { executorPreFlightCheck } from './core/executorPreFlightCheck';
@@ -36,7 +36,12 @@ export default async function runExecutor(
 
   // GITHUB APIS
   const { Octokit } = await import('octokit');
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN,
+    request: {
+      fetch: fetch,
+    },
+  });
 
   await preChromatic({
     octokit,
