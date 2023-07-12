@@ -85,17 +85,16 @@ logicalModelPermissions ::
   (Backend b) =>
   LogicalModelInfo b ->
   RoleName ->
-  IR.TablePermG b (IR.UnpreparedValue b)
+  Maybe (IR.TablePermG b (IR.UnpreparedValue b))
 logicalModelPermissions logicalModel roleName = do
   if roleName == adminRoleName
-    then IR.TablePerm gBoolExpTrue Nothing
-    else case getSelPermInfoForLogicalModel roleName logicalModel of
-      Just selectPermissions ->
+    then Just $ IR.TablePerm gBoolExpTrue Nothing
+    else
+      getSelPermInfoForLogicalModel roleName logicalModel <&> \selectPermissions ->
         IR.TablePerm
           { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
             IR._tpLimit = spiLimit selectPermissions
           }
-      Nothing -> IR.TablePerm gBoolExpTrue Nothing
 
 -- | turn post-schema cache LogicalModelInfo into IR
 buildLogicalModelIR :: LogicalModelInfo b -> LogicalModel b
@@ -111,7 +110,7 @@ buildLogicalModelPermissions ::
   ( MonadBuildSchema b r m n
   ) =>
   LogicalModelInfo b ->
-  SchemaT r m (IR.TablePermG b (IR.UnpreparedValue b))
+  SchemaT r m (Maybe (IR.TablePermG b (IR.UnpreparedValue b)))
 buildLogicalModelPermissions logicalModel = do
   roleName <- retrieve scRole
 
