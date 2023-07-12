@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687122715"><span id="local-6989586621687122716"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687122957"><span id="local-6989586621687122958"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
 </span><span id="line-3"></span><span>
 </span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Source.TableType</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#SourceTableType"><span class="hs-identifier">SourceTableType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
@@ -12,7 +12,7 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
 </span><span id="line-13"></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">data</span><span> </span><span id="SourceTableType"><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#SourceTableType"><span class="hs-identifier hs-var">SourceTableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="View"><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#View"><span class="hs-identifier hs-var">View</span></a></span></span><span>
-</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687122720"><span id="local-6989586621687122722"><span class="annot"><span class="annottext">SourceTableType -&gt; SourceTableType -&gt; Bool
+</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687122962"><span id="local-6989586621687122964"><span class="annot"><span class="annottext">SourceTableType -&gt; SourceTableType -&gt; Bool
 (SourceTableType -&gt; SourceTableType -&gt; Bool)
 -&gt; (SourceTableType -&gt; SourceTableType -&gt; Bool)
 -&gt; Eq SourceTableType
@@ -21,7 +21,7 @@ $c== :: SourceTableType -&gt; SourceTableType -&gt; Bool
 == :: SourceTableType -&gt; SourceTableType -&gt; Bool
 $c/= :: SourceTableType -&gt; SourceTableType -&gt; Bool
 /= :: SourceTableType -&gt; SourceTableType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122729"><span id="local-6989586621687122731"><span id="local-6989586621687122733"><span id="local-6989586621687122737"><span id="local-6989586621687122740"><span id="local-6989586621687122743"><span id="local-6989586621687122746"><span class="annot"><span class="annottext">Eq SourceTableType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122971"><span id="local-6989586621687122973"><span id="local-6989586621687122975"><span id="local-6989586621687122979"><span id="local-6989586621687122982"><span id="local-6989586621687122985"><span id="local-6989586621687122988"><span class="annot"><span class="annottext">Eq SourceTableType
 Eq SourceTableType
 -&gt; (SourceTableType -&gt; SourceTableType -&gt; Ordering)
 -&gt; (SourceTableType -&gt; SourceTableType -&gt; Bool)
@@ -58,7 +58,7 @@ $cmax :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
 max :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
 $cmin :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
 min :: SourceTableType -&gt; SourceTableType -&gt; SourceTableType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122750"><span id="local-6989586621687122752"><span id="local-6989586621687122756"><span class="annot"><span class="annottext">Int -&gt; SourceTableType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122992"><span id="local-6989586621687122994"><span id="local-6989586621687122998"><span class="annot"><span class="annottext">Int -&gt; SourceTableType -&gt; ShowS
 [SourceTableType] -&gt; ShowS
 SourceTableType -&gt; String
 (Int -&gt; SourceTableType -&gt; ShowS)
@@ -73,7 +73,7 @@ $cshow :: SourceTableType -&gt; String
 show :: SourceTableType -&gt; String
 $cshowList :: [SourceTableType] -&gt; ShowS
 showList :: [SourceTableType] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122760"><span id="local-6989586621687122762"><span class="annot"><span class="annottext">(forall x. SourceTableType -&gt; Rep SourceTableType x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687123002"><span id="local-6989586621687123004"><span class="annot"><span class="annottext">(forall x. SourceTableType -&gt; Rep SourceTableType x)
 -&gt; (forall x. Rep SourceTableType x -&gt; SourceTableType)
 -&gt; Generic SourceTableType
 forall x. Rep SourceTableType x -&gt; SourceTableType
@@ -84,7 +84,7 @@ $cfrom :: forall x. SourceTableType -&gt; Rep SourceTableType x
 from :: forall x. SourceTableType -&gt; Rep SourceTableType x
 $cto :: forall x. Rep SourceTableType x -&gt; SourceTableType
 to :: forall x. Rep SourceTableType x -&gt; SourceTableType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122766"><span id="local-6989586621687122774"><span id="local-6989586621687122780"><span id="local-6989586621687122794"><span id="local-6989586621687122796"><span id="local-6989586621687122800"><span id="local-6989586621687122804"><span id="local-6989586621687122808"><span class="annot"><span class="annottext">Int -&gt; SourceTableType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687123008"><span id="local-6989586621687123016"><span id="local-6989586621687123022"><span id="local-6989586621687123036"><span id="local-6989586621687123038"><span id="local-6989586621687123042"><span id="local-6989586621687123046"><span id="local-6989586621687123050"><span class="annot"><span class="annottext">Int -&gt; SourceTableType
 SourceTableType -&gt; Int
 SourceTableType -&gt; [SourceTableType]
 SourceTableType -&gt; SourceTableType
@@ -129,7 +129,7 @@ $cenumFromThenTo :: SourceTableType
 -&gt; SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
 enumFromThenTo :: SourceTableType
 -&gt; SourceTableType -&gt; SourceTableType -&gt; [SourceTableType]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122812"><span id="local-6989586621687122814"><span class="annot"><span class="annottext">SourceTableType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687123054"><span id="local-6989586621687123056"><span class="annot"><span class="annottext">SourceTableType
 SourceTableType -&gt; SourceTableType -&gt; Bounded SourceTableType
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: SourceTableType
@@ -137,12 +137,12 @@ minBound :: SourceTableType
 $cmaxBound :: SourceTableType
 maxBound :: SourceTableType
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687122818"><span class="annot"><span class="annottext">SourceTableType -&gt; ()
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687123060"><span class="annot"><span class="annottext">SourceTableType -&gt; ()
 (SourceTableType -&gt; ()) -&gt; NFData SourceTableType
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: SourceTableType -&gt; ()
 rnf :: SourceTableType -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122835"><span id="local-6989586621687122842"><span class="annot"><span class="annottext">Eq SourceTableType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687123077"><span id="local-6989586621687123084"><span class="annot"><span class="annottext">Eq SourceTableType
 Eq SourceTableType
 -&gt; (Int -&gt; SourceTableType -&gt; Int)
 -&gt; (SourceTableType -&gt; Int)
@@ -155,7 +155,7 @@ hashWithSalt :: Int -&gt; SourceTableType -&gt; Int
 $chash :: SourceTableType -&gt; Int
 hash :: SourceTableType -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687122854"><span id="local-6989586621687122860"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceTableType]
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687123096"><span id="local-6989586621687123102"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceTableType]
 Value -&gt; Parser SourceTableType
 (Value -&gt; Parser SourceTableType)
 -&gt; (Value -&gt; Parser [SourceTableType]) -&gt; FromJSON SourceTableType
@@ -165,7 +165,7 @@ $cparseJSON :: Value -&gt; Parser SourceTableType
 parseJSON :: Value -&gt; Parser SourceTableType
 $cparseJSONList :: Value -&gt; Parser [SourceTableType]
 parseJSONList :: Value -&gt; Parser [SourceTableType]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687122868"><span id="local-6989586621687122874"><span id="local-6989586621687122879"><span id="local-6989586621687122884"><span class="annot"><span class="annottext">[SourceTableType] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687123110"><span id="local-6989586621687123116"><span id="local-6989586621687123121"><span id="local-6989586621687123126"><span class="annot"><span class="annottext">[SourceTableType] -&gt; Value
 [SourceTableType] -&gt; Encoding
 SourceTableType -&gt; Value
 SourceTableType -&gt; Encoding
@@ -190,9 +190,9 @@ $ctoEncodingList :: [SourceTableType] -&gt; Encoding
 toEncodingList :: [SourceTableType] -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687122892"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621687122902"><span class="annot"><span class="annottext">codec :: JSONCodec SourceTableType
-</span><a href="#local-6989586621687122902"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec SourceTableType -&gt; JSONCodec SourceTableType
+</span><span id="line-19"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687123134"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.TableType.html#SourceTableType"><span class="hs-identifier hs-type">SourceTableType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621687123144"><span class="annot"><span class="annottext">codec :: JSONCodec SourceTableType
+</span><a href="#local-6989586621687123144"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec SourceTableType -&gt; JSONCodec SourceTableType
 forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier hs-var">named</span></a></span><span> </span><span class="annot"><span class="annottext">Text
