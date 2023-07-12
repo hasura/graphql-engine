@@ -27,7 +27,6 @@
 }
 
 .feature-matrix-tables {
-  //width: 100%;
   table {
     display: table !important;
     width: 70%;
@@ -39,6 +38,18 @@
     }
     td:last-child {
       width: 30%;
+    }
+  }
+}
+
+.api-metadata-request-type-table {
+  table {
+    td:first-child {
+      max-width: 15em;
+    }
+
+    td:nth-child(2) {
+      max-width: 10em;
     }
   }
 }
