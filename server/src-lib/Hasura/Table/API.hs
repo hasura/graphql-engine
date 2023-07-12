@@ -818,7 +818,8 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciCustomConfig = config,
               _tciDescription = description,
               _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable,
-              _tciApolloFederationConfig = apolloFedConfig
+              _tciApolloFederationConfig = apolloFedConfig,
+              _tciRawColumns = columns
             }
 
     logicalModelToRawColumnInfos :: LogicalModelMetadata b -> Either QErr [RawColumnInfo b]

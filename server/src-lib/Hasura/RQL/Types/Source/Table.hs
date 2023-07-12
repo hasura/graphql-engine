@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Source.Table
     stiName,
     stiType,
     stiColumns,
+    stiLogicalModels,
     stiPrimaryKey,
     stiForeignKeys,
     stiDescription,
@@ -26,7 +27,6 @@ where
 
 import Autodocodec
 import Autodocodec.OpenAPI ()
-import Control.DeepSeq (NFData)
 import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict (HashMap)
@@ -36,8 +36,10 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import GHC.Generics (Generic)
+import Hasura.LogicalModel.Metadata
 import Hasura.RQL.Types.Backend (Backend (..), ConstraintName)
 import Hasura.RQL.Types.Source.Column (SourceColumnInfo)
+import Hasura.RQL.Types.Source.TableType
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -47,6 +49,7 @@ data SourceTableInfo b = SourceTableInfo
   { _stiName :: TableName b,
     _stiType :: SourceTableType,
     _stiColumns :: [SourceColumnInfo b],
+    _stiLogicalModels :: [LogicalModelMetadata b],
     _stiPrimaryKey :: Maybe (NonEmpty (Column b)),
     _stiForeignKeys :: SourceForeignKeys b,
     _stiDescription :: Maybe Text,
@@ -55,12 +58,9 @@ data SourceTableInfo b = SourceTableInfo
     _stiDeletable :: Bool
   }
   deriving stock (Generic)
-  deriving anyclass (Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec (SourceTableInfo b)
 
 deriving stock instance (Backend b) => Eq (SourceTableInfo b)
-
-deriving stock instance (Backend b) => Ord (SourceTableInfo b)
 
 deriving stock instance (Backend b) => Show (SourceTableInfo b)
 
@@ -71,6 +71,7 @@ instance (Backend b) => HasCodec (SourceTableInfo b) where
         <$> requiredField "name" "The name of the table" .= _stiName
         <*> optionalFieldWithDefault "type" Table "The type of table" .= _stiType
         <*> requiredField "columns" "The columns of the table" .= _stiColumns
+        <*> optionalFieldWithOmittedDefault "logical_models" [] "The logical models referenced by the table's column types" .= _stiLogicalModels
         <*> dimapMaybeNonEmpty (optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table") .= _stiPrimaryKey
         <*> optionalFieldWithOmittedDefault "foreign_keys" (SourceForeignKeys mempty) "Foreign key constraints" .= _stiForeignKeys
         <*> optionalFieldOrNull "description" "Description of the table" .= _stiDescription
@@ -80,16 +81,6 @@ instance (Backend b) => HasCodec (SourceTableInfo b) where
     where
       dimapMaybeNonEmpty :: Codec context [a] [a] -> Codec context (Maybe (NonEmpty a)) (Maybe (NonEmpty a))
       dimapMaybeNonEmpty = dimapCodec NonEmpty.nonEmpty (maybe [] NonEmpty.toList)
-
---------------------------------------------------------------------------------
-
-data SourceTableType = Table | View
-  deriving stock (Eq, Ord, Show, Generic, Enum, Bounded)
-  deriving anyclass (NFData, Hashable)
-  deriving (FromJSON, ToJSON) via Autodocodec SourceTableType
-
-instance HasCodec SourceTableType where
-  codec = named "TableType" (stringConstCodec [(Table, "table"), (View, "view")])
 
 --------------------------------------------------------------------------------
 

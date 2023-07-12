@@ -281,6 +281,7 @@ common lib-depends
                      , dependent-sum
                      , dependent-sum-template
                      , either
+                     , extra
                      , hasura-error-message
                      , exceptions
                      , fast-logger
@@ -837,6 +838,7 @@ library
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Source.Column
                      , Hasura.RQL.Types.Source.Table
+                     , Hasura.RQL.Types.Source.TableType
                      , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription

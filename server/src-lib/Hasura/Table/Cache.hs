@@ -80,6 +80,7 @@ module Hasura.Table.Cache
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
+    tciRawColumns,
     tiAdminRolePermInfo,
     tiCoreInfo,
     tiEventTriggerInfoMap,
@@ -1011,7 +1012,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
     _tciExtraTableMetadata :: ExtraTableMetadata b,
-    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tciRawColumns :: [RawColumnInfo b]
   }
   deriving (Generic)
 

@@ -332,6 +332,7 @@ instance
             _stiForeignKeys = convertForeignKeys _ptmiForeignKeys,
             _stiPrimaryKey = fmap (toNonEmpty . _pkColumns) _ptmiPrimaryKey,
             _stiColumns = map convertColumn _ptmiColumns,
+            _stiLogicalModels = [],
             _stiType = tableTypeImpl @pgKind _ptmiExtraTableMetadata,
             _stiDescription = Nothing
           }

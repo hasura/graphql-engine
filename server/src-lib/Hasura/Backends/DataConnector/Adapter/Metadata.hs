@@ -53,6 +53,7 @@ import Hasura.Function.Common
 import Hasura.Incremental qualified as Inc
 import Hasura.Incremental.Select qualified as Inc
 import Hasura.Logging (Hasura, Logger)
+import Hasura.LogicalModel.Cache
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types
 import Hasura.Prelude
@@ -645,21 +646,22 @@ getVolatility API.FWrite = FTVOLATILE
 
 getTableInfo' :: (CacheRM m, MetadataM m, MonadError QErr m) => SourceName -> DC.TableName -> m (Maybe (SourceTableInfo 'DataConnector))
 getTableInfo' sourceName tableName = do
-  SourceInfo {_siDbObjectsIntrospection} <- askSourceInfo @'DataConnector sourceName
+  SourceInfo {_siDbObjectsIntrospection, _siTables, _siLogicalModels} <- askSourceInfo @'DataConnector sourceName
 
   let tables :: HashMap DC.TableName (RQL.T.T.DBTableMetadata 'DataConnector)
       tables = _rsTables _siDbObjectsIntrospection
 
-  pure $ fmap (convertTableMetadataToTableInfo tableName) (HashMap.lookup tableName tables)
+  pure $ convertTableMetadataToTableInfo tableName _siLogicalModels <$> HashMap.lookup tableName tables <*> HashMap.lookup tableName _siTables
 
-convertTableMetadataToTableInfo :: DC.TableName -> RQL.T.T.DBTableMetadata 'DataConnector -> SourceTableInfo 'DataConnector
-convertTableMetadataToTableInfo tableName RQL.T.T.DBTableMetadata {..} =
+convertTableMetadataToTableInfo :: DC.TableName -> LogicalModelCache 'DataConnector -> RQL.T.T.DBTableMetadata 'DataConnector -> RQL.T.T.TableInfo 'DataConnector -> SourceTableInfo 'DataConnector
+convertTableMetadataToTableInfo tableName logicalModelCache RQL.T.T.DBTableMetadata {..} RQL.T.T.TableInfo {..} =
   SourceTableInfo
     { _stiName = Witch.from tableName,
       _stiType = case DC._etmTableType _ptmiExtraTableMetadata of
         DC.Table -> Table
         DC.View -> View,
-      _stiColumns = convertColumn <$> _ptmiColumns,
+      _stiColumns = convertColumn <$> RQL.T.T._tciRawColumns _tiCoreInfo,
+      _stiLogicalModels = fmap logicalModelInfoToMetadata . HashMap.elems $ foldl' collectLogicalModels mempty $ RQL.T.C.rciType <$> RQL.T.T._tciRawColumns _tiCoreInfo,
       _stiPrimaryKey = fmap Witch.from . toNonEmpty . RQL.T.T._pkColumns <$> _ptmiPrimaryKey,
       _stiForeignKeys = convertForeignKeys _ptmiForeignKeys,
       _stiDescription = getPGDescription <$> _ptmiDescription,
@@ -687,6 +689,37 @@ convertTableMetadataToTableInfo tableName RQL.T.T.DBTableMetadata {..} =
         }
       where
         extraColumnMetadata = HashMap.lookup rciName . DC._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
+
+    collectLogicalModels :: LogicalModelCache 'DataConnector -> RQL.T.C.RawColumnType 'DataConnector -> LogicalModelCache 'DataConnector
+    collectLogicalModels seenLogicalModels = \case
+      RQL.T.C.RawColumnTypeScalar _ -> seenLogicalModels
+      RQL.T.C.RawColumnTypeObject _ name -> collectLogicalModelName seenLogicalModels (LogicalModelName name)
+      RQL.T.C.RawColumnTypeArray _ rawColumnType _ -> collectLogicalModels seenLogicalModels rawColumnType
+
+    collectLogicalModelName :: LogicalModelCache 'DataConnector -> LogicalModelName -> LogicalModelCache 'DataConnector
+    collectLogicalModelName seenLogicalModels logicalModelName
+      | logicalModelName `HashMap.member` seenLogicalModels = seenLogicalModels
+      | otherwise =
+          case HashMap.lookup logicalModelName logicalModelCache of
+            Nothing -> seenLogicalModels
+            Just logicalModelInfo ->
+              let seenLogicalModels' = HashMap.insert logicalModelName logicalModelInfo seenLogicalModels
+               in foldl' collectLogicalModelType seenLogicalModels' (fmap lmfType $ InsOrdHashMap.elems $ _lmiFields logicalModelInfo)
+
+    collectLogicalModelType :: LogicalModelCache 'DataConnector -> LogicalModelType 'DataConnector -> LogicalModelCache 'DataConnector
+    collectLogicalModelType seenLogicalModels = \case
+      LogicalModelTypeScalar _ -> seenLogicalModels
+      LogicalModelTypeArray LogicalModelTypeArrayC {..} -> collectLogicalModelType seenLogicalModels lmtaArray
+      LogicalModelTypeReference LogicalModelTypeReferenceC {..} -> collectLogicalModelName seenLogicalModels lmtrReference
+
+    logicalModelInfoToMetadata :: LogicalModelInfo 'DataConnector -> LogicalModelMetadata 'DataConnector
+    logicalModelInfoToMetadata LogicalModelInfo {..} =
+      LogicalModelMetadata
+        { _lmmName = _lmiName,
+          _lmmFields = _lmiFields,
+          _lmmDescription = _lmiDescription,
+          _lmmSelectPermissions = mempty
+        }
 
     convertForeignKeys :: HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector) -> SourceForeignKeys 'DataConnector
     convertForeignKeys foreignKeys =

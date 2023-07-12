@@ -86,7 +86,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName (..))
-import Hasura.RQL.Types.Source.Table (SourceTableType (..))
+import Hasura.RQL.Types.Source.TableType (SourceTableType (..))
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
