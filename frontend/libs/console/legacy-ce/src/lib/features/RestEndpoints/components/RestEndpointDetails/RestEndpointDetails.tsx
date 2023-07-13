@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { z } from 'zod';
+import AceEditor from 'react-ace';
 import {
   CheckboxesField,
   CodeEditorField,
@@ -10,13 +11,15 @@ import {
 import { Button } from '../../../../new-components/Button';
 import { FaArrowRight, FaPlay } from 'react-icons/fa';
 import { useRestEndpoint } from '../../hooks/useRestEndpoint';
-import { getSessionVarsFromLS } from '../../../../components/Common/ConfigureTransformation/utils';
 import { parseQueryVariables } from '../../../../components/Services/ApiExplorer/Rest/utils';
 import { useRestEndpointRequest } from '../../hooks/useRestEndpointRequest';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { RequestHeaders } from './RequestHeaders';
 import { Variables } from './Variables';
 import { AllowedRESTMethods } from '../../../../metadata/types';
+import { openInGraphiQL } from './utils';
+import { LS_KEYS, getLSItem } from '../../../../utils';
+import { hasuraToast } from '../../../../new-components/Toasts';
+import { Analytics } from '../../../Analytics';
 
 export type Variable = Exclude<
   ReturnType<typeof parseQueryVariables>,
@@ -66,10 +69,37 @@ const validationSchema = z.object({
   request: z.string().min(1, { message: 'Please add a GraphQL query' }),
 });
 
+export const getInitialHeaders = (): Header[] => {
+  const headers = getLSItem(LS_KEYS.apiExplorerConsoleGraphQLHeaders);
+
+  if (headers) {
+    return JSON.parse(headers).map(
+      (header: { key: string; value: string; isDisabled: boolean }) => {
+        const value =
+          header.key === 'x-hasura-admin-secret'
+            ? window.__env.adminSecret || getLSItem(LS_KEYS.consoleAdminSecret)
+            : header.value;
+        return {
+          name: header.key,
+          value,
+          selected: !header.isDisabled,
+        };
+      }
+    );
+  }
+  return [
+    {
+      name: '',
+      value: '',
+      selected: true,
+    },
+  ];
+};
+
 export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
   const endpoint = useRestEndpoint(props.name);
 
-  const initialHeaders = getSessionVarsFromLS();
+  const initialHeaders = getInitialHeaders();
 
   const [headers, setHeaders] = React.useState(
     initialHeaders.map(header => ({
@@ -80,11 +110,7 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
 
   const [variables, setVariables] = React.useState<Variable[]>([]);
 
-  const { data, refetch, isFetching, error } = useRestEndpointRequest(
-    endpoint?.endpoint,
-    headers,
-    variables
-  );
+  const { data, mutate, isLoading } = useRestEndpointRequest();
 
   const {
     Form,
@@ -129,10 +155,17 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
               label="GraphQL Request"
             />
 
-            <div className="text-sm absolute top-6 right-0 mt-2 mr-2">
-              <a href="/api/api-explorer">
-                Test it in GraphiQL <FaArrowRight />
-              </a>
+            <div className="text-sm absolute top-3 right-0 mt-2">
+              <Button
+                icon={<FaArrowRight />}
+                iconPosition="end"
+                size="sm"
+                onClick={e => {
+                  openInGraphiQL(endpoint.query.query);
+                }}
+              >
+                Test it in GraphiQL
+              </Button>
             </div>
           </div>
           <Textarea
@@ -163,26 +196,64 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
             )}
             orientation="horizontal"
           />
-          <RequestHeaders headers={headers} setHeaders={setHeaders} />
           <Variables variables={variables} setVariables={setVariables} />
 
+          <RequestHeaders headers={headers} setHeaders={setHeaders} />
+
           <div className="mt-2">
-            {error && (
-              <IndicatorCard status="negative" headline="An error has occured">
-                {JSON.stringify(error, null, 2)}
-              </IndicatorCard>
-            )}
-            <Button
-              disabled={!endpoint?.endpoint}
-              isLoading={isFetching}
-              icon={<FaPlay />}
-              onClick={() => {
-                refetch();
-              }}
-              mode="primary"
-            >
-              Run Request
-            </Button>
+            <Analytics name="api-tab-rest-endpoint-details-run-request">
+              <Button
+                disabled={!endpoint?.endpoint}
+                isLoading={isLoading}
+                icon={<FaPlay />}
+                onClick={() => {
+                  mutate(
+                    {
+                      endpoint: endpoint?.endpoint,
+                      headers,
+                      variables,
+                    },
+                    {
+                      onSuccess: data => {
+                        hasuraToast({
+                          title: 'Success',
+                          message: 'Request successful',
+                          type: 'success',
+                        });
+                        window.scrollTo({
+                          top: 0,
+                          behavior: 'smooth',
+                        });
+                      },
+                      onError: error => {
+                        hasuraToast({
+                          title: 'Error',
+                          message: 'Request failed',
+                          type: 'error',
+                          children: (
+                            <div className="overflow-hidden">
+                              <AceEditor
+                                theme="github"
+                                setOptions={{
+                                  minLines: 1,
+                                  maxLines: Infinity,
+                                  showGutter: false,
+                                  useWorker: false,
+                                }}
+                                value={JSON.stringify(error, null, 2)}
+                              />
+                            </div>
+                          ),
+                        });
+                      },
+                    }
+                  );
+                }}
+                mode="primary"
+              >
+                Run Request
+              </Button>
+            </Analytics>
           </div>
         </div>
         <div>

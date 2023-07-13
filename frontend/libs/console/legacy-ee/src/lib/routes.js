@@ -38,7 +38,6 @@ import {
   ApiContainer,
   CreateRestView,
   RestListView,
-  DetailsView,
   InheritedRolesContainer,
   ApiLimits,
   IntrospectionOptions,
@@ -54,6 +53,7 @@ import {
   SingleSignOnPage,
   SchemaRegistryContainer,
   SchemaDetailsView,
+  RestEndpointDetailsPage,
 } from '@hasura/console-legacy-ce';
 
 import AccessDeniedComponent from './components/AccessDenied/AccessDenied';
@@ -344,7 +344,7 @@ const routes = store => {
             <IndexRedirect to="list" />
             <Route path="create" component={CreateRestView} />
             <Route path="list" component={RestListView} />
-            <Route path="details/:name" component={DetailsView} />
+            <Route path="details/:name" component={RestEndpointDetailsPage} />
             <Route path="edit/:name" component={CreateRestView} />
           </Route>
           <Route path="allow-list">

@@ -1,10 +1,12 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import queryString from 'query-string';
 import {
   Analytics,
   REDACT_EVERYTHING,
 } from '../../../../../features/Analytics';
+import { parse, print } from 'graphql';
 import {
   AllowedRESTMethods,
   RestEndpointEntry,
@@ -84,8 +86,14 @@ const useRestEndpointFormStateForCreation: RestEndpointFormStateHook = (
   formSubmitHandler: RestEndpointFormSubmitHandler;
 } => {
   const formState: RestEndpointFormState = {};
-  formState.request = getLSItem(LS_KEYS.graphiqlQuery) ?? undefined;
-
+  try {
+    const parsedQuery = queryString.parseUrl(window.location.href);
+    if (parsedQuery.query?.from === 'graphiql') {
+      formState.request = print(parse(getLSItem(LS_KEYS.graphiqlQuery) ?? ''));
+    }
+  } catch (e) {
+    // ignore
+  }
   return { formState, formSubmitHandler: createEndpoint };
 };
 

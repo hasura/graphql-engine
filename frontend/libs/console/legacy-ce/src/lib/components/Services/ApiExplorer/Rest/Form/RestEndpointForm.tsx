@@ -15,7 +15,8 @@ import globals from '../../../../../Globals';
 import { FaArrowRight, FaMagic } from 'react-icons/fa';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import clsx from 'clsx';
-import { Link } from 'react-router';
+import { openInGraphiQL } from '../../../../../features/RestEndpoints/components/RestEndpointDetails/utils';
+import { Analytics } from '../../../../../features/Analytics';
 
 const editorOptions = {
   minLines: 10,
@@ -131,11 +132,19 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             description="Support GraphQL queries and mutations."
             editorOptions={editorOptions}
           />
-          <div className="text-sm absolute top-6 right-0 mt-2 mr-2">
-            <Link to="/api/api-explorer?mode=rest">
-              {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
-              <FaArrowRight />
-            </Link>
+          <div className="text-sm absolute top-3 right-0 mt-2">
+            <Analytics name="api-tab-rest-endpoint-form-graphiql-link">
+              <Button
+                icon={<FaArrowRight />}
+                iconPosition="end"
+                size="sm"
+                onClick={e => {
+                  openInGraphiQL(request);
+                }}
+              >
+                {request ? 'Test it in ' : 'Import from '} GraphiQL{' '}
+              </Button>
+            </Analytics>
           </div>
         </div>
         <InputField name="name" label="Name" placeholder="Name" />
@@ -159,8 +168,8 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             customIcon={FaMagic}
             headline="No Parameterized variable specification needed"
           >
-            All parameterized variables in your GraphQL query will be
-            auto-specifed in the URL
+            All parameterized variables (e.g. {prependLabel}example/:id) in your
+            GraphQL query will be auto-specifed in the URL
           </IndicatorCard>
         </div>
         <CheckboxesField
@@ -179,14 +188,18 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           <Button type="button" onClick={onCancel} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            mode="primary"
-            isLoading={loading}
-            loadingText={{ create: 'Creating...', edit: 'Modifying ..' }[mode]}
-          >
-            {{ create: 'Create', edit: 'Modify' }[mode]}
-          </Button>
+          <Analytics name={`api-tab-rest-endpoint-form-${mode}-button`}>
+            <Button
+              type="submit"
+              mode="primary"
+              isLoading={loading}
+              loadingText={
+                { create: 'Creating...', edit: 'Modifying ..' }[mode]
+              }
+            >
+              {{ create: 'Create', edit: 'Modify' }[mode]}
+            </Button>
+          </Analytics>
         </div>
       </div>
     </Form>

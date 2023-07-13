@@ -28,13 +28,13 @@ import { SupportContainer } from './components/Services/Support/SupportContainer
 import HelpPage from './components/Services/Support/HelpPage';
 import FormRestView from './components/Services/ApiExplorer/Rest/Form';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
-import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
 import AuthContainer from './components/Services/Auth/AuthContainer';
 import { FeatureFlags } from './features/FeatureFlags';
 import { AllowListDetail } from './components/Services/AllowList';
+import { RestEndpointDetailsPage } from './features/RestEndpoints/components/RestEndpointDetails/RestEndpointDetailsPage';
 
 const routes = store => {
   // load hasuraCliServer migration status
@@ -121,7 +121,7 @@ const routes = store => {
               <IndexRedirect to="list" />
               <Route path="create" component={FormRestView} />
               <Route path="list" component={RestListView} />
-              <Route path="details/:name" component={DetailsView} />
+              <Route path="details/:name" component={RestEndpointDetailsPage} />
               <Route path="edit/:name" component={FormRestView} />
             </Route>
             <Route path="allow-list">
