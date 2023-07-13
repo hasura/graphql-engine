@@ -641,6 +641,7 @@ runBulkAtomic cmds = do
         RMCreateObjectRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ObjRel . unCreateObjRel) q
         RMCreateArrayRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ArrRel . unCreateArrRel) q
         RMDropRelationship q -> pure $ dispatchMetadata (const . execDropRel) q
+        RMDeleteRemoteRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ const . execDeleteRemoteRelationship) q
         RMTrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execTrackNativeQuery) q
         RMUntrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execUntrackNativeQuery) q
         RMTrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execTrackLogicalModel) q
