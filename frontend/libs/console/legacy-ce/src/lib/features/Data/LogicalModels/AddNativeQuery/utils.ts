@@ -20,6 +20,14 @@ export const transformFormOutputToMetadata = (
     };
   }, {});
 
+  // remove source from the object and get the rest...
+  const { source, ...rest } = formValues;
+
+  return {
+    ...rest,
+    arguments: queryArgsForMetadata,
+  };
+
   const { code, returns, root_field_name, comment, type } = formValues;
 
   return {

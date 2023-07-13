@@ -27,6 +27,12 @@ export const getSources = () => (m: Metadata) => m?.metadata.sources;
 export const findSource = (dataSourceName: string) => (m: Metadata) =>
   utils.findMetadataSource(dataSourceName, m);
 
+export const findNativeQuery =
+  (dataSourceName: string, nativeQueryName: string) => (m: Metadata) =>
+    utils
+      .findMetadataSource(dataSourceName, m)
+      ?.native_queries?.find(nq => nq.root_field_name === nativeQueryName);
+
 export const getTables = (dataSourceName: string) => (m: Metadata) =>
   utils.findMetadataSource(dataSourceName, m)?.tables;
 

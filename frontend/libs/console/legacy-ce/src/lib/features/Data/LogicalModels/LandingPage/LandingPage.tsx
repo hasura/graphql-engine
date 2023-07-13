@@ -137,7 +137,7 @@ export const LandingPage = ({ pathname }: { pathname: string }) => {
                     isLoading={isLoading}
                     onEditClick={query => {
                       push?.(
-                        `data/native-queries/native-query/${query.source.name}/${query.root_field_name}`
+                        `data/native-queries/${query.source.name}/${query.root_field_name}`
                       );
                     }}
                     onRemoveClick={handleRemoveNativeQuery}

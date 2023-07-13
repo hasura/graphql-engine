@@ -7,7 +7,6 @@ import { NativeQuery } from '../../../hasura-metadata-types';
 import { RouteWrapper } from '../components/RouteWrapper';
 import { AddNativeQuery } from './AddNativeQuery';
 import { nativeQueryHandlers } from './mocks';
-import { normalizeArguments } from './utils';
 
 type Story = StoryObj<typeof AddNativeQuery>;
 
@@ -79,9 +78,7 @@ const fillAndSubmitForm: Story['play'] = async ({ canvasElement }) => {
 };
 
 const defaultArgs: Story['args'] = {
-  defaultFormValues: {
-    code: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
-  },
+  defaultSql: `SELECT * FROM (VALUES ('hello', 'world'), ('welcome', 'friend')) as t("one", "two")`,
 };
 
 export const Basic: Story = {
@@ -222,6 +219,8 @@ const existingNativeQuery: Required<NativeQuery> = {
   code: "select\n    AlbumId,\n    a.ArtistId,\n    Title [AlbumTitle],\n    a.Name [Artist],\n    (\n      select\n        count(*)\n      from\n        Track t\n      where\n        t.AlbumId = b.AlbumId\n    ) [TrackCount]\n  from\n    album b\n    join artist a on a.ArtistId = b.ArtistId\n    \n    \n -- search option for later:   \n  WHERE\n    b.Title like '%' + {{query}} + '%'",
   returns: 'hello_world',
   root_field_name: 'AlbumDetail',
+  object_relationships: [],
+  array_relationships: [],
 };
 
 export const Update: Story = {
@@ -233,11 +232,9 @@ export const Update: Story = {
     }),
   },
   args: {
-    mode: 'update',
-    defaultFormValues: {
-      ...existingNativeQuery,
-      source: 'postgres',
-      arguments: normalizeArguments(existingNativeQuery.arguments ?? {}),
+    editDetails: {
+      nativeQuery: existingNativeQuery,
+      dataSourceName: 'postgres',
     },
   },
   play: async ({ canvasElement }) => {

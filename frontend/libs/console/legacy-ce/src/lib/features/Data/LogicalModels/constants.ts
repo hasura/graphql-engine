@@ -14,13 +14,16 @@ export const NATIVE_QUERY_ROUTES = {
     title: 'Native Queries',
     subtitle: 'Access more queries and operators through SQL on your database',
   },
+  // create new native query
   '/data/native-queries/create': {
     title: 'Create Native Query',
     subtitle: 'Access more queries and operators through SQL on your database',
   },
-  '/data/native-queries/{{source}}/{{name}}': {
+  // edit/view native query:
+  '/data/native-queries/{{source}}/{{name}}/{{tab}}': {
     title: '{{name}}',
-    subtitle: 'Access more queries and operators through SQL on your database',
+    //setting via the RouteWrapper props for this one so it can be dynamic based on tab
+    subtitle: '',
   },
   '/data/native-queries/logical-models': {
     title: 'Logical Models',

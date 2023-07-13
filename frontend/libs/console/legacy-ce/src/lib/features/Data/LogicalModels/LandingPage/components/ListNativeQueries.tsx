@@ -4,8 +4,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import React from 'react';
-import { CgDetailsMore } from 'react-icons/cg';
-import { FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
 import { Button } from '../../../../../new-components/Button';
 import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
@@ -46,14 +45,8 @@ export const ListNativeQueries = ({
         header: 'Actions',
         cell: ({ cell, row }) => (
           <div className="flex flex-row gap-2">
-            <Button
-              // icon={<FaEdit />}
-              icon={<CgDetailsMore />}
-              onClick={() => onEditClick(row.original)}
-            >
-              {/* Edit */}
-              {/* Change back to Edit once we support it */}
-              View
+            <Button icon={<FaEdit />} onClick={() => onEditClick(row.original)}>
+              Edit
             </Button>
             <Button
               mode="destructive"

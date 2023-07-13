@@ -43,10 +43,8 @@ import {
   LogicalModelPermissionsRoute,
 } from '../../../features/Data/LogicalModels';
 import { ManageFunction } from '../../../features/Data/ManageFunction/ManageFunction';
-import {
-  UpdateNativeQueryRoute,
-  AddNativeQueryRoute,
-} from '../../../features/Data/LogicalModels/AddNativeQuery';
+import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery';
+import { NativeQueryLandingPage } from '../../../features/Data/LogicalModels/AddNativeQuery/NativeQueryLandingPage';
 
 const makeDataRouter = (
   connect,
@@ -89,10 +87,7 @@ const makeDataRouter = (
       <Route path="native-queries">
         <IndexRoute component={NativeQueries} />
         <Route path="create" component={AddNativeQueryRoute} />
-        <Route
-          path="native-query/:source/:name"
-          component={UpdateNativeQueryRoute}
-        />
+
         <Route path="logical-models">
           <IndexRoute component={NativeQueries} />
           <Redirect from=":source" to="/data/native-queries/logical-models" />
@@ -104,11 +99,16 @@ const makeDataRouter = (
             />
           </Route>
         </Route>
+
         <Route path="stored-procedures" component={NativeQueries} />
         <Route
           path="stored-procedures/track"
           component={TrackStoredProcedureRoute}
         />
+        <Route path=":source/:name" component={NativeQueryLandingPage}>
+          <IndexRedirect to="details" />
+          <Route path=":tabName" component={NativeQueryLandingPage} />
+        </Route>
       </Route>
       <Route path="manage/connect" component={ConnectDatabase} />
       <Route path="manage/create" component={ConnectedCreateDataSourcePage} />

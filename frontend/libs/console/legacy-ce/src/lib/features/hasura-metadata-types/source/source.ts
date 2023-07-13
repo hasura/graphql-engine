@@ -112,3 +112,5 @@ export type BulkKeepGoingResponse = [
       path: string;
     }
 ];
+
+export { NativeQueryRelationship } from './nativeQuery';

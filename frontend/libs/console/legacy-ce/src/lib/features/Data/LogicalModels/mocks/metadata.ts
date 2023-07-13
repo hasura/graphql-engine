@@ -1,4 +1,4 @@
-import { Metadata } from '../../../hasura-metadata-types';
+import { LogicalModel, Metadata } from '../../../hasura-metadata-types';
 
 const testQueries = {
   postgres: [
@@ -13,6 +13,30 @@ const testQueries = {
       code: "SELECT * FROM (VALUES ('hello', 'world2'), ('welcome', 'friend')) as t(\"one\", \"two\")\n",
       returns: 'hello_world2',
       root_field_name: 'hello_world_function2',
+    },
+    {
+      arguments: {},
+      code: 'select "CustomerId", "BillingCity" as "City", "BillingCountry" as "Country" from "public"."Invoice"',
+      returns: 'customer_location_model',
+      root_field_name: 'customer_location',
+    },
+    {
+      arguments: {},
+      code: 'select "CustomerId" as "Id", "FirstName" as "Name" from "public"."Customer"',
+      object_relationships: [
+        {
+          name: 'location',
+          using: {
+            column_mapping: {
+              Id: 'CustomerId',
+            },
+            insertion_order: null,
+            remote_native_query: 'customer_location',
+          },
+        },
+      ],
+      returns: 'customer_model',
+      root_field_name: 'customer_native_query',
     },
   ],
   mssql: [
@@ -31,19 +55,17 @@ const testQueries = {
   ],
 };
 
-const testModels = {
+const testModels: Record<string, LogicalModel[]> = {
   postgres: [
     {
       fields: [
         {
           name: 'one',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
         {
           name: 'two',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
       ],
       name: 'hello_world',
@@ -52,16 +74,60 @@ const testModels = {
       fields: [
         {
           name: 'one',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
         {
           name: 'two',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
       ],
       name: 'hello_world2',
+    },
+    // for testing relationships:
+    {
+      fields: [
+        {
+          name: 'CustomerId',
+          type: {
+            nullable: false,
+            scalar: 'integer',
+          },
+        },
+        {
+          name: 'City',
+          type: {
+            nullable: true,
+            scalar: 'varchar',
+          },
+        },
+        {
+          name: 'Country',
+          type: {
+            nullable: true,
+            scalar: 'varchar',
+          },
+        },
+      ],
+      name: 'customer_location_model',
+    },
+    {
+      fields: [
+        {
+          name: 'Id',
+          type: {
+            nullable: false,
+            scalar: 'integer',
+          },
+        },
+        {
+          name: 'Name',
+          type: {
+            nullable: true,
+            scalar: 'varchar',
+          },
+        },
+      ],
+      name: 'customer_model',
     },
   ],
   mssql: [
@@ -69,13 +135,11 @@ const testModels = {
       fields: [
         {
           name: 'one',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
         {
           name: 'two',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
       ],
       name: 'hello_mssql',
@@ -84,13 +148,11 @@ const testModels = {
       fields: [
         {
           name: 'one',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
         {
           name: 'two',
-          nullable: false,
-          type: 'text',
+          type: { scalar: 'string', nullable: true },
         },
       ],
       name: 'hello_mssql2',
