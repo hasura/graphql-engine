@@ -25594,6 +25594,7 @@ DeleteFromSourceRelationship :: SourceName -> TableName b -> RelName -> DeleteFr
 [_drrSource] :: DeleteFromSourceRelationship (b :: BackendType) -> SourceName
 [_drrTable] :: DeleteFromSourceRelationship (b :: BackendType) -> TableName b
 [_drrName] :: DeleteFromSourceRelationship (b :: BackendType) -> RelName
+execDeleteRemoteRelationship :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m) => DeleteFromSourceRelationship b -> m (MetadataObjId, MetadataModifier)
 runDeleteRemoteRelationship :: forall b m. (BackendMetadata b, MonadError QErr m, CacheRWM m, MetadataM m) => DeleteFromSourceRelationship b -> m EncJSON
 data CreateRemoteSchemaRemoteRelationship
 CreateRemoteSchemaRemoteRelationship :: RemoteSchemaName -> Name -> RelName -> RemoteRelationshipDefinition -> CreateRemoteSchemaRemoteRelationship
