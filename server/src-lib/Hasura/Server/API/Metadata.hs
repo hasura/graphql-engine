@@ -593,11 +593,11 @@ runBulkAtomic ::
 runBulkAtomic cmds = do
   -- get the metadata modifiers for all our commands
   (mdModifiers :: [Metadata -> m Metadata]) <- do
-    (mods :: [Metadata -> m (MetadataObjId, MetadataModifier)]) <- traverse getMetadataModifierForCommand cmds
+    (mods :: [Metadata -> m MetadataModifier]) <- traverse getMetadataModifierForCommand cmds
     pure
       $ map
         ( \checker metadata -> do
-            MetadataModifier modifier <- snd <$> checker metadata
+            MetadataModifier modifier <- checker metadata
             pure $ modifier metadata
         )
         mods
@@ -612,7 +612,14 @@ runBulkAtomic cmds = do
 
   pure successMsg
   where
-    getMetadataModifierForCommand :: RQLMetadataRequest -> m (Metadata -> m (MetadataObjId, MetadataModifier))
+    forgetMetadataObjId ::
+      (command -> Metadata -> m (MetadataObjId, MetadataModifier)) ->
+      command ->
+      Metadata ->
+      m MetadataModifier
+    forgetMetadataObjId f x y = fmap snd (f x y)
+
+    getMetadataModifierForCommand :: RQLMetadataRequest -> m (Metadata -> m MetadataModifier)
     getMetadataModifierForCommand = \case
       RMV1 v -> case v of
         -- Whoa there, cowboy! Chances are you're here to add table tracking to
@@ -628,14 +635,16 @@ runBulkAtomic cmds = do
         --   eventually consistent but currently inconsistent: I add table X, a
         --   relationship between X and Y, and then I add table Y. Currently,
         --   this can't be done, so all validation checks in
-        --   'execCreateRelationship' remain as they are in the @run@ versions.
+        --   'execCreateRelationship' and 'execDropRelationship' remain as they
+        --   are in the @run@ versions.
 
-        RMCreateObjectRelationship q -> pure $ dispatchMetadata (execCreateRelationship ObjRel . unCreateObjRel) q
-        RMCreateArrayRelationship q -> pure $ dispatchMetadata (execCreateRelationship ArrRel . unCreateArrRel) q
-        RMTrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execTrackNativeQuery q
-        RMUntrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execUntrackNativeQuery q
-        RMTrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execTrackLogicalModel q
-        RMUntrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execUntrackLogicalModel q
+        RMCreateObjectRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ObjRel . unCreateObjRel) q
+        RMCreateArrayRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ArrRel . unCreateArrRel) q
+        RMDropRelationship q -> pure $ dispatchMetadata (const . execDropRel) q
+        RMTrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execTrackNativeQuery) q
+        RMUntrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execUntrackNativeQuery) q
+        RMTrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execTrackLogicalModel) q
+        RMUntrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execUntrackLogicalModel) q
         _ -> throw500 "Bulk atomic does not support this command"
       RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 

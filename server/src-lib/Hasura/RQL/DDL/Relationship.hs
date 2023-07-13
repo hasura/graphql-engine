@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Relationship
     defaultBuildObjectRelationshipInfo,
     defaultBuildArrayRelationshipInfo,
     DropRel,
+    execDropRel,
     runDropRel,
     dropRelationshipInMetadata,
     SetRelComment,
@@ -352,36 +353,48 @@ instance (Backend b) => FromJSON (DropRel b) where
       .:? "cascade"
       .!= False
 
-runDropRel ::
+execDropRel ::
   forall b m.
+  (MonadError QErr m, CacheRWM m, BackendMetadata b) =>
+  DropRel b ->
+  m MetadataModifier
+execDropRel (DropRel source qt rn cascade) = do
+  tableInfo <- askTableCoreInfo @b source qt
+
+  _ <- askRelType (_tciFieldInfoMap tableInfo) rn ""
+  schemaCache <- askSchemaCache
+
+  let sourceObj :: SchemaObjId
+      sourceObj =
+        SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOITableObj @b qt
+          $ TORel rn
+
+      depObjs :: [SchemaObjId]
+      depObjs = getDependentObjs schemaCache sourceObj
+
+  unless (null depObjs || cascade) do
+    reportDependentObjectsExist depObjs
+
+  metadataModifiers <- traverse purgeRelDep depObjs
+
+  let modifier :: TableMetadata b -> TableMetadata b
+      modifier = dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
+
+  pure (MetadataModifier (tableMetadataSetter @b source qt %~ modifier))
+
+runDropRel ::
+  forall m b.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   DropRel b ->
   m EncJSON
-runDropRel (DropRel source qt rn cascade) = do
-  depObjs <- collectDependencies
+runDropRel dropRel = do
   withNewInconsistentObjsCheck do
-    metadataModifiers <- traverse purgeRelDep depObjs
-    buildSchemaCache
-      $ MetadataModifier
-      $ tableMetadataSetter @b source qt
-      %~ dropRelationshipInMetadata rn
-      . foldr (.) id metadataModifiers
+    metadataModifier <- execDropRel dropRel
+    buildSchemaCache metadataModifier
+
   pure successMsg
-  where
-    collectDependencies = do
-      tabInfo <- askTableCoreInfo @b source qt
-      void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
-      sc <- askSchemaCache
-      let depObjs =
-            getDependentObjs
-              sc
-              ( SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @b qt
-                  $ TORel rn
-              )
-      unless (null depObjs || cascade) $ reportDependentObjectsExist depObjs
-      pure depObjs
 
 purgeRelDep ::
   forall b m.
