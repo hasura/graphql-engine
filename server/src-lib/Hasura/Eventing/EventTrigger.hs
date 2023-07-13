@@ -634,6 +634,8 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
               timeout (fromInteger (diffTimeToMicroSeconds eventTriggerProcessingTimeout)) eventTriggerProcessAction
                 `onNothingM` do
                   let eventTriggerTimeoutMessage = "Event Trigger " <> etiName eti <<> " timed out while processing."
+                      eventTriggerTimeoutError = err500 TimeoutErrorCode eventTriggerTimeoutMessage
+                  L.unLogger logger $ EventInternalErr eventTriggerTimeoutError
                   processError @b sourceConfig e retryConf logHeaders J.Null maintenanceModeVersion eventTriggerMetrics (HOther $ T.unpack eventTriggerTimeoutMessage)
                     >>= flip onLeft logQErr
 
