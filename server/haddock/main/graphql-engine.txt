@@ -18017,13 +18017,12 @@ WebHookLog :: !LogLevel -> !Maybe Status -> !Text -> !StdMethod -> !Maybe HttpEx
 -- | GQLQueryOperationSuccessLog captures all the data required to
 --   construct an HTTP success log.
 data GQLQueryOperationSuccessLog
-GQLQueryOperationSuccessLog :: GQLReqUnparsed -> DiffTime -> DiffTime -> Int64 -> Int64 -> ParameterizedQueryHash -> GQLQueryOperationSuccessLog
-[gqolQuery] :: GQLQueryOperationSuccessLog -> GQLReqUnparsed
-[gqolQueryExecutionTime] :: GQLQueryOperationSuccessLog -> DiffTime
-[gqolUpstreamExecutionTime] :: GQLQueryOperationSuccessLog -> DiffTime
-[gqolResponseSize] :: GQLQueryOperationSuccessLog -> Int64
-[gqolRequestSize] :: GQLQueryOperationSuccessLog -> Int64
-[gqolParameterizedQueryHash] :: GQLQueryOperationSuccessLog -> ParameterizedQueryHash
+GQLQueryOperationSuccessLog :: !GQLReqUnparsed -> !DiffTime -> !Int64 -> !Int64 -> !ParameterizedQueryHash -> GQLQueryOperationSuccessLog
+[gqolQuery] :: GQLQueryOperationSuccessLog -> !GQLReqUnparsed
+[gqolQueryExecutionTime] :: GQLQueryOperationSuccessLog -> !DiffTime
+[gqolResponseSize] :: GQLQueryOperationSuccessLog -> !Int64
+[gqolRequestSize] :: GQLQueryOperationSuccessLog -> !Int64
+[gqolParameterizedQueryHash] :: GQLQueryOperationSuccessLog -> !ParameterizedQueryHash
 
 -- | GQLQueryOperationErrorLog captures the request along with the error
 --   message
@@ -18109,7 +18108,7 @@ HttpInfoLog :: !Status -> !Text -> !IpAddress -> !Text -> !HttpVersion -> !Maybe
 
 -- | Information about a GraphQL/Hasura metadata operation over HTTP
 data OperationLog
-OperationLog :: !RequestId -> !Maybe SessionVariables -> !Maybe Int64 -> !Int64 -> !Maybe Seconds -> !Maybe Seconds -> Maybe Seconds -> !Maybe Value -> !Maybe Text -> !Maybe QErr -> !RequestMode -> OperationLog
+OperationLog :: !RequestId -> !Maybe SessionVariables -> !Maybe Int64 -> !Int64 -> !Maybe Seconds -> !Maybe Seconds -> !Maybe Value -> !Maybe Text -> !Maybe QErr -> !RequestMode -> OperationLog
 [olRequestId] :: OperationLog -> !RequestId
 [olUserVars] :: OperationLog -> !Maybe SessionVariables
 [olResponseSize] :: OperationLog -> !Maybe Int64
@@ -18123,9 +18122,6 @@ OperationLog :: !RequestId -> !Maybe SessionVariables -> !Maybe Int64 -> !Int64 
 
 -- | Service time, not including request IO wait time.
 [olQueryExecutionTime] :: OperationLog -> !Maybe Seconds
-
--- | Execution time of the upstream source (DB<i>remote schema</i>action)
-[olUpstreamExecutionTime] :: OperationLog -> Maybe Seconds
 [olQuery] :: OperationLog -> !Maybe Value
 [olRawQuery] :: OperationLog -> !Maybe Text
 [olError] :: OperationLog -> !Maybe QErr
@@ -18585,10 +18581,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_akMeH. Prism' (ActionFieldG r_akMeH) (Name, ActionFieldsG r_akMeH)
-_ACFExpression :: forall r_akMeH. Prism' (ActionFieldG r_akMeH) Text
-_ACFRemote :: forall r_akMeH. Prism' (ActionFieldG r_akMeH) (ActionRemoteRelationshipSelect r_akMeH)
-_ACFScalar :: forall r_akMeH. Prism' (ActionFieldG r_akMeH) Name
+_ACFNestedObject :: forall r_akLSg. Prism' (ActionFieldG r_akLSg) (Name, ActionFieldsG r_akLSg)
+_ACFExpression :: forall r_akLSg. Prism' (ActionFieldG r_akLSg) Text
+_ACFRemote :: forall r_akLSg. Prism' (ActionFieldG r_akLSg) (ActionRemoteRelationshipSelect r_akLSg)
+_ACFScalar :: forall r_akLSg. Prism' (ActionFieldG r_akLSg) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: ActionName -> GraphQLType -> ActionFieldsG r -> Value -> ActionOutputFields -> EnvRecord ResolvedWebhook -> [HeaderConf] -> Bool -> Timeout -> Maybe RequestTransform -> Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> ActionName
@@ -18642,30 +18638,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) StringifyNumbers
-aaaqSource :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) (ActionSourceInfo b_akMES)
-aaaqOutputType :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) GraphQLType
-aaaqName :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) ActionName
-aaaqForwardClientHeaders :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) Bool
-aaaqFields :: forall b_akMES r_akMET r_akNie. Lens (AnnActionAsyncQuery b_akMES r_akMET) (AnnActionAsyncQuery b_akMES r_akNie) (AsyncActionQueryFieldsG r_akMET) (AsyncActionQueryFieldsG r_akNie)
-aaaqDefinitionList :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) [(Column b_akMES, ScalarType b_akMES)]
-aaaqActionId :: forall b_akMES r_akMET. Lens' (AnnActionAsyncQuery b_akMES r_akMET) ActionId
-aaeWebhook :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) Timeout
-aaeResponseTransform :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) (Maybe RequestTransform)
-aaePayload :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) Value
-aaeOutputType :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) GraphQLType
-aaeOutputFields :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) ActionOutputFields
-aaeName :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) ActionName
-aaeHeaders :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) [HeaderConf]
-aaeForwardClientHeaders :: forall r_akMEW. Lens' (AnnActionExecution r_akMEW) Bool
-aaeFields :: forall r_akMEW r_akNpU. Lens (AnnActionExecution r_akMEW) (AnnActionExecution r_akNpU) (ActionFieldsG r_akMEW) (ActionFieldsG r_akNpU)
-_AsyncErrors :: forall r_akMEV. Prism' (AsyncActionQueryFieldG r_akMEV) ()
-_AsyncCreatedAt :: forall r_akMEV. Prism' (AsyncActionQueryFieldG r_akMEV) ()
-_AsyncId :: forall r_akMEV. Prism' (AsyncActionQueryFieldG r_akMEV) ()
-_AsyncOutput :: forall r_akNAd r_akMEV. Prism (AsyncActionQueryFieldG r_akNAd) (AsyncActionQueryFieldG r_akMEV) (ActionFieldsG r_akNAd) (ActionFieldsG r_akMEV)
-_AsyncTypename :: forall r_akMEV. Prism' (AsyncActionQueryFieldG r_akMEV) Text
+aaaqStringifyNum :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) StringifyNumbers
+aaaqSource :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) (ActionSourceInfo b_akMir)
+aaaqOutputType :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) GraphQLType
+aaaqName :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) ActionName
+aaaqForwardClientHeaders :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) Bool
+aaaqFields :: forall b_akMir r_akMis r_akMVN. Lens (AnnActionAsyncQuery b_akMir r_akMis) (AnnActionAsyncQuery b_akMir r_akMVN) (AsyncActionQueryFieldsG r_akMis) (AsyncActionQueryFieldsG r_akMVN)
+aaaqDefinitionList :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) [(Column b_akMir, ScalarType b_akMir)]
+aaaqActionId :: forall b_akMir r_akMis. Lens' (AnnActionAsyncQuery b_akMir r_akMis) ActionId
+aaeWebhook :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) Timeout
+aaeResponseTransform :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) (Maybe RequestTransform)
+aaePayload :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) Value
+aaeOutputType :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) GraphQLType
+aaeOutputFields :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) ActionOutputFields
+aaeName :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) ActionName
+aaeHeaders :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) [HeaderConf]
+aaeForwardClientHeaders :: forall r_akMiv. Lens' (AnnActionExecution r_akMiv) Bool
+aaeFields :: forall r_akMiv r_akN3t. Lens (AnnActionExecution r_akMiv) (AnnActionExecution r_akN3t) (ActionFieldsG r_akMiv) (ActionFieldsG r_akN3t)
+_AsyncErrors :: forall r_akMiu. Prism' (AsyncActionQueryFieldG r_akMiu) ()
+_AsyncCreatedAt :: forall r_akMiu. Prism' (AsyncActionQueryFieldG r_akMiu) ()
+_AsyncId :: forall r_akMiu. Prism' (AsyncActionQueryFieldG r_akMiu) ()
+_AsyncOutput :: forall r_akNdM r_akMiu. Prism (AsyncActionQueryFieldG r_akNdM) (AsyncActionQueryFieldG r_akMiu) (ActionFieldsG r_akNdM) (ActionFieldsG r_akMiu)
+_AsyncTypename :: forall r_akMiu. Prism' (AsyncActionQueryFieldG r_akMiu) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -24649,22 +24645,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) TriggerOnReplication
-cteqCleanupConfig :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe Text)
-cetqWebhook :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe InputWebhook)
-cetqUpdate :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe (SubscribeOpSpec b_aspHa))
-cetqTable :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (TableName b_aspHa)
-cetqSource :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) SourceName
-cetqRetryConf :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe RequestTransform)
-cetqReplace :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) Bool
-cetqName :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) TriggerName
-cetqInsert :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe (SubscribeOpSpec b_aspHa))
-cetqHeaders :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe Bool)
-cetqDelete :: forall b_aspHa. Lens' (CreateEventTriggerQuery b_aspHa) (Maybe (SubscribeOpSpec b_aspHa))
+cteqTriggerOnReplication :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) TriggerOnReplication
+cteqCleanupConfig :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe Text)
+cetqWebhook :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe InputWebhook)
+cetqUpdate :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe (SubscribeOpSpec b_aspkJ))
+cetqTable :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (TableName b_aspkJ)
+cetqSource :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) SourceName
+cetqRetryConf :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe RequestTransform)
+cetqReplace :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) Bool
+cetqName :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) TriggerName
+cetqInsert :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe (SubscribeOpSpec b_aspkJ))
+cetqHeaders :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe Bool)
+cetqDelete :: forall b_aspkJ. Lens' (CreateEventTriggerQuery b_aspkJ) (Maybe (SubscribeOpSpec b_aspkJ))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
