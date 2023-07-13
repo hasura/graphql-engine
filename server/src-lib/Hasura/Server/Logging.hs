@@ -150,11 +150,12 @@ instance J.ToJSON WebHookLog where
 -- | GQLQueryOperationSuccessLog captures all the data required to construct
 --   an HTTP success log.
 data GQLQueryOperationSuccessLog = GQLQueryOperationSuccessLog
-  { gqolQuery :: !GH.GQLReqUnparsed,
-    gqolQueryExecutionTime :: !DiffTime,
-    gqolResponseSize :: !Int64,
-    gqolRequestSize :: !Int64,
-    gqolParameterizedQueryHash :: !ParameterizedQueryHash
+  { gqolQuery :: GH.GQLReqUnparsed,
+    gqolQueryExecutionTime :: DiffTime,
+    gqolUpstreamExecutionTime :: DiffTime,
+    gqolResponseSize :: Int64,
+    gqolRequestSize :: Int64,
+    gqolParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Eq, Generic)
 
@@ -401,6 +402,8 @@ data OperationLog = OperationLog
     olRequestReadTime :: !(Maybe Seconds),
     -- | Service time, not including request IO wait time.
     olQueryExecutionTime :: !(Maybe Seconds),
+    -- | Execution time of the upstream source (DB/remote schema/action)
+    olUpstreamExecutionTime :: Maybe Seconds,
     olQuery :: !(Maybe J.Value),
     olRawQuery :: !(Maybe Text),
     olError :: !(Maybe QErr),
@@ -515,11 +518,19 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncomp
             olUncompressedResponseSize = uncompressedResponseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
+            olUpstreamExecutionTime = convertDuration <$> upstreamExecutionTime,
             olRequestMode = batching,
             olQuery = addQuery parsedReq (hlPath http) loggingSettings,
             olRawQuery = Nothing,
             olError = Nothing
           }
+
+      upstreamExecutionTime =
+        queryLogMetadata >>= \case
+          GH.GQLSingleRequest (GQLQueryOperationSuccess GQLQueryOperationSuccessLog {..}) ->
+            Just gqolUpstreamExecutionTime
+          GH.GQLSingleRequest (GQLQueryOperationError _) -> Nothing
+          GH.GQLBatchedReqs _ -> Nothing
       batchOpLog =
         queryLogMetadata
           >>= ( \case
@@ -579,6 +590,7 @@ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq
             olUncompressedResponseSize = responseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
+            olUpstreamExecutionTime = Nothing,
             olQuery = addQuery parsedReq (hlPath http) loggingSettings,
             -- if parsedReq is Nothing, add the raw query
             olRawQuery = maybe (reqToLog $ Just $ bsToTxt $ BL.toStrict reqBody) (const Nothing) parsedReq,

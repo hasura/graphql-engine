@@ -359,12 +359,16 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
   liftIO $ recordGQLQuerySuccess gqlMetrics totalTime gqlOpType
 
   -- 7. Return the response along with logging metadata.
-  let requestSize = LBS.length $ J.encode reqUnparsed
-      responseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response
-  return
-    ( GQLQueryOperationSuccessLog reqUnparsed totalTime responseSize requestSize parameterizedQueryHash,
-      arResponse response
-    )
+  let operationLog =
+        GQLQueryOperationSuccessLog
+          { gqolQuery = reqUnparsed,
+            gqolQueryExecutionTime = totalTime,
+            gqolUpstreamExecutionTime = convertDuration $ arTimeIO response,
+            gqolResponseSize = LBS.length $ encJToLBS $ snd $ _hrBody $ arResponse $ response,
+            gqolRequestSize = LBS.length $ J.encode reqUnparsed,
+            gqolParameterizedQueryHash = parameterizedQueryHash
+          }
+  return (operationLog, arResponse response)
   where
     doQErr :: ExceptT QErr m a -> ExceptT (Either GQExecError QErr) m a
     doQErr = withExceptT Right
