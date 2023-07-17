@@ -177,6 +177,8 @@ export {
   removeLSItem,
 } from './lib/utils/localStorage';
 
+export * from './lib/features/RestEndpoints';
+
 export { reduxStoreListener } from './lib/store/utils/';
 
 export { default as App } from './lib/components/App/App';

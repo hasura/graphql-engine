@@ -156,16 +156,21 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
             />
 
             <div className="text-sm absolute top-3 right-0 mt-2">
-              <Button
-                icon={<FaArrowRight />}
-                iconPosition="end"
-                size="sm"
-                onClick={e => {
-                  openInGraphiQL(endpoint.query.query);
-                }}
+              <Analytics
+                name="api-tab-rest-endpoint-details-graphiql-linkt"
+                passHtmlAttributesToChildren
               >
-                Test it in GraphiQL
-              </Button>
+                <Button
+                  icon={<FaArrowRight />}
+                  iconPosition="end"
+                  size="sm"
+                  onClick={e => {
+                    openInGraphiQL(endpoint.query.query);
+                  }}
+                >
+                  Test it in GraphiQL
+                </Button>
+              </Analytics>
             </div>
           </div>
           <Textarea
@@ -201,7 +206,10 @@ export const RestEndpointDetails = (props: RestEndpointDetailsProps) => {
           <RequestHeaders headers={headers} setHeaders={setHeaders} />
 
           <div className="mt-2">
-            <Analytics name="api-tab-rest-endpoint-details-run-request">
+            <Analytics
+              name="api-tab-rest-endpoint-details-run-request"
+              passHtmlAttributesToChildren
+            >
               <Button
                 disabled={!endpoint?.endpoint}
                 isLoading={isLoading}

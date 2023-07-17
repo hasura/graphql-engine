@@ -170,7 +170,10 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             editorOptions={editorOptions}
           />
           <div className="text-sm absolute top-3 right-0 mt-2">
-            <Analytics name="api-tab-rest-endpoint-form-graphiql-link">
+            <Analytics
+              name="api-tab-rest-endpoint-form-graphiql-link"
+              passHtmlAttributesToChildren
+            >
               <Button
                 icon={<FaArrowRight />}
                 iconPosition="end"
@@ -238,7 +241,10 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           <Button type="button" onClick={onCancel} disabled={loading}>
             Cancel
           </Button>
-          <Analytics name={`api-tab-rest-endpoint-form-${mode}-button`}>
+          <Analytics
+            name={`api-tab-rest-endpoint-form-${mode}-button`}
+            passHtmlAttributesToChildren
+          >
             <Button
               type="submit"
               mode="primary"

@@ -37,7 +37,7 @@ import {
   aboutContainer,
   ApiContainer,
   CreateRestView,
-  RestListView,
+  RestEndpointList,
   InheritedRolesContainer,
   ApiLimits,
   IntrospectionOptions,
@@ -343,7 +343,7 @@ const routes = store => {
           <Route path="rest">
             <IndexRedirect to="list" />
             <Route path="create" component={CreateRestView} />
-            <Route path="list" component={RestListView} />
+            <Route path="list" component={RestEndpointList} />
             <Route path="details/:name" component={RestEndpointDetailsPage} />
             <Route path="edit/:name" component={CreateRestView} />
           </Route>
