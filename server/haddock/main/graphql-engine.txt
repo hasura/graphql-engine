@@ -20546,9 +20546,9 @@ withRecordInconsistencyM :: MonadWriter (Seq CollectItem) m => MetadataObject ->
 withRecordInconsistency :: (ArrowChoice arr, ArrowWriter (Seq CollectItem) arr) => ErrorA QErr arr (e, s) a -> arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistencies :: (ArrowChoice arr, ArrowWriter (Seq CollectItem) arr) => ErrorA QErr arr (e, s) a -> arr (e, ([MetadataObject], s)) (Maybe a)
 class (CacheRM m) => CacheRWM m
-tryBuildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> ValidateNewSchemaCache a -> m a
+tryBuildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> Maybe MetadataResourceVersion -> ValidateNewSchemaCache a -> m a
 setMetadataResourceVersionInSchemaCache :: CacheRWM m => MetadataResourceVersion -> m ()
-buildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> m ()
+buildSchemaCacheWithOptions :: CacheRWM m => BuildReason -> CacheInvalidations -> Metadata -> Maybe MetadataResourceVersion -> m ()
 data BuildReason
 
 -- | The build was triggered by an update this instance made to the catalog
@@ -24689,22 +24689,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) TriggerOnReplication
-cteqCleanupConfig :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe Text)
-cetqWebhook :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe InputWebhook)
-cetqUpdate :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe (SubscribeOpSpec b_asydQ))
-cetqTable :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (TableName b_asydQ)
-cetqSource :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) SourceName
-cetqRetryConf :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe RequestTransform)
-cetqReplace :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) Bool
-cetqName :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) TriggerName
-cetqInsert :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe (SubscribeOpSpec b_asydQ))
-cetqHeaders :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe Bool)
-cetqDelete :: forall b_asydQ. Lens' (CreateEventTriggerQuery b_asydQ) (Maybe (SubscribeOpSpec b_asydQ))
+cteqTriggerOnReplication :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) TriggerOnReplication
+cteqCleanupConfig :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe Text)
+cetqWebhook :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe InputWebhook)
+cetqUpdate :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
+cetqTable :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (TableName b_asyec)
+cetqSource :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) SourceName
+cetqRetryConf :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe RequestTransform)
+cetqReplace :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) Bool
+cetqName :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) TriggerName
+cetqInsert :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
+cetqHeaders :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe Bool)
+cetqDelete :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
