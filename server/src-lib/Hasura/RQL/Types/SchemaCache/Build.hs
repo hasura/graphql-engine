@@ -192,12 +192,12 @@ withRecordInconsistencies = recordInconsistenciesWith recordInconsistencies
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  tryBuildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> ValidateNewSchemaCache a -> m a
+  tryBuildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> Metadata -> Maybe MetadataResourceVersion -> ValidateNewSchemaCache a -> m a
   setMetadataResourceVersionInSchemaCache :: MetadataResourceVersion -> m ()
 
-buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> m ()
-buildSchemaCacheWithOptions buildReason cacheInvalidation metadata =
-  tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata (\_ _ -> (KeepNewSchemaCache, ()))
+buildSchemaCacheWithOptions :: (CacheRWM m) => BuildReason -> CacheInvalidations -> Metadata -> Maybe MetadataResourceVersion -> m ()
+buildSchemaCacheWithOptions buildReason cacheInvalidation metadata metadataResourceVersion =
+  tryBuildSchemaCacheWithOptions buildReason cacheInvalidation metadata metadataResourceVersion (\_ _ -> (KeepNewSchemaCache, ()))
 
 data BuildReason
   = -- | The build was triggered by an update this instance made to the catalog (in the
@@ -252,19 +252,19 @@ data ValidateNewSchemaCacheResult
   deriving stock (Eq, Show, Ord)
 
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
-  tryBuildSchemaCacheWithOptions a b c d = lift $ tryBuildSchemaCacheWithOptions a b c d
+  tryBuildSchemaCacheWithOptions a b c d e = lift $ tryBuildSchemaCacheWithOptions a b c d e
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 instance (CacheRWM m) => CacheRWM (StateT s m) where
-  tryBuildSchemaCacheWithOptions a b c d = lift $ tryBuildSchemaCacheWithOptions a b c d
+  tryBuildSchemaCacheWithOptions a b c d e = lift $ tryBuildSchemaCacheWithOptions a b c d e
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 instance (CacheRWM m) => CacheRWM (TraceT m) where
-  tryBuildSchemaCacheWithOptions a b c d = lift $ tryBuildSchemaCacheWithOptions a b c d
+  tryBuildSchemaCacheWithOptions a b c d e = lift $ tryBuildSchemaCacheWithOptions a b c d e
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 instance (CacheRWM m) => CacheRWM (PG.TxET QErr m) where
-  tryBuildSchemaCacheWithOptions a b c d = lift $ tryBuildSchemaCacheWithOptions a b c d
+  tryBuildSchemaCacheWithOptions a b c d e = lift $ tryBuildSchemaCacheWithOptions a b c d e
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
 newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
@@ -314,6 +314,7 @@ buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do
     (CatalogUpdate mempty)
     cacheInvalidations
     modifiedMetadata
+    Nothing
   putMetadata modifiedMetadata
 
 buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
@@ -346,6 +347,7 @@ tryBuildSchemaCacheWithModifiers modifiers = do
       (CatalogUpdate mempty)
       mempty
       modifiedMetadata
+      Nothing
       validateNewSchemaCache
   when (newInconsistentObjects == mempty)
     $ putMetadata modifiedMetadata

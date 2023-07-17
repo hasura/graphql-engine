@@ -625,7 +625,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
             ciDataConnectors = dataConnectorInvalidations
           }
 
-  buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
+  buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata Nothing
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   pure
     . encJFromJValue

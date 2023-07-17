@@ -268,14 +268,14 @@ instance
   ) =>
   CacheRWM (CacheRWT m)
   where
-  tryBuildSchemaCacheWithOptions buildReason invalidations newMetadata validateNewSchemaCache = CacheRWT do
+  tryBuildSchemaCacheWithOptions buildReason invalidations newMetadata metadataResourceVersion validateNewSchemaCache = CacheRWT do
     dynamicConfig <- ask
     staticConfig <- askCacheStaticConfig
     (RebuildableSchemaCache lastBuiltSC invalidationKeys rule, oldInvalidations, _, _) <- get
     let oldMetadataVersion = scMetadataResourceVersion lastBuiltSC
         -- We are purposely putting (-1) as the metadata resource version here. This is because we want to
         -- catch error cases in `withSchemaCache(Read)Update`
-        metadataWithVersion = MetadataWithResourceVersion newMetadata $ MetadataResourceVersion (-1)
+        metadataWithVersion = MetadataWithResourceVersion newMetadata $ fromMaybe (MetadataResourceVersion (-1)) metadataResourceVersion
         newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     storedIntrospection <- loadStoredIntrospection (_cscLogger staticConfig) oldMetadataVersion
     result <-

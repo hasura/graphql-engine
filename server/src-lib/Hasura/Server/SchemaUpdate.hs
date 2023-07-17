@@ -351,7 +351,7 @@ refreshSchemaCache
                                     $ BackendMap.lookup @'DataConnector
                                     $ scBackendCache schemaCache
                               }
-                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
+                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata (Just latestResourceVersion)
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
                   logInfo logger threadType
                     $ String
