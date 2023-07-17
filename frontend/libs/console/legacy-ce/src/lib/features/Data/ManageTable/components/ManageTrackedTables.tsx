@@ -4,11 +4,9 @@ import { useMetadata } from '../../../hasura-metadata-api';
 import { TrackableResourceTabs } from '../../ManageDatabase/components/TrackableResourceTabs';
 import { useIntrospectedTables } from '../../hooks/useIntrospectedTables';
 import { TableList } from '../parts/TableList';
-import {
-  adaptTrackedTables,
-  adaptUntrackedTables,
-  selectTrackedTables,
-} from '../selectors';
+import { selectTrackedTables, splitByTracked } from '../selectors';
+import { Feature, IntrospectedTable } from '../../../DataSource';
+import { useInvalidateSuggestedRelationships } from '../../TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
 
 type TabState = 'tracked' | 'untracked';
 
@@ -26,6 +24,12 @@ export const ManageTrackedTables = ({
     error: introspectionError,
   } = useMetadata(m => selectTrackedTables(m)(dataSourceName));
 
+  const selector = React.useCallback(
+    (introspectedTables: Feature | IntrospectedTable[]) =>
+      splitByTracked({ metadataTables, introspectedTables }),
+    [metadataTables]
+  );
+
   const {
     data: { trackedTables = [], untrackedTables = [] } = {},
     isSuccess,
@@ -34,11 +38,7 @@ export const ManageTrackedTables = ({
   } = useIntrospectedTables({
     dataSourceName,
     options: {
-      select: introspectedTables => ({
-        trackedTables: adaptTrackedTables(metadataTables)(introspectedTables),
-        untrackedTables:
-          adaptUntrackedTables(metadataTables)(introspectedTables),
-      }),
+      select: selector,
       enabled: isFetched,
       refetchOnWindowFocus: false,
       onSuccess: data => {
@@ -49,6 +49,8 @@ export const ManageTrackedTables = ({
       },
     },
   });
+  const { invalidateSuggestedRelationships } =
+    useInvalidateSuggestedRelationships({ dataSourceName });
 
   if (isMetadataError || isIntrospectionError)
     return (
@@ -83,6 +85,9 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'untracked'}
               dataSourceName={dataSourceName}
               tables={untrackedTables}
+              onChange={() => {
+                invalidateSuggestedRelationships();
+              }}
             />
           ),
         },
@@ -93,6 +98,9 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'tracked'}
               dataSourceName={dataSourceName}
               tables={trackedTables}
+              onChange={() => {
+                invalidateSuggestedRelationships();
+              }}
             />
           ),
         },

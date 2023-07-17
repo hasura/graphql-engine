@@ -22,7 +22,7 @@ export const TrackableListMenu = (
         <>
           <Button
             mode="primary"
-            disabled={!props.checkedItems.length}
+            disabled={!props.checkData.checkedIds.length}
             onClick={props.handleTrackButton}
             isLoading={props.isLoading}
             loadingText="Please Wait"

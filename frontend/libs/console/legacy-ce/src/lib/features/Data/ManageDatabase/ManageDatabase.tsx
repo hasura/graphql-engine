@@ -4,10 +4,11 @@ import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTabl
 import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
 import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
-import { BreadCrumbs, SourceName, CollapsibleResource } from './parts';
+import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
 
 export interface ManageDatabaseProps {
   dataSourceName: string;
+  schema?: string;
 }
 
 //This component has the code for template gallery but is currently commented out until further notice.

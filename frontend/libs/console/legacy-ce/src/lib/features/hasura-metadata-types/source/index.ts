@@ -7,3 +7,4 @@ export type {
   BigQueryConfiguration,
   CitusConfiguration,
 } from './configuration';
+export * from './typeGuards';

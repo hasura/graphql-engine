@@ -15,7 +15,6 @@ import { SuggestedRelationshipTrackModal } from '../../../DatabaseRelationships/
 import Skeleton from 'react-loading-skeleton';
 import { useAllSuggestedRelationships } from '../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
 import { useCheckRows } from '../../../DatabaseRelationships/hooks/useCheckRows';
-// import { useTrackedRelationships } from './hooks/useTrackedRelationships';
 import { useCreateTableRelationships } from '../../../DatabaseRelationships/hooks/useCreateTableRelationships/useCreateTableRelationships';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';

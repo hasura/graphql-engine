@@ -2,6 +2,7 @@ import {
   LogicalModelWithSource,
   NativeQueryWithSource,
 } from '../Data/LogicalModels/types';
+import { getForeignKeyRelationships as selectForeignKeyRels } from '../Data/TrackResources/TrackRelationships/selectors/selectors';
 import { Metadata, QualifiedFunction, Table } from '../hasura-metadata-types';
 import * as utils from './utils';
 
@@ -72,3 +73,13 @@ export const extractModelsAndQueriesFromMetadata = (
     queries,
   };
 };
+
+export const getForeignKeyRelationships =
+  (dataSourceName: string) => (m: Metadata) => {
+    const source = utils.findMetadataSource(dataSourceName, m);
+    const tables = source?.tables ?? [];
+    const foreignKeyRelationships = tables
+      .map(t => selectForeignKeyRels(t))
+      .flat();
+    return foreignKeyRelationships;
+  };

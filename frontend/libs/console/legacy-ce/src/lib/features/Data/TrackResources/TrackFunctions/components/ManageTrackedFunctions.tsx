@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrackableResourceTabs } from '../../components/TrackableResourceTabs';
+
 import { UntrackedFunctions } from './UntrackedFunctions';
 import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
 import {
@@ -8,6 +8,7 @@ import {
 } from '../../../../hasura-metadata-api';
 import { adaptFunctionName } from '../utils';
 import { TrackedFunctions } from './TrackedFunctions';
+import { TrackableResourceTabs } from '../../../ManageDatabase/components';
 
 type TabState = 'tracked' | 'untracked';
 

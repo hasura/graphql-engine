@@ -19,7 +19,7 @@ interface TableListProps {
   dataSourceName: string;
   tables: TrackableTable[];
   viewingTablesThatAre: 'tracked' | 'untracked';
-  onTrackedTable?: () => void;
+  onChange?: () => void;
   onMultipleTablesTrack?: () => void;
   defaultFilter?: string;
   onSingleTableTrack?: (table: TrackableTable) => void;
@@ -41,16 +41,15 @@ const countByType = (tables: TrackableTable[]) =>
     return prev;
   }, {});
 
-export const TableList = (props: TableListProps) => {
-  const {
-    viewingTablesThatAre,
-    dataSourceName,
-    tables,
-    onTrackedTable,
-    defaultFilter,
-    onMultipleTablesTrack,
-  } = props;
-
+export const TableList = ({
+  viewingTablesThatAre,
+  dataSourceName,
+  tables,
+  onChange,
+  defaultFilter,
+  onMultipleTablesTrack,
+  onSingleTableTrack,
+}: TableListProps) => {
   //const availableTableTypes = getUniqueTableTypes(tables);
 
   const typeCounts = React.useMemo(() => countByType(tables), [tables]);
@@ -81,7 +80,7 @@ export const TableList = (props: TableListProps) => {
   const {
     checkData: { onCheck, checkedIds, reset: resetCheckboxes, checkAllElement },
     paginatedData: paginatedTables,
-    checkedItems: checkedTables,
+    getCheckedItems: getCheckedTables,
   } = listProps;
 
   const { trackTables, isLoading, untrackTables } = useTrackTables({
@@ -96,10 +95,10 @@ export const TableList = (props: TableListProps) => {
     //make a copy of the current counts to have an accurate copy of what it was prior to the track/untrack
     const currentCounts = { ...typeCounts };
     // count the items by type in the payload
-    const actionCounts = countByType(checkedTables);
+    const actionCounts = countByType(getCheckedTables());
 
     action({
-      tables: checkedTables,
+      tables: getCheckedTables(),
       onSuccess: () => {
         // create an array of item types where the number tracked/untracked is the same as the total (user tracked/untracked ALL of that type)
         const toRemove = Object.entries(actionCounts).reduce<string[]>(
@@ -119,17 +118,17 @@ export const TableList = (props: TableListProps) => {
           );
         }
 
-        onTrackedTable?.();
         resetCheckboxes();
 
         hasuraToast({
           type: 'success',
           title: `Successfully ${verb}`,
-          message: `${checkedTables.length} ${
-            checkedTables.length <= 1 ? 'table' : 'tables'
+          message: `${getCheckedTables().length} ${
+            getCheckedTables().length <= 1 ? 'table' : 'tables'
           } ${verb}!`,
         });
         onMultipleTablesTrack?.();
+        onChange?.();
       },
       onError: err => {
         hasuraToast({
@@ -142,6 +141,29 @@ export const TableList = (props: TableListProps) => {
   };
 
   const pushRoute = usePushRoute();
+
+  const onTableRowTableTrack = (table: TrackableTable) => {
+    onSingleTableTrack?.(table);
+    onChange?.();
+  };
+
+  const onTableRowTableNameClick = (table: TrackableTable) =>
+    viewingTablesThatAre === 'tracked'
+      ? () => {
+          if ('schema' in (table.table as any)) {
+            const { name, schema } = table.table as PostgresTable;
+
+            pushRoute(
+              `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
+            );
+          } else
+            pushRoute(
+              `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
+                JSON.stringify(table.table)
+              )}`
+            );
+        }
+      : undefined;
 
   if (!tables.length) {
     return (
@@ -158,7 +180,7 @@ export const TableList = (props: TableListProps) => {
       <TrackableListMenu
         checkActionText={`${
           viewingTablesThatAre === 'tracked' ? 'Untrack' : 'Track'
-        } Selected (${checkedTables.length})`}
+        } Selected (${getCheckedTables().length})`}
         handleTrackButton={() => {
           handleCheckAction();
         }}
@@ -229,25 +251,8 @@ export const TableList = (props: TableListProps) => {
                 checked={checkedIds.includes(table.id)}
                 reset={resetCheckboxes}
                 onChange={() => onCheck(table.id)}
-                onTableTrack={props.onSingleTableTrack}
-                onTableNameClick={
-                  viewingTablesThatAre === 'tracked'
-                    ? () => {
-                        if ('schema' in (table.table as any)) {
-                          const { name, schema } = table.table as PostgresTable;
-
-                          pushRoute(
-                            `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
-                          );
-                        } else
-                          pushRoute(
-                            `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
-                              JSON.stringify(table.table)
-                            )}`
-                          );
-                      }
-                    : undefined
-                }
+                onTableTrack={onTableRowTableTrack}
+                onTableNameClick={onTableRowTableNameClick(table)}
               />
             ))}
           </CardedTable.TableBody>
