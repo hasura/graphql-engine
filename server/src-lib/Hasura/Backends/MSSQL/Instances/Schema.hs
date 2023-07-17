@@ -7,6 +7,7 @@
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
+import Control.Applicative (Const (..))
 import Data.Char qualified as Char
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -393,18 +394,18 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
 msCountTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column 'MSSQL)) ->
-  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
+  Maybe (Parser 'Both n (Column 'MSSQL, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'MSSQL))) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL (UnpreparedValue 'MSSQL))
 msCountTypeInput = \case
   Just columnEnum -> do
     column <- P.fieldOptional Name._column Nothing columnEnum
     pure $ flip mkCountType column
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL) -> CountType 'MSSQL
-    mkCountType _ Nothing = MSSQL.StarCountable
-    mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
-    mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col
+    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'MSSQL)) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
+    mkCountType _ Nothing = Const MSSQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just (col, _censorExp)) = Const $ MSSQL.DistinctCountable col -- TODO(caseBoolExp): Deal with censorship expressions
+    mkCountType IR.SelectCountNonDistinct (Just (col, _censorExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(caseBoolExp): Deal with censorship expressions
 
 msParseUpdateOperators ::
   forall m n r.

@@ -7,7 +7,6 @@ extra-source-files: README.md
 
 common common-all
   ghc-options:
-    -Werror
     -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
     -Weverything
     -Wno-missing-exported-signatures
@@ -116,6 +115,7 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnCensorshipSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec

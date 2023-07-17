@@ -159,6 +159,7 @@ class
     Typeable (Column b),
     Typeable b,
     HasTag b,
+    Traversable (CountType b),
     -- constraints of function argument
     Traversable (FunctionArgumentExp b),
     -- Type constraints.
@@ -167,8 +168,6 @@ class
     Eq (BackendInfo b),
     Show (BackendInfo b),
     Monoid (BackendInfo b),
-    Eq (CountType b),
-    Show (CountType b),
     Eq (ScalarValue b),
     Show (ScalarValue b),
     -- Extension constraints.
@@ -220,7 +219,12 @@ class
 
   type BasicOrderType b :: Type
   type NullsOrderType b :: Type
-  type CountType b :: Type
+
+  -- | The type that captures how count aggregations are modelled
+  --
+  -- It is parameterised over the type of fields, which changes during the IR
+  -- translation phases.
+  type CountType b :: Type -> Type
 
   -- Name of a 'column'
   type Column b :: Type

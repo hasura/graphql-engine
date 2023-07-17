@@ -8,6 +8,7 @@ module Harness.Permissions.Types
     updatePermission,
     DeletePermissionDetails (..),
     deletePermission,
+    InheritedRoleDetails (..),
   )
 where
 
@@ -22,6 +23,7 @@ data Permission
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
   | DeletePermission DeletePermissionDetails
+  | InheritedRole InheritedRoleDetails
   deriving (Eq, Show)
 
 data SelectPermissionDetails = SelectPermissionDetails
@@ -29,6 +31,7 @@ data SelectPermissionDetails = SelectPermissionDetails
     selectPermissionTable :: Text,
     selectPermissionRole :: Text,
     selectPermissionColumns :: [Text],
+    selectPermissionComputedFields :: [Text],
     selectPermissionRows :: Value,
     selectPermissionAllowAggregations :: Bool,
     selectPermissionLimit :: Value
@@ -64,6 +67,12 @@ data DeletePermissionDetails = DeletePermissionDetails
   }
   deriving (Eq, Show)
 
+data InheritedRoleDetails = InheritedRoleDetails
+  { inheritedRoleName :: Text,
+    inheritedRoleRoleSet :: [Text]
+  }
+  deriving (Eq, Show)
+
 selectPermission :: SelectPermissionDetails
 selectPermission =
   SelectPermissionDetails
@@ -71,6 +80,7 @@ selectPermission =
       selectPermissionTable = mempty,
       selectPermissionRole = "test-role",
       selectPermissionColumns = mempty,
+      selectPermissionComputedFields = mempty,
       selectPermissionRows = object [],
       selectPermissionAllowAggregations = False,
       selectPermissionLimit = Null

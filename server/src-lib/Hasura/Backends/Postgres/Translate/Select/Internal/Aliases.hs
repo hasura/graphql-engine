@@ -7,6 +7,8 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
     mkBaseTableAlias,
     mkBaseTableIdentifier,
     contextualizeBaseTableColumn,
+    contextualizeField,
+    contextualizeAggregateInput,
     mkComputedFieldTableIdentifier,
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
@@ -75,7 +77,15 @@ mkBaseTableAlias pfx = pfx <> ".base"
 
 contextualizeBaseTableColumn :: TableIdentifier -> PGCol -> S.ColumnAlias
 contextualizeBaseTableColumn pfx pgColumn =
-  S.tableIdentifierToColumnAlias pfx <> ".pg." <> S.mkColumnAlias (getPGColTxt pgColumn)
+  S.tableIdentifierToColumnAlias pfx <> ".pg." <> S.toColumnAlias pgColumn
+
+contextualizeField :: TableIdentifier -> FieldName -> S.ColumnAlias
+contextualizeField pfx field =
+  S.tableIdentifierToColumnAlias pfx <> ".f." <> S.toColumnAlias field
+
+contextualizeAggregateInput :: TableIdentifier -> FieldName -> FieldName -> S.ColumnAlias
+contextualizeAggregateInput pfx aggregateField field =
+  S.tableIdentifierToColumnAlias pfx <> ".ai." <> S.toColumnAlias aggregateField <> "." <> S.toColumnAlias field
 
 mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.ColumnAlias
 mkAggregateOrderByAlias =

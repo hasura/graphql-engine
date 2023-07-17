@@ -576,7 +576,7 @@ fromAggregateField :: Text -> IR.AggregateField 'MSSQL Expression -> Projection
 fromAggregateField alias aggregateField =
   case aggregateField of
     IR.AFExp text -> AggregateProjection $ Aliased (TextAggregate text) alias
-    IR.AFCount countType -> AggregateProjection . flip Aliased alias . CountAggregate $ case countType of
+    IR.AFCount countType -> AggregateProjection . flip Aliased alias . CountAggregate $ case getConst countType of
       StarCountable -> StarCountable
       NonNullFieldCountable name -> NonNullFieldCountable $ columnFieldAggEntity name
       DistinctCountable name -> DistinctCountable $ columnFieldAggEntity name
@@ -584,7 +584,8 @@ fromAggregateField alias aggregateField =
       let projections :: [Projection] =
             fields <&> \(fieldName, columnField) ->
               case columnField of
-                IR.SFCol column _columnType ->
+                -- TODO(caseBoolExp): Deal with censor expression?
+                IR.SFCol column _columnType _caseBoolExp ->
                   let fname = columnFieldAggEntity column
                    in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
                 IR.SFExp text ->

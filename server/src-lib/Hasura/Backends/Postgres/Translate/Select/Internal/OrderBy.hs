@@ -149,7 +149,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                       similarArrayFields
                       fieldName
                   relAlias = mkArrayRelationAlias fieldAlias similarArrayFields fieldName
-                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields relSourcePrefix aggOrderBy
                   selectSource =
                     SelectSource
                       (tableIdentifierToIdentifier relSourcePrefix)
@@ -172,7 +172,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
             CFOBETableAggregation _ tableFilter aggOrderBy -> withWriteComputedFieldTableSet $ do
               let fieldName = mkOrderByFieldName _cfobName
                   computedFieldSourcePrefix = mkComputedFieldTableIdentifier sourcePrefix fieldName
-                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields aggOrderBy
+                  (topExtractor, fields) = mkAggregateOrderByExtractorAndFields computedFieldSourcePrefix aggOrderBy
                   fromItem =
                     functionToFromItem sourcePrefix _cfobFunction _cfobFunctionArgsExp
                   functionQual = S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText _cfobFunction) Nothing

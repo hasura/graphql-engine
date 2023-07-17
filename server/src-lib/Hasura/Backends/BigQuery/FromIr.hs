@@ -14,6 +14,7 @@ module Hasura.Backends.BigQuery.FromIr
   )
 where
 
+import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HashMap
 import Data.Int qualified as Int
@@ -1007,7 +1008,7 @@ fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
     Ir.AFCount countType ->
-      CountAggregate <$> case countType of
+      CountAggregate <$> case getConst countType of
         StarCountable -> pure StarCountable
         NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
         DistinctCountable names -> DistinctCountable <$> traverse fromColumn names
@@ -1018,7 +1019,7 @@ fromAggregateField aggregateField =
           ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
                 case columnField of
-                  Ir.SFCol column _columnType -> fmap ColumnExpression (fromColumn column)
+                  Ir.SFCol column _columnType _caseBoolExp -> fmap ColumnExpression (fromColumn column) -- TODO(caseBoolExp)
                   Ir.SFExp text -> pure (ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)))
                   -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
                   Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"

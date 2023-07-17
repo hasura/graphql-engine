@@ -7,7 +7,7 @@ module Hasura.GraphQL.Schema.OrderBy
   )
 where
 
-import Control.Lens ((^?))
+import Control.Lens ((^?), _1)
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
@@ -241,7 +241,8 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       tCase = _rscNamingConvention customization
       mkTypename = _rscTypeNames customization
   tableIdentifierName <- getTableIdentifierName @b tableInfo
-  allColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  -- TODO(caseBoolExp): Probably need to deal with the censorship expressions here
+  allColumns <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   let numColumns = stdAggOpColumns tCase $ onlyNumCols allColumns
       compColumns = stdAggOpColumns tCase $ onlyComparableCols allColumns
       numOperatorsAndColumns = HashMap.fromList $ (,numColumns) <$> numericAggOperators

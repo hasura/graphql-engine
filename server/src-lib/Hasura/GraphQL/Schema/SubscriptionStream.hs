@@ -7,7 +7,7 @@ module Hasura.GraphQL.Schema.SubscriptionStream
   )
 where
 
-import Control.Lens ((^?))
+import Control.Lens ((^?), _1)
 import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
@@ -191,7 +191,8 @@ tableStreamCursorExp tableInfo = runMaybeT do
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableGQLName tableInfo
   tableGQLIdentifier <- getTableIdentifierName tableInfo
-  columnInfos <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  -- TODO(caseBoolExp): Do we need to deal with censorship expressions here too?
+  columnInfos <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   columnInfosNE <- hoistMaybe $ NE.nonEmpty columnInfos
   lift $ memoizeOn 'tableStreamCursorExp (sourceName, tableName) do
     columnParsers <- tableStreamColumnArg tableGQLIdentifier columnInfosNE

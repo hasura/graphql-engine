@@ -102,7 +102,8 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                     ArgumentsStar ->
                       maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
                         . nonEmpty
-                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
+                        -- TODO(caseBoolExp): Probably need to deal with the censorship expressions from tableSelectColumnsEnum here
+                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list . fmap fst <$> fails (tableSelectColumnsEnum relTable))
                     SingleArgument typ ->
                       AggregationPredicateArguments
                         . (NE.:| [])

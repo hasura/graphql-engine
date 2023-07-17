@@ -117,7 +117,9 @@
         aggregate:
           count: 2
           sum:
-            salary: 25430
+            # Managers can't see salary, so only the rows that are accessed
+            # via the inherited employee role contribute to this sum
+            salary: 10000
   query:
     query: |
       query {

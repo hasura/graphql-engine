@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Column
     onlyNumCols,
     isNumCol,
     onlyComparableCols,
+    isComparableCol,
     parseScalarValueColumnTypeWithContext,
     parseScalarValueColumnType,
     parseScalarValuesColumnTypeWithContext,
@@ -446,7 +447,10 @@ isNumCol :: forall b. (Backend b) => ColumnInfo b -> Bool
 isNumCol = isScalarColumnWhere (isNumType @b) . ciType
 
 onlyComparableCols :: forall b. (Backend b) => [ColumnInfo b] -> [ColumnInfo b]
-onlyComparableCols = filter (isScalarColumnWhere (isComparableType @b) . ciType)
+onlyComparableCols = filter (isComparableCol @b)
+
+isComparableCol :: forall b. (Backend b) => ColumnInfo b -> Bool
+isComparableCol = isScalarColumnWhere (isComparableType @b) . ciType
 
 getColInfos :: (Backend b) => [Column b] -> [ColumnInfo b] -> [ColumnInfo b]
 getColInfos cols allColInfos =

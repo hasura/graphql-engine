@@ -234,10 +234,10 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
                         { IR._cfssFunction = _cffName _cfiFunction,
                           IR._cfssType = scalarReturnType,
                           IR._cfssScalarArguments = colOp,
-                          IR._cfssArguments = args
+                          IR._cfssArguments = args,
+                          IR._cfssCaseBoolExpression = caseBoolExpUnpreparedValue
                         }
                     )
-                    caseBoolExpUnpreparedValue
                 )
       dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser

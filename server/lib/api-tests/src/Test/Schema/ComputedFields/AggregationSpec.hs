@@ -116,7 +116,7 @@ articleTitleLengthSQL schemaName =
   [i|
     CREATE FUNCTION #{ unSchemaName schemaName }.article_length(article_row article)
     RETURNS int AS $$
-      SELECT LENGTH(article_row.title) 
+      SELECT LENGTH(article_row.title)
     $$ LANGUAGE sql STABLE;
   |]
 
@@ -170,7 +170,7 @@ setupMetadata testEnvironment =
                   type: #{ backendPrefix }_add_computed_field
                   args:
                     source: #{ source }
-                    name: article_length 
+                    name: article_length
                     table:
                       schema: #{ schemaName }
                       name: article
@@ -232,7 +232,7 @@ tests = do
           #{schemaName}_author_aggregate:
             aggregate:
               avg:
-                count_articles: 1.5 
+                count_articles: 1.5
                 id: 1.5
               max:
                 count_articles: 2
@@ -267,9 +267,47 @@ tests = do
           #{schemaName}_author_aggregate:
             aggregate:
               avg:
-                count_articles: 1.5 
+                count_articles: 1.5
               max:
                 count_articles: 2
+      |]
+
+  it "Aggregate computed field from the authors table and also return rows" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      testEnv
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+            query {
+              #{schemaName}_author_aggregate(order_by: {id: asc}) {
+                aggregate {
+                  avg {
+                    count_articles
+                  }
+                  max {
+                    count_articles
+                  }
+                }
+                nodes {
+                  id
+                }
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          #{schemaName}_author_aggregate:
+            aggregate:
+              avg:
+                count_articles: 1.5
+              max:
+                count_articles: 2
+            nodes:
+              - id: 1
+              - id: 2
       |]
 
   it "Aggregate computed field from the authors table with arguments" $ \testEnv -> do
@@ -299,9 +337,50 @@ tests = do
           #{schemaName}_author_aggregate:
             aggregate:
               avg:
-                count_articles_plus: 11.5 
+                count_articles_plus: 11.5
               max:
                 count_articles_plus: 12
+      |]
+
+  it "Aggregate computed fields from the authors table with different arguments" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    -- This test abuses field name aliases to have different invocations of the same
+    -- computed field (ie invoked with different arguments) share the same field name.
+    -- but under different aggregate functions. This highlights that the field name
+    -- of the computed field (eg count_articles1) is not good enough on its own to
+    -- identify that field you need the aggregate field name too (eg avg, max).
+    shouldReturnYaml
+      testEnv
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+            query {
+              #{schemaName}_author_aggregate {
+                aggregate {
+                  avg {
+                    count_articles1: count_articles_plus (args: { plus: 12 })
+                    count_articles2: count_articles_plus (args: { plus: 10 })
+                  }
+                  max {
+                    count_articles1: count_articles_plus (args: { plus: 10 })
+                    count_articles2: count_articles_plus (args: { plus: 12 })
+                  }
+                }
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          #{schemaName}_author_aggregate:
+            aggregate:
+              avg:
+                count_articles1: 13.5
+                count_articles2: 11.5
+              max:
+                count_articles1: 12
+                count_articles2: 14
       |]
 
   it "Aggregate computed field, but use two of them" $ \testEnv -> do
@@ -335,7 +414,7 @@ tests = do
             aggregate:
               avg:
                 count_articles: 1.5
-                count_articles_plus: 11.5 
+                count_articles_plus: 11.5
               max:
                 count_articles: 2
                 count_articles_plus: 12
@@ -381,7 +460,7 @@ tests = do
           #{schemaName}_article_aggregate:
             aggregate:
               avg:
-                article_length: 11.6666666666666667 
+                article_length: 11.6666666666666667
               max:
                 article_length: 13
 
@@ -389,7 +468,7 @@ tests = do
             aggregate:
               avg:
                 count_articles: 1.5
-                count_articles_plus: 11.5 
+                count_articles_plus: 11.5
               max:
                 count_articles: 2
                 count_articles_plus: 12

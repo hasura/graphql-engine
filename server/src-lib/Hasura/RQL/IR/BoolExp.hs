@@ -28,6 +28,7 @@ module Hasura.RQL.IR.BoolExp
     RelationshipFilters (..),
     AnnBoolExp,
     AnnColumnCaseBoolExpPartialSQL,
+    AnnColumnCaseBoolExpUnpreparedValue,
     AnnColumnCaseBoolExp,
     AnnColumnCaseBoolExpField (..),
     annBoolExpTrue,
@@ -56,6 +57,7 @@ import Data.Monoid
 import Data.Text.Extended
 import Hasura.Function.Cache
 import Hasura.Prelude
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
@@ -745,6 +747,8 @@ type AnnColumnCaseBoolExp b a = GBoolExp b (AnnColumnCaseBoolExpField b a)
 
 -- misc type aliases
 type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
+
+type AnnColumnCaseBoolExpUnpreparedValue b = AnnColumnCaseBoolExp b (UnpreparedValue b)
 
 type PreSetColsG b v = HashMap.HashMap (Column b) v
 

@@ -351,7 +351,7 @@ groupBy tableInfo = runMaybeT $ do
   namingCase <- retrieve (_rscNamingConvention . _siCustomization @b)
   let groupByFieldName = applyFieldNameCaseCust namingCase Name._group_by
 
-  selectionSetParser <- lift $ groupBySelectionSet tableInfo
+  selectionSetParser <- groupBySelectionSet tableInfo
   P.subselection groupByFieldName (Just "Groups the table by the specified keys") groupByInputFieldsParser selectionSetParser
     <&> (\(keys, fields) -> IR.TAFGroupBy xGroupBy (IR.GroupByG keys fields))
     & pure
@@ -402,7 +402,7 @@ groupByKeyField tableInfo = do
 
   tableColumnsEnumParser <- MaybeT $ tableSelectColumnsEnum tableInfo
   let groupByKeyFields =
-        (\column -> IR.GKFColumn column)
+        (\(column, _censorExp) -> IR.GKFColumn column)
           <$> P.field columnFieldName (Just "A column grouping key") tableColumnsEnumParser
   pure $ P.object groupByKeyTypeName (Just groupByKeyDescription) groupByKeyFields
   where
@@ -415,11 +415,13 @@ groupByKeyField tableInfo = do
 -- >   group_key: table_group_by_key_fields
 -- >   aggregate: table_aggregate_fields
 -- > }
+--
+-- Fails in 'MaybeT' if there are no selectable columns on the table
 groupBySelectionSet ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
   TableInfo b ->
-  SchemaT r m (Parser 'Output n (Fields (IR.GroupByField b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
+  MaybeT (SchemaT r m) (Parser 'Output n (Fields (IR.GroupByField b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 groupBySelectionSet tableInfo = do
   customization <- retrieve (_siCustomization @b)
   let namingCase = _rscNamingConvention customization
@@ -429,8 +431,8 @@ groupBySelectionSet tableInfo = do
   let aggregateFieldName = applyFieldNameCaseCust namingCase Name._aggregate
   let groupKeyName = applyFieldNameCaseCust namingCase Name._group_key
 
-  aggregateParser <- tableAggregationFields tableInfo
-  groupByKeyParser <- groupByKeySelectionSet tableInfo
+  aggregateParser <- lift $ tableAggregationFields tableInfo
+  groupByKeyParser <- lift $ groupByKeySelectionSet tableInfo
   P.selectionSet
     groupByTypeName
     (Just groupByDescription)
@@ -468,7 +470,8 @@ groupByKeySelectionSet tableInfo = do
   tableGQLName <- getTableIdentifierName tableInfo
   let groupByKeyFieldsTypeName = mkTypename $ applyTypeNameCaseIdentifier namingCase $ mkGroupByKeyFieldsTypeName tableGQLName
 
-  scalarColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  -- TODO(caseBoolExp): Probably need to deal with the censor expression here
+  scalarColumns <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   columnFieldParsers <-
     for scalarColumns $ \columnInfo -> do
       let columnFieldName = ciName columnInfo
@@ -835,7 +838,8 @@ tableDistinctArg ::
   SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
 tableDistinctArg tableInfo = do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
-  columnsEnum <- tableSelectColumnsEnum tableInfo
+  -- TODO(caseBoolExp): Probably need to deal with the censor expression here
+  columnsEnum <- fmap (fmap fst) <$> tableSelectColumnsEnum tableInfo
   let distinctOnName = applyFieldNameCaseCust tCase Name._distinct_on
       distinctOnDesc = Just $ G.Description "distinct select on columns"
   pure do
@@ -1047,17 +1051,17 @@ tableAggregationFields tableInfo = do
       mkTypename = _rscTypeNames customization
   P.memoizeOn 'tableAggregationFields (sourceName, tableName) do
     tableGQLName <- getTableIdentifierName tableInfo
-    allColumns <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+    allScalarColumns <- mapMaybe (\(column, censorExp) -> column ^? _SCIScalarColumn <&> (,censorExp)) <$> tableSelectColumns tableInfo
     allComputedFields <-
       if supportsAggregateComputedFields @b -- See 'supportsAggregateComputedFields' for an explanation
         then tableSelectComputedFields tableInfo
         else pure []
-    let numericColumns = onlyNumCols allColumns
+    let numericColumns = filter (isNumCol . fst) allScalarColumns
         numericComputedFields = onlyNumComputedFields allComputedFields
-        comparableColumns = onlyComparableCols allColumns
+        comparableColumns = filter (isComparableCol . fst) allScalarColumns
         comparableComputedFields = onlyComparableComputedFields allComputedFields
         customOperatorsAndColumns =
-          HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
+          HashMap.toList $ HashMap.mapMaybe (getCustomAggOpsColumns allScalarColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
         selectName = runMkTypename mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
@@ -1126,15 +1130,15 @@ tableAggregationFields tableInfo = do
       $ P.selectionSet selectName (Just description) aggregateFields
       <&> parsedSelectionsToFields IR.AFExp
   where
-    getCustomAggOpsColumns :: [ColumnInfo b] -> HashMap (ScalarType b) (ScalarType b) -> Maybe (NonEmpty (ColumnInfo b, ScalarType b))
+    getCustomAggOpsColumns :: [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] -> HashMap (ScalarType b) (ScalarType b) -> Maybe (NonEmpty ((ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)), ScalarType b))
     getCustomAggOpsColumns columnInfos typeMap =
       columnInfos
         & mapMaybe
-          ( \ci@ColumnInfo {..} ->
+          ( \(ci@ColumnInfo {..}, censorExp) ->
               case ciType of
                 ColumnEnumReference _ -> Nothing
                 ColumnScalar scalarType ->
-                  (ci,) <$> HashMap.lookup scalarType typeMap
+                  ((ci, censorExp),) <$> HashMap.lookup scalarType typeMap
           )
         & nonEmpty
 
@@ -1146,7 +1150,7 @@ tableAggregationFields tableInfo = do
     mkColumnAggComputedField tableName computedFieldInfo = do
       let annotatedFieldToSelectionField :: AnnotatedField b -> n (IR.SelectionField b (IR.UnpreparedValue b))
           annotatedFieldToSelectionField = \case
-            IR.AFComputedField _ computedFieldName (IR.CFSScalar computedFieldScalarSelect _maybeShouldBeNullified) ->
+            IR.AFComputedField _ computedFieldName (IR.CFSScalar computedFieldScalarSelect) ->
               pure $ IR.SFComputedField computedFieldName computedFieldScalarSelect
             _ -> parseError "Only computed fields that return scalar types are supported"
 
@@ -1155,39 +1159,39 @@ tableAggregationFields tableInfo = do
           (Just fieldParser) -> (pure . Just) (fieldParser `P.bindField` annotatedFieldToSelectionField)
           Nothing -> pure Nothing
 
-    mkNumericAggFields :: GQLNameIdentifier -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
+    mkNumericAggFields :: GQLNameIdentifier -> [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
     mkNumericAggFields name
       | (C.toSnakeG name) == Name._sum = traverse mkColumnAggField
       -- Memoize here for more sharing. Note: we can't do `P.memoizeOn 'mkNumericAggFields...`
       -- due to stage restrictions, so just add a string key:
-      | otherwise = traverse \columnInfo ->
+      | otherwise = traverse \(columnInfo, censorExp) ->
           P.memoizeOn 'tableAggregationFields ("mkNumericAggFields" :: Text, columnInfo)
             $
             -- CAREFUL!: below must only reference columnInfo else memoization key needs to be adapted
             pure
             $! do
-              let !cfcol = IR.SFCol (ciColumn columnInfo) (ciType columnInfo)
+              let !cfcol = IR.SFCol (ciColumn columnInfo) (ciType columnInfo) censorExp
               P.selection_
                 (ciName columnInfo)
                 (ciDescription columnInfo)
                 (P.nullable P.float)
                 $> cfcol
 
-    mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
-    mkColumnAggField columnInfo =
-      mkColumnAggField' columnInfo (ciType columnInfo)
+    mkColumnAggField :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkColumnAggField columnAndCensorExp@(columnInfo, _censorExp) =
+      mkColumnAggField' columnAndCensorExp (ciType columnInfo)
 
-    mkColumnAggField' :: ColumnInfo b -> ColumnType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
-    mkColumnAggField' columnInfo resultType = do
+    mkColumnAggField' :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> ColumnType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkColumnAggField' (columnInfo, censorExp) resultType = do
       field <- columnParser resultType (G.Nullability True)
       pure
         $ P.selection_
           (ciName columnInfo)
           (ciDescription columnInfo)
           field
-        $> IR.SFCol (ciColumn columnInfo) (ciType columnInfo)
+        $> IR.SFCol (ciColumn columnInfo) (ciType columnInfo) censorExp
 
-    mkNullableScalarTypeAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkNullableScalarTypeAggField :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> ScalarType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkNullableScalarTypeAggField columnInfo resultType =
       mkColumnAggField' columnInfo (ColumnScalar resultType)
 

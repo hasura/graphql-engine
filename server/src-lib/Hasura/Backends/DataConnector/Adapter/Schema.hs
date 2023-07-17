@@ -633,13 +633,13 @@ tableArgs' tableInfo = do
 
 countTypeInput' ::
   (MonadParse n) =>
-  Maybe (P.Parser 'P.Both n DC.ColumnName) ->
-  P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate)
+  Maybe (P.Parser 'P.Both n (DC.ColumnName, Maybe (IR.AnnColumnCaseBoolExpUnpreparedValue 'DataConnector))) ->
+  P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate (IR.UnpreparedValue 'DataConnector))
 countTypeInput' = \case
   Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._column Nothing columnEnum
   Nothing -> pure $ mkCountAggregate Nothing
   where
-    mkCountAggregate :: Maybe DC.ColumnName -> IR.CountDistinct -> DC.CountAggregate
+    mkCountAggregate :: Maybe (DC.ColumnName, Maybe (IR.AnnColumnCaseBoolExpUnpreparedValue 'DataConnector)) -> IR.CountDistinct -> DC.CountAggregate (IR.UnpreparedValue 'DataConnector)
     mkCountAggregate Nothing _ = DC.StarCount
     mkCountAggregate (Just column) IR.SelectCountDistinct = DC.ColumnDistinctCount column
     mkCountAggregate (Just column) IR.SelectCountNonDistinct = DC.ColumnCount column

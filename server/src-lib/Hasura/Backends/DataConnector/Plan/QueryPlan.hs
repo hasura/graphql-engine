@@ -481,8 +481,9 @@ translateAggregateField fieldPrefix fieldName = \case
     let aggregate =
           case countAggregate of
             StarCount -> API.StarCount
-            ColumnCount column -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
-            ColumnDistinctCount column -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
+            -- TODO(caseBoolExp): Do something with these censor expressions
+            ColumnCount (column, _censorExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
+            ColumnDistinctCount (column, _censorExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
      in pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) aggregate
   AFOp AggregateOp {..} -> do
     let fieldPrefix' = fieldPrefix <> prefixWith fieldName
@@ -490,7 +491,8 @@ translateAggregateField fieldPrefix fieldName = \case
 
     fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
       case columnField of
-        SFCol column resultType ->
+        -- TODO(caseBoolExp): Do something with the censorExp
+        SFCol column resultType _censorExp ->
           let resultScalarType = Witch.from $ columnTypeToScalarType resultType
            in pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) resultScalarType)
         SFExp _txt ->
@@ -607,7 +609,7 @@ reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
       AFOp AggregateOp {..} -> do
         reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
           case columnField of
-            SFCol _column _columnType -> do
+            SFCol _column _columnType _caseBoolExp -> do
               let fieldPrefix' = fieldPrefix <> prefixWith fieldName
               let columnFieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
               responseAggregateValue <-

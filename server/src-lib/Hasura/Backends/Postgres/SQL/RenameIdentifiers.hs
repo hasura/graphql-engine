@@ -395,9 +395,8 @@ uSqlExp =
     -- this is for row expressions
     S.SERowIdentifier identifier -> S.SERowIdentifier <$> getTableNameAndPrefixHash identifier
     -- we rename the table alias if needed
-    S.SEQIdentifier (S.QIdentifier qualifier identifier) -> do
-      newQualifier <- uQual qualifier
-      pure $ S.SEQIdentifier $ S.QIdentifier newQualifier $ Identifier $ prefixHash $ getIdenTxt identifier
+    S.SEQIdentifier qIdentifier -> do
+      S.SEQIdentifier <$> uQIdentifier qIdentifier
     S.SEFnApp fn args orderBy ->
       S.SEFnApp fn
         <$> mapM uSqlExp args
@@ -423,10 +422,14 @@ uSqlExp =
       S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
     S.SETuple (S.TupleExp l) ->
       S.SETuple . S.TupleExp <$> mapM uSqlExp l
-    S.SECount cty -> pure $ S.SECount cty
+    S.SECount cty -> S.SECount <$> traverse uQIdentifier cty
     S.SENamedArg arg val -> S.SENamedArg arg <$> uSqlExp val
     S.SEFunction funcExp -> S.SEFunction <$> uFunctionExp funcExp
   where
+    uQIdentifier (S.QIdentifier qualifier identifier) = do
+      newQualifier <- uQual qualifier
+      pure $ S.QIdentifier newQualifier $ Identifier $ prefixHash $ getIdenTxt identifier
+
     -- rename the table alias if needed
     uQual = \case
       S.QualifiedIdentifier identifier typeAnnotation ->

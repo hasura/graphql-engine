@@ -623,6 +623,7 @@ library
                      , Hasura.Backends.Postgres.Translate.Select.Streaming
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
+                     , Hasura.Backends.Postgres.Types.Aggregates
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
                      , Hasura.Backends.Postgres.Types.ComputedField

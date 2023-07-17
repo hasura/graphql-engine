@@ -6,6 +6,7 @@ module Harness.Permissions
     Types.UpdatePermissionDetails (..),
     Types.InsertPermissionDetails (..),
     Types.DeletePermissionDetails (..),
+    Types.InheritedRoleDetails (..),
     Types.selectPermission,
     Types.updatePermission,
     Types.insertPermission,
