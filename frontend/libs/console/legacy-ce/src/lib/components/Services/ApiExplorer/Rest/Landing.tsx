@@ -21,7 +21,7 @@ const Landing = () => {
           size="sm"
           onClick={() => dispatch(_push('/api/rest/create'))}
         >
-          Create REST
+          Create Endpoint
         </Button>
       </div>
       <div className="pb-md pr-md">

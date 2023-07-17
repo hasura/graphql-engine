@@ -17,6 +17,8 @@ import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import clsx from 'clsx';
 import { openInGraphiQL } from '../../../../../features/RestEndpoints/components/RestEndpointDetails/utils';
 import { Analytics } from '../../../../../features/Analytics';
+import { parse } from 'graphql';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
 
 const editorOptions = {
   minLines: 10,
@@ -78,7 +80,7 @@ const validationSchema = z.object({
   request: z
     .string()
     .min(1, { message: 'Please add a GraphQL query' })
-    .refine(val => isQueryValid(val), 'Please add a valid GraphQL query'),
+    .refine(val => isQueryValid(val), 'Please add a valid named GraphQL query'),
 });
 
 export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
@@ -93,6 +95,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
       setFocus,
       watch,
       formState: { errors },
+      setValue,
     },
     Form,
   } = useConsoleForm({
@@ -107,6 +110,40 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
   }, []);
 
   const request = watch('request');
+
+  const [userChangedName, setUserChangedName] = React.useState(false);
+  const [userChangedUrl, setUserChangedUrl] = React.useState(false);
+
+  useDebouncedEffect(
+    () => {
+      if (request) {
+        try {
+          const parsedQuery = parse(request);
+          if (parsedQuery?.definitions?.length > 0) {
+            const operation = parsedQuery.definitions[0];
+            if ('name' in operation) {
+              if (!userChangedName) {
+                setValue('name', operation.name?.value);
+              }
+              if (!userChangedUrl) {
+                setValue(
+                  'url',
+                  operation.name?.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/(^-|-$)+/g, '')
+                );
+              }
+            }
+          }
+        } catch (e) {
+          // do nothing
+        }
+      }
+    },
+    500,
+    [request]
+  );
 
   const prependLabel = `${globals.dataApiUrl}/api/rest/`.replace(/\/\//, '/');
 
@@ -147,7 +184,15 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             </Analytics>
           </div>
         </div>
-        <InputField name="name" label="Name" placeholder="Name" />
+        <InputField
+          name="name"
+          label="Name"
+          placeholder="Name"
+          inputTransform={str => {
+            setUserChangedName(true);
+            return str;
+          }}
+        />
         <Textarea
           name="comment"
           label="Description (Optional)"
@@ -160,7 +205,12 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
             placeholder="Location"
             description={`This is the location of your endpoint (must be unique).`}
             prependLabel={prependLabel}
+            inputTransform={str => {
+              setUserChangedUrl(true);
+              return str;
+            }}
           />
+
           <IndicatorCard
             className={clsx(errors?.url ? 'mt-1' : '-mt-4', 'py-3')}
             showIcon
