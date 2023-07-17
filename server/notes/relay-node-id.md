@@ -1,6 +1,6 @@
 This note is in [Hasura.GraphQL.Schema.Node](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Node.hs#L37).
 It is referenced at:
-  - line 438 of [Hasura.Backends.Postgres.Translate.Select.Internal.Process](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select/Internal/Process.hs#L438)
+  - line 414 of [Hasura.Backends.Postgres.Translate.Select.Internal.Process](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/Translate/Select/Internal/Process.hs#L414)
 
 # Relay Node Id
 

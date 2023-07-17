@@ -29,7 +29,7 @@
 </span><span id="line-27"></span><span>    </span><span id="ffiEnabled"><span class="annot"><span class="annottext">FeatureFlagInfo -&gt; Bool
 </span><a href="Hasura.Server.API.Config.html#ffiEnabled"><span class="hs-identifier hs-var hs-var">ffiEnabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687369968"><span id="local-6989586621687369977"><span id="local-6989586621687369981"><span class="annot"><span class="annottext">Int -&gt; FeatureFlagInfo -&gt; ShowS
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687406155"><span id="local-6989586621687406164"><span id="local-6989586621687406168"><span class="annot"><span class="annottext">Int -&gt; FeatureFlagInfo -&gt; ShowS
 [FeatureFlagInfo] -&gt; ShowS
 FeatureFlagInfo -&gt; String
 (Int -&gt; FeatureFlagInfo -&gt; ShowS)
@@ -44,7 +44,7 @@ $cshow :: FeatureFlagInfo -&gt; String
 show :: FeatureFlagInfo -&gt; String
 $cshowList :: [FeatureFlagInfo] -&gt; ShowS
 showList :: [FeatureFlagInfo] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687369985"><span id="local-6989586621687369992"><span class="annot"><span class="annottext">FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406172"><span id="local-6989586621687406179"><span class="annot"><span class="annottext">FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
 (FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool)
 -&gt; (FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool)
 -&gt; Eq FeatureFlagInfo
@@ -53,7 +53,7 @@ $c== :: FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
 == :: FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
 $c/= :: FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
 /= :: FeatureFlagInfo -&gt; FeatureFlagInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687369996"><span id="local-6989586621687369998"><span class="annot"><span class="annottext">(forall x. FeatureFlagInfo -&gt; Rep FeatureFlagInfo x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406183"><span id="local-6989586621687406185"><span class="annot"><span class="annottext">(forall x. FeatureFlagInfo -&gt; Rep FeatureFlagInfo x)
 -&gt; (forall x. Rep FeatureFlagInfo x -&gt; FeatureFlagInfo)
 -&gt; Generic FeatureFlagInfo
 forall x. Rep FeatureFlagInfo x -&gt; FeatureFlagInfo
@@ -64,7 +64,7 @@ $cfrom :: forall x. FeatureFlagInfo -&gt; Rep FeatureFlagInfo x
 from :: forall x. FeatureFlagInfo -&gt; Rep FeatureFlagInfo x
 $cto :: forall x. Rep FeatureFlagInfo x -&gt; FeatureFlagInfo
 to :: forall x. Rep FeatureFlagInfo x -&gt; FeatureFlagInfo
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687370004"><span id="local-6989586621687370010"><span class="annot"><span class="annottext">Eq FeatureFlagInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406191"><span id="local-6989586621687406197"><span class="annot"><span class="annottext">Eq FeatureFlagInfo
 Eq FeatureFlagInfo
 -&gt; (Int -&gt; FeatureFlagInfo -&gt; Int)
 -&gt; (FeatureFlagInfo -&gt; Int)
@@ -78,16 +78,16 @@ $chash :: FeatureFlagInfo -&gt; Int
 hash :: FeatureFlagInfo -&gt; Int
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687370031"><span id="local-6989586621687370035"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#FeatureFlagInfo"><span class="hs-identifier hs-type">FeatureFlagInfo</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621687370151"><span class="annot"><span class="annottext">toJSON :: FeatureFlagInfo -&gt; Value
-</span><a href="#local-6989586621687370151"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FeatureFlagInfo -&gt; Value
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687406218"><span id="local-6989586621687406222"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#FeatureFlagInfo"><span class="hs-identifier hs-type">FeatureFlagInfo</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621687406338"><span class="annot"><span class="annottext">toJSON :: FeatureFlagInfo -&gt; Value
+</span><a href="#local-6989586621687406338"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FeatureFlagInfo -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621687370236"><span class="annot"><span class="annottext">toEncoding :: FeatureFlagInfo -&gt; Encoding
-</span><a href="#local-6989586621687370236"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FeatureFlagInfo -&gt; Encoding
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621687406423"><span class="annot"><span class="annottext">toEncoding :: FeatureFlagInfo -&gt; Encoding
+</span><a href="#local-6989586621687406423"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FeatureFlagInfo -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Encoding
@@ -102,7 +102,7 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-38"></span><span>    </span><span id="jwtiClaimsMap"><span class="annot"><span class="annottext">JWTInfo -&gt; Maybe JWTCustomClaimsMap
 </span><a href="Hasura.Server.API.Config.html#jwtiClaimsMap"><span class="hs-identifier hs-var hs-var">jwtiClaimsMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCustomClaimsMap"><span class="hs-identifier hs-type">JWTCustomClaimsMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687370244"><span id="local-6989586621687370254"><span id="local-6989586621687370258"><span class="annot"><span class="annottext">Int -&gt; JWTInfo -&gt; ShowS
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687406431"><span id="local-6989586621687406441"><span id="local-6989586621687406445"><span class="annot"><span class="annottext">Int -&gt; JWTInfo -&gt; ShowS
 [JWTInfo] -&gt; ShowS
 JWTInfo -&gt; String
 (Int -&gt; JWTInfo -&gt; ShowS)
@@ -115,7 +115,7 @@ $cshow :: JWTInfo -&gt; String
 show :: JWTInfo -&gt; String
 $cshowList :: [JWTInfo] -&gt; ShowS
 showList :: [JWTInfo] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687370262"><span id="local-6989586621687370271"><span class="annot"><span class="annottext">JWTInfo -&gt; JWTInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406449"><span id="local-6989586621687406458"><span class="annot"><span class="annottext">JWTInfo -&gt; JWTInfo -&gt; Bool
 (JWTInfo -&gt; JWTInfo -&gt; Bool)
 -&gt; (JWTInfo -&gt; JWTInfo -&gt; Bool) -&gt; Eq JWTInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -123,7 +123,7 @@ $c== :: JWTInfo -&gt; JWTInfo -&gt; Bool
 == :: JWTInfo -&gt; JWTInfo -&gt; Bool
 $c/= :: JWTInfo -&gt; JWTInfo -&gt; Bool
 /= :: JWTInfo -&gt; JWTInfo -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687370276"><span id="local-6989586621687370278"><span class="annot"><span class="annottext">(forall x. JWTInfo -&gt; Rep JWTInfo x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406463"><span id="local-6989586621687406465"><span class="annot"><span class="annottext">(forall x. JWTInfo -&gt; Rep JWTInfo x)
 -&gt; (forall x. Rep JWTInfo x -&gt; JWTInfo) -&gt; Generic JWTInfo
 forall x. Rep JWTInfo x -&gt; JWTInfo
 forall x. JWTInfo -&gt; Rep JWTInfo x
@@ -135,15 +135,15 @@ $cto :: forall x. Rep JWTInfo x -&gt; JWTInfo
 to :: forall x. Rep JWTInfo x -&gt; JWTInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687370283"><span id="local-6989586621687370287"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-type">JWTInfo</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621687370373"><span class="annot"><span class="annottext">toJSON :: JWTInfo -&gt; Value
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687406470"><span id="local-6989586621687406474"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-type">JWTInfo</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621687406560"><span class="annot"><span class="annottext">toJSON :: JWTInfo -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; JWTInfo -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621687370449"><span class="annot"><span class="annottext">toEncoding :: JWTInfo -&gt; Encoding
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621687406636"><span class="annot"><span class="annottext">toEncoding :: JWTInfo -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; JWTInfo -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
@@ -183,7 +183,7 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-61"></span><span>    </span><span id="scfgFeatureFlags"><span class="annot"><span class="annottext">ServerConfig -&gt; HashSet FeatureFlagInfo
 </span><a href="Hasura.Server.API.Config.html#scfgFeatureFlags"><span class="hs-identifier hs-var hs-var">scfgFeatureFlags</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">Set.HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#FeatureFlagInfo"><span class="hs-identifier hs-type">FeatureFlagInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687370468"><span id="local-6989586621687370498"><span id="local-6989586621687370502"><span class="annot"><span class="annottext">Int -&gt; ServerConfig -&gt; ShowS
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687406655"><span id="local-6989586621687406685"><span id="local-6989586621687406689"><span class="annot"><span class="annottext">Int -&gt; ServerConfig -&gt; ShowS
 [ServerConfig] -&gt; ShowS
 ServerConfig -&gt; String
 (Int -&gt; ServerConfig -&gt; ShowS)
@@ -198,7 +198,7 @@ $cshow :: ServerConfig -&gt; String
 show :: ServerConfig -&gt; String
 $cshowList :: [ServerConfig] -&gt; ShowS
 showList :: [ServerConfig] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687370506"><span id="local-6989586621687370534"><span class="annot"><span class="annottext">ServerConfig -&gt; ServerConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406693"><span id="local-6989586621687406721"><span class="annot"><span class="annottext">ServerConfig -&gt; ServerConfig -&gt; Bool
 (ServerConfig -&gt; ServerConfig -&gt; Bool)
 -&gt; (ServerConfig -&gt; ServerConfig -&gt; Bool) -&gt; Eq ServerConfig
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -206,7 +206,7 @@ $c== :: ServerConfig -&gt; ServerConfig -&gt; Bool
 == :: ServerConfig -&gt; ServerConfig -&gt; Bool
 $c/= :: ServerConfig -&gt; ServerConfig -&gt; Bool
 /= :: ServerConfig -&gt; ServerConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687370539"><span id="local-6989586621687370541"><span class="annot"><span class="annottext">(forall x. ServerConfig -&gt; Rep ServerConfig x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687406726"><span id="local-6989586621687406728"><span class="annot"><span class="annottext">(forall x. ServerConfig -&gt; Rep ServerConfig x)
 -&gt; (forall x. Rep ServerConfig x -&gt; ServerConfig)
 -&gt; Generic ServerConfig
 forall x. Rep ServerConfig x -&gt; ServerConfig
@@ -219,15 +219,15 @@ $cto :: forall x. Rep ServerConfig x -&gt; ServerConfig
 to :: forall x. Rep ServerConfig x -&gt; ServerConfig
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687370546"><span id="local-6989586621687370550"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-type">ServerConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621687370818"><span class="annot"><span class="annottext">toJSON :: ServerConfig -&gt; Value
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687406733"><span id="local-6989586621687406737"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Config.html#ServerConfig"><span class="hs-identifier hs-type">ServerConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621687407005"><span class="annot"><span class="annottext">toJSON :: ServerConfig -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ServerConfig -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621687371049"><span class="annot"><span class="annottext">toEncoding :: ServerConfig -&gt; Encoding
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621687407236"><span class="annot"><span class="annottext">toEncoding :: ServerConfig -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ServerConfig -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
@@ -261,28 +261,28 @@ Options -&gt; a -&gt; Encoding
 -&gt; [(FeatureFlag, Text, Bool)]
 -&gt; ServerConfig
 </span><a href="Hasura.Server.API.Config.html#runGetConfig"><span class="hs-identifier hs-var hs-var">runGetConfig</span></a></span></span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621687371050"><span class="annot"><span class="annottext">InferFunctionPermissions
-</span><a href="#local-6989586621687371050"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span></span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621687371051"><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621687371051"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span></span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621687371052"><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621687371052"><span class="hs-identifier hs-var">am</span></a></span></span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621687371053"><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687371053"><span class="hs-identifier hs-var">allowListStatus</span></a></span></span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621687371054"><span class="annot"><span class="annottext">LiveQueriesOptions
-</span><a href="#local-6989586621687371054"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span></span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621687371055"><span class="annot"><span class="annottext">LiveQueriesOptions
-</span><a href="#local-6989586621687371055"><span class="hs-identifier hs-var">streamQueryOpts</span></a></span></span><span>
-</span><span id="line-89"></span><span>  </span><span id="local-6989586621687371056"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687371056"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span></span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621687371057"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621687371057"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span></span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621687371058"><span class="annot"><span class="annottext">HashSet API
-</span><a href="#local-6989586621687371058"><span class="hs-identifier hs-var">enabledAPIs</span></a></span></span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621687371059"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621687371059"><span class="hs-identifier hs-var">defaultNamingConvention</span></a></span></span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621687371060"><span class="annot"><span class="annottext">[(FeatureFlag, Text, Bool)]
-</span><a href="#local-6989586621687371060"><span class="hs-identifier hs-var">featureFlags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621687407237"><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="#local-6989586621687407237"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621687407238"><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="#local-6989586621687407238"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span></span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621687407239"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621687407239"><span class="hs-identifier hs-var">am</span></a></span></span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621687407240"><span class="annot"><span class="annottext">AllowListStatus
+</span><a href="#local-6989586621687407240"><span class="hs-identifier hs-var">allowListStatus</span></a></span></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621687407241"><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621687407241"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span></span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621687407242"><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="#local-6989586621687407242"><span class="hs-identifier hs-var">streamQueryOpts</span></a></span></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621687407243"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687407243"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span></span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621687407244"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621687407244"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621687407245"><span class="annot"><span class="annottext">HashSet API
+</span><a href="#local-6989586621687407245"><span class="hs-identifier hs-var">enabledAPIs</span></a></span></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621687407246"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687407246"><span class="hs-identifier hs-var">defaultNamingConvention</span></a></span></span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621687407247"><span class="annot"><span class="annottext">[(FeatureFlag, Text, Bool)]
+</span><a href="#local-6989586621687407247"><span class="hs-identifier hs-var">featureFlags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">Version
 -&gt; InferFunctionPermissions
 -&gt; RemoteSchemaPermissions
@@ -303,75 +303,75 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span>
 </span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">InferFunctionPermissions
-</span><a href="#local-6989586621687371050"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span><span>
+</span><a href="#local-6989586621687407237"><span class="hs-identifier hs-var">functionPermsCtx</span></a></span><span>
 </span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621687371051"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span><span>
+</span><a href="#local-6989586621687407238"><span class="hs-identifier hs-var">remoteSchemaPermsCtx</span></a></span><span>
 </span><span id="line-98"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
 </span><a href="Hasura.Server.API.Config.html#isAdminSecretSet"><span class="hs-identifier hs-var">isAdminSecretSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621687371052"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687407239"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
 </span><a href="Hasura.Server.API.Config.html#isAuthHookSet"><span class="hs-identifier hs-var">isAuthHookSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621687371052"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687407239"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; Bool
 </span><a href="Hasura.Server.API.Config.html#isJWTSet"><span class="hs-identifier hs-var">isJWTSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621687371052"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687407239"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthMode -&gt; [JWTInfo]
 </span><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var">getJWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621687371052"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687407239"><span class="hs-identifier hs-var">am</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">AllowListStatus
-</span><a href="#local-6989586621687371053"><span class="hs-identifier hs-var">allowListStatus</span></a></span><span>
+</span><a href="#local-6989586621687407240"><span class="hs-identifier hs-var">allowListStatus</span></a></span><span>
 </span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">LiveQueriesOptions
-</span><a href="#local-6989586621687371054"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span><span>
+</span><a href="#local-6989586621687407241"><span class="hs-identifier hs-var">liveQueryOpts</span></a></span><span>
 </span><span id="line-104"></span><span>      </span><span class="annot"><span class="annottext">LiveQueriesOptions
-</span><a href="#local-6989586621687371055"><span class="hs-identifier hs-var">streamQueryOpts</span></a></span><span>
+</span><a href="#local-6989586621687407242"><span class="hs-identifier hs-var">streamQueryOpts</span></a></span><span>
 </span><span id="line-105"></span><span>      </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687371056"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span><span>
+</span><a href="#local-6989586621687407243"><span class="hs-identifier hs-var">consoleAssetsDir</span></a></span><span>
 </span><span id="line-106"></span><span>      </span><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621687371057"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span>
+</span><a href="#local-6989586621687407244"><span class="hs-identifier hs-var">experimentalFeatures</span></a></span><span>
 </span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687371065"><span class="hs-identifier hs-var">isPrometheusMetricsEnabled</span></a></span><span>
+</span><a href="#local-6989586621687407252"><span class="hs-identifier hs-var">isPrometheusMetricsEnabled</span></a></span><span>
 </span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621687371059"><span class="hs-identifier hs-var">defaultNamingConvention</span></a></span><span>
+</span><a href="#local-6989586621687407246"><span class="hs-identifier hs-var">defaultNamingConvention</span></a></span><span>
 </span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">HashSet FeatureFlagInfo
-</span><a href="#local-6989586621687371066"><span class="hs-identifier hs-var">featureFlagSettings</span></a></span><span>
+</span><a href="#local-6989586621687407253"><span class="hs-identifier hs-var">featureFlagSettings</span></a></span><span>
 </span><span id="line-110"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>      </span><span id="local-6989586621687371065"><span class="annot"><span class="annottext">isPrometheusMetricsEnabled :: Bool
-</span><a href="#local-6989586621687371065"><span class="hs-identifier hs-var hs-var">isPrometheusMetricsEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">API
+</span><span id="line-111"></span><span>      </span><span id="local-6989586621687407252"><span class="annot"><span class="annottext">isPrometheusMetricsEnabled :: Bool
+</span><a href="#local-6989586621687407252"><span class="hs-identifier hs-var hs-var">isPrometheusMetricsEnabled</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">API
 </span><a href="Hasura.Server.Init.Config.html#METRICS"><span class="hs-identifier hs-var">METRICS</span></a></span><span> </span><span class="annot"><span class="annottext">API -&gt; HashSet API -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#member"><span class="hs-operator hs-var">`Set.member`</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet API
-</span><a href="#local-6989586621687371058"><span class="hs-identifier hs-var">enabledAPIs</span></a></span><span>
-</span><span id="line-112"></span><span>      </span><span id="local-6989586621687371066"><span class="annot"><span class="annottext">featureFlagSettings :: HashSet FeatureFlagInfo
-</span><a href="#local-6989586621687371066"><span class="hs-identifier hs-var hs-var">featureFlagSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687407245"><span class="hs-identifier hs-var">enabledAPIs</span></a></span><span>
+</span><span id="line-112"></span><span>      </span><span id="local-6989586621687407253"><span class="annot"><span class="annottext">featureFlagSettings :: HashSet FeatureFlagInfo
+</span><a href="#local-6989586621687407253"><span class="hs-identifier hs-var hs-var">featureFlagSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-113"></span><span>        </span><span class="annot"><span class="annottext">[FeatureFlagInfo] -&gt; HashSet FeatureFlagInfo
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashSet.Internal.html#fromList"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span>
 </span><span id="line-114"></span><span>          </span><span class="annot"><span class="annottext">([FeatureFlagInfo] -&gt; HashSet FeatureFlagInfo)
 -&gt; [FeatureFlagInfo] -&gt; HashSet FeatureFlagInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687371070"><span class="annot"><span class="annottext">Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687407257"><span class="annot"><span class="annottext">Text
 ffIdentifier :: Text
 ffIdentifier :: FeatureFlag -&gt; Text
-</span><a href="#local-6989586621687371070"><span class="hs-identifier hs-var hs-var">ffIdentifier</span></a></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371072"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687371072"><span class="hs-identifier hs-var">description</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371073"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687371073"><span class="hs-identifier hs-var">enabled</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687407257"><span class="hs-identifier hs-var hs-var">ffIdentifier</span></a></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687407259"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687407259"><span class="hs-identifier hs-var">description</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687407260"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687407260"><span class="hs-identifier hs-var">enabled</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>                </span><span class="annot"><a href="Hasura.Server.API.Config.html#FeatureFlagInfo"><span class="hs-identifier hs-type">FeatureFlagInfo</span></a></span><span>
 </span><span id="line-116"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">ffiName :: Text
 </span><a href="Hasura.Server.API.Config.html#ffiName"><span class="hs-identifier hs-var">ffiName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687371070"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687407257"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>                    </span><span class="annot"><span class="annottext">ffiEnabled :: Bool
 </span><a href="Hasura.Server.API.Config.html#ffiEnabled"><span class="hs-identifier hs-var">ffiEnabled</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687371073"><span class="hs-identifier hs-var">enabled</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687407260"><span class="hs-identifier hs-var">enabled</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-118"></span><span>                    </span><span class="annot"><span class="annottext">ffiDescription :: Text
 </span><a href="Hasura.Server.API.Config.html#ffiDescription"><span class="hs-identifier hs-var">ffiDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687371072"><span class="hs-identifier hs-var">description</span></a></span><span>
+</span><a href="#local-6989586621687407259"><span class="hs-identifier hs-var">description</span></a></span><span>
 </span><span id="line-119"></span><span>                  </span><span class="hs-special">}</span><span>
 </span><span id="line-120"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">((FeatureFlag, Text, Bool) -&gt; FeatureFlagInfo)
 -&gt; [(FeatureFlag, Text, Bool)] -&gt; [FeatureFlagInfo]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(FeatureFlag, Text, Bool)]
-</span><a href="#local-6989586621687371060"><span class="hs-identifier hs-var">featureFlags</span></a></span><span>
+</span><a href="#local-6989586621687407247"><span class="hs-identifier hs-var">featureFlags</span></a></span><span>
 </span><span id="line-122"></span><span>
 </span><span id="line-123"></span><span class="annot"><a href="Hasura.Server.API.Config.html#isAdminSecretSet"><span class="hs-identifier hs-type">isAdminSecretSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-124"></span><span id="isAdminSecretSet"><span class="annot"><span class="annottext">isAdminSecretSet :: AuthMode -&gt; Bool
@@ -406,26 +406,26 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-138"></span><span class="annot"><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-type">getJWTInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-type">JWTInfo</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-139"></span><span id="getJWTInfo"><span class="annot"><span class="annottext">getJWTInfo :: AuthMode -&gt; [JWTInfo]
 </span><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var hs-var">getJWTInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-type">AMAdminSecretAndJWT</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687371078"><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621687371078"><span class="hs-identifier hs-var">jwtCtxs</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687407265"><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621687407265"><span class="hs-identifier hs-var">jwtCtxs</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-140"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687371079"><span class="annot"><span class="annottext">f :: JWTCtx -&gt; JWTInfo
-</span><a href="#local-6989586621687371079"><span class="hs-identifier hs-var hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687371080"><span class="annot"><span class="annottext">JWTCtx
-</span><a href="#local-6989586621687371080"><span class="hs-identifier hs-var">jwtCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; JWTClaims
+</span><span id="line-140"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687407266"><span class="annot"><span class="annottext">f :: JWTCtx -&gt; JWTInfo
+</span><a href="#local-6989586621687407266"><span class="hs-identifier hs-var hs-var">f</span></a></span></span><span> </span><span id="local-6989586621687407267"><span class="annot"><span class="annottext">JWTCtx
+</span><a href="#local-6989586621687407267"><span class="hs-identifier hs-var">jwtCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; JWTClaims
 </span><a href="Hasura.Server.Auth.JWT.html#jcxClaims"><span class="hs-identifier hs-var">jcxClaims</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
-</span><a href="#local-6989586621687371080"><span class="hs-identifier hs-var">jwtCtx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-141"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-type">JCNamespace</span></a></span><span> </span><span id="local-6989586621687371083"><span class="annot"><span class="annottext">JWTNamespace
-</span><a href="#local-6989586621687371083"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span id="local-6989586621687371084"><span class="annot"><span class="annottext">JWTClaimsFormat
-</span><a href="#local-6989586621687371084"><span class="hs-identifier hs-var">claimsFormat</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687407267"><span class="hs-identifier hs-var">jwtCtx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-141"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-type">JCNamespace</span></a></span><span> </span><span id="local-6989586621687407270"><span class="annot"><span class="annottext">JWTNamespace
+</span><a href="#local-6989586621687407270"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span id="local-6989586621687407271"><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><a href="#local-6989586621687407271"><span class="hs-identifier hs-var">claimsFormat</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">JWTNamespace
 -&gt; JWTClaimsFormat -&gt; Maybe JWTCustomClaimsMap -&gt; JWTInfo
 </span><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">JWTNamespace
-</span><a href="#local-6989586621687371083"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
-</span><a href="#local-6989586621687371084"><span class="hs-identifier hs-var">claimsFormat</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
+</span><a href="#local-6989586621687407270"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><a href="#local-6989586621687407271"><span class="hs-identifier hs-var">claimsFormat</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-143"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-type">JCMap</span></a></span><span> </span><span id="local-6989586621687371086"><span class="annot"><span class="annottext">JWTCustomClaimsMap
-</span><a href="#local-6989586621687371086"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-type">JCMap</span></a></span><span> </span><span id="local-6989586621687407273"><span class="annot"><span class="annottext">JWTCustomClaimsMap
+</span><a href="#local-6989586621687407273"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-144"></span><span>          </span><span class="annot"><span class="annottext">JWTNamespace
 -&gt; JWTClaimsFormat -&gt; Maybe JWTCustomClaimsMap -&gt; JWTInfo
 </span><a href="Hasura.Server.API.Config.html#JWTInfo"><span class="hs-identifier hs-var">JWTInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; JWTNamespace
@@ -437,13 +437,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap -&gt; Maybe JWTCustomClaimsMap
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap
-</span><a href="#local-6989586621687371086"><span class="hs-identifier hs-var">claimsMap</span></a></span><span>
+</span><a href="#local-6989586621687407273"><span class="hs-identifier hs-var">claimsMap</span></a></span><span>
 </span><span id="line-145"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(JWTCtx -&gt; JWTInfo) -&gt; [JWTCtx] -&gt; [JWTInfo]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; JWTInfo
-</span><a href="#local-6989586621687371079"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621687371078"><span class="hs-identifier hs-var">jwtCtxs</span></a></span><span>
+</span><a href="#local-6989586621687407266"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621687407265"><span class="hs-identifier hs-var">jwtCtxs</span></a></span><span>
 </span><span id="line-146"></span><span class="annot"><a href="Hasura.Server.API.Config.html#getJWTInfo"><span class="hs-identifier hs-var">getJWTInfo</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[JWTInfo]
 forall a. Monoid a =&gt; a
