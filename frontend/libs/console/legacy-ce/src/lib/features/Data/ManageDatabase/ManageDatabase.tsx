@@ -2,7 +2,7 @@ import get from 'lodash/get';
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
 import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
 import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
-import { ManageTrackedRelationshipsContainer } from '../TrackResources/components/ManageTrackedRelationshipsContainer';
+import { ManageSuggestedRelationships } from '../TrackResources/TrackRelationships/ManageSuggestedRelationships';
 import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
 import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
 
@@ -11,7 +11,6 @@ export interface ManageDatabaseProps {
   schema?: string;
 }
 
-//This component has the code for template gallery but is currently commented out until further notice.
 export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
   const {
     data: {
@@ -55,9 +54,7 @@ export const ManageDatabase = ({ dataSourceName }: ManageDatabaseProps) => {
               title="Foreign Key Relationships"
               tooltip="Track foreign key relationships in your database in your GraphQL API"
             >
-              <ManageTrackedRelationshipsContainer
-                dataSourceName={dataSourceName}
-              />
+              <ManageSuggestedRelationships dataSourceName={dataSourceName} />
             </CollapsibleResource>
           )}
 
