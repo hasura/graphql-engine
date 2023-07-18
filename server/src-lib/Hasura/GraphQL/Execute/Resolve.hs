@@ -83,9 +83,11 @@ resolveVariables definitions jsonValues directives selSet = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
           isOptional = isJust _vdDefaultValue || G.isNullable _vdType
       value <- case HashMap.lookup _vdName jsonValues of
-        Just jsonValue -> pure $ JSONValue jsonValue
+        Just jsonValue -> pure $ Just $ JSONValue jsonValue
         Nothing
-          | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
+          -- If the variable value was not provided, and the variable has no
+          -- default value, then don't store a value for the variable.
+          | isOptional -> pure $ GraphQLValue . fmap absurd <$> _vdDefaultValue
           | otherwise ->
               throw400 ValidationFailed
                 $ "expecting a value for non-nullable variable: "

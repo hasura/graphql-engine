@@ -175,7 +175,9 @@ normalizeSelectionSet = (normalizeSelection =<<)
       G.VEnum _ -> G.VNull
       G.VList l -> G.VList $ map normalizeValue l
       G.VObject obj -> G.VObject $ HashMap.map normalizeValue obj
-      G.VVariable (Variable _info _type value) ->
+      -- Pretend that variables without values are just nulls.
+      G.VVariable (Variable _info _type Nothing) -> G.VNull
+      G.VVariable (Variable _info _type (Just value)) ->
         case value of
           GraphQLValue val -> normalizeConstValue val
           JSONValue v -> jsonToNormalizedGQLVal v
