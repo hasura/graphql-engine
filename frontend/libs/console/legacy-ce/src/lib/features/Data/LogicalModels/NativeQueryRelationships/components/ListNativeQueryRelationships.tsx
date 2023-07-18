@@ -75,6 +75,7 @@ export const ListNativeQueryRelationships = (
               onClick={() => {
                 onEditRow?.(row.original);
               }}
+              data-testid="edit-button"
             >
               Edit
             </Button>
@@ -84,6 +85,7 @@ export const ListNativeQueryRelationships = (
               onClick={() => {
                 onDeleteRow?.(row.original);
               }}
+              data-testid="delete-button"
             >
               Delete
             </Button>
@@ -104,13 +106,14 @@ export const ListNativeQueryRelationships = (
   const NativeQueryRelationshipsTable =
     useCardedTableFromReactTableWithRef<ListNativeQueryRow>();
 
-  if (isLoading) return <Skeleton count={10} />;
+  if (isLoading) return <Skeleton count={10} height={20} />;
 
   return (
     <NativeQueryRelationshipsTable
       table={relationshipsTable}
       ref={tableRef}
       noRowsMessage={'No relationships added'}
+      dataTestId="native-query-relationships"
     />
   );
 };

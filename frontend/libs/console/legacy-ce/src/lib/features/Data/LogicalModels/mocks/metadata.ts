@@ -179,7 +179,7 @@ export const buildMetadata = ({
           kind: 'mssql',
           tables: [],
           native_queries: mssql?.queries ? testQueries.mssql : [],
-          logical_models: mssql?.models ? testModels.mssql : [],
+          logical_models: mssql?.models ? (testModels.mssql as any) : [],
           configuration: {
             connection_info: {
               connection_string: '',
@@ -191,7 +191,7 @@ export const buildMetadata = ({
           kind: 'postgres',
           tables: [],
           native_queries: postgres?.queries ? testQueries.postgres : [],
-          logical_models: postgres?.models ? testModels.postgres : [],
+          logical_models: postgres?.models ? (testModels.postgres as any) : [],
           configuration: {
             connection_info: {
               database_url: '',

@@ -5,15 +5,20 @@ import React from 'react';
 export function CardedTableFromReactTable<T>({
   table,
   noRowsMessage,
+  dataTestId,
 }: {
   table: Table<T>;
   noRowsMessage?: string;
+  dataTestId?: string;
 }) {
   return (
-    <CardedTable.Table>
+    <CardedTable.Table data-testid={`${dataTestId}`}>
       <CardedTable.TableHead>
-        {table.getHeaderGroups().map(headerGroup => (
-          <CardedTable.TableHeadRow key={headerGroup.id}>
+        {table.getHeaderGroups().map((headerGroup, index) => (
+          <CardedTable.TableHeadRow
+            key={headerGroup.id}
+            data-testid={`${dataTestId}-header-${index}`}
+          >
             {headerGroup.headers.map(header => (
               <CardedTable.TableHeadCell key={header.id}>
                 {header.isPlaceholder
@@ -28,10 +33,16 @@ export function CardedTableFromReactTable<T>({
         ))}
       </CardedTable.TableHead>
       <CardedTable.TableBody>
-        {table.getRowModel().rows.map(row => (
-          <CardedTable.TableBodyRow key={row.id}>
-            {row.getVisibleCells().map(cell => (
-              <CardedTable.TableBodyCell key={cell.id}>
+        {table.getRowModel().rows.map((row, index) => (
+          <CardedTable.TableBodyRow
+            key={row.id}
+            data-testid={`${dataTestId}-row-${index}`}
+          >
+            {row.getVisibleCells().map((cell, subIndex) => (
+              <CardedTable.TableBodyCell
+                key={cell.id}
+                data-testid={`${dataTestId}-cell-${index}-${subIndex}`}
+              >
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
               </CardedTable.TableBodyCell>
             ))}
@@ -60,13 +71,14 @@ export function CardedTableFromReactTable<T>({
 function forwardRefWrapper<T>() {
   return React.forwardRef<
     HTMLDivElement,
-    { table: Table<T>; noRowsMessage?: string }
-  >(({ table, noRowsMessage }, ref) => {
+    { table: Table<T>; noRowsMessage?: string; dataTestId?: string }
+  >(({ table, noRowsMessage, dataTestId }, ref) => {
     return (
       <div ref={ref}>
         <CardedTableFromReactTable
           table={table}
           noRowsMessage={noRowsMessage}
+          dataTestId={dataTestId}
         />
       </div>
     );

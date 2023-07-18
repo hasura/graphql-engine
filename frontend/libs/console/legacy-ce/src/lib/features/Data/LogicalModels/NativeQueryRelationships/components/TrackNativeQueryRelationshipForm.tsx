@@ -28,6 +28,7 @@ export const TrackNativeQueryRelationshipForm = ({
         label="Relationship Name"
         placeholder="Name your native query relationship"
         name={'name'}
+        dataTestId="relationship_name"
       />
       <Select
         name={'toNativeQuery'}
@@ -50,11 +51,13 @@ export const TrackNativeQueryRelationshipForm = ({
         from={{
           options: fromFieldOptions,
           label: 'Source Field',
+          placeholder: 'Pick source field',
         }}
         to={{
           type: 'array',
           options: toFieldOptions,
           label: 'Target Field',
+          placeholder: 'Pick target field',
         }}
       />
     </div>
