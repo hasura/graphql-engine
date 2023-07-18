@@ -83,6 +83,12 @@ version control to keep the your codebase in-sync with your database schema and 
 
 See [Metadata format](/migrations-metadata-seeds/metadata-format.mdx) for more details.
 
+:::info Hasura requires a PostgreSQL database to store Metadata
+
+While you can use any [supported database](/databases/overview.mdx) for your datasource, Hasura requires a PostgreSQL database to store Metadata.
+
+:::
+
 ## Authorization
 
 Hasura uses attribute-based authorization where access control is done by creating rules for each model. For
