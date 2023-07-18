@@ -20773,99 +20773,6 @@ instance Hasura.RQL.Types.Roles.Internal.OnlyRelevantEq Language.GraphQL.Draft.S
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Base.Semigroup (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.DelPermInfo b)), GHC.Base.Semigroup (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.InsPermInfo b)), GHC.Base.Semigroup (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.UpdPermInfo b)), GHC.Base.Semigroup (Hasura.Table.Cache.CombinedSelPermInfo b)) => GHC.Base.Semigroup (Hasura.RQL.Types.Roles.Internal.CombineRolePermInfo b)
 instance (Hasura.RQL.Types.Backend.Backend b, GHC.Base.Monoid (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.DelPermInfo b)), GHC.Base.Monoid (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.InsPermInfo b)), GHC.Base.Monoid (Hasura.RQL.Types.Roles.Internal.CheckPermission (Hasura.Table.Cache.UpdPermInfo b)), GHC.Base.Monoid (GHC.Maybe.Maybe (Hasura.Table.Cache.CombinedSelPermInfo b))) => GHC.Base.Monoid (Hasura.RQL.Types.Roles.Internal.CombineRolePermInfo b)
 
-module Hasura.RQL.DDL.SchemaRegistry
-newtype SchemaProjectId
-SchemaProjectId :: Text -> SchemaProjectId
-[_spiProjectId] :: SchemaProjectId -> Text
-newtype IsMetadataInconsistent
-IsMetadataInconsistent :: Bool -> IsMetadataInconsistent
-[_isMdInconsistent] :: IsMetadataInconsistent -> Bool
-newtype SchemaSDL
-SchemaSDL :: Text -> SchemaSDL
-[_sdl] :: SchemaSDL -> Text
-newtype SchemaHash
-SchemaHash :: Text -> SchemaHash
-[_schemaHash] :: SchemaHash -> Text
-type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
-type SchemaRegistryAction = Maybe (MetadataResourceVersion -> [InconsistentMetadata] -> IO ())
-data GQLSchemaInformation
-GQLSchemaInformation :: SchemaSDL -> SchemaHash -> GQLSchemaInformation
-[_gsiSchemaSDL] :: GQLSchemaInformation -> SchemaSDL
-[_gsiSchemaHash] :: GQLSchemaInformation -> SchemaHash
-data ProjectGQLSchemaInformation
-ProjectGQLSchemaInformation :: SchemaRegistryMap -> IsMetadataInconsistent -> SchemaHash -> MetadataResourceVersion -> UTCTime -> ProjectGQLSchemaInformation
-[_pgsiSchemaRegistryMap] :: ProjectGQLSchemaInformation -> SchemaRegistryMap
-[_pgsiIsMetadataInconsistent] :: ProjectGQLSchemaInformation -> IsMetadataInconsistent
-[_pgsiAdminSchemaHash] :: ProjectGQLSchemaInformation -> SchemaHash
-[_pgsiMetadataResourceVersion] :: ProjectGQLSchemaInformation -> MetadataResourceVersion
-[_pgsiChangeRecordedAt] :: ProjectGQLSchemaInformation -> UTCTime
-data SchemaRegistryConfig
-SchemaRegistryConfig :: Text -> Maybe Text -> SchemaRegistryConfig
-[_srcSchemaRegistryWebhook] :: SchemaRegistryConfig -> Text
-[_srcSchemaRegistryAccessKey] :: SchemaRegistryConfig -> Maybe Text
-data SchemaRegistryConfigRaw
-SchemaRegistryConfigRaw :: Maybe Text -> Maybe Text -> SchemaRegistryConfigRaw
-[_srcrSchemaRegistryWebhook] :: SchemaRegistryConfigRaw -> Maybe Text
-[_srcrSchemaRegistryAccessKey] :: SchemaRegistryConfigRaw -> Maybe Text
-data SchemaRegistryDetails
-SchemaRegistryDetails :: RoleName -> GQLSchemaInformation -> SchemaRegistryDetails
-[_srdlSchemaRole] :: SchemaRegistryDetails -> RoleName
-[_srdlSchemaInfo] :: SchemaRegistryDetails -> GQLSchemaInformation
-type SchemaRegistryDetailsList = [SchemaRegistryDetails]
-
--- | Context required to upate schema registry everytime the schema is
---   updated
-data SchemaRegistryContext
-SchemaRegistryContext :: TQueue ProjectGQLSchemaInformation -> PGPool -> SchemaRegistryContext
-[_srpaSchemaRegistryTQueueRef] :: SchemaRegistryContext -> TQueue ProjectGQLSchemaInformation
-[_srpaMetadataDbPoolRef] :: SchemaRegistryContext -> PGPool
-newtype SchemaRegistryControlRole
-SchemaRegistryControlRole :: Text -> SchemaRegistryControlRole
-[unSchemaRegistryControlRole] :: SchemaRegistryControlRole -> Text
-selectNowQuery :: TxE QErr UTCTime
-calculateSchemaSDLHash :: Text -> RoleName -> SchemaHash
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaHash
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaHash
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaHash
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaHash
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaHash
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfig
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfig
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfigRaw
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfigRaw
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
-instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
-instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryControlRole
-instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryControlRole
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
-
 module Hasura.GraphQL.Transport.WebSocket.Server
 data WSId
 mkUnsafeWSId :: UUID -> WSId
@@ -22658,6 +22565,100 @@ instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SourceKinds.SourceTyp
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SourceKinds.SourceType
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SourceKinds.ListSourceKinds
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SourceKinds.ListSourceKinds
+
+module Hasura.RQL.DDL.SchemaRegistry
+newtype SchemaProjectId
+SchemaProjectId :: Text -> SchemaProjectId
+[_spiProjectId] :: SchemaProjectId -> Text
+newtype IsMetadataInconsistent
+IsMetadataInconsistent :: Bool -> IsMetadataInconsistent
+[_isMdInconsistent] :: IsMetadataInconsistent -> Bool
+newtype SchemaSDL
+SchemaSDL :: Text -> SchemaSDL
+[_sdl] :: SchemaSDL -> Text
+newtype SchemaHash
+SchemaHash :: Text -> SchemaHash
+[_schemaHash] :: SchemaHash -> Text
+type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
+type SchemaRegistryAction = Maybe (MetadataResourceVersion -> [InconsistentMetadata] -> Metadata -> IO ())
+data GQLSchemaInformation
+GQLSchemaInformation :: SchemaSDL -> SchemaHash -> GQLSchemaInformation
+[_gsiSchemaSDL] :: GQLSchemaInformation -> SchemaSDL
+[_gsiSchemaHash] :: GQLSchemaInformation -> SchemaHash
+data ProjectGQLSchemaInformation
+ProjectGQLSchemaInformation :: SchemaRegistryMap -> IsMetadataInconsistent -> SchemaHash -> MetadataResourceVersion -> UTCTime -> Metadata -> ProjectGQLSchemaInformation
+[_pgsiSchemaRegistryMap] :: ProjectGQLSchemaInformation -> SchemaRegistryMap
+[_pgsiIsMetadataInconsistent] :: ProjectGQLSchemaInformation -> IsMetadataInconsistent
+[_pgsiAdminSchemaHash] :: ProjectGQLSchemaInformation -> SchemaHash
+[_pgsiMetadataResourceVersion] :: ProjectGQLSchemaInformation -> MetadataResourceVersion
+[_pgsiChangeRecordedAt] :: ProjectGQLSchemaInformation -> UTCTime
+[_pgsiMetadata] :: ProjectGQLSchemaInformation -> Metadata
+data SchemaRegistryConfig
+SchemaRegistryConfig :: Text -> Maybe Text -> SchemaRegistryConfig
+[_srcSchemaRegistryWebhook] :: SchemaRegistryConfig -> Text
+[_srcSchemaRegistryAccessKey] :: SchemaRegistryConfig -> Maybe Text
+data SchemaRegistryConfigRaw
+SchemaRegistryConfigRaw :: Maybe Text -> Maybe Text -> SchemaRegistryConfigRaw
+[_srcrSchemaRegistryWebhook] :: SchemaRegistryConfigRaw -> Maybe Text
+[_srcrSchemaRegistryAccessKey] :: SchemaRegistryConfigRaw -> Maybe Text
+data SchemaRegistryDetails
+SchemaRegistryDetails :: RoleName -> GQLSchemaInformation -> SchemaRegistryDetails
+[_srdlSchemaRole] :: SchemaRegistryDetails -> RoleName
+[_srdlSchemaInfo] :: SchemaRegistryDetails -> GQLSchemaInformation
+type SchemaRegistryDetailsList = [SchemaRegistryDetails]
+
+-- | Context required to upate schema registry everytime the schema is
+--   updated
+data SchemaRegistryContext
+SchemaRegistryContext :: TQueue ProjectGQLSchemaInformation -> PGPool -> SchemaRegistryContext
+[_srpaSchemaRegistryTQueueRef] :: SchemaRegistryContext -> TQueue ProjectGQLSchemaInformation
+[_srpaMetadataDbPoolRef] :: SchemaRegistryContext -> PGPool
+newtype SchemaRegistryControlRole
+SchemaRegistryControlRole :: Text -> SchemaRegistryControlRole
+[unSchemaRegistryControlRole] :: SchemaRegistryControlRole -> Text
+selectNowQuery :: TxE QErr UTCTime
+calculateSchemaSDLHash :: Text -> RoleName -> SchemaHash
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaProjectId
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.IsMetadataInconsistent
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaSDL
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaHash
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaHash
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaHash
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaHash
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaHash
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.ProjectGQLSchemaInformation
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfig
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfig
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfigRaw
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryConfigRaw
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
+instance GHC.Generics.Generic Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
+instance GHC.Show.Show Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryControlRole
+instance GHC.Classes.Eq Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryControlRole
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.SchemaRegistryDetails
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.DDL.SchemaRegistry.GQLSchemaInformation
 
 
 -- | Functions for fetching and updating @<a>Metadata</a> in the catalog.
@@ -24689,22 +24690,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) TriggerOnReplication
-cteqCleanupConfig :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe Text)
-cetqWebhook :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe InputWebhook)
-cetqUpdate :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
-cetqTable :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (TableName b_asyec)
-cetqSource :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) SourceName
-cetqRetryConf :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe RequestTransform)
-cetqReplace :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) Bool
-cetqName :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) TriggerName
-cetqInsert :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
-cetqHeaders :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe Bool)
-cetqDelete :: forall b_asyec. Lens' (CreateEventTriggerQuery b_asyec) (Maybe (SubscribeOpSpec b_asyec))
+cteqTriggerOnReplication :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) TriggerOnReplication
+cteqCleanupConfig :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe Text)
+cetqWebhook :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe InputWebhook)
+cetqUpdate :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe (SubscribeOpSpec b_asyq9))
+cetqTable :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (TableName b_asyq9)
+cetqSource :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) SourceName
+cetqRetryConf :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe RequestTransform)
+cetqReplace :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) Bool
+cetqName :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) TriggerName
+cetqInsert :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe (SubscribeOpSpec b_asyq9))
+cetqHeaders :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe Bool)
+cetqDelete :: forall b_asyq9. Lens' (CreateEventTriggerQuery b_asyq9) (Maybe (SubscribeOpSpec b_asyq9))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
