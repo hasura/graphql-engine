@@ -184,6 +184,8 @@ spec = do
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField
+  testAbsentValuesDontGetForwarded
+  testAbsentValuesWithDefault
   testPartialVarExpansionIfPreset
   testVariableSubstitutionCollision
 
@@ -238,7 +240,7 @@ query($a: A!) {
                    $ Variable
                      (VIRequired _a)
                      (G.TypeNamed (G.Nullability False) _A)
-                     (JSONValue $ J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
+                     (Just $ JSONValue $ J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
                )
 
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField :: Spec
@@ -328,6 +330,57 @@ query ($a: Int) {
                      (G.TypeNamed (G.Nullability True) _Int)
                      (J.Null)
                )
+
+testAbsentValuesDontGetForwarded :: Spec
+testAbsentValuesDontGetForwarded = it "don't forward variables without values" $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+type Query {
+  test(a: Int): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: Int) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+}
+|]
+  length (_fArguments field) `shouldBe` 0
+
+testAbsentValuesWithDefault :: Spec
+testAbsentValuesWithDefault = it "variable without value doesn't cause field with default to become null" $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+type Query {
+  test(a: Int = 3): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: Int) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+}
+|]
+  -- Actually, even better would be if `_fArguments` would be empty.
+  head (toList (_fArguments field)) `shouldBe` G.VInt 3
 
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField :: Spec
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField = it "send null value in the input variable for nullable object field " $ do

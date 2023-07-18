@@ -9,16 +9,13 @@ module Hasura.GraphQL.Parser.Internal.TypeChecking
   )
 where
 
-import Control.Arrow ((>>>))
-import Control.Monad (unless)
 import Data.Aeson qualified as J
-import Data.Function (on)
-import Data.Void (absurd)
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Variable
+import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 -- | Peeling a variable.
@@ -30,31 +27,25 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --     where(limit: 42)
 --     where(limit: $limit)
 --
--- In the case of a variable, we need to "open" it and inspect its content. This
--- forces us to do several things:
+-- In the case of a variable, we are now in the context type-check the variable
+-- usage: we know what the variable was declared as, and we know what type we
+-- expect at our current location in the schema: we can check that they match.
 --
---   1. Type-checking
---      We know what the variable was declared as, we know what type we expect
---      at our current location in the schema: we can check that they match.
---
---   2. Update re-usability
---      In the past, we used to cache the generated execution plan for a given
---      query. To do so properly, we had to identify queries that couldn't be
---      cached; and any root field that uses the content of a variable (outside
---      of a column's value) couldn't be cached: the same graphql expression
---      would lead to a different execution plan if the value of the variable
---      were to change.  We no longer cache execution plans; but we might do it
---      again in the future, which is why we haven't removed some of the code
---      that deals with re-usability.
+-- Note: this conflates nulls and absent variable values (GraphQL spec, June
+-- 2018, section 2.9.5), converting the latter into the former.
 peelVariable :: (MonadParse m) => GType -> InputValue Variable -> m (InputValue Variable)
-peelVariable = peelVariableWith False
+peelVariable locationType value =
+  peelVariableWith False locationType value
+    `onNothingM` if isNullable locationType
+      then pure $ GraphQLValue VNull
+      else parseError $ "no variable value specified for non-nullable variable " <> describeValue value
 
-peelVariableWith :: (MonadParse m) => Bool -> GType -> InputValue Variable -> m (InputValue Variable)
+peelVariableWith :: (MonadParse m) => Bool -> GType -> InputValue Variable -> m (Maybe (InputValue Variable))
 peelVariableWith locationHasDefaultValue locationType = \case
   GraphQLValue (VVariable var) -> do
     typeCheck locationHasDefaultValue locationType var
-    pure $ absurd <$> vValue var
-  value -> pure value
+    pure $ fmap absurd <$> vValue var
+  value -> pure $ Just value
 
 -- | Type-checking.
 --
@@ -126,10 +117,15 @@ typeMismatch name expected given =
     "expected " <> expected <> " for type " <> toErrorValue (getName name) <> ", but found " <> describeValue given
 
 describeValue :: InputValue Variable -> ErrorMessage
-describeValue = describeValueWith (describeValueWith absurd . vValue)
+describeValue = describeValueWith describeVariable
+
+describeVariable :: Variable -> ErrorMessage
+describeVariable v@Variable {..} = case vValue of
+  Nothing -> "no value specified for variable " <> toErrorValue (getName v)
+  Just val -> describeValueWith absurd val
 
 describeValueWith :: (var -> ErrorMessage) -> InputValue var -> ErrorMessage
-describeValueWith describeVariable = \case
+describeValueWith describeVariable' = \case
   JSONValue jval -> describeJSON jval
   GraphQLValue gval -> describeGraphQL gval
   where
@@ -141,7 +137,7 @@ describeValueWith describeVariable = \case
       J.Array _ -> "a list"
       J.Object _ -> "an object"
     describeGraphQL = \case
-      VVariable var -> describeVariable var
+      VVariable var -> describeVariable' var
       VInt _ -> "an integer"
       VFloat _ -> "a float"
       VString _ -> "a string"

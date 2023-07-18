@@ -82,9 +82,12 @@ instance (Hashable v) => Hashable (InputValue v)
 data Variable = Variable
   { vInfo :: VariableInfo,
     vType :: GType,
-    -- | Note: if the variable was null or was not provided and the field has a
-    -- non-null default value, this field contains the default value, not 'VNull'.
-    vValue :: InputValue Void
+    -- | The following cases are distinguished:
+    --
+    -- 1. A JSON value (including `null`) was provided: Just (JSONValue ...)
+    -- 2. No JSON value was provided, but a default value exists: Just (GraphQLValue ...)
+    -- 3. No JSON value was provided, and no default value exists: Nothing
+    vValue :: Maybe (InputValue Void)
   }
   deriving (Show, Eq, Generic, Ord, TH.Lift)
 
