@@ -20,7 +20,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Generator
   ( genAnnBoolExp,
     genAnnBoolExpFld,
-    genAnnColumnCaseBoolExp,
+    genAnnRedactionExp,
     genAnnotatedOrderByElement,
     genAnnotatedOrderByItemG,
   )
@@ -88,7 +88,7 @@ genSelectArgsG genA = do
         . Gen.nonEmpty defaultRange
         $ AnnDistinctColumn
         <$> genColumn
-        <*> genAnnColumnCaseBoolExp
+        <*> genAnnRedactionExp
           genColumn
           genTableName
           genScalarType

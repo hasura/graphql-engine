@@ -30,7 +30,7 @@ import Hasura.LogicalModel.Common (columnsFromFields, getSelPermInfoForLogicalMo
 import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (AnnColumnCaseBoolExpUnpreparedValue)
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
@@ -132,11 +132,10 @@ orderByExpInternal gqlName description selectPermissions tableFields memoizeKey 
       case fieldInfo of
         FIColumn (SCIScalarColumn columnInfo) -> do
           let !fieldName = ciName columnInfo
-          let redactionExp = join . HashMap.lookup (ciColumn columnInfo) $ spiCols selectPermissions'
-          let redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
+          let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
           orderByOperator @b tCase sourceInfo
             & P.fieldOptional fieldName Nothing
-            <&> (fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo redactionExpUnpreparedValue)) . join)
+            <&> (fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo redactionExp)) . join)
             & pure
         FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
         FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
@@ -171,9 +170,8 @@ orderByExpInternal gqlName description selectPermissions tableFields memoizeKey 
           guard $ _cffInputArgs == mempty -- No input arguments other than table row and session argument
           case computedFieldReturnType @b _cfiReturnType of
             ReturnsScalar scalarType -> do
-              let redactionExp = join . HashMap.lookup _cfiName $ spiComputedFields selectPermissions'
-              let redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
-              let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType redactionExpUnpreparedValue
+              let redactionExp = fromMaybe NoRedaction $ getRedactionExprForComputedField selectPermissions' _cfiName
+              let computedFieldOrderBy = mkComputedFieldOrderBy $ IR.CFOBEScalar scalarType redactionExp
               pure
                 $ P.fieldOptional
                   fieldName
@@ -289,8 +287,8 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
 
     stdAggOpColumns ::
       NamingCase ->
-      [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b), (BasicOrderType b, NullsOrderType b))])
+      [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     stdAggOpColumns tCase columns =
       columns
         -- ALl std aggregate functions return the same type as the column used with it
@@ -301,18 +299,18 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
     mkAgOpsFields ::
       NamingCase ->
       -- Assoc list of column types with the type returned by the aggregate function when it is applied to that column
-      [(ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b), (BasicOrderType b, NullsOrderType b))])
+      [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b)] ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     mkAgOpsFields tCase =
       fmap (fmap (catMaybes . toList) . traverse (mkField tCase)) . nonEmpty
 
     getCustomAggOpsColumns ::
       NamingCase ->
       -- All columns
-      [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] ->
+      [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] ->
       -- Map of type the aggregate function accepts to the type it returns
       HashMap (ScalarType b) (ScalarType b) ->
-      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b), (BasicOrderType b, NullsOrderType b))])
+      Maybe (InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))])
     getCustomAggOpsColumns tCase allColumns typeMap =
       allColumns
         -- Filter by columns with a scalar type supported by this aggregate function
@@ -328,8 +326,8 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
 
     mkField ::
       NamingCase ->
-      (ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) ->
-      InputFieldsParser n (Maybe (ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b), (BasicOrderType b, NullsOrderType b)))
+      (ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b) ->
+      InputFieldsParser n (Maybe (ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b)))
     mkField tCase (columnInfo, resultType, redactionExp) =
       P.fieldOptional
         (ciName columnInfo)
@@ -343,7 +341,7 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
       C.GQLNameIdentifier ->
       C.GQLNameIdentifier ->
       NamingCase ->
-      InputFieldsParser n [(ColumnInfo b, ColumnType b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b), (BasicOrderType b, NullsOrderType b))] ->
+      InputFieldsParser n [(ColumnInfo b, ColumnType b, AnnRedactionExpUnpreparedValue b, (BasicOrderType b, NullsOrderType b))] ->
       InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b (IR.UnpreparedValue b))])
     parseOperator makeTypename operator tableGQLName tCase columns =
       let opText = G.unName $ applyFieldNameCaseIdentifier tCase operator

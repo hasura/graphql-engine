@@ -258,7 +258,7 @@ class
   -- which generates @'CountType b' from optional "distinct" field value
   countTypeInput ::
     (MonadParse n) =>
-    Maybe (Parser 'Both n (Column b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))) ->
+    Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)) ->
     InputFieldsParser n (CountDistinct -> CountType b (UnpreparedValue b))
 
   aggregateOrderByCountType :: ScalarType b

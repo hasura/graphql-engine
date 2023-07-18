@@ -49,9 +49,9 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     asJsonAggExtr,
     mkRawComputedFieldExpression,
-    withColumnCaseBoolExp,
     withColumnOp,
     withJsonAggExtr,
+    withRedactionExp,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,
@@ -390,10 +390,10 @@ processAnnFields sourcePrefix fieldAlias annFields tCase = do
     baseTableIdentifier = mkBaseTableIdentifier sourcePrefix
 
     toSQLCol :: AnnColumnField ('Postgres pgKind) S.SQLExp -> m S.SQLExp
-    toSQLCol (AnnColumnField col typ asText colOpM caseBoolExpMaybe) = do
+    toSQLCol (AnnColumnField col typ asText colOpM redactionExp) = do
       strfyNum <- ask
       let sqlExpression =
-            withColumnCaseBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) caseBoolExpMaybe
+            withRedactionExp (S.QualifiedIdentifier baseTableIdentifier Nothing) redactionExp
               $ withColumnOp colOpM
               $ S.mkQIdenExp baseTableIdentifier col
       pure $ toJSONableExp strfyNum typ asText tCase sqlExpression
@@ -556,7 +556,7 @@ aggregateFieldToExp sourcePrefix aggregateFields strfyNum =
       [S.SQLExp]
     selectionFieldToExtractor aggregateFieldName opText (fieldName, selectionField) =
       withAlias fieldName $ case selectionField of
-        SFCol col ty _caseBoolExp ->
+        SFCol col ty _redactionExp ->
           toJSONableExp strfyNum ty False Nothing
             $ S.SEFnApp opText [S.SEQIdentifier $ columnToQIdentifier col] Nothing
         SFComputedField _cfName ComputedFieldScalarSelect {..} ->

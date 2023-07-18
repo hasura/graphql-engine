@@ -426,7 +426,7 @@ transformAnnFields fields = do
                 JCPhantom a -> case joinField of
                   JoinColumn column columnType ->
                     let annotatedColumn =
-                          AFColumn $ AnnColumnField column columnType False Nothing Nothing
+                          AFColumn $ AnnColumnField column columnType False Nothing NoRedaction
                      in Just (a, annotatedColumn)
                   JoinComputedField computedFieldInfo ->
                     Just (a, mkScalarComputedFieldSelect computedFieldInfo)
@@ -441,7 +441,7 @@ transformAnnFields fields = do
       let functionArgs =
             flip FunctionArgsExp mempty $ fromComputedFieldImplicitArguments @b UVSession _scfComputedFieldImplicitArgs
           fieldSelect =
-            CFSScalar $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing Nothing
+            CFSScalar $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing NoRedaction
        in AFComputedField _scfXField _scfName fieldSelect
 
 -- | Transforms an action's selection set.

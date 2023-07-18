@@ -399,7 +399,7 @@ resolveAsyncActionQuery userInfo annAction =
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
     mkAnnFldFromPGCol (column', columnType) =
-      RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
+      RS.mkAnnColumnField column' (ColumnScalar columnType) NoRedaction Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo =
@@ -723,9 +723,9 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList actionFi
 
 actionFieldToAnnField :: IR.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v
 actionFieldToAnnField = \case
-  IR.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) NoRedaction Nothing
   IR.ACFExpression txt -> RS.AFExpression txt
-  IR.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) NoRedaction Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

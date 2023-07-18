@@ -31,7 +31,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     mkAggregateOrderByExtractorAndFields,
-    withColumnCaseBoolExp,
+    withRedactionExp,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
@@ -122,7 +122,7 @@ processOrderByItems sourcePrefix' selectSourceQual fieldAlias' similarArrayField
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo redactionExp ->
           pure
-            $ withColumnCaseBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) redactionExp
+            $ withRedactionExp (S.QualifiedIdentifier baseTableIdentifier Nothing) redactionExp
             $ S.mkQIdenExp baseTableIdentifier
             $ ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
@@ -178,7 +178,7 @@ processOrderByItems sourcePrefix' selectSourceQual fieldAlias' similarArrayField
               let functionArgs = fromTableRowArgs sourcePrefix _cfobFunctionArgsExp
                   functionExp = S.FunctionExp _cfobFunction functionArgs Nothing
               pure
-                $ withColumnCaseBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) redactionExp
+                $ withRedactionExp (S.QualifiedIdentifier baseTableIdentifier Nothing) redactionExp
                 $ S.SEFunction functionExp
             CFOBETableAggregation _ tableFilter aggOrderBy -> withWriteComputedFieldTableSet $ do
               let fieldName = mkOrderByFieldName _cfobName
@@ -246,7 +246,7 @@ processOrderByItems sourcePrefix' selectSourceQual fieldAlias' similarArrayField
         sortAtNodeAndBase baseColumnOrderBys =
           let mkBaseOrderByItem (OrderByItemG orderByType (columnInfo, redactionExp) nullsOrder) =
                 let columnExp =
-                      withColumnCaseBoolExp selectSourceQual redactionExp
+                      withRedactionExp selectSourceQual redactionExp
                         $ S.mkSIdenExp (ciColumn columnInfo)
                  in S.OrderByItem columnExp orderByType nullsOrder
               baseOrderByExp = S.OrderByExp $ mkBaseOrderByItem <$> baseColumnOrderBys
@@ -300,7 +300,7 @@ applyDistinctOnAtBase selectSourceQual distinctColumns =
   let distinctExps =
         distinctColumns
           & toList
-          <&> (\AnnDistinctColumn {..} -> withColumnCaseBoolExp selectSourceQual _adcCaseBoolExpression $ S.mkSIdenExp _adcColumn)
+          <&> (\AnnDistinctColumn {..} -> withRedactionExp selectSourceQual _adcRedactionExpression $ S.mkSIdenExp _adcColumn)
    in S.DistinctOn distinctExps
 
 applyDistinctOnAtNode ::
@@ -318,7 +318,7 @@ applyDistinctOnAtNode pfx distinctColumns = (distinctOnExp, extractors)
     baseTableIdentifier = mkBaseTableIdentifier pfx
     mkExtractor AnnDistinctColumn {..} =
       let extractorExp =
-            withColumnCaseBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) _adcCaseBoolExpression
+            withRedactionExp (S.QualifiedIdentifier baseTableIdentifier Nothing) _adcRedactionExpression
               $ S.mkQIdenExp baseTableIdentifier _adcColumn
        in (mkQColAlias _adcColumn, extractorExp)
     mkQColAlias = contextualizeBaseTableColumn pfx

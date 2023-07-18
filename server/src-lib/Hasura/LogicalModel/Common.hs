@@ -14,7 +14,7 @@ import Hasura.LogicalModel.Cache
 import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..))
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelType (..), LogicalModelTypeScalar (..))
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
+import Hasura.RQL.IR.BoolExp (AnnRedactionExp (..), gBoolExpTrue)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), StructuredColumnInfo (..), fromCol)
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
@@ -95,7 +95,7 @@ getSelPermInfoForLogicalModel role logicalModel =
 mkAdminSelPermInfo :: (Backend b) => LogicalModelInfo b -> SelPermInfo b
 mkAdminSelPermInfo LogicalModelInfo {..} =
   SelPermInfo
-    { spiCols = HashMap.fromList $ (,Nothing) <$> InsOrdHashMap.keys _lmiFields,
+    { spiCols = HashMap.fromList $ (,NoRedaction) <$> InsOrdHashMap.keys _lmiFields,
       spiComputedFields = mempty,
       spiFilter = gBoolExpTrue,
       spiLimit = Nothing,

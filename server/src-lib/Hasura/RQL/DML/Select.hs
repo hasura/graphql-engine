@@ -139,8 +139,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
     case fldInfo of
       FIColumn (SCIScalarColumn colInfo) -> do
         checkSelOnCol spi (ciColumn colInfo)
-        let redactionExp = join $ HashMap.lookup (ciColumn colInfo) (spiCols spi)
-        resolvedRedactionExp <- traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) redactionExp
+        let redactionExp = fromMaybe NoRedaction $ HashMap.lookup (ciColumn colInfo) (spiCols spi)
+        resolvedRedactionExp <- convAnnRedactionExpPartialSQL sessVarBldr redactionExp
         let ty = ciType colInfo
         if isScalarColumnWhere isGeoType ty
           then
@@ -207,10 +207,9 @@ convSelectQ sqlGen table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr =
     $ indexedForM (sqColumns selQ)
     $ \case
       (ECSimple pgCol) -> do
-        (colInfo, caseBoolExpMaybe) <- convExtSimple fieldInfoMap selPermInfo pgCol
-        resolvedCaseBoolExp <-
-          traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) caseBoolExpMaybe
-        pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField (ciColumn colInfo) (ciType colInfo) resolvedCaseBoolExp Nothing)
+        (colInfo, redactionExp) <- convExtSimple fieldInfoMap selPermInfo pgCol
+        resolvedRedactionExp <- convAnnRedactionExpPartialSQL sessVarBldr redactionExp
+        pure (fromCol @('Postgres 'Vanilla) pgCol, mkAnnColumnField (ciColumn colInfo) (ciType colInfo) resolvedRedactionExp Nothing)
       (ECRel relName mAlias relSelQ) -> do
         annRel <-
           convExtRel
@@ -257,11 +256,11 @@ convExtSimple ::
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   SelPermInfo ('Postgres 'Vanilla) ->
   PGCol ->
-  m (ColumnInfo ('Postgres 'Vanilla), Maybe (AnnColumnCaseBoolExpPartialSQL ('Postgres 'Vanilla)))
+  m (ColumnInfo ('Postgres 'Vanilla), AnnRedactionExpPartialSQL ('Postgres 'Vanilla))
 convExtSimple fieldInfoMap selPermInfo pgCol = do
   checkSelOnCol selPermInfo pgCol
   colInfo <- askColInfo fieldInfoMap pgCol relWhenPGErr
-  pure (colInfo, join $ HashMap.lookup pgCol (spiCols selPermInfo))
+  pure (colInfo, fromMaybe NoRedaction $ HashMap.lookup pgCol (spiCols selPermInfo))
   where
     relWhenPGErr = "relationships have to be expanded"
 

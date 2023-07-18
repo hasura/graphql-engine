@@ -22,7 +22,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (Scenario (Frontend))
 import Hasura.GraphQL.Schema.Parser (FieldParser)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (..))
+import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), AnnRedactionExp (..), GBoolExp (..), PartialSQLExp (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
@@ -204,7 +204,7 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
     selPermInfo :: SelPermInfo PG
     selPermInfo =
       SelPermInfo
-        { spiCols = HashMap.fromList . fmap ((,Nothing) . unsafePGCol . cibName) $ columns,
+        { spiCols = HashMap.fromList . fmap ((,NoRedaction) . unsafePGCol . cibName) $ columns,
           spiComputedFields = mempty,
           spiFilter = upiFilter,
           spiLimit = Nothing,

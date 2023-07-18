@@ -11,7 +11,7 @@
 module Hasura.RQL.IR.Generator
   ( genAnnBoolExp,
     genAnnBoolExpFld,
-    genAnnColumnCaseBoolExp,
+    genAnnRedactionExp,
     genAnnotatedOrderByItemG,
     genAnnotatedOrderByElement,
     genAnnotatedAggregateOrderBy,
@@ -58,7 +58,7 @@ genFunctionArgsExpG genA =
     <$> list defaultRange genA
     <*> genHashMap (genArbitraryUnicodeText defaultRange) genA defaultRange
 
-genAnnColumnCaseBoolExp ::
+genAnnRedactionExp ::
   (MonadGen m) =>
   (Hashable (ScalarType b)) =>
   (Hashable (Column b)) =>
@@ -70,8 +70,8 @@ genAnnColumnCaseBoolExp ::
   m (BooleanOperators b a) ->
   m (FunctionArgumentExp b a) ->
   m a ->
-  m (Maybe (AnnColumnCaseBoolExp b a))
-genAnnColumnCaseBoolExp
+  m (AnnRedactionExp b a)
+genAnnRedactionExp
   genColumn
   genTableName
   genScalarType
@@ -80,21 +80,22 @@ genAnnColumnCaseBoolExp
   genBooleanOperators
   genFunctionArgumentExp
   genA =
-    maybe
-      $ genAnnBoolExp
-        ( AnnColumnCaseBoolExpField
-            <$> ( genAnnBoolExpFld
-                    genColumn
-                    genTableName
-                    genScalarType
-                    genFunctionName
-                    genXComputedField
-                    genBooleanOperators
-                    genFunctionArgumentExp
-                    genA
-                )
-        )
-        genTableName
+    choice
+      [ pure NoRedaction,
+        RedactIfFalse
+          <$> genAnnBoolExp
+            ( genAnnBoolExpFld
+                genColumn
+                genTableName
+                genScalarType
+                genFunctionName
+                genXComputedField
+                genBooleanOperators
+                genFunctionArgumentExp
+                genA
+            )
+            genTableName
+      ]
 
 genGExists ::
   (MonadGen m) =>
@@ -503,7 +504,7 @@ genAnnotatedOrderByElement
             genColumn
             genTableName
             genScalarType
-          <*> genAnnColumnCaseBoolExp
+          <*> genAnnRedactionExp
             genColumn
             genTableName
             genScalarType
@@ -604,7 +605,7 @@ genAnnotatedAggregateOrderBy
                     genColumn
                     genTableName
                     genScalarType
-                  <*> genAnnColumnCaseBoolExp
+                  <*> genAnnRedactionExp
                     genColumn
                     genTableName
                     genScalarType
@@ -678,7 +679,7 @@ genComputedFieldOrderByElement
     choice
       [ CFOBEScalar
           <$> genScalarType
-          <*> genAnnColumnCaseBoolExp
+          <*> genAnnRedactionExp
             genColumn
             genTableName
             genScalarType

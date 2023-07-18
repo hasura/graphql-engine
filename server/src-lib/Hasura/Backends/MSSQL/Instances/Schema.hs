@@ -394,7 +394,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
 
 msCountTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column 'MSSQL, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'MSSQL))) ->
+  Maybe (Parser 'Both n (Column 'MSSQL, AnnRedactionExpUnpreparedValue 'MSSQL)) ->
   InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL (UnpreparedValue 'MSSQL))
 msCountTypeInput = \case
   Just columnEnum -> do
@@ -402,10 +402,10 @@ msCountTypeInput = \case
     pure $ flip mkCountType column
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'MSSQL)) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
+    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, AnnRedactionExpUnpreparedValue 'MSSQL) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
     mkCountType _ Nothing = Const MSSQL.StarCountable
-    mkCountType IR.SelectCountDistinct (Just (col, _redactionExp)) = Const $ MSSQL.DistinctCountable col -- TODO(caseBoolExp): Deal with redaction expressions
-    mkCountType IR.SelectCountNonDistinct (Just (col, _redactionExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(caseBoolExp): Deal with redaction expressions
+    mkCountType IR.SelectCountDistinct (Just (col, _redactionExp)) = Const $ MSSQL.DistinctCountable col -- TODO(redactionExp): Deal with redaction expressions
+    mkCountType IR.SelectCountNonDistinct (Just (col, _redactionExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(redactionExp): Deal with redaction expressions
 
 msParseUpdateOperators ::
   forall m n r.

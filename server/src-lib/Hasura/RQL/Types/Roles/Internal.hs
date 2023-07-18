@@ -95,12 +95,11 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
     (maybeToCheckPermission _permDel)
   where
     modifySingleSelectPerm SelPermInfo {..} =
-      let columnCaseBoolExp = fmap AnnColumnCaseBoolExpField spiFilter
-          colsWithColCaseBoolExp = spiCols $> Just columnCaseBoolExp
-          scalarCompFieldsWithColCaseBoolExp = spiComputedFields $> Just columnCaseBoolExp
+      let colsWithRedactionExp = spiCols $> RedactIfFalse spiFilter
+          scalarCompFieldsWithRedactionExp = spiComputedFields $> RedactIfFalse spiFilter
        in CombinedSelPermInfo
-            [colsWithColCaseBoolExp]
-            [scalarCompFieldsWithColCaseBoolExp]
+            [colsWithRedactionExp]
+            [scalarCompFieldsWithRedactionExp]
             [spiFilter]
             (Max <$> spiLimit)
             (Any spiAllowAgg)

@@ -233,7 +233,7 @@ translateOrderByElement ::
   AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m (API.OrderByElement, HashMap API.RelationshipName API.OrderByRelation)
 translateOrderByElement sessionVariables sourceName orderDirection targetReversePath = \case
-  -- TODO(caseBoolExp): Deal with this redaction expressions
+  -- TODO(redactionExp): Deal with this redaction expressions
   AOCColumn ColumnInfo {..} _redactionExp ->
     pure
       ( API.OrderByElement
@@ -257,7 +257,7 @@ translateOrderByElement sessionVariables sourceName orderDirection targetReverse
       AAOCount ->
         pure API.OrderByStarCountAggregate
       AAOOp AggregateOrderByColumn {_aobcColumn = ColumnInfo {..}, ..} -> do
-        -- TODO(caseBoolExp): Deal with the redaction expression: _aobcCaseBoolExpression
+        -- TODO(redactionExp): Deal with the redaction expression: _aobcRedactionExpression
         aggFunction <- lift $ translateSingleColumnAggregateFunction _aobcAggregateFunctionName
         let resultScalarType = Witch.from $ columnTypeToScalarType _aobcAggregateFunctionReturnType
         pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction (Witch.from ciColumn) resultScalarType
@@ -348,7 +348,7 @@ translateAnnField sessionVariables sourceTableName = \case
   AFNestedArray _ (ANASAggregate _) ->
     pure Nothing -- TODO(dmoverton): support nested array aggregates
   AFColumn colField ->
-    -- TODO(caseBoolExp): Deal with the redaction expression: _acfCaseBoolExpression
+    -- TODO(redactionExp): Deal with the redaction expression: _acfRedactionExpression
     -- TODO: make sure certain fields in colField are not in use, since we don't support them
     pure . Just $ API.ColumnField (Witch.from $ _acfColumn colField) (Witch.from . columnTypeToScalarType $ _acfType colField)
   AFObjectRelation objRel ->
@@ -484,7 +484,7 @@ translateAggregateField fieldPrefix fieldName = \case
     let aggregate =
           case countAggregate of
             StarCount -> API.StarCount
-            -- TODO(caseBoolExp): Do something with these redaction expressions
+            -- TODO(redactionExp): Do something with these redaction expressions
             ColumnCount (column, _redactionExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
             ColumnDistinctCount (column, _redactionExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
      in pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) aggregate
@@ -494,7 +494,7 @@ translateAggregateField fieldPrefix fieldName = \case
 
     fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
       case columnField of
-        -- TODO(caseBoolExp): Do something with the redactionExp
+        -- TODO(redactionExp): Do something with the redactionExp
         SFCol column resultType _redactionExp ->
           let resultScalarType = Witch.from $ columnTypeToScalarType resultType
            in pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) resultScalarType)
@@ -612,7 +612,7 @@ reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
       AFOp AggregateOp {..} -> do
         reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
           case columnField of
-            SFCol _column _columnType _caseBoolExp -> do
+            SFCol _column _columnType _redactionExp -> do
               let fieldPrefix' = fieldPrefix <> prefixWith fieldName
               let columnFieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
               responseAggregateValue <-

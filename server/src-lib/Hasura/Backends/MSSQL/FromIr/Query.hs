@@ -584,8 +584,8 @@ fromAggregateField alias aggregateField =
       let projections :: [Projection] =
             fields <&> \(fieldName, columnField) ->
               case columnField of
-                -- TODO(caseBoolExp): Deal with redaction expression?
-                IR.SFCol column _columnType _caseBoolExp ->
+                -- TODO(redactionExp): Deal with redaction expression?
+                IR.SFCol column _columnType _redactionExp ->
                   let fname = columnFieldAggEntity column
                    in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
                 IR.SFExp text ->
@@ -655,9 +655,9 @@ fromAnnColumnField annColumnField = do
   -- WKT format
   if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
     then pure $ MethodApplicationExpression (ColumnExpression fieldName) MethExpSTAsText
-    else case caseBoolExpMaybe of
-      Nothing -> pure (ColumnExpression fieldName)
-      Just ex -> do
+    else case redactionExp of
+      IR.NoRedaction -> pure (ColumnExpression fieldName)
+      IR.RedactIfFalse ex -> do
         ex' <- fromGBoolExp (coerce ex)
         let nullValue = ValueExpression ODBC.NullValue
         pure (ConditionalExpression ex' (ColumnExpression fieldName) nullValue)
@@ -667,7 +667,7 @@ fromAnnColumnField annColumnField = do
         _acfType = typ,
         _acfAsText = _asText :: Bool,
         _acfArguments = _ :: Maybe Void,
-        _acfCaseBoolExpression = caseBoolExpMaybe
+        _acfRedactionExpression = redactionExp
       } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
@@ -972,7 +972,7 @@ unfurlAnnotatedOrderByElement ::
   WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
 unfurlAnnotatedOrderByElement =
   \case
-    -- TODO(caseBoolExp): Use the redaction expression
+    -- TODO(redactionExp): Use the redaction expression
     IR.AOCColumn columnInfo _redactionExp -> do
       fieldName <- lift (fromColumnInfo columnInfo)
       pure
@@ -1010,7 +1010,7 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  -- TODO(caseBoolExp): Use the redaction expression
+                  -- TODO(redactionExp): Use the redaction expression
                   IR.AAOOp (IR.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (pure (ColumnExpression fieldName)))

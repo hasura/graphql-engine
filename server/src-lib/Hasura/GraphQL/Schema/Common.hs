@@ -45,6 +45,8 @@ module Hasura.GraphQL.Schema.Common
     optionalFieldParser,
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
+    getRedactionExprForColumn,
+    getRedactionExprForComputedField,
     requiredFieldParser,
     takeValidNativeQueries,
     takeValidStoredProcedures,
@@ -86,6 +88,7 @@ import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName)
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.Schema.Options (SchemaOptions)
@@ -96,6 +99,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.StoredProcedure.Cache (StoredProcedureCache)
+import Hasura.Table.Cache (SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -424,6 +428,16 @@ partialSQLExpToUnpreparedValue :: PartialSQLExp b -> IR.UnpreparedValue b
 partialSQLExpToUnpreparedValue (PSESessVar pftype var) = IR.UVSessionVar pftype var
 partialSQLExpToUnpreparedValue PSESession = IR.UVSession
 partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = IR.UVLiteral sqlExp
+
+getRedactionExprForColumn :: (Backend b) => SelPermInfo b -> Column b -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
+getRedactionExprForColumn selectPermissions columnName =
+  let redactionExp = HashMap.lookup columnName (spiCols selectPermissions)
+   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
+
+getRedactionExprForComputedField :: (Backend b) => SelPermInfo b -> ComputedFieldName -> Maybe (IR.AnnRedactionExpUnpreparedValue b)
+getRedactionExprForComputedField selectPermissions cfName =
+  let redactionExp = HashMap.lookup cfName (spiComputedFields selectPermissions)
+   in fmap partialSQLExpToUnpreparedValue <$> redactionExp
 
 mapField ::
   (Functor m) =>

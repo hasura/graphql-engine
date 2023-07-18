@@ -218,11 +218,8 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   functionArgsParser <- lift $ computedFieldFunctionArgs sourceName _cfiFunction
   case _cfiReturnType of
     Postgres.CFRScalar scalarReturnType -> do
-      caseBoolExpMaybe <-
-        hoistMaybe (HashMap.lookup _cfiName (spiComputedFields selectPermissions))
-      let caseBoolExpUnpreparedValue =
-            (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
-          fieldArgsParser = do
+      redactionExp <- hoistMaybe $ getRedactionExprForComputedField selectPermissions _cfiName
+      let fieldArgsParser = do
             args <- functionArgsParser
             colOp <- scalarSelectionArgumentsParser @('Postgres pgKind) $ ColumnScalar scalarReturnType
             pure
@@ -235,7 +232,7 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
                           IR._cfssType = scalarReturnType,
                           IR._cfssScalarArguments = colOp,
                           IR._cfssArguments = args,
-                          IR._cfssCaseBoolExpression = caseBoolExpUnpreparedValue
+                          IR._cfssRedactionExpression = redactionExp
                         }
                     )
                 )

@@ -25,12 +25,9 @@ import Hasura.RQL.Types.Relationships.Local
 data AnnotatedOrderByElement (b :: BackendType) v
   = AOCColumn
       (ColumnInfo b)
-      -- | This type is used to determine whether the column
-      -- should be nullified. When the value is `Nothing`, the column value
-      -- will be outputted as computed and when the value is `Just c`, the
-      -- column will be outputted when `c` evaluates to `true` and `null`
-      -- when `c` evaluates to `false`.
-      (Maybe (AnnColumnCaseBoolExp b v))
+      -- | This type is used to determine whether the column should be redacted
+      -- before being ordered over
+      (AnnRedactionExp b v)
   | AOCObjectRelation
       (RelInfo b)
       -- | Permission filter of the remote table to which the relationship is defined
@@ -49,7 +46,7 @@ deriving stock instance
     Eq (AnnBoolExp b v),
     Eq (AnnotatedAggregateOrderBy b v),
     Eq (ComputedFieldOrderBy b v),
-    Eq (AnnColumnCaseBoolExp b v)
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (AnnotatedOrderByElement b v)
 
@@ -58,7 +55,7 @@ deriving stock instance
     Show (AnnBoolExp b v),
     Show (AnnotatedAggregateOrderBy b v),
     Show (ComputedFieldOrderBy b v),
-    Show (AnnColumnCaseBoolExp b v)
+    Show (AnnRedactionExp b v)
   ) =>
   Show (AnnotatedOrderByElement b v)
 
@@ -67,7 +64,7 @@ instance
     Hashable (AnnBoolExp b v),
     Hashable (AnnotatedAggregateOrderBy b v),
     Hashable (ComputedFieldOrderBy b v),
-    Hashable (AnnColumnCaseBoolExp b v)
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (AnnotatedOrderByElement b v)
 
@@ -87,20 +84,17 @@ data AggregateOrderByColumn b v = AggregateOrderByColumn
   { _aobcAggregateFunctionName :: Text,
     _aobcAggregateFunctionReturnType :: ColumnType b,
     _aobcColumn :: ColumnInfo b,
-    -- | This type is used to determine whether the column
-    -- should be nullified. When the value is `Nothing`, the column value
-    -- will be outputted as computed and when the value is `Just c`, the
-    -- column will be outputted when `c` evaluates to `true` and `null`
-    -- when `c` evaluates to `false`.
-    _aobcCaseBoolExpression :: (Maybe (AnnColumnCaseBoolExp b v))
+    -- | This type is used to determine whether the column should be redacted
+    -- before being aggregated and then ordered over
+    _aobcRedactionExpression :: AnnRedactionExp b v
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
-deriving stock instance (Backend b, Eq (AnnColumnCaseBoolExp b v)) => Eq (AggregateOrderByColumn b v)
+deriving stock instance (Backend b, Eq (AnnRedactionExp b v)) => Eq (AggregateOrderByColumn b v)
 
-deriving stock instance (Backend b, Show (AnnColumnCaseBoolExp b v)) => Show (AggregateOrderByColumn b v)
+deriving stock instance (Backend b, Show (AnnRedactionExp b v)) => Show (AggregateOrderByColumn b v)
 
-instance (Backend b, Hashable (AnnColumnCaseBoolExp b v)) => Hashable (AggregateOrderByColumn b v)
+instance (Backend b, Hashable (AnnRedactionExp b v)) => Hashable (AggregateOrderByColumn b v)
 
 type AnnotatedOrderByItemG b v = OrderByItemG b (AnnotatedOrderByElement b v)
 
@@ -111,12 +105,9 @@ data ComputedFieldOrderByElement (b :: BackendType) v
   = -- | Sort by the scalar computed field
     CFOBEScalar
       (ScalarType b)
-      -- | This type is used to determine whether the column
-      -- should be nullified. When the value is `Nothing`, the column value
-      -- will be outputted as computed and when the value is `Just c`, the
-      -- column will be outputted when `c` evaluates to `true` and `null`
-      -- when `c` evaluates to `false`.
-      (Maybe (AnnColumnCaseBoolExp b v))
+      -- | This type is used to determine whether the computed field should be redacted
+      -- before being ordered over
+      (AnnRedactionExp b v)
   | CFOBETableAggregation
       (TableName b)
       -- | Permission filter of the retuning table
@@ -129,7 +120,7 @@ deriving stock instance
   ( Backend b,
     Eq (AnnBoolExp b v),
     Eq (AnnotatedAggregateOrderBy b v),
-    Eq (AnnColumnCaseBoolExp b v)
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (ComputedFieldOrderByElement b v)
 
@@ -138,7 +129,7 @@ deriving stock instance
     Show v,
     Show (AnnBoolExp b v),
     Show (AnnotatedAggregateOrderBy b v),
-    Show (AnnColumnCaseBoolExp b v)
+    Show (AnnRedactionExp b v)
   ) =>
   Show (ComputedFieldOrderByElement b v)
 
@@ -146,7 +137,7 @@ instance
   ( Backend b,
     Hashable (AnnBoolExp b v),
     Hashable (AnnotatedAggregateOrderBy b v),
-    Hashable (AnnColumnCaseBoolExp b v)
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (ComputedFieldOrderByElement b v)
 

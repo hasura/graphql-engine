@@ -382,12 +382,12 @@ instance (Hashable a) => Hashable (ArgumentExp a)
 
 data CountAggregate v
   = StarCount
-  | ColumnCount (ColumnName, Maybe (IR.AnnColumnCaseBoolExp 'DataConnector v))
-  | ColumnDistinctCount (ColumnName, Maybe (IR.AnnColumnCaseBoolExp 'DataConnector v))
+  | ColumnCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
+  | ColumnDistinctCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
   deriving (Generic)
 
 deriving stock instance
-  (Backend 'DataConnector, Show (IR.AnnColumnCaseBoolExp 'DataConnector v), Show v) =>
+  (Backend 'DataConnector, Show (IR.AnnRedactionExp 'DataConnector v), Show v) =>
   Show (CountAggregate v)
 
 deriving stock instance (Backend 'DataConnector) => Functor CountAggregate
@@ -397,11 +397,11 @@ deriving stock instance (Backend 'DataConnector) => Foldable CountAggregate
 deriving stock instance (Backend 'DataConnector) => Traversable CountAggregate
 
 deriving stock instance
-  (Backend 'DataConnector, Eq (IR.AnnColumnCaseBoolExp 'DataConnector v), Eq v) =>
+  (Backend 'DataConnector, Eq (IR.AnnRedactionExp 'DataConnector v), Eq v) =>
   Eq (CountAggregate v)
 
 deriving stock instance
-  (Backend 'DataConnector, Data (IR.AnnColumnCaseBoolExp 'DataConnector v), Data v) =>
+  (Backend 'DataConnector, Data (IR.AnnRedactionExp 'DataConnector v), Data v) =>
   Data (CountAggregate v)
 
 --------------------------------------------------------------------------------

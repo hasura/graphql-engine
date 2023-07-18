@@ -11,7 +11,7 @@ module Hasura.RQL.DML.Internal
     checkRetCols,
     checkSelOnCol,
     convAnnBoolExpPartialSQL,
-    convAnnColumnCaseBoolExpPartialSQL,
+    convAnnRedactionExpPartialSQL,
     convBoolExp,
     convPartialSQLExp,
     fetchRelDet,
@@ -323,13 +323,13 @@ convAnnBoolExpPartialSQL ::
 convAnnBoolExpPartialSQL f =
   (traverse . traverse) (convPartialSQLExp f)
 
-convAnnColumnCaseBoolExpPartialSQL ::
+convAnnRedactionExpPartialSQL ::
   (Applicative f) =>
   SessionVariableBuilder f ->
-  AnnColumnCaseBoolExpPartialSQL ('Postgres 'Vanilla) ->
-  f (AnnColumnCaseBoolExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
-convAnnColumnCaseBoolExpPartialSQL f =
-  (traverse . traverse) (convPartialSQLExp f)
+  AnnRedactionExpPartialSQL ('Postgres 'Vanilla) ->
+  f (AnnRedactionExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
+convAnnRedactionExpPartialSQL f =
+  traverse (convPartialSQLExp f)
 
 convPartialSQLExp ::
   (Applicative f) =>

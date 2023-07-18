@@ -979,7 +979,7 @@ intersectsGeomNbandInput = do
 
 countTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column ('Postgres pgKind), Maybe (AnnColumnCaseBoolExpUnpreparedValue ('Postgres pgKind)))) ->
+  Maybe (Parser 'Both n (Column ('Postgres pgKind), AnnRedactionExpUnpreparedValue ('Postgres pgKind))) ->
   InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))
 countTypeInput = \case
   Just columnEnum -> do
@@ -987,7 +987,7 @@ countTypeInput = \case
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe [(Column ('Postgres pgKind), Maybe (AnnColumnCaseBoolExpUnpreparedValue ('Postgres pgKind)))] -> CountType ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))
+    mkCountType :: IR.CountDistinct -> Maybe [(Column ('Postgres pgKind), AnnRedactionExpUnpreparedValue ('Postgres pgKind))] -> CountType ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))
     mkCountType _ Nothing = CountAggregate Postgres.CTStar
     mkCountType IR.SelectCountDistinct (Just cols) = CountAggregate $ Postgres.CTDistinct cols
     mkCountType IR.SelectCountNonDistinct (Just cols) = CountAggregate $ Postgres.CTSimple cols

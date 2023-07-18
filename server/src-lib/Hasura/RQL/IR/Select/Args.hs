@@ -92,30 +92,27 @@ noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
 
 data AnnDistinctColumn b v = AnnDistinctColumn
   { _adcColumn :: Column b,
-    -- | This type is used to determine whether the column
-    -- should be nullified. When the value is `Nothing`, the column value
-    -- will be outputted as computed and when the value is `Just c`, the
-    -- column will be outputted when `c` evaluates to `true` and `null`
-    -- when `c` evaluates to `false`.
-    _adcCaseBoolExpression :: (Maybe (AnnColumnCaseBoolExp b v))
+    -- | This type is used to determine whether the column should be redacted
+    -- before being distincted-upon
+    _adcRedactionExpression :: AnnRedactionExp b v
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnCaseBoolExp b v)
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (AnnDistinctColumn b v)
 
 instance
   ( Backend b,
-    Hashable (AnnColumnCaseBoolExp b v)
+    Hashable (AnnRedactionExp b v)
   ) =>
   Hashable (AnnDistinctColumn b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnCaseBoolExp b v)
+    Show (AnnRedactionExp b v)
   ) =>
   Show (AnnDistinctColumn b v)
 

@@ -507,11 +507,11 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
       --
       -- TODO: do we care about inherited roles? We don't seem to set this to
       -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
-      spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-      spiCols = HashMap.fromList (map (,Nothing) columns)
+      spiCols :: HashMap (Column b) (AnnRedactionExpPartialSQL b)
+      spiCols = HashMap.fromList (map (,NoRedaction) columns)
 
       -- Native queries don't have computed fields.
-      spiComputedFields :: HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+      spiComputedFields :: HashMap ComputedFieldName (AnnRedactionExpPartialSQL b)
       spiComputedFields = mempty
 
   let -- We don't need something like validateAllowedRootFields because we
@@ -587,8 +587,8 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     when (value < 0)
       $ throw400 NotSupported "unexpected negative value"
 
-  let spiCols = HashMap.fromList $ map (,Nothing) pgCols
-      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
+  let spiCols = HashMap.fromList $ map (,NoRedaction) pgCols
+      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> NoRedaction
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
     validateAllowedRootFields source tableName roleName sp

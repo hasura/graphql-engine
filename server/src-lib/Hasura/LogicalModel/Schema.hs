@@ -33,6 +33,7 @@ import Hasura.GraphQL.Schema.Common
     AnnotatedFields,
     SchemaT,
     SelectArgs,
+    getRedactionExprForColumn,
     parsedSelectionsToFields,
     partialSQLExpToUnpreparedValue,
     retrieve,
@@ -182,8 +183,8 @@ parseLogicalModelField knownRelNames column logimoField = runMaybeT do
         columnName <- G.mkName (toTxt column) `onNothing` throw500 (column <<> " is not a valid GraphQL name")
 
         -- We have not yet worked out what providing permissions here enables
-        -- TODO(caseBoolExp): This should be drawn from SelPermInfo.spiCols
-        let caseBoolExpUnpreparedValue = Nothing
+        -- TODO(redactionExp): This should be drawn from SelPermInfo.spiCols
+        let redactionExp = IR.NoRedaction
             columnType = ColumnScalar lmtsScalar
             pathArg = scalarSelectionArgumentsParser columnType
 
@@ -191,7 +192,7 @@ parseLogicalModelField knownRelNames column logimoField = runMaybeT do
 
         pure
           $! P.selection columnName (G.Description <$> lmfDescription) pathArg field
-          <&> IR.mkAnnColumnField column columnType caseBoolExpUnpreparedValue
+          <&> IR.mkAnnColumnField column columnType redactionExp
     ( LogicalModelField
         { lmfType =
             LogicalModelTypeReference
@@ -401,10 +402,9 @@ logicalModelDistinctArg logicalModel = do
                 dInfo = P.EnumValueInfo
               }
 
-      let redactionExp = join . HashMap.lookup name' $ spiCols selectPermissions
-      let redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
+      let redactionExp = fromMaybe IR.NoRedaction $ getRedactionExprForColumn selectPermissions name'
 
-      pure (definition, IR.AnnDistinctColumn name' redactionExpUnpreparedValue)
+      pure (definition, IR.AnnDistinctColumn name' redactionExp)
 
 defaultLogicalModelArgs ::
   forall b r m n.

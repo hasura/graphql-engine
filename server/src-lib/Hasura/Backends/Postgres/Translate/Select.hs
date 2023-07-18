@@ -29,7 +29,7 @@ import Hasura.Backends.Postgres.Translate.Select.Streaming as Streaming
 {- Note: [SQL generation for inherited roles]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When a query is executed by an inherited role, each column may contain a predicate
-(AnnColumnCaseBoolExp ('Postgres pgKind) SQLExp) along with it. The predicate is then
+(AnnRedactionExp ('Postgres pgKind) SQLExp) along with it. The predicate is then
 converted to a BoolExp, which will be used to check if the said column should
 be nullified. For example,
 

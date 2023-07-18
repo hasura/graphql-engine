@@ -296,17 +296,17 @@ type AnnFields b = AnnFieldsG b Void (SQLExpression b)
 mkAnnColumnField ::
   Column backend ->
   ColumnType backend ->
-  Maybe (AnnColumnCaseBoolExp backend v) ->
+  AnnRedactionExp backend v ->
   Maybe (ScalarSelectionArguments backend) ->
   AnnFieldG backend r v
-mkAnnColumnField col typ caseBoolExp colOpM =
-  AFColumn (AnnColumnField col typ False colOpM caseBoolExp)
+mkAnnColumnField col typ redactionExp colOpM =
+  AFColumn (AnnColumnField col typ False colOpM redactionExp)
 
 mkAnnColumnFieldAsText ::
   ColumnInfo backend ->
   AnnFieldG backend r v
 mkAnnColumnFieldAsText ci =
-  AFColumn (AnnColumnField (ciColumn ci) (ciType ci) True Nothing Nothing)
+  AFColumn (AnnColumnField (ciColumn ci) (ciType ci) True Nothing NoRedaction)
 
 traverseSourceRelationshipSelection ::
   (Applicative f, Backend backend) =>
@@ -434,22 +434,19 @@ data SelectionField (b :: BackendType) v
   = SFCol
       (Column b)
       (ColumnType b)
-      -- | This type is used to determine whether the column
-      -- should be nullified. When the value is `Nothing`, the column value
-      -- will be outputted as computed and when the value is `Just c`, the
-      -- column will be outputted when `c` evaluates to `true` and `null`
-      -- when `c` evaluates to `false`.
-      (Maybe (AnnColumnCaseBoolExp b v))
+      -- | This type is used to determine whether the column should be redacted
+      -- before being aggregated
+      (AnnRedactionExp b v)
   | SFComputedField ComputedFieldName (ComputedFieldScalarSelect b v)
   | SFExp Text
   deriving (Functor, Foldable, Traversable)
 
 deriving stock instance
-  (Backend b, Eq (FunctionArgumentExp b v), Eq (AnnColumnCaseBoolExp b v), Eq v) =>
+  (Backend b, Eq (FunctionArgumentExp b v), Eq (AnnRedactionExp b v), Eq v) =>
   Eq (SelectionField b v)
 
 deriving stock instance
-  (Backend b, Show (FunctionArgumentExp b v), Show (AnnColumnCaseBoolExp b v), Show v) =>
+  (Backend b, Show (FunctionArgumentExp b v), Show (AnnRedactionExp b v), Show v) =>
   Show (SelectionField b v)
 
 type TableAggregateField b = TableAggregateFieldG b Void (SQLExpression b)
@@ -534,24 +531,20 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
     _acfAsText :: Bool,
     -- | Arguments of this column's selection. See 'ScalarSelectionArguments'
     _acfArguments :: Maybe (ScalarSelectionArguments b),
-    -- | This type is used to determine whether the column
-    -- should be nullified. When the value is `Nothing`, the column value
-    -- will be outputted as computed and when the value is `Just c`, the
-    -- column will be outputted when `c` evaluates to `true` and `null`
-    -- when `c` evaluates to `false`.
-    _acfCaseBoolExpression :: (Maybe (AnnColumnCaseBoolExp b v))
+    -- | This type is used to determine whether the column should be redacted
+    _acfRedactionExpression :: AnnRedactionExp b v
   }
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnCaseBoolExp b v)
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (AnnColumnField b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnCaseBoolExp b v)
+    Show (AnnRedactionExp b v)
   ) =>
   Show (AnnColumnField b v)
 
@@ -562,12 +555,8 @@ data ComputedFieldScalarSelect (b :: BackendType) v = ComputedFieldScalarSelect
     _cfssArguments :: FunctionArgsExp b v,
     _cfssType :: ScalarType b,
     _cfssScalarArguments :: (Maybe (ScalarSelectionArguments b)),
-    -- | This type is used to determine if whether the scalar
-    -- computed field should be nullified. When the value is `Nothing`,
-    -- the scalar computed value will be outputted as computed and when the
-    -- value is `Just c`, the scalar computed field will be outputted when
-    -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
-    _cfssCaseBoolExpression :: Maybe (AnnColumnCaseBoolExp b v)
+    -- | This type is used to determine whether the computed field should be redacted
+    _cfssRedactionExpression :: AnnRedactionExp b v
   }
   deriving stock (Functor, Foldable, Traversable)
 
@@ -575,7 +564,7 @@ deriving stock instance
   ( Backend b,
     Show v,
     Show (FunctionArgumentExp b v),
-    Show (AnnColumnCaseBoolExp b v)
+    Show (AnnRedactionExp b v)
   ) =>
   Show (ComputedFieldScalarSelect b v)
 
@@ -583,7 +572,7 @@ deriving stock instance
   ( Backend b,
     Eq v,
     Eq (FunctionArgumentExp b v),
-    Eq (AnnColumnCaseBoolExp b v)
+    Eq (AnnRedactionExp b v)
   ) =>
   Eq (ComputedFieldScalarSelect b v)
 

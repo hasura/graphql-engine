@@ -470,7 +470,7 @@ groupByKeySelectionSet tableInfo = do
   tableGQLName <- getTableIdentifierName tableInfo
   let groupByKeyFieldsTypeName = mkTypename $ applyTypeNameCaseIdentifier namingCase $ mkGroupByKeyFieldsTypeName tableGQLName
 
-  -- TODO(caseBoolExp): Probably need to deal with the redaction expression here
+  -- TODO(redactionExp): Probably need to deal with the redaction expression here
   scalarColumns <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   columnFieldParsers <-
     for scalarColumns $ \columnInfo -> do
@@ -951,9 +951,8 @@ tableConnectionArgs pkeyColumns tableInfo selectPermissions = do
             if ciColumn columnInfo `elem` orderByColumnNames
               then Nothing
               else
-                let redactionExp = join . HashMap.lookup (ciColumn columnInfo) $ spiCols selectPermissions
-                    redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
-                 in Just $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo redactionExpUnpreparedValue) Nothing
+                let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions (ciColumn columnInfo)
+                 in Just $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo redactionExp) Nothing
        in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit ::
@@ -969,8 +968,7 @@ tableConnectionArgs pkeyColumns tableInfo selectPermissions = do
           $ \columnInfo -> do
             let columnJsonPath = [J.Key $ K.fromText $ toTxt $ ciColumn columnInfo]
                 columnType = ciType columnInfo
-                redactionExp = join . HashMap.lookup (ciColumn columnInfo) $ spiCols selectPermissions
-                redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
+                redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions (ciColumn columnInfo)
             columnValue <-
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
@@ -978,7 +976,7 @@ tableConnectionArgs pkeyColumns tableInfo selectPermissions = do
             let unresolvedValue = IR.UVParameter IR.FreshVar $ ColumnValue columnType pgValue
             pure
               $ IR.ConnectionSplit splitKind unresolvedValue
-              $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo redactionExpUnpreparedValue) Nothing
+              $ IR.OrderByItemG Nothing (IR.AOCColumn columnInfo redactionExp) Nothing
         Just orderBys ->
           forM orderBys $ \orderBy -> do
             let IR.OrderByItemG orderType annObCol nullsOrder = orderBy
@@ -1135,7 +1133,7 @@ tableAggregationFields tableInfo = do
       $ P.selectionSet selectName (Just description) aggregateFields
       <&> parsedSelectionsToFields IR.AFExp
   where
-    getCustomAggOpsColumns :: [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] -> HashMap (ScalarType b) (ScalarType b) -> Maybe (NonEmpty ((ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)), ScalarType b))
+    getCustomAggOpsColumns :: [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] -> HashMap (ScalarType b) (ScalarType b) -> Maybe (NonEmpty ((ColumnInfo b, AnnRedactionExpUnpreparedValue b), ScalarType b))
     getCustomAggOpsColumns columnInfos typeMap =
       columnInfos
         & mapMaybe
@@ -1164,7 +1162,7 @@ tableAggregationFields tableInfo = do
           (Just fieldParser) -> (pure . Just) (fieldParser `P.bindField` annotatedFieldToSelectionField)
           Nothing -> pure Nothing
 
-    mkNumericAggFields :: GQLNameIdentifier -> [(ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b))] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
+    mkNumericAggFields :: GQLNameIdentifier -> [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] -> SchemaT r m [FieldParser n (IR.SelectionField b (IR.UnpreparedValue b))]
     mkNumericAggFields name
       | (C.toSnakeG name) == Name._sum = traverse mkColumnAggField
       -- Memoize here for more sharing. Note: we can't do `P.memoizeOn 'mkNumericAggFields...`
@@ -1182,11 +1180,11 @@ tableAggregationFields tableInfo = do
                 (P.nullable P.float)
                 $> cfcol
 
-    mkColumnAggField :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkColumnAggField :: (ColumnInfo b, AnnRedactionExpUnpreparedValue b) -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkColumnAggField columnAndRedactionExp@(columnInfo, _redactionExp) =
       mkColumnAggField' columnAndRedactionExp (ciType columnInfo)
 
-    mkColumnAggField' :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> ColumnType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkColumnAggField' :: (ColumnInfo b, AnnRedactionExpUnpreparedValue b) -> ColumnType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkColumnAggField' (columnInfo, redactionExp) resultType = do
       field <- columnParser resultType (G.Nullability True)
       pure
@@ -1196,7 +1194,7 @@ tableAggregationFields tableInfo = do
           field
         $> IR.SFCol (ciColumn columnInfo) (ciType columnInfo) redactionExp
 
-    mkNullableScalarTypeAggField :: (ColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)) -> ScalarType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
+    mkNullableScalarTypeAggField :: (ColumnInfo b, AnnRedactionExpUnpreparedValue b) -> ScalarType b -> SchemaT r m (FieldParser n (IR.SelectionField b (IR.UnpreparedValue b)))
     mkNullableScalarTypeAggField columnInfo resultType =
       mkColumnAggField' columnInfo (ColumnScalar resultType)
 
@@ -1309,9 +1307,7 @@ fieldSelection logicalModelCache table tableInfo = \case
       let columnName = ciColumn columnInfo
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ columnName `HashMap.member` spiCols selectPermissions
-      let !caseBoolExp = join $ HashMap.lookup columnName (spiCols selectPermissions)
-          !caseBoolExpUnpreparedValue =
-            (fmap . fmap) partialSQLExpToUnpreparedValue <$!> caseBoolExp
+      let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions columnName
           pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
           -- In an inherited role, when a column is part of all the select
           -- permissions which make up the inherited role then the nullability
@@ -1332,11 +1328,11 @@ fieldSelection logicalModelCache table tableInfo = \case
           -- The above is the paper which talks about the idea of cell-level
           -- authorization and multiple roles. The paper says that we should only
           -- allow the case analysis only on nullable columns.
-          nullability = ciIsNullable columnInfo || isJust caseBoolExp
+          nullability = ciIsNullable columnInfo || redactionExp /= NoRedaction
       field <- lift $ columnParser (ciType columnInfo) (G.Nullability nullability)
       pure
         $! P.selection fieldName (ciDescription columnInfo) pathArg field
-        <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
+        <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) redactionExp
   FIColumn (SCIObjectColumn nestedObjectInfo) ->
     pure . fmap IR.AFNestedObject <$> nestedObjectFieldParser nestedObjectInfo
   FIColumn (SCIArrayColumn NestedArrayInfo {..}) ->
@@ -1418,7 +1414,7 @@ nestedObjectParser supportsNestedObjects objectTypes LogicalModelInfo {..} colum
         wrapScalar isNullable' name scalarType parser =
           pure
             $ wrapNullable isNullable' (P.selection_ name (G.Description <$> lmfDescription) parser)
-            $> IR.mkAnnColumnField lmfName (ColumnScalar scalarType) Nothing Nothing
+            $> IR.mkAnnColumnField lmfName (ColumnScalar scalarType) NoRedaction Nothing
         customScalarParser isNullable' fieldTypeName =
           let nullable = if isNullable' then P.Nullable else P.NonNullable
               schemaType = P.TNamed nullable $ P.Definition fieldTypeName Nothing Nothing [] P.TIScalar

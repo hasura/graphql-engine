@@ -27,10 +27,9 @@ module Hasura.RQL.IR.BoolExp
     AnnBoolExpFld (..),
     RelationshipFilters (..),
     AnnBoolExp,
-    AnnColumnCaseBoolExpPartialSQL,
-    AnnColumnCaseBoolExpUnpreparedValue,
-    AnnColumnCaseBoolExp,
-    AnnColumnCaseBoolExpField (..),
+    AnnRedactionExpPartialSQL,
+    AnnRedactionExpUnpreparedValue,
+    AnnRedactionExp (..),
     annBoolExpTrue,
     andAnnBoolExps,
     AnnBoolExpFldSQL,
@@ -702,53 +701,35 @@ instance (ToJSON field) => ToJSON (STIntersectsGeomminNband field) where
 ----------------------------------------------------------------------------------------------------
 -- Miscellaneous
 
--- | This is a simple newtype over AnnBoolExpFld. At time of writing, I do not know why we want
--- this, and why it exists. It might be a relic of a needed differentiation, now lost?
--- TODO: can this be removed?
-newtype AnnColumnCaseBoolExpField (backend :: BackendType) field = AnnColumnCaseBoolExpField {_accColCaseBoolExpField :: AnnBoolExpFld backend field}
-  deriving (Functor, Foldable, Traversable, Generic)
+-- | This captures a boolean expression where, if it is false, some associated data needs to be redacted
+-- (in practice, nulled out) because the user doesn't have access to it. Alternatively,
+-- "no redaction" is explicitly defined, which is used as an optimization to avoid evaluating a boolexp
+-- if unnecessary (as opposed to defining a boolean exp which always evaluates to true).
 
-deriving instance
-  ( Eq (AnnBoolExpFld b a)
-  ) =>
-  Eq (AnnColumnCaseBoolExpField b a)
+-- See notes [Inherited roles architecture for read queries] and [SQL generation for inherited roles]
+-- for more information about what this is used for.
+data AnnRedactionExp b v
+  = NoRedaction
+  | RedactIfFalse (GBoolExp b (AnnBoolExpFld b v))
+  deriving stock (Functor, Foldable, Traversable, Generic)
 
-deriving instance
-  ( Backend b,
-    Show (AnnBoolExpFld b a),
-    Show a
-  ) =>
-  Show (AnnColumnCaseBoolExpField b a)
+deriving stock instance (Backend b, Show (GBoolExp b (AnnBoolExpFld b v))) => Show (AnnRedactionExp b v)
 
-instance
-  ( Backend b,
-    NFData (AnnBoolExpFld b a),
-    NFData a
-  ) =>
-  NFData (AnnColumnCaseBoolExpField b a)
+deriving stock instance (Backend b, Eq (GBoolExp b (AnnBoolExpFld b v))) => Eq (AnnRedactionExp b v)
 
-instance
-  ( Backend b,
-    Hashable (AnnBoolExpFld b a),
-    Hashable a
-  ) =>
-  Hashable (AnnColumnCaseBoolExpField b a)
+instance (Backend b, Hashable (GBoolExp b (AnnBoolExpFld b v))) => Hashable (AnnRedactionExp b v)
 
-instance
-  ( ToJSONKeyValue (AnnBoolExpFld b a)
-  ) =>
-  ToJSONKeyValue (AnnColumnCaseBoolExpField b a)
-  where
-  toJSONKeyValue = toJSONKeyValue . _accColCaseBoolExpField
+instance (Backend b, NFData (GBoolExp b (AnnBoolExpFld b v))) => NFData (AnnRedactionExp b v)
 
--- | Similar to AnnBoolExp, this type alias ties together
--- 'GBoolExp', 'OpExpG', and 'AnnColumnCaseBoolExpFld'.
-type AnnColumnCaseBoolExp b a = GBoolExp b (AnnColumnCaseBoolExpField b a)
+instance (Backend b, ToJSON (GBoolExp b (AnnBoolExpFld b v))) => ToJSON (AnnRedactionExp b v) where
+  toJSON = \case
+    NoRedaction -> Null
+    RedactIfFalse boolExp -> toJSON boolExp
 
 -- misc type aliases
-type AnnColumnCaseBoolExpPartialSQL b = AnnColumnCaseBoolExp b (PartialSQLExp b)
+type AnnRedactionExpPartialSQL b = AnnRedactionExp b (PartialSQLExp b)
 
-type AnnColumnCaseBoolExpUnpreparedValue b = AnnColumnCaseBoolExp b (UnpreparedValue b)
+type AnnRedactionExpUnpreparedValue b = AnnRedactionExp b (UnpreparedValue b)
 
 type PreSetColsG b v = HashMap.HashMap (Column b) v
 
