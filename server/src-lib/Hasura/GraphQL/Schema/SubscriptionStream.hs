@@ -191,7 +191,7 @@ tableStreamCursorExp tableInfo = runMaybeT do
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableGQLName tableInfo
   tableGQLIdentifier <- getTableIdentifierName tableInfo
-  -- TODO(caseBoolExp): Do we need to deal with censorship expressions here too?
+  -- TODO(caseBoolExp): Do we need to deal with redaction expressions here too?
   columnInfos <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   columnInfosNE <- hoistMaybe $ NE.nonEmpty columnInfos
   lift $ memoizeOn 'tableStreamCursorExp (sourceName, tableName) do

@@ -20,10 +20,11 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Generator
   ( genAnnBoolExp,
     genAnnBoolExpFld,
+    genAnnColumnCaseBoolExp,
     genAnnotatedOrderByElement,
     genAnnotatedOrderByItemG,
   )
-import Hasura.RQL.IR.Select (AnnotatedOrderByItemG, SelectArgsG (..))
+import Hasura.RQL.IR.Select (AnnDistinctColumn (..), AnnotatedOrderByItemG, SelectArgsG (..))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hedgehog (MonadGen)
@@ -81,8 +82,21 @@ genSelectArgsG genA = do
     offset :: m (Maybe Int64)
     offset = Gen.maybe $ Gen.integral defaultRange
 
-    distinct :: m (Maybe (NonEmpty (Column ('Postgres 'Vanilla))))
-    distinct = Gen.maybe . Gen.nonEmpty defaultRange $ genColumn
+    distinct :: m (Maybe (NonEmpty (AnnDistinctColumn ('Postgres 'Vanilla) a)))
+    distinct =
+      Gen.maybe
+        . Gen.nonEmpty defaultRange
+        $ AnnDistinctColumn
+        <$> genColumn
+        <*> genAnnColumnCaseBoolExp
+          genColumn
+          genTableName
+          genScalarType
+          genFunctionName
+          genXComputedField
+          (genBooleanOperators genA)
+          (genFunctionArgumentExp genA)
+          genA
 
 --------------------------------------------------------------------------------
 -- Unexported Helpers

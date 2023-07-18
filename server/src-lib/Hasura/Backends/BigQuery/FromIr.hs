@@ -592,7 +592,8 @@ fromSelectArgsG selectArgsG = do
     Args
       { argsJoins = toList (fmap unfurledJoin joins),
         argsOrderBy = NE.nonEmpty argsOrderBy,
-        argsDistinct = mdistinct,
+        -- TODO(caseBoolExp): Deal with the redaction expressions in distinct
+        argsDistinct = fmap Ir._adcColumn <$> mdistinct,
         ..
       }
   where
@@ -625,7 +626,7 @@ unfurlAnnotatedOrderByElement ::
   Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnotatedOrderByElement =
   \case
-    Ir.AOCColumn columnInfo -> lift (fromColumnInfo columnInfo)
+    Ir.AOCColumn columnInfo _redactionExp -> lift (fromColumnInfo columnInfo) -- TODO(caseBoolExp): Use this redaction expression
     Ir.AOCObjectRelation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
@@ -686,7 +687,8 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   Ir.AAOCount -> pure (CountAggregate StarCountable)
-                  Ir.AAOOp text _resultType columnInfo -> do
+                  -- TODO(caseBoolExp): Deal with the redaction expression
+                  Ir.AAOOp (Ir.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (ColumnExpression fieldName))
               )

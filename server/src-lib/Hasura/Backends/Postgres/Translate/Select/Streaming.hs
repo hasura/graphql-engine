@@ -83,7 +83,7 @@ mkStreamSQLSelect ::
 mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
   let cursorArg = _ssaCursorArg args
       cursorColInfo = _sciColInfo cursorArg
-      annOrderbyCol = AOCColumn cursorColInfo
+      annOrderbyCol = AOCColumn cursorColInfo Nothing -- TODO(caseBoolExp): Does a redaction expression need to go here?
       basicOrderType =
         bool S.OTAsc S.OTDesc $ _sciOrdering cursorArg == CODescending
       orderByItems =

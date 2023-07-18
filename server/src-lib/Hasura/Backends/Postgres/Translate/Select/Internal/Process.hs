@@ -116,12 +116,12 @@ processSelectParams
   permLimitSubQ
   tablePermissions
   tableArgs = do
-    (additionalExtrs, selectSorting, cursorExp) <-
-      processOrderByItems (identifierToTableIdentifier thisSourcePrefix) fieldAlias similarArrFields distM orderByM
     let prefix = identifierToTableIdentifier $ _pfBase sourcePrefixes
-    (whereSource, fromItem) <- selectFromToQual prefix selectFrom
+    (selectSourceQual, fromItem) <- selectFromToQual prefix selectFrom
+    (additionalExtrs, selectSorting, cursorExp) <-
+      processOrderByItems (identifierToTableIdentifier thisSourcePrefix) selectSourceQual fieldAlias similarArrFields distM orderByM
     let finalWhere =
-          toSQLBoolExp whereSource
+          toSQLBoolExp selectSourceQual
             $ maybe permFilter (andAnnBoolExps permFilter) whereM
         sortingAndSlicing = SortingAndSlicing selectSorting selectSlicing
         selectSource =
@@ -393,7 +393,7 @@ processAnnFields sourcePrefix fieldAlias annFields tCase = do
     toSQLCol (AnnColumnField col typ asText colOpM caseBoolExpMaybe) = do
       strfyNum <- ask
       let sqlExpression =
-            withColumnCaseBoolExp baseTableIdentifier caseBoolExpMaybe
+            withColumnCaseBoolExp (S.QualifiedIdentifier baseTableIdentifier Nothing) caseBoolExpMaybe
               $ withColumnOp colOpM
               $ S.mkQIdenExp baseTableIdentifier col
       pure $ toJSONableExp strfyNum typ asText tCase sqlExpression

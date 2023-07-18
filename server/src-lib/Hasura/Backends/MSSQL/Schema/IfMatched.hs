@@ -140,8 +140,8 @@ tableInsertMatchColumnsEnum tableInfo = do
       [ ( define $ ciName column,
           ciColumn column
         )
-        | -- TODO(caseBoolExp): Does the censor expression need to be considered here?
-          (SCIScalarColumn column, _censorExp) <- columns,
+        | -- TODO(caseBoolExp): Does the redaction expression need to be considered here?
+          (SCIScalarColumn column, _redactionExp) <- columns,
           isMatchColumnValid column
       ]
   where

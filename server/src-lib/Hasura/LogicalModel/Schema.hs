@@ -3,7 +3,8 @@
 
 -- | Schema parsers for logical models
 module Hasura.LogicalModel.Schema
-  ( buildLogicalModelIR,
+  ( getSelPermInfoForLogicalModel,
+    buildLogicalModelIR,
     buildLogicalModelPermissions,
     logicalModelSelectionList,
     defaultLogicalModelArgs,
@@ -46,6 +47,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select (defaultArgsParser)
 import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel)
 import Hasura.LogicalModel.IR (LogicalModel (..))
 import Hasura.LogicalModel.Types
   ( LogicalModelField (..),
@@ -58,7 +60,6 @@ import Hasura.LogicalModel.Types
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
-import Hasura.RQL.IR.BoolExp (gBoolExpTrue)
 import Hasura.RQL.Types.Backend (Backend, Column)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common (RelName (..))
@@ -71,30 +72,18 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.Table.Cache (SelPermInfo (..), _permSel)
 import Language.GraphQL.Draft.Syntax qualified as G
 
--- | find list of columns we're allowed to access for this role
-getSelPermInfoForLogicalModel ::
-  RoleName ->
-  LogicalModelInfo b ->
-  Maybe (SelPermInfo b)
-getSelPermInfoForLogicalModel role logicalModel =
-  HashMap.lookup role (_lmiPermissions logicalModel) >>= _permSel
-
 -- | build select permissions for logical model
--- `admin` can always select everything
 logicalModelPermissions ::
   (Backend b) =>
   LogicalModelInfo b ->
   RoleName ->
   Maybe (IR.TablePermG b (IR.UnpreparedValue b))
 logicalModelPermissions logicalModel roleName = do
-  if roleName == adminRoleName
-    then Just $ IR.TablePerm gBoolExpTrue Nothing
-    else
-      getSelPermInfoForLogicalModel roleName logicalModel <&> \selectPermissions ->
-        IR.TablePerm
-          { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
-            IR._tpLimit = spiLimit selectPermissions
-          }
+  getSelPermInfoForLogicalModel roleName logicalModel <&> \selectPermissions ->
+    IR.TablePerm
+      { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
+        IR._tpLimit = spiLimit selectPermissions
+      }
 
 -- | turn post-schema cache LogicalModelInfo into IR
 buildLogicalModelIR :: LogicalModelInfo b -> LogicalModel b
@@ -193,6 +182,7 @@ parseLogicalModelField knownRelNames column logimoField = runMaybeT do
         columnName <- G.mkName (toTxt column) `onNothing` throw500 (column <<> " is not a valid GraphQL name")
 
         -- We have not yet worked out what providing permissions here enables
+        -- TODO(caseBoolExp): This should be drawn from SelPermInfo.spiCols
         let caseBoolExpUnpreparedValue = Nothing
             columnType = ColumnScalar lmtsScalar
             pathArg = scalarSelectionArgumentsParser columnType
@@ -366,14 +356,17 @@ logicalModelDistinctArg ::
   ( MonadBuildSchema b r m n
   ) =>
   LogicalModelInfo b ->
-  SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (Column b))))
+  SchemaT r m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnDistinctColumn b (IR.UnpreparedValue b)))))
 logicalModelDistinctArg logicalModel = do
+  roleName <- retrieve scRole
+  let selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
+
   let name = getLogicalModelName (_lmiName logicalModel)
 
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
 
   let maybeColumnDefinitions =
-        traverse definitionFromTypeRow (InsOrdHashMap.keys (_lmiFields logicalModel))
+        traverse (definitionFromTypeRow selectPermissions) (InsOrdHashMap.keys (_lmiFields logicalModel))
           >>= NE.nonEmpty
 
   case (,) <$> G.mkName "_enum_name" <*> maybeColumnDefinitions of
@@ -394,8 +387,9 @@ logicalModelDistinctArg logicalModel = do
               (P.fieldOptional distinctOnName distinctOnDesc . P.nullable . P.list)
         pure $ maybeDistinctOnColumns >>= NE.nonEmpty
   where
-    definitionFromTypeRow :: Column b -> Maybe (P.Definition P.EnumValueInfo, Column b)
-    definitionFromTypeRow name' = do
+    definitionFromTypeRow :: Maybe (SelPermInfo b) -> Column b -> Maybe (P.Definition P.EnumValueInfo, IR.AnnDistinctColumn b (IR.UnpreparedValue b))
+    definitionFromTypeRow maybeSelectPermissions name' = do
+      selectPermissions <- maybeSelectPermissions
       columnName <- G.mkName (toTxt name')
 
       let definition =
@@ -406,7 +400,11 @@ logicalModelDistinctArg logicalModel = do
                 dDirectives = mempty,
                 dInfo = P.EnumValueInfo
               }
-      pure (definition, name')
+
+      let redactionExp = join . HashMap.lookup name' $ spiCols selectPermissions
+      let redactionExpUnpreparedValue = fmap (fmap partialSQLExpToUnpreparedValue) <$!> redactionExp
+
+      pure (definition, IR.AnnDistinctColumn name' redactionExpUnpreparedValue)
 
 defaultLogicalModelArgs ::
   forall b r m n.

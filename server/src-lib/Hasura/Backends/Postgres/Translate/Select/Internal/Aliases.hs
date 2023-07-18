@@ -34,7 +34,7 @@ import Hasura.RQL.Types.Relationships.Local
 mkAnnOrderByAlias ::
   TableIdentifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.ColumnAlias
 mkAnnOrderByAlias tablePrefix parAls similarFields = \case
-  AOCColumn pgColumnInfo ->
+  AOCColumn pgColumnInfo _redactionExp ->
     let pgColumn = ciColumn pgColumnInfo
         obColAls = contextualizeBaseTableColumn tablePrefix pgColumn
      in obColAls
@@ -55,7 +55,7 @@ mkAnnOrderByAlias tablePrefix parAls similarFields = \case
   AOCComputedField cfOrderBy ->
     let fieldName = fromComputedField $ _cfobName cfOrderBy
      in case _cfobOrderByElement cfOrderBy of
-          CFOBEScalar _ -> S.tableIdentifierToColumnAlias $ mkComputedFieldTableIdentifier tablePrefix fieldName
+          CFOBEScalar _ _redactionExp -> S.tableIdentifierToColumnAlias $ mkComputedFieldTableIdentifier tablePrefix fieldName
           CFOBETableAggregation _ _ aggOrderBy ->
             let cfPfx = mkComputedFieldTableIdentifier tablePrefix fieldName
                 obAls = S.tableIdentifierToColumnAlias cfPfx <> "." <> mkAggregateOrderByAlias aggOrderBy
@@ -87,11 +87,11 @@ contextualizeAggregateInput :: TableIdentifier -> FieldName -> FieldName -> S.Co
 contextualizeAggregateInput pfx aggregateField field =
   S.tableIdentifierToColumnAlias pfx <> ".ai." <> S.toColumnAlias aggregateField <> "." <> S.toColumnAlias field
 
-mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.ColumnAlias
+mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) v -> S.ColumnAlias
 mkAggregateOrderByAlias =
   (S.toColumnAlias . Identifier) . \case
     AAOCount -> "count"
-    AAOOp opText _resultType col -> opText <> "." <> getPGColTxt (ciColumn col)
+    AAOOp AggregateOrderByColumn {..} -> _aobcAggregateFunctionName <> "." <> getPGColTxt (ciColumn _aobcColumn)
 
 mkOrderByFieldName :: (ToTxt a) => a -> FieldName
 mkOrderByFieldName name =

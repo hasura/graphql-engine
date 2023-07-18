@@ -14,8 +14,8 @@ import Hasura.RQL.Types.BackendType
 
 -- | This newtype allows us to reuse 'S.CountType' for the 'Backend.CountType' type family
 -- We reuse the overall structure, but our column type is a PGCol column name, plus
--- the column censorship expression used by inherited roles.
--- See [SQL generation for inherited roles] for more information about column censorship
+-- the column redaction expression used by inherited roles.
+-- See [SQL generation for inherited roles] for more information about column redaction
 newtype CountAggregate pgKind v = CountAggregate {getCountType :: S.CountType (PGCol, Maybe (AnnColumnCaseBoolExp ('Postgres pgKind) v))}
   deriving stock (Generic)
 

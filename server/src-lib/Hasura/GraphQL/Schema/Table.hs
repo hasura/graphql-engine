@@ -98,8 +98,8 @@ tableSelectColumnsEnum tableInfo = do
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columnsWithCensorExps <- tableSelectColumns tableInfo
-  let columns = fst <$> columnsWithCensorExps
+  columnsWithRedactionExps <- tableSelectColumns tableInfo
+  let columns = fst <$> columnsWithRedactionExps
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
       description =
         Just
@@ -109,7 +109,7 @@ tableSelectColumnsEnum tableInfo = do
   -- We noticed many 'Definition's allocated, from 'define' below, so memoize
   -- to gain more sharing and lower memory residency.
   let columnDefinitions =
-        columnsWithCensorExps
+        columnsWithRedactionExps
           <&> ( \(structuredColumnInfo, caseBoolExp) ->
                   let definition = define $ structuredColumnInfoName structuredColumnInfo
                       column = structuredColumnInfoColumn structuredColumnInfo
@@ -288,16 +288,16 @@ tableSelectColumns tableInfo = do
   case spiCols <$> tableSelectPermissions roleName tableInfo of
     Nothing -> pure []
     Just columnPermissions ->
-      mapMaybe (getColumnsAndCensorExps columnPermissions) <$> tableSelectFields tableInfo
+      mapMaybe (getColumnsAndRedactionExps columnPermissions) <$> tableSelectFields tableInfo
   where
-    getColumnsAndCensorExps ::
+    getColumnsAndRedactionExps ::
       HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)) ->
       FieldInfo b ->
       Maybe ((StructuredColumnInfo b, Maybe (AnnColumnCaseBoolExpUnpreparedValue b)))
-    getColumnsAndCensorExps columnPermissions = \case
+    getColumnsAndRedactionExps columnPermissions = \case
       FIColumn structuredColumnInfo -> do
-        censorExp <- HashMap.lookup (structuredColumnInfoColumn structuredColumnInfo) columnPermissions
-        pure (structuredColumnInfo, (fmap . fmap) partialSQLExpToUnpreparedValue <$!> censorExp)
+        redactionExp <- HashMap.lookup (structuredColumnInfoColumn structuredColumnInfo) columnPermissions
+        pure (structuredColumnInfo, (fmap . fmap) partialSQLExpToUnpreparedValue <$!> redactionExp)
       _ ->
         Nothing
 

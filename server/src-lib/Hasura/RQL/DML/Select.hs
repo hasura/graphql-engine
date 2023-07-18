@@ -139,13 +139,15 @@ convOrderByElem sessVarBldr (flds, spi) = \case
     case fldInfo of
       FIColumn (SCIScalarColumn colInfo) -> do
         checkSelOnCol spi (ciColumn colInfo)
+        let redactionExp = join $ HashMap.lookup (ciColumn colInfo) (spiCols spi)
+        resolvedRedactionExp <- traverse (convAnnColumnCaseBoolExpPartialSQL sessVarBldr) redactionExp
         let ty = ciType colInfo
         if isScalarColumnWhere isGeoType ty
           then
             throw400 UnexpectedPayload
               $ fldName
               <<> " has type 'geometry' and cannot be used in order_by"
-          else pure $ AOCColumn colInfo
+          else pure $ AOCColumn colInfo resolvedRedactionExp
       FIRelationship _ ->
         throw400 UnexpectedPayload
           $ fldName

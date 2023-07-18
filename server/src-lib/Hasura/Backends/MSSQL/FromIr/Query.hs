@@ -584,7 +584,7 @@ fromAggregateField alias aggregateField =
       let projections :: [Projection] =
             fields <&> \(fieldName, columnField) ->
               case columnField of
-                -- TODO(caseBoolExp): Deal with censor expression?
+                -- TODO(caseBoolExp): Deal with redaction expression?
                 IR.SFCol column _columnType _caseBoolExp ->
                   let fname = columnFieldAggEntity column
                    in AggregateProjection $ Aliased (OpAggregate op [ColumnExpression fname]) (IR.getFieldNameTxt fieldName)
@@ -972,7 +972,8 @@ unfurlAnnotatedOrderByElement ::
   WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
 unfurlAnnotatedOrderByElement =
   \case
-    IR.AOCColumn columnInfo -> do
+    -- TODO(caseBoolExp): Use the redaction expression
+    IR.AOCColumn columnInfo _redactionExp -> do
       fieldName <- lift (fromColumnInfo columnInfo)
       pure
         ( fieldName,
@@ -1009,7 +1010,8 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  IR.AAOOp text _resultType columnInfo -> do
+                  -- TODO(caseBoolExp): Use the redaction expression
+                  IR.AAOOp (IR.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (pure (ColumnExpression fieldName)))
               )

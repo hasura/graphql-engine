@@ -375,9 +375,9 @@ bqCountTypeInput = \case
     mkCountType :: IR.CountDistinct -> Maybe [(Column 'BigQuery, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'BigQuery))] -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery)
     mkCountType _ Nothing = Const $ BigQuery.StarCountable
     mkCountType IR.SelectCountDistinct (Just cols) =
-      maybe (Const BigQuery.StarCountable) (Const . BigQuery.DistinctCountable) $ nonEmpty (fst <$> cols) -- TODO(caseBoolExp): Deal with censorship expressions
+      maybe (Const BigQuery.StarCountable) (Const . BigQuery.DistinctCountable) $ nonEmpty (fst <$> cols) -- TODO(caseBoolExp): Deal with redaction expressions
     mkCountType IR.SelectCountNonDistinct (Just cols) =
-      maybe (Const BigQuery.StarCountable) (Const . BigQuery.NonNullFieldCountable) $ nonEmpty (fst <$> cols) -- TODO(caseBoolExp): Deal with censorship expressions
+      maybe (Const BigQuery.StarCountable) (Const . BigQuery.NonNullFieldCountable) $ nonEmpty (fst <$> cols) -- TODO(caseBoolExp): Deal with redaction expressions
 
 geographyWithinDistanceInput ::
   forall m n r.

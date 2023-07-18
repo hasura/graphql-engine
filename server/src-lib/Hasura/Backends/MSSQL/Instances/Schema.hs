@@ -404,8 +404,8 @@ msCountTypeInput = \case
   where
     mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, Maybe (AnnColumnCaseBoolExpUnpreparedValue 'MSSQL)) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
     mkCountType _ Nothing = Const MSSQL.StarCountable
-    mkCountType IR.SelectCountDistinct (Just (col, _censorExp)) = Const $ MSSQL.DistinctCountable col -- TODO(caseBoolExp): Deal with censorship expressions
-    mkCountType IR.SelectCountNonDistinct (Just (col, _censorExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(caseBoolExp): Deal with censorship expressions
+    mkCountType IR.SelectCountDistinct (Just (col, _redactionExp)) = Const $ MSSQL.DistinctCountable col -- TODO(caseBoolExp): Deal with redaction expressions
+    mkCountType IR.SelectCountNonDistinct (Just (col, _redactionExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(caseBoolExp): Deal with redaction expressions
 
 msParseUpdateOperators ::
   forall m n r.
