@@ -549,7 +549,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- service.
           CatalogSync ->
             for_ schemaRegistryAction $ \action -> do
-              liftIO $ action interimMetadataResourceVersion (scInconsistentObjs schemaCache)
+              liftIO $ action interimMetadataResourceVersion (scInconsistentObjs schemaCache) metadata
           -- If this is a metadata event then we cannot be sure that the schema will be committed. So we write the schema
           -- to the registry service only after the schema is committed.
           CatalogUpdate _ -> pure ()

@@ -198,22 +198,23 @@ buildGQLContext
         res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
         case res of
           Left err ->
-            pure $ \_ _ ->
+            pure $ \_ _ _ ->
               unLogger logger $ mkGenericLog @Text LevelWarn "schema-registry" ("failed to fetch the time from metadata db correctly: " <> showQErr err)
           Right now -> do
             let schemaRegistryMap = generateSchemaRegistryMap hasuraContexts
-                projectSchemaInfo = \metadataResourceVersion inconsistentMetadata ->
+                projectSchemaInfo = \metadataResourceVersion inconsistentMetadata metadata ->
                   ProjectGQLSchemaInformation
                     schemaRegistryMap
                     (IsMetadataInconsistent $ checkMdErrs inconsistentMetadata)
                     (calculateSchemaSDLHash (generateSDL adminIntrospection) adminRoleName)
                     metadataResourceVersion
                     now
+                    metadata
             pure
-              $ \metadataResourceVersion inconsistentMetadata ->
+              $ \metadataResourceVersion inconsistentMetadata metadata ->
                 STM.atomically
                   $ STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx)
-                  $ projectSchemaInfo metadataResourceVersion inconsistentMetadata
+                  $ projectSchemaInfo metadataResourceVersion inconsistentMetadata metadata
 
     pure
       ( ( adminIntrospection,

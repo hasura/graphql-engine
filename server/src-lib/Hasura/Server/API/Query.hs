@@ -227,7 +227,7 @@ runQuery appContext sc query = do
         saveSourcesIntrospection logger sourcesIntrospection newResourceVersion
         -- run schema registry action
         for_ schemaRegistryAction $ \action -> do
-          liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache'))
+          liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache')) updatedMetadata
         -- notify schema cache sync
         liftEitherM $ notifySchemaCacheSync newResourceVersion appEnvInstanceId invalidations
 
