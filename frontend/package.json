@@ -28,7 +28,9 @@
     "npm": ">=8"
   },
   "resolutions": {
-    "@types/react": "17.0.39"
+    "@types/react": "17.0.39",
+    "codemirror-graphql": "0.12.0-alpha.0",
+    "graphql-language-service-interface": "2.4.0-alpha.0"
   },
   "dependencies": {
     "@ant-design/icons": "4.7.0",

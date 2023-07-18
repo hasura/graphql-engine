@@ -15037,16 +15037,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codemirror-graphql@npm:^0.12.0-alpha.0":
-  version: 0.12.4
-  resolution: "codemirror-graphql@npm:0.12.4"
+"codemirror-graphql@npm:0.12.0-alpha.0":
+  version: 0.12.0-alpha.0
+  resolution: "codemirror-graphql@npm:0.12.0-alpha.0"
   dependencies:
-    graphql-language-service-interface: ^2.4.3
-    graphql-language-service-parser: ^1.6.5
+    graphql-language-service-interface: ^2.4.0-alpha.0
+    graphql-language-service-parser: ^1.5.3-alpha.0
   peerDependencies:
-    codemirror: ^5.54.0
-    graphql: ^14.0.0 || ^15.0.0
-  checksum: 6e7de2d0ece9dda1e43b4afaa25a0dd80269e04b00b4a3241e0034b6fd8ba89603dd3b243668b0d2294b52a7b37f873975ba277d5bb19ae0329fb09b761787c1
+    codemirror: ^5.26.0
+    graphql: ^0.12.0 || ^0.13.0 || ^14.0.0
+  checksum: 8df4dbda170ad799d8ce0311a1724b3b38b1ce3c5355c78496c72c0b6c646a4af70ea110869b95798b5e9577105a12c552fdc5b8ec4c470819610267c7e1f202
   languageName: node
   linkType: hard
 
@@ -15738,6 +15738,16 @@ __metadata:
     cross-env: src/bin/cross-env.js
     cross-env-shell: src/bin/cross-env-shell.js
   checksum: dcfb07e279ca83abfe2205199a38d719bd9e1ba1dd4eed0878b12bb9b45132df0e7aea4a2fcf310b6845d232d2991488fafb30059261bb4c822fd12f71fe5e28
+  languageName: node
+  linkType: hard
+
+"cross-fetch@npm:2.2.2":
+  version: 2.2.2
+  resolution: "cross-fetch@npm:2.2.2"
+  dependencies:
+    node-fetch: 2.1.2
+    whatwg-fetch: 2.0.4
+  checksum: 882026e147d8f7798555fed7093867623d77db53c56696a2be6f10c493e19c697c45053f43d7877363372f7a67e348db6dc099b8118d48ec8e3da232ed8041a9
   languageName: node
   linkType: hard
 
@@ -20400,6 +20410,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"graphql-config@npm:2.2.1":
+  version: 2.2.1
+  resolution: "graphql-config@npm:2.2.1"
+  dependencies:
+    graphql-import: ^0.7.1
+    graphql-request: ^1.5.0
+    js-yaml: ^3.10.0
+    lodash: ^4.17.4
+    minimatch: ^3.0.4
+  peerDependencies:
+    graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0
+  checksum: 4b70bd9e2a949dec611608b74b6f3c0c88a0dafb182bc3d2d65fc1075fd8497943afa3f58fc18dd419b8a4283f9faf316739dd8bb371f245073e7f4085e879e9
+  languageName: node
+  linkType: hard
+
 "graphql-config@npm:4.3.6":
   version: 4.3.6
   resolution: "graphql-config@npm:4.3.6"
@@ -20448,22 +20473,33 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-language-service-interface@npm:^2.4.3":
-  version: 2.10.2
-  resolution: "graphql-language-service-interface@npm:2.10.2"
+"graphql-import@npm:^0.7.1":
+  version: 0.7.1
+  resolution: "graphql-import@npm:0.7.1"
   dependencies:
-    graphql-config: ^4.1.0
-    graphql-language-service-parser: ^1.10.4
-    graphql-language-service-types: ^1.8.7
-    graphql-language-service-utils: ^2.7.1
-    vscode-languageserver-types: ^3.15.1
+    lodash: ^4.17.4
+    resolve-from: ^4.0.0
   peerDependencies:
-    graphql: ^15.5.0 || ^16.0.0
-  checksum: 301a1602987099868dcca5fd21e963089bf526f6315b4c6fbabb2bcd7bebf7dcb23652844bd03123f8e0badf00adfce89e0b50f8a7589d342d6b385f92a7e776
+    graphql: ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0
+  checksum: 26997dee29f9134477a64db264e5a7cf0d4b9c93b6585506bcbf809763efd8af6a35f2802208965c82f9c070794b86040d9353bbab077b30b44db159b28eeb4c
   languageName: node
   linkType: hard
 
-"graphql-language-service-parser@npm:^1.10.4, graphql-language-service-parser@npm:^1.6.5":
+"graphql-language-service-interface@npm:2.4.0-alpha.0":
+  version: 2.4.0-alpha.0
+  resolution: "graphql-language-service-interface@npm:2.4.0-alpha.0"
+  dependencies:
+    graphql-config: 2.2.1
+    graphql-language-service-parser: ^1.5.3-alpha.0
+    graphql-language-service-types: ^1.6.0-alpha.0
+    graphql-language-service-utils: ^2.4.0-alpha.0
+  peerDependencies:
+    graphql: ^0.12.0 || ^0.13.0 || ^14.0.0
+  checksum: 2e3cba0e89e5137b6cbf1fe54cd6bcc630c09b746692e4a6739beaa2334411e26ccaa1cb8486a4023768bde7ce420bbcf90affe81a07b6f5070b204f62fecdf7
+  languageName: node
+  linkType: hard
+
+"graphql-language-service-parser@npm:^1.5.3-alpha.0":
   version: 1.10.4
   resolution: "graphql-language-service-parser@npm:1.10.4"
   dependencies:
@@ -20474,7 +20510,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-language-service-types@npm:^1.8.7":
+"graphql-language-service-types@npm:^1.6.0-alpha.0, graphql-language-service-types@npm:^1.8.7":
   version: 1.8.7
   resolution: "graphql-language-service-types@npm:1.8.7"
   dependencies:
@@ -20486,7 +20522,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-language-service-utils@npm:^2.7.1":
+"graphql-language-service-utils@npm:^2.4.0-alpha.0":
   version: 2.7.1
   resolution: "graphql-language-service-utils@npm:2.7.1"
   dependencies:
@@ -20507,6 +20543,15 @@ __metadata:
     iterall: ^1.1.1
     mqtt: ^2.3.0
   checksum: 7b385360ee91d567b7a4d999bbad6e44482824697b13799bbe8f5fbd5fef449a602cb1dbfddcaa8ec5df7418b58d9e59f1bf4f08bb49c550261aea544d7311b1
+  languageName: node
+  linkType: hard
+
+"graphql-request@npm:^1.5.0":
+  version: 1.8.2
+  resolution: "graphql-request@npm:1.8.2"
+  dependencies:
+    cross-fetch: 2.2.2
+  checksum: 6cc391e9f502774e9cf0277ac61c5d5b075bad0fefe100776491c0ad548a7513d00a7fcb0f1ad08323032f3c2c0df2b9dc1a69862cf064f860ac114750a1e671
   languageName: node
   linkType: hard
 
@@ -26703,6 +26748,13 @@ __metadata:
   version: 1.2.0
   resolution: "node-fetch-native@npm:1.2.0"
   checksum: f18d775523fc25b9fbec05a1da99cbf40214045bcaca82c8fd949b99148890c3cead4ab1764e26a92af600d14884d846481bcebf82d56815210624f836051a10
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:2.1.2":
+  version: 2.1.2
+  resolution: "node-fetch@npm:2.1.2"
+  checksum: 4c235a1c0d806046ee3874ff920e7e99200b1b1eec8df8c39318ddfb9f1d839ff738fcd0d876d1ad00f2f70ff19a7a43ab977a65260db787ce2ff335c51805ce
   languageName: node
   linkType: hard
 
@@ -35977,6 +36029,13 @@ __metadata:
   dependencies:
     iconv-lite: 0.6.3
   checksum: 7087810c410aa9b689cbd6af8773341a53cdc1f3aae2a882c163bd5522ec8ca4cdfc269aef417a5792f411807d5d77d50df4c24e3abb00bb60192858a40cc675
+  languageName: node
+  linkType: hard
+
+"whatwg-fetch@npm:2.0.4":
+  version: 2.0.4
+  resolution: "whatwg-fetch@npm:2.0.4"
+  checksum: de7c65a68d7d62e2f144a6b30293370b3ad82b65ebcd68f2ac8e8bbe7ede90febd98ba9486b78c1cbc950e0e8838fa5c2727f939899ab3fc7b71a04be52d33a5
   languageName: node
   linkType: hard
 
