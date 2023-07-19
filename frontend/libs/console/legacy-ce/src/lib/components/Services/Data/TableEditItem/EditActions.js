@@ -15,7 +15,10 @@ import {
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { isArray, isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
-import { getTableConfiguration } from '../TableBrowseRows/utils';
+import {
+  getTableConfiguration,
+  getTableCustomization,
+} from '../TableBrowseRows/utils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -35,6 +38,7 @@ const editItem = (tableName, colValues) => {
     const { tables, metadata } = getState();
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
+    const tableCustomization = getTableCustomization(tables, sources);
     /* Type all the values correctly */
     const { currentSchema, allSchemas, currentDataSource } = tables;
 
@@ -133,6 +137,7 @@ const editItem = (tableName, colValues) => {
       source: currentDataSource,
       tableDef,
       tableConfiguration,
+      dataSourceCustomization: tableCustomization,
       set: _setObject,
       defaultArray: _defaultArray,
       where: tables.update.pkClause,
@@ -153,7 +158,12 @@ const editItem = (tableName, colValues) => {
           showSuccessNotification(
             'Edited!',
             'Affected rows: ' +
-              processEditData({ data, tableDef, tableConfiguration })
+              processEditData({
+                data,
+                tableDef,
+                tableConfiguration,
+                dataSourceCustomization: tableCustomization,
+              })
           )
         );
       },

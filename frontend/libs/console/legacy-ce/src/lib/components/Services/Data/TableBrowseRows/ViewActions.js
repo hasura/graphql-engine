@@ -15,7 +15,7 @@ import {
   findTableFromRel,
   isFeatureSupported,
 } from '../../../../dataSources';
-import { getTableConfiguration } from './utils';
+import { getTableConfiguration, getTableCustomization } from './utils';
 import { reloadDataSource } from '../../../../metadata/actions';
 import { updateLimit } from './ViewAction.utils';
 
@@ -73,11 +73,17 @@ const getConfiguration = (tables, sources) => {
     )?.configuration;
 };
 
+const getCustomization = (tables, sources) => {
+  const { currentDataSource } = tables;
+  return sources?.find(s => s.name === currentDataSource)?.customization;
+};
+
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
     const { tables, metadata } = getState();
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
+    const dataSourceCustomization = getCustomization(tables, sources);
     const headers = dataHeaders(getState);
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
@@ -86,7 +92,11 @@ const vMakeRowsRequest = () => {
     const options = {
       method: 'POST',
       body: JSON.stringify(
-        getTableRowRequestBody({ tables, tableConfiguration })
+        getTableRowRequestBody({
+          tables,
+          tableConfiguration,
+          dataSourceCustomization,
+        })
       ),
       headers,
       credentials: globalCookiePolicy,
@@ -117,10 +127,13 @@ const vMakeRowsRequest = () => {
           return;
         }
         const { currentSchema, currentTable: originalTable } = tables;
+
+        const dataSourceCustomization = getCustomization(tables, sources);
         const { rows, estimatedCount } = processTableRowData(data, {
           currentSchema,
           originalTable,
           tableConfiguration,
+          dataSourceCustomization,
         });
 
         const currentTable = getState().tables.currentTable;
@@ -153,12 +166,18 @@ const vMakeExportRequest = () => {
     const headers = dataHeaders(getState);
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
+    const dataSourceCustomization = getCustomization(tables, sources);
     const { endpoint, getTableRowRequestBody, processTableRowData } =
       dataSource.generateTableRowRequest();
     const options = {
       method: 'POST',
       body: JSON.stringify(
-        getTableRowRequestBody({ tables, tableConfiguration, isExport: true })
+        getTableRowRequestBody({
+          tables,
+          tableConfiguration,
+          isExport: true,
+          dataSourceCustomization,
+        })
       ),
       headers,
       credentials: globalCookiePolicy,
@@ -195,10 +214,15 @@ const vMakeCountRequest = () => {
     const { tables, metadata } = getState();
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getConfiguration(tables, sources);
+    const dataSourceCustomization = getCustomization(tables, sources);
 
     const { endpoint, getRowsCountRequestBody, processCount } =
       dataSource.generateRowsCountRequest();
-    const requestBody = getRowsCountRequestBody({ tables, tableConfiguration });
+    const requestBody = getRowsCountRequestBody({
+      tables,
+      tableConfiguration,
+      dataSourceCustomization,
+    });
 
     const options = {
       method: 'POST',
@@ -211,11 +235,13 @@ const vMakeCountRequest = () => {
       data => {
         if (!isEmpty(data)) {
           const { currentTable: originalTable, currentSchema } = tables;
+          const dataSourceCustomization = getCustomization(tables, sources);
           const count = processCount({
             data,
             currentSchema,
             originalTable,
             tableConfiguration,
+            dataSourceCustomization,
           });
           const currentTable = getState().tables.currentTable;
           // in case table has changed before count load
@@ -281,6 +307,7 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
 
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
+    const tableCustomization = getTableCustomization(tables, sources);
 
     const { endpoint, getDeleteRowRequestBody, processDeleteRowData } =
       dataSource.generateDeleteRowRequest();
@@ -291,6 +318,7 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
       source,
       columnInfo: columnTypeInfo,
       tableConfiguration,
+      dataSourceCustomization: tableCustomization,
     });
 
     const options = {
@@ -302,11 +330,9 @@ const deleteItem = (pkClause, tableName, tableSchema) => {
     dispatch(requestAction(endpoint, options)).then(
       data => {
         try {
-          const affectedRows = processDeleteRowData(
-            data,
-            tableName,
-            tableSchema
-          );
+          const affectedRows = processDeleteRowData(data, {
+            dataSourceCustomization: tableCustomization,
+          });
           dispatch(vMakeTableRequests());
           dispatch(
             showSuccessNotification(
@@ -350,6 +376,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
 
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
+    const tableCustomization = getTableCustomization(tables, sources);
 
     const reqBody = getBulkDeleteRowRequestBody({
       pkClauses,
@@ -358,6 +385,7 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
       source,
       columnInfo: columnTypeInfo,
       tableConfiguration,
+      dataSourceCustomization: tableCustomization,
     });
 
     const options = {
@@ -370,11 +398,9 @@ const deleteItems = (pkClauses, tableName, tableSchema) => {
     dispatch(requestAction(endpoint, options)).then(
       data => {
         try {
-          const affected = processBulkDeleteRowData(
-            data,
-            tableName,
-            tableSchema
-          );
+          const affected = processBulkDeleteRowData(data, {
+            dataSourceCustomization: tableCustomization,
+          });
           dispatch(vMakeTableRequests());
           dispatch(
             showSuccessNotification(

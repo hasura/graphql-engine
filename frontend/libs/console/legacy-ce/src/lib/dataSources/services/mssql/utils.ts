@@ -1,6 +1,7 @@
 import {
   getFullQueryNameBase,
   getGraphQLQueryBase,
+  getQueryWithNamespace,
   QueryBody,
 } from './../../common';
 import { TableConfig } from './../../../metadata/types';
@@ -8,6 +9,8 @@ import Endpoints from '../../../Endpoints';
 import { ReduxState } from '../../../types';
 import { Relationship } from '../../types';
 import { isEmpty } from '../../../components/Common/utils/jsUtils';
+import { SourceCustomization } from '../../../features/hasura-metadata-types';
+import { Column, getQueryName } from '../../common/utils';
 
 type Tables = ReduxState['tables'];
 
@@ -81,21 +84,36 @@ const getFormattedValue = (
 };
 
 const getColQuery = (
-  cols: (string | { name: string; columns: string[] })[],
+  cols: (string | Column)[],
   limit: number,
   relationships: Relationship[],
-  tableConfiguration: TableConfig
+  tableConfiguration: TableConfig,
+  dataSourceCustomization: SourceCustomization
 ): string[] => {
-  return cols.map(c => {
+  return cols.map(column => {
     const columnConfig = tableConfiguration?.column_config ?? {};
-    if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
-    const rel = relationships.find((r: any) => r.rel_name === c.name);
-    return `${columnConfig[c.name]?.custom_name ?? c.name} ${
+
+    if (typeof column === 'string') {
+      return columnConfig[column]?.custom_name ?? column;
+    }
+
+    const queryName = getQueryName({
+      column,
+      tableConfiguration,
+      dataSourceCustomization,
+    });
+
+    const rel = relationships.find((r: any) => r.rel_name === column.name);
+    return `${queryName} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
     } {
-      ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
-        '\n'
-      )} }`;
+      ${getColQuery(
+        column.columns,
+        limit,
+        relationships,
+        tableConfiguration,
+        dataSourceCustomization
+      ).join('\n')} }`;
   });
 };
 
@@ -103,10 +121,12 @@ export const getTableRowRequestBody = ({
   tables,
   isExport,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   tables: Tables;
   isExport?: boolean;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const {
     currentTable: originalTable,
@@ -119,30 +139,41 @@ export const getTableRowRequestBody = ({
     tableName,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'select',
   });
   const aggregateName = getFullQueryName({
     tableName,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'select_aggregate',
   });
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
   const queryBody = ({ clauses, relationshipInfo }: QueryBody) => {
-    return `query TableRows {
-      ${queryName} ${clauses && `(${clauses})`} {
+    return getQueryWithNamespace({
+      queryName: 'query TableRows',
+      namespace,
+      innerQuery: `
+      ${queryName} ${clauses && `(${clauses})`}
+      {
           ${getColQuery(
             view.query.columns,
             view.curFilter.limit,
             relationshipInfo,
-            tableConfiguration
+            tableConfiguration,
+            dataSourceCustomization
           ).join('\n')}
-    }
-    ${aggregateName} {
-      aggregate {
-        count
       }
-    }
-  }`;
+      ${aggregateName}
+      {
+        aggregate {
+          count
+        }
+      }
+      `,
+    });
   };
 
   return {
@@ -167,9 +198,15 @@ const processTableRowData = (
     originalTable: string;
     currentSchema: string;
     tableConfiguration: TableConfig;
+    dataSourceCustomization: SourceCustomization;
   }
 ) => {
-  const { originalTable, currentSchema, tableConfiguration } = config!;
+  const {
+    originalTable,
+    currentSchema,
+    tableConfiguration,
+    dataSourceCustomization,
+  } = config!;
 
   const reversedCustomColumns = Object.entries(
     tableConfiguration?.column_config ?? {}
@@ -183,9 +220,16 @@ const processTableRowData = (
     tableName,
     schema: currentSchema,
     tableConfiguration,
+    dataSourceCustomization,
     operation: 'select',
   });
-  const results = data?.data[queryName];
+
+  const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+  const hasNamespace = !!namespace;
+
+  const results = hasNamespace
+    ? data?.data[namespace][queryName]
+    : data?.data[queryName];
 
   const rows = isEmpty(reversedCustomColumns)
     ? results
@@ -212,9 +256,11 @@ export const generateTableRowRequest = () => ({
 export const getRowsCountRequestBody = ({
   tables,
   tableConfiguration,
+  dataSourceCustomization,
 }: {
   tables: Tables;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }) => {
   const {
     currentTable: originalTable,
@@ -227,15 +273,22 @@ export const getRowsCountRequestBody = ({
       tableName: originalTable,
       schema: currentSchema,
       tableConfiguration,
+      dataSourceCustomization,
       operation: 'select_aggregate',
     });
-    return `query TableCount {
-      ${queryName} ${clauses && `(${clauses})`} {
-        aggregate {
-          count
+
+    const namespace = dataSourceCustomization?.root_fields?.namespace ?? '';
+    return getQueryWithNamespace({
+      queryName: 'query TableCount',
+      namespace: namespace,
+      innerQuery: `
+        ${queryName} ${clauses && `(${clauses})`} {
+          aggregate {
+            count
+          }
         }
-      }
-    }`;
+      `,
+    });
   };
 
   return {
@@ -259,12 +312,14 @@ const processCount = (c: {
   currentSchema: string;
   originalTable: string;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
 }): number => {
   const key = getFullQueryName({
     tableName: c.originalTable,
     schema: c.currentSchema,
     tableConfiguration: c.tableConfiguration,
     operation: 'select_aggregate',
+    dataSourceCustomization: c.dataSourceCustomization,
   });
   return c.data?.data?.[key]?.aggregate?.count;
 };

@@ -1,3 +1,4 @@
+import { formatSdl } from 'format-graphql';
 import { CustomRootFields, TableConfig } from './../../metadata/types';
 import {
   OrderBy,
@@ -5,6 +6,8 @@ import {
 } from '../../components/Common/utils/v1QueryUtils';
 import { ReduxState } from '../../types';
 import { BaseTableColumn, Relationship, Table } from '../types';
+import { SourceCustomization } from '../../features/hasura-metadata-types';
+import { getQueryName } from './utils';
 
 type Tables = ReduxState['tables'];
 
@@ -26,6 +29,7 @@ interface GetFullQueryName {
   tableName: string;
   schema: string;
   tableConfiguration: TableConfig;
+  dataSourceCustomization: SourceCustomization;
   defaultSchema?: string;
   operation: keyof Omit<
     CustomRootFields,
@@ -50,18 +54,31 @@ export const getColQuery = (
   cols: (string | { name: string; columns: string[] })[],
   limit: number,
   relationships: Relationship[],
-  tableConfiguration: TableConfig
+  tableConfiguration: TableConfig,
+  dataSourceCustomization: SourceCustomization
 ): string[] => {
-  return cols.map(c => {
+  return cols.map(column => {
     const columnConfig = tableConfiguration?.column_config ?? {};
-    if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
-    const rel = relationships.find((r: any) => r.rel_name === c.name);
-    return `${columnConfig[c.name]?.custom_name ?? c.name} ${
+    if (typeof column === 'string')
+      return columnConfig[column]?.custom_name ?? column;
+
+    const queryName = getQueryName({
+      column,
+      tableConfiguration,
+      dataSourceCustomization,
+    });
+
+    const rel = relationships.find((r: any) => r.rel_name === column.name);
+    return `${queryName} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
     } {
-        ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
-          '\n'
-        )} }`;
+        ${getColQuery(
+          column.columns,
+          limit,
+          relationships,
+          tableConfiguration,
+          dataSourceCustomization
+        ).join('\n')} }`;
   });
 };
 
@@ -175,20 +192,53 @@ export const getFullQueryNameBase =
     tableName,
     schema,
     tableConfiguration,
+    dataSourceCustomization,
     operation,
   }: GetFullQueryName): string => {
+    const prefix = dataSourceCustomization?.root_fields?.prefix ?? '';
+    const suffix = dataSourceCustomization?.root_fields?.suffix ?? '';
+
     const customRootFields = tableConfiguration?.custom_root_fields ?? {};
     const customRootField = customRootFields[operation];
-    if (typeof customRootField === 'string') return customRootField;
-    else if (customRootField?.name) return customRootField.name;
-    const withUpdate = operation === 'update' ? 'update_' : '';
+
+    const withUpdate =
+      operation === 'update' && !customRootFields?.update ? 'update_' : '';
     const withSchema =
       schema === defaultSchema || tableConfiguration?.custom_name
         ? ''
         : `${schema}_`;
-    const withAgg = operation === 'select_aggregate' ? `_aggregate` : '';
-    const withDelete = operation === 'delete' ? 'delete_' : '';
-    const withInsert = operation === 'insert' ? 'insert_' : '';
-    const trackedTableName = tableConfiguration?.custom_name || tableName;
-    return `${withDelete}${withUpdate}${withInsert}${withSchema}${trackedTableName}${withAgg}`;
+    const withAgg =
+      operation === 'select_aggregate' && !customRootFields?.select_aggregate
+        ? `_aggregate`
+        : '';
+    const withDelete =
+      operation === 'delete' && !customRootFields?.delete ? 'delete_' : '';
+    const withInsert =
+      operation === 'insert' && !customRootFields?.insert ? 'insert_' : '';
+
+    const trackedTableName =
+      customRootField || tableConfiguration?.custom_name || tableName;
+
+    return `${prefix}${withDelete}${withUpdate}${withInsert}${withSchema}${trackedTableName}${withAgg}${suffix}`;
   };
+
+type GetQueryWithNamespaceArgs = {
+  queryName: string;
+  namespace: string;
+  innerQuery: string;
+};
+
+export const getQueryWithNamespace = ({
+  queryName,
+  namespace,
+  innerQuery,
+}: GetQueryWithNamespaceArgs) => {
+  return formatSdl(`${queryName}
+  {
+    ${namespace ? `${namespace} {` : ''}
+
+    ${innerQuery}
+
+    ${namespace ? `}` : ''}
+  }`);
+};
