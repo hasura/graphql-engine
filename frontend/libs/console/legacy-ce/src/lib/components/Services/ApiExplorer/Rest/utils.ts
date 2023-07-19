@@ -295,8 +295,8 @@ export const getValueWithType = (variableData: VariableState) => {
 
   // NOTE: bool_exp are of JSON type, so pass it as JSON object (issue: https://github.com/hasura/graphql-engine/issues/9671)
   if (
-    (variableData.type.endsWith('_exp') ||
-      variableData.type.endsWith('_input')) &&
+    (variableData.type.includes('_exp') ||
+      variableData.type.includes('_input')) &&
     isJsonString(variableData.value)
   ) {
     return JSON.parse(variableData.value);

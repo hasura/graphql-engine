@@ -1,7 +1,12 @@
 import { Microfiber } from 'microfiber';
 import { useIntrospectionSchema } from '../../../components/Services/Actions/Common/components/ImportTypesModal/useIntrospectionSchema';
 import { useEffect, useState } from 'react';
-import { Query, RestEndpoint } from '../../hasura-metadata-types';
+import {
+  MetadataTable,
+  Query,
+  RestEndpoint,
+  Source,
+} from '../../hasura-metadata-types';
 import {
   Operation,
   generateDeleteEndpoint,
@@ -11,7 +16,7 @@ import {
   generateViewEndpoint,
 } from './utils';
 import { formatSdl } from 'format-graphql';
-import { useMetadata } from '../../MetadataAPI';
+import { useMetadata } from '../../hasura-metadata-api';
 
 export type EndpointType = 'READ' | 'READ_ALL' | 'CREATE' | 'UPDATE' | 'DELETE';
 
@@ -26,14 +31,31 @@ type EndpointDefinitions = {
   >;
 };
 
+type Table = MetadataTable & { table: { name: string; schema: string } };
+
 export type Generator = {
-  regExp: RegExp;
+  operationName: (source: Source, table: Table) => string;
   generator: (
     root: string,
     table: string,
     operation: Operation,
     microfiber: any
   ) => EndpointDefinition;
+};
+
+export const getSchemaPrefix = (source: Source, table: Table) => {
+  const schemaName = table.table.schema;
+  if (source.kind === 'mssql' && schemaName === 'dbo') {
+    return '';
+  }
+  if (
+    ['cockroach', 'postgres', 'citus'].includes(source.kind) &&
+    schemaName === 'public'
+  ) {
+    return '';
+  }
+
+  return `${table?.table?.schema}_`;
 };
 
 export const getOperations = (microfiber: any) => {
@@ -90,24 +112,59 @@ export const getOperations = (microfiber: any) => {
 
 const generators: Record<EndpointType, Generator> = {
   READ: {
-    regExp: /fetch data from the table: "(.+)" using primary key columns$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.select_by_pk) {
+        return table?.configuration?.custom_root_fields?.select_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      return `${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateViewEndpoint,
   },
   READ_ALL: {
-    regExp: /fetch data from the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.select) {
+        return table?.configuration?.custom_root_fields?.select;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      return `${schemaPrefix}${tableName}`;
+    },
     generator: generateViewAllEndpoint,
   },
   CREATE: {
-    regExp: /insert a single row into the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.insert_one) {
+        return table?.configuration?.custom_root_fields?.insert_one;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      return `insert_${schemaPrefix}${tableName}_one`;
+    },
     generator: generateInsertEndpoint,
   },
   UPDATE: {
-    regExp: /update single row of the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.update_by_pk) {
+        return table?.configuration?.custom_root_fields?.update_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      return `update_${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateUpdateEndpoint,
   },
 
   DELETE: {
-    regExp: /delete single row from the table: "(.+)"$/,
+    operationName: (source, table) => {
+      if (table?.configuration?.custom_root_fields?.delete_by_pk) {
+        return table?.configuration?.custom_root_fields?.delete_by_pk;
+      }
+      const schemaPrefix = getSchemaPrefix(source, table);
+      const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      return `delete_${schemaPrefix}${tableName}_by_pk`;
+    },
     generator: generateDeleteEndpoint,
   },
 };
@@ -119,12 +176,15 @@ export const useRestEndpointDefinitions = () => {
     error,
   } = useIntrospectionSchema();
 
-  const { data: metadata } = useMetadata();
+  const { data: metadata } = useMetadata(m => ({
+    restEndpoints: m.metadata?.rest_endpoints,
+    sources: m.metadata?.sources,
+  }));
 
   const [data, setData] = useState<EndpointDefinitions>();
 
   useEffect(() => {
-    const existingRestEndpoints = metadata?.metadata?.rest_endpoints || [];
+    const existingRestEndpoints = metadata?.restEndpoints || [];
 
     if (introspectionSchema) {
       const response: EndpointDefinitions = {};
@@ -137,25 +197,40 @@ export const useRestEndpointDefinitions = () => {
         return;
       }
 
-      for (const operation of operations.operations) {
-        for (const endpointType in generators) {
-          const match = operation.description?.match(
-            generators[endpointType as EndpointType].regExp
-          );
-          const table = match?.[1];
+      for (const source of metadata?.sources || []) {
+        const sourcePrefix = source.customization?.root_fields?.prefix || '';
 
-          if (match) {
-            const definition = generators[
-              endpointType as EndpointType
-            ].generator(operations.root, table, operation, microfiber);
+        const sourceSuffix = source.customization?.root_fields?.suffix || '';
+        for (const table of source.tables as Table[]) {
+          for (const [type, generator] of Object.entries(generators)) {
+            const operationName = `${sourcePrefix}${generator.operationName(
+              source,
+              table
+            )}${sourceSuffix}`;
+            const operation = operations.operations.find(
+              operation => operation.name === operationName
+            );
+
+            if (!operation) {
+              continue;
+            }
+
+            const tableName = table?.table?.name;
+
+            const definition = generators[type as EndpointType].generator(
+              operations.root,
+              tableName,
+              operation,
+              microfiber
+            );
 
             if (definition.query.query) {
               definition.query.query = formatSdl(definition.query.query);
             }
 
-            response[table] = {
-              ...(response[table] || {}),
-              [endpointType]: {
+            response[tableName] = {
+              ...(response[tableName] || {}),
+              [type]: {
                 ...definition,
                 exists: existingRestEndpoints.some(
                   endpoint =>
@@ -167,6 +242,7 @@ export const useRestEndpointDefinitions = () => {
           }
         }
       }
+
       setData(response);
     }
   }, [introspectionSchema, metadata]);
