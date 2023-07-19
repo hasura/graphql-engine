@@ -31,56 +31,56 @@
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="annot"><span class="hs-comment">-- | Generate alias for order by extractors</span></span><span>
-</span><span id="line-34"></span><span id="local-6989586621687398629"><span id="local-6989586621687398631"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAnnOrderByAlias"><span class="hs-identifier hs-type">mkAnnOrderByAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SimilarArrayFields"><span class="hs-identifier hs-type">SimilarArrayFields</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398629"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687398631"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span></span></span><span>
+</span><span id="line-34"></span><span id="local-6989586621687398665"><span id="local-6989586621687398667"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAnnOrderByAlias"><span class="hs-identifier hs-type">mkAnnOrderByAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#SimilarArrayFields"><span class="hs-identifier hs-type">SimilarArrayFields</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedOrderByElement"><span class="hs-identifier hs-type">AnnotatedOrderByElement</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398665"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687398667"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span></span></span><span>
 </span><span id="line-36"></span><span id="mkAnnOrderByAlias"><span class="annot"><span class="annottext">mkAnnOrderByAlias :: forall (pgKind :: PostgresKind) v.
 TableIdentifier
 -&gt; FieldName
 -&gt; SimilarArrayFields
 -&gt; AnnotatedOrderByElement ('Postgres pgKind) v
 -&gt; ColumnAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAnnOrderByAlias"><span class="hs-identifier hs-var hs-var">mkAnnOrderByAlias</span></a></span></span><span> </span><span id="local-6989586621687398766"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span></span><span> </span><span id="local-6989586621687398767"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398767"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398768"><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398768"><span class="hs-identifier hs-var">similarFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCColumn"><span class="hs-identifier hs-type">AOCColumn</span></a></span><span> </span><span id="local-6989586621687398770"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398770"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span></span><span> </span><span id="local-6989586621687398771"><span class="annot"><span class="annottext">AnnRedactionExp ('Postgres pgKind) v
-</span><a href="#local-6989586621687398771"><span class="hs-identifier hs-var">_redactionExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-38"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398772"><span class="annot"><span class="annottext">pgColumn :: Column ('Postgres pgKind)
-</span><a href="#local-6989586621687398772"><span class="hs-identifier hs-var hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAnnOrderByAlias"><span class="hs-identifier hs-var hs-var">mkAnnOrderByAlias</span></a></span></span><span> </span><span id="local-6989586621687398802"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span></span><span> </span><span id="local-6989586621687398803"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398803"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398804"><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398804"><span class="hs-identifier hs-var">similarFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCColumn"><span class="hs-identifier hs-type">AOCColumn</span></a></span><span> </span><span id="local-6989586621687398806"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621687398806"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span></span><span> </span><span id="local-6989586621687398807"><span class="annot"><span class="annottext">AnnRedactionExp ('Postgres pgKind) v
+</span><a href="#local-6989586621687398807"><span class="hs-identifier hs-var">_redactionExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398808"><span class="annot"><span class="annottext">pgColumn :: Column ('Postgres pgKind)
+</span><a href="#local-6989586621687398808"><span class="hs-identifier hs-var hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398770"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
-</span><span id="line-39"></span><span>        </span><span id="local-6989586621687398774"><span class="annot"><span class="annottext">obColAls :: ColumnAlias
-</span><a href="#local-6989586621687398774"><span class="hs-identifier hs-var hs-var">obColAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; PGCol -&gt; ColumnAlias
+</span><a href="#local-6989586621687398806"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
+</span><span id="line-39"></span><span>        </span><span id="local-6989586621687398810"><span class="annot"><span class="annottext">obColAls :: ColumnAlias
+</span><a href="#local-6989586621687398810"><span class="hs-identifier hs-var hs-var">obColAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; PGCol -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeBaseTableColumn"><span class="hs-identifier hs-var">contextualizeBaseTableColumn</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
 PGCol
-</span><a href="#local-6989586621687398772"><span class="hs-identifier hs-var">pgColumn</span></a></span><span>
+</span><a href="#local-6989586621687398808"><span class="hs-identifier hs-var">pgColumn</span></a></span><span>
 </span><span id="line-40"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ColumnAlias
-</span><a href="#local-6989586621687398774"><span class="hs-identifier hs-var">obColAls</span></a></span><span>
+</span><a href="#local-6989586621687398810"><span class="hs-identifier hs-var">obColAls</span></a></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-comment">-- &quot;pfx.or.relname&quot;.&quot;pfx.ob.or.relname.rest&quot; AS &quot;pfx.ob.or.relname.rest&quot;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCObjectRelation"><span class="hs-identifier hs-type">AOCObjectRelation</span></a></span><span> </span><span id="local-6989586621687398776"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398776"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) v
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398777"><span class="annot"><span class="annottext">AnnotatedOrderByElement ('Postgres pgKind) v
-</span><a href="#local-6989586621687398777"><span class="hs-identifier hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398778"><span class="annot"><span class="annottext">rn :: RelName
-</span><a href="#local-6989586621687398778"><span class="hs-identifier hs-var hs-var">rn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; RelName
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCObjectRelation"><span class="hs-identifier hs-type">AOCObjectRelation</span></a></span><span> </span><span id="local-6989586621687398812"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
+</span><a href="#local-6989586621687398812"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) v
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398813"><span class="annot"><span class="annottext">AnnotatedOrderByElement ('Postgres pgKind) v
+</span><a href="#local-6989586621687398813"><span class="hs-identifier hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398814"><span class="annot"><span class="annottext">rn :: RelName
+</span><a href="#local-6989586621687398814"><span class="hs-identifier hs-var hs-var">rn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; RelName
 forall (b :: BackendType). RelInfo b -&gt; RelName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riName"><span class="hs-identifier hs-var">riName</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398776"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
-</span><span id="line-44"></span><span>        </span><span id="local-6989586621687398780"><span class="annot"><span class="annottext">relPfx :: TableIdentifier
-</span><a href="#local-6989586621687398780"><span class="hs-identifier hs-var hs-var">relPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; RelName -&gt; TableIdentifier
+</span><a href="#local-6989586621687398812"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
+</span><span id="line-44"></span><span>        </span><span id="local-6989586621687398816"><span class="annot"><span class="annottext">relPfx :: TableIdentifier
+</span><a href="#local-6989586621687398816"><span class="hs-identifier hs-var hs-var">relPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; RelName -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkObjectRelationTableAlias"><span class="hs-identifier hs-var">mkObjectRelationTableAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621687398778"><span class="hs-identifier hs-var">rn</span></a></span><span>
-</span><span id="line-45"></span><span>        </span><span id="local-6989586621687398781"><span class="annot"><span class="annottext">ordByFldName :: FieldName
-</span><a href="#local-6989586621687398781"><span class="hs-identifier hs-var hs-var">ordByFldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelName -&gt; FieldName
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621687398814"><span class="hs-identifier hs-var">rn</span></a></span><span>
+</span><span id="line-45"></span><span>        </span><span id="local-6989586621687398817"><span class="annot"><span class="annottext">ordByFldName :: FieldName
+</span><a href="#local-6989586621687398817"><span class="hs-identifier hs-var hs-var">ordByFldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 forall a. ToTxt a =&gt; a -&gt; FieldName
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-var">mkOrderByFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621687398778"><span class="hs-identifier hs-var">rn</span></a></span><span>
-</span><span id="line-46"></span><span>        </span><span id="local-6989586621687398782"><span class="annot"><span class="annottext">nesAls :: ColumnAlias
-</span><a href="#local-6989586621687398782"><span class="hs-identifier hs-var hs-var">nesAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398814"><span class="hs-identifier hs-var">rn</span></a></span><span>
+</span><span id="line-46"></span><span>        </span><span id="local-6989586621687398818"><span class="annot"><span class="annottext">nesAls :: ColumnAlias
+</span><a href="#local-6989586621687398818"><span class="hs-identifier hs-var hs-var">nesAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier
 -&gt; FieldName
 -&gt; SimilarArrayFields
 -&gt; AnnotatedOrderByElement ('Postgres pgKind) v
@@ -92,40 +92,40 @@ TableIdentifier
 -&gt; AnnotatedOrderByElement ('Postgres pgKind) v
 -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAnnOrderByAlias"><span class="hs-identifier hs-var">mkAnnOrderByAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398780"><span class="hs-identifier hs-var">relPfx</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398781"><span class="hs-identifier hs-var">ordByFldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398816"><span class="hs-identifier hs-var">relPfx</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398817"><span class="hs-identifier hs-var">ordByFldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedOrderByElement ('Postgres pgKind) v
-</span><a href="#local-6989586621687398777"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><a href="#local-6989586621687398813"><span class="hs-identifier hs-var">rest</span></a></span><span>
 </span><span id="line-47"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ColumnAlias
-</span><a href="#local-6989586621687398782"><span class="hs-identifier hs-var">nesAls</span></a></span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCArrayAggregation"><span class="hs-identifier hs-type">AOCArrayAggregation</span></a></span><span> </span><span id="local-6989586621687398784"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398784"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) v
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398785"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398785"><span class="hs-identifier hs-var">aggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-49"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398786"><span class="annot"><span class="annottext">rn :: RelName
-</span><a href="#local-6989586621687398786"><span class="hs-identifier hs-var hs-var">rn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; RelName
+</span><a href="#local-6989586621687398818"><span class="hs-identifier hs-var">nesAls</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCArrayAggregation"><span class="hs-identifier hs-type">AOCArrayAggregation</span></a></span><span> </span><span id="local-6989586621687398820"><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
+</span><a href="#local-6989586621687398820"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) v
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398821"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
+</span><a href="#local-6989586621687398821"><span class="hs-identifier hs-var">aggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398822"><span class="annot"><span class="annottext">rn :: RelName
+</span><a href="#local-6989586621687398822"><span class="hs-identifier hs-var hs-var">rn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind) -&gt; RelName
 forall (b :: BackendType). RelInfo b -&gt; RelName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riName"><span class="hs-identifier hs-var">riName</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398784"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
-</span><span id="line-50"></span><span>        </span><span id="local-6989586621687398787"><span class="annot"><span class="annottext">arrPfx :: TableIdentifier
-</span><a href="#local-6989586621687398787"><span class="hs-identifier hs-var hs-var">arrPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687398820"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
+</span><span id="line-50"></span><span>        </span><span id="local-6989586621687398823"><span class="annot"><span class="annottext">arrPfx :: TableIdentifier
+</span><a href="#local-6989586621687398823"><span class="hs-identifier hs-var hs-var">arrPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">TableIdentifier
 -&gt; FieldName -&gt; SimilarArrayFields -&gt; FieldName -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationSourcePrefix"><span class="hs-identifier hs-var">mkArrayRelationSourcePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398767"><span class="hs-identifier hs-var">parAls</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398768"><span class="hs-identifier hs-var">similarFields</span></a></span><span>
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398803"><span class="hs-identifier hs-var">parAls</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398804"><span class="hs-identifier hs-var">similarFields</span></a></span><span>
 </span><span id="line-52"></span><span>            </span><span class="annot"><span class="annottext">(FieldName -&gt; TableIdentifier) -&gt; FieldName -&gt; TableIdentifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 forall a. ToTxt a =&gt; a -&gt; FieldName
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-var">mkOrderByFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621687398786"><span class="hs-identifier hs-var">rn</span></a></span><span>
-</span><span id="line-53"></span><span>        </span><span id="local-6989586621687398788"><span class="annot"><span class="annottext">obAls :: ColumnAlias
-</span><a href="#local-6989586621687398788"><span class="hs-identifier hs-var hs-var">obAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
+</span><a href="#local-6989586621687398822"><span class="hs-identifier hs-var">rn</span></a></span><span>
+</span><span id="line-53"></span><span>        </span><span id="local-6989586621687398824"><span class="annot"><span class="annottext">obAls :: ColumnAlias
+</span><a href="#local-6989586621687398824"><span class="hs-identifier hs-var hs-var">obAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398787"><span class="hs-identifier hs-var">arrPfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398823"><span class="hs-identifier hs-var">arrPfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -134,50 +134,50 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall (pgKind :: PostgresKind) v.
 AnnotatedAggregateOrderBy ('Postgres pgKind) v -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-var">mkAggregateOrderByAlias</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398785"><span class="hs-identifier hs-var">aggOrderBy</span></a></span><span>
+</span><a href="#local-6989586621687398821"><span class="hs-identifier hs-var">aggOrderBy</span></a></span><span>
 </span><span id="line-54"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
-</span><a href="#local-6989586621687398788"><span class="hs-identifier hs-var">obAls</span></a></span><span>
-</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCComputedField"><span class="hs-identifier hs-type">AOCComputedField</span></a></span><span> </span><span id="local-6989586621687398792"><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398792"><span class="hs-identifier hs-var">cfOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-56"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398793"><span class="annot"><span class="annottext">fieldName :: FieldName
-</span><a href="#local-6989586621687398793"><span class="hs-identifier hs-var hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; FieldName
+</span><a href="#local-6989586621687398824"><span class="hs-identifier hs-var">obAls</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AOCComputedField"><span class="hs-identifier hs-type">AOCComputedField</span></a></span><span> </span><span id="local-6989586621687398828"><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v
+</span><a href="#local-6989586621687398828"><span class="hs-identifier hs-var">cfOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398829"><span class="annot"><span class="annottext">fieldName :: FieldName
+</span><a href="#local-6989586621687398829"><span class="hs-identifier hs-var hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.ComputedField.Name.html#fromComputedField"><span class="hs-identifier hs-var">fromComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldName -&gt; FieldName) -&gt; ComputedFieldName -&gt; FieldName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v -&gt; ComputedFieldName
 forall (b :: BackendType) v.
 ComputedFieldOrderBy b v -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.IR.Select.OrderBy.html#%24sel%3A_cfobName%3AComputedFieldOrderBy"><span class="hs-identifier hs-var">_cfobName</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398792"><span class="hs-identifier hs-var">cfOrderBy</span></a></span><span>
+</span><a href="#local-6989586621687398828"><span class="hs-identifier hs-var">cfOrderBy</span></a></span><span>
 </span><span id="line-57"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v
 -&gt; ComputedFieldOrderByElement ('Postgres pgKind) v
 forall (b :: BackendType) v.
 ComputedFieldOrderBy b v -&gt; ComputedFieldOrderByElement b v
 </span><a href="Hasura.RQL.IR.Select.OrderBy.html#%24sel%3A_cfobOrderByElement%3AComputedFieldOrderBy"><span class="hs-identifier hs-var">_cfobOrderByElement</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398792"><span class="hs-identifier hs-var">cfOrderBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687398828"><span class="hs-identifier hs-var">cfOrderBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-58"></span><span>          </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#CFOBEScalar"><span class="hs-identifier hs-type">CFOBEScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398798"><span class="annot"><span class="annottext">AnnRedactionExp ('Postgres pgKind) v
-</span><a href="#local-6989586621687398798"><span class="hs-identifier hs-var">_redactionExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398834"><span class="annot"><span class="annottext">AnnRedactionExp ('Postgres pgKind) v
+</span><a href="#local-6989586621687398834"><span class="hs-identifier hs-var">_redactionExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(TableIdentifier -&gt; ColumnAlias) -&gt; TableIdentifier -&gt; ColumnAlias
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; FieldName -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkComputedFieldTableIdentifier"><span class="hs-identifier hs-var">mkComputedFieldTableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398793"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398829"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-59"></span><span>          </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#CFOBETableAggregation"><span class="hs-identifier hs-type">CFOBETableAggregation</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) v
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398800"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398800"><span class="hs-identifier hs-var">aggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-60"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398801"><span class="annot"><span class="annottext">cfPfx :: TableIdentifier
-</span><a href="#local-6989586621687398801"><span class="hs-identifier hs-var hs-var">cfPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; FieldName -&gt; TableIdentifier
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621687398836"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
+</span><a href="#local-6989586621687398836"><span class="hs-identifier hs-var">aggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398837"><span class="annot"><span class="annottext">cfPfx :: TableIdentifier
+</span><a href="#local-6989586621687398837"><span class="hs-identifier hs-var hs-var">cfPfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; FieldName -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkComputedFieldTableIdentifier"><span class="hs-identifier hs-var">mkComputedFieldTableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398766"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398793"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
-</span><span id="line-61"></span><span>                </span><span id="local-6989586621687398802"><span class="annot"><span class="annottext">obAls :: ColumnAlias
-</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var hs-var">obAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
+</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">tablePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398829"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><span id="line-61"></span><span>                </span><span id="local-6989586621687398838"><span class="annot"><span class="annottext">obAls :: ColumnAlias
+</span><a href="#local-6989586621687398838"><span class="hs-identifier hs-var hs-var">obAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398801"><span class="hs-identifier hs-var">cfPfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398837"><span class="hs-identifier hs-var">cfPfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -186,19 +186,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall (pgKind :: PostgresKind) v.
 AnnotatedAggregateOrderBy ('Postgres pgKind) v -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-var">mkAggregateOrderByAlias</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
-</span><a href="#local-6989586621687398800"><span class="hs-identifier hs-var">aggOrderBy</span></a></span><span>
+</span><a href="#local-6989586621687398836"><span class="hs-identifier hs-var">aggOrderBy</span></a></span><span>
 </span><span id="line-62"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
-</span><a href="#local-6989586621687398802"><span class="hs-identifier hs-var">obAls</span></a></span><span>
+</span><a href="#local-6989586621687398838"><span class="hs-identifier hs-var">obAls</span></a></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkObjectRelationTableAlias"><span class="hs-identifier hs-type">mkObjectRelationTableAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span>
 </span><span id="line-65"></span><span id="mkObjectRelationTableAlias"><span class="annot"><span class="annottext">mkObjectRelationTableAlias :: TableIdentifier -&gt; RelName -&gt; TableIdentifier
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkObjectRelationTableAlias"><span class="hs-identifier hs-var hs-var">mkObjectRelationTableAlias</span></a></span></span><span> </span><span id="local-6989586621687398803"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398803"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398804"><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621687398804"><span class="hs-identifier hs-var">relName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkObjectRelationTableAlias"><span class="hs-identifier hs-var hs-var">mkObjectRelationTableAlias</span></a></span></span><span> </span><span id="local-6989586621687398839"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398839"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398840"><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621687398840"><span class="hs-identifier hs-var">relName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398803"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
+</span><a href="#local-6989586621687398839"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -206,15 +206,15 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RelName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#relNameToTxt"><span class="hs-identifier hs-var">relNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621687398804"><span class="hs-identifier hs-var">relName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687398840"><span class="hs-identifier hs-var">relName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkComputedFieldTableIdentifier"><span class="hs-identifier hs-type">mkComputedFieldTableIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span>
 </span><span id="line-69"></span><span id="mkComputedFieldTableIdentifier"><span class="annot"><span class="annottext">mkComputedFieldTableIdentifier :: TableIdentifier -&gt; FieldName -&gt; TableIdentifier
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkComputedFieldTableIdentifier"><span class="hs-identifier hs-var hs-var">mkComputedFieldTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398807"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398807"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398808"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398808"><span class="hs-identifier hs-var">fldAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkComputedFieldTableIdentifier"><span class="hs-identifier hs-var hs-var">mkComputedFieldTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398843"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398843"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398844"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398844"><span class="hs-identifier hs-var">fldAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398807"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
+</span><a href="#local-6989586621687398843"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -223,13 +223,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398808"><span class="hs-identifier hs-var">fldAls</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687398844"><span class="hs-identifier hs-var">fldAls</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>
 </span><span id="line-72"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableIdentifier"><span class="hs-identifier hs-type">mkBaseTableIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span>
 </span><span id="line-73"></span><span id="mkBaseTableIdentifier"><span class="annot"><span class="annottext">mkBaseTableIdentifier :: TableIdentifier -&gt; TableIdentifier
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableIdentifier"><span class="hs-identifier hs-var hs-var">mkBaseTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398810"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398810"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398810"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableIdentifier"><span class="hs-identifier hs-var hs-var">mkBaseTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398846"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398846"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398846"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -237,21 +237,21 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableAlias"><span class="hs-identifier hs-type">mkBaseTableAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#TableAlias"><span class="hs-identifier hs-type">S.TableAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#TableAlias"><span class="hs-identifier hs-type">S.TableAlias</span></a></span><span>
 </span><span id="line-76"></span><span id="mkBaseTableAlias"><span class="annot"><span class="annottext">mkBaseTableAlias :: TableAlias -&gt; TableAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableAlias"><span class="hs-identifier hs-var hs-var">mkBaseTableAlias</span></a></span></span><span> </span><span id="local-6989586621687398811"><span class="annot"><span class="annottext">TableAlias
-</span><a href="#local-6989586621687398811"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableAlias
-</span><a href="#local-6989586621687398811"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableAlias -&gt; TableAlias -&gt; TableAlias
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableAlias"><span class="hs-identifier hs-var hs-var">mkBaseTableAlias</span></a></span></span><span> </span><span id="local-6989586621687398847"><span class="annot"><span class="annottext">TableAlias
+</span><a href="#local-6989586621687398847"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableAlias
+</span><a href="#local-6989586621687398847"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableAlias -&gt; TableAlias -&gt; TableAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableAlias
 </span><span class="hs-string">&quot;.base&quot;</span></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeBaseTableColumn"><span class="hs-identifier hs-type">contextualizeBaseTableColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span><span>
 </span><span id="line-79"></span><span id="contextualizeBaseTableColumn"><span class="annot"><span class="annottext">contextualizeBaseTableColumn :: TableIdentifier -&gt; PGCol -&gt; ColumnAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeBaseTableColumn"><span class="hs-identifier hs-var hs-var">contextualizeBaseTableColumn</span></a></span></span><span> </span><span id="local-6989586621687398812"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398812"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398813"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621687398813"><span class="hs-identifier hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeBaseTableColumn"><span class="hs-identifier hs-var hs-var">contextualizeBaseTableColumn</span></a></span></span><span> </span><span id="local-6989586621687398848"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398848"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398849"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621687398849"><span class="hs-identifier hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-80"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398812"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398848"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.pg.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -259,16 +259,16 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621687398813"><span class="hs-identifier hs-var">pgColumn</span></a></span><span>
+</span><a href="#local-6989586621687398849"><span class="hs-identifier hs-var">pgColumn</span></a></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeField"><span class="hs-identifier hs-type">contextualizeField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span><span>
 </span><span id="line-83"></span><span id="contextualizeField"><span class="annot"><span class="annottext">contextualizeField :: TableIdentifier -&gt; FieldName -&gt; ColumnAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeField"><span class="hs-identifier hs-var hs-var">contextualizeField</span></a></span></span><span> </span><span id="local-6989586621687398814"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398814"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398815"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398815"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeField"><span class="hs-identifier hs-var hs-var">contextualizeField</span></a></span></span><span> </span><span id="local-6989586621687398850"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398850"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398851"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398851"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398814"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398850"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.f.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -276,17 +276,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398815"><span class="hs-identifier hs-var">field</span></a></span><span>
+</span><a href="#local-6989586621687398851"><span class="hs-identifier hs-var">field</span></a></span><span>
 </span><span id="line-85"></span><span>
 </span><span id="line-86"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeAggregateInput"><span class="hs-identifier hs-type">contextualizeAggregateInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span><span>
 </span><span id="line-87"></span><span id="contextualizeAggregateInput"><span class="annot"><span class="annottext">contextualizeAggregateInput :: TableIdentifier -&gt; FieldName -&gt; FieldName -&gt; ColumnAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeAggregateInput"><span class="hs-identifier hs-var hs-var">contextualizeAggregateInput</span></a></span></span><span> </span><span id="local-6989586621687398816"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398816"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398817"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398817"><span class="hs-identifier hs-var">aggregateField</span></a></span></span><span> </span><span id="local-6989586621687398818"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398818"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#contextualizeAggregateInput"><span class="hs-identifier hs-var hs-var">contextualizeAggregateInput</span></a></span></span><span> </span><span id="local-6989586621687398852"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398852"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398853"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398853"><span class="hs-identifier hs-var">aggregateField</span></a></span></span><span> </span><span id="local-6989586621687398854"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398854"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-88"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#tableIdentifierToColumnAlias"><span class="hs-identifier hs-var">S.tableIdentifierToColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398816"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398852"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.ai.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -294,7 +294,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398817"><span class="hs-identifier hs-var">aggregateField</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
+</span><a href="#local-6989586621687398853"><span class="hs-identifier hs-var">aggregateField</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnAlias -&gt; ColumnAlias -&gt; ColumnAlias
@@ -302,9 +302,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; ColumnAlias
 forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398818"><span class="hs-identifier hs-var">field</span></a></span><span>
+</span><a href="#local-6989586621687398854"><span class="hs-identifier hs-var">field</span></a></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span id="local-6989586621687398655"><span id="local-6989586621687398656"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-type">mkAggregateOrderByAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398655"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687398656"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span></span></span><span>
+</span><span id="line-90"></span><span id="local-6989586621687398691"><span id="local-6989586621687398692"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-type">mkAggregateOrderByAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398691"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621687398692"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnAlias"><span class="hs-identifier hs-type">S.ColumnAlias</span></a></span></span></span><span>
 </span><span id="line-91"></span><span id="mkAggregateOrderByAlias"><span class="annot"><span class="annottext">mkAggregateOrderByAlias :: forall (pgKind :: PostgresKind) v.
 AnnotatedAggregateOrderBy ('Postgres pgKind) v -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-var hs-var">mkAggregateOrderByAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -323,7 +323,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind) v
 </span><a href="Hasura.RQL.IR.Select.OrderBy.html#AAOCount"><span class="hs-identifier hs-var">AAOCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;count&quot;</span></span><span>
-</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AAOOp"><span class="hs-identifier hs-type">AAOOp</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687398830"><span id="local-6989586621687398831"><span id="local-6989586621687398832"><span id="local-6989586621687398833"><span class="annot"><span class="annottext">Text
+</span><span id="line-94"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AAOOp"><span class="hs-identifier hs-type">AAOOp</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.OrderBy.html#AggregateOrderByColumn"><span class="hs-identifier hs-type">AggregateOrderByColumn</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687398866"><span id="local-6989586621687398867"><span id="local-6989586621687398868"><span id="local-6989586621687398869"><span class="annot"><span class="annottext">Text
 ColumnType ('Postgres pgKind)
 ColumnInfo ('Postgres pgKind)
 AnnRedactionExp ('Postgres pgKind) v
@@ -338,8 +338,8 @@ $sel:_aobcColumn:AggregateOrderByColumn :: forall (b :: BackendType) v.
 AggregateOrderByColumn b v -&gt; ColumnInfo b
 $sel:_aobcRedactionExpression:AggregateOrderByColumn :: forall (b :: BackendType) v.
 AggregateOrderByColumn b v -&gt; AnnRedactionExp b v
-</span><a href="#local-6989586621687398830"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687398830"><span class="hs-identifier hs-var">_aobcAggregateFunctionName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687398866"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687398866"><span class="hs-identifier hs-var">_aobcAggregateFunctionName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -348,19 +348,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#getPGColTxt"><span class="hs-identifier hs-var">getPGColTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621687398832"><span class="hs-identifier hs-var">_aobcColumn</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687398868"><span class="hs-identifier hs-var">_aobcColumn</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span id="local-6989586621687398648"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-type">mkOrderByFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398648"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687398648"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span></span><span>
+</span><span id="line-96"></span><span id="local-6989586621687398684"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-type">mkOrderByFieldName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687398684"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687398684"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span></span><span>
 </span><span id="line-97"></span><span id="mkOrderByFieldName"><span class="annot"><span class="annottext">mkOrderByFieldName :: forall a. ToTxt a =&gt; a -&gt; FieldName
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-var hs-var">mkOrderByFieldName</span></a></span></span><span> </span><span id="local-6989586621687398845"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687398845"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkOrderByFieldName"><span class="hs-identifier hs-var hs-var">mkOrderByFieldName</span></a></span></span><span> </span><span id="local-6989586621687398881"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687398881"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-98"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; FieldName) -&gt; Text -&gt; FieldName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687398845"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621687398881"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -376,32 +376,32 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span>
 </span><span id="line-106"></span><span id="mkArrayRelationSourcePrefix"><span class="annot"><span class="annottext">mkArrayRelationSourcePrefix :: TableIdentifier
 -&gt; FieldName -&gt; SimilarArrayFields -&gt; FieldName -&gt; TableIdentifier
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationSourcePrefix"><span class="hs-identifier hs-var hs-var">mkArrayRelationSourcePrefix</span></a></span></span><span> </span><span id="local-6989586621687398848"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398848"><span class="hs-identifier hs-var">parentSourcePrefix</span></a></span></span><span> </span><span id="local-6989586621687398849"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398849"><span class="hs-identifier hs-var">parentFieldName</span></a></span></span><span> </span><span id="local-6989586621687398850"><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398850"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span></span><span> </span><span id="local-6989586621687398851"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398851"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationSourcePrefix"><span class="hs-identifier hs-var hs-var">mkArrayRelationSourcePrefix</span></a></span></span><span> </span><span id="local-6989586621687398884"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398884"><span class="hs-identifier hs-var">parentSourcePrefix</span></a></span></span><span> </span><span id="local-6989586621687398885"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398885"><span class="hs-identifier hs-var">parentFieldName</span></a></span></span><span> </span><span id="local-6989586621687398886"><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398886"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span></span><span> </span><span id="local-6989586621687398887"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398887"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier -&gt; FieldName -&gt; [FieldName] -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationTableIdentifier"><span class="hs-identifier hs-var">mkArrayRelationTableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398848"><span class="hs-identifier hs-var">parentSourcePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398849"><span class="hs-identifier hs-var">parentFieldName</span></a></span><span>
+</span><a href="#local-6989586621687398884"><span class="hs-identifier hs-var">parentSourcePrefix</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398885"><span class="hs-identifier hs-var">parentFieldName</span></a></span><span>
 </span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">([FieldName] -&gt; TableIdentifier) -&gt; [FieldName] -&gt; TableIdentifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[FieldName] -&gt; FieldName -&gt; SimilarArrayFields -&gt; [FieldName]
 forall k v. (Eq k, Hashable k) =&gt; v -&gt; k -&gt; HashMap k v -&gt; v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookupDefault"><span class="hs-identifier hs-var">HashMap.lookupDefault</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398851"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398851"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398850"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span><span>
+</span><a href="#local-6989586621687398887"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398887"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398886"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span><span>
 </span><span id="line-109"></span><span>
 </span><span id="line-110"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationTableIdentifier"><span class="hs-identifier hs-type">mkArrayRelationTableIdentifier</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-type">TableIdentifier</span></a></span><span>
 </span><span id="line-111"></span><span id="mkArrayRelationTableIdentifier"><span class="annot"><span class="annottext">mkArrayRelationTableIdentifier :: TableIdentifier -&gt; FieldName -&gt; [FieldName] -&gt; TableIdentifier
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationTableIdentifier"><span class="hs-identifier hs-var hs-var">mkArrayRelationTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398854"><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398854"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398855"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398855"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398856"><span class="annot"><span class="annottext">[FieldName]
-</span><a href="#local-6989586621687398856"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationTableIdentifier"><span class="hs-identifier hs-var hs-var">mkArrayRelationTableIdentifier</span></a></span></span><span> </span><span id="local-6989586621687398890"><span class="annot"><span class="annottext">TableIdentifier
+</span><a href="#local-6989586621687398890"><span class="hs-identifier hs-var">pfx</span></a></span></span><span> </span><span id="local-6989586621687398891"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398891"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398892"><span class="annot"><span class="annottext">[FieldName]
+</span><a href="#local-6989586621687398892"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-112"></span><span>  </span><span class="annot"><span class="annottext">TableIdentifier
-</span><a href="#local-6989586621687398854"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
+</span><a href="#local-6989586621687398890"><span class="hs-identifier hs-var">pfx</span></a></span><span> </span><span class="annot"><span class="annottext">TableIdentifier -&gt; TableIdentifier -&gt; TableIdentifier
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -409,13 +409,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableIdentifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#TableIdentifier"><span class="hs-identifier hs-var">TableIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687398857"><span class="hs-identifier hs-var">uniqArrRelAls</span></a></span><span>
+</span><a href="#local-6989586621687398893"><span class="hs-identifier hs-var">uniqArrRelAls</span></a></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-114"></span><span>    </span><span id="local-6989586621687398857"><span class="annot"><span class="annottext">uniqArrRelAls :: Text
-</span><a href="#local-6989586621687398857"><span class="hs-identifier hs-var hs-var">uniqArrRelAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; [FieldName] -&gt; Text
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621687398893"><span class="annot"><span class="annottext">uniqArrRelAls :: Text
+</span><a href="#local-6989586621687398893"><span class="hs-identifier hs-var hs-var">uniqArrRelAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; [FieldName] -&gt; Text
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkUniqArrayRelationAlias"><span class="hs-identifier hs-var">mkUniqArrayRelationAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398855"><span class="hs-identifier hs-var">parAls</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldName]
-</span><a href="#local-6989586621687398856"><span class="hs-identifier hs-var">flds</span></a></span><span>
+</span><a href="#local-6989586621687398891"><span class="hs-identifier hs-var">parAls</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldName]
+</span><a href="#local-6989586621687398892"><span class="hs-identifier hs-var">flds</span></a></span><span>
 </span><span id="line-115"></span><span>
 </span><span id="line-116"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationAlias"><span class="hs-identifier hs-type">mkArrayRelationAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -423,41 +423,41 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-119"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-120"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#TableAlias"><span class="hs-identifier hs-type">S.TableAlias</span></a></span><span>
 </span><span id="line-121"></span><span id="mkArrayRelationAlias"><span class="annot"><span class="annottext">mkArrayRelationAlias :: FieldName -&gt; SimilarArrayFields -&gt; FieldName -&gt; TableAlias
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationAlias"><span class="hs-identifier hs-var hs-var">mkArrayRelationAlias</span></a></span></span><span> </span><span id="local-6989586621687398859"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398859"><span class="hs-identifier hs-var">parentFieldName</span></a></span></span><span> </span><span id="local-6989586621687398860"><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398860"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span></span><span> </span><span id="local-6989586621687398861"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398861"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkArrayRelationAlias"><span class="hs-identifier hs-var hs-var">mkArrayRelationAlias</span></a></span></span><span> </span><span id="local-6989586621687398895"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398895"><span class="hs-identifier hs-var">parentFieldName</span></a></span></span><span> </span><span id="local-6989586621687398896"><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398896"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span></span><span> </span><span id="local-6989586621687398897"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398897"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-122"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; TableAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkTableAlias"><span class="hs-identifier hs-var">S.mkTableAlias</span></a></span><span>
 </span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; TableAlias) -&gt; Text -&gt; TableAlias
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; [FieldName] -&gt; Text
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkUniqArrayRelationAlias"><span class="hs-identifier hs-var">mkUniqArrayRelationAlias</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398859"><span class="hs-identifier hs-var">parentFieldName</span></a></span><span>
+</span><a href="#local-6989586621687398895"><span class="hs-identifier hs-var">parentFieldName</span></a></span><span>
 </span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">([FieldName] -&gt; Text) -&gt; [FieldName] -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[FieldName] -&gt; FieldName -&gt; SimilarArrayFields -&gt; [FieldName]
 forall k v. (Eq k, Hashable k) =&gt; v -&gt; k -&gt; HashMap k v -&gt; v
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookupDefault"><span class="hs-identifier hs-var">HashMap.lookupDefault</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398861"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398861"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
-</span><a href="#local-6989586621687398860"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span><span>
+</span><a href="#local-6989586621687398897"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398897"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">SimilarArrayFields
+</span><a href="#local-6989586621687398896"><span class="hs-identifier hs-var">similarFieldsMap</span></a></span><span>
 </span><span id="line-125"></span><span>
 </span><span id="line-126"></span><span class="hs-comment">-- array relationships are not grouped, so have to be prefixed by</span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- parent's alias</span><span>
 </span><span id="line-128"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkUniqArrayRelationAlias"><span class="hs-identifier hs-type">mkUniqArrayRelationAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-129"></span><span id="mkUniqArrayRelationAlias"><span class="annot"><span class="annottext">mkUniqArrayRelationAlias :: FieldName -&gt; [FieldName] -&gt; Text
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkUniqArrayRelationAlias"><span class="hs-identifier hs-var hs-var">mkUniqArrayRelationAlias</span></a></span></span><span> </span><span id="local-6989586621687398863"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398863"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398864"><span class="annot"><span class="annottext">[FieldName]
-</span><a href="#local-6989586621687398864"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-130"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398865"><span class="annot"><span class="annottext">sortedFields :: [FieldName]
-</span><a href="#local-6989586621687398865"><span class="hs-identifier hs-var hs-var">sortedFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[FieldName] -&gt; [FieldName]
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkUniqArrayRelationAlias"><span class="hs-identifier hs-var hs-var">mkUniqArrayRelationAlias</span></a></span></span><span> </span><span id="local-6989586621687398899"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621687398899"><span class="hs-identifier hs-var">parAls</span></a></span></span><span> </span><span id="local-6989586621687398900"><span class="annot"><span class="annottext">[FieldName]
+</span><a href="#local-6989586621687398900"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687398901"><span class="annot"><span class="annottext">sortedFields :: [FieldName]
+</span><a href="#local-6989586621687398901"><span class="hs-identifier hs-var hs-var">sortedFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[FieldName] -&gt; [FieldName]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">sort</span></span><span> </span><span class="annot"><span class="annottext">[FieldName]
-</span><a href="#local-6989586621687398864"><span class="hs-identifier hs-var">flds</span></a></span><span>
+</span><a href="#local-6989586621687398900"><span class="hs-identifier hs-var">flds</span></a></span><span>
 </span><span id="line-131"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621687398863"><span class="hs-identifier hs-var">parAls</span></a></span><span>
+</span><a href="#local-6989586621687398899"><span class="hs-identifier hs-var">parAls</span></a></span><span>
 </span><span id="line-132"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -470,5 +470,5 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldName]
-</span><a href="#local-6989586621687398865"><span class="hs-identifier hs-var">sortedFields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687398901"><span class="hs-identifier hs-var">sortedFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span></pre></body></html>
