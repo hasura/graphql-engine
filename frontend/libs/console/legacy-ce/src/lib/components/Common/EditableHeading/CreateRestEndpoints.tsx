@@ -19,7 +19,10 @@ export const CreateRestEndpoint = (props: CreateRestEndpointProps) => {
 
   return (
     <>
-      <Analytics name="data-tab-btn-create-rest-endpoints">
+      <Analytics
+        name="data-tab-btn-create-rest-endpoints"
+        passHtmlAttributesToChildren
+      >
         <Button size="sm" onClick={toggleModal} icon={<FaLink />}>
           Create REST Endpoints{' '}
           <Badge className="pt-0 pb-0 pl-2 pr-2 ml-1" color="indigo">

@@ -70,7 +70,7 @@ const isTable = (table: NormalizedTable) => {
 };
 
 export const isColTypeString = (colType: string) =>
-  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType.toLowerCase());
 
 const columnDataTypes = {
   INTEGER: 'integer',
