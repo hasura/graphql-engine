@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Schema.Typename</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier">MkTypename</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#withTypenameCustomization"><span class="hs-identifier">withTypenameCustomization</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#set"><span class="hs-identifier">set</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#Has"><span class="hs-identifier">Has</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Endo</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier">Name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="annot"><span class="hs-comment">-- | Type name customization</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">newtype</span><span> </span><span id="MkTypename"><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-var">MkTypename</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MkTypename"><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-var">MkTypename</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runMkTypename"><span class="annot"><span class="annottext">MkTypename -&gt; Name -&gt; Name
+</span><a href="Hasura.GraphQL.Schema.Typename.html#runMkTypename"><span class="hs-identifier hs-var hs-var">runMkTypename</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687090463"><span id="local-6989586621687090468"><span id="local-6989586621687090474"><span class="annot"><span class="annottext">NonEmpty MkTypename -&gt; MkTypename
+MkTypename -&gt; MkTypename -&gt; MkTypename
+(MkTypename -&gt; MkTypename -&gt; MkTypename)
+-&gt; (NonEmpty MkTypename -&gt; MkTypename)
+-&gt; (forall b. Integral b =&gt; b -&gt; MkTypename -&gt; MkTypename)
+-&gt; Semigroup MkTypename
+forall b. Integral b =&gt; b -&gt; MkTypename -&gt; MkTypename
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+$c&lt;&gt; :: MkTypename -&gt; MkTypename -&gt; MkTypename
+&lt;&gt; :: MkTypename -&gt; MkTypename -&gt; MkTypename
+$csconcat :: NonEmpty MkTypename -&gt; MkTypename
+sconcat :: NonEmpty MkTypename -&gt; MkTypename
+$cstimes :: forall b. Integral b =&gt; b -&gt; MkTypename -&gt; MkTypename
+stimes :: forall b. Integral b =&gt; b -&gt; MkTypename -&gt; MkTypename
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687090484"><span id="local-6989586621687090489"><span id="local-6989586621687090493"><span class="annot"><span class="annottext">Semigroup MkTypename
+MkTypename
+Semigroup MkTypename
+-&gt; MkTypename
+-&gt; (MkTypename -&gt; MkTypename -&gt; MkTypename)
+-&gt; ([MkTypename] -&gt; MkTypename)
+-&gt; Monoid MkTypename
+[MkTypename] -&gt; MkTypename
+MkTypename -&gt; MkTypename -&gt; MkTypename
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+$cmempty :: MkTypename
+mempty :: MkTypename
+$cmappend :: MkTypename -&gt; MkTypename -&gt; MkTypename
+mappend :: MkTypename -&gt; MkTypename -&gt; MkTypename
+$cmconcat :: [MkTypename] -&gt; MkTypename
+mconcat :: [MkTypename] -&gt; MkTypename
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Endo</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | Inject a new @MkTypename@ customization function into the environment.</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- the correct type name customizations are applied.</span><span>
+</span><span id="line-20"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#withTypenameCustomization"><span class="hs-identifier hs-type">withTypenameCustomization</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687090436"><span class="annot"><a href="#local-6989586621687090436"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687090435"><span class="annot"><a href="#local-6989586621687090435"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621687090439"><span class="annot"><a href="#local-6989586621687090439"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621687090435"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687090436"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#Has"><span class="hs-identifier hs-type">Has</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687090435"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687090436"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687090439"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687090436"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687090439"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-21"></span><span id="withTypenameCustomization"><span class="annot"><span class="annottext">withTypenameCustomization :: forall (m :: * -&gt; *) r a.
+(MonadReader r m, Has MkTypename r) =&gt;
+MkTypename -&gt; m a -&gt; m a
+</span><a href="Hasura.GraphQL.Schema.Typename.html#withTypenameCustomization"><span class="hs-identifier hs-var hs-var">withTypenameCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(r -&gt; r) -&gt; m a -&gt; m a
+forall a. (r -&gt; r) -&gt; m a -&gt; m a
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; r) -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">local</span></span><span> </span><span class="annot"><span class="annottext">((r -&gt; r) -&gt; m a -&gt; m a)
+-&gt; (MkTypename -&gt; r -&gt; r) -&gt; MkTypename -&gt; m a -&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ASetter r r MkTypename MkTypename -&gt; MkTypename -&gt; r -&gt; r
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#set"><span class="hs-identifier hs-var">set</span></a></span><span> </span><span class="annot"><span class="annottext">ASetter r r MkTypename MkTypename
+forall a t. Has a t =&gt; Lens t a
+Lens r MkTypename
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#hasLens"><span class="hs-identifier hs-var">hasLens</span></a></span><span>
+</span><span id="line-22"></span></pre></body></html>
