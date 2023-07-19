@@ -334,3 +334,13 @@ Once deployed, you can use any of the following endpoints as your auth webhook i
 If you are using `Firebase`, you will need to set the associated environment variables.
 
 :::
+
+## Building Webhook Handlers
+
+To begin utilizing webhooks, it is essential to have your service deployed on a server endpoint. However, setting up a server endpoint might not always be a swift option. If you wish to continue refining and testing your implementation before writing the actual service code, an alternative approach is to employ no-code tools like [Beeceptor](https://beeceptor.com/). [Beeceptor](https://beeceptor.com/) acts as an HTTP catch-alls, enabling you to examine the incoming payloads from Hasura. Moreover, it allows you to respond with a `200` status or a custom response that aligns with Hasura's webhook response specifications. This empowers you to comprehensively design your webhook implementation from start to finish, and subsequently, you can proceed to code the actual service once you're ready.
+
+:::caution Ensure security with webhooks inspection tools
+
+You should exercise caution when using public webhooks inspection tools as you might be sending sensitive data to an external service. Use these tools only with the development environments or tokens and ensure data security.
+
+:::
