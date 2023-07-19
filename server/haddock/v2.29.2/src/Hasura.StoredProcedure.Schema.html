@@ -1,0 +1,571 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Schema parsers for stored procedures.</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.StoredProcedure.Schema</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Schema.html#defaultBuildStoredProcedureRootFields"><span class="hs-identifier">defaultBuildStoredProcedureRootFields</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#Has"><span class="hs-identifier">Has</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier">getter</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendLogicalModelSelectSchema"><span class="hs-identifier">BackendLogicalModelSelectSchema</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier">MonadBuildSchema</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Common</span></a></span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier">SchemaT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier">retrieve</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Schema.html"><span class="hs-identifier">Hasura.LogicalModel.Schema</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Schema.html"><span class="hs-identifier">Hasura.LogicalModelResolver.Schema</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Schema.html#argumentsSchema"><span class="hs-identifier">argumentsSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html"><span class="hs-identifier">Hasura.RQL.IR.Root</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier">RemoteRelationshipField</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier">QueryDB</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QDBMultipleRows"><span class="hs-identifier">QDBMultipleRows</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html"><span class="hs-identifier">Hasura.RQL.IR.Value</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#Provenance"><span class="hs-identifier">Provenance</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#FromInternal"><span class="hs-identifier">FromInternal</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier">UVParameter</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Column</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Object</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MO</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html"><span class="hs-identifier">Hasura.RQL.Types.Relationships.Local</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#Nullable"><span class="hs-identifier">Nullable</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Schema.Options.html"><span class="hs-identifier">Hasura.RQL.Types.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html"><span class="hs-identifier">Hasura.RQL.Types.Source</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier">SourceInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_siCustomization"><span class="hs-identifier">_siCustomization</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier">_siName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#ResolvedSourceCustomization"><span class="hs-identifier">ResolvedSourceCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#_rscNamingConvention"><span class="hs-identifier">_rscNamingConvention</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier">mkAnyBackend</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Cache.html"><span class="hs-identifier">Hasura.StoredProcedure.Cache</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Cache.html#StoredProcedureInfo"><span class="hs-identifier">StoredProcedureInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.IR.html"><span class="hs-identifier">Hasura.StoredProcedure.IR</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier">StoredProcedure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html"><span class="hs-identifier">Hasura.StoredProcedure.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html"><span class="hs-identifier">Hasura.StoredProcedure.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Hasura.StoredProcedure.Schema.html#defaultBuildStoredProcedureRootFields"><span class="hs-identifier hs-type">defaultBuildStoredProcedureRootFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687378609"><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687378610"><span class="annot"><a href="#local-6989586621687378610"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621687378611"><span class="annot"><a href="#local-6989586621687378611"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687378612"><span class="annot"><a href="#local-6989586621687378612"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378610"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378611"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378612"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendLogicalModelSelectSchema"><span class="hs-identifier hs-type">BackendLogicalModelSelectSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><a href="Hasura.StoredProcedure.Cache.html#StoredProcedureInfo"><span class="hs-identifier hs-type">StoredProcedureInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="#local-6989586621687378610"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="#local-6989586621687378611"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">P.FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378612"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span id="defaultBuildStoredProcedureRootFields"><span class="annot"><span class="annottext">defaultBuildStoredProcedureRootFields :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+(MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =&gt;
+StoredProcedureInfo b
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (FieldParser
+           n
+           (QueryDB
+              b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+</span><a href="Hasura.StoredProcedure.Schema.html#defaultBuildStoredProcedureRootFields"><span class="hs-identifier hs-var hs-var">defaultBuildStoredProcedureRootFields</span></a></span></span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Cache.html#StoredProcedureInfo"><span class="hs-identifier hs-type">StoredProcedureInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687378865"><span id="local-6989586621687378866"><span id="local-6989586621687378867"><span id="local-6989586621687378868"><span id="local-6989586621687378869"><span id="local-6989586621687378870"><span class="annot"><span class="annottext">Maybe Text
+HashMap ArgumentName (NullableScalarType b)
+Name
+FunctionName b
+StoredProcedureConfig
+LogicalModelInfo b
+_spiStoredProcedure :: FunctionName b
+_spiGraphqlName :: Name
+_spiConfig :: StoredProcedureConfig
+_spiReturns :: LogicalModelInfo b
+_spiArguments :: HashMap ArgumentName (NullableScalarType b)
+_spiDescription :: Maybe Text
+_spiStoredProcedure :: forall (b :: BackendType). StoredProcedureInfo b -&gt; FunctionName b
+_spiGraphqlName :: forall (b :: BackendType). StoredProcedureInfo b -&gt; Name
+_spiConfig :: forall (b :: BackendType).
+StoredProcedureInfo b -&gt; StoredProcedureConfig
+_spiReturns :: forall (b :: BackendType).
+StoredProcedureInfo b -&gt; LogicalModelInfo b
+_spiArguments :: forall (b :: BackendType).
+StoredProcedureInfo b
+-&gt; HashMap ArgumentName (NullableScalarType b)
+_spiDescription :: forall (b :: BackendType). StoredProcedureInfo b -&gt; Maybe Text
+</span><a href="#local-6989586621687378865"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT
+  (SchemaT r m)
+  (FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (FieldParser
+           n
+           (QueryDB
+              b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
+</span><span class="hs-identifier hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT
+   (SchemaT r m)
+   (FieldParser
+      n
+      (QueryDB
+         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+ -&gt; SchemaT
+      r
+      m
+      (Maybe
+         (FieldParser
+            n
+            (QueryDB
+               b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))))
+-&gt; MaybeT
+     (SchemaT r m)
+     (FieldParser
+        n
+        (QueryDB
+           b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (FieldParser
+           n
+           (QueryDB
+              b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687378878"><span class="annot"><span class="annottext">fieldName :: Name
+</span><a href="#local-6989586621687378878"><span class="hs-identifier hs-var hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687378866"><span class="hs-identifier hs-var">_spiGraphqlName</span></a></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621687378879"><span class="annot"><span class="annottext">InputFieldsParser n (HashMap ArgumentName (ColumnValue b))
+</span><a href="#local-6989586621687378879"><span class="hs-identifier hs-var">storedProcedureArgsParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+Name
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; MaybeT
+     (SchemaT r m)
+     (InputFieldsParser n (HashMap ArgumentName (ColumnValue b)))
+</span><a href="Hasura.StoredProcedure.Schema.html#storedProcedureArgumentsSchema"><span class="hs-identifier hs-var">storedProcedureArgumentsSchema</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378610"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378611"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378612"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687378878"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
+</span><a href="#local-6989586621687378869"><span class="hs-identifier hs-var">_spiArguments</span></a></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621687378881"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621687378881"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; SourceInfo b) -&gt; MaybeT (SchemaT r m) (SourceInfo b)
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
+forall a t. Has a t =&gt; t -&gt; a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687378883"><span class="annot"><span class="annottext">sourceName :: SourceName
+</span><a href="#local-6989586621687378883"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
+forall (b :: BackendType). SourceInfo b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621687378881"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621687378884"><span class="annot"><span class="annottext">tCase :: NamingCase
+</span><a href="#local-6989586621687378884"><span class="hs-identifier hs-var hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResolvedSourceCustomization -&gt; NamingCase
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_rscNamingConvention"><span class="hs-identifier hs-var">_rscNamingConvention</span></a></span><span> </span><span class="annot"><span class="annottext">(ResolvedSourceCustomization -&gt; NamingCase)
+-&gt; ResolvedSourceCustomization -&gt; NamingCase
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; ResolvedSourceCustomization
+forall (b :: BackendType).
+SourceInfo b -&gt; ResolvedSourceCustomization
+</span><a href="Hasura.RQL.Types.Source.html#_siCustomization"><span class="hs-identifier hs-var">_siCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621687378881"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621687378885"><span class="annot"><span class="annottext">description :: Maybe Description
+</span><a href="#local-6989586621687378885"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html#Description"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Maybe Text -&gt; Maybe Description
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687378870"><span class="hs-identifier hs-var">_spiDescription</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621687378888"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687378888"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaOptions -&gt; StringifyNumbers)
+-&gt; MaybeT (SchemaT r m) StringifyNumbers
+forall r (m :: * -&gt; *) a b.
+(MonadReader r m, Has a r) =&gt;
+(a -&gt; b) -&gt; m b
+</span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaOptions -&gt; StringifyNumbers
+</span><a href="Hasura.RQL.Types.Schema.Options.html#soStringifyNumbers"><span class="hs-identifier hs-var">Options.soStringifyNumbers</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621687378890"><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621687378890"><span class="hs-identifier hs-var">logicalModelPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">SchemaT r m (Maybe (TablePermG b (UnpreparedValue b)))
+-&gt; MaybeT (SchemaT r m) (TablePermG b (UnpreparedValue b))
+forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
+</span><span class="hs-identifier hs-var">MaybeT</span></span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">(SchemaT r m (Maybe (TablePermG b (UnpreparedValue b)))
+ -&gt; MaybeT (SchemaT r m) (TablePermG b (UnpreparedValue b)))
+-&gt; (SchemaT r m (TablePermG b (UnpreparedValue b))
+    -&gt; SchemaT r m (Maybe (TablePermG b (UnpreparedValue b))))
+-&gt; SchemaT r m (TablePermG b (UnpreparedValue b))
+-&gt; MaybeT (SchemaT r m) (TablePermG b (UnpreparedValue b))
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(TablePermG b (UnpreparedValue b)
+ -&gt; Maybe (TablePermG b (UnpreparedValue b)))
+-&gt; SchemaT r m (TablePermG b (UnpreparedValue b))
+-&gt; SchemaT r m (Maybe (TablePermG b (UnpreparedValue b)))
+forall a b. (a -&gt; b) -&gt; SchemaT r m a -&gt; SchemaT r m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+-&gt; Maybe (TablePermG b (UnpreparedValue b))
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">(SchemaT r m (TablePermG b (UnpreparedValue b))
+ -&gt; MaybeT (SchemaT r m) (TablePermG b (UnpreparedValue b)))
+-&gt; SchemaT r m (TablePermG b (UnpreparedValue b))
+-&gt; MaybeT (SchemaT r m) (TablePermG b (UnpreparedValue b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+LogicalModelInfo b
+-&gt; SchemaT r m (TablePermG b (UnpreparedValue b))
+</span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelPermissions"><span class="hs-identifier hs-var">buildLogicalModelPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378610"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378611"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378612"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
+</span><a href="#local-6989586621687378868"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621687378894"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><a href="#local-6989586621687378894"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687378895"><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
+</span><a href="#local-6989586621687378895"><span class="hs-identifier hs-var">logicalModelsArgsParser</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">SchemaT
+  r
+  m
+  (Maybe
+     (Parser 'Output n (AnnotatedFields b),
+      InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+-&gt; MaybeT
+     (SchemaT r m)
+     (Parser 'Output n (AnnotatedFields b),
+      InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
+</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(SchemaT
+   r
+   m
+   (Maybe
+      (Parser 'Output n (AnnotatedFields b),
+       InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+ -&gt; MaybeT
+      (SchemaT r m)
+      (Parser 'Output n (AnnotatedFields b),
+       InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (Parser 'Output n (AnnotatedFields b),
+         InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+-&gt; MaybeT
+     (SchemaT r m)
+     (Parser 'Output n (AnnotatedFields b),
+      InputFieldsParser n (SelectArgsG b (UnpreparedValue b)))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap RelName (RelInfo b)
+-&gt; Nullable
+-&gt; LogicalModelInfo b
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (Parser 'Output n (AnnotatedFields b),
+         InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+(MonadBuildSchema b r m n, BackendLogicalModelSelectSchema b) =&gt;
+InsOrdHashMap RelName (RelInfo b)
+-&gt; Nullable
+-&gt; LogicalModelInfo b
+-&gt; SchemaT
+     r
+     m
+     (Maybe
+        (Parser 'Output n (AnnotatedFields b),
+         InputFieldsParser n (SelectArgsG b (UnpreparedValue b))))
+</span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelFields"><span class="hs-identifier hs-var">buildLogicalModelFields</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap RelName (RelInfo b)
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">Nullable
+</span><a href="Hasura.RQL.Types.Relationships.Local.html#NotNullable"><span class="hs-identifier hs-var">NotNullable</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
+</span><a href="#local-6989586621687378868"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687378900"><span class="annot"><span class="annottext">arguments :: HashMap ArgumentName (ColumnValue b)
+-&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+</span><a href="#local-6989586621687378900"><span class="hs-identifier hs-var hs-var">arguments</span></a></span></span><span> </span><span id="local-6989586621687378901"><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+</span><a href="#local-6989586621687378901"><span class="hs-identifier hs-var">spArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">(ArgumentName
+ -&gt; ColumnValue b -&gt; (ScalarType b, UnpreparedValue b))
+-&gt; HashMap ArgumentName (ColumnValue b)
+-&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#mapWithKey"><span class="hs-identifier hs-var">HashMap.mapWithKey</span></a></span><span>
+</span><span id="line-73"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span id="local-6989586621687378904"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687378904"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621687378905"><span class="annot"><span class="annottext">ColumnValue b
+</span><a href="#local-6989586621687378905"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-74"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnValue b -&gt; ColumnType b
+forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#cvType"><span class="hs-identifier hs-var">Column.cvType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue b
+</span><a href="#local-6989586621687378905"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-75"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">Column.ColumnScalar</span></a></span><span> </span><span id="local-6989586621687378908"><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621687378908"><span class="hs-identifier hs-var">st</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType b
+</span><a href="#local-6989586621687378908"><span class="hs-identifier hs-var">st</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Provenance -&gt; ColumnValue b -&gt; UnpreparedValue b
+forall (b :: BackendType).
+Provenance -&gt; ColumnValue b -&gt; UnpreparedValue b
+</span><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier hs-var">UVParameter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Provenance
+</span><a href="Hasura.RQL.IR.Value.html#FromInternal"><span class="hs-identifier hs-var">FromInternal</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687378904"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ColumnValue b
+</span><a href="#local-6989586621687378905"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">Column.ColumnEnumReference</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-78"></span><span>                  </span><span class="hs-comment">-- should not happen</span><span>
+</span><span id="line-79"></span><span>                  </span><span class="annot"><span class="annottext">[Char] -&gt; (ScalarType b, UnpreparedValue b)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;Enums are unsupported in stored procedures.&quot;</span></span><span>
+</span><span id="line-80"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+</span><a href="#local-6989586621687378901"><span class="hs-identifier hs-var">spArgs</span></a></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687378911"><span class="annot"><span class="annottext">sourceObj :: MetadataObjId
+</span><a href="#local-6989586621687378911"><span class="hs-identifier hs-var hs-var">sourceObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceMetadataObjId -&gt; MetadataObjId
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSourceObjId"><span class="hs-identifier hs-var">MO.MOSourceObjId</span></a></span><span>
+</span><span id="line-85"></span><span>          </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621687378883"><span class="hs-identifier hs-var">sourceName</span></a></span><span>
+</span><span id="line-86"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceMetadataObjId b -&gt; AnyBackend SourceMetadataObjId
+forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+i b -&gt; AnyBackend i
+</span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">(SourceMetadataObjId b -&gt; AnyBackend SourceMetadataObjId)
+-&gt; SourceMetadataObjId b -&gt; AnyBackend SourceMetadataObjId
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). FunctionName b -&gt; SourceMetadataObjId b
+</span><a href="Hasura.RQL.Types.Metadata.Object.html#SMOStoredProcedure"><span class="hs-identifier hs-var">MO.SMOStoredProcedure</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687378609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName b
+</span><a href="#local-6989586621687378865"><span class="hs-identifier hs-var">_spiStoredProcedure</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><span class="annottext">FieldParser
+  n
+  (QueryDB
+     b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; MaybeT
+     (SchemaT r m)
+     (FieldParser
+        n
+        (QueryDB
+           b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+forall a. a -&gt; MaybeT (SchemaT r m) a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">(FieldParser
+   n
+   (QueryDB
+      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+ -&gt; MaybeT
+      (SchemaT r m)
+      (FieldParser
+         n
+         (QueryDB
+            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; MaybeT
+     (SchemaT r m)
+     (FieldParser
+        n
+        (QueryDB
+           b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+forall (m :: * -&gt; *) origin a.
+origin -&gt; FieldParser origin m a -&gt; FieldParser origin m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Internal.Parser.html#setFieldParserOrigin"><span class="hs-identifier hs-var">P.setFieldParserOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObjId
+</span><a href="#local-6989586621687378911"><span class="hs-identifier hs-var">sourceObj</span></a></span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">(FieldParser
+   n
+   (QueryDB
+      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+ -&gt; FieldParser
+      n
+      (QueryDB
+         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser
+     MetadataObjId
+     n
+     (SelectArgsG b (UnpreparedValue b),
+      HashMap ArgumentName (ColumnValue b))
+-&gt; Parser 'Output n (AnnotatedFields b)
+-&gt; FieldParser
+     MetadataObjId
+     n
+     ((SelectArgsG b (UnpreparedValue b),
+       HashMap ArgumentName (ColumnValue b)),
+      AnnotatedFields b)
+forall (m :: * -&gt; *) origin a b.
+MonadParse m =&gt;
+Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser origin m a
+-&gt; Parser origin 'Output m b
+-&gt; FieldParser origin m (a, b)
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Internal.Parser.html#subselection"><span class="hs-identifier hs-var">P.subselection</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687378878"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621687378885"><span class="hs-identifier hs-var">description</span></a></span><span>
+</span><span id="line-93"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>          </span><span class="annot"><span class="annottext">(SelectArgsG b (UnpreparedValue b)
+ -&gt; HashMap ArgumentName (ColumnValue b)
+ -&gt; (SelectArgsG b (UnpreparedValue b),
+     HashMap ArgumentName (ColumnValue b)))
+-&gt; InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
+-&gt; InputFieldsParser
+     MetadataObjId
+     n
+     (HashMap ArgumentName (ColumnValue b)
+      -&gt; (SelectArgsG b (UnpreparedValue b),
+          HashMap ArgumentName (ColumnValue b)))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SelectArgsG b (UnpreparedValue b))
+</span><a href="#local-6989586621687378895"><span class="hs-identifier hs-var">logicalModelsArgsParser</span></a></span><span>
+</span><span id="line-95"></span><span>          </span><span class="annot"><span class="annottext">InputFieldsParser
+  MetadataObjId
+  n
+  (HashMap ArgumentName (ColumnValue b)
+   -&gt; (SelectArgsG b (UnpreparedValue b),
+       HashMap ArgumentName (ColumnValue b)))
+-&gt; InputFieldsParser n (HashMap ArgumentName (ColumnValue b))
+-&gt; InputFieldsParser
+     MetadataObjId
+     n
+     (SelectArgsG b (UnpreparedValue b),
+      HashMap ArgumentName (ColumnValue b))
+forall a b.
+InputFieldsParser MetadataObjId n (a -&gt; b)
+-&gt; InputFieldsParser MetadataObjId n a
+-&gt; InputFieldsParser MetadataObjId n b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (HashMap ArgumentName (ColumnValue b))
+</span><a href="#local-6989586621687378879"><span class="hs-identifier hs-var">storedProcedureArgsParser</span></a></span><span>
+</span><span id="line-96"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><a href="#local-6989586621687378894"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">FieldParser
+  MetadataObjId
+  n
+  ((SelectArgsG b (UnpreparedValue b),
+    HashMap ArgumentName (ColumnValue b)),
+   AnnotatedFields b)
+-&gt; (((SelectArgsG b (UnpreparedValue b),
+      HashMap ArgumentName (ColumnValue b)),
+     AnnotatedFields b)
+    -&gt; QueryDB
+         b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; FieldParser
+     n
+     (QueryDB
+        b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621687378917"><span class="annot"><span class="annottext">SelectArgsG b (UnpreparedValue b)
+</span><a href="#local-6989586621687378917"><span class="hs-identifier hs-var">lmArgs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687378918"><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+</span><a href="#local-6989586621687378918"><span class="hs-identifier hs-var">spArgs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621687378919"><span class="annot"><span class="annottext">AnnotatedFields b
+</span><a href="#local-6989586621687378919"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">AnnSimpleSelectG
+  b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+-&gt; QueryDB
+     b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+forall (b :: BackendType) r v.
+AnnSimpleSelectG b r v -&gt; QueryDB b r v
+</span><a href="Hasura.RQL.IR.Select.html#QDBMultipleRows"><span class="hs-identifier hs-var">QDBMultipleRows</span></a></span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">(AnnSimpleSelectG
+   b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+ -&gt; QueryDB
+      b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))
+-&gt; AnnSimpleSelectG
+     b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+-&gt; QueryDB
+     b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.AnnSelectG.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
+</span><span id="line-101"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields b
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields b
+</span><a href="#local-6989586621687378919"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-103"></span><span>              </span><span class="annot"><span class="annottext">StoredProcedure b (UnpreparedValue b)
+-&gt; SelectFromG b (UnpreparedValue b)
+forall (b :: BackendType) v. StoredProcedure b v -&gt; SelectFromG b v
+</span><a href="Hasura.RQL.IR.Select.From.html#FromStoredProcedure"><span class="hs-identifier hs-var">IR.FromStoredProcedure</span></a></span><span>
+</span><span id="line-104"></span><span>                </span><span class="annot"><a href="Hasura.StoredProcedure.IR.html#StoredProcedure"><span class="hs-identifier hs-type">StoredProcedure</span></a></span><span>
+</span><span id="line-105"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">spStoredProcedure :: FunctionName b
+</span><a href="Hasura.StoredProcedure.IR.html#spStoredProcedure"><span class="hs-identifier hs-var">spStoredProcedure</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionName b
+</span><a href="#local-6989586621687378865"><span class="hs-identifier hs-var">_spiStoredProcedure</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>                    </span><span class="annot"><span class="annottext">spGraphqlName :: Name
+</span><a href="Hasura.StoredProcedure.IR.html#spGraphqlName"><span class="hs-identifier hs-var">spGraphqlName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687378866"><span class="hs-identifier hs-var">_spiGraphqlName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-107"></span><span>                    </span><span class="annot"><span class="annottext">spArgs :: HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+</span><a href="Hasura.StoredProcedure.IR.html#spArgs"><span class="hs-identifier hs-var">spArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+-&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+forall {b :: BackendType}.
+HashMap ArgumentName (ColumnValue b)
+-&gt; HashMap ArgumentName (ScalarType b, UnpreparedValue b)
+</span><a href="#local-6989586621687378900"><span class="hs-identifier hs-var">arguments</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (ColumnValue b)
+</span><a href="#local-6989586621687378918"><span class="hs-identifier hs-var">spArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-108"></span><span>                    </span><span class="annot"><span class="annottext">spLogicalModel :: LogicalModel b
+</span><a href="Hasura.StoredProcedure.IR.html#spLogicalModel"><span class="hs-identifier hs-var">spLogicalModel</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b -&gt; LogicalModel b
+forall (b :: BackendType). LogicalModelInfo b -&gt; LogicalModel b
+</span><a href="Hasura.LogicalModel.Schema.html#buildLogicalModelIR"><span class="hs-identifier hs-var">buildLogicalModelIR</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelInfo b
+</span><a href="#local-6989586621687378868"><span class="hs-identifier hs-var">_spiReturns</span></a></span><span>
+</span><span id="line-109"></span><span>                  </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621687378890"><span class="hs-identifier hs-var">logicalModelPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectArgsG b (UnpreparedValue b)
+</span><a href="#local-6989586621687378917"><span class="hs-identifier hs-var">lmArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621687378888"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-113"></span><span>            </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
+</span><a href="Hasura.RQL.IR.Select.AnnSelectG.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Maybe NamingCase
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687378884"><span class="hs-identifier hs-var">tCase</span></a></span><span>
+</span><span id="line-114"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="annot"><a href="Hasura.StoredProcedure.Schema.html#storedProcedureArgumentsSchema"><span class="hs-identifier hs-type">storedProcedureArgumentsSchema</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-117"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687378695"><span class="annot"><a href="#local-6989586621687378695"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621687378696"><span class="annot"><a href="#local-6989586621687378696"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621687378697"><span class="annot"><a href="#local-6989586621687378697"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621687378698"><span class="annot"><a href="#local-6989586621687378698"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-118"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378695"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378696"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378697"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378698"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-120"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378695"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-121"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MaybeT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378696"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378697"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">P.InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378698"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">Column.ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687378695"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span id="storedProcedureArgumentsSchema"><span class="annot"><span class="annottext">storedProcedureArgumentsSchema :: forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+Name
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; MaybeT
+     (SchemaT r m)
+     (InputFieldsParser n (HashMap ArgumentName (ColumnValue b)))
+</span><a href="Hasura.StoredProcedure.Schema.html#storedProcedureArgumentsSchema"><span class="hs-identifier hs-var hs-var">storedProcedureArgumentsSchema</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Name
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; MaybeT
+     (SchemaT r m)
+     (InputFieldsParser n (HashMap ArgumentName (ColumnValue b)))
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+Text
+-&gt; Name
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; MaybeT
+     (SchemaT r m)
+     (InputFieldsParser n (HashMap ArgumentName (ColumnValue b)))
+</span><a href="Hasura.LogicalModelResolver.Schema.html#argumentsSchema"><span class="hs-identifier hs-var">argumentsSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Stored Procedure&quot;</span></span><span>
+</span><span id="line-123"></span></pre></body></html>

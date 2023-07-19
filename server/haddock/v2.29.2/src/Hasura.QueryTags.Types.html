@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.QueryTags.Types</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier">QueryTagsConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier">QueryTagsFormat</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier">defaultQueryTagsConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier">named</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault%27"><span class="hs-identifier">optionalFieldWithDefault'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#stringConstCodec"><span class="hs-identifier">stringConstCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-d8dd4a6703f20a95a31e04d174050d4288c8d4f1103ada02dfd9b355eebb59af/share/doc/html/src/Data.Aeson.Casing.html"><span class="hs-identifier">Data.Aeson.Casing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hspec-core-2.10.10-fe5856b737dafedbd573370698f3897b668fdf4c5cde0b3546e09136b68887ec/share/doc/html/src/NonEmpty.html"><span class="hs-identifier">NonEmpty</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsFormat"><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-var">QueryTagsFormat</span></a></span></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Standard"><span class="annot"><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SQLCommenter"><span class="annot"><a href="Hasura.QueryTags.Types.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073786"><span id="local-6989586621687073788"><span id="local-6989586621687073792"><span class="annot"><span class="annottext">Int -&gt; QueryTagsFormat -&gt; ShowS
+[QueryTagsFormat] -&gt; ShowS
+QueryTagsFormat -&gt; String
+(Int -&gt; QueryTagsFormat -&gt; ShowS)
+-&gt; (QueryTagsFormat -&gt; String)
+-&gt; ([QueryTagsFormat] -&gt; ShowS)
+-&gt; Show QueryTagsFormat
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; QueryTagsFormat -&gt; ShowS
+showsPrec :: Int -&gt; QueryTagsFormat -&gt; ShowS
+$cshow :: QueryTagsFormat -&gt; String
+show :: QueryTagsFormat -&gt; String
+$cshowList :: [QueryTagsFormat] -&gt; ShowS
+showList :: [QueryTagsFormat] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073796"><span id="local-6989586621687073798"><span class="annot"><span class="annottext">QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+(QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool)
+-&gt; (QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool)
+-&gt; Eq QueryTagsFormat
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+== :: QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+$c/= :: QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+/= :: QueryTagsFormat -&gt; QueryTagsFormat -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073803"><span id="local-6989586621687073805"><span class="annot"><span class="annottext">(forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x)
+-&gt; (forall x. Rep QueryTagsFormat x -&gt; QueryTagsFormat)
+-&gt; Generic QueryTagsFormat
+forall x. Rep QueryTagsFormat x -&gt; QueryTagsFormat
+forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
+from :: forall x. QueryTagsFormat -&gt; Rep QueryTagsFormat x
+$cto :: forall x. Rep QueryTagsFormat x -&gt; QueryTagsFormat
+to :: forall x. Rep QueryTagsFormat x -&gt; QueryTagsFormat
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073811"><span id="local-6989586621687073818"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073830"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073846"><span id="local-6989586621687073850"><span id="local-6989586621687073853"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621687073859"><span class="annot"><span class="annottext">toJSON :: QueryTagsFormat -&gt; Value
+</span><a href="#local-6989586621687073859"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;standard&quot;</span></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-string">&quot;sqlcommenter&quot;</span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073863"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621687073878"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsFormat
+</span><a href="#local-6989586621687073878"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Text -&gt; Parser QueryTagsFormat)
+-&gt; Value
+-&gt; Parser QueryTagsFormat
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withText"><span class="hs-identifier hs-var">withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">((Text -&gt; Parser QueryTagsFormat)
+ -&gt; Value -&gt; Parser QueryTagsFormat)
+-&gt; (Text -&gt; Parser QueryTagsFormat)
+-&gt; Value
+-&gt; Parser QueryTagsFormat
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687073881"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687073881"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#toLower"><span class="hs-identifier hs-var">T.toLower</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687073881"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;standard&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat -&gt; Parser QueryTagsFormat
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;sqlcommenter&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat -&gt; Parser QueryTagsFormat
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser QueryTagsFormat
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687073883"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621687073883"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621687073883"><span class="hs-identifier hs-var hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Not a valid query tags format value. Use either standard or sqlcommenter&quot;</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- TODO: Replace JSON instances with versions derived from this codec. We'll</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- need to support case-insenitivity on input to make that change without</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- affecting the API.</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073889"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621687073899"><span class="annot"><span class="annottext">codec :: JSONCodec QueryTagsFormat
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec QueryTagsFormat -&gt; JSONCodec QueryTagsFormat
+forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier hs-var">named</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;QueryTagsFormat&quot;</span></span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">(JSONCodec QueryTagsFormat -&gt; JSONCodec QueryTagsFormat)
+-&gt; JSONCodec QueryTagsFormat -&gt; JSONCodec QueryTagsFormat
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (QueryTagsFormat, Text) -&gt; JSONCodec QueryTagsFormat
+forall constant.
+Eq constant =&gt;
+NonEmpty (constant, Text) -&gt; JSONCodec constant
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#stringConstCodec"><span class="hs-identifier hs-var">stringConstCodec</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">(NonEmpty (QueryTagsFormat, Text) -&gt; JSONCodec QueryTagsFormat)
+-&gt; NonEmpty (QueryTagsFormat, Text) -&gt; JSONCodec QueryTagsFormat
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(QueryTagsFormat, Text)] -&gt; NonEmpty (QueryTagsFormat, Text)
+forall a. HasCallStack =&gt; [a] -&gt; NonEmpty a
+</span><span class="hs-identifier hs-var">NonEmpty.fromList</span></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">([(QueryTagsFormat, Text)] -&gt; NonEmpty (QueryTagsFormat, Text))
+-&gt; [(QueryTagsFormat, Text)] -&gt; NonEmpty (QueryTagsFormat, Text)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;standard&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#SQLCommenter"><span class="hs-identifier hs-var">SQLCommenter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;sqlcommenter&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- | QueryTagsConfig is the configuration created by the users to control query tags</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- This config let's hasura know about the following:</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--    1. In what format should the query tags be created</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--    2. Should they be appended to the SQL</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--    3. Should the request id be part of the query tags (which varies on each request</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--       and will cause prepared statements to be re-prepared every time)</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- FWIW, `QueryTagsConfig` are coupled along with the Source metadata. So you can</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- also think `QueryTagsConfig` as the query tags configuration for each source.</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- The workflow is something like this:</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--    1. The `QueryTagsConfig` for a source is created from the metadata we get from</span><span>
+</span><span id="line-65"></span><span class="hs-comment">--       the user.</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--    2. This configuration is packaged (for the lack of better word) along with</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--       SourceConfigWith</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--    3. These query tags configuration are extracted from the `SourceConfigWith` in</span><span>
+</span><span id="line-69"></span><span class="hs-comment">--       the `mkDBQueryPlan`, `mkDBMutationPlan`, `mkDBSubscriptionPlan` functions</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--       and are passed along to the point where the actual SQL generation takes</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--       place</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- Note that, it is important for `QueryTagsConfig` to be a part of</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- `SourceConfigWith` because that's the only sane way (that we can think of) the</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- `mkDB..Plan` functions can get the QueryTagsConfig.</span><span>
+</span><span id="line-76"></span><span class="hs-keyword">data</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsConfig"><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_qtcDisabled"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
+</span><a href="Hasura.QueryTags.Types.html#_qtcDisabled"><span class="hs-identifier hs-var hs-var">_qtcDisabled</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>    </span><span id="_qtcFormat"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#_qtcFormat"><span class="hs-identifier hs-var hs-var">_qtcFormat</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsFormat"><span class="hs-identifier hs-type">QueryTagsFormat</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-79"></span><span>    </span><span id="_qtcOmitRequestId"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
+</span><a href="Hasura.QueryTags.Types.html#_qtcOmitRequestId"><span class="hs-identifier hs-var hs-var">_qtcOmitRequestId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687073906"><span id="local-6989586621687073914"><span id="local-6989586621687073918"><span class="annot"><span class="annottext">Int -&gt; QueryTagsConfig -&gt; ShowS
+[QueryTagsConfig] -&gt; ShowS
+QueryTagsConfig -&gt; String
+(Int -&gt; QueryTagsConfig -&gt; ShowS)
+-&gt; (QueryTagsConfig -&gt; String)
+-&gt; ([QueryTagsConfig] -&gt; ShowS)
+-&gt; Show QueryTagsConfig
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; QueryTagsConfig -&gt; ShowS
+showsPrec :: Int -&gt; QueryTagsConfig -&gt; ShowS
+$cshow :: QueryTagsConfig -&gt; String
+show :: QueryTagsConfig -&gt; String
+$cshowList :: [QueryTagsConfig] -&gt; ShowS
+showList :: [QueryTagsConfig] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073921"><span id="local-6989586621687073927"><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+(QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool)
+-&gt; (QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool)
+-&gt; Eq QueryTagsConfig
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+== :: QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+$c/= :: QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+/= :: QueryTagsConfig -&gt; QueryTagsConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687073931"><span id="local-6989586621687073933"><span class="annot"><span class="annottext">(forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x)
+-&gt; (forall x. Rep QueryTagsConfig x -&gt; QueryTagsConfig)
+-&gt; Generic QueryTagsConfig
+forall x. Rep QueryTagsConfig x -&gt; QueryTagsConfig
+forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x
+from :: forall x. QueryTagsConfig -&gt; Rep QueryTagsConfig x
+$cto :: forall x. Rep QueryTagsConfig x -&gt; QueryTagsConfig
+to :: forall x. Rep QueryTagsConfig x -&gt; QueryTagsConfig
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073938"><span id="local-6989586621687073945"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073961"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687073983"><span id="local-6989586621687073987"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621687074101"><span class="annot"><span class="annottext">toJSON :: QueryTagsConfig -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; QueryTagsConfig -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">genericToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; ShowS -&gt; Options
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-d8dd4a6703f20a95a31e04d174050d4288c8d4f1103ada02dfd9b355eebb59af/share/doc/html/src/Data.Aeson.Casing.Internal.html#aesonDrop"><span class="hs-identifier hs-var">J.aesonDrop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">4</span></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-d8dd4a6703f20a95a31e04d174050d4288c8d4f1103ada02dfd9b355eebb59af/share/doc/html/src/Data.Aeson.Casing.Internal.html#snakeCase"><span class="hs-identifier hs-var">J.snakeCase</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621687074186"><span class="annot"><span class="annottext">toEncoding :: QueryTagsConfig -&gt; Encoding
+</span><a href="#local-6989586621687074186"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; QueryTagsConfig -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">genericToEncoding</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; ShowS -&gt; Options
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-d8dd4a6703f20a95a31e04d174050d4288c8d4f1103ada02dfd9b355eebb59af/share/doc/html/src/Data.Aeson.Casing.Internal.html#aesonDrop"><span class="hs-identifier hs-var">J.aesonDrop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">4</span></span><span> </span><span class="annot"><span class="annottext">ShowS
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-d8dd4a6703f20a95a31e04d174050d4288c8d4f1103ada02dfd9b355eebb59af/share/doc/html/src/Data.Aeson.Casing.Internal.html#snakeCase"><span class="hs-identifier hs-var">J.snakeCase</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687074191"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621687074206"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryTagsConfig
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser QueryTagsConfig)
+-&gt; Value
+-&gt; Parser QueryTagsConfig
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;QueryTagsConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser QueryTagsConfig)
+ -&gt; Value -&gt; Parser QueryTagsConfig)
+-&gt; (Object -&gt; Parser QueryTagsConfig)
+-&gt; Value
+-&gt; Parser QueryTagsConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687074208"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687074208"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
+</span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">(Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+-&gt; Parser Bool
+-&gt; Parser (QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687074208"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;disabled&quot;</span></span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">Parser (QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+-&gt; Parser QueryTagsFormat -&gt; Parser (Bool -&gt; QueryTagsConfig)
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687074208"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe QueryTagsFormat)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;format&quot;</span></span><span>
+</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe QueryTagsFormat)
+-&gt; QueryTagsFormat -&gt; Parser QueryTagsFormat
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">Parser (Bool -&gt; QueryTagsConfig)
+-&gt; Parser Bool -&gt; Parser QueryTagsConfig
+forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687074208"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;omit_request_id&quot;</span></span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687074214"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621687074230"><span class="annot"><span class="annottext">codec :: JSONCodec QueryTagsConfig
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec QueryTagsConfig QueryTagsConfig
+-&gt; JSONCodec QueryTagsConfig
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">AC.object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;QueryTagsConfig&quot;</span></span><span>
+</span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec QueryTagsConfig QueryTagsConfig
+ -&gt; JSONCodec QueryTagsConfig)
+-&gt; ObjectCodec QueryTagsConfig QueryTagsConfig
+-&gt; JSONCodec QueryTagsConfig
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
+</span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">(Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+-&gt; Codec Object QueryTagsConfig Bool
+-&gt; Codec
+     Object QueryTagsConfig (QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; ObjectCodec Bool Bool
+forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault%27"><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (QueryTagsConfig -&gt; Bool) -&gt; Codec Object QueryTagsConfig Bool
+forall {oldInput} {output} {newInput}.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="#local-6989586621687074232"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
+</span><a href="Hasura.QueryTags.Types.html#_qtcDisabled"><span class="hs-identifier hs-var">_qtcDisabled</span></a></span><span>
+</span><span id="line-110"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object QueryTagsConfig (QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig)
+-&gt; Codec Object QueryTagsConfig QueryTagsFormat
+-&gt; Codec Object QueryTagsConfig (Bool -&gt; QueryTagsConfig)
+forall a b.
+Codec Object QueryTagsConfig (a -&gt; b)
+-&gt; Codec Object QueryTagsConfig a -&gt; Codec Object QueryTagsConfig b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; QueryTagsFormat -&gt; ObjectCodec QueryTagsFormat QueryTagsFormat
+forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault%27"><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;format&quot;</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span>
+</span><span id="line-111"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec QueryTagsFormat QueryTagsFormat
+-&gt; (QueryTagsConfig -&gt; QueryTagsFormat)
+-&gt; Codec Object QueryTagsConfig QueryTagsFormat
+forall {oldInput} {output} {newInput}.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="#local-6989586621687074232"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#_qtcFormat"><span class="hs-identifier hs-var">_qtcFormat</span></a></span><span>
+</span><span id="line-112"></span><span>        </span><span class="annot"><span class="annottext">Codec Object QueryTagsConfig (Bool -&gt; QueryTagsConfig)
+-&gt; Codec Object QueryTagsConfig Bool
+-&gt; ObjectCodec QueryTagsConfig QueryTagsConfig
+forall a b.
+Codec Object QueryTagsConfig (a -&gt; b)
+-&gt; Codec Object QueryTagsConfig a -&gt; Codec Object QueryTagsConfig b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; ObjectCodec Bool Bool
+forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault%27"><span class="hs-identifier hs-var">optionalFieldWithDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;omit_request_id&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-113"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
+-&gt; (QueryTagsConfig -&gt; Bool) -&gt; Codec Object QueryTagsConfig Bool
+forall {oldInput} {output} {newInput}.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="#local-6989586621687074232"><span class="hs-operator hs-var">.==</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Bool
+</span><a href="Hasura.QueryTags.Types.html#_qtcOmitRequestId"><span class="hs-identifier hs-var">_qtcOmitRequestId</span></a></span><span>
+</span><span id="line-114"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>      </span><span id="local-6989586621687074232"><span class="annot"><span class="annottext">.== :: ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="#local-6989586621687074232"><span class="hs-operator hs-var hs-var">(.==)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+forall {oldInput} {output} {newInput}.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">(AC..=)</span></a></span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="annot"><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier hs-type">defaultQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span><span>
+</span><span id="line-118"></span><span id="defaultQueryTagsConfig"><span class="annot"><span class="annottext">defaultQueryTagsConfig :: QueryTagsConfig
+</span><a href="Hasura.QueryTags.Types.html#defaultQueryTagsConfig"><span class="hs-identifier hs-var hs-var">defaultQueryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; QueryTagsFormat -&gt; Bool -&gt; QueryTagsConfig
+</span><a href="Hasura.QueryTags.Types.html#QueryTagsConfig"><span class="hs-identifier hs-var">QueryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsFormat
+</span><a href="Hasura.QueryTags.Types.html#Standard"><span class="hs-identifier hs-var">Standard</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-119"></span></pre></body></html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.Headers</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#makeHeadersFromConf"><span class="hs-identifier">makeHeadersFromConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#toHeadersConf"><span class="hs-identifier">toHeadersConf</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.html"><span class="hs-identifier">Data.CaseInsensitive</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ci-info-0.1.0.0/opt/doc/html/ci-info/src/CI.html"><span class="hs-identifier">CI</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html"><span class="hs-identifier">Data.URL.Template</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#mkPlainTemplate"><span class="hs-identifier">mkPlainTemplate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#renderTemplate"><span class="hs-identifier">renderTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Instances.html"><span class="hs-identifier">Hasura.Base.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Headers.html"><span class="hs-identifier">Hasura.RQL.Types.Headers</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.html"><span class="hs-identifier">Network.HTTP.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="annot"><span class="hs-comment">-- | Resolve configuration headers</span></span><span>
+</span><span id="line-18"></span><span id="local-6989586621687082027"><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#makeHeadersFromConf"><span class="hs-identifier hs-type">makeHeadersFromConf</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687082027"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687082027"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-20"></span><span id="makeHeadersFromConf"><span class="annot"><span class="annottext">makeHeadersFromConf :: forall (m :: * -&gt; *).
+MonadError QErr m =&gt;
+Environment -&gt; [HeaderConf] -&gt; m [Header]
+</span><a href="Hasura.RQL.DDL.Headers.html#makeHeadersFromConf"><span class="hs-identifier hs-var hs-var">makeHeadersFromConf</span></a></span></span><span> </span><span id="local-6989586621687082107"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687082107"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HeaderConf -&gt; m Header) -&gt; [HeaderConf] -&gt; m [Header]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; [a] -&gt; m [b]
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">HeaderConf -&gt; m Header
+</span><a href="#local-6989586621687082109"><span class="hs-identifier hs-var">getHeader</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>    </span><span id="local-6989586621687082109"><span class="annot"><span class="annottext">getHeader :: HeaderConf -&gt; m Header
+</span><a href="#local-6989586621687082109"><span class="hs-identifier hs-var hs-var">getHeader</span></a></span></span><span> </span><span id="local-6989586621687082110"><span class="annot"><span class="annottext">HeaderConf
+</span><a href="#local-6989586621687082110"><span class="hs-identifier hs-var">hconf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-23"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; CI ByteString
+forall s. FoldCase s =&gt; s -&gt; CI s
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.Internal.html#mk"><span class="hs-identifier hs-var">CI.mk</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; CI ByteString)
+-&gt; (Text -&gt; ByteString) -&gt; Text -&gt; CI ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#txtToBs"><span class="hs-identifier hs-var">txtToBs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; CI ByteString)
+-&gt; (Text -&gt; ByteString) -&gt; (Text, Text) -&gt; Header
+forall b c b' c'. (b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall (a :: * -&gt; * -&gt; *) b c b' c'.
+Arrow a =&gt;
+a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
+</span><span class="hs-operator hs-var">***</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#txtToBs"><span class="hs-identifier hs-var">txtToBs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>        </span><span class="annot"><span class="annottext">((Text, Text) -&gt; Header) -&gt; m (Text, Text) -&gt; m Header
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HeaderConf
+</span><a href="#local-6989586621687082110"><span class="hs-identifier hs-var">hconf</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-25"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687082117"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082117"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-type">HVValue</span></a></span><span> </span><span id="local-6989586621687082119"><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687082119"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-26"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687082120"><span class="annot"><span class="annottext">renderedTemplate :: Either Text Text
+</span><a href="#local-6989586621687082120"><span class="hs-identifier hs-var hs-var">renderedTemplate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Template -&gt; Either Text Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#renderTemplate"><span class="hs-identifier hs-var">renderTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687082107"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Template
+</span><a href="#local-6989586621687082119"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><span id="line-27"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either Text Text
+</span><a href="#local-6989586621687082120"><span class="hs-identifier hs-var">renderedTemplate</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-28"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687082121"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082121"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (Text, Text)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#NotFound"><span class="hs-identifier hs-var">NotFound</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (Text, Text)) -&gt; Text -&gt; m (Text, Text)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;template cannot be resolved: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082121"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-29"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687082124"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082124"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text, Text) -&gt; m (Text, Text)
+forall a. a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082117"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082124"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span> </span><span id="local-6989586621687082125"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082125"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HVEnv"><span class="hs-identifier hs-type">HVEnv</span></a></span><span> </span><span id="local-6989586621687082127"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082127"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687082128"><span class="annot"><span class="annottext">mEnv :: Maybe String
+</span><a href="#local-6989586621687082128"><span class="hs-identifier hs-var hs-var">mEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687082107"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082127"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>            </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687082128"><span class="hs-identifier hs-var">mEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-33"></span><span>              </span><span class="annot"><span class="annottext">Maybe String
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (Text, Text)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#NotFound"><span class="hs-identifier hs-var">NotFound</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (Text, Text)) -&gt; Text -&gt; m (Text, Text)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;environment variable '&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082127"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;' not set&quot;</span></span><span>
+</span><span id="line-34"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687082131"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687082131"><span class="hs-identifier hs-var">envval</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text, Text) -&gt; m (Text, Text)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687082125"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">T.pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687082131"><span class="hs-identifier hs-var">envval</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="annot"><span class="hs-comment">-- | Encode headers to HeaderConf</span></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#toHeadersConf"><span class="hs-identifier hs-type">toHeadersConf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.Header.html#Header"><span class="hs-identifier hs-type">HTTP.Header</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span id="toHeadersConf"><span class="annot"><span class="annottext">toHeadersConf :: [Header] -&gt; [HeaderConf]
+</span><a href="Hasura.RQL.DDL.Headers.html#toHeadersConf"><span class="hs-identifier hs-var hs-var">toHeadersConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">(Header -&gt; HeaderConf) -&gt; [Header] -&gt; [HeaderConf]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; HeaderValue -&gt; HeaderConf)
+-&gt; (Text, HeaderValue) -&gt; HeaderConf
+forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HeaderValue -&gt; HeaderConf
+</span><a href="Hasura.RQL.Types.Headers.html#HeaderConf"><span class="hs-identifier hs-var">HeaderConf</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, HeaderValue) -&gt; HeaderConf)
+-&gt; (Header -&gt; (Text, HeaderValue)) -&gt; Header -&gt; HeaderConf
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text)
+-&gt; (CI ByteString -&gt; ByteString) -&gt; CI ByteString -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">CI ByteString -&gt; ByteString
+forall s. CI s -&gt; s
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/case-insensitive-1.2.1.0-ede7ac3d53382fc055ce32dafddbdaf4c08f3d9482ea41fec2eb02abcb6696fd/share/doc/html/src/Data.CaseInsensitive.Internal.html#original"><span class="hs-identifier hs-var">CI.original</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(CI ByteString -&gt; Text)
+-&gt; (ByteString -&gt; HeaderValue) -&gt; Header -&gt; (Text, HeaderValue)
+forall b c b' c'. (b -&gt; c) -&gt; (b' -&gt; c') -&gt; (b, b') -&gt; (c, c')
+forall (a :: * -&gt; * -&gt; *) b c b' c'.
+Arrow a =&gt;
+a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
+</span><span class="hs-operator hs-var">***</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; HeaderValue
+</span><a href="Hasura.RQL.Types.Headers.html#HVValue"><span class="hs-identifier hs-var">HVValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Template -&gt; HeaderValue)
+-&gt; (ByteString -&gt; Template) -&gt; ByteString -&gt; HeaderValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Template
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#mkPlainTemplate"><span class="hs-identifier hs-var">mkPlainTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Template)
+-&gt; (ByteString -&gt; Text) -&gt; ByteString -&gt; Template
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span></pre></body></html>
