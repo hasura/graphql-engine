@@ -1,0 +1,52 @@
+---
+description: Hasura Data Connector plugin
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+sidebar_class_name: cloud-icon
+---
+
+# Hasura Data Connector plugin on Hasura Cloud
+
+This Hasura CLI plugin enables deployment and management of custom
+[Hasura Data Connector](https://hasura.io/docs/latest/databases/data-connectors/) agents to Hasura Cloud.
+
+## Install the Hasura CLI Data Connector plugin
+
+To start deploying Data Connectors using the Data Connector plugin, the following pre-requisites need to be in place:
+
+1. Install [Hasura CLI](/hasura-cli/install-hasura-cli.mdx)
+
+2. Update plugin index 
+ ```bash
+ hasura plugins list
+ ```
+
+3. Install `cloud` plugin
+ ```bash
+ hasura plugins install cloud
+ ```
+
+4. Authenticate the CLI with Hasura Cloud
+ ```bash
+ hasura cloud login
+ ```
+
+5. Install `connector` plugin
+ ```bash
+ hasura plugins install connector
+ ```
+
+6. Verify installation with the `--help` flag
+ ```bash
+ hasura connector --help
+ ```
+## Uninstall the Hasura CLI Data Connector plugin
+
+To uninstall the Hasura CLI Data Connector plugin, use the `uninstall` command:
+
+```bash
+hasura plugins uninstall connector
+```
