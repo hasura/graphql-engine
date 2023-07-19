@@ -1,0 +1,70 @@
+table:
+  name: Album
+  schema: public
+object_relationships:
+  - name: Artist
+    using:
+      foreign_key_constraint_on: ArtistId
+array_relationships:
+  - name: Tracks
+    using:
+      foreign_key_constraint_on:
+        column: AlbumId
+        table:
+          name: Track
+          schema: public
+insert_permissions:
+  - role: anonymous
+    permission:
+      check: {}
+      columns:
+        - Title
+        - AlbumId
+        - ArtistId
+select_permissions:
+  - role: anonymous
+    permission:
+      columns:
+        - Title
+        - AlbumId
+        - ArtistId
+      filter: {}
+event_triggers:
+  - name: Album_insert
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 1
+      timeout_sec: 60
+    webhook: http://localhost:8080/v1/graphql
+    request_transform:
+      body:
+        action: transform
+        template: |-
+          {
+            "query":"query GetAlbums @cached(ttl: 65) {Album(limit: 10, order_by: {AlbumId: desc}) {  Title  AlbumId ArtistId  }}",
+            "variables":null,
+            "operationName":"GetAlbums"
+          }
+      template_engine: Kriti
+      version: 2
+    cleanup_config:
+      batch_size: 10000
+      clean_invocation_logs: true
+      clear_older_than: 168
+      paused: false
+      schedule: 0 0 * * *
+      timeout: 60
+  - name: Album_insert_failed
+    definition:
+      enable_manual: false
+      insert:
+        columns: '*'
+    retry_conf:
+      interval_sec: 10
+      num_retries: 0
+      timeout_sec: 60
+    webhook: http://localhost:8080/v2/query
