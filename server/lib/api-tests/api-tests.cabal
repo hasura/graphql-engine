@@ -142,6 +142,7 @@ library
     Test.Databases.Postgres.JsonbSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec
+    Test.Databases.SQLServer.ConnectionPoolSpec
     Test.Databases.SQLServer.DefaultValues.OnConflictSpec
     Test.Databases.SQLServer.InsertVarcharColumnSpec
     Test.Databases.SQLServer.VarcharLiteralsSpec

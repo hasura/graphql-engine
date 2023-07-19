@@ -99,42 +99,57 @@ instance FromJSON InputConnectionString where
       s@(String _) -> RawString <$> parseJSON s
       _ -> fail "one of string or object must be provided"
 
-data MSSQLPoolSettings = MSSQLPoolSettings
-  { _mpsMaxConnections :: Maybe Int,
-    _mpsTotalMaxConnections :: Maybe Int,
-    _mpsIdleTimeout :: Int
-  }
+data MSSQLPoolSettings
+  = MSSQLPoolSettings
+      { _mpsMaxConnections :: Maybe Int,
+        _mpsTotalMaxConnections :: Maybe Int,
+        _mpsIdleTimeout :: Int
+      }
+  | MSSQLPoolSettingsNoPool
   deriving (Show, Eq, Generic)
 
 instance Hashable MSSQLPoolSettings
 
 instance NFData MSSQLPoolSettings
 
-instance ToJSON MSSQLPoolSettings where
-  toJSON = genericToJSON hasuraJSON
-  toEncoding = genericToEncoding hasuraJSON
+deriving via AC.Autodocodec MSSQLPoolSettings instance ToJSON MSSQLPoolSettings
 
-instance FromJSON MSSQLPoolSettings where
-  parseJSON = withObject "MSSQL pool settings" $ \o ->
-    MSSQLPoolSettings
-      <$> o
-      .:? "max_connections"
-      <*> o
-      .:? "total_max_connections"
-      <*> o
-      .:? "idle_timeout"
-      .!= _mpsIdleTimeout defaultMSSQLPoolSettings
+deriving via AC.Autodocodec MSSQLPoolSettings instance FromJSON MSSQLPoolSettings
 
 instance HasCodec MSSQLPoolSettings where
   codec =
-    AC.object "MSSQLPoolSettings"
-      $ MSSQLPoolSettings
-      <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
-      AC..= _mpsMaxConnections
-        <*> optionalFieldOrNull' "total_max_connections"
-      AC..= _mpsTotalMaxConnections
-        <*> optionalFieldWithDefault' "idle_timeout" (_mpsIdleTimeout defaultMSSQLPoolSettings)
-      AC..= _mpsIdleTimeout
+    AC.matchChoiceCodec codecNoPool codecWithPool toInput
+    where
+      toInput :: MSSQLPoolSettings -> Either MSSQLPoolSettings MSSQLPoolSettings
+      toInput = \case
+        p@MSSQLPoolSettingsNoPool {} -> Left p
+        p@MSSQLPoolSettings {} -> Right p
+
+      codecNoPool :: AC.JSONCodec MSSQLPoolSettings
+      codecNoPool =
+        AC.bimapCodec
+          ( \case
+              False -> Right MSSQLPoolSettingsNoPool
+              True -> Left "impossible, guarded by 'EqCodec False"
+          )
+          ( \case
+              MSSQLPoolSettingsNoPool -> False
+              _ -> True
+          )
+          $ AC.EqCodec False
+          $ AC.object "MSSQLPoolSettingsNoPool"
+          $ AC.requiredField "enable" "Whether the connection pool is entirely disabled"
+
+      codecWithPool :: AC.JSONCodec MSSQLPoolSettings
+      codecWithPool =
+        AC.object "MSSQLPoolSettings"
+          $ MSSQLPoolSettings
+          <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
+          AC..= _mpsMaxConnections
+            <*> optionalFieldOrNull' "total_max_connections"
+          AC..= _mpsTotalMaxConnections
+            <*> optionalFieldWithDefault' "idle_timeout" (_mpsIdleTimeout defaultMSSQLPoolSettings)
+          AC..= _mpsIdleTimeout
 
 defaultMSSQLMaxConnections :: Int
 defaultMSSQLMaxConnections = 50

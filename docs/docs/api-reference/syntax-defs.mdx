@@ -191,11 +191,21 @@ and the two generally shouldn't be enabled at the same time.
 
 ## MsSQLPoolSettings {#mssqlpoolsettings}
 
+Pool settings have two disjoint cases.
+
+This schema indicates that the source uses a connection pool (the default):
+
 | Key                   | Required | Schema    | Description                                                                                                                                                                           |
 | --------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                    |
 | total_max_connections | false    | `Integer` | Maximum number of total connections across any number of Hasura Cloud instances (default: 50). Takes precedence over `max_connections` in Cloud projects. _(Only available in Cloud)_ |
 | idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                           |
+
+This schema indicates that the source does not use a connection pool:
+
+| Key            | Required | Schema    | Description                                            |
+| -------------- | -------- | --------- | ------------------------------------------------------ |
+| enable         | true     | `Bool`    | Set to `false` to disable the connection pool entirely |
 
 ## PGColumnType {#pgcolumntype}
 

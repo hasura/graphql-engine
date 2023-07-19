@@ -4977,7 +4977,20 @@
                         "type": "string"
                     },
                     "pool_settings": {
-                        "$ref": "#/components/schemas/MSSQLPoolSettings"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "enum": [
+                                    {
+                                        "enable": false
+                                    }
+                                ],
+                                "type": "object"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MSSQLPoolSettings"
+                            }
+                        ]
                     }
                 },
                 "required": [
