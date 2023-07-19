@@ -21,7 +21,7 @@ import Data.Text.Extended
 import Data.Type.Equality
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P (inputParserInput, nonNullableField, nullableField)
+import Hasura.GraphQL.Parser.Internal.Parser qualified as P (NullableInput (..), inputParserInput, nonNullableField, nullableExact, nullableField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
@@ -274,9 +274,10 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable)) ->
       Parser k n (Maybe (Altered, G.Value RemoteSchemaVariable))
     doNullability (G.Nullability True) parser =
-      nullable parser `bind` \case
-        Just x -> pure x
-        Nothing -> pure $ Just (Altered False, G.VNull)
+      P.nullableExact parser `bind` \case
+        P.NullableInputValue x -> pure x
+        P.NullableInputNull -> pure $ Just (Altered False, G.VNull)
+        P.NullableInputAbsent -> pure Nothing
     doNullability (G.Nullability False) parser = parser
 
     fieldConstructor ::
@@ -288,9 +289,9 @@ inputValueDefinitionParser schemaDoc (G.InputValueDefinition desc name fieldType
       case maybeDefaultVal of
         Nothing ->
           if G.isNullable fieldType
-            then join <$> fieldOptional name desc parser
+            then join <$> fieldOptional' name desc parser
             else field name desc parser
-        Just defaultVal -> fieldWithDefault name desc defaultVal parser
+        Just defaultVal -> fieldWithDefault' name desc defaultVal parser
 
     buildField ::
       ( forall k.

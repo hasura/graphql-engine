@@ -531,7 +531,12 @@ peelWithOrigin parser =
         P.GraphQLValue (G.VVariable var@P.Variable {vInfo, vValue}) -> do
           -- Check types c.f. 5.8.5 of the June 2018 GraphQL spec
           P.typeCheck False (P.toGraphQLType $ P.pType parser) var
-          IR.ValueWithOrigin vInfo <$> P.pParser parser (absurd <$> vValue)
+          fmap (IR.ValueWithOrigin vInfo)
+            $ P.pParser parser
+            $ case vValue of
+              -- TODO: why is faking a null value here semantically correct? RE: GraphQL spec June 2018, section 2.9.5
+              Nothing -> P.GraphQLValue G.VNull
+              Just val -> absurd <$> val
         value -> IR.ValueNoOrigin <$> P.pParser parser value
     }
 
