@@ -1,12 +1,13 @@
-import Endpoints from '../../../Endpoints';
-import { Api } from '../../../hooks/apiUtils';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import { useSelector } from 'react-redux';
-import type { MetadataResponse } from '../types';
+import Endpoints from '../../../Endpoints';
+import { Api } from '../../../hooks/apiUtils';
 import {
   METADATA_QUERY_KEY,
   MetadataQueryKey,
+  useSyncResourceVersionToRedux,
 } from '../../hasura-metadata-api/useMetadata';
+import type { MetadataResponse } from '../types';
 
 // overloads
 /**
@@ -56,6 +57,8 @@ export function useMetadata(
     'queryKey' | 'queryFn'
   >
 ) {
+  const { syncToRedux } = useSyncResourceVersionToRedux();
+
   const body = {
     type: 'export_metadata',
     version: 2,
@@ -68,11 +71,17 @@ export function useMetadata(
     string
   >;
   const queryFn = () => {
-    return Api.post<MetadataResponse>({
+    const post = Api.post<MetadataResponse>({
       headers,
       body,
       url: Endpoints.metadata,
     });
+
+    post.then(result => {
+      syncToRedux(result.resource_version);
+    });
+
+    return post;
   };
 
   return useQuery({
