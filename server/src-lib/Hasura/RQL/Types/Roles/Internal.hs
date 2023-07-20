@@ -155,8 +155,8 @@ instance
   where
   annBoolExpFldL ==~ annBoolExpFldR =
     case (annBoolExpFldL, annBoolExpFldR) of
-      (AVColumn colInfoL opExpsL, AVColumn colInfoR opExpsR) ->
-        colInfoL == colInfoR && Set.fromList opExpsL == Set.fromList opExpsR
+      (AVColumn colInfoL redactionExpL opExpsL, AVColumn colInfoR redactionExpR opExpsR) ->
+        colInfoL == colInfoR && Set.fromList opExpsL == Set.fromList opExpsR && redactionExpL ==~ redactionExpR
       (AVRelationship relInfoL (RelationshipFilters permsL annBoolExpL), AVRelationship relInfoR (RelationshipFilters permsR annBoolExpR)) ->
         relInfoL == relInfoR && annBoolExpL ==~ annBoolExpR && permsL ==~ permsR
       (AVComputedField annCompFldBoolExpL, AVComputedField annCompFldBoolExpR) ->
@@ -361,6 +361,15 @@ instance OnlyRelevantEq G.InputValueDefinition where
         == defaultValueR
         && Set.fromList directivesL
         == Set.fromList directivesR
+
+instance
+  (OnlyRelevantEq (GBoolExp b (AnnBoolExpFld b v))) =>
+  OnlyRelevantEq (AnnRedactionExp b v)
+  where
+  NoRedaction ==~ NoRedaction = True
+  NoRedaction ==~ RedactIfFalse {} = False
+  RedactIfFalse {} ==~ NoRedaction = False
+  RedactIfFalse bExpL ==~ RedactIfFalse bExpR = bExpL ==~ bExpR
 
 maybeToCheckPermission :: Maybe a -> CheckPermission a
 maybeToCheckPermission = maybe CPUndefined CPDefined

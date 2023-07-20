@@ -59,6 +59,7 @@ module Hasura.GraphQL.Schema.Common
     addEnumSuffix,
     peelWithOrigin,
     getIntrospectionResult,
+    tablePermissionsInfo,
   )
 where
 
@@ -566,3 +567,10 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
     | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
       otherwise ->
         HashMap.lookup role (_rscPermissions remoteSchemaContext)
+
+tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b
+tablePermissionsInfo selectPermissions =
+  IR.TablePerm
+    { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
+      IR._tpLimit = spiLimit selectPermissions
+    }

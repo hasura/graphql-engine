@@ -30,7 +30,7 @@ import Data.Text.Extended (ToTxt (toTxt))
 import Data.Text.NonEmpty qualified as TNE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
+import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp, withRedactionExp)
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
@@ -51,7 +51,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
     mkRawComputedFieldExpression,
     withColumnOp,
     withJsonAggExtr,
-    withRedactionExp,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,

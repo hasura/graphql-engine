@@ -607,3 +607,68 @@ tests = do
             |]
 
       shouldReturnYaml testEnvironment actual expected
+
+  describe "Redaction in filtering" $ do
+    it "filtering by column is applied against redacted column value" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_employee(where: { monthly_salary: { _eq: 5000 } }) {
+                    id
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to
+          -- the monthly_salary column, but the 'employee_private_info' role
+          -- does, but only for the current employee's record (ie. hers).
+          -- This means she should not be able to compare against salaries
+          -- she does not have access to, such as David Holden's salary
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_employee: []
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "filtering by computed field is applied against redacted computed field value" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_employee(where: { yearly_salary: { _eq: 60000 } }) {
+                    id
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to
+          -- the yearly_salary computed field, but the 'employee_private_info' role
+          -- does, but only for the current employee's record (ie. hers).
+          -- This means she should not be able to compare against salaries
+          -- she does not have access to, such as David Holden's salary
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_employee: []
+            |]
+
+      shouldReturnYaml testEnvironment actual expected

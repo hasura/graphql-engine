@@ -8,7 +8,6 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
     asSingleRowExtr,
     asJsonAggExtr,
     withColumnOp,
-    withRedactionExp,
   )
 where
 
@@ -16,7 +15,7 @@ import Control.Monad.Writer.Strict
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
+import Hasura.Backends.Postgres.Translate.BoolExp (withRedactionExp)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Types (PermissionLimitSubQuery (..))
@@ -218,20 +217,3 @@ withColumnOp :: Maybe S.ColumnOp -> S.SQLExp -> S.SQLExp
 withColumnOp colOpM sqlExp = case colOpM of
   Nothing -> sqlExp
   Just (S.ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
-
-withRedactionExp ::
-  (Backend ('Postgres pgKind)) =>
-  S.Qual ->
-  AnnRedactionExp ('Postgres pgKind) S.SQLExp ->
-  S.SQLExp ->
-  S.SQLExp
-withRedactionExp tableQual redactionExp sqlExpression =
-  -- Check out [SQL generation for inherited role]
-  case redactionExp of
-    NoRedaction -> sqlExpression
-    RedactIfFalse gBoolExp ->
-      let boolExp =
-            S.simplifyBoolExp
-              $ toSQLBoolExp tableQual
-              $ gBoolExp
-       in S.SECond boolExp sqlExpression S.SENull

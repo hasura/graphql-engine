@@ -95,8 +95,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
               fromResVars
                 (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
                 ["cursor", G.unName $ ciName cursorColInfo]
-         in BoolField $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
-
+         in BoolField $ AVColumn cursorColInfo NoRedaction [(orderByOpExp sqlExp)] -- TODO(redactionExp): Does a redaction expression need to go here?
       selectArgs =
         noSelectArgs
           { _saWhere =

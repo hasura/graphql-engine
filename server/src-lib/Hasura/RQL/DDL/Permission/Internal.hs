@@ -182,7 +182,7 @@ annColExp ::
 annColExp rhsParser rootFieldInfoMap colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (SCIScalarColumn pgi) -> AVColumn pgi <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
+    FIColumn (SCIScalarColumn pgi) -> AVColumn pgi NoRedaction <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceColumn pgi) colVal
     FIColumn (SCIObjectColumn {}) ->
       throw400 NotSupported "nested object not supported"
     FIColumn (SCIArrayColumn {}) ->

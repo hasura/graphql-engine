@@ -259,4 +259,4 @@ buildTableInfo TableInfoBuilder {..} = tableInfo
       (x : xs) -> Just $ foldl (<>) (NESeq.singleton x) $ fmap NESeq.singleton xs
 
     upiFilter :: GBoolExp PG (AnnBoolExpFld PG (PartialSQLExp PG))
-    upiFilter = BoolAnd $ fmap (\ci -> BoolField $ AVColumn ci []) columnInfos
+    upiFilter = BoolAnd $ fmap (\ci -> BoolField $ AVColumn ci NoRedaction []) columnInfos

@@ -541,10 +541,11 @@ primaryKeysArguments tableInfo = runMaybeT $ do
     $ fmap (BoolAnd . toList)
     . sequenceA
     <$> for columns \columnInfo -> do
+      let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPerms (ciColumn columnInfo)
       field <- columnParser (ciType columnInfo) (G.Nullability False)
       pure
         $ BoolField
-        . AVColumn columnInfo
+        . AVColumn columnInfo redactionExp
         . pure
         . AEQ NonNullableComparison
         . IR.mkParameter

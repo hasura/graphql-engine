@@ -187,7 +187,7 @@ selectFunction mkRootFieldName fi@RQL.FunctionInfo {..} description = runMaybeT 
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-            IR._asnPerm = GS.S.tablePermissionsInfo selectPermissions,
+            IR._asnPerm = GS.C.tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs'',
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
@@ -598,7 +598,6 @@ comparisonExps' columnType = do
         $ GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName operatorName) Nothing
         $ CustomBooleanOperator (GQL.unName operatorName)
         . Just
-        . Right
         <$> argParser
 
     mkArgParser :: DC.ScalarType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))

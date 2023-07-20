@@ -80,9 +80,10 @@ genAnnRedactionExp
   genBooleanOperators
   genFunctionArgumentExp
   genA =
-    choice
-      [ pure NoRedaction,
-        RedactIfFalse
+    recursive
+      choice
+      [pure NoRedaction]
+      [ RedactIfFalse
           <$> genAnnBoolExp
             ( genAnnBoolExpFld
                 genColumn
@@ -154,6 +155,15 @@ genAnnBoolExpFld
             genColumn
             genTableName
             genScalarType
+          <*> genAnnRedactionExp
+            genColumn
+            genTableName
+            genScalarType
+            genFunctionName
+            genXComputedField
+            genBooleanOperators
+            genFunctionArgumentExp
+            genA
           <*> list
             defaultRange
             ( genOpExpG
@@ -299,7 +309,16 @@ genComputedFieldBoolExp
   genA =
     choice
       [ CFBEScalar
-          <$> list
+          <$> genAnnRedactionExp
+            genColumn
+            genTableName
+            genScalarType
+            genFunctionName
+            genXComputedField
+            genBooleanOperators
+            genFunctionArgumentExp
+            genA
+          <*> list
             defaultRange
             ( genOpExpG
                 genTableName

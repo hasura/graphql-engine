@@ -327,7 +327,7 @@ buildComputedFieldBooleanExp boolExpResolver rhsParser rootFieldInfoMap colInfoM
       AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName computedFieldFunctionArgs
         <$> case _cfiReturnType of
           CFRScalar scalarType ->
-            CFBEScalar
+            CFBEScalar NoRedaction
               <$> parseBoolExpOperations (_berpValueParser rhsParser) rootFieldInfoMap colInfoMap (ColumnReferenceComputedField _cfiName scalarType) colVal
           CFRSetofTable table -> do
             tableBoolExp <- decodeValue colVal

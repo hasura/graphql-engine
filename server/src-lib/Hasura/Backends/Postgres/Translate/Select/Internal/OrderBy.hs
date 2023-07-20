@@ -16,7 +16,7 @@ import Hasura.Backends.Postgres.SQL.Types
     qualifiedObjectToText,
     tableIdentifierToIdentifier,
   )
-import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
+import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp, withRedactionExp)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
   ( contextualizeBaseTableColumn,
     mkAggregateOrderByAlias,
@@ -31,7 +31,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   ( aggregateFieldsToExtractorExps,
     mkAggregateOrderByExtractorAndFields,
-    withRedactionExp,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree

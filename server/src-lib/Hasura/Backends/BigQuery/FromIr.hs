@@ -822,7 +822,8 @@ fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVColumn columnInfo opExpGs -> do
+    Ir.AVColumn columnInfo _redactionExp opExpGs -> do
+      -- TODO(redactionExp): Deal with the redaction expression
       expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)

@@ -22,7 +22,6 @@ module Hasura.GraphQL.Schema.Select
     tableDistinctArg,
     tableLimitArg,
     tableOffsetArg,
-    tablePermissionsInfo,
     tableSelectionList,
   )
 where
@@ -238,10 +237,11 @@ selectTableByPk tableInfo fieldName description = runMaybeT do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
       sequenceA <$> for primaryKeys \columnInfo -> do
+        let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions (ciColumn columnInfo)
         field <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
         pure
           $ BoolField
-          . AVColumn columnInfo
+          . AVColumn columnInfo redactionExp
           . pure
           . AEQ NonNullableComparison
           . IR.mkParameter
@@ -1657,10 +1657,3 @@ relationshipField table ri = runMaybeT do
             fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteAggField,
             fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteConnectionField
           ]
-
-tablePermissionsInfo :: (Backend b) => SelPermInfo b -> TablePerms b
-tablePermissionsInfo selectPermissions =
-  IR.TablePerm
-    { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
-      IR._tpLimit = spiLimit selectPermissions
-    }

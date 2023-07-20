@@ -81,7 +81,8 @@ fromAnnBoolExpFld ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVColumn columnInfo opExpGs -> do
+    IR.AVColumn columnInfo _redactionExp opExpGs -> do
+      -- TODO(redactionExp): Deal with the redaction expression
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       pure (AndExpression expressions)
     IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do

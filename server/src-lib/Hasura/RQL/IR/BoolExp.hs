@@ -293,6 +293,11 @@ data OpExpG (backend :: BackendType) field
   | ABackendSpecific (BooleanOperators backend field)
   deriving (Generic)
 
+-- NOTE: There is no redaction expression ('AnnRedactionExp') required for the
+-- column involved here, because RootOrCurrentColumn is only used in the permissions
+-- system, where no redaction is applied anyway.
+-- If we start using this type in normal GraphQL 'where' bool exps, we will need
+-- to add a redaction expression here to deal with redaction from inherited roles.
 data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
   deriving (Generic)
 
@@ -390,11 +395,11 @@ opExpDepCol = \case
   CLTE c -> Just c
   _ -> Nothing
 
--- | This type is used to represent the kinds of boolean expression used for compouted fields
+-- | This type is used to represent the kinds of boolean expression used for computed fields
 -- based on the return type of the SQL function.
 data ComputedFieldBoolExp (backend :: BackendType) scalar
   = -- | SQL function returning a scalar
-    CFBEScalar [OpExpG backend scalar]
+    CFBEScalar (AnnRedactionExp backend scalar) [OpExpG backend scalar]
   | -- | SQL function returning SET OF table
     CFBETable (TableName backend) (AnnBoolExp backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
@@ -493,7 +498,7 @@ instance
 --
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
-  = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
+  = AVColumn (ColumnInfo backend) (AnnRedactionExp backend leaf) [OpExpG backend leaf]
   | AVRelationship
       (RelInfo backend)
       (RelationshipFilters backend leaf)
@@ -546,7 +551,7 @@ instance
   ToJSONKeyValue (AnnBoolExpFld b a)
   where
   toJSONKeyValue = \case
-    AVColumn pci opExps ->
+    AVColumn pci _redactionExp opExps ->
       ( K.fromText $ toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
@@ -558,7 +563,7 @@ instance
       ( K.fromText $ toTxt $ _acfbName cfBoolExp,
         let function = _acfbFunction cfBoolExp
          in case _acfbBoolExp cfBoolExp of
-              CFBEScalar opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
+              CFBEScalar _redactionExp opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
     AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates

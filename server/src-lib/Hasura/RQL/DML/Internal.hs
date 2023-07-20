@@ -278,7 +278,7 @@ checkOnColExp ::
   AnnBoolExpFldSQL ('Postgres 'Vanilla) ->
   m (AnnBoolExpFldSQL ('Postgres 'Vanilla))
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVColumn colInfo _ -> do
+  AVColumn colInfo _ _ -> do
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
@@ -294,7 +294,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     roleName <- askCurRole
     let fieldName = _acfbName cfBoolExp
     case _acfbBoolExp cfBoolExp of
-      CFBEScalar _ -> do
+      CFBEScalar _ _ -> do
         checkSelectPermOnScalarComputedField spi fieldName
         pure annFld
       CFBETable table nesBoolExp -> do
