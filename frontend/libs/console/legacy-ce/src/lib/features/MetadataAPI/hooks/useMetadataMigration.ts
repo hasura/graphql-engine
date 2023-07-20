@@ -4,8 +4,8 @@ import { CLI_CONSOLE_MODE } from '../../../constants';
 import Endpoints from '../../../Endpoints';
 import { Api } from '../../../hooks/apiUtils';
 import { useConsoleConfig } from '../../../hooks/useEnvVars';
-import { allowedMetadataTypes, MetadataResponse } from '../types';
 import { useInvalidateMetadata } from '../../hasura-metadata-api';
+import { allowedMetadataTypes, MetadataResponse } from '../types';
 
 const maxAllowedLength = 255;
 const unixEpochLength = 14;
@@ -107,11 +107,9 @@ export function useMetadataMigration<
             `Migration Body:`,
             JSON.stringify(lastBody, null, 2),
           ],
-          additionalQueryKeys:
-            additionalQueryKeysToInvalidate &&
-            additionalQueryKeysToInvalidate?.length > 0
-              ? additionalQueryKeysToInvalidate
-              : undefined,
+          additionalQueryKeys: additionalQueryKeysToInvalidate?.length
+            ? additionalQueryKeysToInvalidate
+            : undefined,
         });
 
         const { onSuccess } = mutationOptions ?? {};

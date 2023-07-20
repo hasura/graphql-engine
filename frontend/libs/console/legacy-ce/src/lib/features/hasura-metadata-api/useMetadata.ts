@@ -5,6 +5,8 @@ import { useHttpClient } from '../Network';
 import { Metadata } from '../hasura-metadata-types';
 import { exportMetadata } from './exportMetadata';
 import { getCurrentReduxResourceVersion } from '../../store/utils/';
+import { exportMetadata as exportMetadataAction } from '../../metadata/actions';
+import React from 'react';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -23,6 +25,21 @@ type Options = {
   enabled?: boolean;
 };
 
+export const useSyncResourceVersionToRedux = () => {
+  const dispatch = useAppDispatch();
+
+  const syncToRedux = React.useCallback(
+    (resource_version: number) => {
+      if (resource_version !== getCurrentReduxResourceVersion()) {
+        dispatch(exportMetadataAction());
+      }
+    },
+    [dispatch]
+  );
+
+  return { syncToRedux };
+};
+
 export const useMetadata = <FinalResult = Metadata>(
   selector?: (m: Metadata) => FinalResult,
   options: Options = {
@@ -31,20 +48,13 @@ export const useMetadata = <FinalResult = Metadata>(
   }
 ) => {
   const httpClient = useHttpClient();
-
-  const dispatch = useAppDispatch();
-
+  const { syncToRedux } = useSyncResourceVersionToRedux();
   const queryReturn = useQuery<Metadata, APIError, FinalResult>({
     queryKey: [METADATA_QUERY_KEY],
     queryFn: async () => {
       const result = await exportMetadata({ httpClient });
 
-      if (result.resource_version !== getCurrentReduxResourceVersion()) {
-        dispatch({
-          type: 'Metadata/EXPORT_METADATA_SUCCESS',
-          data: result,
-        });
-      }
+      syncToRedux(result.resource_version);
 
       return result;
     },
