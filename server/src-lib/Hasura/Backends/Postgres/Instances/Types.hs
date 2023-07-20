@@ -58,8 +58,8 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
-  versionCheckImpl :: Env.Environment -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
-  versionCheckImpl = const $ const (pure $ Right ())
+  versionCheckImpl :: Env.Environment -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl _ _ _ = pure (Right ())
 
   runPingSourceImpl :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
   runPingSourceImpl _ _ _ _ = pure ()

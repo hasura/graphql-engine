@@ -273,8 +273,8 @@ class
   healthCheckImplementation = Nothing
 
   -- | An Implementation for version checking when adding a source.
-  versionCheckImplementation :: Env.Environment -> SourceConnConfiguration b -> IO (Either QErr ())
-  versionCheckImplementation = const (const (pure $ Right ()))
+  versionCheckImplementation :: Env.Environment -> SourceName -> SourceConnConfiguration b -> IO (Either QErr ())
+  versionCheckImplementation _ _ _ = pure (Right ())
 
   -- | A backend type can opt into providing an implementation for
   -- fingerprinted pings to the source,

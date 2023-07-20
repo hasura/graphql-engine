@@ -114,7 +114,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
   sources <- scSources <$> askSchemaCache
   do
     -- version check
-    result <- liftIO $ versionCheckImplementation @b env sourceConfig
+    result <- liftIO $ versionCheckImplementation @b env name sourceConfig
     liftEither result
 
   metadataModifier <-

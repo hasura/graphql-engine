@@ -39,6 +39,7 @@ import Hasura.NativeQuery.Types (NullableScalarType (nstType))
 import Hasura.NativeQuery.Validation (validateArgumentDeclaration)
 import Hasura.Prelude
 import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Common (SourceName)
 
 -- | Prepare a native query query against a postgres-like database to validate it.
 validateNativeQuery ::
@@ -46,11 +47,12 @@ validateNativeQuery ::
   (MonadIO m, MonadError QErr m) =>
   InsOrdHashMap.InsOrdHashMap PGScalarType PQ.Oid ->
   Env.Environment ->
+  SourceName ->
   PG.PostgresConnConfiguration ->
   LogicalModelInfo ('Postgres pgKind) ->
   NativeQueryMetadata ('Postgres pgKind) ->
   m (InterpolatedQuery ArgumentName)
-validateNativeQuery pgTypeOidMapping env connConf logicalModel nq = do
+validateNativeQuery pgTypeOidMapping env sourceName connConf logicalModel nq = do
   validateArgumentDeclaration nq
   let nqmCode = trimQueryEnd (_nqmCode nq)
       model = nq {_nqmCode = nqmCode}
@@ -73,6 +75,7 @@ validateNativeQuery pgTypeOidMapping env connConf logicalModel nq = do
         =<< liftIO
           ( withPostgresDB
               env
+              sourceName
               connConf
               ( do
                   -- prepare statement

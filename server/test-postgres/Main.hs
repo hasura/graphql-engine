@@ -82,7 +82,7 @@ main = do
       serveOptions = Constants.serveOptions
       metadataDbUrl = Just (T.unpack pgUrlText)
 
-  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
+  pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams {PG.cpConns = 1} print
   let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
 
       logger :: Logger Hasura = Logger $ \l -> do

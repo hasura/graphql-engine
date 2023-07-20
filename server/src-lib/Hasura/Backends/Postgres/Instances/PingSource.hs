@@ -21,7 +21,7 @@ runCockroachDBPing ::
 runCockroachDBPing env pingLog sourceName sourceConnection = do
   let versionMessage = "hasura-graphql-engine-version=" <> tshow currentVersion
       query = PG.fromText ("select 1 /* " <> versionMessage <> " */")
-  result <- withPostgresDB env sourceConnection $ do
+  result <- withPostgresDB env sourceName sourceConnection $ do
     PG.discardQE PG.dmlTxErrorHandler query () False
   case result of
     Left _ ->

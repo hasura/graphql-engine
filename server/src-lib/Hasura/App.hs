@@ -403,10 +403,13 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
   -- Generate the instance id.
   instanceId <- liftIO generateInstanceId
 
+  let connectionContext :: J.Value
+      connectionContext = J.object ["source" J..= J.String "metadata"]
+
   -- Init metadata db pool.
   metadataDbPool <-
     allocate
-      (liftIO $ PG.initPGPool bciMetadataConnInfo soConnParams pgLogger)
+      (liftIO $ PG.initPGPool bciMetadataConnInfo connectionContext soConnParams pgLogger)
       (liftIO . PG.destroyPGPool)
 
   -- Migrate the catalog and fetch the metdata.
@@ -1445,7 +1448,7 @@ telemetryNotice =
     <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
 
 mkPgSourceResolver :: PG.PGLogger -> SourceResolver ('Postgres 'Vanilla)
-mkPgSourceResolver pgLogger env _ config = runExceptT do
+mkPgSourceResolver pgLogger env sourceName config = runExceptT do
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
@@ -1459,7 +1462,8 @@ mkPgSourceResolver pgLogger env _ config = runExceptT do
             PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
             PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
           }
-  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let context = J.object [("source" J..= sourceName)]
+  pgPool <- liftIO $ Q.initPGPool connInfo context connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (_pccExtensionsSchema config) mempty ConnTemplate_NotApplicable
 

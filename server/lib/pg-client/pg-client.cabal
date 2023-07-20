@@ -113,6 +113,7 @@ benchmark pg-client-bench
   hs-source-dirs: bench
   main-is:        Main.hs
   build-depends:
+    , aeson
     , base
     , bytestring
     , file-embed

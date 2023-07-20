@@ -1036,7 +1036,8 @@ executable graphql-engine
 
   hs-source-dirs:    src-exec
   main-is:           Main.hs
-  build-depends:     base
+  build-depends:     aeson
+                   , base
                    , graphql-engine
                    , ghc-debug-stub
                    , bytestring
