@@ -10,21 +10,23 @@ sidebar_position: 1.4
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 # Hasura Data Connectors
 
 ## Introduction
 
-Hasura Data Connectors provide an easy way to build connectors to any data source and instantly obtain GraphQL APIs
-on that data.
+Hasura Data Connectors provide an easy way to build connectors to any data source and instantly obtain GraphQL APIs on
+that data.
 
-Currently, Hasura natively supports Postgres, SQL Server, and BigQuery databases. Data Connectors allow you to
-connect Hasura to **_any_** other data source. Hasura has used Data Connectors to build connectors to
-MySQL, Oracle, Snowflake, Amazon Athena, MariaDB, MongoDB (coming soon), with more sources in the pipeline, but you
-can also use them to connect to your own. Think Microsoft Excel, SQLite, CSV, AirTable and more.
+Currently, Hasura natively supports Postgres, SQL Server, and BigQuery databases. Data Connectors allow you to connect
+Hasura to **_any_** other data source. Hasura has used Data Connectors to build connectors to MySQL, Oracle, Snowflake,
+Amazon Athena, MariaDB, MongoDB (coming soon), with more sources in the pipeline, but you can also use them to connect
+to your own. Think Microsoft Excel, SQLite, CSV, AirTable and more.
 
-For more information on databases, check out the [Hasura Databases documentation](/docs/databases/overview.mdx)
-or to jump right into integrating a native database, [check out the Quickstart](/docs/databases/quickstart.mdx).
+For more information on databases, check out the [Hasura Databases documentation](/docs/databases/overview.mdx) or to
+jump right into integrating a native database, [check out the Quickstart](/docs/databases/quickstart.mdx).
 
 This documentation will guide you through understanding Hasura Data Connectors concepts and how to use them.
 
@@ -37,46 +39,154 @@ them as stable as possible soon, but please be aware that breaking changes may o
 
 ## Hasura GraphQL Data Connector Agent
 
-The Hasura GraphQL Data Connector Agent is a service that acts as an intermediary middleware abstraction between a
-data source and the Hasura GraphQL Engine via a REST API. It allows users to implement Hasura's powerful GraphQL
-experience on any data source they use. Further information about the design and implementation of the Agent service
-can be found in the [README.md of the Data Connector Agent repository](https://github.com/hasura/graphql-engine/blob/master/dc-agents/README.md).
+The Hasura GraphQL Data Connector Agent is a service that acts as an intermediary middleware abstraction between a data
+source and the Hasura GraphQL Engine via a REST API. It allows users to implement Hasura's powerful GraphQL experience
+on any data source they use. Further information about the design and implementation of the Agent service can be found
+in the
+[README.md of the Data Connector Agent repository](https://github.com/hasura/graphql-engine/blob/master/dc-agents/README.md).
 
 <Thumbnail
   src="/img/databases/data-connector/data-connectors-agent-diagram.png"
   alt="Hasura GraphQL Data Connector Agent diagram"
 />
 
-In addition, an agent can directly support new functionality without any other database upstream. The purpose of
-Data Connector agents is to quickly and easily allow developers to author new agents to support a wide variety of new
-data sources and use-cases.
+In addition, an agent can directly support new functionality without any other database upstream. The purpose of Data
+Connector agents is to quickly and easily allow developers to author new agents to support a wide variety of new data
+sources and use-cases.
+
+## Adding Hasura GraphQL Data Connector Agent to Metadata
+
+To use a custom Hasura GraphQL Data Connector Agent, follow the following steps on Console to add it to HGE metadata.
+Before following the steps, make sure the custom connector is deployed and accessible.
+
+<Tabs groupId="user-preference" className="api-tabs">
+
+
+<TabItem value="console" label="Console">
+<ol>
+<li>
+
+Navigate to the project Console to the Data tab.
+
+<Thumbnail src="/img/databases/data-connector/data-tab.png" alt="Hasura GraphQL Data Connector Agent diagram" />
+</li>
+<li>
+
+Click on the `Manage` button.
+
+<Thumbnail
+  src="/img/databases/data-connector/manage-db.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+</li>
+<li>
+
+Click on the `Data Connector Agents` button.
+
+<Thumbnail
+  src="/img/databases/data-connector/connect-agent.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+</li>
+<li>
+
+Click on the `Add Agent` button.
+
+<Thumbnail
+  src="/img/databases/data-connector/add-agent.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+</li>
+<li>
+
+Enter the values for name and agent endpoint. Click `Connect` and you're done!
+
+<Thumbnail
+  src="/img/databases/data-connector/connect-final.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+</li>
+<li>
+
+Once the above is done, the new driver supported by the custom connector will be available as one of the options
+in the `Connect Database` page.
+
+<Thumbnail
+  src="/img/databases/data-connector/updated-driver-list.png"
+  alt="Hasura GraphQL Data Connector Agent diagram"
+/>
+</li>
+</ol>
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can add a DC agent by adding their config to the `/metadata/backend_configs.yaml` file:
+
+```yaml
+dataconnector:
+  sqlite:
+    uri: <dc agent url>
+```
+
+Apply the Metadata by running:
+
+```yaml
+hasura metadata apply
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You can add a DC agent to Hasura via the `dc_add_agent` Metadata API.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "dc_add_agent",
+  "args": {
+      "name": "sqlite",
+      "url": "<URL where the DC agent is deployed>"
+  }
+}
+```
+</TabItem>
+</Tabs>
 
 ## Hasura GraphQL Data Connector SDK
 
 The Data Connector SDK serves as a pack of documentation and resources for understanding, building, and testing Data
 Connector agent implementations to ensure that they are complete, correct, idiomatic and can be developed rapidly and
 with confidence. The workflow that the SDK supports out of the box is powered by Docker Compose in order to reduce the
-number of dependencies required, but each component may be run natively if desired. The SDK is versioned with the
-Hasura GraphQL Engine.
+number of dependencies required, but each component may be run natively if desired. The SDK is versioned with the Hasura
+GraphQL Engine.
 
-The SDK including the `docker-compose.yaml` file can be [found here](https://github.com/hasura/graphql-engine/tree/master/dc-agents/sdk).
+The SDK including the `docker-compose.yaml` file can be
+[found here](https://github.com/hasura/graphql-engine/tree/master/dc-agents/sdk).
 
-For more details on the SDK, check out the [SDK repository README.md](https://github.com/hasura/graphql-engine/blob/master/dc-agents/sdk/README.md).
+For more details on the SDK, check out the
+[SDK repository README.md](https://github.com/hasura/graphql-engine/blob/master/dc-agents/sdk/README.md).
 
 ### Building a New Data Connector with the SDK
 
 To create a new Data Connector, follow these steps:
 
-1. [Start the container](https://github.com/hasura/graphql-engine/blob/master/dc-agents/sdk/docker-compose.yaml) with `docker compose up`.
+1. [Start the container](https://github.com/hasura/graphql-engine/blob/master/dc-agents/sdk/docker-compose.yaml) with
+   `docker compose up`.
 2. Verify that tests pass.
 3. Review & make changes to the reference connector for your specific database and intended implementation.
 4. Or rebuild as required, depending on your stack.
 5. Rerun the tests with `docker compose run tests`.
 6. Interact with the agent via Hasura GraphQL Engine at `http://localhost:8080` and view the OpenAPI Schema at
-`http://localhost:8300`.
+   `http://localhost:8300`.
 
 ## Reference Connector
 
 The reference connector is located under the `/reference` path within the SDK and serves as a working connector example.
 It is written in TypeScript and has several key code snippet examples within the reference itself. For more information
-on the reference connector, check out [README in the reference directory](https://github.com/hasura/graphql-engine/tree/master/dc-agents/reference).
+on the reference connector, check out
+[README in the reference directory](https://github.com/hasura/graphql-engine/tree/master/dc-agents/reference).
