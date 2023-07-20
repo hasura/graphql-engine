@@ -13,7 +13,9 @@ export default function DocSidebarItem({ item, ...props }) {
         // if there is no custom sidebar_pathname, use the label with our regex
         // and apparently deal with the Wiki as a special case
         if (item.label != 'Docs Wiki') {
-          item.href = `/docs/latest/${item.label.toLowerCase().replace(/\s/g, '-')}/overview/`;
+          item.href = `/docs/latest/${item.label
+            .toLowerCase()
+            .replace(/\s/g, '-')}/overview/`;
         }
       } else {
         // if it already has a href (such as any category that has an index within the dir), use it
