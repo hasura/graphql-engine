@@ -88,6 +88,8 @@ type CloudServerEnv = {
   userRole: CloudUserRole;
   neonOAuthClientId?: string;
   neonRootDomain?: string;
+  slackOAuthClientId?: string;
+  slackRootDomain?: string;
   allowedLuxFeatures?: LuxFeature[];
   userId?: string;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
@@ -160,6 +162,8 @@ export type EnvVars = {
   userRole?: string;
   neonOAuthClientId?: string;
   neonRootDomain?: string;
+  slackOAuthClientId?: string;
+  slackRootDomain?: string;
   allowedLuxFeatures?: LuxFeature[];
   userId?: string;
   userEmail?: string;
@@ -216,6 +220,8 @@ const globals = {
   hasuraCloudProjectName: window.__env?.projectName,
   neonOAuthClientId: window.__env?.neonOAuthClientId,
   neonRootDomain: window.__env?.neonRootDomain,
+  slackOAuthClientId: window.__env?.slackOAuthClientId,
+  slackRootDomain: window.__env?.slackRootDomain,
   allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],
   luxDataHost: window.__env?.luxDataHost
     ? stripTrailingSlash(window.__env.luxDataHost)

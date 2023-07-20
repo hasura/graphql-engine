@@ -9,6 +9,13 @@ import {
   SiblingSchema,
   GetRegistrySchemaResponseWithError,
 } from './types';
+import {
+  getLSItem,
+  LS_KEYS,
+  removeLSItem,
+  setLSItem,
+} from '../../utils/localStorage';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 import moment from 'moment';
 
 export const CapitalizeFirstLetter = (str: string) => {
@@ -117,6 +124,45 @@ export const schemaTransformFn = (
 export const getPublishTime = (isoStringTs: string) => {
   const published = moment(isoStringTs);
   return published.format('DD/MM/YYYY HH:mm:ss');
+};
+
+export const SLACK_CALLBACK_SEARCH = LS_KEYS.slackCallbackSearch;
+
+export const persistSlackCallbackSearch = (value: string) => {
+  setLSItem(SLACK_CALLBACK_SEARCH, value);
+};
+
+export const getPersistedSlackCallbackSearch = () => {
+  return getLSItem(SLACK_CALLBACK_SEARCH);
+};
+
+export const clearPersistedSlackCallbackSearch = () => {
+  removeLSItem(SLACK_CALLBACK_SEARCH);
+};
+
+export function useIsUnmounted() {
+  const rIsUnmounted = useRef<'mounting' | 'mounted' | 'unmounted'>('mounting');
+
+  useLayoutEffect(() => {
+    rIsUnmounted.current = 'mounted';
+    return () => {
+      rIsUnmounted.current = 'unmounted';
+    };
+  }, []);
+
+  return useCallback(() => rIsUnmounted.current !== 'mounted', []);
+}
+
+export const generateRandomString = (stringLength = 16) => {
+  const allChars =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+
+  for (let i = 0; i < stringLength; i++) {
+    const randomNum = Math.floor(Math.random() * allChars.length);
+    str += allChars.charAt(randomNum);
+  }
+  return str;
 };
 
 export const hexToRGB = (hex: string, alpha: number) => {

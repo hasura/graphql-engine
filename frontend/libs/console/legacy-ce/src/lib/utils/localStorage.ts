@@ -119,6 +119,7 @@ export const LS_KEYS = {
   permissionConfirmationModalStatus:
     'console:permissionConfirmationModalStatus',
   neonCallbackSearch: 'neon:authCallbackSearch',
+  slackCallbackSearch: 'slack:authCallbackSearch',
   herokuCallbackSearch: 'HEROKU_CALLBACK_SEARCH',
   consolePersonalAccessToken: 'PERSONAL_ACCESS_TOKEN',
   notificationsData: 'notifications:data',

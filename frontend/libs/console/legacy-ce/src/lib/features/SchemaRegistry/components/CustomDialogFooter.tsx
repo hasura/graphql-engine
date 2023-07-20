@@ -1,26 +1,18 @@
 import React from 'react';
-import globals from '../../../Globals';
 import { Button } from '../../../new-components/Button';
-import { useSetEmailAlertConfig } from '../hooks/useSetAlertConfig';
-import { ConfigKey } from '../types';
 import { Analytics } from '../../Analytics';
 
 type CustomDialogFooterProps = {
+  onSet: () => void;
   onClose: () => void;
-  alertConfig: Record<ConfigKey, boolean>;
+  isLoading: boolean;
 };
 
 export const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
+  onSet,
   onClose,
-  alertConfig,
+  isLoading,
 }) => {
-  const projectID = globals.hasuraCloudProjectId || '';
-  const { setEmailAlertMutation } = useSetEmailAlertConfig(onClose);
-
-  const onSet = React.useCallback(() => {
-    setEmailAlertMutation.mutate({ projectId: projectID, config: alertConfig });
-  }, [alertConfig]);
-
   return (
     <div className="flex justify-between border-t border-gray-300 bg-white p-sm">
       <div>
@@ -38,8 +30,8 @@ export const CustomDialogFooter: React.FC<CustomDialogFooterProps> = ({
                 e.preventDefault();
                 onSet();
               }}
-              isLoading={setEmailAlertMutation.isLoading}
-              disabled={setEmailAlertMutation.isLoading}
+              isLoading={isLoading}
+              disabled={isLoading}
             >
               Set
             </Button>
