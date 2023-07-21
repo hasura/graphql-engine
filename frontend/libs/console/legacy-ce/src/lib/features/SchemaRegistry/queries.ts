@@ -77,7 +77,7 @@ query fetchAlertConfig($projectId: uuid!, $type: alert_service_type_enum!) {
 
 export const SET_ALERT_CONFIG = gql(`
 mutation UpsertAlertConfig($projectId: uuid, $rules: jsonb) {
-  insert_alert_config(objects: {alert_types: {data: {type: "SchemaRegistryUpdates"}, on_conflict: {constraint: alert_config_alert_type_pkey, update_columns: type}}, project_id: $projectId, enabled: true, alert_config_services: {data: {metadata: "", rules: $rules, type: mail}, on_conflict: {constraint: alert_config_service_pkey, update_columns: rules}}}, on_conflict: {constraint: alert_config_pkey, update_columns: enabled}) {
+  insert_alert_config(objects: {alert_types: {data: {type: "SchemaRegistryUpdates"}, on_conflict: {constraint: alert_config_alert_type_pkey, update_columns: type}}, project_id: $projectId, enabled: true, alert_config_services: {data: {rules: $rules, type: mail, enabled: true}, on_conflict: {constraint: alert_config_service_pkey, update_columns: rules}}}, on_conflict: {constraint: alert_config_pkey, update_columns: enabled}) {
     affected_rows
   }
 } 
