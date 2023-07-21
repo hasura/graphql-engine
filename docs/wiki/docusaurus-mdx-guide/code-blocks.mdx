@@ -8,7 +8,7 @@ While adding code blocks, ensure you set the correct language type. Sometimes ad
 
 ## Docusaurus - MDX
 
-```markdown
+````markdown
     ```graphql {2,5}
         query {
         // highlight-next-line
@@ -24,32 +24,32 @@ While adding code blocks, ensure you set the correct language type. Sometimes ad
           }
         }
     ```
-```
+````
 
 ## Result in UI
 
 ```graphql {2,5}
-  query {
-    authors (where: {articles: {rating: {_gt: 4}}}) {
+query {
+  authors(where: { articles: { rating: { _gt: 4 } } }) {
+    id
+    name
+    articles(where: { rating: { _gt: 4 } }) {
       id
-      name
-      articles (where: {rating: {_gt: 4}}) {
-        id
-        title
-        rating
-      }
+      title
+      rating
     }
   }
+}
 ```
 
 :::caution Supported Languages
 
 - Docusaurus uses prisma under the hood for code-block syntax highlighting. Please refer to the supported languages
-[here](https://prismjs.com/#supported-languages).
+  [here](https://prismjs.com/#supported-languages).
 - By default prisma includes a few that are listed
-[here](https://github.com/FormidableLabs/prism-react-renderer/blob/master/src/vendor/prism/includeLangs.js). If any
-supported language is not listed here, please add it to `additionalLanguages` under prisma plugin in
-`docusaurus.config.js`.
+  [here](https://github.com/FormidableLabs/prism-react-renderer/blob/master/src/vendor/prism/includeLangs.js). If any
+  supported language is not listed here, please add it to `additionalLanguages` under prisma plugin in
+  `docusaurus.config.js`.
 
 :::
 
@@ -61,7 +61,7 @@ over `\n`, `\t` etc.
 
 ```html
 <div className="parsed-literal">
-<pre>
+  <pre>
 <code>
 {`{
   "table"  : `}<a href="#tablename">TableName</a>{`
@@ -77,17 +77,22 @@ over `\n`, `\t` etc.
 
 Using html + string templates is a workaround, if markdown ever supports this or provides an alternative, it would be
 easy to find the respective usage and replace it. Nothing more :)
+
 </details>
 
 <div className="parsed-literal">
-<pre>
-<code>
-{`{
-  "table"  : `}<a href="#tablename">TableName</a>{`
-  "column" : `}<a href="#pgcolumn">PGColumn</a>{`
+  <pre>
+    <code>
+      {`{
+  "table"  : `}
+      <a href="#tablename">TableName</a>
+      {`
+  "column" : `}
+      <a href="#pgcolumn">PGColumn</a>
+      {`
 }`}
-</code>
-</pre>
+    </code>
+  </pre>
 </div>
 
 :::tip
