@@ -1,10 +1,6 @@
 import { useCallback } from 'react';
 import { isObject } from '../../../../components/Common/utils/jsUtils';
 import { transformErrorResponse } from '../../../Data/errorUtils';
-// import {
-//   useAllDriverCapabilities,
-//   useDriverCapabilities,
-// } from '../../../Data/hooks/useDriverCapabilities';
 import { useAllDriverCapabilities } from '../../../Data/hooks/useAllDriverCapabilities';
 import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
@@ -48,6 +44,18 @@ const defaultCapabilities = {
   isLocalTableRelationshipSupported: false,
   isRemoteTableRelationshipSupported: false,
   isRemoteSchemaRelationshipSupported: true,
+};
+
+const isRemoteRelPresentInPayload = (
+  data: ReturnType<typeof createTableRelationshipRequestBody>[]
+) => {
+  const remoteRel = data.find(rel => {
+    if (rel === 'Not implemented') return false;
+
+    return rel.type.includes('_create_remote_relationship');
+  });
+
+  return !!remoteRel;
 };
 
 const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
@@ -156,7 +164,9 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_atomic',
+            type: isRemoteRelPresentInPayload(payloads)
+              ? 'bulk_keep_going'
+              : 'bulk_atomic',
             args: payloads,
             resource_version,
           },
