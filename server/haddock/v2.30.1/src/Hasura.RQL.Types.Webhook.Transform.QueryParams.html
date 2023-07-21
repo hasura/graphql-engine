@@ -1,0 +1,376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.QueryParams</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier">QueryParams</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier">QueryParamsTransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier">dimapCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#disjointEitherCodec"><span class="hs-identifier">disjointEitherCodec</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#hashMapCodec"><span class="hs-identifier">hashMapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Class</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier">TransformCtx</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier">TransformFn</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html"><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Request</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier">RequestTransformCtx</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.HTTP.Client.Transformable.html"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- | The actual query params we are transforming.</span><span>
+</span><span id="line-21"></span><span class="hs-comment">--</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- This newtype is necessary because otherwise we end up with an</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- orphan instance.</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryParams"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-var">QueryParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryParams"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-var">QueryParams</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unQueryParams"><span class="annot"><span class="annottext">QueryParams -&gt; Query
+</span><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#unQueryParams"><span class="hs-identifier hs-var hs-var">unQueryParams</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/http-types-0.12.3-e90deb8507289c0bf4cfca5d91ad626efd0368a9e1f2eb92a4ff6bd79f5e0680/share/doc/html/src/Network.HTTP.Types.URI.html#Query"><span class="hs-identifier hs-type">HTTP.Query</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="annot"><span class="hs-comment">-- | The defunctionalized transformation 'QueryParams'</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">data</span><span> </span><span id="QueryParamsTransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier hs-var">QueryParamsTransformFn</span></a></span></span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AddOrReplace"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#AddOrReplace"><span class="hs-identifier hs-var">AddOrReplace</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ParamTemplate"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#ParamTemplate"><span class="hs-identifier hs-var">ParamTemplate</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687185833"><span class="annot"><span class="annottext">QueryParamsTransformFn -&gt; ()
+(QueryParamsTransformFn -&gt; ()) -&gt; NFData QueryParamsTransformFn
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: QueryParamsTransformFn -&gt; ()
+rnf :: QueryParamsTransformFn -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687185860"><span id="local-6989586621687185867"><span class="annot"><span class="annottext">QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool
+(QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool)
+-&gt; (QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool)
+-&gt; Eq QueryParamsTransformFn
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool
+== :: QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool
+$c/= :: QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool
+/= :: QueryParamsTransformFn -&gt; QueryParamsTransformFn -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687185876"><span id="local-6989586621687185878"><span class="annot"><span class="annottext">(forall x. QueryParamsTransformFn -&gt; Rep QueryParamsTransformFn x)
+-&gt; (forall x.
+    Rep QueryParamsTransformFn x -&gt; QueryParamsTransformFn)
+-&gt; Generic QueryParamsTransformFn
+forall x. Rep QueryParamsTransformFn x -&gt; QueryParamsTransformFn
+forall x. QueryParamsTransformFn -&gt; Rep QueryParamsTransformFn x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. QueryParamsTransformFn -&gt; Rep QueryParamsTransformFn x
+from :: forall x. QueryParamsTransformFn -&gt; Rep QueryParamsTransformFn x
+$cto :: forall x. Rep QueryParamsTransformFn x -&gt; QueryParamsTransformFn
+to :: forall x. Rep QueryParamsTransformFn x -&gt; QueryParamsTransformFn
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687185881"><span id="local-6989586621687185891"><span id="local-6989586621687185895"><span class="annot"><span class="annottext">Int -&gt; QueryParamsTransformFn -&gt; ShowS
+[QueryParamsTransformFn] -&gt; ShowS
+QueryParamsTransformFn -&gt; String
+(Int -&gt; QueryParamsTransformFn -&gt; ShowS)
+-&gt; (QueryParamsTransformFn -&gt; String)
+-&gt; ([QueryParamsTransformFn] -&gt; ShowS)
+-&gt; Show QueryParamsTransformFn
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; QueryParamsTransformFn -&gt; ShowS
+showsPrec :: Int -&gt; QueryParamsTransformFn -&gt; ShowS
+$cshow :: QueryParamsTransformFn -&gt; String
+show :: QueryParamsTransformFn -&gt; String
+$cshowList :: [QueryParamsTransformFn] -&gt; ShowS
+showList :: [QueryParamsTransformFn] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687185904"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier hs-type">QueryParamsTransformFn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621687185908"><span class="annot"><span class="annottext">codec :: JSONCodec QueryParamsTransformFn
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Either
+   (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+   UnescapedTemplate
+ -&gt; QueryParamsTransformFn)
+-&gt; (QueryParamsTransformFn
+    -&gt; Either
+         (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+         UnescapedTemplate)
+-&gt; Codec
+     Value
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+-&gt; JSONCodec QueryParamsTransformFn
+forall oldOutput newOutput newInput oldInput context.
+(oldOutput -&gt; newOutput)
+-&gt; (newInput -&gt; oldInput)
+-&gt; Codec context oldInput oldOutput
+-&gt; Codec context newInput newOutput
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#dimapCodec"><span class="hs-identifier hs-var">dimapCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Either
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+  UnescapedTemplate
+-&gt; QueryParamsTransformFn
+</span><a href="#local-6989586621687185909"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">QueryParamsTransformFn
+-&gt; Either
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     UnescapedTemplate
+</span><a href="#local-6989586621687185910"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec
+   Value
+   (Either
+      (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+      UnescapedTemplate)
+   (Either
+      (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+      UnescapedTemplate)
+ -&gt; JSONCodec QueryParamsTransformFn)
+-&gt; Codec
+     Value
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+-&gt; JSONCodec QueryParamsTransformFn
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Codec
+  Value
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+-&gt; Codec Value UnescapedTemplate UnescapedTemplate
+-&gt; Codec
+     Value
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+     (Either
+        (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+        UnescapedTemplate)
+forall context input1 output1 input2 output2.
+Codec context input1 output1
+-&gt; Codec context input2 output2
+-&gt; Codec context (Either input1 input2) (Either output1 output2)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#disjointEitherCodec"><span class="hs-identifier hs-var">disjointEitherCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Codec
+  Value
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+</span><a href="#local-6989586621687185911"><span class="hs-identifier hs-var">addOrReplaceCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value UnescapedTemplate UnescapedTemplate
+</span><a href="#local-6989586621687185912"><span class="hs-identifier hs-var">templateCodec</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621687185911"><span class="annot"><span class="annottext">addOrReplaceCodec :: Codec
+  Value
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+</span><a href="#local-6989586621687185911"><span class="hs-identifier hs-var hs-var">addOrReplaceCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONCodec (Maybe UnescapedTemplate)
+-&gt; Codec
+     Value
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+forall k v.
+(Eq k, Hashable k, FromJSONKey k, ToJSONKey k) =&gt;
+JSONCodec v -&gt; JSONCodec (HashMap k v)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#hashMapCodec"><span class="hs-identifier hs-var">hashMapCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621687185912"><span class="annot"><span class="annottext">templateCodec :: Codec Value UnescapedTemplate UnescapedTemplate
+</span><a href="#local-6989586621687185912"><span class="hs-identifier hs-var hs-var">templateCodec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall value. HasCodec value =&gt; JSONCodec value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621687185909"><span class="annot"><span class="annottext">dec :: Either
+  (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+  UnescapedTemplate
+-&gt; QueryParamsTransformFn
+</span><a href="#local-6989586621687185909"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687185926"><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+</span><a href="#local-6989586621687185926"><span class="hs-identifier hs-var">qps</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+-&gt; QueryParamsTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#AddOrReplace"><span class="hs-identifier hs-var">AddOrReplace</span></a></span><span> </span><span class="annot"><span class="annottext">([(UnescapedTemplate, Maybe UnescapedTemplate)]
+ -&gt; QueryParamsTransformFn)
+-&gt; [(UnescapedTemplate, Maybe UnescapedTemplate)]
+-&gt; QueryParamsTransformFn
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+-&gt; [(UnescapedTemplate, Maybe UnescapedTemplate)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+</span><a href="#local-6989586621687185926"><span class="hs-identifier hs-var">qps</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><a href="#local-6989586621687185909"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687185928"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185928"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; QueryParamsTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#ParamTemplate"><span class="hs-identifier hs-var">ParamTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185928"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>      </span><span id="local-6989586621687185910"><span class="annot"><span class="annottext">enc :: QueryParamsTransformFn
+-&gt; Either
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     UnescapedTemplate
+</span><a href="#local-6989586621687185910"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#AddOrReplace"><span class="hs-identifier hs-type">AddOrReplace</span></a></span><span> </span><span id="local-6989586621687185931"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621687185931"><span class="hs-identifier hs-var">addOrReplace</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+-&gt; Either
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     UnescapedTemplate
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+ -&gt; Either
+      (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+      UnescapedTemplate)
+-&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+-&gt; Either
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     UnescapedTemplate
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+-&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621687185931"><span class="hs-identifier hs-var">addOrReplace</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><a href="#local-6989586621687185910"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#ParamTemplate"><span class="hs-identifier hs-type">ParamTemplate</span></a></span><span> </span><span id="local-6989586621687185933"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185933"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+-&gt; Either
+     (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+     UnescapedTemplate
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185933"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687185936"><span id="local-6989586621687185940"><span id="local-6989586621687185943"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier hs-type">QueryParamsTransformFn</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621687185956"><span class="annot"><span class="annottext">toJSON :: QueryParamsTransformFn -&gt; Value
+</span><a href="#local-6989586621687185956"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#AddOrReplace"><span class="hs-identifier hs-type">AddOrReplace</span></a></span><span> </span><span id="local-6989586621687185958"><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621687185958"><span class="hs-identifier hs-var">addOrReplace</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value)
+-&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate) -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+-&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+</span><a href="#local-6989586621687185958"><span class="hs-identifier hs-var">addOrReplace</span></a></span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#ParamTemplate"><span class="hs-identifier hs-type">ParamTemplate</span></a></span><span> </span><span id="local-6989586621687185959"><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185959"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">J.toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate
+</span><a href="#local-6989586621687185959"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687185962"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier hs-type">QueryParamsTransformFn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621687185981"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser QueryParamsTransformFn
+</span><a href="#local-6989586621687185981"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621687185983"><span class="annot"><span class="annottext">xs :: Value
+</span><a href="#local-6989586621687185983"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Object"><span class="hs-identifier hs-type">J.Object</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(UnescapedTemplate, Maybe UnescapedTemplate)]
+-&gt; QueryParamsTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#AddOrReplace"><span class="hs-identifier hs-var">AddOrReplace</span></a></span><span> </span><span class="annot"><span class="annottext">([(UnescapedTemplate, Maybe UnescapedTemplate)]
+ -&gt; QueryParamsTransformFn)
+-&gt; (HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+    -&gt; [(UnescapedTemplate, Maybe UnescapedTemplate)])
+-&gt; HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+-&gt; QueryParamsTransformFn
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+-&gt; [(UnescapedTemplate, Maybe UnescapedTemplate)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap UnescapedTemplate (Maybe UnescapedTemplate)
+ -&gt; QueryParamsTransformFn)
+-&gt; Parser (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+-&gt; Parser QueryParamsTransformFn
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value
+-&gt; Parser (HashMap UnescapedTemplate (Maybe UnescapedTemplate))
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687185983"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span id="local-6989586621687185987"><span class="annot"><span class="annottext">xs :: Value
+</span><a href="#local-6989586621687185987"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnescapedTemplate -&gt; QueryParamsTransformFn
+</span><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#ParamTemplate"><span class="hs-identifier hs-var">ParamTemplate</span></a></span><span> </span><span class="annot"><span class="annottext">(UnescapedTemplate -&gt; QueryParamsTransformFn)
+-&gt; Parser UnescapedTemplate -&gt; Parser QueryParamsTransformFn
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser UnescapedTemplate
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">J.parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687185987"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser QueryParamsTransformFn
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Invalid query parameter&quot;</span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- NOTE: GHC does not let us attach Haddock documentation to data family</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- instances, so 'QueryParamsTransformFn' is defined separately from this</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- wrapper.</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="QueryParamsTransformFn_"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn_"><span class="hs-identifier hs-var">QueryParamsTransformFn_</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParamsTransformFn"><span class="hs-identifier hs-type">QueryParamsTransformFn</span></a></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687185991"><span id="local-6989586621687185995"><span id="local-6989586621687185999"><span class="annot"><span class="annottext">Int -&gt; TransformFn QueryParams -&gt; ShowS
+[TransformFn QueryParams] -&gt; ShowS
+TransformFn QueryParams -&gt; String
+(Int -&gt; TransformFn QueryParams -&gt; ShowS)
+-&gt; (TransformFn QueryParams -&gt; String)
+-&gt; ([TransformFn QueryParams] -&gt; ShowS)
+-&gt; Show (TransformFn QueryParams)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TransformFn QueryParams -&gt; ShowS
+showsPrec :: Int -&gt; TransformFn QueryParams -&gt; ShowS
+$cshow :: TransformFn QueryParams -&gt; String
+show :: TransformFn QueryParams -&gt; String
+$cshowList :: [TransformFn QueryParams] -&gt; ShowS
+showList :: [TransformFn QueryParams] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687186002"><span id="local-6989586621687186005"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+(TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool)
+-&gt; (TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool)
+-&gt; Eq (TransformFn QueryParams)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+== :: TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+$c/= :: TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+/= :: TransformFn QueryParams -&gt; TransformFn QueryParams -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687186009"><span id="local-6989586621687186011"><span class="annot"><span class="annottext">(forall x.
+ TransformFn QueryParams -&gt; Rep (TransformFn QueryParams) x)
+-&gt; (forall x.
+    Rep (TransformFn QueryParams) x -&gt; TransformFn QueryParams)
+-&gt; Generic (TransformFn QueryParams)
+forall x.
+Rep (TransformFn QueryParams) x -&gt; TransformFn QueryParams
+forall x.
+TransformFn QueryParams -&gt; Rep (TransformFn QueryParams) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x.
+TransformFn QueryParams -&gt; Rep (TransformFn QueryParams) x
+from :: forall x.
+TransformFn QueryParams -&gt; Rep (TransformFn QueryParams) x
+$cto :: forall x.
+Rep (TransformFn QueryParams) x -&gt; TransformFn QueryParams
+to :: forall x.
+Rep (TransformFn QueryParams) x -&gt; TransformFn QueryParams
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687186014"><span class="annot"><span class="annottext">TransformFn QueryParams -&gt; ()
+(TransformFn QueryParams -&gt; ()) -&gt; NFData (TransformFn QueryParams)
+forall a. (a -&gt; ()) -&gt; NFData a
+$crnf :: TransformFn QueryParams -&gt; ()
+rnf :: TransformFn QueryParams -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687186019"><span id="local-6989586621687186023"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn QueryParams]
+Value -&gt; Parser (TransformFn QueryParams)
+(Value -&gt; Parser (TransformFn QueryParams))
+-&gt; (Value -&gt; Parser [TransformFn QueryParams])
+-&gt; FromJSON (TransformFn QueryParams)
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser (TransformFn QueryParams)
+parseJSON :: Value -&gt; Parser (TransformFn QueryParams)
+$cparseJSONList :: Value -&gt; Parser [TransformFn QueryParams]
+parseJSONList :: Value -&gt; Parser [TransformFn QueryParams]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687186028"><span id="local-6989586621687186032"><span id="local-6989586621687186036"><span id="local-6989586621687186040"><span class="annot"><span class="annottext">[TransformFn QueryParams] -&gt; Value
+[TransformFn QueryParams] -&gt; Encoding
+TransformFn QueryParams -&gt; Value
+TransformFn QueryParams -&gt; Encoding
+(TransformFn QueryParams -&gt; Value)
+-&gt; (TransformFn QueryParams -&gt; Encoding)
+-&gt; ([TransformFn QueryParams] -&gt; Value)
+-&gt; ([TransformFn QueryParams] -&gt; Encoding)
+-&gt; ToJSON (TransformFn QueryParams)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: TransformFn QueryParams -&gt; Value
+toJSON :: TransformFn QueryParams -&gt; Value
+$ctoEncoding :: TransformFn QueryParams -&gt; Encoding
+toEncoding :: TransformFn QueryParams -&gt; Encoding
+$ctoJSONList :: [TransformFn QueryParams] -&gt; Value
+toJSONList :: [TransformFn QueryParams] -&gt; Value
+$ctoEncodingList :: [TransformFn QueryParams] -&gt; Encoding
+toEncodingList :: [TransformFn QueryParams] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-keyword">instance</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#QueryParams"><span class="hs-identifier hs-type">QueryParams</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.QueryParams.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Request.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span>
+</span><span id="line-63"></span></pre></body></html>

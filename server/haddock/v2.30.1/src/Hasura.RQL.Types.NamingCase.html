@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.NamingCase</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier">NamingCase</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier">parseNamingConventionFromText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- | Represents the different possible type cases for fields and types, i.e.</span><span>
+</span><span id="line-14"></span><span class="hs-comment">--   @HasuraCase@ and @GraphqlCase@ (@CamelCase@ fields and @PascalCase@ types).</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">data</span><span> </span><span id="NamingCase"><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-var">NamingCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasuraCase"><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="GraphqlCase"><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span></span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687103222"><span id="local-6989586621687103224"><span class="annot"><span class="annottext">NamingCase -&gt; NamingCase -&gt; Bool
+(NamingCase -&gt; NamingCase -&gt; Bool)
+-&gt; (NamingCase -&gt; NamingCase -&gt; Bool) -&gt; Eq NamingCase
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: NamingCase -&gt; NamingCase -&gt; Bool
+== :: NamingCase -&gt; NamingCase -&gt; Bool
+$c/= :: NamingCase -&gt; NamingCase -&gt; Bool
+/= :: NamingCase -&gt; NamingCase -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687103229"><span id="local-6989586621687103231"><span id="local-6989586621687103235"><span class="annot"><span class="annottext">Int -&gt; NamingCase -&gt; ShowS
+[NamingCase] -&gt; ShowS
+NamingCase -&gt; String
+(Int -&gt; NamingCase -&gt; ShowS)
+-&gt; (NamingCase -&gt; String)
+-&gt; ([NamingCase] -&gt; ShowS)
+-&gt; Show NamingCase
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; NamingCase -&gt; ShowS
+showsPrec :: Int -&gt; NamingCase -&gt; ShowS
+$cshow :: NamingCase -&gt; String
+show :: NamingCase -&gt; String
+$cshowList :: [NamingCase] -&gt; ShowS
+showList :: [NamingCase] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687103239"><span id="local-6989586621687103241"><span class="annot"><span class="annottext">(forall x. NamingCase -&gt; Rep NamingCase x)
+-&gt; (forall x. Rep NamingCase x -&gt; NamingCase) -&gt; Generic NamingCase
+forall x. Rep NamingCase x -&gt; NamingCase
+forall x. NamingCase -&gt; Rep NamingCase x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. NamingCase -&gt; Rep NamingCase x
+from :: forall x. NamingCase -&gt; Rep NamingCase x
+$cto :: forall x. Rep NamingCase x -&gt; NamingCase
+to :: forall x. Rep NamingCase x -&gt; NamingCase
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687103246"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">AC.HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621687103256"><span class="annot"><span class="annottext">codec :: JSONCodec NamingCase
+</span><a href="#local-6989586621687103256"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec NamingCase -&gt; JSONCodec NamingCase
+forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier hs-var">AC.named</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;NamingCase&quot;</span></span><span>
+</span><span id="line-21"></span><span>      </span><span class="annot"><span class="annottext">(JSONCodec NamingCase -&gt; JSONCodec NamingCase)
+-&gt; JSONCodec NamingCase -&gt; JSONCodec NamingCase
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (NamingCase, Text) -&gt; JSONCodec NamingCase
+forall constant.
+Eq constant =&gt;
+NonEmpty (constant, Text) -&gt; JSONCodec constant
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#stringConstCodec"><span class="hs-identifier hs-var">AC.stringConstCodec</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;hasura-default&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;graphql-default&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687103262"><span id="local-6989586621687103266"><span id="local-6989586621687103269"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621687103274"><span class="annot"><span class="annottext">toJSON :: NamingCase -&gt; Value
+</span><a href="#local-6989586621687103274"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;hasura-default&quot;</span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;graphql-default&quot;</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687103279"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621687103287"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NamingCase
+</span><a href="#local-6989586621687103287"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase
+forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withText"><span class="hs-identifier hs-var">J.withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;NamingCase&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase)
+-&gt; (Text -&gt; Parser NamingCase) -&gt; Value -&gt; Parser NamingCase
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687103290"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687103290"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-var">parseNamingConventionFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687103290"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687103291"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687103291"><span class="hs-identifier hs-var">nc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Parser NamingCase
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621687103291"><span class="hs-identifier hs-var">nc</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687103292"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687103292"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser NamingCase
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687103292"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- Used for both the environment variable and JSON.</span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-type">parseNamingConventionFromText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span>
+</span><span id="line-34"></span><span id="parseNamingConventionFromText"><span class="annot"><span class="annottext">parseNamingConventionFromText :: Text -&gt; Either String NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-var hs-var">parseNamingConventionFromText</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;hasura-default&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Either String NamingCase
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#HasuraCase"><span class="hs-identifier hs-var">HasuraCase</span></a></span><span>
+</span><span id="line-35"></span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-var">parseNamingConventionFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;graphql-default&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Either String NamingCase
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.RQL.Types.NamingCase.html#GraphqlCase"><span class="hs-identifier hs-var">GraphqlCase</span></a></span><span>
+</span><span id="line-36"></span><span class="annot"><a href="Hasura.RQL.Types.NamingCase.html#parseNamingConventionFromText"><span class="hs-identifier hs-var">parseNamingConventionFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String NamingCase
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;naming_convention can either be \&quot;hasura-default\&quot; or \&quot;graphql-default\&quot;&quot;</span></span><span>
+</span><span id="line-37"></span></pre></body></html>
