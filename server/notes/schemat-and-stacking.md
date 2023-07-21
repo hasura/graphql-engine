@@ -1,7 +1,7 @@
-This note is in [Hasura.GraphQL.Schema.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Common.hs#L180).
+This note is in [Hasura.GraphQL.Schema.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Common.hs#L181).
 It is referenced at:
-  - line 50 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L50)
-  - line 59 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L59)
+  - line 49 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L49)
+  - line 58 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L58)
 
 # SchemaT and stacking
 
