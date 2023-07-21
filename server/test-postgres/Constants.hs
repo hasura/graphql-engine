@@ -62,6 +62,7 @@ serveOptions =
       soEnableTelemetry = Init.TelemetryDisabled,
       soStringifyNum = Options.Don'tStringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soRemoteNullForwardingPolicy = Options.RemoteForwardAccurately,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,

@@ -4,6 +4,7 @@ module Hasura.RQL.Types.Schema.Options
   ( SchemaOptions (..),
     StringifyNumbers (..),
     DangerouslyCollapseBooleans (..),
+    RemoteNullForwardingPolicy (..),
     InferFunctionPermissions (..),
     RemoteSchemaPermissions (..),
     OptimizePermissionFilters (..),
@@ -24,6 +25,7 @@ import Hasura.Prelude
 data SchemaOptions = SchemaOptions
   { soStringifyNumbers :: StringifyNumbers,
     soDangerousBooleanCollapse :: DangerouslyCollapseBooleans,
+    soRemoteNullForwardingPolicy :: RemoteNullForwardingPolicy,
     soInferFunctionPermissions :: InferFunctionPermissions,
     soOptimizePermissionFilters :: OptimizePermissionFilters,
     soIncludeUpdateManyFields :: IncludeUpdateManyFields,
@@ -86,6 +88,24 @@ instance ToJSON DangerouslyCollapseBooleans where
   toJSON = \case
     DangerouslyCollapseBooleans -> Bool True
     Don'tDangerouslyCollapseBooleans -> Bool False
+
+data RemoteNullForwardingPolicy
+  = RemoteForwardAccurately
+  | RemoteOnlyForwardNonNull
+  deriving (Show, Eq)
+
+instance FromJSON RemoteNullForwardingPolicy where
+  parseJSON =
+    withBool "RemoteNullForwardingPolicy"
+      $ pure
+      . \case
+        False -> RemoteForwardAccurately
+        True -> RemoteOnlyForwardNonNull
+
+instance ToJSON RemoteNullForwardingPolicy where
+  toJSON = \case
+    RemoteForwardAccurately -> Bool False
+    RemoteOnlyForwardNonNull -> Bool True
 
 -- | Should we infer function permissions? If this flag is set to
 -- 'InferFunctionPermissions', we may fail to build expression parsers

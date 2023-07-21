@@ -253,6 +253,9 @@ instance FromEnv Options.RemoteSchemaPermissions where
 instance FromEnv Options.DangerouslyCollapseBooleans where
   fromEnv = fmap (bool Options.Don'tDangerouslyCollapseBooleans Options.DangerouslyCollapseBooleans) . fromEnv @Bool
 
+instance FromEnv Options.RemoteNullForwardingPolicy where
+  fromEnv = fmap (bool Options.RemoteForwardAccurately Options.RemoteOnlyForwardNonNull) . fromEnv @Bool
+
 instance FromEnv Options.InferFunctionPermissions where
   fromEnv = fmap (bool Options.Don'tInferFunctionPermissions Options.InferFunctionPermissions) . fromEnv @Bool
 

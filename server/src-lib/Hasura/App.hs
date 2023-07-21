@@ -502,7 +502,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
   let cacheStaticConfig = buildCacheStaticConfig appEnv
       Loggers _ logger pgLogger = appEnvLoggers
-      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
+      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soRemoteNullForwardingPolicy
       cacheDynamicConfig =
         CacheDynamicConfig
           soInferFunctionPermissions

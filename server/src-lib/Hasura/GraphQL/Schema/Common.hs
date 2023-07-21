@@ -261,6 +261,7 @@ runSourceSchema context options sourceInfo (SchemaT action) = runReaderT action 
 type MonadBuildRemoteSchema r m n =
   ( MonadBuildSchemaBase m n,
     Has SchemaContext r,
+    Has Options.RemoteNullForwardingPolicy r,
     Has CustomizeRemoteFieldName r,
     Has MkTypename r
   )
@@ -268,15 +269,17 @@ type MonadBuildRemoteSchema r m n =
 -- | Runs a schema-building computation with all the context required to build a remote schema.
 runRemoteSchema ::
   SchemaContext ->
+  Options.RemoteNullForwardingPolicy ->
   SchemaT
     ( SchemaContext,
+      Options.RemoteNullForwardingPolicy,
       MkTypename,
       CustomizeRemoteFieldName
     )
     m
     a ->
   m a
-runRemoteSchema context (SchemaT action) = runReaderT action (context, mempty, mempty)
+runRemoteSchema context nullForwarding (SchemaT action) = runReaderT action (context, nullForwarding, mempty, mempty)
 
 type MonadBuildActionSchema r m n =
   ( MonadBuildSchemaBase m n,

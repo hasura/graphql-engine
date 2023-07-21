@@ -31,6 +31,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     wsReadCookieOption,
     stringifyNumOption,
     dangerousBooleanCollapseOption,
+    remoteNullForwardingPolicyOption,
     enabledAPIsOption,
     mxRefetchDelayOption,
     mxBatchSizeOption,
@@ -119,6 +120,7 @@ serveCommandParser =
     <*> parseWsReadCookie
     <*> parseStringifyNum
     <*> parseDangerousBooleanCollapse
+    <*> parseRemoteNullForwardingPolicy
     <*> parseEnabledAPIs
     <*> parseMxRefetchDelay
     <*> parseMxBatchSize
@@ -626,6 +628,24 @@ dangerousBooleanCollapseOption =
         "Emulate V1's behaviour re. boolean expression, where an explicit 'null'"
           <> " value will be interpreted to mean that the field should be ignored"
           <> " [DEPRECATED, WILL BE REMOVED SOON] (default: false)"
+    }
+
+parseRemoteNullForwardingPolicy :: Opt.Parser (Maybe Options.RemoteNullForwardingPolicy)
+parseRemoteNullForwardingPolicy =
+  fmap (bool Nothing (Just Options.RemoteOnlyForwardNonNull))
+    $ Opt.switch
+      ( Opt.long "remote-schema-skip-nulls"
+          <> Opt.help (Config._helpMessage remoteNullForwardingPolicyOption)
+      )
+
+remoteNullForwardingPolicyOption :: Config.Option Options.RemoteNullForwardingPolicy
+remoteNullForwardingPolicyOption =
+  Config.Option
+    { Config._default = Options.RemoteForwardAccurately,
+      Config._envVar = "HASURA_GRAPHQL_REMOTE_SCHEMA_SKIP_NULLS",
+      Config._helpMessage =
+        "Skip null values from arguments while resolving fields from remote schemas. (default: false, i.e."
+          <> " forward null values in argument as well)"
     }
 
 parseEnabledAPIs :: Opt.Parser (Maybe (HashSet Config.API))
@@ -1295,6 +1315,7 @@ serveCmdFooter =
         Config.optionPP metadataDBExtensionsSchemaOption,
         Config.optionPP apolloFederationStatusOption,
         Config.optionPP closeWebsocketsOnMetadataChangeOption,
-        Config.optionPP maxTotalHeaderLengthOption
+        Config.optionPP maxTotalHeaderLengthOption,
+        Config.optionPP remoteNullForwardingPolicyOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]

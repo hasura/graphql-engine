@@ -56,7 +56,7 @@ remoteRelationshipField schemaContext schemaOptions sourceCache remoteSchemaCach
           ExcludeRemoteSourceRelationship -> pure Nothing
       RFISchema remoteSchema ->
         -- see Note [SchemaT and stacking]
-        runRemoteSchema schemaContext do
+        runRemoteSchema schemaContext (soRemoteNullForwardingPolicy schemaOptions) do
           fields <- remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
           pure $ fmap (pure . fmap IR.RemoteSchemaField) fields
 
