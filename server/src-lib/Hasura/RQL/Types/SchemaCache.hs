@@ -2,9 +2,6 @@
 
 module Hasura.RQL.Types.SchemaCache
   ( SchemaCache (..),
-    SchemaCacheVer,
-    initSchemaCacheVer,
-    incSchemaCacheVer,
     TableConfig (..),
     emptyTableConfig,
     getAllRemoteSchemas,
@@ -296,16 +293,6 @@ data CronTriggerInfo = CronTriggerInfo
 instance ToJSON CronTriggerInfo where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
-
-newtype SchemaCacheVer = SchemaCacheVer {unSchemaCacheVer :: Word64}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
-
-initSchemaCacheVer :: SchemaCacheVer
-initSchemaCacheVer = SchemaCacheVer 0
-
-incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
-incSchemaCacheVer (SchemaCacheVer prev) =
-  SchemaCacheVer $ prev + 1
 
 type ActionCache = HashMap.HashMap ActionName ActionInfo -- info of all actions
 
@@ -796,7 +783,7 @@ getLogicalModelColExpDeps source logicalModelName = \case
   AVRelationship {} -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
-  AVColumn colInfo opExps -> do
+  AVColumn colInfo _redactionExp opExps -> do
     let columnName :: Column b
         columnName = ciColumn colInfo
 
@@ -853,7 +840,7 @@ getColExpDeps ::
 getColExpDeps bexp = do
   BoolExpCtx {source, currTable} <- ask
   case bexp of
-    AVColumn colInfo opExps ->
+    AVColumn colInfo _redactionExp opExps ->
       let columnName = ciColumn colInfo
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
@@ -886,7 +873,7 @@ getColExpDeps bexp = do
       let mkComputedFieldDep' r =
             mkComputedFieldDep @b r source currTable $ _acfbName computedFieldBoolExp
        in case _acfbBoolExp computedFieldBoolExp of
-            CFBEScalar opExps ->
+            CFBEScalar _redactionExp opExps ->
               let computedFieldDep =
                     mkComputedFieldDep'
                       $ bool DRSessionVariable DROnType

@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 -- | Metadata representation of a native query in the metadata,
@@ -7,13 +5,6 @@
 module Hasura.NativeQuery.Metadata
   ( NativeQueryName (..),
     NativeQueryMetadata (..),
-    nqmArguments,
-    nqmObjectRelationships,
-    nqmCode,
-    nqmDescription,
-    nqmReturns,
-    nqmArrayRelationships,
-    nqmRootFieldName,
     ArgumentName (..),
     InterpolatedItem (..),
     InterpolatedQuery (..),
@@ -24,11 +15,10 @@ where
 
 import Autodocodec
 import Autodocodec qualified as AC
-import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.HashMap.Strict.InsOrd.Autodocodec (sortedElemsCodec)
 import Data.Text.Extended qualified as T
-import Hasura.LogicalModel.Types
+import Hasura.LogicalModelResolver.Metadata (LogicalModelIdentifier)
 import Hasura.NativeQuery.InterpolatedQuery
 import Hasura.NativeQuery.Types (NativeQueryName (..), NullableScalarType (..))
 import Hasura.Prelude hiding (first)
@@ -48,7 +38,7 @@ type Relationships = InsOrdHashMap RelName
 data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
   { _nqmRootFieldName :: NativeQueryName,
     _nqmCode :: InterpolatedQuery ArgumentName,
-    _nqmReturns :: LogicalModelName,
+    _nqmReturns :: LogicalModelIdentifier b,
     _nqmArguments :: HashMap ArgumentName (NullableScalarType b),
     _nqmArrayRelationships :: Relationships (RelDef (RelManualNativeQueryConfig b)),
     _nqmObjectRelationships :: Relationships (RelDef (RelManualNativeQueryConfig b)),
@@ -104,5 +94,3 @@ deriving via
   (Autodocodec (NativeQueryMetadata b))
   instance
     (Backend b) => (ToJSON (NativeQueryMetadata b))
-
-makeLenses ''NativeQueryMetadata

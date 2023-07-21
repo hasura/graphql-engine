@@ -68,7 +68,7 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
   const {
     checkData: { onCheck, checkedIds, reset, checkAllElement },
     paginatedData,
-    checkedItems,
+    getCheckedItems,
   } = listProps;
 
   if (isLoading) return <Skeleton count={5} height={20} className="mb-1" />;
@@ -84,17 +84,17 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
   return (
     <div className="space-y-4">
       <TrackableListMenu
-        checkActionText={`Untrack Selected (${checkedItems.length})`}
+        checkActionText={`Untrack Selected (${checkedIds.length})`}
         handleTrackButton={() => {
           untrackFunction({
-            functionsToBeUntracked: checkedItems.map(
+            functionsToBeUntracked: getCheckedItems().map(
               fn => fn.qualifiedFunction
             ),
             onSuccess: () => {
               hasuraToast({
                 type: 'success',
                 title: 'Success',
-                message: `Untracked ${checkedItems.length} objects`,
+                message: `Untracked ${checkedIds.length} objects`,
               });
               reset();
             },
@@ -118,7 +118,14 @@ export const TrackedFunctions = (props: TrackedFunctionsProps) => {
                     [
                       <span
                         className="py-2"
-                        onClick={() => invalidateMetadata()}
+                        onClick={() =>
+                          invalidateMetadata({
+                            componentName: 'TrackedFunctions',
+                            reasons: [
+                              'Refreshing tracked functions on dropdown menu item click.',
+                            ],
+                          })
+                        }
                       >
                         Refresh
                       </span>,

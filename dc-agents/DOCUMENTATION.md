@@ -138,7 +138,11 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
     },
     "relationships": {},
     "scalar_types": {
-      "DateTime": {"comparison_operators": {"DateTime": {"in_year": "Number"}}}
+      "DateTime": {
+        "comparison_operators": {
+          "in_year": "Number"
+        }
+      }
     },
     "user_defined_functions": {}
   },

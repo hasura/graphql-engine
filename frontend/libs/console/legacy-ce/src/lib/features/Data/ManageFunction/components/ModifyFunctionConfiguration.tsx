@@ -129,7 +129,7 @@ export const ModifyFunctionConfiguration = (
           isLoading={isLoading}
           onClose={props.onClose}
           callToDeny="Cancel"
-          callToAction="Edit Configuration"
+          callToAction="Save Configuration"
           onSubmitAnalyticsName="actions-tab-generate-types-submit"
           onCancelAnalyticsName="actions-tab-generate-types-cancel"
         />

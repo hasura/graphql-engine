@@ -1,22 +1,22 @@
+import { useDispatch, useStore } from 'react-redux';
+import { Link } from 'react-router';
 import {
   createActionMigration,
   deleteAction,
   executeActionCreation,
 } from '../../../../components/Services/Actions/ServerIO';
-import { Link } from 'react-router';
-import { useMetadata } from '../../../MetadataAPI';
-import { useDispatch, useStore } from 'react-redux';
-import { GeneratedAction } from './types';
 import { parseCustomTypes } from '../../../../shared/utils/hasuraCustomTypeUtils';
+import { useMetadata } from '../../../MetadataAPI';
 import { generatedActionToHasuraAction } from '../OASGenerator/utils';
+import { GeneratedAction } from './types';
 
+import React from 'react';
 import { FaAngleRight, FaFileImport, FaHome } from 'react-icons/fa';
 import { z } from 'zod';
-import { useQueryClient } from 'react-query';
-import { SimpleForm } from '../../../../new-components/Form';
-import { OasGeneratorForm } from './OASGeneratorForm';
-import React from 'react';
 import { useLocalStorage } from '../../../../hooks';
+import { SimpleForm } from '../../../../new-components/Form';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
+import { OasGeneratorForm } from './OASGeneratorForm';
 
 export const formSchema = z.object({
   oas: z.string(),
@@ -49,7 +49,7 @@ export const Breadcrumbs = () => (
 export const OASGeneratorPage = () => {
   const dispatch = useDispatch();
   const store = useStore();
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
 
   const [savedOas, setSavedOas] = useLocalStorage<string>('oas', '');
 
@@ -77,7 +77,10 @@ export const OASGeneratorPage = () => {
           state,
           false,
           () => {
-            queryClient.invalidateQueries(['metadata']);
+            invalidateMetadata({
+              componentName: 'OASGeneratorPage',
+              reasons: ['onGenerate action migration occurred'],
+            });
             setBusy(false);
           },
           () => {
@@ -99,7 +102,10 @@ export const OASGeneratorPage = () => {
         store.getState,
         false,
         () => {
-          queryClient.invalidateQueries(['metadata']);
+          invalidateMetadata({
+            componentName: 'OASGeneratorPage',
+            reasons: ['onDelete delete action occurred'],
+          });
           setBusy(false);
         },
         () => {

@@ -8,7 +8,7 @@ where
 import Database.PG.Query.Pool qualified as QQ
 import Hasura.Backends.Postgres.Types.Update (UpdateOpExpression (..))
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
 import Test.Backend.Postgres.Misc qualified as P
 import Test.Backend.Postgres.Update qualified as Test
@@ -28,7 +28,7 @@ spec =
             Expect.SingleBatchUpdate
               $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
-                  ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                  ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                 },
           expectedSQL =
             [QQ.sql|
@@ -53,7 +53,7 @@ spec =
                     [ (P.nameColumn, UpdateSet P.textNew),
                       (P.descColumn, UpdateSet P.textOther)
                     ],
-                  ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                  ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                 },
           expectedSQL =
             [QQ.sql|
@@ -76,8 +76,8 @@ spec =
               $ Expect.UpdateBatchBuilder
                 { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                   ubbWhere =
-                    [ (P.idColumn, [AEQ True P.integerOne]),
-                      (P.nameColumn, [AEQ False P.textOld])
+                    [ (P.idColumn, [AEQ NonNullableComparison P.integerOne]),
+                      (P.nameColumn, [AEQ NullableComparison P.textOld])
                     ]
                 },
           expectedSQL =
@@ -107,13 +107,13 @@ spec =
               [ Expect.UpdateBatchBuilder
                   { ubbOperations = [(P.nameColumn, UpdateSet P.textNew)],
                     ubbWhere =
-                      [ (P.idColumn, [AEQ True P.integerOne]),
-                        (P.nameColumn, [AEQ False P.textNew])
+                      [ (P.idColumn, [AEQ NonNullableComparison P.integerOne]),
+                        (P.nameColumn, [AEQ NullableComparison P.textNew])
                       ]
                   },
                 Expect.UpdateBatchBuilder
                   { ubbOperations = [(P.descColumn, UpdateSet P.textNew)],
-                    ubbWhere = [(P.idColumn, [AEQ True P.integerOne])]
+                    ubbWhere = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])]
                   }
               ],
           expectedSQL =

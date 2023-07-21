@@ -25,7 +25,8 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), lmmSelectPermissions)
+import Hasura.LogicalModel.Lenses (lmmSelectPermissions)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName, logicalModelFieldMapCodec)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))

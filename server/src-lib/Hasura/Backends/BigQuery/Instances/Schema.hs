@@ -4,6 +4,7 @@
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
 
+import Control.Applicative (Const (..))
 import Data.Aeson qualified as J
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
@@ -363,20 +364,20 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
 
 bqCountTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column 'BigQuery)) ->
-  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
+  Maybe (Parser 'Both n (Column 'BigQuery, AnnRedactionExpUnpreparedValue 'BigQuery)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery))
 bqCountTypeInput = \case
   Just columnEnum -> do
     columns <- P.fieldOptional Name._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe [Column 'BigQuery] -> CountType 'BigQuery
-    mkCountType _ Nothing = BigQuery.StarCountable
+    mkCountType :: IR.CountDistinct -> Maybe [(Column 'BigQuery, AnnRedactionExpUnpreparedValue 'BigQuery)] -> CountType 'BigQuery (IR.UnpreparedValue 'BigQuery)
+    mkCountType _ Nothing = Const $ BigQuery.StarCountable
     mkCountType IR.SelectCountDistinct (Just cols) =
-      maybe BigQuery.StarCountable BigQuery.DistinctCountable $ nonEmpty cols
+      maybe (Const BigQuery.StarCountable) (Const . BigQuery.DistinctCountable) $ nonEmpty (fst <$> cols) -- TODO(redactionExp): Deal with redaction expressions
     mkCountType IR.SelectCountNonDistinct (Just cols) =
-      maybe BigQuery.StarCountable BigQuery.NonNullFieldCountable $ nonEmpty cols
+      maybe (Const BigQuery.StarCountable) (Const . BigQuery.NonNullFieldCountable) $ nonEmpty (fst <$> cols) -- TODO(redactionExp): Deal with redaction expressions
 
 geographyWithinDistanceInput ::
   forall m n r.
@@ -468,7 +469,7 @@ bqComputedField ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
       field <- columnParser @'BigQuery (ColumnScalar columnType) (G.Nullability True)
       pure
         $ P.selection_ graphQLName Nothing field
-        $> IR.mkAnnColumnField columnName (ColumnScalar columnType) Nothing Nothing
+        $> IR.mkAnnColumnField columnName (ColumnScalar columnType) NoRedaction Nothing
 
     computedFieldFunctionArgs ::
       (G.Name -> G.Name) ->

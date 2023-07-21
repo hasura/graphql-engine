@@ -37,12 +37,13 @@ services:
       - ./DataSources/sqlite.db:/sqlite.db
   mssql:
     container_name: 'mssql'
+    user: root
     ports:
       - '1433:1433'
     volumes:
       - mssql-database-data:/var/opt/mssql
     stdin_open: true
-    image: mcr.microsoft.com/azure-sql-edge
+    image: mcr.microsoft.com/azure-sql-edge:latest
     # if not running Apple Silicon (M1/M2 etc), you can use this:
     #image: mcr.microsoft.com/mssql/server:2022-latest
     init: true # azure-sql-edge doesn't shut down properly without this
@@ -120,7 +121,16 @@ services:
     container_name: mongo_connector
     ports:
       - 3000:3000
+  cockroachdb:
+    image: cockroachdb/cockroach:latest
+    ports:
+      - '26257:26257'
+      - '8090:8080'
+    command: start-single-node --insecure
+    volumes:
+      - 'cockroach-db-data:/cockroach-data/crdb:/cockroach/cockroach-data'
 
 volumes:
   metadata_db_data:
   mssql-database-data:
+  cockroach-db-data:

@@ -399,7 +399,7 @@ resolveAsyncActionQuery userInfo annAction =
     sessionVarsColumn = (unsafePGCol "session_variables", PGJSONB)
 
     mkAnnFldFromPGCol (column', columnType) =
-      RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
+      RS.mkAnnColumnField column' (ColumnScalar columnType) NoRedaction Nothing
 
     tableBoolExpression =
       let actionIdColumnInfo =
@@ -412,7 +412,7 @@ resolveAsyncActionQuery userInfo annAction =
                 ciDescription = Nothing,
                 ciMutability = ColumnMutability False False
               }
-          actionIdColumnEq = BoolField $ AVColumn actionIdColumnInfo [AEQ True $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
+          actionIdColumnEq = BoolField $ AVColumn actionIdColumnInfo NoRedaction [AEQ NonNullableComparison $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
           -- TODO: avoid using ColumnInfo
           sessionVarsColumnInfo =
             ColumnInfo
@@ -431,7 +431,7 @@ resolveAsyncActionQuery userInfo annAction =
               $ PG.JSONB
               $ J.toJSON
               $ _uiSession userInfo
-          sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
+          sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo NoRedaction [AEQ NonNullableComparison sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
           -- only when it's session variables are equal to that of action's.
@@ -723,9 +723,9 @@ processOutputSelectionSet tableRowInput actionOutputType definitionList actionFi
 
 actionFieldToAnnField :: IR.ActionFieldG Void -> RS.AnnFieldG ('Postgres 'Vanilla) Void v
 actionFieldToAnnField = \case
-  IR.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFScalar asf -> RS.mkAnnColumnField (unsafePGCol $ toTxt asf) (ColumnScalar PGJSON) NoRedaction Nothing
   IR.ACFExpression txt -> RS.AFExpression txt
-  IR.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) Nothing Nothing
+  IR.ACFNestedObject fieldName _ -> RS.mkAnnColumnField (unsafePGCol $ toTxt fieldName) (ColumnScalar PGJSON) NoRedaction Nothing
 
 mkJsonAggSelect :: GraphQLType -> JsonAggSelect
 mkJsonAggSelect =

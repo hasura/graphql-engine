@@ -1,18 +1,17 @@
 import { useCallback } from 'react';
 import {
-  MetadataFunction,
-  QualifiedFunction,
-} from '../../hasura-metadata-types';
-import {
   MetadataMigrationOptions,
   useMetadataMigration,
 } from '../../MetadataAPI/hooks/useMetadataMigration';
 import {
   MetadataSelectors,
   areTablesEqual,
-  useInvalidateMetadata,
   useMetadata,
 } from '../../hasura-metadata-api';
+import {
+  MetadataFunction,
+  QualifiedFunction,
+} from '../../hasura-metadata-types';
 import { transformErrorResponse } from '../errorUtils';
 
 export type MetadataFunctionPayload = {
@@ -26,12 +25,9 @@ export const useSetFunctionConfiguration = ({
   dataSourceName,
   ...globalMutateOptions
 }: { dataSourceName: string } & MetadataMigrationOptions) => {
-  const invalidateMetadata = useInvalidateMetadata();
-
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
     onSuccess: (data, variables, ctx) => {
-      invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variables, ctx);
     },
     errorTransform: transformErrorResponse,

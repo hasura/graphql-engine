@@ -65,27 +65,22 @@ query fetchRegistrySchema ($schemaId: uuid!) {
 `);
 
 export const FETCH_ALERT_CONFIG = gql(`
-query QueryAlerts($projectId: uuid!) {
-  schema_registry_alerts(where: {project_id: {_eq: $projectId}}) {
-    config
-    alert_type
-    id
-    meta
+query fetchAlertConfig($projectId: uuid!, $type: alert_service_type_enum!) {
+  alert_config_service(where: {project_id: {_eq: $projectId}, type: {_eq: $type}}) {
     project_id
-    slack_webhook
+    type
+    metadata
+    rules
   }
 }
 `);
 
 export const SET_ALERT_CONFIG = gql(`
-mutation UpsertEmailAlertConfig($projectId: uuid, $config: jsonb) {
-  insert_schema_registry_alerts_one(object: {alert_type: email, config: $config, project_id: $projectId}, on_conflict: {constraint: schema_registry_alerts_project_id_alert_type_key, update_columns: config}) {
-    id
-    project_id
-    alert_type
-    config
+mutation UpsertAlertConfig($projectId: uuid, $rules: jsonb) {
+  insert_alert_config(objects: {alert_types: {data: {type: "SchemaRegistryUpdates"}, on_conflict: {constraint: alert_config_alert_type_pkey, update_columns: type}}, project_id: $projectId, enabled: true, alert_config_services: {data: {rules: $rules, type: mail, enabled: true}, on_conflict: {constraint: alert_config_service_pkey, update_columns: rules}}}, on_conflict: {constraint: alert_config_pkey, update_columns: enabled}) {
+    affected_rows
   }
-}
+} 
 `);
 
 export const ADD_SCHEMA_TAG = gql(`
@@ -104,4 +99,39 @@ mutation DeleteSchemaTag($ID: uuid!) {
     id
   }
 }
+`);
+
+export const DELETE_SLACK_APP = gql(`
+mutation DeleteSlackApp($projectID: uuid!) {
+  deleteSlackApp(args: {projectID: $projectID}) {
+    status
+  }
+}
+`);
+
+export const FETCH_SLACK_STATE = gql(`
+query FetchSlackState($projectId: uuid!) {
+  slack_config(where: {project_id: {_eq: $projectId}}) {
+    channel_name
+    webhook_url
+    project_id
+    channel_id
+    slack_team_id
+    team_name
+  }
+}
+`);
+
+export const SLACK_TOKEN_EXCHANGE_QUERY = gql(`
+mutation slackTokenExchange (
+  $code: String!
+  $projectId: uuid!
+  ) {
+    slackExchangeOAuthToken (
+      code: $code
+      projectId: $projectId
+    ) {
+      channel_name
+    }
+  }
 `);

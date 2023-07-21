@@ -1,0 +1,349 @@
+{
+  "__elements": {},
+  "__inputs": [
+    {
+      "description": "",
+      "label": "Loki",
+      "name": "DS_LOKI",
+      "pluginId": "loki",
+      "pluginName": "Loki",
+      "type": "datasource"
+    },
+    {
+      "description": "",
+      "label": "Jaeger",
+      "name": "DS_JAEGER",
+      "pluginId": "jaeger",
+      "pluginName": "Jaeger",
+      "type": "datasource"
+    }
+  ],
+  "__requires": [
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "type": "grafana",
+      "version": "9.5.2"
+    },
+    {
+      "id": "jaeger",
+      "name": "Jaeger",
+      "type": "datasource",
+      "version": "1.0.0"
+    },
+    {
+      "id": "logs",
+      "name": "Logs",
+      "type": "panel",
+      "version": ""
+    },
+    {
+      "id": "loki",
+      "name": "Loki",
+      "type": "datasource",
+      "version": "1.0.0"
+    },
+    {
+      "id": "traces",
+      "name": "Traces",
+      "type": "panel",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "View Hasura Logs and Traces",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI}"
+      },
+      "gridPos": {
+        "h": 20,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI}"
+          },
+          "editorMode": "builder",
+          "expr": "{job=~\"$job\", instance=~\"$instance\"} |~ `(?i)$search_keyword` | json | type =~ `$log_type`",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Hasura Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "jaeger",
+        "uid": "${DS_JAEGER}"
+      },
+      "description": "Paste the Trace ID to search the trace",
+      "gridPos": {
+        "h": 20,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "jaeger",
+            "uid": "${DS_JAEGER}"
+          },
+          "query": "$trace_id",
+          "refId": "A"
+        }
+      ],
+      "title": "Trace Detail",
+      "type": "traces"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["hasura"],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Loki",
+          "value": "Loki"
+        },
+        "description": "Loki data source",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "DS_LOKI",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Jaeger",
+          "value": "Jaeger"
+        },
+        "description": "Jaeger data source",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Jaeger",
+        "multi": false,
+        "name": "DS_JAEGER",
+        "options": [],
+        "query": "jaeger",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job",
+        "multi": true,
+        "name": "job",
+        "options": [],
+        "query": {
+          "label": "job",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI}"
+        },
+        "definition": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instance",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {
+          "label": "instance",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Search log content",
+        "hide": 0,
+        "label": "Search",
+        "name": "search_keyword",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "description": "Hasura Log Type",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Type",
+        "multi": true,
+        "name": "log_type",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "startup",
+            "value": "startup"
+          },
+          {
+            "selected": false,
+            "text": "http-log",
+            "value": "http-log"
+          },
+          {
+            "selected": false,
+            "text": "websocket-log",
+            "value": "websocket-log"
+          },
+          {
+            "selected": false,
+            "text": "event-trigger",
+            "value": "event-trigger"
+          },
+          {
+            "selected": false,
+            "text": "webhook-log",
+            "value": "webhook-log"
+          },
+          {
+            "selected": false,
+            "text": "query-log",
+            "value": "query-log"
+          },
+          {
+            "selected": false,
+            "text": "livequery-poller-log",
+            "value": "livequery-poller-log"
+          }
+        ],
+        "query": "startup,http-log,websocket-log,event-trigger,webhook-log,query-log,livequery-poller-log",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "description": "Hasura Trace ID",
+        "hide": 0,
+        "label": "Trace ID",
+        "name": "trace_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-5m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Hasura Logs & Traces",
+  "uid": "b4a37738-ba1b-4252-8905-516de01093ea",
+  "version": 1,
+  "weekStart": ""
+}

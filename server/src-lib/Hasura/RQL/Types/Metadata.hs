@@ -59,9 +59,11 @@ import Data.Monoid (Dual (..), Endo (..))
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.Incremental qualified as Inc
-import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName, lmmSelectPermissions)
+import Hasura.LogicalModel.Lenses (lmmSelectPermissions)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata, LogicalModelName)
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
-import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName, nqmArrayRelationships)
+import Hasura.NativeQuery.Lenses (nqmArrayRelationships)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata, NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit

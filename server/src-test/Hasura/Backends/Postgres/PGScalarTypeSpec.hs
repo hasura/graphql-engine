@@ -11,7 +11,7 @@ import Prelude
 
 spec :: Spec
 spec =
-  describe "parse array scalar types" $ do
+  describe "parse array scalar types with arrays switched on" $ do
     let expectations =
           [ ("text", PGText),
             ("text[]", PGArray PGText),

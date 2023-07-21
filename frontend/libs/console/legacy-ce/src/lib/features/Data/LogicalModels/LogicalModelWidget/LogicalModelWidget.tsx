@@ -25,9 +25,9 @@ import { formFieldToLogicalModelField } from './mocks/utils/formFieldToLogicalMo
 import { useSupportedDrivesForNativeQueries } from '../hook';
 
 export type AddLogicalModelDialogProps = {
-  defaultValues?: AddLogicalModelFormData;
+  defaultValues?: Partial<AddLogicalModelFormData>;
   onCancel?: () => void;
-  onSubmit?: () => void;
+  onSubmit?: (data: AddLogicalModelFormData) => void;
   disabled?: CreateBooleanMap<
     AddLogicalModelFormData & {
       callToAction?: boolean;
@@ -115,7 +115,7 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
           type: 'success',
           title: LOGICAL_MODEL_CREATE_SUCCESS,
         });
-        props.onSubmit?.();
+        props.onSubmit?.(data);
       },
       onError: err => {
         hasuraToast({

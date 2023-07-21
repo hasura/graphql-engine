@@ -1,12 +1,8 @@
-import {
-  MetadataUtils,
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../../hasura-metadata-api';
-import { MetadataTable } from '../../../hasura-metadata-types';
-import { useMetadataMigration } from '../../../MetadataAPI';
-import { useFireNotification } from '../../../../new-components/Notifications';
 import { useCallback } from 'react';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { useMetadataMigration } from '../../../MetadataAPI';
+import { MetadataUtils, useMetadata } from '../../../hasura-metadata-api';
+import { MetadataTable } from '../../../hasura-metadata-types';
 
 export const useUpdateTableConfiguration = (
   dataSourceName: string,
@@ -15,8 +11,6 @@ export const useUpdateTableConfiguration = (
   const { mutate, ...rest } = useMetadataMigration();
 
   const { fireNotification } = useFireNotification();
-
-  const invalidateMetadata = useInvalidateMetadata();
 
   const { data } = useMetadata(m => ({
     source: MetadataUtils.findMetadataSource(dataSourceName, m),
@@ -52,8 +46,6 @@ export const useUpdateTableConfiguration = (
           },
           {
             onSuccess: () => {
-              invalidateMetadata();
-
               fireNotification({
                 type: 'success',
                 title: 'Success!',
@@ -77,7 +69,6 @@ export const useUpdateTableConfiguration = (
       dataSourceName,
       fireNotification,
       mutate,
-      invalidateMetadata,
       metadataTable,
       resource_version,
       source,

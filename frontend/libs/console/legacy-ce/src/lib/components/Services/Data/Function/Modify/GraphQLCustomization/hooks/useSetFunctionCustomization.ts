@@ -1,5 +1,9 @@
-import { Driver } from '../../../../../../../dataSources';
 import { getDriverPrefix } from '../../../../../../../features/DataSource';
+import {
+  QualifiedFunction,
+  SupportedDrivers,
+  Table,
+} from '../../../../../../../features/hasura-metadata-types';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
@@ -13,12 +17,17 @@ type Configuration = {
     function?: string;
   };
   custom_name?: string;
+  response?: {
+    table: Table;
+    type: string;
+  };
 };
 
 type OnSetFunctionCustomizationArgs = {
-  driver: Driver;
+  driver: SupportedDrivers;
   dataSourceName: string;
-  functionName: string;
+  // the plain function name is used by native databases, the qualified function by GDC data sources
+  functionName: string | QualifiedFunction;
   configuration: Configuration;
 };
 
@@ -29,6 +38,7 @@ type Props = {
 
 export const useSetFunctionCustomization = ({ onSuccess, onError }: Props) => {
   const dispatch = useAppDispatch();
+
   const mutation = useMetadataMigration({
     onSuccess: () => {
       dispatch(updateSchemaInfo()).then(() => {

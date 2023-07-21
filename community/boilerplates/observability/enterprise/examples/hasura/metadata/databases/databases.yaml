@@ -1,0 +1,45 @@
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HGE_DATABASE_URL
+      isolation_level: read-committed
+      pool_settings:
+        connection_lifetime: 600
+        idle_timeout: 180
+        retries: 1
+      use_prepared_statements: true
+    read_replicas:
+      - database_url:
+          from_env: HGE_DATABASE_REPLICA_URL
+        isolation_level: read-committed
+        use_prepared_statements: false
+  health_check:
+    interval: 10
+    retries: 3
+    retry_interval: 5
+    test:
+      sql: SELECT 1
+    timeout: 5
+  tables: "!include default/tables/tables.yaml"
+- name: failed
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HGE_DATABASE_REPLICA_URL
+      isolation_level: repeatable-read
+      pool_settings:
+        connection_lifetime: 600
+        idle_timeout: 180
+        retries: 1
+      use_prepared_statements: true
+  health_check:
+    interval: 10
+    retries: 0
+    retry_interval: 5
+    test:
+      sql: SELECT pg_sleep(5)
+    timeout: 1
+  tables: "!include failed/tables/tables.yaml"

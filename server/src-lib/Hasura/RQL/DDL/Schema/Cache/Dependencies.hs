@@ -176,7 +176,7 @@ pruneDanglingDependents cache =
             SOILogicalModelObj logicalModelName logicalModelObjId -> do
               logicalModel <- resolveLogicalModel sourceInfo logicalModelName
               case logicalModelObjId of
-                LMOInnerLogicalModel inner ->
+                LMOReferencedLogicalModel inner ->
                   void $ resolveLogicalModel sourceInfo inner
                 LMOPerm roleName permType -> do
                   let rolePermissions :: Maybe (RolePermInfo b)
@@ -202,6 +202,8 @@ pruneDanglingDependents cache =
                   unless (InsOrdHashMap.member colName (_lmiFields (_nqiReturns nativeQueryInfo)))
                     $ Left
                       ("native query " <> nativeQueryName <<> " has no field named " <>> colName)
+                NQOReferencedLogicalModel inner ->
+                  void $ resolveLogicalModel sourceInfo inner
             SOIStoredProcedure storedProcedureName -> do
               void $ resolveStoredProcedure sourceInfo storedProcedureName
             SOIStoredProcedureObj storedProcedureName storedProcedureObjId -> do
@@ -347,6 +349,7 @@ deleteMetadataObject = \case
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         siNativeQueries . ix nativeQueryName %~ case nativeQueryObjId of
           NQMORel name _ -> nqiRelationships %~ InsOrdHashMap.delete name
+          NQMOReferencedLogicalModel _ -> id
       SMOStoredProcedure name -> siStoredProcedures %~ HashMap.delete name
       SMOLogicalModel name ->
         -- TODO: if I'm inconsistent, delete everything that depends on me
@@ -357,7 +360,7 @@ deleteMetadataObject = \case
           LMMOPerm roleName PTInsert -> lmiPermissions . ix roleName . permIns .~ Nothing
           LMMOPerm roleName PTUpdate -> lmiPermissions . ix roleName . permUpd .~ Nothing
           LMMOPerm roleName PTDelete -> lmiPermissions . ix roleName . permDel .~ Nothing
-          LMMOInnerLogicalModel _ -> id
+          LMMOReferencedLogicalModel _ -> id
       SMOTableObj tableName tableObjectId ->
         siTables . ix tableName %~ case tableObjectId of
           MTORel name _ -> tiCoreInfo . tciFieldInfoMap %~ HashMap.delete (fromRel name)

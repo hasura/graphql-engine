@@ -1,10 +1,12 @@
 module Hasura.RQL.DDL.Relationship
   ( CreateArrRel (..),
     CreateObjRel (..),
+    execCreateRelationship,
     runCreateRelationship,
     defaultBuildObjectRelationshipInfo,
     defaultBuildArrayRelationshipInfo,
     DropRel,
+    execDropRel,
     runDropRel,
     dropRelationshipInMetadata,
     SetRelComment,
@@ -53,13 +55,18 @@ newtype CreateArrRel b = CreateArrRel {unCreateArrRel :: WithTable b (ArrRelDef 
 newtype CreateObjRel b = CreateObjRel {unCreateObjRel :: WithTable b (ObjRelDef b)}
   deriving newtype (FromJSON)
 
-runCreateRelationship ::
-  forall m b a.
-  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
+execCreateRelationship ::
+  forall b m a.
+  ( BackendMetadata b,
+    CacheRM m,
+    MonadError QErr m,
+    ToJSON a
+  ) =>
   RelType ->
   WithTable b (RelDef a) ->
-  m EncJSON
-runCreateRelationship relType (WithTable source tableName relDef) = do
+  Metadata ->
+  m (MetadataObjId, MetadataModifier)
+execCreateRelationship relType (WithTable source tableName relDef) _ = do
   let relName = _rdName relDef
   -- Check if any field with relationship name already exists in the table
   tableFields <- _tciFieldInfoMap <$> askTableCoreInfo @b source tableName
@@ -99,10 +106,23 @@ runCreateRelationship relType (WithTable source tableName relDef) = do
         (Right value)
       pure $ tmArrayRelationships %~ InsOrdHashMap.insert relName (RelDef relName (_rdUsing value) comment)
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ tableMetadataSetter @b source tableName
-    %~ addRelationshipToMetadata
+  let metadataModifier = MetadataModifier do
+        tableMetadataSetter @b source tableName
+          %~ addRelationshipToMetadata
+
+  pure (metadataObj, metadataModifier)
+
+runCreateRelationship ::
+  forall m b a.
+  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
+  RelType ->
+  WithTable b (RelDef a) ->
+  m EncJSON
+runCreateRelationship relType withTable = do
+  (metadataObj, metadataModifier) <-
+    getMetadata >>= execCreateRelationship relType withTable
+
+  buildSchemaCacheFor metadataObj metadataModifier
   pure successMsg
 
 defaultBuildObjectRelationshipInfo ::
@@ -333,36 +353,48 @@ instance (Backend b) => FromJSON (DropRel b) where
       .:? "cascade"
       .!= False
 
-runDropRel ::
+execDropRel ::
   forall b m.
+  (MonadError QErr m, CacheRWM m, BackendMetadata b) =>
+  DropRel b ->
+  m MetadataModifier
+execDropRel (DropRel source qt rn cascade) = do
+  tableInfo <- askTableCoreInfo @b source qt
+
+  _ <- askRelType (_tciFieldInfoMap tableInfo) rn ""
+  schemaCache <- askSchemaCache
+
+  let sourceObj :: SchemaObjId
+      sourceObj =
+        SOSourceObj source
+          $ AB.mkAnyBackend
+          $ SOITableObj @b qt
+          $ TORel rn
+
+      depObjs :: [SchemaObjId]
+      depObjs = getDependentObjs schemaCache sourceObj
+
+  unless (null depObjs || cascade) do
+    reportDependentObjectsExist depObjs
+
+  metadataModifiers <- traverse purgeRelDep depObjs
+
+  let modifier :: TableMetadata b -> TableMetadata b
+      modifier = dropRelationshipInMetadata rn . foldr (.) id metadataModifiers
+
+  pure (MetadataModifier (tableMetadataSetter @b source qt %~ modifier))
+
+runDropRel ::
+  forall m b.
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   DropRel b ->
   m EncJSON
-runDropRel (DropRel source qt rn cascade) = do
-  depObjs <- collectDependencies
+runDropRel dropRel = do
   withNewInconsistentObjsCheck do
-    metadataModifiers <- traverse purgeRelDep depObjs
-    buildSchemaCache
-      $ MetadataModifier
-      $ tableMetadataSetter @b source qt
-      %~ dropRelationshipInMetadata rn
-      . foldr (.) id metadataModifiers
+    metadataModifier <- execDropRel dropRel
+    buildSchemaCache metadataModifier
+
   pure successMsg
-  where
-    collectDependencies = do
-      tabInfo <- askTableCoreInfo @b source qt
-      void $ askRelType (_tciFieldInfoMap tabInfo) rn ""
-      sc <- askSchemaCache
-      let depObjs =
-            getDependentObjs
-              sc
-              ( SOSourceObj source
-                  $ AB.mkAnyBackend
-                  $ SOITableObj @b qt
-                  $ TORel rn
-              )
-      unless (null depObjs || cascade) $ reportDependentObjectsExist depObjs
-      pure depObjs
 
 purgeRelDep ::
   forall b m.

@@ -22,6 +22,11 @@ type HandlersOptions = {
   enabledFeatureFlag?: boolean;
 };
 
+type BulkArgsType = {
+  type: string;
+  args: { root_field_name?: string; name?: string; source?: string };
+};
+
 export const nativeQueryHandlers = ({
   metadataOptions,
   trackNativeQueryResult = 'success',
@@ -33,7 +38,7 @@ export const nativeQueryHandlers = ({
   rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
     const reqBody = await req.json<{
       type: string;
-      args: { root_field_name?: string; name?: string; source?: string };
+      args: BulkArgsType[];
     }>();
 
     const response = (
@@ -45,7 +50,12 @@ export const nativeQueryHandlers = ({
       return response(buildMetadata(metadataOptions));
     }
 
-    if (reqBody.type.endsWith('_track_native_query')) {
+    // use the final bulk step as the command to reference:
+    const finalBulkStep = reqBody.args[reqBody.args.length - 1];
+    // get the type from the final step
+    const type = finalBulkStep.type;
+
+    if (type.endsWith('_track_native_query')) {
       switch (trackNativeQueryResult) {
         case 'success':
           return response({ message: 'success' });
@@ -53,7 +63,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'already-tracked',
-              error: `Native query '${reqBody.args.root_field_name}' is already tracked.`,
+              error: `Native query '${finalBulkStep.args.root_field_name}' is already tracked.`,
               path: '$.args',
             },
             400
@@ -100,7 +110,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'not-found',
-              error: `Native query "${reqBody.args.root_field_name}" not found in source "${reqBody.args.source}".`,
+              error: `Native query "${finalBulkStep.args.root_field_name}" not found in source "${finalBulkStep.args.source}".`,
               path: '$.args',
             },
             400
@@ -125,7 +135,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'already-tracked',
-              error: `Logical model '${reqBody.args.name}' is already tracked.`,
+              error: `Logical model '${finalBulkStep.args.name}' is already tracked.`,
               path: '$.args',
             },
             400
@@ -149,7 +159,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'not-found',
-              error: `Logical model "${reqBody.args.name}" not found in source "${reqBody.args.source}".`,
+              error: `Logical model "${finalBulkStep.args.name}" not found in source "${finalBulkStep.args.source}".`,
               path: '$.args',
             },
             400
@@ -158,7 +168,7 @@ export const nativeQueryHandlers = ({
           return response(
             {
               code: 'constraint-violation',
-              error: `Custom type "${reqBody.args.name}" still being used by native query "hello_mssql_function".`,
+              error: `Custom type "${finalBulkStep.args.name}" still being used by native query "hello_mssql_function".`,
               path: '$.args',
             },
             400

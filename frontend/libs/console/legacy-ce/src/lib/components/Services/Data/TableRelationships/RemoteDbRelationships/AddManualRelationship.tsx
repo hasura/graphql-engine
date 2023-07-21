@@ -1,18 +1,18 @@
-import React, { useReducer } from 'react';
-import { useQueryClient } from 'react-query';
-import { RemoteDBRelationship } from '../../../../../metadata/types';
+import { useReducer } from 'react';
 import { NormalizedTable } from '../../../../../dataSources/types';
+import { useInvalidateMetadata } from '../../../../../features/hasura-metadata-api';
+import { RemoteDBRelationship } from '../../../../../metadata/types';
 import { Dispatch } from '../../../../../types';
+import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import { ordinalColSort } from '../../utils';
 import { addDbToDbRelationship, dropDbToDbRelationship } from '../Actions';
-import {
-  relResetState,
-  dbToDbRelDefaultState,
-  dbToDbRelReducer,
-} from './state';
-import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import ManualRelationshipSelector from './ManualRelationshipSelector';
 import { RemoteRelCollapsedLabel } from './RemoteRelCollapsedLabel';
+import {
+  dbToDbRelDefaultState,
+  dbToDbRelReducer,
+  relResetState,
+} from './state';
 import { parseDbToDbRemoteRel } from './utils';
 
 const AddManualRelationship = ({
@@ -32,7 +32,7 @@ const AddManualRelationship = ({
   );
   const columns = tableSchema.columns.sort(ordinalColSort);
   const isNew = relationship === null;
-  const queryClient = useQueryClient();
+  const invalidate = useInvalidateMetadata();
 
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
@@ -51,7 +51,10 @@ const AddManualRelationship = ({
         reduxDispatch(
           dropDbToDbRelationship(state, tableSchema, () => {
             toggleEditor();
-            queryClient.refetchQueries(['metadata'], { active: true });
+            invalidate({
+              componentName: 'AddManualRelationship',
+              reasons: ['Dropped db-to-db relationship'],
+            });
           })
         );
       }
@@ -60,10 +63,12 @@ const AddManualRelationship = ({
   const saveFk = (toggleEditor: unknown) => {
     reduxDispatch(
       addDbToDbRelationship(state, tableSchema, toggleEditor, isNew, () => {
-        queryClient.refetchQueries(['metadata'], { active: true });
+        invalidate({
+          componentName: 'AddManualRelationship',
+          reasons: ['Added db-to-db relationship'],
+        });
       })
     );
-    // queryClient.refetchQueries(['metadata'], { active: true });
   };
 
   const expandedContent = () => (

@@ -183,6 +183,9 @@ spec = do
   testNoVarExpansionIfNoPreset
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField
   testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField
+  testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField
+  testAbsentValuesDontGetForwarded
+  testAbsentValuesWithDefault
   testPartialVarExpansionIfPreset
   testVariableSubstitutionCollision
 
@@ -237,7 +240,7 @@ query($a: A!) {
                    $ Variable
                      (VIRequired _a)
                      (G.TypeNamed (G.Nullability False) _A)
-                     (JSONValue $ J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
+                     (Just $ JSONValue $ J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
                )
 
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField :: Spec
@@ -294,7 +297,7 @@ query($a: A) {
                )
 
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField :: Spec
-testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField = it "send null value in the input variable for nullable field" $ do
+testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullField = it "send null value in the input variable for nullable scalar field" $ do
   field <-
     run
       -- schema
@@ -325,6 +328,104 @@ query ($a: Int) {
                  G.VVariable
                    $ RemoteJSONValue
                      (G.TypeNamed (G.Nullability True) _Int)
+                     (J.Null)
+               )
+
+testAbsentValuesDontGetForwarded :: Spec
+testAbsentValuesDontGetForwarded = it "don't forward variables without values" $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+type Query {
+  test(a: Int): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: Int) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+}
+|]
+  length (_fArguments field) `shouldBe` 0
+
+testAbsentValuesWithDefault :: Spec
+testAbsentValuesWithDefault = it "variable without value doesn't cause field with default to become null" $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+type Query {
+  test(a: Int = 3): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: Int) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+}
+|]
+  -- Actually, even better would be if `_fArguments` would be empty.
+  head (toList (_fArguments field)) `shouldBe` G.VInt 3
+
+testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField :: Spec
+testNoVarExpansionIfNoPresetUnlessTopLevelOptionalFieldSendNullFieldForObjectField = it "send null value in the input variable for nullable object field " $ do
+  field <-
+    run
+      -- schema
+      [raw|
+scalar Int
+
+input A {
+  b: B
+}
+
+input B {
+  c: C
+}
+
+input C {
+  i: Int
+}
+
+type Query {
+  test(a: A): Int
+}
+|]
+      -- query
+      [raw|
+query($a: A) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+  "a": null
+}
+|]
+  let arg = head $ HashMap.toList $ _fArguments field
+  arg
+    `shouldBe` ( _a,
+                 -- fieldOptional has peeled the variable; all we see is a JSON blob, and in doubt
+                 -- we repackage it as a newly minted JSON variable
+                 G.VVariable
+                   $ RemoteJSONValue
+                     (G.TypeNamed (G.Nullability True) _A)
                      (J.Null)
                )
 

@@ -4,6 +4,7 @@
 
 module Test.Hasura.EventTriggerCleanupSuite (buildEventTriggerCleanupSuite) where
 
+import Data.Aeson qualified as J
 import Data.Text qualified as T
 import Data.Text.IO qualified as T
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
@@ -42,7 +43,7 @@ buildEventTriggerCleanupSuite = do
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
-  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
+  pgPool <- PG.initPGPool pgConnInfo J.Null PG.defaultConnParams print
 
   let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema mempty ConnTemplate_NotApplicable

@@ -90,12 +90,13 @@ boolExpInternal ::
     AggregationPredicatesSchema b
   ) =>
   GQLNameIdentifier ->
+  Maybe (SelPermInfo b) ->
   [FieldInfo b] ->
   G.Description ->
   name ->
   SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)])) ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
+boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAggPredParser = do
   sourceInfo :: SourceInfo b <- asks getter
   P.memoizeOn 'boolExpInternal (_siName sourceInfo, memoizeKey) do
     let customization = _siCustomization sourceInfo
@@ -106,7 +107,7 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
     tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
 
     aggregationPredicatesParser' <- fromMaybe (pure []) <$> mkAggPredParser
-    recur <- boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser
+    recur <- boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAggPredParser
 
     -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
     -- think the TH splices throw it off), so we have to define it separately.
@@ -128,12 +129,14 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
       FieldInfo b ->
       SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
+      selectPermissions' <- hoistMaybe selectPermissions
       !roleName <- retrieve scRole
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
         FIColumn (SCIScalarColumn columnInfo) ->
-          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
+          let redactionExp = fromMaybe NoRedaction $ getRedactionExprForColumn selectPermissions' (ciColumn columnInfo)
+           in lift $ fmap (AVColumn columnInfo redactionExp) <$> comparisonExps @b (ciType columnInfo)
         FIColumn (SCIObjectColumn _) -> empty -- TODO(dmoverton)
         FIColumn (SCIArrayColumn _) -> empty -- TODO(dmoverton)
         -- field_name: field_type_bool_exp
@@ -159,7 +162,9 @@ boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser = do
 
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
                 <$> case computedFieldReturnType @b _cfiReturnType of
-                  ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
+                  ReturnsScalar scalarType ->
+                    let redactionExp = fromMaybe NoRedaction $ getRedactionExprForComputedField selectPermissions' _cfiName
+                     in lift $ fmap (CFBEScalar redactionExp) <$> comparisonExps @b (ColumnScalar scalarType)
                   ReturnsTable table -> do
                     info <- askTableInfo table
                     lift $ fmap (CFBETable table) <$> tableBoolExp info
@@ -185,12 +190,14 @@ logicalModelBoolExp ::
   ) =>
   LogicalModelInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-logicalModelBoolExp logicalModel =
+logicalModelBoolExp logicalModel = do
+  roleName <- retrieve scRole
   case toFieldInfo (columnsFromFields $ _lmiFields logicalModel) of
     Nothing -> throw500 $ "Error creating fields for logical model " <> tshow (_lmiName logicalModel)
     Just fieldInfo -> do
       let name = getLogicalModelName (_lmiName logicalModel)
           gqlName = mkTableBoolExpTypeName (C.fromCustomName name)
+          selectPermissions = getSelPermInfoForLogicalModel roleName logicalModel
 
           -- Aggregation parsers let us say things like, "select all authors
           -- with at least one article": they are predicates based on the
@@ -210,7 +217,7 @@ logicalModelBoolExp logicalModel =
               $ "Boolean expression to filter rows from the logical model for "
               <> name
               <<> ". All fields are combined with a logical 'AND'."
-       in boolExpInternal gqlName fieldInfo description memoizeKey mkAggPredParser
+       in boolExpInternal gqlName selectPermissions fieldInfo description memoizeKey mkAggPredParser
 
 -- |
 -- > input type_bool_exp {
@@ -227,6 +234,8 @@ tableBoolExp ::
   TableInfo b ->
   SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 tableBoolExp tableInfo = do
+  roleName <- retrieve scRole
+  let selectPermissions = tableSelectPermissions roleName tableInfo
   gqlName <- getTableIdentifierName tableInfo
   fieldInfos <- tableSelectFields tableInfo
   let mkAggPredParser = aggregationPredicatesParser tableInfo
@@ -237,7 +246,7 @@ tableBoolExp tableInfo = do
           <<> ". All fields are combined with a logical 'AND'."
 
   let memoizeKey = tableInfoName tableInfo
-  boolExpInternal gqlName fieldInfos description memoizeKey mkAggPredParser
+  boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAggPredParser
 
 {- Note [Nullability in comparison operators]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -333,8 +342,8 @@ equalityOperators ::
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 equalityOperators tCase collapseIfNull valueParser valueListParser =
   [ mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_is", "null"])) Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
-    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__eq) Nothing $ AEQ True <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__neq) Nothing $ ANE True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__eq) Nothing $ AEQ NonNullableComparison <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__neq) Nothing $ ANE NonNullableComparison <$> valueParser,
     mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__in) Nothing $ AIN <$> valueListParser,
     mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__nin) Nothing $ ANIN <$> valueListParser
   ]

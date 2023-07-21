@@ -1,62 +1,62 @@
 ---
-description: Create a cron trigger with Hasura
+description: Create a Scheduled Trigger with Hasura
 keywords:
   - hasura
   - cloud
   - cron trigger
   - scheduled trigger
   - create
-sidebar_position: 3
+sidebar_position: 6
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Create a Cron Trigger
+# Create a Scheduled Trigger
 
 ## Introduction
 
-Cron triggers are used to reliably trigger HTTP endpoints to run custom business logic periodically based on a
-[cron schedule](https://en.wikipedia.org/wiki/Cron). For example, you can create a cron trigger to generate an
+Scheduled Triggers are used to reliably trigger HTTP endpoints to run custom business logic periodically based on a
+[cron schedule](https://en.wikipedia.org/wiki/Cron). For example, you can create a Scheduled Trigger to generate an
 end-of-day sales report every weekday at 10pm.
 
-To add a cron trigger, follow these steps:
+To add a Scheduled Trigger, follow these steps:
 
-## Step 1: Define the cron trigger
+## Step 1: Define the Scheduled Trigger
 
-The following fields are required to define a cron trigger:
+The following fields are required to define a Scheduled Trigger:
 
-- **Name**: A name for the cron trigger.
+- **Name**: A name for the Scheduled Trigger.
 - **Webhook**: The HTTP endpoint that should be triggered.
 - **Cron schedule**: A cron expression defining the schedule for the cron. Cron events are created based on the UTC
   timezone. You can use tools like [crontab guru](https://crontab.guru/#*_*_*_*_*) to help build a cron expression.
 - **Payload**: The JSON payload which will be sent to the webhook.
 
-You can also define a **comment** that helps you identify the cron trigger.
+You can also define a **comment** that helps you identify the Scheduled Trigger.
 
-For example, we can create a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod` with
-the cron schedule `0 22 * * 1-5`, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check
-this [here](https://crontab.guru/#0_22_*_*_1-5)).
+For example, we can create a Scheduled Trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod`
+with the cron schedule `0 22 * * 1-5`, which means "At 22:00 on every day-of-week from Monday through Friday" (you can
+check this [here](https://crontab.guru/#0_22_*_*_1-5)).
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 Navigate to `Events > Cron Triggers > Create` in your Hasura Console.
 
-<Thumbnail src="/img/event-triggers/create-cron.png" alt="Adding a cron trigger" width="1000px" />
+<Thumbnail src="/img/event-triggers/create-cron.png" alt="Adding a Scheduled Trigger" width="1000px" />
 
 In the form opened, fill out the fields defined above:
 
 You can use the link next to the `Cron Schedule` field to help build a cron expression using
 [crontab guru](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut.
 
-<Thumbnail src="/img/event-triggers/define-cron-trigger.png" alt="Defining a cron trigger" width="500px" />
+<Thumbnail src="/img/event-triggers/define-cron-trigger.png" alt="Defining a Scheduled Trigger" width="500px" />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define a cron trigger by adding it to the `cron_triggers.yaml` file inside the `metadata` directory:
+You can define a Scheduled Trigger by adding it to the `cron_triggers.yaml` file inside the `metadata` directory:
 
 ```yaml
 - name: eod_reports
@@ -75,7 +75,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define a cron trigger via the
+You can define a Scheduled Trigger via the
 [create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) Metadata API:
 
 ```http
@@ -104,8 +104,8 @@ If you like, you can also define the following values:
 
 - **Headers**: List of headers to be sent to the webhook.
 - **Retry configuration**: In case the call to the webhook fails.
-- **Include in metadata**: When set to true, the cron trigger will be included in the metadata and can be exported along
-  with it.
+- **Include in metadata**: When set to true, the Scheduled Trigger will be included in the metadata and can be exported
+  along with it.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -114,7 +114,7 @@ Expand the `Advanced` section.
 
 <Thumbnail
   src="/img/event-triggers/advanced-cron.png"
-  alt="Defining advanced options for a cron trigger"
+  alt="Defining advanced options for a Scheduled Trigger"
   width="700px"
 />
 
@@ -147,7 +147,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define advanced options for a cron trigger when defining it via the
+You can define advanced options for a Scheduled Trigger when defining it via the
 [create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) Metadata API:
 
 ```http
@@ -179,18 +179,18 @@ X-Hasura-Role: admin
 
 ## Schedule & logs
 
-Once you've created your cron trigger, you can see `Pending events`, `Processed events`, and `Invocation logs` in their
-respective tabs.
+Once you've created your Scheduled Trigger, you can see `Pending events`, `Processed events`, and `Invocation logs` in
+their respective tabs.
 
-<Thumbnail src="/img/event-triggers/pending-cron.png" alt="Schedule and logs for cron triggers" width="1200px" />
+<Thumbnail src="/img/event-triggers/pending-cron.png" alt="Schedule and logs for Scheduled Triggers" width="1200px" />
 
 ## Rest Connectors
 
-REST Connectors i.e. request and response transformations, for cron triggers are used to invoke existing or third-party
-webhooks without needing any middleware or modifications to the upstream code.
+REST Connectors i.e. request and response transformations, for Scheduled Triggers are used to invoke existing or
+third-party webhooks without needing any middleware or modifications to the upstream code.
 
-REST Connectors modify the cron trigger's HTTP request to adapt to your webhook's expected format by adding suitable
-transforms.
+REST Connectors modify the Scheduled Trigger's HTTP request to adapt to your webhook's expected format by adding
+suitable transforms.
 
-Rest Connectors for cron triggers can be configured in the same way as rest connectors for event triggers. You can read more about it
-in the [REST Connectors](/docs/latest/event-triggers/rest-connectors/) section.
+Rest Connectors for Scheduled Triggers can be configured in the same way as rest connectors for event triggers. You can
+read more about it in the [REST Connectors](/docs/latest/event-triggers/rest-connectors/) section.

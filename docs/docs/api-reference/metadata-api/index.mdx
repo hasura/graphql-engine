@@ -65,6 +65,8 @@ The structure of args depends on the type and version.
 
 The various types of queries are listed in the following table:
 
+<div className="api-metadata-request-type-table">
+
 | `type`                                                                                                                                                     | `args`                                                                                                                                                                 | `version` | Synopsis                                                                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | **bulk**                                                                                                                                                   | [Query](#metadata-query) array                                                                                                                                         | 1         | Execute multiple operations in a single query                                                                                                   |
@@ -217,6 +219,8 @@ The various types of queries are listed in the following table:
 | [set_graphql_introspection_options](/api-reference/metadata-api/introspection.mdx#metadata-set-graphql-introspection-options)                              | [set_graphql_schema_introspection_options_args](/api-reference/metadata-api/introspection.mdx#metadata-set-graphql-schema-introspection-options-syntax)                | 1         | Set graphql introspection options                                                                                                               |
 | [add_host_to_tls_allowlist](/api-reference/metadata-api/network.mdx#metadata-add-host-to-tls-allowlist)                                                    | [add_host_to_tls_allowlist_args](/api-reference/metadata-api/network.mdx#add-host-to-tls-allowlist-syntax)                                                             | 1         | Add an endpoint to the TLS Allowlist                                                                                                            |
 | [drop_host_from_tls_allowlist](/api-reference/metadata-api/network.mdx#metadata-drop-host-from-tls-allowlist)                                              | [drop_host_from_tls_allowlist_args](/api-reference/metadata-api/network.mdx#drop-host-from-tls-allowlist-syntax)                                                       | 1         | Drop an endpoint from the TLS Allowlist                                                                                                         |
+
+</div>
 
 <!--
 

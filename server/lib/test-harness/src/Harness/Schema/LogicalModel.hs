@@ -13,6 +13,7 @@ module Harness.Schema.LogicalModel
     trackLogicalModelCommand,
     untrackLogicalModel,
     untrackLogicalModelCommand,
+    logicalModelColumnToJSON,
   )
 where
 
@@ -96,63 +97,65 @@ logicalModel logicalModelName =
       logicalModelDescription = Nothing
     }
 
+logicalModelColumnToJSON :: BackendTypeConfig -> LogicalModelColumn -> Value
+logicalModelColumnToJSON backendTypeConfig =
+  ( \case
+      LogicalModelReference
+        { logicalModelColumnReferenceType = ObjectReference,
+          logicalModelColumnReference,
+          logicalModelColumnName,
+          logicalModelColumnNullable
+        } ->
+          J.object
+            $ [ ("name" .= logicalModelColumnName),
+                ( "type",
+                  J.object
+                    [ "logical_model" .= logicalModelColumnReference,
+                      "nullable" .= logicalModelColumnNullable
+                    ]
+                )
+              ]
+      LogicalModelReference
+        { logicalModelColumnReferenceType = ArrayReference,
+          logicalModelColumnReference,
+          logicalModelColumnName,
+          logicalModelColumnNullable
+        } ->
+          J.object
+            $ [ ("name" .= logicalModelColumnName),
+                ( "type",
+                  J.object
+                    $ [ ( "array",
+                          J.object
+                            $ [ ("logical_model" .= logicalModelColumnReference)
+                              ]
+                        ),
+                        "nullable" .= logicalModelColumnNullable
+                      ]
+                )
+              ]
+      LogicalModelScalar {..} ->
+        let descriptionPair = case logicalModelColumnDescription of
+              Just desc -> [("description" .= desc)]
+              Nothing -> []
+         in -- this is the old way to encode these, but we'll keep using
+            -- in the tests for now to ensure we remain backwards
+            -- compatible
+            J.object
+              $ [ ("name" .= logicalModelColumnName),
+                  ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
+                  ("nullable" .= logicalModelColumnNullable)
+                ]
+              <> descriptionPair
+  )
+
 trackLogicalModelCommand :: String -> BackendTypeConfig -> LogicalModel -> Value
 trackLogicalModelCommand sourceName backendTypeConfig (LogicalModel {logicalModelDescription, logicalModelName, logicalModelColumns}) =
-  let returnTypeToJson =
+  let columns =
         J.Array
           . V.fromList
-          . fmap
-            ( \case
-                LogicalModelReference
-                  { logicalModelColumnReferenceType = ObjectReference,
-                    logicalModelColumnReference,
-                    logicalModelColumnName,
-                    logicalModelColumnNullable
-                  } ->
-                    J.object
-                      $ [ ("name" .= logicalModelColumnName),
-                          ( "type",
-                            J.object
-                              [ "logical_model" .= logicalModelColumnReference,
-                                "nullable" .= logicalModelColumnNullable
-                              ]
-                          )
-                        ]
-                LogicalModelReference
-                  { logicalModelColumnReferenceType = ArrayReference,
-                    logicalModelColumnReference,
-                    logicalModelColumnName,
-                    logicalModelColumnNullable
-                  } ->
-                    J.object
-                      $ [ ("name" .= logicalModelColumnName),
-                          ( "type",
-                            J.object
-                              $ [ ( "array",
-                                    J.object
-                                      $ [ ("logical_model" .= logicalModelColumnReference)
-                                        ]
-                                  ),
-                                  "nullable" .= logicalModelColumnNullable
-                                ]
-                          )
-                        ]
-                LogicalModelScalar {..} ->
-                  let descriptionPair = case logicalModelColumnDescription of
-                        Just desc -> [("description" .= desc)]
-                        Nothing -> []
-                   in -- this is the old way to encode these, but we'll keep using
-                      -- in the tests for now to ensure we remain backwards
-                      -- compatible
-                      J.object
-                        $ [ ("name" .= logicalModelColumnName),
-                            ("type" .= (BackendType.backendScalarType backendTypeConfig) logicalModelColumnType),
-                            ("nullable" .= logicalModelColumnNullable)
-                          ]
-                        <> descriptionPair
-            )
-
-      columns = returnTypeToJson logicalModelColumns
+          . fmap (logicalModelColumnToJSON backendTypeConfig)
+          $ logicalModelColumns
 
       -- need to make this only appear if it's Just, for now fall back to empty
       -- string for lols

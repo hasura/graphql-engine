@@ -66,7 +66,7 @@ pgColsToSelFlds cols =
   flip map cols
     $ \pgColInfo ->
       ( fromCol @('Postgres pgKind) $ ciColumn pgColInfo,
-        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) Nothing Nothing
+        mkAnnColumnField (ciColumn pgColInfo) (ciType pgColInfo) NoRedaction Nothing
         --  ^^ Nothing because mutations aren't supported
         --  with inherited role
       )

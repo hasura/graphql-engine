@@ -22,13 +22,13 @@ export const getTableColumns = async ({
   const { name, schema } = table as CockroachDBTable;
 
   const sql = `
-  SELECT 
-   column_name, data_type 
-  FROM 
-    information_schema.columns 
-  WHERE 
-    table_schema = '${name}' AND 
-    table_name  = '${schema}';`;
+  SELECT
+   column_name, data_type
+  FROM
+    information_schema.columns
+  WHERE
+    table_schema = '${schema}' AND
+    table_name  = '${name}';`;
 
   const tables = await runSQL({
     source: {

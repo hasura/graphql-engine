@@ -187,7 +187,7 @@ selectFunction mkRootFieldName fi@RQL.FunctionInfo {..} description = runMaybeT 
         IR.AnnSelectG
           { IR._asnFields = fields,
             IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
-            IR._asnPerm = GS.S.tablePermissionsInfo selectPermissions,
+            IR._asnPerm = GS.C.tablePermissionsInfo selectPermissions,
             IR._asnArgs = tableArgs'',
             IR._asnStrfyNum = stringifyNumbers,
             IR._asnNamingConvention = Just tCase
@@ -598,7 +598,6 @@ comparisonExps' columnType = do
         $ GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName operatorName) Nothing
         $ CustomBooleanOperator (GQL.unName operatorName)
         . Just
-        . Right
         <$> argParser
 
     mkArgParser :: DC.ScalarType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
@@ -633,13 +632,13 @@ tableArgs' tableInfo = do
 
 countTypeInput' ::
   (MonadParse n) =>
-  Maybe (P.Parser 'P.Both n DC.ColumnName) ->
-  P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate)
+  Maybe (P.Parser 'P.Both n (DC.ColumnName, IR.AnnRedactionExpUnpreparedValue 'DataConnector)) ->
+  P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate (IR.UnpreparedValue 'DataConnector))
 countTypeInput' = \case
   Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._column Nothing columnEnum
   Nothing -> pure $ mkCountAggregate Nothing
   where
-    mkCountAggregate :: Maybe DC.ColumnName -> IR.CountDistinct -> DC.CountAggregate
+    mkCountAggregate :: Maybe (DC.ColumnName, IR.AnnRedactionExpUnpreparedValue 'DataConnector) -> IR.CountDistinct -> DC.CountAggregate (IR.UnpreparedValue 'DataConnector)
     mkCountAggregate Nothing _ = DC.StarCount
     mkCountAggregate (Just column) IR.SelectCountDistinct = DC.ColumnDistinctCount column
     mkCountAggregate (Just column) IR.SelectCountNonDistinct = DC.ColumnCount column

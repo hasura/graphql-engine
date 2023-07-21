@@ -280,3 +280,46 @@ tests = do
               |]
 
       shouldReturnYaml testEnvironment actual expected
+
+    -- This test checks an edge case where if aliasing is not done properly in the SQL, the column alias
+    -- given to the nodes field can conflict with the column alias given to the column used in the aggregation
+    -- which can break the query.
+    it "Fetch aggregation over a column while also returning a field with the same name as the column" \testEnvironment -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_article_aggregate:
+                  aggregate:
+                    sum:
+                      rating: 13
+                  rating:
+                    - id: 1
+                    - id: 2
+                    - id: 3
+                    - id: 4
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_article_aggregate(order_by: {id: asc}) {
+                   aggregate {
+                      sum {
+                        rating
+                      }
+                    }
+                    rating: nodes {
+                      id
+                    }
+                  }
+                }
+              |]
+
+      shouldReturnYaml testEnvironment actual expected

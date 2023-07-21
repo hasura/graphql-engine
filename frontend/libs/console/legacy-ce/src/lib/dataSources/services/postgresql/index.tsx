@@ -568,7 +568,7 @@ const getReferenceOption = (opt: string) => {
 };
 
 const permissionColumnDataTypes = {
-  boolean: ['boolean'],
+  boolean: ['boolean', 'bool'],
   character: ['character', 'character varying', 'text', 'citext'],
   dateTime: [
     'timestamp',

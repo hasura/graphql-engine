@@ -184,6 +184,8 @@ export const AlertProvider: React.FC = ({ children }) => {
             // init
           },
         })}
+        //this ensures the component is given a new instances when it's closed/re-opened
+        key={showAlert.toString()}
         isLoading={loading}
         open={showAlert}
         success={success}

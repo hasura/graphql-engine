@@ -252,7 +252,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           </Button>
         </CollapsibleToggle>
       </div>
-      <p>here</p>
       <div className="w-full">
         <CollapsibleToggle
           title="Request Variables"

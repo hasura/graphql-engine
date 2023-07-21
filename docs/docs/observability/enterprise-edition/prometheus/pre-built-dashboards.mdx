@@ -22,11 +22,19 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 <ProductBadge self />
 
-## Introduction
+## Grafana Dashboards
+
+You can download dashboards on the [Hasura organization](https://grafana.com/orgs/hasurahq) page on Grafana Cloud, or
+from the demo repository below.
+
+## Demo
+
+### Introduction
 
 If you're running Hasura EE yourself, you have metrics available over a Prometheus endpoint, Traces available over
 OpenTelemetry and Logs available over stdout. We have set up a
-[repository](https://github.com/hasura/ee-observability-demo) where we have configured Hasura along with:
+[boilerplate folder](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/observability/enterprise)
+where we have configured Hasura along with:
 
 - Prometheus for metrics collector.
 - Jaeger for Traces collector.
@@ -42,7 +50,7 @@ OpenTelemetry and Logs available over stdout. We have set up a
 The repository helps you quickly start and explore the latest observability feature updates, dashboards, and alert
 templates for monitoring in production.
 
-## Get Started
+### Get Started
 
 Clone the repository to your local machine, copy the sample environment file `dotenv` to `.env`, and edit the enterprise
 license key (`HGE_EE_LICENSE_KEY`) and secrets. The demo uses [Docker Compose](https://docs.docker.com/compose/) to

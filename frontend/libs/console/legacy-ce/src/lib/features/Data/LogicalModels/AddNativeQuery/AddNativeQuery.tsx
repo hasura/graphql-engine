@@ -1,50 +1,59 @@
 import React from 'react';
-import { FaPlusCircle, FaSave } from 'react-icons/fa';
+import { FaSave } from 'react-icons/fa';
+import { useHasuraAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
-import {
-  GraphQLSanitizedInputField,
-  InputField,
-  Select,
-  useConsoleForm,
-} from '../../../../new-components/Form';
-// import { FormDebugWindow } from '../../../../new-components/Form/dev-components/FormDebugWindow';
-import Skeleton from 'react-loading-skeleton';
+import { useConsoleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { Feature } from '../../../DataSource';
+import {
+  useEnvironmentState,
+  usePushRoute,
+} from '../../../ConnectDBRedesign/hooks';
+import { Feature, nativeDrivers } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
+import { NativeQuery } from '../../../hasura-metadata-types';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
-import { LogicalModelWidget } from '../LogicalModelWidget/LogicalModelWidget';
-import { ArgumentsField } from './components/ArgumentsField';
-import { SqlEditorField } from './components/SqlEditorField';
+import { NativeQueryFormFields } from './components/NativeQueryDetailsForm';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
-import { transformFormOutputToMetadata } from './utils';
-import { useSupportedDrivesForNativeQueries } from '../hook';
-import { LimitedFeatureWrapper } from '../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { normalizeArguments, transformFormOutputToMetadata } from './utils';
+import { useIsStorybook } from '../../../../utils/StoryUtils';
 
 type AddNativeQueryProps = {
-  defaultFormValues?: Partial<NativeQueryForm>;
-  mode?: 'create' | 'update';
+  editDetails?: {
+    nativeQuery: NativeQuery;
+    dataSourceName: string;
+  };
+  // this is purely for storybook
+  defaultSql?: string;
 };
 
 export const AddNativeQuery = ({
-  defaultFormValues,
-  mode = 'create',
+  editDetails,
+  defaultSql,
 }: AddNativeQueryProps) => {
+  const { mode, defaultFormValues } = useDefaultFormValues({
+    editDetails,
+    defaultSql,
+  });
+
   const {
     Form,
-    methods: { watch, setValue },
+    methods: { watch, setValue, formState },
   } = useConsoleForm({
     schema,
-    options: { defaultValues: defaultFormValues },
+    options: {
+      defaultValues: defaultFormValues,
+    },
   });
+
+  const formHasChanges = Object.keys(formState.dirtyFields).length > 0;
 
   const push = usePushRoute();
 
-  const allowedDrivers = useSupportedDrivesForNativeQueries();
+  const { consoleType } = useEnvironmentState();
+  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
 
   const {
     data: sources,
@@ -53,8 +62,6 @@ export const AddNativeQuery = ({
   } = useMetadata(s => {
     return s.metadata.sources.filter(s => allowedDrivers.includes(s.kind));
   });
-
-  const selectedSource = watch('source');
 
   React.useEffect(() => {
     const subscription = watch((value, { name, type }) => {
@@ -67,24 +74,26 @@ export const AddNativeQuery = ({
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const logicalModels = sources?.find(
-    s => s.name === selectedSource
-  )?.logical_models;
+  const selectedSource = watch('source');
 
   const { trackNativeQuery, isLoading: isSaving } = useTrackNativeQuery();
 
-  const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
-    React.useState(false);
-
+  const { hasuraConfirm } = useHasuraAlert();
   const handleFormSubmit = (values: NativeQueryForm) => {
     const metadataNativeQuery = transformFormOutputToMetadata(values);
 
     trackNativeQuery({
       data: { ...metadataNativeQuery, source: values.source },
+      // if this is an "edit", supply the original root_field_name:
+      editDetails: editDetails
+        ? { rootFieldName: editDetails.nativeQuery.root_field_name }
+        : undefined,
       onSuccess: () => {
         hasuraToast({
           type: 'success',
-          message: `Successfully tracked native query as: ${values.root_field_name}`,
+          message: `Successfully ${
+            mode === 'create' ? 'tracked' : 'updated'
+          } native query as: ${values.root_field_name}`,
           title: 'Track Native Query',
           toastOptions: { duration: 3000 },
         });
@@ -101,23 +110,6 @@ export const AddNativeQuery = ({
       },
     });
   };
-
-  const logicalModelSelectPlaceholder = () => {
-    if (!selectedSource) {
-      return 'Select a database first...';
-    } else if (!!selectedSource && (logicalModels ?? []).length === 0) {
-      return `No logical models found for ${selectedSource}.`;
-    } else {
-      return `Select a logical model...`;
-    }
-  };
-
-  const { data: isThereBigQueryOrMssqlSource } = useMetadata(
-    m =>
-      !!m.metadata.sources.find(
-        s => s.kind === 'mssql' || s.kind === 'bigquery'
-      )
-  );
 
   /**
    * Options for the data source types
@@ -146,117 +138,86 @@ export const AddNativeQuery = ({
     );
 
   return (
-    <div>
-      {mode === 'update' && (
-        <IndicatorCard status="info">
-          The current release does not support editing Native Queries. This
-          feature will be available in a future release. You can still edit
-          directly by modifying the Metadata.
-        </IndicatorCard>
-      )}
-      <Form onSubmit={handleFormSubmit}>
-        <fieldset disabled={mode === 'update'}>
-          {/* <FormDebugWindow /> */}
-          <div className="max-w-xl flex flex-col">
-            <GraphQLSanitizedInputField
-              name="root_field_name"
-              label="Native Query Name"
-              placeholder="Name that exposes this model in GraphQL API"
-              hideTips
-            />
-            <InputField
-              name="comment"
-              label="Comment"
-              placeholder="A description of this logical model"
-            />
-            <Select
-              name="source"
-              label="Database"
-              // saving prop for future update
-              //noOptionsMessage="No databases found."
-              loading={isSourcesLoading}
-              options={(sources ?? []).map(m => ({
-                label: m.name,
-                value: m.name,
-              }))}
-              placeholder="Select a database..."
-            />
-          </div>
-          <div className="max-w-4xl">
-            {isThereBigQueryOrMssqlSource && (
-              <LimitedFeatureWrapper
-                title="Looking to add Native Queries for SQL Server/Big Query databases?"
-                id="native-queries"
-                description="Get production-ready today with a 30-day free trial of Hasura EE, no credit card required."
-              />
-            )}
-          </div>
+    <Form onSubmit={handleFormSubmit}>
+      <div className="py-2" />
+      <NativeQueryFormFields
+        isIntrospectionLoading={isIntrospectionLoading}
+        isSourcesLoading={isSourcesLoading}
+        typeOptions={typeOptions}
+        sources={sources}
+      />
+      <div className="sticky bottom-0 z-10 bg-slate-50 p-3 border-t-slate-200 border-t flex flex-row justify-end gap-2 ">
+        <Button
+          type={'button'}
+          onClick={() => {
+            if (formHasChanges) {
+              hasuraConfirm({
+                title: 'Unsaved changes!',
+                confirmText: 'Discard Changes',
+                cancelText: 'Stay Here',
+                destructive: true,
+                message:
+                  'Are you sure you want to leave this page? Your changes will not be saved.',
 
-          {isIntrospectionLoading ? (
-            <div>
-              <Skeleton />
-              <Skeleton />
-            </div>
-          ) : (
-            <ArgumentsField types={typeOptions} />
-          )}
-          <SqlEditorField />
-          <div className="flex w-full">
-            {/* Logical Model Dropdown */}
-            <Select
-              name="returns"
-              selectClassName="max-w-xl"
-              // saving prop for future update
-              // noOptionsMessage={
-              //   !selectedSource ? 'Select a database first.' : 'No models found.'
-              // }
-              // force component re-init on source change
-              //key={selectedSource}
-              label="Query Return Type"
-              placeholder={logicalModelSelectPlaceholder()}
-              loading={isSourcesLoading}
-              options={(logicalModels ?? []).map(m => ({
-                label: m.name,
-                value: m.name,
-              }))}
-            />
-            <Button
-              icon={<FaPlusCircle />}
-              onClick={e => {
-                setIsLogicalModelsDialogOpen(true);
-              }}
-            >
-              Add Logical Model
-            </Button>
-          </div>
-          {isLogicalModelsDialogOpen ? (
-            <LogicalModelWidget
-              onCancel={() => {
-                setIsLogicalModelsDialogOpen(false);
-              }}
-              onSubmit={() => {
-                setIsLogicalModelsDialogOpen(false);
-              }}
-              asDialog
-            />
-          ) : null}
-          <div className="flex flex-row justify-end gap-2">
-            {/*
-              Validate Button will remain hidden until we have more information about how to handle standalone validation
-              Slack thread: https://hasurahq.slack.com/archives/C04LV93JNSH/p1682965503376129
-          */}
-            {/* <Button icon={<FaPlay />}>Validate</Button> */}
-            <Button
-              type="submit"
-              icon={<FaSave />}
-              mode="primary"
-              isLoading={isSaving}
-            >
-              Save
-            </Button>
-          </div>
-        </fieldset>
-      </Form>
-    </div>
+                onClose: ({ confirmed }) => {
+                  if (confirmed) push('/data/native-queries');
+                },
+              });
+            } else {
+              push('/data/native-queries');
+            }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          icon={<FaSave />}
+          mode="primary"
+          isLoading={isSaving}
+        >
+          Save
+        </Button>
+      </div>
+    </Form>
   );
 };
+
+// this is kind of a distracting bit of logic for the component, so just hiding it here
+// it
+function useDefaultFormValues({
+  editDetails,
+  defaultSql,
+}: AddNativeQueryProps) {
+  const mode = editDetails ? 'update' : 'create';
+
+  const _defaultFormValues: Partial<NativeQueryForm> = React.useMemo(
+    () =>
+      mode === 'update'
+        ? {
+            ...editDetails?.nativeQuery,
+            source: editDetails?.dataSourceName,
+            arguments: normalizeArguments(
+              editDetails?.nativeQuery?.arguments ?? {}
+            ),
+          }
+        : {},
+    [mode]
+  );
+
+  const { isStorybook } = useIsStorybook();
+
+  const defaultFormValues = _defaultFormValues;
+
+  if (defaultSql) {
+    if (!isStorybook)
+      throw new Error('defaultSql prop is only allowed in Storybook.');
+
+    defaultFormValues.code = defaultSql;
+  }
+
+  return {
+    mode,
+    defaultFormValues,
+  };
+}

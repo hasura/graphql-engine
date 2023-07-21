@@ -70,7 +70,8 @@ defaultSchemaOptions =
       soIncludeAggregationPredicates = Options.IncludeAggregationPredicates,
       soIncludeStreamFields = Options.IncludeStreamFields,
       soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput,
-      soIncludeGroupByAggregateFields = Options.IncludeGroupByAggregateFields
+      soIncludeGroupByAggregateFields = Options.IncludeGroupByAggregateFields,
+      soPostgresArrays = Options.UsePostgresArrays
     }
 
 instance Has NamingCase SchemaEnvironment where

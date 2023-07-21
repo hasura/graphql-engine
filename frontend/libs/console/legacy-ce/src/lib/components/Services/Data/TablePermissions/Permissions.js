@@ -141,6 +141,8 @@ class Permissions extends Component {
   componentDidMount() {
     const { dispatch } = this.props;
 
+    dispatch(updateSchemaInfo());
+
     if (!isFeatureSupported('tables.permissions.enabled')) return;
 
     dispatch({ type: RESET });

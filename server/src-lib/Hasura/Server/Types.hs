@@ -87,6 +87,7 @@ data ExperimentalFeature
   | EFHideAggregationPredicates
   | EFHideStreamFields
   | EFGroupByAggregations
+  | EFDisablePostgresArrays
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -101,6 +102,7 @@ experimentalFeatureKey = \case
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
   EFHideStreamFields -> "hide_stream_fields"
   EFGroupByAggregations -> "group_by_aggregations"
+  EFDisablePostgresArrays -> "disable_postgres_arrays"
 
 instance Hashable ExperimentalFeature
 

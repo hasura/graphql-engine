@@ -32,7 +32,7 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
 
   const checkData = useCheckRows(rowsToBeChecked, filteredData, data);
 
-  const checkedItems = React.useMemo(
+  const getCheckedItems = React.useCallback(
     () => data.filter(d => checkData.checkedIds.includes(d.id)),
     [checkData.checkedIds, data]
   );
@@ -67,7 +67,7 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
     checkData,
     filteredData,
     paginatedData,
-    checkedItems,
+    getCheckedItems,
     dataSize: data.length,
   };
 }

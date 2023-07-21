@@ -40,19 +40,12 @@ import Control.Lens (at, (.~), (^.))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Extended
-import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
-import Data.HashSet qualified as HashSet
-import Data.Semigroup.Foldable (Foldable1 (..))
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
-import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
-import Hasura.Backends.Postgres.SQL.Types (getPGDescription)
 import Hasura.Base.Error
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON
@@ -63,7 +56,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Backend qualified as RQL.Types
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.BackendType qualified as Backend
-import Hasura.RQL.Types.Column (ColumnMutability (..), RawColumnInfo (..), RawColumnType (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.HealthCheck (HealthCheckConfig)
@@ -82,9 +74,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.AnyBackend qualified as AnyBackend
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Services
-import Hasura.Table.Cache (Constraint (..), DBTableMetadata (..), ForeignKey (..), ForeignKeyMetadata (..), PrimaryKey (..))
-import Language.GraphQL.Draft.Syntax qualified as G
-import Witch qualified
 
 --------------------------------------------------------------------------------
 -- Add source
@@ -125,7 +114,7 @@ runAddSource env (AddSource name backendKind sourceConfig replaceConfiguration s
   sources <- scSources <$> askSchemaCache
   do
     -- version check
-    result <- liftIO $ versionCheckImplementation @b env sourceConfig
+    result <- liftIO $ versionCheckImplementation @b env name sourceConfig
     liftEither result
 
   metadataModifier <-
@@ -408,7 +397,7 @@ runGetSourceTables GetSourceTables {..} = do
 
 data GetTableInfo_ = GetTableInfo_
   { _gtiSourceName_ :: Common.SourceName,
-    _gtiTableName_ :: API.TableName
+    _gtiTableName_ :: TableName 'DataConnector
   }
 
 instance FromJSON GetTableInfo_ where
@@ -422,7 +411,9 @@ instance FromJSON GetTableInfo_ where
 runGetTableInfo_ ::
   ( CacheRM m,
     MonadError Error.QErr m,
-    Metadata.MetadataM m
+    Metadata.MetadataM m,
+    MonadBaseControl IO m,
+    MonadIO m
   ) =>
   GetTableInfo_ ->
   m EncJSON
@@ -432,13 +423,10 @@ runGetTableInfo_ GetTableInfo_ {..} = do
   let sources = fmap Metadata.unBackendSourceMetadata $ Metadata._metaSources metadata
   abSourceMetadata <- lookupSourceMetadata _gtiSourceName_ sources
 
-  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind, _smConfiguration} -> do
+  AnyBackend.dispatchAnyBackend @RQL.Types.Backend abSourceMetadata $ \Metadata.SourceMetadata {_smKind} -> do
     case _smKind of
       Backend.DataConnectorKind _dcName -> do
-        sourceInfo <- askSourceInfo @'DataConnector _gtiSourceName_
-        let tableName = Witch.from _gtiTableName_
-        let table = HashMap.lookup tableName $ _rsTables $ _siDbObjectsIntrospection sourceInfo
-        pure . EncJSON.encJFromJValue $ convertTableMetadataToTableInfo tableName <$> table
+        fmap EncJSON.encJFromJValue (getTableInfo @'DataConnector _gtiSourceName_ _gtiTableName_)
       backend ->
         Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
@@ -475,54 +463,3 @@ lookupSourceMetadata :: (MonadError QErr m) => SourceName -> InsOrdHashMap Sourc
 lookupSourceMetadata sourceName sources =
   InsOrdHashMap.lookup sourceName sources
     `onNothing` Error.throw400 Error.DataConnectorError ("Source '" <> Text.E.toTxt sourceName <> "' not found")
-
-convertTableMetadataToTableInfo :: TableName 'DataConnector -> DBTableMetadata 'DataConnector -> API.TableInfo
-convertTableMetadataToTableInfo tableName DBTableMetadata {..} =
-  API.TableInfo
-    { _tiName = Witch.from tableName,
-      _tiType = DC.Types._etmTableType _ptmiExtraTableMetadata,
-      _tiColumns = convertColumn <$> _ptmiColumns,
-      _tiPrimaryKey = fmap Witch.from . toNonEmpty . _pkColumns <$> _ptmiPrimaryKey,
-      _tiForeignKeys = convertForeignKeys _ptmiForeignKeys,
-      _tiDescription = getPGDescription <$> _ptmiDescription,
-      _tiInsertable = all viIsInsertable _ptmiViewInfo,
-      _tiUpdatable = all viIsUpdatable _ptmiViewInfo,
-      _tiDeletable = all viIsDeletable _ptmiViewInfo
-    }
-  where
-    convertRawColumnType :: RawColumnType 'DataConnector -> API.ColumnType
-    convertRawColumnType = \case
-      RawColumnTypeScalar scalarType -> API.ColumnTypeScalar $ Witch.from scalarType
-      RawColumnTypeObject _ name -> API.ColumnTypeObject name
-      RawColumnTypeArray _ columnType isNullable -> API.ColumnTypeArray (convertRawColumnType columnType) isNullable
-
-    convertColumn :: RawColumnInfo 'DataConnector -> API.ColumnInfo
-    convertColumn RawColumnInfo {..} =
-      API.ColumnInfo
-        { _ciName = Witch.from rciName,
-          _ciType = convertRawColumnType rciType,
-          _ciNullable = rciIsNullable,
-          _ciDescription = G.unDescription <$> rciDescription,
-          _ciInsertable = _cmIsInsertable rciMutability,
-          _ciUpdatable = _cmIsUpdatable rciMutability,
-          _ciValueGenerated = DC.Types._ecmValueGenerated =<< extraColumnMetadata
-        }
-      where
-        extraColumnMetadata = HashMap.lookup rciName . DC.Types._etmExtraColumnMetadata $ _ptmiExtraTableMetadata
-
-    convertForeignKeys :: HashSet (ForeignKeyMetadata 'DataConnector) -> API.ForeignKeys
-    convertForeignKeys foreignKeys =
-      foreignKeys
-        & HashSet.toList
-        & fmap
-          ( \(ForeignKeyMetadata ForeignKey {..}) ->
-              let constraintName = Witch.from $ _cName _fkConstraint
-                  constraint =
-                    API.Constraint
-                      { _cForeignTable = Witch.from _fkForeignTable,
-                        _cColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> NEHashMap.toList _fkColumnMapping
-                      }
-               in (constraintName, constraint)
-          )
-        & HashMap.fromList
-        & API.ForeignKeys

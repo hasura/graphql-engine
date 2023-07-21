@@ -6,6 +6,7 @@ where
 import Control.Concurrent.Extended qualified as C
 import Control.Exception
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BC
 import Data.Environment qualified as Env
 import Data.Int (Int64)
@@ -142,7 +143,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
     mkMinimalPool connInfo = do
       pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
       let connParams = PG.defaultConnParams {PG.cpConns = 1}
-      liftIO $ PG.initPGPool connInfo connParams pgLogger
+      liftIO $ PG.initPGPool connInfo J.Null connParams pgLogger
 
 -- | A specification of all EKG metrics tracked in `runApp`.
 data

@@ -1,13 +1,11 @@
-import React from 'react';
-import { Table } from '../../../hasura-metadata-types';
-import { CardedTable } from '../../../../new-components/CardedTable';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { FiRefreshCcw } from 'react-icons/fi';
 import Skeleton from 'react-loading-skeleton';
-import { QueryClient, useQueryClient } from 'react-query';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import { useListAllDatabaseRelationships } from '../../hooks/useListAllDatabaseRelationships';
 import { MODE, Relationship } from '../../types';
-import { generateQueryKeys } from '../../utils/queryClientUtils';
 import { RelationshipMapping } from './parts/RelationshipMapping';
 import { RowActions } from './parts/RowActions';
 import { TargetName } from './parts/TargetName';
@@ -17,10 +15,6 @@ export interface AvailableRelationshipsListProps {
   onAction: (relationship: Relationship, mode: MODE) => void;
   table: Table;
 }
-
-const refreshMetadata = (client: QueryClient) => {
-  client.invalidateQueries(generateQueryKeys.metadata());
-};
 
 export const AvailableRelationshipsList = ({
   dataSourceName,
@@ -32,7 +26,14 @@ export const AvailableRelationshipsList = ({
     table,
   });
 
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
+
+  const refreshMetadata = () => {
+    invalidateMetadata({
+      componentName: 'AvailableRelationshipList',
+      reasons: ['User clicked button to refresh metadata.'],
+    });
+  };
 
   if (!relationships) return <Skeleton count={7} height={30} />;
 
@@ -55,7 +56,7 @@ export const AvailableRelationshipsList = ({
             'TYPE',
             'RELATIONSHIP',
             <div className="flex justify-end hidden">
-              <FiRefreshCcw onClick={() => refreshMetadata(queryClient)} />
+              <FiRefreshCcw onClick={() => refreshMetadata()} />
             </div>,
           ]}
         />

@@ -21,8 +21,8 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModel.Metadata (LogicalModelName)
 import Hasura.LogicalModelResolver.Codec (nativeQueryRelationshipsCodec)
+import Hasura.LogicalModelResolver.Metadata (LogicalModelIdentifier)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType)
 import Hasura.Prelude
@@ -49,7 +49,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
     tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
     tnqDescription :: Maybe Text,
-    tnqReturns :: LogicalModelName
+    tnqReturns :: LogicalModelIdentifier b
   }
 
 instance (Backend b) => HasCodec (TrackNativeQuery b) where

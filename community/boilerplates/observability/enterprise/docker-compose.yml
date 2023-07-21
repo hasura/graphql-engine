@@ -1,0 +1,201 @@
+version: "3.6"
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+  db_data: {}
+  db_replica_data: {}
+
+services:
+  redis:
+    container_name: hge-redis
+    image: ${REDIS_IMAGE}
+    restart: always
+    ports:
+      - "${REDIS_PORT}:6379"
+
+  postgres:
+    container_name: hge-metadata-pg
+    image: ${PG_IMAGE}
+    restart: always
+    ports:
+      - "${PG_PORT}:5432"
+    volumes:
+      - "db_data:/bitnami/postgresql"
+    environment:
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: ${PG_REPLICATION_PASSWORD}
+      POSTGRESQL_USERNAME: ${PG_USER}
+      POSTGRESQL_PASSWORD: ${PG_PASSWORD}
+      POSTGRESQL_DATABASE: ${PG_DATABASE}
+
+  postgres-replica:
+    image: "bitnami/postgresql:15"
+    restart: always
+    volumes:
+      - "db_replica_data:/bitnami/postgresql"
+    depends_on:
+      - postgres
+    environment:
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: ${PG_REPLICATION_PASSWORD}
+      POSTGRESQL_MASTER_HOST: postgres
+      POSTGRESQL_PASSWORD: ${PG_PASSWORD}
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+
+  graphql-engine:
+    container_name: hge
+    image: ${HGE_IMAGE}
+    ports:
+      - "${HGE_PORT}:8080"
+    depends_on:
+      - postgres
+      - postgres-replica
+      - redis
+    labels:
+      logging: "promtail"
+      logging_jobname: "graphql-engine"
+    restart: always
+    ## uncomment the auto migration image and volumes to explore the example
+    volumes:
+      - ./examples/hasura/migrations:/hasura-migrations
+      - ./examples/hasura/metadata:/hasura-metadata
+    environment:
+      ## generate a Hasura Pro Key from the Hasura EE Control Plane for this project and uncomment the below line
+      HASURA_GRAPHQL_EE_LICENSE_KEY: ${HGE_EE_LICENSE_KEY}
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HGE_ADMIN_SECRET}
+      ## The metadata database for this Hasura GraphQL project. Can be changed to a managed postgres instance
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: ${HGE_METADATA_DATABASE_URL}
+      HGE_DATABASE_URL: ${HGE_DATABASE_URL}
+      HGE_DATABASE_REPLICA_URL: ${HGE_DATABASE_REPLICA_URL}
+
+      ## Optional settings:
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: ${HGE_ENABLED_LOG_TYPES}
+      HASURA_GRAPHQL_LOG_LEVEL: debug
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: "/srv/console-assets"
+      HASURA_GRAPHQL_REDIS_URL: "redis://redis:6379"
+      HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
+      HASURA_GRAPHQL_MAX_CACHE_SIZE: "200"
+      # HASURA_GRAPHQL_SERVER_PORT: "8080"
+      HASURA_GRAPHQL_ENABLED_APIS: ${HGE_ENABLED_APIS}
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+
+      ## enable basic authorization for the Prometheus metrics endpoint
+      ## remember to set the secret credential in the Prometheus target config
+      # HASURA_GRAPHQL_METRICS_SECRET: ${HGE_METRICS_SECRET}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  prometheus:
+    container_name: hge-prom
+    image: ${PROM_IMAGE}
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    ports:
+      - ${PROM_PORT}:9090
+    links:
+      - alertmanager:alertmanager
+    restart: always
+
+  node-exporter:
+    container_name: hge-node-exporter
+    image: ${NODE_EXPORTER_IMAGE}
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    ports:
+      - ${NODE_EXPORTER_PORT}:9100
+    restart: always
+
+  alertmanager:
+    container_name: hge-alert-manager
+    image: ${ALERT_MANAGER_IMAGE}
+    ports:
+      - ${ALERT_MANAGER_PORT}:9093
+    volumes:
+      - ./alertmanager/config.yml/:/etc/alertmanager/alertmanager.yml
+    restart: always
+
+  blackbox_exporter:
+    container_name: hge-blackbox
+    image: ${BLACKBOX_IMAGE}
+    ports:
+      - ${BLACKBOX_PORT}:9115
+    volumes:
+      - ./blackboxexporter/:/etc/blackboxexporter/
+    command:
+      - "--config.file=/etc/blackboxexporter/config.yml"
+    restart: always
+
+  grafana:
+    container_name: hge-grafana
+    image: ${GRAFANA_IMAGE}
+    depends_on:
+      - prometheus
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+
+  jaeger:
+    container_name: hge-jaeger
+    image: ${JAEGER_IMAGE}
+    restart: always
+    ports:
+      - 5775:5775/udp
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 4002:16686
+      - 14250:14250
+      - 14268:14268
+      - 14269:14269
+      - 4317:4317 # OTLP gRPC
+      - 4318:4318 # OTLP HTTP
+      - 9411:9411
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: ":9411"
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  loki:
+    image: ${LOKI_IMAGE}
+    ports:
+      - ${LOKI_PORT}:3100
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: ${PROMTAIL_IMAGE}
+    volumes:
+      - ./promtail/config.yaml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always

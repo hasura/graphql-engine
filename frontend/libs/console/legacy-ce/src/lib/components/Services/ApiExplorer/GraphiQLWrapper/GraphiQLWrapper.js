@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { Component } from 'react';
 import GraphiQL from 'graphiql';
+import queryString from 'query-string';
 import { connect } from 'react-redux';
 import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import PropTypes from 'prop-types';
@@ -49,6 +50,7 @@ import {
   ResponseTimeWarning,
   RESPONSE_TIME_CACHE_WARNING,
 } from './ResponseTimeWarning';
+import { GraphiQLToolbarButton } from './GraphiQLToolbarButton';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -196,7 +198,7 @@ class GraphiQLWrapper extends Component {
         );
         return;
       }
-      dispatch(_push('/api/rest/create'));
+      dispatch(_push('/api/rest/create?from=graphiql'));
     };
 
     const _toggleCacheDirective = () => {
@@ -293,6 +295,9 @@ class GraphiQLWrapper extends Component {
 
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
+      const queryParams = queryString.parseUrl(window.location.href);
+      const highlightRestButton = queryParams.query.mode === 'rest';
+
       let analyzerProps = {};
       if (graphiqlContext) {
         analyzerProps = graphiqlContext.state;
@@ -345,6 +350,7 @@ class GraphiQLWrapper extends Component {
           {
             label: 'REST',
             title: 'REST Endpoints',
+            primary: highlightRestButton,
             onClick: () => {
               trackGraphiQlToolbarButtonClick('REST');
               routeToREST();
@@ -361,7 +367,7 @@ class GraphiQLWrapper extends Component {
         return buttons
           .filter(b => !b.hide)
           .map(b => {
-            return <GraphiQL.Button key={b.label} {...b} />;
+            return <GraphiQLToolbarButton key={b.label} {...b} />;
           });
       };
 

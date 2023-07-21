@@ -70,3 +70,9 @@ export const cancelAlert = async (
     timeout: removalTimout,
   });
 };
+
+export const useIsStorybook = () => {
+  return {
+    isStorybook: !!process.env.STORYBOOK,
+  };
+};

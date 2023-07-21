@@ -40,7 +40,7 @@ import Control.Monad.Except (MonadError (catchError, throwError))
 import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Control (MonadBaseControl, control)
 import Control.Monad.Trans.Except (ExceptT)
-import Data.Aeson (ToJSON (toJSON))
+import Data.Aeson (ToJSON (toJSON), Value)
 import Data.ByteString qualified as BS
 import Data.HashTable.IO qualified as HIO
 import Data.IORef (newIORef)
@@ -107,10 +107,11 @@ initPGPoolStats = do
 
 initPGPool ::
   ConnInfo ->
+  Value ->
   ConnParams ->
   PGLogger ->
   IO PGPool
-initPGPool ci cp logger = do
+initPGPool ci context cp logger = do
   _stats <- initPGPoolStats
   _pool <- RP.createPool' (creator _stats) destroyer nStripes diffTime nConns nTimeout
   pure PGPool {..}
@@ -127,7 +128,7 @@ initPGPool ci cp logger = do
       EKG.Distribution.add (_dbConnAcquireLatency stats) connAcquiredMicroseconds
       ctr <- newIORef 0
       table <- HIO.new
-      return $ PGConn pqConn (cpAllowPrepare cp) (cpCancel cp) retryP logger ctr table createdAt (cpMbLifetime cp)
+      return $ PGConn context pqConn (cpAllowPrepare cp) (cpCancel cp) retryP logger ctr table createdAt (cpMbLifetime cp)
     destroyer = PQ.finish . pgPQConn
     diffTime = fromIntegral $ cpIdleTime cp
 

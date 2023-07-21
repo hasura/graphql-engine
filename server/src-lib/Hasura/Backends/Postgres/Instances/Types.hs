@@ -22,6 +22,7 @@ import Hasura.Backends.Postgres.Instances.PingSource (runCockroachDBPing)
 import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
+import Hasura.Backends.Postgres.Types.Aggregates qualified as Postgres
 import Hasura.Backends.Postgres.Types.BoolExp qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
 import Hasura.Backends.Postgres.Types.ComputedField qualified as Postgres
@@ -57,8 +58,8 @@ class
   where
   type PgExtraTableMetadata pgKind :: Type
 
-  versionCheckImpl :: Env.Environment -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
-  versionCheckImpl = const $ const (pure $ Right ())
+  versionCheckImpl :: Env.Environment -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO (Either QErr ())
+  versionCheckImpl _ _ _ = pure (Right ())
 
   runPingSourceImpl :: Env.Environment -> (String -> IO ()) -> SourceName -> SourceConnConfiguration ('Postgres pgKind) -> IO ()
   runPingSourceImpl _ _ _ _ = pure ()
@@ -95,7 +96,7 @@ instance
   type ConstraintName ('Postgres pgKind) = Postgres.ConstraintName
   type BasicOrderType ('Postgres pgKind) = Postgres.OrderType
   type NullsOrderType ('Postgres pgKind) = Postgres.NullsOrder
-  type CountType ('Postgres pgKind) = Postgres.CountType
+  type CountType ('Postgres pgKind) = Postgres.CountAggregate pgKind
   type Column ('Postgres pgKind) = Postgres.PGCol
   type ScalarValue ('Postgres pgKind) = Postgres.PGScalarValue
   type ScalarType ('Postgres pgKind) = Postgres.PGScalarType

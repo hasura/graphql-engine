@@ -81,6 +81,12 @@ EOL
 exit 1
 }
 
+# See: TODO
+cabal --version | grep -q ' 3\.10' || { 
+    echo_error "Please use cabal 3.10, as cabal broke 'import' and we can't make it compatible"
+    exit 1
+}
+
 # The default configuration this script expects. May be overridden depending on
 # flags passed to subcommands, or this can be edited for one-off tests:
 CABAL_PROJECT_FILE=cabal/dev-sh.project

@@ -1,14 +1,17 @@
-import { Dispatch } from '../../../../../../types';
+import {
+  useInvalidateMetadata,
+  useMetadata,
+} from '../../../../../../features/hasura-metadata-api';
 import { reactQueryClient } from '../../../../../../lib/reactQuery';
+import { Dispatch } from '../../../../../../types';
+import _push from '../../../push';
 import { NeonBanner } from './components/Neon/NeonBanner';
+import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from './components/NeonDashboardLink';
+import { useNeonIntegration } from './useNeonIntegration';
 import {
   getNeonDBName,
   transformNeonIntegrationStatusToNeonBannerProps,
 } from './utils';
-import { useNeonIntegration } from './useNeonIntegration';
-import _push from '../../../push';
-import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from './components/NeonDashboardLink';
-import { useMetadata } from '../../../../../../features/hasura-metadata-api';
 
 type NeonConnectProps = {
   dispatch: Dispatch;
@@ -19,7 +22,8 @@ export function NeonConnect({
   dispatch,
   connectDbUrl = '/data/manage/connect',
 }: NeonConnectProps) {
-  const { data, invalidateMetadata } = useMetadata();
+  const { data } = useMetadata();
+  const invalidateMetadata = useInvalidateMetadata();
   const allDatabases = data?.metadata.sources.map(source => source.name) ?? [];
 
   // success callback
@@ -29,7 +33,10 @@ export function NeonConnect({
     reactQueryClient.refetchQueries(FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY);
 
     // invalidate react query metadata on success
-    invalidateMetadata();
+    invalidateMetadata({
+      componentName: 'NeonConnect',
+      reasons: ['Successfully adding neon source.'],
+    });
 
     dispatch(_push(`/data/${dataSourceName}/schema/public`));
   };

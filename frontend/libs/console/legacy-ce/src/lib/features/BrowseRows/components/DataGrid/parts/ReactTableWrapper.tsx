@@ -261,7 +261,7 @@ export const ReactTableWrapper: React.VFC<ReactTableWrapperProps> = ({
 
                 return (
                   <CardedTable.TableBodyCell
-                    key={i}
+                    key={`${row.id}-${i}`}
                     data-testid={`@table-cell-${row.id}-${i}`}
                     style={{ maxWidth: '20ch' }}
                   >

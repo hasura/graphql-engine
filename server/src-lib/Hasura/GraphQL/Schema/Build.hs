@@ -159,10 +159,9 @@ buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo gqlName
         selectPerm <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-        let tableSelPerm = tablePermissionsInfo selectPerm
         tableGQLName <- getTableIdentifierName tableInfo
         let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
-        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
+        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo selectPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
 
       pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)
   where

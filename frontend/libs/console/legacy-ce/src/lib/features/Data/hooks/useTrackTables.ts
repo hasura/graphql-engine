@@ -1,14 +1,10 @@
-import { useMetadataMigration } from '../../MetadataAPI';
 import { useCallback } from 'react';
-import {
-  MetadataSelectors,
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../hasura-metadata-api';
-import type { TrackableTable } from '../TrackResources/types';
-import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
 import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
+import { useMetadataMigration } from '../../MetadataAPI';
+import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { BulkKeepGoingResponse } from '../../hasura-metadata-types';
+import type { TrackableTable } from '../TrackResources/types';
 
 export const useTrackTables = ({
   dataSourceName,
@@ -19,12 +15,9 @@ export const useTrackTables = ({
     resource_version: m.resource_version,
   }));
 
-  const invalidateMetadata = useInvalidateMetadata();
-
   const { mutate, ...rest } = useMetadataMigration<BulkKeepGoingResponse>({
     ...globalMutateOptions,
     onSuccess: (data, variables, ctx) => {
-      invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variables, ctx);
     },
     errorTransform: transformErrorResponse,

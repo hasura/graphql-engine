@@ -26,6 +26,7 @@ import Hasura.Backends.Postgres.SQL.Types as Postgres hiding (FunctionName, Tabl
 import Hasura.Backends.Postgres.SQL.Value as Postgres
 import Hasura.Backends.Postgres.Schema.OnConflict
 import Hasura.Backends.Postgres.Schema.Select
+import Hasura.Backends.Postgres.Types.Aggregates
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Backends.Postgres.Types.Insert as PGIR
@@ -437,13 +438,26 @@ columnParser columnType nullability = case columnType of
     -- TODO: introduce new dedicated scalars for Postgres column types.
     (name, schemaType) <- case scalarType of
       PGArray innerScalar -> do
-        name <- mkScalarTypeName innerScalar
-        pure
-          ( name,
-            P.TList
-              P.NonNullable
-              (P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)
-          )
+        -- postgres arrays break introspection for some clients so allow them
+        -- to disable it
+        disableArrays <- retrieve Options.soPostgresArrays
+        case disableArrays of
+          Options.UsePostgresArrays -> do
+            name <- mkScalarTypeName innerScalar
+            pure
+              ( name,
+                P.TList
+                  P.NonNullable
+                  (P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)
+              )
+          Options.DontUsePostgresArrays -> do
+            -- previously, we represented text[] as `_text` - recover this
+            -- naming:
+            arrayName <- mkScalarTypeName (PGUnknown $ "_" <> pgScalarTypeToText innerScalar)
+            pure
+              ( arrayName,
+                P.TNamed P.NonNullable $ P.Definition arrayName Nothing Nothing [] P.TIScalar
+              )
       _ -> do
         name <- mkScalarTypeName scalarType
         pure (name, P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar)
@@ -965,18 +979,18 @@ intersectsGeomNbandInput = do
 
 countTypeInput ::
   (MonadParse n) =>
-  Maybe (Parser 'Both n (Column ('Postgres pgKind))) ->
-  InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind))
+  Maybe (Parser 'Both n (Column ('Postgres pgKind), AnnRedactionExpUnpreparedValue ('Postgres pgKind))) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))
 countTypeInput = \case
   Just columnEnum -> do
     columns <- P.fieldOptional Name._columns Nothing (P.list columnEnum)
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
-    mkCountType :: IR.CountDistinct -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
-    mkCountType _ Nothing = Postgres.CTStar
-    mkCountType IR.SelectCountDistinct (Just cols) = Postgres.CTDistinct cols
-    mkCountType IR.SelectCountNonDistinct (Just cols) = Postgres.CTSimple cols
+    mkCountType :: IR.CountDistinct -> Maybe [(Column ('Postgres pgKind), AnnRedactionExpUnpreparedValue ('Postgres pgKind))] -> CountType ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))
+    mkCountType _ Nothing = CountAggregate Postgres.CTStar
+    mkCountType IR.SelectCountDistinct (Just cols) = CountAggregate $ Postgres.CTDistinct cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) = CountAggregate $ Postgres.CTSimple cols
 
 -- | Update operator that prepends a value to a column containing jsonb arrays.
 --

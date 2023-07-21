@@ -253,8 +253,9 @@ translateBoolExp sessionVariables sourceName = \case
     mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName) xs
   BoolNot x ->
     API.Not <$> (translateBoolExp' sourceName) x
-  BoolField (AVColumn c xs) ->
-    lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) xs
+  BoolField (AVColumn c _redactionExp opExps) ->
+    -- TODO(redactionExp): Deal with the redaction expression
+    lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) opExps
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
@@ -344,11 +345,9 @@ translateOp sessionVariables columnName columnType opExp = do
       throw400 NotSupported "The ACast operator is not supported by the Data Connector backend"
     ABackendSpecific CustomBooleanOperator {..} -> case _cboRHS of
       Nothing -> pure $ API.ApplyUnaryComparisonOperator (API.CustomUnaryComparisonOperator _cboName) currentComparisonColumn
-      Just (Left rootOrCurrentColumn) ->
-        pure $ mkApplyBinaryComparisonOperatorToAnotherColumn (API.CustomBinaryComparisonOperator _cboName) rootOrCurrentColumn
-      Just (Right (ValueLiteral scalarType value)) ->
+      Just (ValueLiteral scalarType value) ->
         pure $ mkApplyBinaryComparisonOperatorToScalar (API.CustomBinaryComparisonOperator _cboName) value scalarType
-      Just (Right (ArrayLiteral scalarType array)) ->
+      Just (ArrayLiteral scalarType array) ->
         pure $ API.ApplyBinaryArrayComparisonOperator (API.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array (Witch.from scalarType)
   where
     currentComparisonColumn :: API.ComparisonColumn

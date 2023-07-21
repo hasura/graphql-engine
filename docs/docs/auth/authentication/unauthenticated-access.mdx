@@ -19,18 +19,18 @@ logging in.
 Once you have configured an [admin secret](/deployment/securing-graphql-endpoint.mdx), by default Hasura GraphQL Engine
 will reject any unauthenticated request it receives.
 
-You can configure the Hasura Engine to allow access to unauthenticated users by defining a specific role which will
-be used for all unauthenticated requests. Once an unauthenticated role is configured, unauthenticated requests will not
-be rejected and instead will be handled as the unauthenticated user with the relevant authorization permissions
-for that role taking effect.
+You can configure the Hasura Engine to allow access to unauthenticated users by defining a specific role which will be
+used for all unauthenticated requests. Once an unauthenticated role is configured, unauthenticated requests will not be
+rejected and instead will be handled as the unauthenticated user with the relevant authorization permissions for that
+role taking effect.
 
 A guide on setting up permissions for the unauthenticated role can be found
 [here](/auth/authorization/permissions/common-roles-auth-examples.mdx#unauthorized-users-example).
 
 :::warning Risk of session variables with the unauthenticated role
 
-You should not use [session variables](/auth/authorization/roles-variables.mdx#session-variables) in
-the permissions for an unauthenticated role because the source of the session variables cannot be trusted.
+You should not use [session variables](/auth/authorization/roles-variables.mdx#session-variables) in the permissions for
+an unauthenticated role because the source of the session variables cannot be trusted.
 
 Since session variables can be passed using request headers and they are not verified through the JWT or webhook
 authentication methods or utilize an admin secret, a user can choose to set any values for them and bypass the
@@ -40,15 +40,16 @@ permissions.
 
 ## Configuring unauthenticated / public access
 
-You can use the env variable `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or the `--unauthorized-role` flag to define a role for
-unauthenticated (non-logged in) users. See
-[GraphQL Engine server config reference](/deployment/graphql-engine-flags/index.mdx) for more details on setting
-this flag or environment variable.
+You can use the env variable
+[`HASURA_GRAPHQL_UNAUTHORIZED_ROLE` or the `--unauthorized-role` flag](/deployment/graphql-engine-flags/reference.mdx#unauthorized-role)
+to define a role for unauthenticated (non-logged in) users. See
+[GraphQL Engine server config reference](/deployment/graphql-engine-flags/index.mdx) for more details on setting this
+flag or environment variable.
 
 ### No-auth setup
 
-When JWT or webhook modes are not configured, and the request does not contain the admin secret
-header, then every request is considered an unauthenticated request.
+When JWT or webhook modes are not configured, and the request does not contain the admin secret header, then every
+request is considered an unauthenticated request.
 
 ### JWT
 

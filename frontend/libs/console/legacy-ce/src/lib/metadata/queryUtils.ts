@@ -113,6 +113,7 @@ export const metadataQueryTypes = [
   'untrack_tables',
   'track_stored_procedure',
   'untrack_stored_procedure',
+  'bulk_atomic',
 ] as const;
 
 export type MetadataQueryType = (typeof metadataQueryTypes)[number];

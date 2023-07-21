@@ -1,18 +1,16 @@
 import { useCallback, useMemo } from 'react';
-import { useQueryClient } from 'react-query';
+import { Driver } from '../../../dataSources';
 import { exportMetadata } from '../../../metadata/actions';
 import { useAppDispatch } from '../../../storeHooks';
-import { generateQueryKeys } from '../../DatabaseRelationships/utils/queryClientUtils';
 import { useMetadataMigration } from '../../MetadataAPI';
+import { useHttpClient } from '../../Network';
+import { useMetadata } from '../../hasura-metadata-api';
 import { DatabaseConnection } from '../types';
-import { usePushRoute } from './usePushRoute';
 import {
   sendConnectDatabaseTelemetryEvent,
   transformErrorResponse,
 } from '../utils';
-import { useHttpClient } from '../../Network';
-import { Driver } from '../../../dataSources';
-import { useMetadata } from '../../hasura-metadata-api';
+import { usePushRoute } from './usePushRoute';
 
 export const useManageDatabaseConnection = ({
   onSuccess,
@@ -21,7 +19,6 @@ export const useManageDatabaseConnection = ({
   onSuccess?: () => void;
   onError?: (err: Error) => void;
 }) => {
-  const queryClient = useQueryClient();
   const { mutateAsync, ...rest } = useMetadataMigration({
     errorTransform: transformErrorResponse,
   });
@@ -33,7 +30,6 @@ export const useManageDatabaseConnection = ({
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
-        queryClient.invalidateQueries(generateQueryKeys.metadata());
         onSuccess?.();
 
         // this code is only for the demo
@@ -45,7 +41,7 @@ export const useManageDatabaseConnection = ({
         onError?.(err);
       },
     }),
-    [dispatch, onError, onSuccess, push, queryClient]
+    [dispatch, onError, onSuccess, push]
   );
 
   const createConnection = useCallback(

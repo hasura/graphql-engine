@@ -161,7 +161,7 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   let invalidations = mempty {ciRemoteSchemas = S.singleton name}
   metadata <- getMetadata
   withNewInconsistentObjsCheck
-    $ buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata
+    $ buildSchemaCacheWithOptions (CatalogUpdate Nothing) invalidations metadata Nothing
   pure successMsg
 
 runIntrospectRemoteSchema ::

@@ -34,8 +34,6 @@ export const useManageLocalRelationship = ({
   const mutationOptions = useMemo(
     () => ({
       onSuccess: () => {
-        queryClient.invalidateQueries(generateQueryKeys.metadata());
-
         queryClient.invalidateQueries(
           generateQueryKeys.suggestedRelationships({ dataSourceName, table })
         );

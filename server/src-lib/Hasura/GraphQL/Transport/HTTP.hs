@@ -296,7 +296,6 @@ runGQ ::
   Env.Environment ->
   SQLGenCtx ->
   SchemaCache ->
-  SchemaCacheVer ->
   Init.AllowListStatus ->
   ReadOnlyMode ->
   PrometheusMetrics ->
@@ -309,7 +308,7 @@ runGQ ::
   E.GraphQLQueryType ->
   GQLReqUnparsed ->
   m (GQLQueryOperationSuccessLog, HttpResponse (Maybe GQResponse, EncJSON))
-runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
+runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
   let gqlMetrics = pmGraphQLRequestMetrics prometheusMetrics
 
   (totalTime, (response, parameterizedQueryHash, gqlOpType)) <- withElapsedTime $ do
@@ -329,7 +328,7 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
     let gqlOpType = G._todType queryParts
     observeGQLQueryError gqlMetrics (Just gqlOpType) $ do
       -- 3. Construct the remainder of the execution plan.
-      let maybeOperationName = _unOperationName <$> _grOperationName reqParsed
+      let maybeOperationName = _unOperationName <$> getOpNameFromParsedReq reqParsed
       for_ maybeOperationName $ \nm ->
         -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
         attachMetadata [("graphql.operation.name", G.unName nm)]
@@ -342,7 +341,6 @@ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agen
           sqlGenCtx
           readOnlyMode
           sc
-          scVer
           queryType
           reqHeaders
           reqUnparsed
@@ -710,7 +708,6 @@ runGQBatched ::
   Env.Environment ->
   SQLGenCtx ->
   SchemaCache ->
-  SchemaCacheVer ->
   Init.AllowListStatus ->
   ReadOnlyMode ->
   PrometheusMetrics ->
@@ -725,10 +722,10 @@ runGQBatched ::
   -- | the batched request with unparsed GraphQL query
   GQLBatchedReqs (GQLReq GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
-runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
+runGQBatched env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId responseErrorsConfig userInfo ipAddress reqHdrs queryType query =
   case query of
     GQLSingleRequest req -> do
-      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      (gqlQueryOperationLog, httpResp) <- runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let httpLoggingGQInfo = (CommonHttpLogMetadata L.RequestModeSingle (Just (GQLSingleRequest (GQLQueryOperationSuccess gqlQueryOperationLog))), (PQHSetSingleton (gqolParameterizedQueryHash gqlQueryOperationLog)))
       pure (httpLoggingGQInfo, snd <$> httpResp)
     GQLBatchedReqs reqs -> do
@@ -741,7 +738,7 @@ runGQBatched env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logg
             flip HttpResponse []
               . encJFromList
               . map (either (encJFromJEncoding . encodeGQErr includeInternal) _hrBody)
-      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc scVer enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
+      responses <- for reqs \req -> fmap (req,) $ try $ (fmap . fmap . fmap) snd $ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicenseKey reqId userInfo ipAddress reqHdrs queryType req
       let requestsOperationLogs = map fst $ rights $ map snd responses
           batchOperationLogs =
             map

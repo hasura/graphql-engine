@@ -746,10 +746,9 @@ class Schema extends Component {
             dispatch={dispatch}
           >
             {getUntrackedTablesSection()}
+            {isFeatureSupported('tables.relationships.track') &&
+              getUntrackedRelationsSection()}
           </FeatureFlagContainer>
-
-          {isFeatureSupported('tables.relationships.track') &&
-            getUntrackedRelationsSection()}
 
           {getUntrackedFunctionsSection(
             isFeatureSupported('functions.track.enabled')

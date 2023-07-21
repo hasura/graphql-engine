@@ -6,7 +6,6 @@ import Skeleton from 'react-loading-skeleton';
 import globals from '../../../../Globals';
 import _push from '../../../../components/Services/Data/push';
 import { exportMetadata } from '../../../../metadata/actions';
-import { MetadataDataSource } from '../../../../metadata/types';
 import { useDestructiveAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
 import { CardedTable } from '../../../../new-components/CardedTable';
@@ -14,7 +13,9 @@ import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useAppDispatch } from '../../../../storeHooks';
 import { getProjectId, isCloudConsole } from '../../../../utils/cloudConsole';
-import { useMetadata } from '../../../MetadataAPI';
+
+import { useMetadata } from '../../../hasura-metadata-api';
+import { Source } from '../../../hasura-metadata-types';
 import { useDatabaseLatencyCheck } from '../../hooks/useDatabaseLatencyCheck';
 import { useDatabaseVersion } from '../../hooks/useDatabaseVersion';
 import { useDropSource } from '../../hooks/useDropSource';
@@ -25,8 +26,8 @@ import { Latency } from '../../types';
 import { AccelerateProject, Details, LatencyBadge } from './parts';
 
 type DatabaseItem = {
-  dataSourceName: MetadataDataSource['name'];
-  driver: MetadataDataSource['kind'];
+  dataSourceName: Source['name'];
+  driver: Source['kind'];
 };
 
 export const ListConnectedDatabases = (props?: { className?: string }) => {
@@ -88,7 +89,10 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
       !isFetching
     );
 
-  const isCurrentRow = (rowIndex: number) => rowIndex === activeRow;
+  const isCurrentRow = React.useCallback(
+    (rowIndex: number) => rowIndex === activeRow,
+    [activeRow]
+  );
 
   const columns = ['database', 'driver', '', ''];
 
@@ -128,7 +132,7 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
         },
       });
     },
-    [dropSource]
+    [destructivePrompt, dropSource]
   );
 
   const rowData = React.useMemo(
@@ -193,6 +197,8 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
     [
       databaseList,
       databaseVersions,
+      handleEdit,
+      handleRemove,
       inconsistentSources,
       isCurrentRow,
       isDatabaseVersionLoading,
@@ -209,29 +215,32 @@ export const ListConnectedDatabases = (props?: { className?: string }) => {
     // isLoading: isUpdatingProjectRegion,
   } = useUpdateProjectRegion();
 
-  const openUpdateProjectRegionPage = React.useCallback((_rowId?: string) => {
-    if (!_rowId) {
-      hasuraToast({
-        type: 'error',
-        title: 'Could not fetch row Id to update!',
-        message: 'Something went wrong',
-      });
-      return;
-    }
+  const openUpdateProjectRegionPage = React.useCallback(
+    (_rowId?: string) => {
+      if (!_rowId) {
+        hasuraToast({
+          type: 'error',
+          title: 'Could not fetch row Id to update!',
+          message: 'Something went wrong',
+        });
+        return;
+      }
 
-    // update project region for the row Id
-    updateProjectRegionForRowId(_rowId);
+      // update project region for the row Id
+      updateProjectRegionForRowId(_rowId);
 
-    // redirect to the cloud "change region for project page"
+      // redirect to the cloud "change region for project page"
 
-    const projectId = getProjectId(globals);
-    if (!projectId) {
-      return;
-    }
-    const cloudDetailsPage = `${window.location.protocol}//${window.location.host}/project/${projectId}/details?open_update_region_drawer=true`;
+      const projectId = getProjectId(globals);
+      if (!projectId) {
+        return;
+      }
+      const cloudDetailsPage = `${window.location.protocol}//${window.location.host}/project/${projectId}/details?open_update_region_drawer=true`;
 
-    window.open(cloudDetailsPage, '_blank');
-  }, []);
+      window.open(cloudDetailsPage, '_blank');
+    },
+    [updateProjectRegionForRowId]
+  );
 
   if (isLoading) return <>Loading...</>;
 

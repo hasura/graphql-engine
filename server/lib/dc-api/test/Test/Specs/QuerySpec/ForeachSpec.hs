@@ -175,11 +175,15 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
               [ mkForeachIds _tdAlbumsTableName [("ArtistId", J.Number 82)],
                 mkForeachIds _tdAlbumsTableName [("ArtistId", J.Number 68)]
               ]
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "AlbumId" Ascending :| []
       let query =
             albumsQueryRequest
               & qrForeach ?~ foreachIds
               -- Add the Artist object relationship field
-              & qrQuery %~ (qFields . _Just . Data.fieldAt "Artist" ?~ RelField (RelationshipField _tdArtistRelationshipName artistsQuery))
+              & qrQuery
+                %~ ( qFields . _Just . Data.fieldAt "Artist" ?~ RelField (RelationshipField _tdArtistRelationshipName artistsQuery)
+                       >>> qOrderBy ?~ orderBy
+                   )
               & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
       receivedForeachResponse <- queryGuarded query
 
@@ -191,6 +195,7 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
       let getAlbumsByArtistId artistId =
             _tdAlbumsRows
               & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId)
+              & sortOn (^? Data.field "AlbumId")
               & fmap joinInArtist
 
       let expectedForeachResponseRows =
@@ -208,11 +213,15 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
               [ mkForeachIds _tdAlbumsTableName [("ArtistId", J.Number 3)],
                 mkForeachIds _tdAlbumsTableName [("ArtistId", J.Number 2)]
               ]
+      let orderBy = OrderBy mempty $ _tdOrderByColumn [] "AlbumId" Ascending :| []
       let query =
             albumsQueryRequest
               & qrForeach ?~ foreachIds
               -- Add the Tracks array relationship field
-              & qrQuery %~ (qFields . _Just . Data.fieldAt "Tracks" ?~ RelField (RelationshipField _tdTracksRelationshipName tracksQuery))
+              & qrQuery
+                %~ ( qFields . _Just . Data.fieldAt "Tracks" ?~ RelField (RelationshipField _tdTracksRelationshipName tracksQuery)
+                       >>> qOrderBy ?~ orderBy
+                   )
               & qrRelationships .~ Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships]
       receivedForeachResponse <- queryGuarded query
 
@@ -225,6 +234,7 @@ spec TestData {..} Capabilities {..} = describe "Foreach Queries" $ do
       let getAlbumsByArtistId artistId =
             _tdAlbumsRows
               & filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId)
+              & sortOn (^? Data.field "AlbumId")
               & fmap joinInTracks
 
       let expectedForeachResponseRows =

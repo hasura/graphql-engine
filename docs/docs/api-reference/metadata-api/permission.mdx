@@ -60,7 +60,16 @@ X-Hasura-Role: admin
             "set":{
                 "id":"X-HASURA-USER-ID"
             },
-            "columns":["name","author_id"]
+            "columns":["name","author_id"],
+            "validate_input": {
+                "type": "http",
+                "definition": {
+                "forward_client_headers": true,
+                "headers": [],
+                "timeout": 10,
+                "url": "http://www.somedomain.com/validateUser"
+                }
+            }
         }
     }
 }
@@ -310,6 +319,15 @@ X-Hasura-Role: admin
             },
             "set":{
                 "updated_at" : "NOW()"
+            },
+            "validate_input": {
+                "type": "http",
+                "definition": {
+                "forward_client_headers": true,
+                "headers": [],
+                "timeout": 10,
+                "url": "http://www.somedomain.com/validateUser"
+                }
             }
         }
     }
@@ -399,6 +417,15 @@ X-Hasura-Role: admin
         "permission" : {
             "filter" : {
                 "author_id" : "X-HASURA-USER-ID"
+            },
+            "validate_input": {
+                "type": "http",
+                "definition": {
+                "forward_client_headers": true,
+                "headers": [],
+                "timeout": 10,
+                "url": "http://www.somedomain.com/validateUser"
+                }
             }
         }
     }

@@ -176,7 +176,7 @@ runMetadataQuery appContext schemaCache closeWebsocketsOnMetadataChange RQLMetad
         Tracing.newSpan "runSchemaRegistryAction"
           $ for_ schemaRegistryAction
           $ \action -> do
-            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache))
+            liftIO $ action newResourceVersion (scInconsistentObjs (lastBuiltSchemaCache modSchemaCache)) modMetadata
 
         -- notify schema cache sync
         Tracing.newSpan "notifySchemaCacheSync"
@@ -582,6 +582,7 @@ dispatchMetadata f x = dispatchAnyBackend @BackendMetadata x f
 -- run the schema cache validation once. This allows us to combine drop and
 -- re-add commands to do edits, or add two interdependent items at once.
 runBulkAtomic ::
+  forall m.
   ( HasFeatureFlagChecker m,
     MonadError QErr m,
     CacheRWM m,
@@ -592,11 +593,11 @@ runBulkAtomic ::
 runBulkAtomic cmds = do
   -- get the metadata modifiers for all our commands
   (mdModifiers :: [Metadata -> m Metadata]) <- do
-    (mods :: [Metadata -> m (MetadataObjId, MetadataModifier)]) <- traverse getMetadataModifierForCommand cmds
+    (mods :: [Metadata -> m MetadataModifier]) <- traverse getMetadataModifierForCommand cmds
     pure
       $ map
         ( \checker metadata -> do
-            MetadataModifier modifier <- snd <$> checker metadata
+            MetadataModifier modifier <- checker metadata
             pure $ modifier metadata
         )
         mods
@@ -611,14 +612,40 @@ runBulkAtomic cmds = do
 
   pure successMsg
   where
-    getMetadataModifierForCommand ::
-      (HasFeatureFlagChecker m, MonadError QErr m) => RQLMetadataRequest -> m (Metadata -> m (MetadataObjId, MetadataModifier))
+    forgetMetadataObjId ::
+      (command -> Metadata -> m (MetadataObjId, MetadataModifier)) ->
+      command ->
+      Metadata ->
+      m MetadataModifier
+    forgetMetadataObjId f x y = fmap snd (f x y)
+
+    getMetadataModifierForCommand :: RQLMetadataRequest -> m (Metadata -> m MetadataModifier)
     getMetadataModifierForCommand = \case
       RMV1 v -> case v of
-        RMTrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execTrackNativeQuery q
-        RMUntrackNativeQuery q -> pure $ dispatchMetadata NativeQueries.execUntrackNativeQuery q
-        RMTrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execTrackLogicalModel q
-        RMUntrackLogicalModel q -> pure $ dispatchMetadata LogicalModel.execUntrackLogicalModel q
+        -- Whoa there, cowboy! Chances are you're here to add table tracking to
+        -- the list of things that bulk_atomic can do. Before you do that,
+        -- though, there is a big, particularly-Citus-shaped problem you might
+        -- need to consider:
+        --
+        -- \* There are specific validation rules around how Citus handles
+        --   relationships (see 'validateRel' in 'PostgresMetadata'), which
+        --   will either need to be deferred until the end of the bulk /or/
+        --   moved to the schema cache.
+        -- \* This would also introduce the possibility of a table state that is
+        --   eventually consistent but currently inconsistent: I add table X, a
+        --   relationship between X and Y, and then I add table Y. Currently,
+        --   this can't be done, so all validation checks in
+        --   'execCreateRelationship' and 'execDropRelationship' remain as they
+        --   are in the @run@ versions.
+
+        RMCreateObjectRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ObjRel . unCreateObjRel) q
+        RMCreateArrayRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ execCreateRelationship ArrRel . unCreateArrRel) q
+        RMDropRelationship q -> pure $ dispatchMetadata (const . execDropRel) q
+        RMDeleteRemoteRelationship q -> pure $ dispatchMetadata (forgetMetadataObjId $ const . execDeleteRemoteRelationship) q
+        RMTrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execTrackNativeQuery) q
+        RMUntrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execUntrackNativeQuery) q
+        RMTrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execTrackLogicalModel) q
+        RMUntrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execUntrackLogicalModel) q
         _ -> throw500 "Bulk atomic does not support this command"
       RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 

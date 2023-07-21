@@ -333,7 +333,7 @@ transformAnnFields fields = do
           pure (AFArrayRelation . ASConnection $ transformed, Nothing)
         AFComputedField computedField computedFieldName computedFieldSelect -> do
           transformed <- case computedFieldSelect of
-            CFSScalar cfss cbe -> pure $ CFSScalar cfss cbe
+            CFSScalar cfss -> pure $ CFSScalar cfss
             CFSTable jsonAggSel annSel -> do
               transformed <- transformSelect annSel
               pure $ CFSTable jsonAggSel transformed
@@ -426,7 +426,7 @@ transformAnnFields fields = do
                 JCPhantom a -> case joinField of
                   JoinColumn column columnType ->
                     let annotatedColumn =
-                          AFColumn $ AnnColumnField column columnType False Nothing Nothing
+                          AFColumn $ AnnColumnField column columnType False Nothing NoRedaction
                      in Just (a, annotatedColumn)
                   JoinComputedField computedFieldInfo ->
                     Just (a, mkScalarComputedFieldSelect computedFieldInfo)
@@ -441,8 +441,7 @@ transformAnnFields fields = do
       let functionArgs =
             flip FunctionArgsExp mempty $ fromComputedFieldImplicitArguments @b UVSession _scfComputedFieldImplicitArgs
           fieldSelect =
-            flip CFSScalar Nothing
-              $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing
+            CFSScalar $ ComputedFieldScalarSelect _scfFunction functionArgs _scfType Nothing NoRedaction
        in AFComputedField _scfXField _scfName fieldSelect
 
 -- | Transforms an action's selection set.

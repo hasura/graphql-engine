@@ -7,11 +7,13 @@ module Hasura.RQL.IR.BoolExp.Lenses
   ( geWhere,
     geTable,
     _BoolExists,
+    _NoRedaction,
+    _RedactIfFalse,
   )
 where
 
 import Control.Lens.TH (makeLenses, makePrisms, makeWrapped)
-import Hasura.RQL.IR.BoolExp (BoolExp (..), GBoolExp (..), GExists (..))
+import Hasura.RQL.IR.BoolExp (AnnRedactionExp (..), BoolExp (..), GBoolExp (..), GExists (..))
 
 makeLenses ''GExists
 
@@ -20,3 +22,4 @@ makeLenses ''GExists
 makeWrapped ''BoolExp
 
 makePrisms ''GBoolExp
+makePrisms ''AnnRedactionExp

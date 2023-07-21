@@ -28,7 +28,6 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Root
-import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value (UnpreparedValue, ValueWithOrigin (ValueNoOrigin))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -77,20 +76,20 @@ convertToApolloFedParserFunc ::
   (MonadParse n, Backend b) =>
   SourceInfo b ->
   TableInfo b ->
-  TablePermG b (UnpreparedValue b) ->
+  SelPermInfo b ->
   StringifyNumbers ->
   Maybe NamingCase ->
   NESeq (ColumnInfo b) ->
   Parser 'Output n (AnnotatedFields b) ->
   Parser 'Output n (ApolloFederationParserFunction n)
-convertToApolloFedParserFunc sInfo tInfo selPerm stringifyNumbers tCase pKeys =
-  fmap (modifyApolloFedParserFunc sInfo tInfo selPerm stringifyNumbers tCase pKeys)
+convertToApolloFedParserFunc sInfo tInfo selectPermissions stringifyNumbers tCase pKeys =
+  fmap (modifyApolloFedParserFunc sInfo tInfo selectPermissions stringifyNumbers tCase pKeys)
 
 modifyApolloFedParserFunc ::
   (MonadParse n, Backend b) =>
   SourceInfo b ->
   TableInfo b ->
-  TablePermG b (UnpreparedValue b) ->
+  SelPermInfo b ->
   StringifyNumbers ->
   Maybe NamingCase ->
   NESeq (ColumnInfo b) ->
@@ -108,14 +107,15 @@ modifyApolloFedParserFunc
       for primaryKeys \columnInfo -> do
         let colName = G.unName $ ciName columnInfo
             cvType = ciType columnInfo
+            redactionExp = fromMaybe IR.NoRedaction $ getRedactionExprForColumn selectPermissions (ciColumn columnInfo)
         cvValue <- case KMap.lookup (K.fromText colName) afPKValues of
           Nothing -> P.parseError . toErrorMessage $ "cannot find " <> colName <> " in _Any type"
           Just va -> liftQErr $ flip runReaderT _siConfiguration $ parseScalarValueColumnType (ciType columnInfo) va
         pure
           $ IR.BoolField
-          . IR.AVColumn columnInfo
+          . IR.AVColumn columnInfo redactionExp
           . pure
-          . IR.AEQ True
+          . IR.AEQ IR.NonNullableComparison
           . IR.mkParameter
           $ ValueNoOrigin
           $ ColumnValue {..}
@@ -129,7 +129,7 @@ modifyApolloFedParserFunc
             $ IR.AnnSelectG
               { IR._asnFields = annField,
                 IR._asnFrom = IR.FromTable tableName,
-                IR._asnPerm = selectPermissions,
+                IR._asnPerm = tableSelPerm,
                 IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
                 IR._asnStrfyNum = stringifyNumbers,
                 IR._asnNamingConvention = tCase
@@ -140,6 +140,7 @@ modifyApolloFedParserFunc
       $ IR.SourceConfigWith sourceConfig Nothing
       $ queryDBRoot
     where
+      tableSelPerm = tablePermissionsInfo selectPermissions
       liftQErr = either (P.parseError . toErrorMessage . qeError) pure . runExcept
 
 -------------------------------------------------------------------------------

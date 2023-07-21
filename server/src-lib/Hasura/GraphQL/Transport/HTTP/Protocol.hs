@@ -8,6 +8,7 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
     SingleOperation,
     getSingleOperation,
     toParsed,
+    getOpNameFromParsedReq,
     GQLQueryText (..),
     GQLExecDoc (..),
     OperationName (..),
@@ -193,6 +194,19 @@ toParsed req = case G.parseExecutableDoc gqlText of
   Right a -> return $ req {_grQuery = GQLExecDoc $ G.getExecutableDefinitions a}
   where
     gqlText = _unGQLQueryText $ _grQuery req
+
+-- | Get operation name from parsed executable document if the field `operationName` is not explicitly
+-- sent by the client in the body of the request
+getOpNameFromParsedReq :: GQLReqParsed -> Maybe OperationName
+getOpNameFromParsedReq reqParsed =
+  case execDefs of
+    [G.ExecutableDefinitionOperation (G.OperationDefinitionTyped (G.TypedOperationDefinition _ maybeName _ _ _))] ->
+      let maybeOpNameFromRequestBody = _grOperationName reqParsed
+          maybeOpNameFromFirstExecDef = OperationName <$> maybeName
+       in maybeOpNameFromRequestBody <|> maybeOpNameFromFirstExecDef
+    _ -> _grOperationName reqParsed
+  where
+    execDefs = unGQLExecDoc $ _grQuery reqParsed
 
 encodeGQErr :: Bool -> QErr -> J.Encoding
 encodeGQErr includeInternal qErr =

@@ -15,6 +15,7 @@ module Main (main) where
 import Control.Concurrent (forkIO, threadDelay)
 import Control.Monad.Trans.Class (MonadTrans (lift))
 import Control.Monad.Trans.Except (runExceptT)
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as BS
 import Data.String (fromString)
 import Database.PG.Query
@@ -84,7 +85,7 @@ main = hspec $ do
 mkPool :: IO PGPool
 mkPool = do
   dbUri <- BS.pack <$> Env.getEnv "DATABASE_URL"
-  initPGPool (connInfo dbUri) connParams logger
+  initPGPool (connInfo dbUri) J.Null connParams logger
   where
     connInfo uri =
       ConnInfo

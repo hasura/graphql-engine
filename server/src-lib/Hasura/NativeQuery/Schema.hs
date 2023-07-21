@@ -80,7 +80,6 @@ defaultSelectNativeQueryObject nqi@NativeQueryInfo {..} fieldName description = 
 
   logicalModelPermissions <-
     MaybeT
-      . fmap Just
       $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   -- if we have any relationships, we use a Native Query rather than Logical
@@ -172,7 +171,6 @@ defaultSelectNativeQuery nqi@NativeQueryInfo {..} fieldName nullability descript
 
   logicalModelPermissions <-
     MaybeT
-      . fmap Just
       $ buildLogicalModelPermissions @b @r @m @n _nqiReturns
 
   -- if we have any relationships, we use a Native Query rather than Logical

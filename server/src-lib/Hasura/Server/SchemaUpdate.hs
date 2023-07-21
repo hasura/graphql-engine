@@ -289,7 +289,7 @@ refreshSchemaCache
     respErr <- runExceptT
       $ withSchemaCacheUpdate appStateRef logger (Just logTVar)
       $ do
-        rebuildableCache <- liftIO $ fst <$> getRebuildableSchemaCacheWithVersion appStateRef
+        rebuildableCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
         appContext <- liftIO $ getAppContext appStateRef
         let dynamicConfig = buildCacheDynamicConfig appContext
         -- the instance which triggered the schema sync event would have stored
@@ -351,7 +351,7 @@ refreshSchemaCache
                                     $ BackendMap.lookup @'DataConnector
                                     $ scBackendCache schemaCache
                               }
-                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
+                  buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata (Just latestResourceVersion)
                   setMetadataResourceVersionInSchemaCache latestResourceVersion
                   logInfo logger threadType
                     $ String

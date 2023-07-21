@@ -7,16 +7,16 @@ import { MetadataReducer } from '../../../mocks/actions';
 export const restEndpointsInitialData: Partial<Metadata['metadata']> = {
   rest_endpoints: [
     {
-      comment: '',
+      comment: 'Description of my rest endpoint',
       definition: {
         query: {
           collection_name: 'allowed-queries',
-          query_name: 'test',
+          query_name: 'MyQuery',
         },
       },
-      methods: ['GET'],
-      name: 'test',
-      url: 'test',
+      methods: ['POST'],
+      name: 'MyQuery',
+      url: 'test/:id',
     },
   ],
 };

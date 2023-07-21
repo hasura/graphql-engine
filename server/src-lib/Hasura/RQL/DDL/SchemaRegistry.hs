@@ -28,6 +28,7 @@ import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Execute.Types qualified as SQLTypes
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (Metadata)
 import Hasura.RQL.Types.Metadata.Object (InconsistentMetadata)
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache (MetadataResourceVersion)
@@ -85,7 +86,7 @@ newtype SchemaHash = SchemaHash {_schemaHash :: T.Text}
 
 type SchemaRegistryMap = HashMap RoleName GQLSchemaInformation
 
-type SchemaRegistryAction = Maybe (MetadataResourceVersion -> [InconsistentMetadata] -> IO ())
+type SchemaRegistryAction = Maybe (MetadataResourceVersion -> [InconsistentMetadata] -> Metadata -> IO ())
 
 data GQLSchemaInformation = GQLSchemaInformation
   { _gsiSchemaSDL :: SchemaSDL,
@@ -106,7 +107,8 @@ data ProjectGQLSchemaInformation = ProjectGQLSchemaInformation
     _pgsiIsMetadataInconsistent :: IsMetadataInconsistent,
     _pgsiAdminSchemaHash :: SchemaHash,
     _pgsiMetadataResourceVersion :: MetadataResourceVersion,
-    _pgsiChangeRecordedAt :: UTCTime
+    _pgsiChangeRecordedAt :: UTCTime,
+    _pgsiMetadata :: Metadata
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (J.FromJSON, J.ToJSON)

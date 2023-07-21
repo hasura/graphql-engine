@@ -1,8 +1,7 @@
 import React from 'react';
 import {
-  adaptTrackedTables,
-  adaptUntrackedTables,
   selectTrackedTables,
+  splitByTracked,
 } from '../../../../features/Data/ManageTable/selectors';
 import { useIntrospectedTables } from '../../../../features/Data/hooks/useIntrospectedTables';
 import { Feature, IntrospectedTable } from '../../../../features/DataSource';
@@ -21,21 +20,12 @@ export function useTrackTablesState(dataSourceName: string, schema: string) {
 
   // if this is not memoized it re-runs each render
   const select = React.useCallback(
-    (introspectedTables: Feature | IntrospectedTable[]) => {
-      const untracked =
-        adaptUntrackedTables(metadataTables)(introspectedTables);
-      const untrackedBySchema = untracked.filter(
-        t => t.name.split('.')[0] === schema
-      );
-      const tracked = adaptTrackedTables(metadataTables)(introspectedTables);
-      const trackedBySchema = tracked.filter(
-        t => t.name.split('.')[0] === schema
-      );
-      return {
-        untrackedTables: untrackedBySchema,
-        trackedTables: trackedBySchema,
-      };
-    },
+    (introspectedTables: Feature | IntrospectedTable[]) =>
+      splitByTracked({
+        metadataTables,
+        introspectedTables,
+        schemaFilter: schema,
+      }),
     [metadataTables, schema]
   );
 

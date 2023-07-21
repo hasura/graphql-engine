@@ -15,7 +15,6 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadMemoize)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
-import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude

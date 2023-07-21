@@ -8,7 +8,6 @@ import {
   FaUserSecret,
 } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import jwt from 'jsonwebtoken';
 
 import { Button } from '../../../../new-components/Button';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
@@ -88,6 +87,7 @@ class ApiRequest extends Component {
         error: null,
         serverResp: {},
       },
+      jwt: null,
     };
 
     if (this.props.numberOfTables !== 0) {
@@ -99,6 +99,13 @@ class ApiRequest extends Component {
 
     this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
     this.onAnalyzeBearerClose = this.onAnalyzeBearerClose.bind(this);
+
+    // Dynamically load jsonwebtoken library to prevent storybook stories crash
+    if (!global.window.preventJsonWebTokenLoad) {
+      import('jsonwebtoken').then(jwt => {
+        this.setState({ ...this.state, jwt });
+      });
+    }
   }
 
   componentDidMount() {
@@ -190,7 +197,7 @@ class ApiRequest extends Component {
     });
 
     const decodeAndSetState = serverResp => {
-      const decoded = jwt.decode(token, { complete: true });
+      const decoded = this.jwt.decode(token, { complete: true });
 
       if (decoded) {
         this.setState({

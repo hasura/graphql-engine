@@ -1,0 +1,337 @@
+---
+title: Using Schedule Triggers for Sending Review Request Email
+description: Succinct, tested, and reusable code recipes for common use cases in Hasura.
+sidebar_label: Product review
+keywords:
+  - hasura
+  - docs
+  - recipes
+  - scheduled triggers
+  - review
+  - request
+  - automated
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Send a Product Review Request Email
+
+Scheduled Triggers allows you to schedule business, or other logic to occur at specific times or intervals. In this guide,
+we'll explore how to use Scheduled Triggers to send a review request email for a product seven days after the order is
+delivered. We'll do this by executing this trigger every day at midnight to check whether it has been seven days since an order has been completed, if it has, and the user has not already received a reminder and has not left a review for their purchase, we'll send them an email asking them to do so. 
+
+## Prerequisites
+
+Before getting started, ensure that you have the following in place:
+
+- A Hasura project, either locally or using [Hasura Cloud](https://cloud.hasura.io/?skip_onboarding=true).
+- A working SMTP server or email-sending service that you can integrate with to send emails.
+- If you plan on using a webhook endpoint hosted on your own machine with a Hasura project hosted elsewhere, ensure that
+  you have a tunneling service such as [ngrok](https://ngrok.com/) set up so that a remotely hosted instance can communicate with your local machine.
+
+## Our model
+
+When sending transactionary emails such as this, there are three fundamental components to consider:
+
+- **Your data source**: In your database, which table contains the value that you want to use to determine whether or
+  not to send the email?
+- **Your querying logic**: In your webhook, how will you query your database to determine whether or not to send the
+  email? How will you return information so that you have the correct data to include in the email?
+- **Your email templating**: How will you generate and send the email containing the information you want to send?
+
+For simplicity, we're assuming there are three tables in our database: `orders`, `products`, and `users`. The `orders`
+table contains the details of all orders placed by customers, including the product ID, customer ID, order status, and
+delivery date. The `products` table contains the details of all products, including the product name and description.
+The `users` table contains the details of all users, including the user's email address.
+
+<details>
+<summary>
+Click here for the SQL to generate these tables and some seed data.
+</summary>
+
+```sql
+-- Create the 'users' table
+CREATE TABLE public.users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    email TEXT NOT NULL
+);
+
+-- Create the 'products' table
+CREATE TABLE public.products (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT
+);
+
+-- Create the 'orders' table
+CREATE TABLE public.orders (
+    id SERIAL PRIMARY KEY,
+    product_id INTEGER NOT NULL REFERENCES products(id),
+    customer_id INTEGER NOT NULL REFERENCES users(id),
+    status VARCHAR(255),
+    delivery_date DATE,
+    is_reviewed BOOLEAN DEFAULT FALSE
+);
+
+-- Seed data for the 'users' table
+INSERT INTO public.users (name, email) VALUES
+    ('Daniel Ricciardo', 'user1@example.com'),
+    ('Charles Leclerc', 'user2@example.com'),
+    ('Carlos Sainz', 'user3@example.com');
+
+-- Seed data for the 'products' table
+INSERT INTO public.products (name, description) VALUES
+    ('Product A', 'Description for Product A'),
+    ('Product B', 'Description for Product B'),
+    ('Product C', 'Description for Product C');
+
+-- Seed data for the 'orders' table
+INSERT INTO public.orders (product_id, customer_id, status, delivery_date) VALUES
+    (1, 1, 'Delivered', '2023-01-05'),
+    (2, 1, 'In Progress', '2023-02-10'),
+    (3, 2, 'Delivered', '2023-03-15'),
+    (1, 3, 'Cancelled', '2023-04-20');
+
+```
+
+You can copy / paste this into the `RUN SQL` tab in the Hasura Console on the `Data` page. Then, track all relationships
+under the `Public` schema on the `Data` page.
+
+**For any order that is delivered, do be sure to change the date to a time within the last seven days.**
+
+</details>
+
+## Step 1: Create the Scheduled Event
+
+Head to your the Hasura Console of your project and navigate to the "Events" tab. From there, click on the
+`Cron Triggers` item in the sidebar. Then, click `Create`:
+
+<Thumbnail
+  src="/img/scheduled-triggers/scheduled-triggers_getting-started-guide_2.18.0_click-create.png"
+  alt="Hasura Scheduled Trigger architecture"
+  width="1000"
+/>
+
+## Step 2: Configure the Scheduled Event
+
+First, provide a name for your trigger, e.g., `send_review_request_email`. Then, enter a webhook URL that will be called
+when the event is triggered. This webhook will be responsible for sending the review request email and can be hosted
+anywhere, and written in any language, you like.
+
+In the example below, if we're using Docker, we'll use a webhook endpoint hosted on our own machine running on port `4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
+
+```
+http://host.docker.internal:4000/review-request
+```
+
+:::info Tunneling your webhook endpoint
+
+If you're not running your Hasura instance on the same machine as your webhook endpoint, you'll need to use a tunneling
+service such as [ngrok](https://ngrok.com/) to expose your webhook endpoint to the internet. This will allow you to
+expose a public URL that will forward requests to your local machine and the server we'll configure below.
+
+You'll need to modify your webhook URL to use the public URL provided by ngrok.
+
+:::
+
+Next, we'll configure the cron expression that will trigger the event. In this example, we want to send requests at
+midnight. We can do that with the following cron expression:
+
+```
+0 0 * * *
+```
+
+Our trigger must also have a payload. This payload will be sent to the webhook endpoint when the event is triggered. We
+don't have to include any data in the payload, but we can if we want to. In this example, we'll simply send a
+`trigger_type` property categorizing the event as a `review_requests`. In the `Payload` section, enter the following:
+
+```json
+{
+  "trigger_type": "review_requests"
+}
+```
+
+Under `Advanced Settings`, we can configure the headers that will be sent with the request. We'll add an
+`authentication` header to prevent abuse of the endpoint and ensure that only Hasura can trigger the event. Set the
+`Key` as `secret-authorization-string` and the `Value` as `super_secret_string_123`.
+
+<Thumbnail
+  src="/img/scheduled-triggers/scheduled-triggers_recipes_review-request_auth-header.png"
+  alt="Hasura Scheduled Trigger architecture"
+  width="1000"
+/>
+
+Finally, click the `Add Cron Trigger` button to create the Scheduled Event.
+
+## Step 3: Create a webhook to handle the request
+
+Whenever a cron job is triggered, Hasura will send a request to the webhook URL you provided. In this example, we're
+simply going to send a `POST` request. Our webhook will parse the request, ensure the header is correct, and then query
+the database to determine which customers should receive a review request email.
+
+Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
+attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
+code as a guide to write your own webhook.
+
+Init a new project with `npm init` and install the following dependencies:
+
+```bash
+npm install express nodemailer
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.js</code> and add the following code:
+</summary>
+
+```javascript
+const express = require('express');
+const nodemailer = require('nodemailer');
+
+const app = express();
+
+// Create a Nodemailer transporter using Ethereal email service
+// Ideally, this configuration would be stored somewhere else
+nodemailer.createTestAccount((err, account) => {
+  if (err) {
+    console.error('Failed to create a testing account. ' + err.message);
+    return process.exit(1);
+  }
+
+  // If all goes as planned, here's the console telling us we're 👍
+  console.log('Credentials obtained, listening on the webhook...');
+
+  // Create a transporter object for nodemailer
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: {
+      user: account.user,
+      pass: account.pass,
+    },
+  });
+
+  // Our route for the webhook
+  app.post('/review-request', async (req, res) => {
+    // confirm the auth header is correct — ideally, you'd keep the secret in an environment variable
+    const authHeader = req.headers['secret-authorization-string'];
+    if (authHeader !== 'super_secret_string_123') {
+      return res.status(401).json({
+        message: 'Unauthorized',
+      });
+    }
+
+    // get our date ready for the query
+    const today = new Date();
+    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const formattedDate = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+
+    // Fetch the data from our Hasura instance
+    async function getRecentOrders() {
+      const response = await fetch('http://localhost:8080/v1/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // "x-hasura-admin-secret": "<YOUR-ADMIN-KEY>",
+        },
+        body: JSON.stringify({
+          query: `
+          query ReviewRequestQuery($delivery_date: date!) {
+            orders(where: {delivery_date: {_eq: $delivery_date}, is_reviewed: {_eq: false}}) {
+              user {
+                id
+                name
+                email
+              }
+              product {
+                id
+                name
+              }
+            }
+          }
+          
+          `,
+          variables: {
+            delivery_date: formattedDate,
+          },
+        }),
+      });
+      const { data } = await response.json();
+      return data.orders;
+    }
+
+    let orders = await getRecentOrders();
+
+    // map over the data and send an email to each customer
+    async function sendReviewRequests() {
+      let outcomes = [];
+      orders.map(async order => {
+        // Create a message object
+        const message = {
+          from: 'SuperStore.com <sender@SuperStore.com>',
+          to: `${order.user.name} <${order.user.email}>`,
+          subject: `We need your review, ${order.user.name.split(' ')[0]}!`,
+          text: `Hi ${order.user.name.split(' ')[0]}, we hope you're enjoying your ${
+            order.product.name
+          }. Please leave us a review!`,
+        };
+
+        // Send the message using the Nodemailer transporter
+        const info = await transporter.sendMail(message);
+
+        // Log the message info
+        console.log(`\nMessage sent to ${order.user.name}: ${nodemailer.getTestMessageUrl(info)}`);
+
+        // add the info to the outcomes array
+        outcomes.push({
+          messageId: info.messageId,
+          previewUrl: nodemailer.getTestMessageUrl(info),
+        });
+        return outcomes;
+      });
+    }
+
+    await sendReviewRequests(orders);
+
+    // Return a JSON response to the client
+    res.json({
+      message: 'Review requests sent!',
+    });
+  });
+
+  // Start the server
+  app.listen(4000, () => {
+    console.log('Server started on port 4000');
+  });
+});
+```
+
+</details>
+
+You can run the server by running `node index.js` in your terminal. If you see the message
+`Webhook server is running on port 4000`, you're good to go!
+
+## Step 4: Test the setup
+
+With your server running, Hasura should start hitting our endpoint. As we set our cron expression to `0 0 * * *`, the
+webhook will be triggered at midnight every day. We don't want to wait that long to test it. For now, update the expression to
+`* * * * *` to trigger the webhook every minute. Then, check out your invocation logs in the Hasura Console to verify
+that the webhook was triggered successfully and your terminal to see the outputted information and link to a handy email
+🎉
+
+<Thumbnail
+  src="/img/scheduled-triggers/scheduled-triggers_recipes_review-terminal.png"
+  alt="Hasura Scheduled Trigger architecture"
+  width="1000"
+/>
+
+Feel free to customize the webhook implementation based on your specific requirements and chosen email sending service.
+Remember to handle error scenarios, implement necessary validations, and add appropriate security measures to your
+webhook endpoint.

@@ -2,6 +2,7 @@ module Hasura.LogicalModel.Common
   ( toFieldInfo,
     columnsFromFields,
     logicalModelFieldsToFieldInfo,
+    getSelPermInfoForLogicalModel,
   )
 where
 
@@ -9,12 +10,16 @@ import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended (ToTxt (toTxt))
+import Hasura.LogicalModel.Cache
 import Hasura.LogicalModel.NullableScalarType (NullableScalarType (..))
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelType (..), LogicalModelTypeScalar (..))
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (AnnRedactionExp (..), gBoolExpTrue)
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..), StructuredColumnInfo (..), fromCol)
-import Hasura.Table.Cache (FieldInfo (..), FieldInfoMap)
+import Hasura.RQL.Types.Permission (AllowedRootFields (..))
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
+import Hasura.Table.Cache (FieldInfo (..), FieldInfoMap, RolePermInfo (..), SelPermInfo (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 columnsFromFields ::
@@ -76,3 +81,26 @@ logicalModelFieldsToFieldInfo =
       (\i (column, lmf) -> (,) column <$> logicalModelToColumnInfo i (column, lmf))
     . InsOrdHashMap.toList
     . columnsFromFields
+
+getSelPermInfoForLogicalModel ::
+  (Backend b) =>
+  RoleName ->
+  LogicalModelInfo b ->
+  Maybe (SelPermInfo b)
+getSelPermInfoForLogicalModel role logicalModel =
+  if role == adminRoleName
+    then Just $ mkAdminSelPermInfo logicalModel
+    else HashMap.lookup role (_lmiPermissions logicalModel) >>= _permSel
+
+mkAdminSelPermInfo :: (Backend b) => LogicalModelInfo b -> SelPermInfo b
+mkAdminSelPermInfo LogicalModelInfo {..} =
+  SelPermInfo
+    { spiCols = HashMap.fromList $ (,NoRedaction) <$> InsOrdHashMap.keys _lmiFields,
+      spiComputedFields = mempty,
+      spiFilter = gBoolExpTrue,
+      spiLimit = Nothing,
+      spiAllowAgg = True,
+      spiRequiredHeaders = mempty,
+      spiAllowedQueryRootFields = ARFAllowAllRootFields,
+      spiAllowedSubscriptionRootFields = ARFAllowAllRootFields
+    }

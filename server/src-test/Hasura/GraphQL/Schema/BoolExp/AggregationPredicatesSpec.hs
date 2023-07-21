@@ -22,7 +22,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value (Provenance (FreshVar), UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.BackendType (BackendSourceKind (PostgresVanillaKind), BackendType (Postgres), PostgresKind (Vanilla))
@@ -203,7 +203,7 @@ spec = do
                           aggPredArguments = AggregationPredicateArgumentsStar,
                           aggPredPredicate =
                             [ AEQ
-                                True
+                                NonNullableComparison
                                 ( UVParameter
                                     FreshVar
                                     ColumnValue

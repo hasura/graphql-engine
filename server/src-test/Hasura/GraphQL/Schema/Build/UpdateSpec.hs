@@ -8,7 +8,7 @@ module Hasura.GraphQL.Schema.Build.UpdateSpec (spec) where
 
 import Hasura.Backends.Postgres.Types.Update (UpdateOpExpression (..))
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
 import Hasura.RQL.Types.Instances ()
 import Test.Backend.Postgres.Misc qualified as P
@@ -36,7 +36,7 @@ spec = do
                       SingleBatchUpdate
                         $ UpdateBatchBuilder
                           { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textNew)],
-                            ubbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])]
+                            ubbWhere = [(P.nameColumnBuilder, [AEQ NonNullableComparison P.textOld])]
                           }
                   },
               utsField =
@@ -65,7 +65,7 @@ spec = do
                               [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                 (P.descColumnBuilder, UpdateSet P.textOther)
                               ],
-                            ubbWhere = [(P.nameColumnBuilder, [AEQ True P.textOld])]
+                            ubbWhere = [(P.nameColumnBuilder, [AEQ NonNullableComparison P.textOld])]
                           }
                   },
               utsField =
@@ -95,7 +95,7 @@ spec = do
                                 [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                   (P.descColumnBuilder, UpdateSet P.textOther)
                                 ],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerOne])]
                             }
                         ]
                   },
@@ -128,11 +128,11 @@ spec = do
                                 [ (P.nameColumnBuilder, UpdateSet P.textNew),
                                   (P.descColumnBuilder, UpdateSet P.textOther)
                                 ],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerOne])]
                             },
                           UpdateBatchBuilder
                             { ubbOperations = [(P.descColumnBuilder, UpdateSet P.textOther)],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerTwo])]
                             }
                         ]
                   },
@@ -165,15 +165,15 @@ spec = do
                       MultipleBatchesUpdate
                         [ UpdateBatchBuilder
                             { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textNew)],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerOne])]
                             },
                           UpdateBatchBuilder
                             { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textOld)],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerOne])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerOne])]
                             },
                           UpdateBatchBuilder
                             { ubbOperations = [(P.nameColumnBuilder, UpdateSet P.textOther)],
-                              ubbWhere = [(P.idColumnBuilder, [AEQ True P.integerTwo])]
+                              ubbWhere = [(P.idColumnBuilder, [AEQ NonNullableComparison P.integerTwo])]
                             }
                         ]
                   },

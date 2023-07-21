@@ -5,6 +5,7 @@
 module Hasura.RQL.IR.Select.Args
   ( SelectArgs,
     SelectArgsG (..),
+    AnnDistinctColumn (..),
     SelectStreamArgsG (..),
     SelectStreamArgs,
     StreamCursorItem (..),
@@ -56,28 +57,31 @@ data SelectArgsG (b :: BackendType) v = SelectArgs
     _saOrderBy :: Maybe (NE.NonEmpty (AnnotatedOrderByItemG b v)),
     _saLimit :: Maybe Int,
     _saOffset :: Maybe Int64,
-    _saDistinct :: (Maybe (NE.NonEmpty (Column b)))
+    _saDistinct :: (Maybe (NE.NonEmpty (AnnDistinctColumn b v)))
   }
   deriving stock (Generic, Functor, Foldable, Traversable)
 
 deriving stock instance
   ( Backend b,
     Eq (AnnBoolExp b v),
-    Eq (AnnotatedOrderByItemG b v)
+    Eq (AnnotatedOrderByItemG b v),
+    Eq (AnnDistinctColumn b v)
   ) =>
   Eq (SelectArgsG b v)
 
 instance
   ( Backend b,
     Hashable (AnnBoolExp b v),
-    Hashable (AnnotatedOrderByItemG b v)
+    Hashable (AnnotatedOrderByItemG b v),
+    Hashable (AnnDistinctColumn b v)
   ) =>
   Hashable (SelectArgsG b v)
 
 deriving stock instance
   ( Backend b,
     Show (AnnBoolExp b v),
-    Show (AnnotatedOrderByItemG b v)
+    Show (AnnotatedOrderByItemG b v),
+    Show (AnnDistinctColumn b v)
   ) =>
   Show (SelectArgsG b v)
 
@@ -85,6 +89,32 @@ type SelectArgs b = SelectArgsG b (SQLExpression b)
 
 noSelectArgs :: SelectArgsG backend v
 noSelectArgs = SelectArgs Nothing Nothing Nothing Nothing Nothing
+
+data AnnDistinctColumn b v = AnnDistinctColumn
+  { _adcColumn :: Column b,
+    -- | This type is used to determine whether the column should be redacted
+    -- before being distincted-upon
+    _adcRedactionExpression :: AnnRedactionExp b v
+  }
+  deriving stock (Generic, Functor, Foldable, Traversable)
+
+deriving stock instance
+  ( Backend b,
+    Eq (AnnRedactionExp b v)
+  ) =>
+  Eq (AnnDistinctColumn b v)
+
+instance
+  ( Backend b,
+    Hashable (AnnRedactionExp b v)
+  ) =>
+  Hashable (AnnDistinctColumn b v)
+
+deriving stock instance
+  ( Backend b,
+    Show (AnnRedactionExp b v)
+  ) =>
+  Show (AnnDistinctColumn b v)
 
 -- | Cursor for streaming subscription
 data StreamCursorItem (b :: BackendType) = StreamCursorItem

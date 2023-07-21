@@ -249,7 +249,7 @@ export const getAlterColumnTypeSql = (
   alter table ${getMySQLNameString(
     schemaName,
     tableName
-  )} modify column \`${columnName}\` ${columnType};  
+  )} modify column \`${columnName}\` ${columnType};
 `;
 
 export const getDropColumnDefaultSql = (

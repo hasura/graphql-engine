@@ -245,11 +245,130 @@ Learn more about [Postgres triggers](https://www.postgresql.org/docs/current/sql
 
 ## Using Hasura permissions
 
-If the validation logic can be expressed **declaratively** using static values and data from the database, then you can
-use [row level permissions](/auth/authorization/permissions/row-level-permissions.mdx) to perform the validations.
-(Read more about [Authorization](/auth/authorization/index.mdx)).
+Hasura permissions provides two different ways to validate data:
 
-**Example 1:** Validate that an `article` can be inserted only if `title` is not empty.
+1. If input arguments of a mutations needs to be validated, you can use the
+   [input validation](/docs/schema/postgres/input-validations.mdx) feature. This
+   allows you to write custom validation logic that is run in an external webhook before hitting the
+   database to execute the mutation.
+2. If the validation logic can be expressed **declaratively** using static
+   values and data from the database, then you can use [row level
+   permissions](/auth/authorization/permissions/row-level-permissions.mdx) to
+   perform the validations. (Read more
+   about[Authorization](/auth/authorization/index.mdx)).
+
+**Example 1:** Validate that a valid email is being inserted
+
+Suppose, we have the following table in our schema:
+```sql
+customer (id uuid, name text, city text, email text)
+```
+Now, we can create a role `user` and add an input validation rule as follows:
+
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail
+  src="/img/schema/input-validation-create-permission.png"
+  alt="Using boolean expressions to build rules"
+  width="500px"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can define the input validation  in the `metadata -> databases -> [database-name] -> tables -> [table-name].yaml`
+file, eg:
+
+```yaml {9-14}
+- table:
+    schema: public
+    name: customer
+  insert_permissions:
+    - role: user
+      permission:
+        columns: []
+        filter: {}
+        validate_input:
+          type: http
+          definition:
+            url: http://www.somedomain.com/validateCustomerMutation
+            forward_client_headers: true
+            timeout: 5
+        
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can define the input validations when using the [permissions Metadata API](/api-reference/metadata-api/permission.mdx).
+Example with a Postgres DB:
+
+```http {14-21}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_insert_permission",
+  "args": {
+    "source": "<db_name>",
+    "table": "customer",
+    "role": "user",
+    "permission": {
+      "columns": "*",
+      "filter": {},
+      "validate_input": {
+        "type": "http",
+        "definition": {
+          "forward_client_headers": true,
+          "headers": [],
+          "timeout": 5,
+          "url": "http://www.somedomain.com/validateCustomerMutation"
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+If we try to insert a customer with an invalid email, we will get a `validation-failed` error:
+
+<GraphiQLIDE
+  query={`mutation {
+  insert_customer(
+    objects: {
+      name: "customer 1"
+      email: "random-email",
+    }
+  ) {
+    affected_rows
+  }
+}`}
+  response={`{
+  "errors": [
+    {
+      "message": "customer email id is not valid",
+      "extensions": {
+        "path": "$",
+        "code": "validation-dfailed"
+      }
+    }
+  ]
+}`}
+/>
+
+**Example 2:** Validate that an `article` can be inserted only if `title` is not empty.
 
 Suppose, we have the following table in our schema:
 
@@ -325,7 +444,7 @@ If we try to insert an article with `title = ""`, we will get a `permission-erro
   query={`mutation {
   insert_article(
     objects: {
-      title: "
+      title: ""
       content: "Lorem ipsum dolor sit amet",
     }
   ) {
@@ -345,7 +464,7 @@ If we try to insert an article with `title = ""`, we will get a `permission-erro
 }`}
 />
 
-**Example 2:** Validate that an `article` can be inserted only if its `author` is active.
+**Example 3:** Validate that an `article` can be inserted only if its `author` is active.
 
 Suppose, we have 2 tables:
 

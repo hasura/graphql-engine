@@ -1,10 +1,11 @@
+import { useMutation } from 'react-query';
 import Endpoints from '../../../../Endpoints';
 import { Api } from '../../../../hooks/apiUtils';
 import { useAppSelector } from '../../../../storeHooks';
-import { useMutation, useQueryClient } from 'react-query';
+import { useInvalidateMetadata } from '../../../hasura-metadata-api';
 
 export const useAddRemoteSchemaRelationship = () => {
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
   const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
@@ -19,13 +20,16 @@ export const useAddRemoteSchemaRelationship = () => {
       }),
     {
       onSuccess: () => {
-        queryClient.refetchQueries(['metadata'], { active: true });
+        invalidateMetadata({
+          componentName: 'useAddRemoteSchemaRelationship',
+          reasons: ['added a remote schema relationship'],
+        });
       },
     }
   );
 };
 export const useDropRemoteSchemaRelationship = () => {
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
   const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
@@ -40,7 +44,10 @@ export const useDropRemoteSchemaRelationship = () => {
       }),
     {
       onSuccess: () => {
-        queryClient.refetchQueries(['metadata'], { active: true });
+        invalidateMetadata({
+          componentName: 'useDropRemoteSchemaRelationship',
+          reasons: ['dropped a remote schema relationship'],
+        });
       },
       onError: () => {},
     }
@@ -48,7 +55,7 @@ export const useDropRemoteSchemaRelationship = () => {
 };
 
 export const useUpdateRemoteSchemaRelationship = () => {
-  const queryClient = useQueryClient();
+  const invalidateMetadata = useInvalidateMetadata();
   const headers = useAppSelector(state => state.tables.dataHeaders);
 
   return useMutation(
@@ -63,7 +70,10 @@ export const useUpdateRemoteSchemaRelationship = () => {
       }),
     {
       onSuccess: () => {
-        queryClient.refetchQueries(['metadata'], { active: true });
+        invalidateMetadata({
+          componentName: 'useUpdateRemoteSchemaRelationship',
+          reasons: ['updated a remote schema relationship'],
+        });
       },
       onError: () => {},
     }

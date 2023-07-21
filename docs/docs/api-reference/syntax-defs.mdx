@@ -139,7 +139,7 @@ influence its efficiency.
 The only way to reasonably know if enabling prepared statements will increase the performance of a Hasura GraphQL
 Engine instance is to benchmark it under a representative query load.
 
-This option interacts with the [Query Tags](/observability/cloud-monitoring/query-tags.mdx) feature (see for details),
+This option interacts with the [Query Tags](/observability/query-tags.mdx) feature (see for details),
 and the two generally shouldn't be enabled at the same time.
 
 :::
@@ -191,11 +191,21 @@ and the two generally shouldn't be enabled at the same time.
 
 ## MsSQLPoolSettings {#mssqlpoolsettings}
 
+Pool settings have two disjoint cases.
+
+This schema indicates that the source uses a connection pool (the default):
+
 | Key                   | Required | Schema    | Description                                                                                                                                                                           |
 | --------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | max_connections       | false    | `Integer` | Maximum number of connections to be kept in the pool (default: 50)                                                                                                                    |
 | total_max_connections | false    | `Integer` | Maximum number of total connections across any number of Hasura Cloud instances (default: 50). Takes precedence over `max_connections` in Cloud projects. _(Only available in Cloud)_ |
 | idle_timeout          | false    | `Integer` | The idle timeout (in seconds) per connection (default: 180)                                                                                                                           |
+
+This schema indicates that the source does not use a connection pool:
+
+| Key            | Required | Schema    | Description                                            |
+| -------------- | -------- | --------- | ------------------------------------------------------ |
+| enable         | true     | `Bool`    | Set to `false` to disable the connection pool entirely |
 
 ## PGColumnType {#pgcolumntype}
 
@@ -337,14 +347,31 @@ Configuration properties for particular column, as specified on [ColumnConfig](#
 | function           | false    | `String` | Customize the `<function-name>` root field           |
 | function_aggregate | false    | `String` | Customize the `<function-name>_aggregate` root field |
 
+## InputValidationDefinition {#input-validation-definition}
+
+| Key                    | Required | Schema                                                                      | Description                                                                                 |
+| -----------            | -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| url                    | true     | [WebhookURL](#webhookurl)                                                   | The input validations's webhook URL                                                         |
+| headers                | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \] | List of defined headers to be sent to the handler                                           |
+| forward_client_headers | false    | boolean                                                                     | If set to `true` the client headers are forwarded to the webhook handler (default: `false`) |
+| timeout                | false    | Integer                                                                     | Number of seconds to wait for response before timing out. Default: 10                       |
+
+## InputValidation {#input-validation}
+
+| Key                    | Required | Schema                                                    | Description                                                          |
+| ---------------------- | -------- | --------                                                  | -------------------------------------------------------------------- |
+| type                   | true     | `String`                                                  | The interface for input validation. (Currently only supports "http") |
+| definition             | true     | [InputValidationDefinition](#input-validation-definition) | The definition for the input validation                              |
+
 ## InsertPermission {#insertpermission}
 
-| Key          | Required | Schema                                 | Description                                                                                                                                                                                                                       |
-| ------------ | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| check        | true     | [BoolExp](#boolexp)                    | This expression has to hold true for every new row that is inserted                                                                                                                                                               |
-| set          | false    | [ColumnPresetsExp](#columnpresetexp)   | Preset values for columns that can be sourced from session variables or static values                                                                                                                                             |
-| columns      | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                               |
-| backend_only | false    | Boolean                                | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| Key            | Required | Schema                                 | Description                                                                                                                                                                                                                       |
+| ------------   | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| check          | true     | [BoolExp](#boolexp)                    | This expression has to hold true for every new row that is inserted                                                                                                                                                               |
+| set            | false    | [ColumnPresetsExp](#columnpresetexp)   | Preset values for columns that can be sourced from session variables or static values                                                                                                                                             |
+| columns        | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                               |
+| backend_only   | false    | Boolean                                | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| validate_input | false    | [InputValidation](#input-validation)   | The input validation definition for the insert mutation.                                                                                                                                                                          |
 
 ## SelectPermission {#selectpermission}
 
@@ -366,20 +393,23 @@ The `query_root_fields` and the `subscription_root_fields` are only available in
 
 ## UpdatePermission {#updatepermission}
 
-| Key          | Required | Schema                                 | Description                                                                                                                                                                                                                       |
-| ------------ | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| columns      | true     | [PGColumn](#pgcolumn) array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified)                                                                                                                                                                |
-| filter       | true     | [BoolExp](#boolexp)                    | Only the rows where this precondition holds true are updatable                                                                                                                                                                    |
-| check        | false    | [BoolExp](#boolexp)                    | Postcondition which must be satisfied by rows which have been updated                                                                                                                                                             |
-| set          | false    | [ColumnPresetsExp](#columnpresetexp)   | Preset values for columns that can be sourced from session variables or static values.                                                                                                                                            |
-| backend_only | false    | Boolean                                | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| Key            | Required | Schema                                 | Description                                                                                                                                                                                                                       |
+| ------------   | -------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| columns        | true     | [PGColumn](#pgcolumn) array (or) `'*'` | Only these columns are selectable (or all when `'*'` is specified)                                                                                                                                                                |
+| filter         | true     | [BoolExp](#boolexp)                    | Only the rows where this precondition holds true are updatable                                                                                                                                                                    |
+| check          | false    | [BoolExp](#boolexp)                    | Postcondition which must be satisfied by rows which have been updated                                                                                                                                                             |
+| set            | false    | [ColumnPresetsExp](#columnpresetexp)   | Preset values for columns that can be sourced from session variables or static values.                                                                                                                                            |
+| backend_only   | false    | Boolean                                | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| validate_input | false    | [InputValidation](#input-validation)   | The input validation definition for the insert mutation.                                                                                                                                                                          |
+
 
 ## DeletePermission {#deletepermission}
 
-| Key          | Required | Schema              | Description                                                                                                                                                                                                                       |
-| ------------ | -------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| filter       | true     | [BoolExp](#boolexp) | Only the rows where this expression holds true are deletable                                                                                                                                                                      |
-| backend_only | false    | Boolean             | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| Key            | Required | Schema                                 | Description                                                                                                                                                                                                                       |
+| ------------   | -------- | -------------------                    | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filter         | true     | [BoolExp](#boolexp)                    | Only the rows where this expression holds true are deletable                                                                                                                                                                      |
+| backend_only   | false    | Boolean                                | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+| validate_input | false    | [InputValidation](#input-validation)   | The input validation definition for the insert mutation.                                                                                                                                                                          |
 
 ## LogicalModelSelectPermission {#logicalmodelselectpermission}
 

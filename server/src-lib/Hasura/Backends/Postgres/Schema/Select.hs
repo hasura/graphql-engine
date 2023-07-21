@@ -174,7 +174,7 @@ selectFunctionConnection mkRootFieldName fi@FunctionInfo {..} description pkeyCo
   lift do
     let fieldName = runMkRootFieldName mkRootFieldName $ _fiGQLName <> Name.__connection
     stringifyNumbers <- retrieve Options.soStringifyNumbers
-    tableConnectionArgsParser <- tableConnectionArgs pkeyColumns returnTableInfo
+    tableConnectionArgsParser <- tableConnectionArgs pkeyColumns returnTableInfo selectPermissions
     functionArgsParser <- customSQLFunctionArgs fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
     pure
@@ -218,11 +218,8 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   functionArgsParser <- lift $ computedFieldFunctionArgs sourceName _cfiFunction
   case _cfiReturnType of
     Postgres.CFRScalar scalarReturnType -> do
-      caseBoolExpMaybe <-
-        hoistMaybe (HashMap.lookup _cfiName (spiComputedFields selectPermissions))
-      let caseBoolExpUnpreparedValue =
-            (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
-          fieldArgsParser = do
+      redactionExp <- hoistMaybe $ getRedactionExprForComputedField selectPermissions _cfiName
+      let fieldArgsParser = do
             args <- functionArgsParser
             colOp <- scalarSelectionArgumentsParser @('Postgres pgKind) $ ColumnScalar scalarReturnType
             pure
@@ -234,10 +231,10 @@ computedFieldPG ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
                         { IR._cfssFunction = _cffName _cfiFunction,
                           IR._cfssType = scalarReturnType,
                           IR._cfssScalarArguments = colOp,
-                          IR._cfssArguments = args
+                          IR._cfssArguments = args,
+                          IR._cfssRedactionExpression = redactionExp
                         }
                     )
-                    caseBoolExpUnpreparedValue
                 )
       dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser

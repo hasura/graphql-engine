@@ -5,19 +5,12 @@ import { transformErrorResponse } from '../../../Data/errorUtils';
 //   useAllDriverCapabilities,
 //   useDriverCapabilities,
 // } from '../../../Data/hooks/useDriverCapabilities';
+import { useAllDriverCapabilities } from '../../../Data/hooks/useAllDriverCapabilities';
 import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
-import {
-  areTablesEqual,
-  useInvalidateMetadata,
-  useMetadata,
-} from '../../../hasura-metadata-api';
-import {
-  createTableRelationshipRequestBody,
-  deleteTableRelationshipRequestBody,
-  renameRelationshipRequestBody,
-} from './utils';
+import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
+import { Table } from '../../../hasura-metadata-types';
 import {
   DeleteRelationshipProps,
   LocalTableRelationshipDefinition,
@@ -26,8 +19,11 @@ import {
   RenameRelationshipProps,
   TableRelationshipBasicDetails,
 } from './types';
-import { Table } from '../../../hasura-metadata-types';
-import { useAllDriverCapabilities } from '../../../Data/hooks/useAllDriverCapabilities';
+import {
+  createTableRelationshipRequestBody,
+  deleteTableRelationshipRequestBody,
+  renameRelationshipRequestBody,
+} from './utils';
 
 type AllowedRelationshipDefinitions =
   | Omit<LocalTableRelationshipDefinition, 'capabilities'>
@@ -66,8 +62,6 @@ export const useCreateTableRelationships = (
   dataSourceName: string,
   globalMutateOptions?: MetadataMigrationOptions
 ) => {
-  const invalidateMetadata = useInvalidateMetadata();
-
   // get these capabilities
 
   const { data: driverCapabilties = [] } = useAllDriverCapabilities({
@@ -100,32 +94,6 @@ export const useCreateTableRelationships = (
     },
   });
 
-  // const {
-  //   data: capabilities = {
-  //     isLocalTableRelationshipSupported: false,
-  //     isRemoteTableRelationshipSupported: false,
-  //     isRemoteSchemaRelationshipSupported: true,
-  //   },
-  // } = useDriverCapabilities({
-  //   dataSourceName,
-  //   select: data => {
-  //     if (data === Feature.NotImplemented)
-  //       return {
-  //         isLocalTableRelationshipSupported: false,
-  //         isRemoteTableRelationshipSupported: false,
-  //         isRemoteSchemaRelationshipSupported: false,
-  //       };
-
-  //     return {
-  //       isLocalTableRelationshipSupported: isObject(data.relationships),
-  //       isRemoteTableRelationshipSupported: isObject(data.queries?.foreach),
-  //       isRemoteSchemaRelationshipSupported: true,
-  //     };
-  //   },
-  // });
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
   const { data: { metadataSources = [], resource_version } = {} } = useMetadata(
     m => ({
       metadataSources: m.metadata.sources,
@@ -152,7 +120,6 @@ export const useCreateTableRelationships = (
     ...globalMutateOptions,
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
-      invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variable, ctx);
     },
   });
@@ -189,7 +156,7 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
+            type: 'bulk_atomic',
             args: payloads,
             resource_version,
           },
@@ -247,7 +214,7 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_keep_going',
+            type: 'bulk_atomic',
             args: payloads,
             resource_version,
           },

@@ -43,8 +43,10 @@ getVariableDefinitionAndValue var@(Variable varInfo gType varValue) =
 
     varJSONValue =
       case varValue of
-        JSONValue v -> v
-        GraphQLValue val -> graphQLValueToJSON val
+        Just (JSONValue v) -> v
+        Just (GraphQLValue val) -> graphQLValueToJSON val
+        -- TODO: is this semantically correct RE: GraphQL spec June 2018, section 2.9.5?
+        Nothing -> J.Null
 
 unresolveVariables ::
   forall fragments.
@@ -202,7 +204,7 @@ resolveRemoteVariable userInfo = \case
             False -> throw400 CoercionError $ sessionVarEnumVal <<> " is not one of the valid enum values"
     -- nullability is false, because we treat presets as hard presets
     let variableGType = G.TypeNamed (G.Nullability False) typeName
-    pure $ Variable (VIRequired varName) variableGType (GraphQLValue coercedValue)
+    pure $ Variable (VIRequired varName) variableGType $ Just $ GraphQLValue coercedValue
   RemoteJSONValue gtype jsonValue -> do
     let key = RemoteJSONVariableKey gtype jsonValue
     varMap <- gets coerce
@@ -216,7 +218,7 @@ resolveRemoteVariable userInfo = \case
     varName <-
       G.mkName varText
         `onNothing` throw500 ("'" <> varText <> "' is not a valid GraphQL name")
-    pure $ Variable (VIRequired varName) gtype $ JSONValue jsonValue
+    pure $ Variable (VIRequired varName) gtype $ Just $ JSONValue jsonValue
   QueryVariable variable -> pure variable
 
 -- | TODO: Documentation.

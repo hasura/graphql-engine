@@ -1,13 +1,11 @@
 import { useCallback } from 'react';
-import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useFireNotification } from '../../../../../new-components/Notifications/index';
 import { exportMetadata } from '../../../../DataSource';
+import { useMetadataMigration } from '../../../../MetadataAPI';
 import { useHttpClient } from '../../../../Network';
 import { LogicalModel, Source } from '../../../../hasura-metadata-types';
-import { useQueryClient } from 'react-query';
-import { useFireNotification } from '../../../../../new-components/Notifications/index';
-import { METADATA_QUERY_KEY } from '../../../../hasura-metadata-api/useMetadata';
-import { errorTransform } from './utils/errorTransform';
 import { Permission } from '../components/types';
+import { errorTransform } from './utils/errorTransform';
 import { getDeleteLogicalModelBody } from './utils/getDeleteLogicalModelBody';
 
 const useRemoveLogicalModelsPermissions = ({
@@ -22,7 +20,6 @@ const useRemoveLogicalModelsPermissions = ({
   });
   const { fireNotification } = useFireNotification();
   const httpClient = useHttpClient();
-  const queryClient = useQueryClient();
 
   const remove = useCallback(
     async ({
@@ -68,7 +65,6 @@ const useRemoveLogicalModelsPermissions = ({
               });
             },
             onSettled: async () => {
-              await queryClient.invalidateQueries([METADATA_QUERY_KEY]);
               onSuccess?.();
             },
           }

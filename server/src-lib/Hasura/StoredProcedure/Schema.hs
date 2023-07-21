@@ -62,7 +62,6 @@ defaultBuildStoredProcedureRootFields StoredProcedureInfo {..} = runMaybeT $ do
 
   logicalModelPermissions <-
     MaybeT
-      . fmap Just
       $ buildLogicalModelPermissions @b @r @m @n _spiReturns
 
   selectionListParser <- MaybeT $ logicalModelSelectionList @b @r @m @n NotNullable _spiReturns

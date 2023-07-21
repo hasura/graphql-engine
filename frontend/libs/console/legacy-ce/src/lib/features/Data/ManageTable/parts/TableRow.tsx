@@ -107,7 +107,7 @@ export const TableRow = React.memo(
             <Button
               data-testid={`untrack-${table.name}`}
               size="sm"
-              onClick={untrack}
+              onClick={() => untrack()}
               isLoading={isLoading}
               loadingText="Please wait"
             >

@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
-import { Table } from '../hasura-metadata-types';
+import { useState } from 'react';
+import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../new-components/Button';
 import { useFireNotification } from '../../new-components/Notifications';
-import { FaPlusCircle } from 'react-icons/fa';
-import Legend from './components/Legend';
-import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
-import { MODE, Relationship } from './types';
+import { useSyncResourceVersionOnMount } from '../hasura-metadata-api';
+import { Table } from '../hasura-metadata-types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
-import { NOTIFICATIONS } from './components/constants';
+import Legend from './components/Legend';
 import { RenderWidget } from './components/RenderWidget/RenderWidget';
-import { useInvalidateMetadata } from '../hasura-metadata-api';
+import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
+import { NOTIFICATIONS } from './components/constants';
+import { MODE, Relationship } from './types';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;
@@ -29,8 +29,6 @@ export const DatabaseRelationships = ({
   });
   const { fireNotification } = useFireNotification();
 
-  const invalidateMetadata = useInvalidateMetadata();
-
   const onCancel = () => {
     setTabState({
       mode: undefined,
@@ -38,11 +36,9 @@ export const DatabaseRelationships = ({
     });
   };
 
-  // just invalidate metadata when this screen loads for the first time
-  // why? because the user might be coming from a redux based paged and the resource_version might gone out of sync
-  useEffect(() => {
-    invalidateMetadata();
-  }, [invalidateMetadata]);
+  useSyncResourceVersionOnMount({
+    componentName: 'DatabaseRelationships',
+  });
 
   const onError = (err: Error) => {
     if (mode)

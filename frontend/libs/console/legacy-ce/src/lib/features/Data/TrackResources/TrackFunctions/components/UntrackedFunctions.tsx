@@ -14,14 +14,14 @@ import {
 import { FunctionDisplayName } from './FunctionDisplayName';
 
 import React, { useState } from 'react';
+import { useHasuraAlert } from '../../../../../new-components/Alert';
+import { hasuraToast } from '../../../../../new-components/Toasts';
+import { QualifiedFunction } from '../../../../hasura-metadata-types';
+import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
+import { useTrackFunction } from '../../../hooks/useTrackFunction';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
 import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
-import { hasuraToast } from '../../../../../new-components/Toasts';
-import { useTrackFunction } from '../../../hooks/useTrackFunction';
-import { QualifiedFunction } from '../../../../hasura-metadata-types';
-import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
-import { useHasuraAlert } from '../../../../../new-components/Alert';
 import {
   TrackFunctionForm,
   TrackFunctionFormSchema,
@@ -104,7 +104,10 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
       </IndicatorCard>
     );
 
-  const { checkedItems, paginatedData } = listProps;
+  const {
+    checkData: { checkedIds },
+    paginatedData,
+  } = listProps;
 
   const handleTrack = (
     index: number,
@@ -148,7 +151,7 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
     <div>
       <div className="space-y-4">
         <TrackableListMenu
-          checkActionText={`Track Selected (${checkedItems.length})`}
+          checkActionText={`Track Selected (${checkedIds.length})`}
           isLoading={isLoading}
           {...listProps}
         />
@@ -163,7 +166,14 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
                       [
                         <span
                           className="py-2"
-                          onClick={() => invalidateMetadata()}
+                          onClick={() =>
+                            invalidateMetadata({
+                              componentName: 'UntrackedFunctions',
+                              reasons: [
+                                'Refreshing untracked functions on Dropdown Menu item click.',
+                              ],
+                            })
+                          }
                         >
                           Refresh
                         </span>,

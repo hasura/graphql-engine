@@ -25,7 +25,6 @@ import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, HasSourceConfiguration (..), SupportedNamingCase (..), XDisable, XEnable)
 import Hasura.RQL.Types.BackendType (BackendSourceKind (DataConnectorKind), BackendType (DataConnector))
 import Hasura.RQL.Types.Column (ColumnType (..))
@@ -182,7 +181,7 @@ instance HasSourceConfiguration 'DataConnector where
 
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
-    _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type
+    _cboRHS :: Maybe a
   }
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 

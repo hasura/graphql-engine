@@ -1,15 +1,11 @@
-import { useMetadataMigration } from '../../MetadataAPI';
-import { useInvalidateMetadata } from '../../hasura-metadata-api';
-import { hasuraToast } from '../../../new-components/Toasts';
 import { useCallback } from 'react';
+import { hasuraToast } from '../../../new-components/Toasts';
+import { useMetadataMigration } from '../../MetadataAPI';
 
 export const useReloadSource = () => {
-  const invalidateMetadata = useInvalidateMetadata();
-
   const { mutate, ...rest } = useMetadataMigration({
     onSuccess: () => {
       hasuraToast({ type: 'success', title: 'Reload successful!' });
-      invalidateMetadata();
     },
     onError: () => {
       hasuraToast({ type: 'error', title: 'Failed to reload source.' });

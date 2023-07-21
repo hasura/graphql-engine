@@ -38,7 +38,7 @@ instance Backend 'MSSQL where
   type ConstraintName 'MSSQL = MSSQL.ConstraintName
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
-  type CountType 'MSSQL = MSSQL.Countable MSSQL.ColumnName
+  type CountType 'MSSQL = Const (MSSQL.Countable MSSQL.ColumnName) -- TODO(redactionExp): Going to need to replace this Const with a fixed up type here
   type Column 'MSSQL = MSSQL.ColumnName
   type ScalarValue 'MSSQL = MSSQL.Value
   type ScalarType 'MSSQL = MSSQL.ScalarType

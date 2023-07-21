@@ -8,6 +8,7 @@ module Hasura.GraphQL.Execute.Subscription.Poll.Common
     BackendPollerKey (..),
     PollerMap,
     dumpPollerMap,
+    PollDetailsError (..),
     PollDetails (..),
     BatchExecutionDetails (..),
     CohortExecutionDetails (..),
@@ -53,9 +54,11 @@ import Control.Immortal qualified as Immortal
 import Crypto.Hash qualified as CH
 import Data.Aeson qualified as J
 import Data.ByteString qualified as BS
+import Data.Text (unpack)
 import Data.Time.Clock qualified as Clock
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
+import Hasura.Base.Error (QErr, showQErr)
 import Hasura.GraphQL.Execute.Subscription.Options
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
@@ -384,6 +387,22 @@ batchExecutionDetailMinimal BatchExecutionDetails {..} =
             <> batchRespSize
         )
 
+data PollDetailsError = PollDetailsError
+  { _pdeBatchId :: BatchId,
+    _pdeErrorDetails :: QErr
+  }
+  deriving (Eq)
+
+instance Show PollDetailsError where
+  show pde = "batch_id = " ++ show (_pdeBatchId pde) ++ ", detail = " ++ unpack (showQErr $ _pdeErrorDetails pde)
+
+instance J.ToJSON PollDetailsError where
+  toJSON PollDetailsError {..} =
+    J.object
+      $ [ "batch_id" J..= _pdeBatchId,
+          "detail" J..= _pdeErrorDetails
+        ]
+
 -- TODO consider refactoring into two types: one that is returned from pollLiveQuery and pollStreamingQuery, and a parent type containing pollerId, sourceName, and so on, which is assembled at the callsites of those two functions. Move postPollHook out of those functions to callsites
 data PollDetails = PollDetails
   { -- | the unique ID (basically a thread that run as a 'Poller') for the
@@ -405,7 +424,9 @@ data PollDetails = PollDetails
     _pdLiveQueryOptions :: SubscriptionsOptions,
     _pdSource :: SourceName,
     _pdRole :: RoleName,
-    _pdParameterizedQueryHash :: ParameterizedQueryHash
+    _pdParameterizedQueryHash :: ParameterizedQueryHash,
+    _pdLogLevel :: L.LogLevel,
+    _pdErrors :: Maybe [PollDetailsError]
   }
   deriving (Show, Eq)
 
@@ -423,23 +444,24 @@ they need to.
 pollDetailMinimal :: PollDetails -> J.Value
 pollDetailMinimal PollDetails {..} =
   J.object
-    [ "poller_id" J..= _pdPollerId,
-      "kind" J..= _pdKind,
-      "snapshot_time" J..= _pdSnapshotTime,
-      "batches" J..= batches, -- TODO: deprecate this field
-      "execution_batches" J..= batches,
-      "subscriber_count" J..= sum (map (length . _bedCohorts) _pdBatches),
-      "total_time" J..= _pdTotalTime,
-      "source" J..= _pdSource,
-      "generated_sql" J..= _pdGeneratedSql,
-      "role" J..= _pdRole,
-      "subscription_options" J..= _pdLiveQueryOptions
-    ]
+    $ [ "poller_id" J..= _pdPollerId,
+        "kind" J..= _pdKind,
+        "snapshot_time" J..= _pdSnapshotTime,
+        "batches" J..= batches, -- TODO: deprecate this field
+        "execution_batches" J..= batches,
+        "subscriber_count" J..= sum (map (length . _bedCohorts) _pdBatches),
+        "total_time" J..= _pdTotalTime,
+        "source" J..= _pdSource,
+        "generated_sql" J..= _pdGeneratedSql,
+        "role" J..= _pdRole,
+        "subscription_options" J..= _pdLiveQueryOptions
+      ]
+    <> maybe [] (\err -> ["errors" J..= err]) _pdErrors
   where
     batches = map batchExecutionDetailMinimal _pdBatches
 
 instance L.ToEngineLog PollDetails L.Hasura where
-  toEngineLog pl = (L.LevelInfo, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
+  toEngineLog pl = (_pdLogLevel pl, L.ELTLivequeryPollerLog, pollDetailMinimal pl)
 
 type SubscriptionPostPollHook = PollDetails -> IO ()
 

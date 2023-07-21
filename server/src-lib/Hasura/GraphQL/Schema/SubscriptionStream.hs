@@ -7,7 +7,7 @@ module Hasura.GraphQL.Schema.SubscriptionStream
   )
 where
 
-import Control.Lens ((^?))
+import Control.Lens ((^?), _1)
 import Control.Monad.Memoize
 import Data.Has
 import Data.List.NonEmpty qualified as NE
@@ -23,7 +23,7 @@ import Hasura.GraphQL.Schema.Parser
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, tableWhereArg)
+import Hasura.GraphQL.Schema.Select (tableSelectionList, tableWhereArg)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, getTableIdentifierName, tableSelectColumns, tableSelectPermissions)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
@@ -191,7 +191,8 @@ tableStreamCursorExp tableInfo = runMaybeT do
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableGQLName tableInfo
   tableGQLIdentifier <- getTableIdentifierName tableInfo
-  columnInfos <- mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  -- TODO(redactionExp): Do we need to deal with redaction expressions here too?
+  columnInfos <- mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   columnInfosNE <- hoistMaybe $ NE.nonEmpty columnInfos
   lift $ memoizeOn 'tableStreamCursorExp (sourceName, tableName) do
     columnParsers <- tableStreamColumnArg tableGQLIdentifier columnInfosNE

@@ -7,8 +7,8 @@ import {
 } from './configuration';
 import { LogicalModel } from './logicalModel';
 import { NativeQuery } from './nativeQuery';
-import { MetadataTable, Table } from './table';
 import { StoredProcedure } from './storedProcedure';
+import { MetadataTable, Table } from './table';
 
 export type NativeDrivers =
   | 'postgres'
@@ -53,6 +53,7 @@ export type MetadataFunction = {
       table: Table;
     };
   };
+  permissions?: Record<string, string>[];
 };
 
 export type Source = {
@@ -96,10 +97,11 @@ export type QualifiedFunction = unknown;
 export type { LogicalModel, LogicalModelField } from './logicalModel';
 export type { NativeQuery, NativeQueryArgument } from './nativeQuery';
 export type {
+  QualifiedStoredProcedure,
   StoredProcedure,
   StoredProcedureArgument,
-  QualifiedStoredProcedure,
 } from './storedProcedure';
+export type { LocalArrayRelationship, LocalObjectRelationship } from './table';
 
 export type BulkKeepGoingResponse = [
   | {
@@ -111,3 +113,5 @@ export type BulkKeepGoingResponse = [
       path: string;
     }
 ];
+
+export { NativeQueryRelationship } from './nativeQuery';

@@ -4,7 +4,7 @@
     "version": 3,
     "sources": [
       {
-        "name": "bigquery",
+        "name": "aBigQuery",
         "kind": "bigquery",
         "tables": [],
         "configuration": {
@@ -19,7 +19,7 @@
         }
       },
       {
-        "name": "mysql",
+        "name": "aMysql",
         "kind": "mysql8",
         "tables": [],
         "configuration": {
@@ -37,7 +37,7 @@
         }
       },
       {
-        "name": "postgres",
+        "name": "aPostgres",
         "kind": "postgres",
         "tables": [],
         "configuration": {
@@ -54,7 +54,24 @@
         }
       },
       {
-        "name": "sqlite",
+        "name": "aCockroach",
+        "kind": "cockroach",
+        "tables": [],
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgres://root@cockroachdb:26257/defaultdb",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "cockroach"
+          }
+        }
+      },
+      {
+        "name": "aSqlite",
         "kind": "sqlite",
         "tables": [],
         "configuration": {
@@ -74,7 +91,7 @@
         }
       },
       {
-        "name": "mssql",
+        "name": "aMSSql",
         "kind": "mssql",
         "tables": [],
         "configuration": {

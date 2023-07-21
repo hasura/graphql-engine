@@ -14,6 +14,7 @@ module Hasura.Backends.BigQuery.FromIr
   )
 where
 
+import Control.Applicative (getConst)
 import Control.Monad.Validate
 import Data.HashMap.Strict qualified as HashMap
 import Data.Int qualified as Int
@@ -591,7 +592,8 @@ fromSelectArgsG selectArgsG = do
     Args
       { argsJoins = toList (fmap unfurledJoin joins),
         argsOrderBy = NE.nonEmpty argsOrderBy,
-        argsDistinct = mdistinct,
+        -- TODO(redactionExp): Deal with the redaction expressions in distinct
+        argsDistinct = fmap Ir._adcColumn <$> mdistinct,
         ..
       }
   where
@@ -624,7 +626,7 @@ unfurlAnnotatedOrderByElement ::
   Ir.AnnotatedOrderByElement 'BigQuery Expression -> WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) FieldName
 unfurlAnnotatedOrderByElement =
   \case
-    Ir.AOCColumn columnInfo -> lift (fromColumnInfo columnInfo)
+    Ir.AOCColumn columnInfo _redactionExp -> lift (fromColumnInfo columnInfo) -- TODO(redactionExp): Use this redaction expression
     Ir.AOCObjectRelation Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _annBoolExp _annOrderByElementG ->
       error "unfurlAnnotatedOrderByElement RelTargetNativeQuery"
     Ir.AOCObjectRelation Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable tableName} annBoolExp annOrderByElementG -> do
@@ -685,7 +687,8 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   Ir.AAOCount -> pure (CountAggregate StarCountable)
-                  Ir.AAOOp text _resultType columnInfo -> do
+                  -- TODO(redactionExp): Deal with the redaction expression
+                  Ir.AAOOp (Ir.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
                     fieldName <- fromColumnInfo columnInfo
                     pure (OpAggregate text (ColumnExpression fieldName))
               )
@@ -819,7 +822,8 @@ fromAnnBoolExpFld ::
   Ir.AnnBoolExpFld 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    Ir.AVColumn columnInfo opExpGs -> do
+    Ir.AVColumn columnInfo _redactionExp opExpGs -> do
+      -- TODO(redactionExp): Deal with the redaction expression
       expression <- fmap ColumnExpression (fromColumnInfo columnInfo)
       expressions <- traverse (lift . fromOpExpG expression) opExpGs
       pure (AndExpression expressions)
@@ -1007,7 +1011,7 @@ fromAggregateField aggregateField =
   case aggregateField of
     Ir.AFExp text -> pure (TextAggregate text)
     Ir.AFCount countType ->
-      CountAggregate <$> case countType of
+      CountAggregate <$> case getConst countType of
         StarCountable -> pure StarCountable
         NonNullFieldCountable names -> NonNullFieldCountable <$> traverse fromColumn names
         DistinctCountable names -> DistinctCountable <$> traverse fromColumn names
@@ -1018,7 +1022,7 @@ fromAggregateField aggregateField =
           ( \(Rql.FieldName fieldName, columnField) -> do
               expression' <-
                 case columnField of
-                  Ir.SFCol column _columnType -> fmap ColumnExpression (fromColumn column)
+                  Ir.SFCol column _columnType _redactionExp -> fmap ColumnExpression (fromColumn column) -- TODO(redactionExp)
                   Ir.SFExp text -> pure (ValueExpression (BigQuery.TypedValue BigQuery.StringScalarType (StringValue text)))
                   -- See Hasura.RQL.Types.Backend.supportsAggregateComputedFields
                   Ir.SFComputedField _ _ -> error "Aggregate computed fields aren't currently supported for BigQuery!"
@@ -1077,9 +1081,9 @@ fromAnnColumnField annColumnField = do
   fieldName <- fromColumn column
   if asText || False -- TODO: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == Rql.StringifyNumbers)
     then pure (ToStringExpression (ColumnExpression fieldName))
-    else case caseBoolExpMaybe of
-      Nothing -> pure (ColumnExpression fieldName)
-      Just ex -> do
+    else case redactionExp of
+      Ir.NoRedaction -> pure (ColumnExpression fieldName)
+      Ir.RedactIfFalse ex -> do
         ex' <- (traverse fromAnnBoolExpFld >=> fromGBoolExp) (coerce ex)
         pure (ConditionalProjection ex' fieldName)
   where
@@ -1087,7 +1091,7 @@ fromAnnColumnField annColumnField = do
       { _acfColumn = column,
         _acfAsText = asText :: Bool,
         _acfArguments = _ :: Maybe Void,
-        _acfCaseBoolExpression = caseBoolExpMaybe :: Maybe (Ir.AnnColumnCaseBoolExp 'BigQuery Expression)
+        _acfRedactionExpression = redactionExp :: Ir.AnnRedactionExp 'BigQuery Expression
       } = annColumnField
 
 -- | This is where a field name "foo" is resolved to a fully qualified
@@ -1768,10 +1772,10 @@ fromOpExpG expression op =
   case op of
     Ir.ANISNULL -> pure (IsNullExpression expression)
     Ir.ANISNOTNULL -> pure (IsNotNullExpression expression)
-    Ir.AEQ False val -> pure (nullableBoolEquality expression val)
-    Ir.AEQ True val -> pure (EqualExpression expression val)
-    Ir.ANE False val -> pure (nullableBoolInequality expression val)
-    Ir.ANE True val -> pure (NotEqualExpression expression val)
+    Ir.AEQ Ir.NullableComparison val -> pure (nullableBoolEquality expression val)
+    Ir.AEQ Ir.NonNullableComparison val -> pure (EqualExpression expression val)
+    Ir.ANE Ir.NullableComparison val -> pure (nullableBoolInequality expression val)
+    Ir.ANE Ir.NonNullableComparison val -> pure (NotEqualExpression expression val)
     Ir.AIN val -> pure (OpExpression InOp expression val)
     Ir.ANIN val -> pure (OpExpression NotInOp expression val)
     Ir.AGT val -> pure (OpExpression MoreOp expression val)

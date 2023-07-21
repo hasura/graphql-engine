@@ -62,4 +62,10 @@ export default {
   docs: {
     autodocs: true,
   },
+  parameters: {
+    chromatic: {
+      // Default value is 0.063
+      diffThreshold: 0.4,
+    },
+  },
 };

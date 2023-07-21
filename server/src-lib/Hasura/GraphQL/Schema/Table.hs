@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema.Table
   )
 where
 
-import Control.Lens ((^?))
+import Control.Lens ((^?), _1)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
@@ -32,6 +32,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (AnnRedactionExpPartialSQL, AnnRedactionExpUnpreparedValue)
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
@@ -91,13 +92,14 @@ tableSelectColumnsEnum ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
   TableInfo b ->
-  SchemaT r m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)))
 tableSelectColumnsEnum tableInfo = do
   customization <- retrieve $ _siCustomization @b
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- tableSelectColumns tableInfo
+  columnsWithRedactionExps <- tableSelectColumns tableInfo
+  let columns = fst <$> columnsWithRedactionExps
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableSelectColumnTypeName tableGQLName
       description =
         Just
@@ -106,16 +108,22 @@ tableSelectColumnsEnum tableInfo = do
           <>> tableInfoName tableInfo
   -- We noticed many 'Definition's allocated, from 'define' below, so memoize
   -- to gain more sharing and lower memory residency.
-  case nonEmpty $ map (define . structuredColumnInfoName &&& structuredColumnInfoColumn) columns of
+  let columnDefinitions =
+        columnsWithRedactionExps
+          <&> ( \(structuredColumnInfo, redactionExp) ->
+                  let definition = define $ structuredColumnInfoName structuredColumnInfo
+                      column = structuredColumnInfoColumn structuredColumnInfo
+                   in (definition, (column, redactionExp))
+              )
+          & nonEmpty
+  case columnDefinitions of
     Nothing -> pure Nothing
-    Just columnDefinitions ->
+    Just columnDefinitions' ->
       Just
         <$> P.memoizeOn
           'tableSelectColumnsEnum
           (enumName, description, columns)
-          ( pure
-              $ P.enum enumName description columnDefinitions
-          )
+          (pure $ P.enum enumName description columnDefinitions')
   where
     define name =
       P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
@@ -141,7 +149,7 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
       mkTypename = runMkTypename $ _rscTypeNames customization
       predName' = applyFieldNameCaseIdentifier tCase predName
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- filter (columnPredicate . ciType) . mapMaybe (^? _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  columns <- filter (columnPredicate . ciType) . mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
         Just
@@ -274,12 +282,24 @@ tableSelectColumns ::
     Has (SourceInfo b) r
   ) =>
   TableInfo b ->
-  m [StructuredColumnInfo b]
-tableSelectColumns tableInfo =
-  mapMaybe columnInfo <$> tableSelectFields tableInfo
+  m [(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)]
+tableSelectColumns tableInfo = do
+  roleName <- retrieve scRole
+  case spiCols <$> tableSelectPermissions roleName tableInfo of
+    Nothing -> pure []
+    Just columnPermissions ->
+      mapMaybe (getColumnsAndRedactionExps columnPermissions) <$> tableSelectFields tableInfo
   where
-    columnInfo (FIColumn ci) = Just ci
-    columnInfo _ = Nothing
+    getColumnsAndRedactionExps ::
+      HashMap (Column b) (AnnRedactionExpPartialSQL b) ->
+      FieldInfo b ->
+      Maybe ((StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b))
+    getColumnsAndRedactionExps columnPermissions = \case
+      FIColumn structuredColumnInfo -> do
+        redactionExp <- HashMap.lookup (structuredColumnInfoColumn structuredColumnInfo) columnPermissions
+        pure (structuredColumnInfo, partialSQLExpToUnpreparedValue <$> redactionExp)
+      _ ->
+        Nothing
 
 -- | Get the computed fields of a table that may be selected under the given
 -- select permissions.

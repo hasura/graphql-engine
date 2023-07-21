@@ -81,7 +81,8 @@ fromAnnBoolExpFld ::
   ReaderT EntityAlias FromIr Expression
 fromAnnBoolExpFld =
   \case
-    IR.AVColumn columnInfo opExpGs -> do
+    IR.AVColumn columnInfo _redactionExp opExpGs -> do
+      -- TODO(redactionExp): Deal with the redaction expression
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       pure (AndExpression expressions)
     IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
@@ -162,10 +163,10 @@ fromOpExpG columnInfo op = do
   case op of
     IR.ANISNULL -> pure $ TSQL.IsNullExpression column
     IR.ANISNOTNULL -> pure $ TSQL.IsNotNullExpression column
-    IR.AEQ False val -> pure $ nullableBoolEquality column val
-    IR.AEQ True val -> pure $ OpExpression TSQL.EQ' column val
-    IR.ANE False val -> pure $ nullableBoolInequality column val
-    IR.ANE True val -> pure $ OpExpression TSQL.NEQ' column val
+    IR.AEQ IR.NullableComparison val -> pure $ nullableBoolEquality column val
+    IR.AEQ IR.NonNullableComparison val -> pure $ OpExpression TSQL.EQ' column val
+    IR.ANE IR.NullableComparison val -> pure $ nullableBoolInequality column val
+    IR.ANE IR.NonNullableComparison val -> pure $ OpExpression TSQL.NEQ' column val
     IR.AGT val -> pure $ OpExpression TSQL.GT column val
     IR.ALT val -> pure $ OpExpression TSQL.LT column val
     IR.AGTE val -> pure $ OpExpression TSQL.GTE column val

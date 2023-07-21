@@ -117,7 +117,7 @@ const SchemasDetails: React.VFC<{
           <Tabs
             value={tabState}
             onValueChange={state => setTabState(state)}
-            headerTabBackgroundColor="bg-white"
+            headerTabBackgroundColor="white"
             items={[
               {
                 value: 'graphql',

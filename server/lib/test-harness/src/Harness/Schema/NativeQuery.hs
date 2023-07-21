@@ -9,15 +9,18 @@ module Harness.Schema.NativeQuery
     untrackNativeQuery,
     nativeQuery,
     nativeQueryColumn,
+    inlineNativeQuery,
   )
 where
 
 import Data.Aeson (Value, (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
+import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema.LogicalModel
 import Harness.Schema.Table
 import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.BackendType qualified as BackendType
@@ -41,20 +44,37 @@ nativeQueryColumn name colType =
       nativeQueryColumnDescription = Nothing
     }
 
+data NativeQueryReturn
+  = NQNamedLogicalModel Text
+  | NQFields [LogicalModelColumn]
+
 data NativeQuery = NativeQuery
   { nativeQueryName :: Text,
-    nativeQueryLogicalModel :: Text,
+    nativeQueryReturn :: NativeQueryReturn,
     nativeQueryQuery :: BackendType.BackendType -> Text,
     nativeQueryArguments :: [NativeQueryColumn],
     nativeQueryArrayRelationships :: [J.Value],
     nativeQueryObjectRelationships :: [J.Value]
   }
 
+-- | A native query with a named Logical Model
 nativeQuery :: Text -> (BackendType.BackendType -> Text) -> Text -> NativeQuery
 nativeQuery nativeQueryName query returnType =
   NativeQuery
     { nativeQueryName,
-      nativeQueryLogicalModel = returnType,
+      nativeQueryReturn = NQNamedLogicalModel returnType,
+      nativeQueryQuery = query,
+      nativeQueryArguments = mempty,
+      nativeQueryArrayRelationships = mempty,
+      nativeQueryObjectRelationships = mempty
+    }
+
+-- | A natiev query with an inline Logical Model
+inlineNativeQuery :: Text -> (BackendType.BackendType -> Text) -> [LogicalModelColumn] -> NativeQuery
+inlineNativeQuery nativeQueryName query fields =
+  NativeQuery
+    { nativeQueryName,
+      nativeQueryReturn = NQFields fields,
       nativeQueryQuery = query,
       nativeQueryArguments = mempty,
       nativeQueryArrayRelationships = mempty,
@@ -62,7 +82,7 @@ nativeQuery nativeQueryName query returnType =
     }
 
 trackNativeQueryCommand :: String -> BackendTypeConfig -> NativeQuery -> Value
-trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryObjectRelationships, nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryLogicalModel}) =
+trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryObjectRelationships, nativeQueryArrayRelationships, nativeQueryName, nativeQueryArguments, nativeQueryQuery, nativeQueryReturn}) =
   -- arguments are a map from name to type details
   let argsToJson =
         J.object
@@ -87,6 +107,18 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
       requestType = BackendType.backendTypeString backendTypeConfig <> "_track_native_query"
 
       query = nativeQueryQuery (BackendType.backendType backendTypeConfig)
+
+      returns = case nativeQueryReturn of
+        NQNamedLogicalModel lm -> J.String lm
+        NQFields fields ->
+          J.object
+            $ [ ( "fields",
+                  J.Array
+                    . V.fromList
+                    . fmap (logicalModelColumnToJSON backendTypeConfig)
+                    $ fields
+                )
+              ]
    in [yaml|
         type: *requestType
         args:
@@ -97,7 +129,7 @@ trackNativeQueryCommand sourceName backendTypeConfig (NativeQuery {nativeQueryOb
           arguments: *arguments
           array_relationships: *nativeQueryArrayRelationships
           object_relationships: *nativeQueryObjectRelationships
-          returns: *nativeQueryLogicalModel
+          returns: *returns
       |]
 
 trackNativeQuery :: (HasCallStack) => String -> NativeQuery -> TestEnvironment -> IO ()

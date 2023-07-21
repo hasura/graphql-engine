@@ -30,7 +30,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: mongouser
       MONGO_INITDB_ROOT_PASSWORD: mongopassword
   hasura:
-    image: hasura/graphql-engine:v2.29.0
+    image: hasura/graphql-engine:v2.30.0
     restart: always
     ports:
       - 8080:8080

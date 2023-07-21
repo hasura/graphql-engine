@@ -1,7 +1,7 @@
 import { transformErrorResponse } from '../../ConnectDBRedesign/utils';
 import { useMetadataMigration } from '../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../MetadataAPI/hooks/useMetadataMigration';
-import { useInvalidateMetadata, useMetadata } from '../../hasura-metadata-api';
+import { useMetadata } from '../../hasura-metadata-api';
 import { LogicalModel } from '../../hasura-metadata-types';
 import { getSourceDriver } from './utils';
 
@@ -20,13 +20,10 @@ export const useTrackLogicalModel = (
     resource_version: m.resource_version,
   }));
 
-  const invalidateMetadata = useInvalidateMetadata();
-
   const { mutate, ...rest } = useMetadataMigration({
     ...globalMutateOptions,
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
-      invalidateMetadata();
       globalMutateOptions?.onSuccess?.(data, variable, ctx);
     },
   });

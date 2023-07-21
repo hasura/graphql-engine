@@ -208,7 +208,7 @@ export const TableBrowseRowsContainer = (
     dispatch(vSetDefaults(newLimit));
 
   return (
-    <div className="bootstrap-jail">
+    <div className="bootstrap-jail table-browse-rows-container">
       <RightContainer>
         <TableHeader
           count={isCountEstimated ? estimatedCount : count}

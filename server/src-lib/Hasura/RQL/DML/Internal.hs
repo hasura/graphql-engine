@@ -11,7 +11,7 @@ module Hasura.RQL.DML.Internal
     checkRetCols,
     checkSelOnCol,
     convAnnBoolExpPartialSQL,
-    convAnnColumnCaseBoolExpPartialSQL,
+    convAnnRedactionExpPartialSQL,
     convBoolExp,
     convPartialSQLExp,
     fetchRelDet,
@@ -278,7 +278,7 @@ checkOnColExp ::
   AnnBoolExpFldSQL ('Postgres 'Vanilla) ->
   m (AnnBoolExpFldSQL ('Postgres 'Vanilla))
 checkOnColExp spi sessVarBldr annFld = case annFld of
-  AVColumn colInfo _ -> do
+  AVColumn colInfo _ _ -> do
     let cn = ciColumn colInfo
     checkSelOnCol spi cn
     return annFld
@@ -294,7 +294,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
     roleName <- askCurRole
     let fieldName = _acfbName cfBoolExp
     case _acfbBoolExp cfBoolExp of
-      CFBEScalar _ -> do
+      CFBEScalar _ _ -> do
         checkSelectPermOnScalarComputedField spi fieldName
         pure annFld
       CFBETable table nesBoolExp -> do
@@ -323,13 +323,13 @@ convAnnBoolExpPartialSQL ::
 convAnnBoolExpPartialSQL f =
   (traverse . traverse) (convPartialSQLExp f)
 
-convAnnColumnCaseBoolExpPartialSQL ::
+convAnnRedactionExpPartialSQL ::
   (Applicative f) =>
   SessionVariableBuilder f ->
-  AnnColumnCaseBoolExpPartialSQL ('Postgres 'Vanilla) ->
-  f (AnnColumnCaseBoolExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
-convAnnColumnCaseBoolExpPartialSQL f =
-  (traverse . traverse) (convPartialSQLExp f)
+  AnnRedactionExpPartialSQL ('Postgres 'Vanilla) ->
+  f (AnnRedactionExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
+convAnnRedactionExpPartialSQL f =
+  traverse (convPartialSQLExp f)
 
 convPartialSQLExp ::
   (Applicative f) =>

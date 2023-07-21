@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Backends.DataConnector.Adapter.Types
   ( ConnSourceConfig (..),
@@ -53,6 +54,9 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp qualified as IR
+import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (..))
 import Hasura.RQL.Types.DataConnector
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
@@ -376,12 +380,29 @@ instance (Hashable a) => Hashable (ArgumentExp a)
 
 --------------------------------------------------------------------------------
 
-data CountAggregate
+data CountAggregate v
   = StarCount
-  | ColumnCount ColumnName
-  | ColumnDistinctCount ColumnName
-  deriving stock (Data, Eq, Generic, Ord, Show)
-  deriving anyclass (FromJSON, Hashable, NFData, ToJSON)
+  | ColumnCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
+  | ColumnDistinctCount (ColumnName, IR.AnnRedactionExp 'DataConnector v)
+  deriving (Generic)
+
+deriving stock instance
+  (Backend 'DataConnector, Show (IR.AnnRedactionExp 'DataConnector v), Show v) =>
+  Show (CountAggregate v)
+
+deriving stock instance (Backend 'DataConnector) => Functor CountAggregate
+
+deriving stock instance (Backend 'DataConnector) => Foldable CountAggregate
+
+deriving stock instance (Backend 'DataConnector) => Traversable CountAggregate
+
+deriving stock instance
+  (Backend 'DataConnector, Eq (IR.AnnRedactionExp 'DataConnector v), Eq v) =>
+  Eq (CountAggregate v)
+
+deriving stock instance
+  (Backend 'DataConnector, Data (IR.AnnRedactionExp 'DataConnector v), Data v) =>
+  Data (CountAggregate v)
 
 --------------------------------------------------------------------------------
 

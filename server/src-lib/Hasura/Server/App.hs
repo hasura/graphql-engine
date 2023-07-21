@@ -124,7 +124,6 @@ import Web.Spock.Core qualified as Spock
 data HandlerCtx = HandlerCtx
   { hcAppContext :: AppContext,
     hcSchemaCache :: RebuildableSchemaCache,
-    hcSchemaCacheVersion :: SchemaCacheVer,
     hcUser :: UserInfo,
     hcReqHeaders :: [HTTP.Header],
     hcRequestId :: RequestId,
@@ -350,11 +349,11 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
         authInfo <- onLeft authenticationResp (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders (ExtraUserInfo Nothing) . qErrModifier)
         let (userInfo, _, authHeaders, extraUserInfo) = authInfo
         appContext <- liftIO $ getAppContext appStateRef
-        (schemaCache, schemaCacheVer) <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
+        schemaCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
         pure
           ( userInfo,
             authHeaders,
-            HandlerCtx appContext schemaCache schemaCacheVer userInfo headers requestId ipAddress appEnvLicenseKeyCache,
+            HandlerCtx appContext schemaCache userInfo headers requestId ipAddress appEnvLicenseKeyCache,
             shouldIncludeInternal (_uiRole userInfo) acResponseInternalErrorsConfig,
             extraUserInfo
           )
@@ -569,11 +568,10 @@ v1Alpha1GQHandler queryType query = do
   AppContext {..} <- asks hcAppContext
   userInfo <- asks hcUser
   schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
-  schemaCacheVer <- asks hcSchemaCacheVersion
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
@@ -917,7 +915,6 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
         AppContext {..} <- liftIO $ getAppContext appStateRef
         endpoints <- liftIO $ scEndpoints <$> getSchemaCache appStateRef
         schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
-        schemaCacheVer <- asks hcSchemaCacheVersion
         requestId <- asks hcRequestId
         userInfo <- asks hcUser
         reqHeaders <- asks hcReqHeaders
@@ -933,7 +930,7 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache schemaCacheVer acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do

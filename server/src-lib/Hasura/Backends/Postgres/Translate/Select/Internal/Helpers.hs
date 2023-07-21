@@ -13,7 +13,6 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
-    fromTableRowArgsDon'tAddBase,
     functionToIdentifier,
     withJsonBuildObj,
     withForceAggregation,
@@ -114,18 +113,6 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
         (S.SERowIdentifier (tableIdentifierToIdentifier baseTableIdentifier))
         (S.mkQIdenExp baseTableIdentifier . Identifier)
     baseTableIdentifier = mkBaseTableIdentifier prefix
-
--- Like `fromTableRowArgs`, but we don't add `mkBaseTableIdentifier`
-fromTableRowArgsDon'tAddBase ::
-  TableIdentifier -> FunctionArgsExpG (ArgumentExp S.SQLExp) -> S.FunctionArgs
-fromTableRowArgsDon'tAddBase prefix = toFunctionArgs . fmap toSQLExp
-  where
-    toFunctionArgs (FunctionArgsExp positional named) =
-      S.FunctionArgs positional named
-    toSQLExp =
-      onArgumentExp
-        (S.SERowIdentifier (tableIdentifierToIdentifier prefix))
-        (S.mkQIdenExp prefix . Identifier)
 
 -- | Given a @NativeQueryName@, what should we call the CTE generated for it?
 nativeQueryNameToAlias :: NativeQueryName -> Int -> S.TableAlias

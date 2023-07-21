@@ -76,7 +76,7 @@ instance Hashable TableMetadataObjId
 -- | Identifiers for logical model elements within the metadata structure.
 data LogicalModelMetadataObjId
   = LMMOPerm RoleName PermType
-  | LMMOInnerLogicalModel LogicalModelName
+  | LMMOReferencedLogicalModel LogicalModelName
   deriving (Show, Eq, Ord, Generic)
 
 instance Hashable LogicalModelMetadataObjId
@@ -84,6 +84,7 @@ instance Hashable LogicalModelMetadataObjId
 -- | the native query should probably also link to its logical model
 data NativeQueryMetadataObjId
   = NQMORel RelName RelType
+  | NQMOReferencedLogicalModel LogicalModelName
   deriving (Show, Eq, Ord, Generic)
 
 instance Hashable NativeQueryMetadataObjId
@@ -161,11 +162,12 @@ moiTypeName = \case
       SMONativeQuery _ -> "native_query"
       SMONativeQueryObj _ nativeQueryObjId -> case nativeQueryObjId of
         NQMORel _ relType -> relTypeToTxt relType <> "_relation"
+        NQMOReferencedLogicalModel name -> "inner_logical_model_" <> toTxt name
       SMOStoredProcedure _ -> "stored_procedure"
       SMOLogicalModel _ -> "logical_model"
       SMOLogicalModelObj _ logicalModelObjectId -> case logicalModelObjectId of
         LMMOPerm _ permType -> permTypeToCode permType <> "_permission"
-        LMMOInnerLogicalModel name -> "inner_logical_model_" <> toTxt name
+        LMMOReferencedLogicalModel name -> "inner_logical_model_" <> toTxt name
       SMOFunctionPermission _ _ -> "function_permission"
       SMOTableObj _ tableObjectId -> case tableObjectId of
         MTORel _ relType -> relTypeToTxt relType <> "_relation"
@@ -221,13 +223,14 @@ moiName objectId =
       SMONativeQueryObj nativeQueryName nativeQueryObjId ->
         case nativeQueryObjId of
           NQMORel name _ -> toTxt name <> " in " <> toTxt nativeQueryName
+          NQMOReferencedLogicalModel name -> toTxt name <> " in " <> toTxt nativeQueryName
       SMOStoredProcedure name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModel name -> toTxt name <> " in source " <> toTxt source
       SMOLogicalModelObj logicalModelName logicalModelObjectId -> do
         let objectName :: Text
             objectName = case logicalModelObjectId of
               LMMOPerm name _ -> toTxt name
-              LMMOInnerLogicalModel name -> toTxt name
+              LMMOReferencedLogicalModel name -> toTxt name
 
             sourceObjectId :: MetadataObjId
             sourceObjectId =

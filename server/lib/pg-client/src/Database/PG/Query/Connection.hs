@@ -351,7 +351,7 @@ retryOnConnErr pgConn action = do
       Left (Right pgConnErr) -> return $ Left pgConnErr
   where
     resetFn = resetPGConn pgConn
-    PGConn _ _ _ retryP logger _ _ _ _ = pgConn
+    PGConn _ _ _ _ retryP logger _ _ _ _ = pgConn
 
 checkResult ::
   PQ.Connection ->
@@ -475,7 +475,9 @@ mkPGRetryPolicy numRetries =
     baseDelay = 100 * 1000 -- 0.1 second
 
 data PGConn = PGConn
-  { pgPQConn :: !PQ.Connection,
+  { -- | Debugging context.
+    pgContext :: !Value,
+    pgPQConn :: !PQ.Connection,
     pgAllowPrepare :: !Bool,
     -- | Cancel command execution when interrupted by any asynchronous exception.
     --   On receiving an asynchronous exception, a cancel message is sent to
@@ -492,7 +494,7 @@ data PGConn = PGConn
   }
 
 resetPGConn :: PGConn -> IO ()
-resetPGConn (PGConn conn _ _ _ _ ctr ht _ _) = do
+resetPGConn (PGConn _ conn _ _ _ _ ctr ht _ _) = do
   -- Reset LibPQ connection
   PQ.reset conn
   -- Set counter to 0
@@ -537,7 +539,7 @@ prepare ::
   Template ->
   [PQ.Oid] ->
   PGExec RemoteKey
-prepare (PGConn conn _ _ _ _ counter table _ _) tpl@(Template tplBytes) tl = do
+prepare (PGConn _ conn _ _ _ _ counter table _ _) tpl@(Template tplBytes) tl = do
   let lk = localKey tpl tl
   rkm <- lift $ HIO.lookup table lk
   case rkm of
@@ -587,7 +589,7 @@ execQuery pgConn pgQuery = do
         allowPrepare && preparable
   withExceptT PGIUnexpected $ convF resOk
   where
-    PGConn conn allowPrepare cancelable _ _ _ _ _ _ = pgConn
+    PGConn _ conn allowPrepare cancelable _ _ _ _ _ _ = pgConn
     PGQuery tpl@(Template tplBytes) params preparable convF = pgQuery
     run = bool lift (cancelOnAsync conn) cancelable
     withoutPrepare = do
@@ -614,7 +616,7 @@ execMulti pgConn (Template t) convF = do
     checkResult conn mRes
   withExceptT PGIUnexpected $ convF resOk
   where
-    PGConn conn _ cancelable _ _ _ _ _ _ = pgConn
+    PGConn _ conn _ cancelable _ _ _ _ _ _ = pgConn
 
 -- | Extract the description of a prepared statement.
 describePrepared ::

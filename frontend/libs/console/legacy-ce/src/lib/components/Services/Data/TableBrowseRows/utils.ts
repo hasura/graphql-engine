@@ -18,7 +18,14 @@ export const isTableWithPK = (
   );
 };
 
-export const getTableConfiguration = (
+const getSource = (
+  currentDataSource: string,
+  sources: MetadataDataSource[]
+) => {
+  return sources?.find(s => s.name === currentDataSource);
+};
+
+const getTable = (
   tables: ReduxState['tables'],
   sources: MetadataDataSource[]
 ) => {
@@ -27,11 +34,26 @@ export const getTableConfiguration = (
     currentTable: originalTable,
     currentDataSource,
   } = tables;
-  return sources
-    ?.find(s => s.name === currentDataSource)
-    ?.tables.find(
-      t => originalTable === t.table.name && currentSchema === t.table.schema
-    )?.configuration;
+
+  return getSource(currentDataSource, sources)?.tables.find(
+    t => originalTable === t.table.name && currentSchema === t.table.schema
+  );
+};
+
+export const getTableConfiguration = (
+  tables: ReduxState['tables'],
+  sources: MetadataDataSource[]
+) => {
+  return getTable(tables, sources)?.configuration;
+};
+
+export const getTableCustomization = (
+  tables: ReduxState['tables'],
+  sources: MetadataDataSource[]
+) => {
+  const { currentDataSource } = tables;
+
+  return getSource(currentDataSource, sources)?.customization ?? {};
 };
 
 export const compareRows = (

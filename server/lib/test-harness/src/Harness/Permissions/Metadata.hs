@@ -88,6 +88,7 @@ createPermissionMetadata testEnvironment (Types.SelectPermission Types.SelectPer
       role:  *selectPermissionRole
       permission:
         columns: *selectPermissionColumns
+        computed_fields: *selectPermissionComputedFields
         filter: *selectPermissionRows
         allow_aggregations: *selectPermissionAllowAggregations
         limit: *selectPermissionLimit
@@ -114,6 +115,13 @@ createPermissionMetadata testEnvironment (Types.DeletePermission Types.DeletePer
       permission:
         filter: *deletePermissionRows
         validate_input: *validateInput
+  |]
+createPermissionMetadata _testEnvironment (Types.InheritedRole Types.InheritedRoleDetails {..}) = do
+  [yaml|
+    type: add_inherited_role
+    args:
+      role_name: *inheritedRoleName
+      role_set: *inheritedRoleRoleSet
   |]
 
 -- | Produce a JSON payload of the common `*_drop_*_permission` form.
@@ -173,4 +181,10 @@ dropPermissionMetadata env (Types.DeletePermission Types.DeletePermissionDetails
       table: *qualifiedTable
       source: *sourceName
       role:  *deletePermissionRole
+  |]
+dropPermissionMetadata _env (Types.InheritedRole Types.InheritedRoleDetails {..}) = do
+  [yaml|
+    type: drop_inherited_role
+    args:
+      role_name: *inheritedRoleName
   |]

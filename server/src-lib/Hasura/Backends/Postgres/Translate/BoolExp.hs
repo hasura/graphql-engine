@@ -5,6 +5,7 @@
 -- Convert IR boolean expressions to Postgres-specific SQL expressions.
 module Hasura.Backends.Postgres.Translate.BoolExp
   ( toSQLBoolExp,
+    withRedactionExp,
   )
 where
 
@@ -119,10 +120,10 @@ translateBoolExp = \case
     whereExp <- withCurrentTable (S.QualifiedIdentifier identifier Nothing) (translateBoolExp wh)
     return $ S.mkExists (S.FISimple currTableReference (Just alias)) whereExp
   BoolField boolExp -> case boolExp of
-    AVColumn colInfo opExps -> do
+    AVColumn colInfo redactionExp opExps -> do
       BoolExpCtx {rootReference, currTableReference} <- ask
       let colFld = fromCol @('Postgres pgKind) $ ciColumn colInfo
-          bExps = map (mkFieldCompExp rootReference currTableReference $ LColumn colFld) opExps
+          bExps = map (mkFieldCompExp rootReference currTableReference redactionExp $ LColumn colFld) opExps
       return $ sqlAnd bExps
     AVRelationship
       (RelInfo {riTarget = RelTargetNativeQuery _})
@@ -155,10 +156,10 @@ translateBoolExp = \case
         return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
       case cfBoolExp of
-        CFBEScalar opExps -> do
+        CFBEScalar redactionExp opExps -> do
           BoolExpCtx {rootReference, currTableReference} <- ask
           -- Convert the where clause on scalar computed field
-          let bExps = map (mkFieldCompExp rootReference currTableReference $ LComputedField function sessionArgPresence) opExps
+          let bExps = map (mkFieldCompExp rootReference currTableReference redactionExp $ LComputedField function sessionArgPresence) opExps
           pure $ sqlAnd bExps
         CFBETable _ be -> do
           -- Convert the where clause on table computed field
@@ -239,6 +240,7 @@ translateAVAggregationPredicates (AggregationPredicatesImplementation (RelInfo {
 
 translateAggPredBoolExp ::
   forall pgKind.
+  (Backend ('Postgres pgKind)) =>
   TableName ('Postgres pgKind) ->
   TableIdentifier ->
   AggregationPredicate ('Postgres pgKind) S.SQLExp ->
@@ -248,10 +250,11 @@ translateAggPredBoolExp
   subselectIdentifier
   (AggregationPredicate {aggPredFunctionName, aggPredPredicate}) = do
     BoolExpCtx {rootReference} <- ask
+    -- TODO(redactionExp): Use of NoRedaction below is a placeholder. Investigate what is necessary here
     let (Identifier aggAlias) = identifierWithSuffix relTableName aggPredFunctionName
         boolExps =
           map
-            (mkFieldCompExp rootReference (S.QualifiedIdentifier subselectIdentifier Nothing) $ LColumn (FieldName aggAlias))
+            (mkFieldCompExp rootReference (S.QualifiedIdentifier subselectIdentifier Nothing) NoRedaction $ LColumn (FieldName aggAlias))
             aggPredPredicate
     pure $ sqlAnd boolExps
 
@@ -355,16 +358,29 @@ sqlAnd :: [S.BoolExp] -> S.BoolExp
 sqlAnd = foldr (S.BEBin S.AndOp) (S.BELit True)
 
 mkFieldCompExp ::
-  S.Qual -> S.Qual -> LHSField ('Postgres pgKind) -> OpExpG ('Postgres pgKind) S.SQLExp -> S.BoolExp
-mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
+  forall pgKind.
+  (Backend ('Postgres pgKind)) =>
+  S.Qual ->
+  S.Qual ->
+  AnnRedactionExp ('Postgres pgKind) S.SQLExp ->
+  LHSField ('Postgres pgKind) ->
+  OpExpG ('Postgres pgKind) S.SQLExp ->
+  S.BoolExp
+mkFieldCompExp rootReference currTableReference lhsRedactionExp lhsField = mkCompExp qLhsField
   where
     qLhsField = case lhsField of
       LColumn fieldName ->
-        -- "qual"."column" =
-        S.SEQIdentifier $ S.QIdentifier currTableReference $ Identifier $ getFieldNameTxt fieldName
+        withRedactionExp currTableReference lhsRedactionExp
+          -- "qual"."column" =
+          $ S.SEQIdentifier
+          $ S.QIdentifier currTableReference
+          $ Identifier
+          $ getFieldNameTxt fieldName
       LComputedField function sessionArgPresence ->
-        -- "function_schema"."function_name"("qual".*) =
-        S.SEFunction $ mkComputedFieldFunctionExp currTableReference function sessionArgPresence Nothing
+        withRedactionExp currTableReference lhsRedactionExp
+          -- "function_schema"."function_name"("qual".*) =
+          $ S.SEFunction
+          $ mkComputedFieldFunctionExp currTableReference function sessionArgPresence Nothing
 
     mkQCol :: RootOrCurrentColumn ('Postgres pgKind) -> S.SQLExp
     mkQCol (RootOrCurrentColumn IsRoot col) = S.mkIdentifierSQLExp rootReference col
@@ -373,10 +389,10 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
     mkCompExp :: SQLExpression ('Postgres pgKind) -> OpExpG ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) -> S.BoolExp
     mkCompExp lhs = \case
       ACast casts -> mkCastsExp casts
-      AEQ False val -> equalsBoolExpBuilder lhs val
-      AEQ True val -> S.BECompare S.SEQ lhs val
-      ANE False val -> notEqualsBoolExpBuilder lhs val
-      ANE True val -> S.BECompare S.SNE lhs val
+      AEQ NullableComparison val -> equalsBoolExpBuilder lhs val
+      AEQ NonNullableComparison val -> S.BECompare S.SEQ lhs val
+      ANE NullableComparison val -> notEqualsBoolExpBuilder lhs val
+      ANE NonNullableComparison val -> S.BECompare S.SNE lhs val
       AIN val -> S.BECompareAny S.SEQ lhs val
       ANIN val -> S.BENot $ S.BECompareAny S.SEQ lhs val
       AGT val -> S.BECompare S.SGT lhs val
@@ -441,3 +457,20 @@ mkFieldCompExp rootReference currTableReference lhsField = mkCompExp qLhsField
           sqlAnd . flip map (HashMap.toList casts) $ \(targetType, operations) ->
             let targetAnn = S.mkTypeAnn $ CollectableTypeScalar targetType
              in sqlAnd $ map (mkCompExp (S.SETyAnn lhs targetAnn)) operations
+
+withRedactionExp ::
+  (Backend ('Postgres pgKind)) =>
+  S.Qual ->
+  AnnRedactionExp ('Postgres pgKind) S.SQLExp ->
+  S.SQLExp ->
+  S.SQLExp
+withRedactionExp tableQual redactionExp sqlExpression =
+  -- Check out [SQL generation for inherited role]
+  case redactionExp of
+    NoRedaction -> sqlExpression
+    RedactIfFalse gBoolExp ->
+      let boolExp =
+            S.simplifyBoolExp
+              $ toSQLBoolExp tableQual
+              $ gBoolExp
+       in S.SECond boolExp sqlExpression S.SENull

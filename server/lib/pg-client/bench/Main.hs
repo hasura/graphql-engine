@@ -11,6 +11,7 @@ where
 import Control.Exception qualified as E
 import Control.Monad (unless)
 import Control.Monad.Trans.Except (runExceptT)
+import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Char8 qualified as BC
 import Data.FileEmbed qualified as FE
@@ -89,7 +90,7 @@ getPoolC = do
       connInfo = PG.ConnInfo 0 connDetails
       connParams = PG.ConnParams 1 1 180 False Nothing Nothing False
       logger = const (return ())
-  PG.initPGPool connInfo connParams logger
+  PG.initPGPool connInfo J.Null connParams logger
 
 q1 :: T.Text
 q1 = $(FE.embedStringFile "bench/queries/artistByArtistId.sql")

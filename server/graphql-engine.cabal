@@ -281,6 +281,7 @@ common lib-depends
                      , dependent-sum
                      , dependent-sum-template
                      , either
+                     , extra
                      , hasura-error-message
                      , exceptions
                      , fast-logger
@@ -622,6 +623,7 @@ library
                      , Hasura.Backends.Postgres.Translate.Select.Streaming
                      , Hasura.Backends.Postgres.Translate.Types
                      , Hasura.Backends.Postgres.Translate.Update
+                     , Hasura.Backends.Postgres.Types.Aggregates
                      , Hasura.Backends.Postgres.Types.BoolExp
                      , Hasura.Backends.Postgres.Types.CitusExtraTableMetadata
                      , Hasura.Backends.Postgres.Types.ComputedField
@@ -724,6 +726,7 @@ library
                      , Hasura.GC
 
                      , Hasura.LogicalModelResolver.Codec
+                     , Hasura.LogicalModelResolver.Metadata
                      , Hasura.LogicalModelResolver.Schema
                      , Hasura.LogicalModelResolver.Types
 
@@ -836,6 +839,7 @@ library
                      , Hasura.RQL.Types.Source
                      , Hasura.RQL.Types.Source.Column
                      , Hasura.RQL.Types.Source.Table
+                     , Hasura.RQL.Types.Source.TableType
                      , Hasura.RQL.Types.SourceConfiguration
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
@@ -1032,7 +1036,8 @@ executable graphql-engine
 
   hs-source-dirs:    src-exec
   main-is:           Main.hs
-  build-depends:     base
+  build-depends:     aeson
+                   , base
                    , graphql-engine
                    , ghc-debug-stub
                    , bytestring
