@@ -907,3 +907,64 @@ export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
     );
   },
 };
+
+export const ReplaceArrayWithColumn: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const [permissions, setPermissions] = useState<Permissions>({ _and: [{}] });
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={p => {
+          setPermissions(p);
+        }}
+        table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={permissions}
+      />
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Should be able to select the _and dropdown and change it to be a column
+    await userEvent.selectOptions(
+      canvas.getByTestId('_and-operator'),
+      'Series_reference'
+    );
+    expect(canvas.getByTestId('Series_reference-operator')).toBeInTheDocument();
+  },
+};
+
+// The difference between this and the previous story is that this one does not have a value in the array
+// There was a bug where this case did not work, so adding a test for it
+export const ReplaceEmptyArrayWithColumn: StoryObj<typeof RowPermissionsInput> =
+  {
+    render: args => {
+      const [permissions, setPermissions] = useState<Permissions>({ _and: [] });
+      return (
+        <RowPermissionsInput
+          onPermissionsChange={p => {
+            setPermissions(p);
+          }}
+          table={{ dataset: 'bigquery_sample', name: 'sample_table' }}
+          tables={tables}
+          comparators={comparators}
+          logicalModel={undefined}
+          logicalModels={[]}
+          permissions={permissions}
+        />
+      );
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      // Should be able to select the _and dropdown and change it to be a column
+      await userEvent.selectOptions(
+        canvas.getByTestId('_and-operator'),
+        'Series_reference'
+      );
+      expect(
+        canvas.getByTestId('Series_reference-operator')
+      ).toBeInTheDocument();
+    },
+  };

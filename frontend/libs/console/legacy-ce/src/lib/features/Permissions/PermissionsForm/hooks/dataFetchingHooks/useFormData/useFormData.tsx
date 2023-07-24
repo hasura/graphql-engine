@@ -4,21 +4,17 @@ import {
   DataSource,
   exportMetadata,
   Operator,
-  TableColumn,
 } from '../../../../../DataSource';
 import { useHttpClient } from '../../../../../Network';
 
 import { createDefaultValues } from './createDefaultValues';
 import { createFormData } from './createFormData';
-import { MetadataDataSource } from '../../../../../../metadata/types';
 
 export type Args = {
   dataSourceName: string;
   table: unknown;
   roleName: string;
   queryType: 'select' | 'insert' | 'update' | 'delete';
-  tableColumns: TableColumn[];
-  metadataSource: MetadataDataSource | undefined;
 };
 
 export type ReturnValue = {
@@ -31,27 +27,11 @@ export type ReturnValue = {
  * creates data for displaying in the form e.g. column names, roles etc.
  * creates default values for form i.e. existing permissions from metadata
  */
-export const useFormData = ({
-  dataSourceName,
-  table,
-  roleName,
-  queryType,
-  tableColumns = [],
-  metadataSource,
-}: Args) => {
+export const useFormData = ({ dataSourceName, table }: Args) => {
   const httpClient = useHttpClient();
-  return useQuery<ReturnValue, Error>({
-    queryKey: [
-      dataSourceName,
-      'permissionFormData',
-      JSON.stringify(table),
-      roleName,
-      tableColumns,
-      queryType,
-    ],
+  return useQuery({
+    queryKey: [dataSourceName, 'permissionFormData', table],
     queryFn: async () => {
-      if (tableColumns.length === 0)
-        return { formData: undefined, defaultValues: undefined };
       const metadata = await exportMetadata({ httpClient });
 
       const defaultQueryRoot = await DataSource(httpClient).getDefaultQueryRoot(
@@ -67,30 +47,7 @@ export const useFormData = ({
         dataSourceName,
       })) as Operator[];
 
-      const defaultValues = {
-        ...createDefaultValues({
-          queryType,
-          roleName,
-          dataSourceName,
-          metadata,
-          table,
-          tableColumns,
-          defaultQueryRoot,
-          metadataSource,
-          supportedOperators: supportedOperators ?? [],
-        }),
-      };
-
-      const formData = createFormData({
-        dataSourceName,
-        table,
-        metadata,
-        tableColumns,
-        trackedTables: metadataSource?.tables,
-        metadataSource,
-      });
-
-      return { formData, defaultValues };
+      return { defaultQueryRoot, supportedOperators, metadata };
     },
     refetchOnWindowFocus: false,
   });

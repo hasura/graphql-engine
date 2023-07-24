@@ -329,7 +329,7 @@ export const useRolePermissions = ({
     { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
     Error
   >({
-    queryKey: [dataSourceName, 'permissionsTable', JSON.stringify(table)],
+    queryKey: [dataSourceName, 'permissionsTable', table],
     queryFn: async () => {
       const metadata = await exportMetadata({ httpClient });
       // get table columns for metadata table from db introspection
