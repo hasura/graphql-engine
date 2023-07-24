@@ -3,6 +3,7 @@ import {
   CustomFieldNamesModal,
   CustomFieldNamesModalProps,
 } from './CustomFieldNamesModal';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 export default {
   component: CustomFieldNamesModal,
@@ -10,6 +11,7 @@ export default {
     onSubmit: { action: true },
     onClose: { action: true },
   },
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof CustomFieldNamesModal>;
 
 export const Primary: StoryObj<CustomFieldNamesModalProps> = {

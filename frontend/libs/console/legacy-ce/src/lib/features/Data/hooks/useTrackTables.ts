@@ -37,11 +37,16 @@ export const useTrackTables = ({
             resource_version,
             args: {
               allow_warnings: true,
-              tables: tables.map(trackableTable => ({
-                table: trackableTable.table,
-                source: dataSourceName,
-                configuration: trackableTable.configuration,
-              })),
+              tables: tables.map(trackableTable => {
+                const { logical_model, ...configuration } =
+                  trackableTable.configuration || {};
+                return {
+                  table: trackableTable.table,
+                  source: dataSourceName,
+                  configuration,
+                  logical_model,
+                };
+              }),
             },
           },
         },

@@ -23,6 +23,9 @@ export const DataTypeToSQLTypeMap: Record<
   json: [],
   float: ['float'],
 };
+
+export const DataTypeScalars = Object.values(DataTypeToSQLTypeMap).flat();
+
 export function adaptSQLDataType(
   sqlDataType: string
 ): TableColumn['consoleDataType'] {

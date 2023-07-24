@@ -11,6 +11,7 @@ export const defaultIntrospectionProps = {
   getFKRelationships: async () => Feature.NotImplemented,
   getTablesListAsTree: async () => Feature.NotImplemented,
   getSupportedOperators: async () => Feature.NotImplemented,
+  getSupportedScalars: async () => Feature.NotImplemented,
   getTrackableFunctions: async () => Feature.NotImplemented,
   getDatabaseSchemas: async () => Feature.NotImplemented,
   getIsTableView: async () => Feature.NotImplemented,

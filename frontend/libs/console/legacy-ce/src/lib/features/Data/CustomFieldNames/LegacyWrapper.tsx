@@ -99,6 +99,7 @@ export const LegacyWrapper: React.FC<LegacyWrapperProps> = props => {
       {...props}
       onSubmit={onCustomizationFormSubmit}
       isLoading={mutation.isLoading}
+      source={dataSource}
     />
   );
 };

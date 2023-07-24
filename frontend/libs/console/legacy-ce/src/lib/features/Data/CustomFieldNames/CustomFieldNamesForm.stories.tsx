@@ -6,9 +6,11 @@ import {
   CustomFieldNamesForm,
   CustomFieldNamesFormProps,
 } from './CustomFieldNamesForm';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 export default {
   component: CustomFieldNamesForm,
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof CustomFieldNamesForm>;
 
 export const Primary: StoryObj<CustomFieldNamesFormProps> = {

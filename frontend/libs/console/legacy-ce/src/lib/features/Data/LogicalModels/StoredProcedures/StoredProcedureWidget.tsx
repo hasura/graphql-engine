@@ -97,10 +97,6 @@ export const StoredProcedureWidget = () => {
     error: typeIntrospectionError,
   } = useSupportedDataTypes({
     dataSourceName,
-    select: values => {
-      if (values === Feature.NotImplemented) return [];
-      return Object.values(values).flat();
-    },
     options: {
       enabled: !!dataSourceName,
     },

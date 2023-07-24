@@ -150,12 +150,12 @@ export const useCreateTableRelationships = (
           },
           sourceCapabilities:
             driverCapabilties.find(
-              c => c.driver === getDriver(item.source.fromSource)
+              c => c.driver.kind === getDriver(item.source.fromSource)
             )?.capabilities ?? defaultCapabilities,
           targetCapabilities:
             driverCapabilties.find(
               c =>
-                c.driver ===
+                c.driver.kind ===
                 getDriver(getTargetName(item.definition.target) ?? '')
             )?.capabilities ?? defaultCapabilities,
         });

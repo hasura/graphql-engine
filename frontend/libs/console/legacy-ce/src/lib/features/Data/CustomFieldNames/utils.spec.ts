@@ -56,6 +56,7 @@ describe('getTrackingTableFormPlaceholders', () => {
 
       insert: 'insert_customizeTableName (default)',
       insert_one: 'insert_customizeTableName_one (default)',
+      logical_model: 'Select a logical model',
 
       update: 'update_customizeTableName (default)',
       update_by_pk: 'update_customizeTableName_by_pk (default)',

@@ -126,10 +126,9 @@ export const FieldsInput = ({
       columnHelper.accessor('array', {
         id: 'array',
         cell: ({ row }) => {
-          const typeClassValue = watch(`fields.${row.index}.typeClass`);
           return (
             <BooleanInput
-              disabled={disabled || typeClassValue === 'scalar'}
+              disabled={disabled}
               name={`fields.${row.index}.array`}
               dataTestId={`fields-input-array-${row.index}`}
             />

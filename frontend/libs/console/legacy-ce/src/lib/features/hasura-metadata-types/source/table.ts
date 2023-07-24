@@ -45,6 +45,7 @@ export type MetadataTableConfig = {
   };
   column_config?: Record<string, MetadataTableColumnConfig>;
   comment?: string;
+  logical_model?: string;
   /**
    * @deprecated do not use this anymore. Should be used only for backcompatiblity reasons
    */

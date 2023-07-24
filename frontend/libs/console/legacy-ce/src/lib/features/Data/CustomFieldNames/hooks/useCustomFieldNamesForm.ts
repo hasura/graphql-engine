@@ -26,6 +26,7 @@ const schema = implement<CustomFieldNamesFormVals>().with({
   delete: z.string(),
   delete_by_pk: z.string(),
   update_many: z.string(),
+  logical_model: z.string(),
 });
 
 export const useCustomFieldNamesForm = ({

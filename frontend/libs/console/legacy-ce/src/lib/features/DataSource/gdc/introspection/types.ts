@@ -23,4 +23,7 @@ export type GetTableInfoResponse = {
       column_mapping: Record<string, string>;
     }
   >;
+  capabilities: {
+    scalar_types: Record<string, any>;
+  };
 };

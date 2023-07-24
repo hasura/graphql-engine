@@ -37,6 +37,7 @@ import type {
   WhereClause,
   StoredProcedure,
   GetStoredProceduresProps,
+  GetSupportedScalarsProps,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
@@ -157,6 +158,9 @@ export type Database = {
     getSupportedDataTypes: () => Promise<
       Record<TableColumn['consoleDataType'], string[]> | Feature.NotImplemented
     >;
+    getSupportedScalars: (
+      props: GetSupportedScalarsProps
+    ) => Promise<string[] | Feature.NotImplemented>;
     getStoredProcedures: (
       props: GetStoredProceduresProps
     ) => Promise<StoredProcedure[] | Feature.NotImplemented>;
@@ -639,6 +643,28 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
     return (
       database.introspection?.getSupportedDataTypes() ?? Feature.NotImplemented
+    );
+  },
+  getSupportedScalars: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    const { metadata } = await exportMetadata({ httpClient });
+    const dataSource = metadata.sources.find(
+      source => source.name === dataSourceName
+    );
+
+    if (!dataSource) {
+      throw Error(`Data source ${dataSource} not found in metadata`);
+    }
+
+    return (
+      database.introspection?.getSupportedScalars({
+        dataSourceKind: dataSource.kind,
+        httpClient,
+      }) ?? Feature.NotImplemented
     );
   },
   getStoredProcedures: async ({

@@ -83,6 +83,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
         dialogDescription=""
         show={showCustomModal}
         currentConfiguration={metadataTable?.configuration}
+        source={dataSourceName}
       />
     </div>
   );

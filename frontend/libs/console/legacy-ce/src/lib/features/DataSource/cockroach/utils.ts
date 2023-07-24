@@ -66,6 +66,8 @@ export const consoleDataTypeToSQLTypeMap: Record<
   float: ['float8', 'float4'],
 };
 
+export const consoleScalars = Object.values(consoleDataTypeToSQLTypeMap).flat();
+
 export function adaptSQLDataType(
   sqlDataType: string
 ): TableColumn['consoleDataType'] {
