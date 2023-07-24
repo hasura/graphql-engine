@@ -31,6 +31,7 @@ import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
+import { SlackCallbackHandler } from './features/SchemaRegistry/components/TempSlackCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
 import AuthContainer from './components/Services/Auth/AuthContainer';
 import { FeatureFlags } from './features/FeatureFlags';
@@ -100,6 +101,10 @@ const routes = store => {
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route path="heroku-callback" component={HerokuCallbackHandler} />
       <Route path="neon-integration/callback" component={NeonCallbackHandler} />
+      <Route
+        path="slack-integration/callback"
+        component={SlackCallbackHandler}
+      />
       <Route path="" component={AuthContainer}>
         <Route
           path=""

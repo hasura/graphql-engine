@@ -95,7 +95,19 @@ export type GetAlertConfigResponseWithError = {
 };
 
 export type GetAlertConfigQueryResponse = {
-  schema_registry_alerts: SchemaRegistryAlert[];
+  alert_config_service: AlertConfig[];
+};
+
+export type AlertConfig = {
+  project_id: string;
+  type: AlertType;
+  metadata: Record<string, any>;
+  rules: Record<string, boolean>;
+};
+
+export type SetAlertConfigResponseWithError = {
+  data?: SetAlertConfigQueryResponse;
+  errors?: GraphQLError[];
 };
 
 export type SchemaRegistryAlert = {
@@ -105,11 +117,6 @@ export type SchemaRegistryAlert = {
   config: Record<string, boolean>;
   slack_webhook: string;
   meta: Record<string, any>;
-};
-
-export type SetAlertConfigResponseWithError = {
-  data?: SetAlertConfigQueryResponse;
-  errors?: GraphQLError[];
 };
 
 export type SetAlertConfigQueryResponse = {
@@ -160,4 +167,38 @@ export type DeleteSchemaRegistryTagMutationResponse = {
 
 export type DeletedTagID = {
   id: string;
+};
+
+type MailAlertType = 'mail';
+type SlackAlertType = 'slack';
+
+export type AlertType = MailAlertType | SlackAlertType;
+
+export type DeleteSlackAppMutationResponseWithError = {
+  data?: DeleteSlackAppMutationResponse;
+  errors?: GraphQLError[];
+};
+
+export type DeleteSlackAppMutationResponse = {
+  deleteSlackApp: {
+    status: string;
+  };
+};
+
+export type GetSlackStateResponseWithError = {
+  data?: GetSlackStateQueryResponse;
+  errors?: GraphQLError[];
+};
+
+export type GetSlackStateQueryResponse = {
+  slack_config: SlackConfig[];
+};
+
+export type SlackConfig = {
+  channel_name: string;
+  webhook_url: string;
+  project_id: string;
+  channel_id: string;
+  slack_team_id: string;
+  team_name: string;
 };

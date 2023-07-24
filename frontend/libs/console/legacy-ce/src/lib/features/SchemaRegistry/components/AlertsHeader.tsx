@@ -12,16 +12,16 @@ export const AlertHeader: React.FC<AlertHeaderProps> = ({
   description,
 }) => {
   return (
-    <>
+    <div className="flex items-top p-md">
       <div className="text-yellow-500">{icon}</div>
       <div>
-        <p className="font-semibold">{title}</p>
+        <p className="text-lg font-semibold">{title}</p>
         {description && (
           <div className="overflow-y-auto max-h-[calc(100vh-14rem)]">
             <p className="m-0">{description}</p>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
-import { FETCH_ALERT_CONFIG } from '../queries';
-import { GetAlertConfigResponseWithError, AlertType } from '../types';
-import { FETCH_ALERT_CONFIG_QUERY_NAME } from '../constants';
+import { FETCH_SLACK_STATE } from '../queries';
+import { GetSlackStateResponseWithError } from '../types';
+import { FETCH_SLACK_STATE_QUERY_NAME } from '../constants';
 import { controlPlaneClient } from '../../ControlPlane';
 
-type FetchAlertResponse =
+type FetchSlackStateResponse =
   | {
       kind: 'loading';
     }
@@ -15,26 +15,24 @@ type FetchAlertResponse =
     }
   | {
       kind: 'success';
-      response: NonNullable<GetAlertConfigResponseWithError['data']>;
+      response: NonNullable<GetSlackStateResponseWithError['data']>;
     };
 
-export const useGetAlertConfig = (
-  projectId: string,
-  type: AlertType
-): FetchAlertResponse => {
-  const fetchAlertConfigQueryFn = (projectId: string) => {
+export const useGetSlackState = (
+  projectId: string
+): FetchSlackStateResponse => {
+  const fetchSlackStateQueryFn = (projectId: string) => {
     return controlPlaneClient.query<
-      GetAlertConfigResponseWithError,
-      { projectId: string; type: AlertType }
-    >(FETCH_ALERT_CONFIG, {
+      GetSlackStateResponseWithError,
+      { projectId: string }
+    >(FETCH_SLACK_STATE, {
       projectId: projectId,
-      type: type,
     });
   };
 
   const { data, error, isLoading } = useQuery({
-    queryKey: FETCH_ALERT_CONFIG_QUERY_NAME,
-    queryFn: () => fetchAlertConfigQueryFn(projectId),
+    queryKey: FETCH_SLACK_STATE_QUERY_NAME,
+    queryFn: () => fetchSlackStateQueryFn(projectId),
     refetchOnMount: true,
   });
 
