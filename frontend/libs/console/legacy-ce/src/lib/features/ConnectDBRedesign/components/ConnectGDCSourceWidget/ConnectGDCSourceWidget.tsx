@@ -24,6 +24,8 @@ import { GraphQLCustomization } from '../GraphQLCustomization/GraphQLCustomizati
 import { graphQLCustomizationSchema } from '../GraphQLCustomization/schema';
 import { adaptGraphQLCustomization } from '../GraphQLCustomization/utils/adaptResponse';
 import { generateGDCRequestPayload } from './utils/generateRequest';
+import { Timeout } from './components/Timeout';
+import { Template } from './components/Template';
 
 interface ConnectGDCSourceWidgetProps {
   driver: string;
@@ -53,6 +55,11 @@ const useFormValidationSchema = (driver: string) => {
           configSchemas.otherSchemas
         ),
         customization: graphQLCustomizationSchema.optional(),
+        timeout: z
+          .number()
+          .gte(0, { message: 'Timeout must be a postive number' })
+          .optional(),
+        template: z.string().optional(),
       });
 
       return { validationSchema, configSchemas };
@@ -136,6 +143,8 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
         name: metadataSource?.name,
         // This is a particularly weird case with metadata only valid for GDC sources.
         configuration: (metadataSource?.configuration as any).value,
+        timeout: (metadataSource?.configuration as any)?.timeout?.seconds,
+        template: (metadataSource?.configuration as any)?.template ?? '',
         customization: adaptGraphQLCustomization(
           metadataSource?.customization ?? {}
         ),
@@ -237,6 +246,19 @@ export const ConnectGDCSourceWidget = (props: ConnectGDCSourceWidgetProps) => {
                     schemaObject={data?.configSchemas.configSchema}
                     references={data?.configSchemas.otherSchemas}
                   />
+
+                  <div className="mt-sm">
+                    <Collapsible
+                      triggerChildren={
+                        <div className="font-semibold text-muted">
+                          Advanced Settings
+                        </div>
+                      }
+                    >
+                      <Timeout name="timeout" />
+                      <Template name="template" />
+                    </Collapsible>
+                  </div>
 
                   <div className="mt-sm">
                     <Collapsible
