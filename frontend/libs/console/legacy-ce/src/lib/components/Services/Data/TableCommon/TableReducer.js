@@ -86,6 +86,7 @@ import {
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   modifyRootPermissionState,
+  PERM_SET_COMMENT,
 } from '../TablePermissions/Actions';
 import {
   getDefaultFilterType,
@@ -375,7 +376,17 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ),
         },
       };
-
+    case PERM_SET_COMMENT:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'comment',
+            action.comment
+          ),
+        },
+      };
     case PERM_ALLOW_ALL:
       return {
         ...modifyState,

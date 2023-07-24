@@ -50,6 +50,7 @@ const defaultQueryPermissions = {
     backend_only: false,
     set: {},
     columns: [],
+    comment: '',
   },
   select: {
     columns: [],
@@ -60,16 +61,19 @@ const defaultQueryPermissions = {
     filter: {},
     limit: null,
     allow_aggregations: false,
+    comment: '',
   },
   update: {
     columns: [],
     filter: {},
     backend_only: false,
     set: {},
+    comment: '',
   },
   delete: {
     backend_only: false,
     filter: {},
+    comment: '',
   },
 };
 

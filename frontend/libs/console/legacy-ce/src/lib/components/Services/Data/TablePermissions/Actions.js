@@ -49,6 +49,7 @@ export const PERM_RESET_APPLY_SAME = 'ModifyTable/PERM_RESET_APPLY_SAME';
 export const PERM_SET_APPLY_SAME_PERM = 'ModifyTable/PERM_SET_APPLY_SAME_PERM';
 export const PERM_DEL_APPLY_SAME_PERM = 'ModifyTable/PERM_DEL_APPLY_SAME_PERM';
 export const PERM_TOGGLE_BACKEND_ONLY = 'ModifyTable/PERM_TOGGLE_BACKEND_ONLY';
+export const PERM_SET_COMMENT = 'ModifyTable/PERM_SET_COMMENT';
 export const PERM_VALIDATE_INPUT_FIELD =
   'ModifyTable/PERM_VALIDATE_INPUT_FIELD';
 
@@ -139,6 +140,10 @@ const permToggleAllowAggregation = checked => ({
   type: PERM_TOGGLE_ALLOW_AGGREGATION,
   data: checked,
 });
+const permSetComment = comment => ({
+  type: PERM_SET_COMMENT,
+  comment,
+});
 export const permToggleBackendOnly = () => ({
   type: PERM_TOGGLE_BACKEND_ONLY,
 });
@@ -173,7 +178,6 @@ const permCustomChecked = filterType => ({
 
 const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
-
   _permissions.table = tableSchema.table_name;
   _permissions.role = role;
   _permissions.query = query;
@@ -925,6 +929,7 @@ export {
   permCustomChecked,
   permRemoveRole,
   permSetBulkSelect,
+  permSetComment,
   toggleField,
   toggleAllFields,
   getBasePermissionsState,

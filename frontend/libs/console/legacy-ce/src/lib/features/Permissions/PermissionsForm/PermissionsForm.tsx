@@ -35,6 +35,7 @@ import {
   getAllowedFilterKeys,
 } from './hooks/dataFetchingHooks/useFormData/createFormData/index';
 import Skeleton from 'react-loading-skeleton';
+import { CommentSection } from './components/CommentSection';
 
 export interface ComponentProps {
   dataSourceName: string;
@@ -125,6 +126,7 @@ const Component = (props: ComponentProps) => {
             {queryType}
           </h3>
         </div>
+        <CommentSection key={key} />
         <RowPermissionsSectionWrapper
           roleName={roleName}
           queryType={queryType}

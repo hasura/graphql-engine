@@ -1,6 +1,7 @@
 exports[`Create a insert type table permission with input validation > When the users create, modify and delete a insert type table permission everything should work #0`] =
 [
   {
+    "comment": "",
     "permission": {
       "check": {},
       "columns": [],
@@ -26,6 +27,7 @@ exports[`Create a insert type table permission with input validation > When the 
 exports[`Create a update type table permission with input validation > When the users create, modify and delete a update type table permission everything should work #0`] =
 [
   {
+    "comment": "",
     "permission": {
       "check": null,
       "columns": [],
@@ -52,6 +54,7 @@ exports[`Create a update type table permission with input validation > When the 
 exports[`Create a delete type table permission with input validation > When the users create, modify and delete a delete type table permission everything should work #0`] =
 [
   {
+    "comment": "",
     "permission": {
       "filter": {},
       "validate_input": {

@@ -36,6 +36,7 @@ export const schema = z.discriminatedUnion('queryType', [
     queryType: z.literal('insert'),
     checkType: z.string(),
     filterType: z.string(),
+    comment: z.string(),
     check: z.any(),
     columns,
     presets,
@@ -46,6 +47,7 @@ export const schema = z.discriminatedUnion('queryType', [
   z.object({
     queryType: z.literal('select'),
     filterType: z.string(),
+    comment: z.string(),
     filter: z.any(),
     columns,
     presets,
@@ -60,6 +62,7 @@ export const schema = z.discriminatedUnion('queryType', [
     queryType: z.literal('update'),
     columns,
     filterType: z.string(),
+    comment: z.string(),
     filter: z.any(),
     checkType: z.string(),
     check: z.any(),
@@ -71,6 +74,7 @@ export const schema = z.discriminatedUnion('queryType', [
   z.object({
     queryType: z.literal('delete'),
     filterType: z.string(),
+    comment: z.string(),
     filter: z.any(),
     backendOnly: z.boolean().optional(),
     supportedOperators: z.array(z.any()),

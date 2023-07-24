@@ -67,6 +67,7 @@ export const createDefaultValues = ({
 
   const baseDefaultValues: DefaultValues = {
     queryType: 'select',
+    comment: '',
     filterType: 'none',
     columns: {},
     supportedOperators,
