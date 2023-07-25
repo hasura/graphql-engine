@@ -726,6 +726,7 @@ library
                      , Hasura.GC
 
                      , Hasura.LogicalModelResolver.Codec
+                     , Hasura.LogicalModelResolver.Lenses
                      , Hasura.LogicalModelResolver.Metadata
                      , Hasura.LogicalModelResolver.Schema
                      , Hasura.LogicalModelResolver.Types

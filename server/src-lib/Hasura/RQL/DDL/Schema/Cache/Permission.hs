@@ -9,7 +9,7 @@ module Hasura.RQL.DDL.Schema.Cache.Permission
   )
 where
 
-import Data.Aeson
+import Data.Aeson (ToJSON (..))
 import Data.Environment qualified as Env
 import Data.Graph qualified as G
 import Data.Has
@@ -19,7 +19,8 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation (..))
+import Hasura.NativeQuery.Metadata (WithNativeQuery (..))
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -303,12 +304,12 @@ buildLogicalModelPermissions ::
   ) =>
   SourceName ->
   TableCoreCache b ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap (Column b) (LogicalModelField b) ->
   InsOrdHashMap RoleName (SelPermDef b) ->
   OrderedRoles ->
   m (RolePermInfoMap b)
-buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModelFields selectPermissions orderedRoles = do
+buildLogicalModelPermissions sourceName tableCache logicalModelLocation logicalModelFields selectPermissions orderedRoles = do
   let combineRolePermissions :: RolePermInfoMap b -> Role -> m (RolePermInfoMap b)
       combineRolePermissions acc (Role roleName (ParentRoles parentRoles)) = do
         -- This error will ideally never be thrown, but if it's thrown then
@@ -348,59 +349,88 @@ buildLogicalModelPermissions sourceName tableCache logicalModelName logicalModel
 
   -- At the moment, we only support select permissions for logical models
   metadataRolePermissions <-
-    for (InsOrdHashMap.toHashMap selectPermissions) \selectPermission -> do
-      let role :: RoleName
-          role = _pdRole selectPermission
-
-          -- An identifier for the object on we're going to need to depend to
-          -- generate this permission.
-          sourceObjId :: MetadataObjId
-          sourceObjId =
-            MOSourceObjId sourceName
-              $ AB.mkAnyBackend
-              $ SMOLogicalModelObj @b logicalModelName
-              $ LMMOPerm role PTSelect
-
-          -- The object we're going to use to track the dependency and any
-          -- potential cache inconsistencies.
-          metadataObject :: MetadataObject
-          metadataObject =
-            MetadataObject sourceObjId
-              $ toJSON
-                WithLogicalModel
-                  { _wlmSource = sourceName,
-                    _wlmName = logicalModelName,
-                    _wlmInfo = selectPermission
-                  }
-
-          -- An identifier for this permission within the metadata structure.
-          schemaObject :: SchemaObjId
-          schemaObject =
-            SOSourceObj sourceName
-              $ AB.mkAnyBackend
-              $ SOILogicalModelObj @b logicalModelName
-              $ LMOPerm role PTSelect
-
-          modifyError :: ExceptT QErr m a -> ExceptT QErr m a
-          modifyError = modifyErr \err ->
-            addLogicalModelContext logicalModelName
-              $ "in permission for role "
-              <> role
-              <<> ": "
-              <> err
-
-      select <- withRecordInconsistencyM metadataObject $ modifyError do
-        when (role == adminRoleName)
-          $ throw400 ConstraintViolation "cannot define permission for admin role"
-
-        (permissionInformation, dependencies) <-
-          flip runTableCoreCacheRT tableCache
-            $ buildLogicalModelPermInfo sourceName logicalModelName logicalModelFields
-            $ _pdPermission selectPermission
-
-        recordDependenciesM metadataObject schemaObject dependencies
-        pure permissionInformation
-
-      pure (RolePermInfo Nothing select Nothing Nothing)
+    for
+      (InsOrdHashMap.toHashMap selectPermissions)
+      (buildLogicalModelSelectPermission sourceName tableCache logicalModelLocation logicalModelFields)
 
   foldlM combineRolePermissions metadataRolePermissions (_unOrderedRoles orderedRoles)
+
+buildLogicalModelSelectPermission ::
+  forall b m r.
+  ( MonadError QErr m,
+    MonadWriter (Seq CollectItem) m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
+  ) =>
+  SourceName ->
+  TableCoreCache b ->
+  LogicalModelLocation ->
+  InsOrdHashMap (Column b) (LogicalModelField b) ->
+  SelPermDef b ->
+  m (RolePermInfo b)
+buildLogicalModelSelectPermission sourceName tableCache logicalModelLocation logicalModelFields selectPermission = do
+  let role :: RoleName
+      role = _pdRole selectPermission
+
+      -- An identifier for the object on we're going to need to depend to
+      -- generate this permission.
+      sourceObjId :: MetadataObjId
+      sourceObjId =
+        MOSourceObjId sourceName
+          $ AB.mkAnyBackend
+          $ SMOLogicalModelObj @b logicalModelLocation
+          $ LMMOPerm role PTSelect
+
+      -- The object we're going to use to track the dependency and any
+      -- potential cache inconsistencies.
+      -- we'll need to add one for each location a Logical Model can live in future (a Stored Procedure, etc)
+      metadataObject :: MetadataObject
+      metadataObject = case logicalModelLocation of
+        LMLLogicalModel logicalModelName ->
+          MetadataObject sourceObjId
+            $ toJSON
+              WithLogicalModel
+                { _wlmSource = sourceName,
+                  _wlmName = logicalModelName,
+                  _wlmInfo = selectPermission
+                }
+        LMLNativeQuery nativeQueryName ->
+          MetadataObject sourceObjId
+            $ toJSON
+              WithNativeQuery
+                { _wnqSource = sourceName,
+                  _wnqName = nativeQueryName,
+                  _wnqInfo = selectPermission
+                }
+
+      -- An identifier for this permission within the metadata structure.
+      schemaObject :: SchemaObjId
+      schemaObject =
+        SOSourceObj sourceName
+          $ AB.mkAnyBackend
+          $ SOILogicalModelObj @b logicalModelLocation
+          $ LMOPerm role PTSelect
+
+      modifyError :: ExceptT QErr m a -> ExceptT QErr m a
+      modifyError = modifyErr \err ->
+        addLogicalModelContext logicalModelLocation
+          $ "in permission for role "
+          <> role
+          <<> ": "
+          <> err
+
+  select <- withRecordInconsistencyM metadataObject $ modifyError do
+    when (role == adminRoleName)
+      $ throw400 ConstraintViolation "cannot define permission for admin role"
+
+    (permissionInformation, dependencies) <-
+      flip runTableCoreCacheRT tableCache
+        $ buildLogicalModelPermInfo sourceName logicalModelLocation logicalModelFields
+        $ _pdPermission selectPermission
+
+    recordDependenciesM metadataObject schemaObject dependencies
+    pure permissionInformation
+
+  pure (RolePermInfo Nothing select Nothing Nothing)

@@ -27,7 +27,10 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Lenses (lmmSelectPermissions)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
-import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName, logicalModelFieldMapCodec)
+import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelLocation (..), LogicalModelName, logicalModelFieldMapCodec)
+import Hasura.LogicalModelResolver.Lenses
+import Hasura.NativeQuery.API (assertNativeQueryExists)
+import Hasura.NativeQuery.Lenses (nqmReturns)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.BackendTag (backendPrefix, backendTag, reify)
@@ -230,12 +233,22 @@ execUntrackLogicalModel q metadata = do
     source = utlmSource q
     fieldName = utlmName q
 
+-- type for the `type` field in permissions
+data LogicalModelSource
+  = LMLogicalModel
+  | LMNativeQuery
+
+instance FromJSON LogicalModelSource where
+  parseJSON (String "logical_model") = pure LMLogicalModel
+  parseJSON (String "native_query") = pure LMNativeQuery
+  parseJSON _ = fail "Expected string"
+
 -- | A permission for logical models is tied to a specific name and
 -- source. This wrapper adds both of those things to the JSON object that
 -- describes the permission.
 data CreateLogicalModelPermission a (b :: BackendType) = CreateLogicalModelPermission
   { clmpSource :: SourceName,
-    clmpName :: LogicalModelName,
+    clmpLocation :: LogicalModelLocation,
     clmpInfo :: PermDef b a
   }
   deriving stock (Generic)
@@ -246,7 +259,12 @@ instance
   where
   parseJSON = withObject "CreateLogicalModelPermission" \obj -> do
     clmpSource <- obj .:? "source" .!= defaultSource
-    clmpName <- obj .: "name"
+    lmType <- obj .:? "type" .!= LMLogicalModel
+
+    clmpLocation <- case lmType of
+      LMLogicalModel -> LMLLogicalModel <$> obj .: "name"
+      LMNativeQuery -> LMLNativeQuery <$> obj .: "name"
+
     clmpInfo <- parseJSON (Object obj)
 
     pure CreateLogicalModelPermission {..}
@@ -258,19 +276,38 @@ runCreateSelectLogicalModelPermission ::
   m EncJSON
 runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
   metadata <- getMetadata
-  assertLogicalModelExists @b clmpSource clmpName metadata
 
-  let metadataObj :: MetadataObjId
-      metadataObj =
-        MOSourceObjId clmpSource
-          $ AB.mkAnyBackend
-          $ SMOLogicalModel @b clmpName
+  case clmpLocation of
+    LMLNativeQuery nativeQueryName -> do
+      assertNativeQueryExists @b clmpSource nativeQueryName metadata
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ logicalModelMetadataSetter @b clmpSource clmpName
-    . lmmSelectPermissions
-    %~ InsOrdHashMap.insert (_pdRole clmpInfo) clmpInfo
+      let metadataObj :: MetadataObjId
+          metadataObj =
+            MOSourceObjId clmpSource
+              $ AB.mkAnyBackend
+              $ SMONativeQuery @b nativeQueryName
+
+      buildSchemaCacheFor metadataObj
+        $ MetadataModifier
+        $ nativeQueryMetadataSetter @b clmpSource nativeQueryName
+        . nqmReturns
+        . _LMIInlineLogicalModel
+        . ilmmSelectPermissions
+        %~ InsOrdHashMap.insert (_pdRole clmpInfo) clmpInfo
+    LMLLogicalModel logicalModelName -> do
+      assertLogicalModelExists @b clmpSource logicalModelName metadata
+
+      let metadataObj :: MetadataObjId
+          metadataObj =
+            MOSourceObjId clmpSource
+              $ AB.mkAnyBackend
+              $ SMOLogicalModel @b logicalModelName
+
+      buildSchemaCacheFor metadataObj
+        $ MetadataModifier
+        $ logicalModelMetadataSetter @b clmpSource logicalModelName
+        . lmmSelectPermissions
+        %~ InsOrdHashMap.insert (_pdRole clmpInfo) clmpInfo
 
   pure successMsg
 
@@ -278,7 +315,7 @@ runCreateSelectLogicalModelPermission CreateLogicalModelPermission {..} = do
 -- the logical model, as well as the role whose permission we want to drop.
 data DropLogicalModelPermission (b :: BackendType) = DropLogicalModelPermission
   { dlmpSource :: SourceName,
-    dlmpName :: LogicalModelName,
+    dlmpLocation :: LogicalModelLocation,
     dlmpRole :: RoleName
   }
   deriving stock (Generic)
@@ -286,7 +323,13 @@ data DropLogicalModelPermission (b :: BackendType) = DropLogicalModelPermission
 instance FromJSON (DropLogicalModelPermission b) where
   parseJSON = withObject "DropLogicalModelPermission" \obj -> do
     dlmpSource <- obj .:? "source" .!= defaultSource
-    dlmpName <- obj .: "name"
+
+    lmType <- obj .:? "type" .!= LMLogicalModel
+
+    dlmpLocation <- case lmType of
+      LMLogicalModel -> LMLLogicalModel <$> obj .: "name"
+      LMNativeQuery -> LMLNativeQuery <$> obj .: "name"
+
     dlmpRole <- obj .: "role"
 
     pure DropLogicalModelPermission {..}
@@ -298,19 +341,37 @@ runDropSelectLogicalModelPermission ::
   m EncJSON
 runDropSelectLogicalModelPermission DropLogicalModelPermission {..} = do
   metadata <- getMetadata
-  assertLogicalModelExists @b dlmpSource dlmpName metadata
+  case dlmpLocation of
+    LMLNativeQuery nativeQueryName -> do
+      assertNativeQueryExists @b dlmpSource nativeQueryName metadata
 
-  let metadataObj :: MetadataObjId
-      metadataObj =
-        MOSourceObjId dlmpSource
-          $ AB.mkAnyBackend
-          $ SMOLogicalModel @b dlmpName
+      let metadataObj :: MetadataObjId
+          metadataObj =
+            MOSourceObjId dlmpSource
+              $ AB.mkAnyBackend
+              $ SMONativeQuery @b nativeQueryName
 
-  buildSchemaCacheFor metadataObj
-    $ MetadataModifier
-    $ logicalModelMetadataSetter @b dlmpSource dlmpName
-    . lmmSelectPermissions
-    %~ InsOrdHashMap.delete dlmpRole
+      buildSchemaCacheFor metadataObj
+        $ MetadataModifier
+        $ nativeQueryMetadataSetter @b dlmpSource nativeQueryName
+        . nqmReturns
+        . _LMIInlineLogicalModel
+        . ilmmSelectPermissions
+        %~ InsOrdHashMap.delete dlmpRole
+    LMLLogicalModel logicalModelName -> do
+      assertLogicalModelExists @b dlmpSource logicalModelName metadata
+
+      let metadataObj :: MetadataObjId
+          metadataObj =
+            MOSourceObjId dlmpSource
+              $ AB.mkAnyBackend
+              $ SMOLogicalModel @b logicalModelName
+
+      buildSchemaCacheFor metadataObj
+        $ MetadataModifier
+        $ logicalModelMetadataSetter @b dlmpSource logicalModelName
+        . lmmSelectPermissions
+        %~ InsOrdHashMap.delete dlmpRole
 
   pure successMsg
 

@@ -82,7 +82,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.LogicalModel.Cache (LogicalModelInfo (_lmiPermissions))
 import Hasura.LogicalModel.Types (LogicalModelName)
-import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo)
+import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
 import Hasura.NativeQuery.Types (NativeQueryName)
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -348,7 +348,10 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
 getLogicalModelRoles :: BackendSourceInfo -> [RoleName]
 getLogicalModelRoles bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go si = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
+    go si =
+      let namedLogicalModelRoles = HashMap.keys . _lmiPermissions =<< HashMap.elems (_siLogicalModels si)
+          inlineLogicalModelRoles = HashMap.keys . _lmiPermissions . _nqiReturns =<< HashMap.elems (_siNativeQueries si)
+       in namedLogicalModelRoles <> inlineLogicalModelRoles
 
 askScalarTypeParsingContext ::
   forall b r m.

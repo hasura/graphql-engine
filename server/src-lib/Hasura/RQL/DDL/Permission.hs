@@ -44,7 +44,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
-import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -264,12 +264,12 @@ buildLogicalModelPermInfo ::
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildLogicalModelPermInfo sourceName logicalModelName fieldInfoMap = \case
-  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelName fieldInfoMap p
+buildLogicalModelPermInfo sourceName logicalModelLocation fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelLocation fieldInfoMap p
   InsPerm' _ -> error "Not implemented yet"
   UpdPerm' _ -> error "Not implemented yet"
   DelPerm' _ -> error "Not implemented yet"
@@ -464,11 +464,11 @@ buildLogicalModelSelPermInfo ::
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = withPathK "permission" do
+buildLogicalModelSelPermInfo source logicalModelLocation logicalModelFieldMap sp = withPathK "permission" do
   let columns :: [Column b]
       columns = interpColSpec (lmfName <$> InsOrdHashMap.elems logicalModelFieldMap) (spColumns sp)
 
@@ -477,7 +477,7 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
   -- filter out the non-scalars.
   (spiFilter, boolExpDeps) <-
     withPathK "filter"
-      $ procLogicalModelBoolExp source logicalModelName (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
+      $ procLogicalModelBoolExp source logicalModelLocation (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
 
   let -- What parts of the metadata are interesting when computing the
       -- permissions? These dependencies bubble all the way up to
@@ -486,9 +486,9 @@ buildLogicalModelSelPermInfo source logicalModelName logicalModelFieldMap sp = w
       deps :: Seq SchemaDependency
       deps =
         mconcat
-          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelName),
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelLocation),
             boolExpDeps,
-            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelName)
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelLocation)
               $ Seq.fromList columns
           ]
 
