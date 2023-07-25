@@ -258,6 +258,16 @@ common common-exe
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -kc8K --disable-delayed-os-memory-return"
 
+
+-- See 'preload-mimalloc/README.md'
+-- We want this in all server binary executable sections
+common preload-mimalloc
+    c-sources:       ../preload-mimalloc/mimalloc/src/static.c
+    include-dirs:    ../preload-mimalloc/mimalloc/include
+    cc-options:      -DMI_MALLOC_OVERRIDE
+    cc-options: -DMI_STATIC_LIB
+    cc-options:  -O3 -DNDEBUG -fPIC   -Wall -Wextra -Wno-unknown-pragmas -fvisibility=hidden -Wstrict-prototypes -ftls-model=initial-exec -std=gnu11
+
 common lib-depends
   build-depends:       Spock-core
                      , aeson
@@ -1029,6 +1039,7 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
+  import: preload-mimalloc
 
   if flag(optimize-hasura)
     ghc-options:

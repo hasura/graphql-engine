@@ -67,6 +67,13 @@ package *
   -- For tooling, e.g. 'weeder', and IDE-like stuff:
   ghc-options: -fwrite-ide-info
 
+  -- we statically link malloc from mimalloc. Out of an abundance of caution, 
+  -- disable special treatment of these in all the foreign code we build. The
+  -- only risk is potential for some missed optimizations.
+  -- See: https://github.com/microsoft/mimalloc/issues/785
+  -- NOTE: cc-options is not recognized here for some reason, so we use ghc-options+optc:
+  ghc-options: -optc-fno-builtin-malloc -optc-fno-builtin-calloc -optc-fno-builtin-realloc -optc-fno-builtin-free
+
   haddock-html: true
   haddock-hoogle: true
   haddock-hyperlink-source: true
