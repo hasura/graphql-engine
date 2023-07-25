@@ -7,9 +7,9 @@
 </span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-8"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator">(^?)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier">_1</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator">(^?)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier">_1</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html"><span class="hs-identifier">Control.Monad.Memoize</span></a></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html"><span class="hs-identifier">Data.Text.Casing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier">GQLNameIdentifier</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator">(&lt;&gt;&gt;)</span></a></span><span class="hs-special">)</span><span>
@@ -112,7 +112,7 @@ SchemaT r m (Parser 'Both n CursorOrdering)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687496798"><span class="annot"><span class="annottext">customization :: ResolvedSourceCustomization
 </span><a href="#local-6989586621687496798"><span class="hs-identifier hs-var hs-var">customization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; ResolvedSourceCustomization
 forall (b :: BackendType).
@@ -421,7 +421,7 @@ GQLNameIdentifier
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687497665"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687497665"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -575,7 +575,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 -&gt; [(ColumnInfo b, ColumnValue b)]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">([Maybe (ColumnInfo b, ColumnValue b)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">([Maybe (ColumnInfo b, ColumnValue b)]
  -&gt; [(ColumnInfo b, ColumnValue b)])
 -&gt; (NonEmpty (Maybe (ColumnInfo b, ColumnValue b))
     -&gt; [Maybe (ColumnInfo b, ColumnValue b)])
@@ -744,7 +744,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-187"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687497832"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687497832"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -796,14 +796,14 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
 -&gt; Getting
      (First (ColumnInfo b))
      (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
      (ColumnInfo b)
 -&gt; Maybe (ColumnInfo b)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(StructuredColumnInfo b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(StructuredColumnInfo b
  -&gt; Const (First (ColumnInfo b)) (StructuredColumnInfo b))
 -&gt; (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
 -&gt; Const
@@ -815,7 +815,7 @@ Lens
   (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
   (StructuredColumnInfo b)
   (StructuredColumnInfo b)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((StructuredColumnInfo b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((StructuredColumnInfo b
   -&gt; Const (First (ColumnInfo b)) (StructuredColumnInfo b))
  -&gt; (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
  -&gt; Const
@@ -1027,7 +1027,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]] -&gt; [[StreamCursorItem b]]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]]
 </span><a href="#local-6989586621687497880"><span class="hs-identifier hs-var">cursorArgs</span></a></span><span>
 </span><span id="line-216"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-217"></span><span>    </span><span id="local-6989586621687497881"><span class="annot"><span class="annottext">cursorName :: Name
@@ -1227,7 +1227,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-260"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687498031"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687498031"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName

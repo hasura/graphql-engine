@@ -26,16 +26,16 @@
 </span><span id="line-26"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Indexed.html#index"><span class="hs-identifier">index</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Key.html"><span class="hs-identifier">Data.Aeson.Key</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">K</span></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Indexed.html#index"><span class="hs-identifier">index</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Key.html"><span class="hs-identifier">Data.Aeson.Key</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">K</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.Extended.html"><span class="hs-identifier">Data.HashMap.Strict.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html"><span class="hs-identifier">Data.Text.Casing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier">GQLNameIdentifier</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html"><span class="hs-identifier">Data.Text.Casing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
@@ -133,7 +133,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-120"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687491475"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687491475"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -371,7 +371,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-178"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687491600"><span class="annot"><span class="annottext">tableName :: TableName b
 </span><a href="#local-6989586621687491600"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
 forall (b :: BackendType). TableInfo b -&gt; TableName b
@@ -669,7 +669,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-228"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687491741"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687491741"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -784,7 +784,7 @@ forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="#local-6989586621687491754"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b) -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#member"><span class="hs-operator hs-var">`HashMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#member"><span class="hs-operator hs-var">`HashMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
 forall (b :: BackendType).
 SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
 </span><a href="Hasura.Table.Cache.html#spiCols"><span class="hs-identifier hs-var">spiCols</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
@@ -1182,7 +1182,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-289"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687491903"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687491903"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -2689,14 +2689,14 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
 -&gt; Getting
      (First (ColumnInfo b))
      (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
      (ColumnInfo b)
 -&gt; Maybe (ColumnInfo b)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(StructuredColumnInfo b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(StructuredColumnInfo b
  -&gt; Const (First (ColumnInfo b)) (StructuredColumnInfo b))
 -&gt; (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
 -&gt; Const
@@ -2708,7 +2708,7 @@ Lens
   (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
   (StructuredColumnInfo b)
   (StructuredColumnInfo b)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((StructuredColumnInfo b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((StructuredColumnInfo b
   -&gt; Const (First (ColumnInfo b)) (StructuredColumnInfo b))
  -&gt; (StructuredColumnInfo b, AnnRedactionExpUnpreparedValue b)
  -&gt; Const
@@ -2981,7 +2981,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-566"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687492364"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687492364"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -3112,7 +3112,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-585"></span><span>        </span><span id="local-6989586621687492382"><span class="annot"><span class="annottext">tableFields :: [FieldInfo b]
 </span><a href="#local-6989586621687492382"><span class="hs-identifier hs-var hs-var">tableFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
 forall k v. HashMap k v -&gt; [v]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b])
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b])
 -&gt; HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashMap FieldName (FieldInfo b)
@@ -3144,7 +3144,7 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="#local-6989586621687492385"><span class="hs-identifier hs-var">tablePkeyColumns</span></a></span><span>
 </span><span id="line-588"></span><span>        </span><span id="local-6989586621687492388"><span class="annot"><span class="annottext">pkFieldDirective :: Text
 </span><a href="#local-6989586621687492388"><span class="hs-identifier hs-var hs-var">pkFieldDirective</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html#intercalate"><span class="hs-identifier hs-var">T.intercalate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.html#intercalate"><span class="hs-identifier hs-var">T.intercalate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; [Text] -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Text) -&gt; [ColumnInfo b] -&gt; [Text]
@@ -3189,7 +3189,7 @@ forall var. Name -&gt; HashMap Name (Value var) -&gt; Directive var
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value Void -&gt; HashMap Name (Value Void)
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_fields"><span class="hs-identifier hs-var">Name._fields</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; HashMap Name (Value Void))
 -&gt; (Text -&gt; Value Void) -&gt; Text -&gt; HashMap Name (Value Void)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -3320,13 +3320,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SchemaContext
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-622"></span><span>        </span><span id="local-6989586621687492419"><span class="annot"><span class="annottext">SchemaOptions
 </span><a href="#local-6989586621687492419"><span class="hs-identifier hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; SchemaOptions) -&gt; SchemaT r m SchemaOptions
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SchemaOptions
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-623"></span><span>        </span><span class="hs-comment">-- This `lift` is important! If we don't use it, the underlying node</span><span>
 </span><span id="line-624"></span><span>        </span><span class="hs-comment">-- builder will assume that the current `SchemaT r m` is the monad in</span><span>
 </span><span id="line-625"></span><span>        </span><span class="hs-comment">-- which to run, and will stack another `SchemaT` on top of it when</span><span>
@@ -3598,7 +3598,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-680"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687492554"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687492554"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -5790,7 +5790,7 @@ Parser origin 'Both m Text
      (Column b)
 -&gt; [Column b]
 forall s a. s -&gt; Getting (Endo [a]) s a -&gt; [a]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E.."><span class="hs-operator hs-var">^..</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnotatedOrderByItemG b (UnpreparedValue b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E.."><span class="hs-operator hs-var">^..</span></a></span><span> </span><span class="annot"><span class="annottext">(AnnotatedOrderByItemG b (UnpreparedValue b)
  -&gt; Const
       (Endo [Column b]) (AnnotatedOrderByItemG b (UnpreparedValue b)))
 -&gt; NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b))
@@ -5830,7 +5830,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (p :: * -&gt; * -&gt; *) (f :: * -&gt; *) s a.
 (Profunctor p, Contravariant f) =&gt;
 (s -&gt; a) -&gt; Optic' p f s a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Getter.html#to"><span class="hs-identifier hs-var">to</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedOrderByItemG b (UnpreparedValue b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Getter.html#to"><span class="hs-identifier hs-var">to</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedOrderByItemG b (UnpreparedValue b)
 -&gt; AnnotatedOrderByElement b (UnpreparedValue b)
 forall (b :: BackendType) a. OrderByItemG b a -&gt; a
 </span><a href="Hasura.RQL.IR.OrderBy.html#obiColumn"><span class="hs-identifier hs-var">IR.obiColumn</span></a></span><span> </span><span class="annot"><span class="annottext">((AnnotatedOrderByElement b (UnpreparedValue b)
@@ -5889,7 +5889,7 @@ Lens
   (ColumnInfo b, AnnRedactionExp b (UnpreparedValue b))
   (ColumnInfo b)
   (ColumnInfo b)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((ColumnInfo b -&gt; Const (Endo [Column b]) (ColumnInfo b))
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Tuple.html#_1"><span class="hs-identifier hs-var">_1</span></a></span><span> </span><span class="annot"><span class="annottext">((ColumnInfo b -&gt; Const (Endo [Column b]) (ColumnInfo b))
  -&gt; (ColumnInfo b, AnnRedactionExp b (UnpreparedValue b))
  -&gt; Const
       (Endo [Column b])
@@ -5909,7 +5909,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (p :: * -&gt; * -&gt; *) (f :: * -&gt; *) s a.
 (Profunctor p, Contravariant f) =&gt;
 (s -&gt; a) -&gt; Optic' p f s a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Getter.html#to"><span class="hs-identifier hs-var">to</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Getter.html#to"><span class="hs-identifier hs-var">to</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span>
 </span><span id="line-950"></span><span>          </span><span id="local-6989586621687493042"><span class="annot"><span class="annottext">pkeyOrderBys :: [AnnotatedOrderByItemG b (UnpreparedValue b)]
@@ -5928,7 +5928,7 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrimaryKeyColumns b -&gt; [ColumnInfo b]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrimaryKeyColumns b -&gt; [ColumnInfo b]
 forall a. NESeq a -&gt; [a]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">PrimaryKeyColumns b
@@ -6035,7 +6035,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-965"></span><span>      </span><span id="local-6989586621687493053"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621687493053"><span class="hs-identifier hs-var">cursorValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String Value
 forall a. FromJSON a =&gt; ByteString -&gt; Either String a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html#eitherDecode"><span class="hs-identifier hs-var">J.eitherDecode</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html#eitherDecode"><span class="hs-identifier hs-var">J.eitherDecode</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621687493052"><span class="hs-identifier hs-var">cursorSplit</span></a></span><span> </span><span class="annot"><span class="annottext">Either String Value -&gt; (String -&gt; n Value) -&gt; n Value
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -6067,10 +6067,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="#local-6989586621687493060"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-969"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687493061"><span class="annot"><span class="annottext">columnJsonPath :: [JSONPathElement]
 </span><a href="#local-6989586621687493061"><span class="hs-identifier hs-var hs-var">columnJsonPath</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Key"><span class="hs-identifier hs-var">J.Key</span></a></span><span> </span><span class="annot"><span class="annottext">(Key -&gt; JSONPathElement) -&gt; Key -&gt; JSONPathElement
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#Key"><span class="hs-identifier hs-var">J.Key</span></a></span><span> </span><span class="annot"><span class="annottext">(Key -&gt; JSONPathElement) -&gt; Key -&gt; JSONPathElement
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier hs-var">K.fromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Key) -&gt; Text -&gt; Key
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier hs-var">K.fromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Key) -&gt; Text -&gt; Key
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
@@ -6233,11 +6233,11 @@ forall a. IResult a -&gt; Maybe a
 </span><a href="Hasura.Server.Utils.html#executeJSONPath"><span class="hs-identifier hs-var">executeJSONPath</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; JSONPathElement) -&gt; [Text] -&gt; [JSONPathElement]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Key"><span class="hs-identifier hs-var">J.Key</span></a></span><span> </span><span class="annot"><span class="annottext">(Key -&gt; JSONPathElement)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#Key"><span class="hs-identifier hs-var">J.Key</span></a></span><span> </span><span class="annot"><span class="annottext">(Key -&gt; JSONPathElement)
 -&gt; (Text -&gt; Key) -&gt; Text -&gt; JSONPathElement
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Key
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier hs-var">K.fromText</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedOrderByElement b (UnpreparedValue b) -&gt; [Text]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Key.html#fromText"><span class="hs-identifier hs-var">K.fromText</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AnnotatedOrderByElement b (UnpreparedValue b) -&gt; [Text]
 </span><a href="#local-6989586621687493086"><span class="hs-identifier hs-var">getPathFromOrderBy</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedOrderByElement b (UnpreparedValue b)
 </span><a href="#local-6989586621687493081"><span class="hs-identifier hs-var">annObCol</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621687493053"><span class="hs-identifier hs-var">cursorValue</span></a></span><span class="hs-special">)</span><span>
@@ -6557,7 +6557,7 @@ TableInfo b
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo b
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-1050"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687493368"><span class="annot"><span class="annottext">sourceName :: SourceName
 </span><a href="#local-6989586621687493368"><span class="hs-identifier hs-var hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
 forall (b :: BackendType). SourceInfo b -&gt; SourceName
@@ -6611,7 +6611,7 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687493375"><span class="annot"><span class="annottext">StructuredColumnInfo b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687493375"><span class="annot"><span class="annottext">StructuredColumnInfo b
 </span><a href="#local-6989586621687493375"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687493376"><span class="annot"><span class="annottext">AnnRedactionExpUnpreparedValue b
 </span><a href="#local-6989586621687493376"><span class="hs-identifier hs-var">redactionExp</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StructuredColumnInfo b
 </span><a href="#local-6989586621687493375"><span class="hs-identifier hs-var">column</span></a></span><span> </span><span class="annot"><span class="annottext">StructuredColumnInfo b
@@ -6619,7 +6619,7 @@ Filterable f =&gt;
      (First (ColumnInfo b)) (StructuredColumnInfo b) (ColumnInfo b)
 -&gt; Maybe (ColumnInfo b)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
   (First (ColumnInfo b)) (StructuredColumnInfo b) (ColumnInfo b)
 forall (b :: BackendType) (p :: * -&gt; * -&gt; *) (f :: * -&gt; *).
 (Choice p, Applicative f) =&gt;
@@ -6722,7 +6722,7 @@ Backend b =&gt;
      NonEmpty
        ((ColumnInfo b, AnnRedactionExpUnpreparedValue b), ScalarType b))]
 forall k v. HashMap k v -&gt; [(k, v)]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#toList"><span class="hs-identifier hs-var">HashMap.toList</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap
    Name
    (NonEmpty
       ((ColumnInfo b, AnnRedactionExpUnpreparedValue b), ScalarType b))
@@ -6747,7 +6747,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      (NonEmpty
         ((ColumnInfo b, AnnRedactionExpUnpreparedValue b), ScalarType b))
 forall v1 v2 k. (v1 -&gt; Maybe v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#mapMaybe"><span class="hs-identifier hs-var">HashMap.mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(ColumnInfo b, AnnRedactionExpUnpreparedValue b)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#mapMaybe"><span class="hs-identifier hs-var">HashMap.mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(ColumnInfo b, AnnRedactionExpUnpreparedValue b)]
 -&gt; HashMap (ScalarType b) (ScalarType b)
 -&gt; Maybe
      (NonEmpty
@@ -6947,7 +6947,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
          [FieldParser n (SelectionField b (UnpreparedValue b))]]]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
 </span><span id="line-1075"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="hs-comment">-- operators on numeric computed fields</span><span>
 </span><span id="line-1076"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[ComputedFieldInfo b] -&gt; Bool
 forall a. [a] -&gt; Bool
@@ -7068,7 +7068,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      GQLNameIdentifier
      [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><a href="#local-6989586621687493404"><span class="hs-identifier hs-var">operator</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493405"><span class="hs-identifier hs-var">numFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-1084"></span><span>            </span><span class="hs-comment">-- operators on comparable computed fields</span><span>
@@ -7191,7 +7191,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      GQLNameIdentifier
      [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><a href="#local-6989586621687493408"><span class="hs-identifier hs-var">operator</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493409"><span class="hs-identifier hs-var">comparableFields</span></a></span><span>
 </span><span id="line-1093"></span><span>          </span><span class="hs-special">]</span><span>
@@ -7344,7 +7344,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
          [FieldParser n (SelectionField b (UnpreparedValue b))]]]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
 </span><span id="line-1098"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="hs-comment">-- operators on numeric columns</span><span>
 </span><span id="line-1099"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[(ColumnInfo b, AnnRedactionExpUnpreparedValue b)] -&gt; Bool
 forall a. [a] -&gt; Bool
@@ -7464,7 +7464,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      GQLNameIdentifier
      [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><a href="#local-6989586621687493411"><span class="hs-identifier hs-var">operator</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493412"><span class="hs-identifier hs-var">numFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-1106"></span><span>            </span><span class="hs-comment">-- operators on comparable columns</span><span>
@@ -7571,7 +7571,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
      GQLNameIdentifier
      [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><a href="#local-6989586621687493416"><span class="hs-identifier hs-var">operator</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493414"><span class="hs-identifier hs-var">comparableFields</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-1115"></span><span>            </span><span class="hs-comment">-- -- custom operators</span><span>
@@ -7705,7 +7705,7 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
      GQLNameIdentifier
      [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; GQLNameIdentifier
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#singleton"><span class="hs-identifier hs-var">HashMap.singleton</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; GQLNameIdentifier
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Casing.html#fromCustomName"><span class="hs-identifier hs-var">C.fromCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621687493417"><span class="hs-identifier hs-var">operator</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493419"><span class="hs-identifier hs-var">customFields</span></a></span><span>
@@ -7725,7 +7725,7 @@ forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
      GQLNameIdentifier
      (FieldParser n (AggregateField b (UnpreparedValue b)))
 forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#mapWithKey"><span class="hs-identifier hs-var">HashMap.mapWithKey</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#mapWithKey"><span class="hs-identifier hs-var">HashMap.mapWithKey</span></a></span><span>
 </span><span id="line-1126"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687493424"><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><a href="#local-6989586621687493424"><span class="hs-identifier hs-var">operator</span></a></span></span><span> </span><span id="local-6989586621687493425"><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 </span><a href="#local-6989586621687493425"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MkTypename
@@ -7756,7 +7756,7 @@ forall k v1 v2. (k -&gt; v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 forall k v.
 (Eq k, Hashable k) =&gt;
 (v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#unionWith"><span class="hs-identifier hs-var">HashMap.unionWith</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#unionWith"><span class="hs-identifier hs-var">HashMap.unionWith</span></a></span><span> </span><span class="annot"><span class="annottext">[FieldParser n (SelectionField b (UnpreparedValue b))]
 -&gt; [FieldParser n (SelectionField b (UnpreparedValue b))]
 -&gt; [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall a. [a] -&gt; [a] -&gt; [a]
@@ -7780,7 +7780,7 @@ forall a. a -&gt; [a] -&gt; [a]
   (FieldParser n (AggregateField b (UnpreparedValue b)))
 -&gt; [FieldParser n (AggregateField b (UnpreparedValue b))]
 forall k v. HashMap k v -&gt; [v]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#elems"><span class="hs-identifier hs-var">HashMap.elems</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   GQLNameIdentifier
   (FieldParser n (AggregateField b (UnpreparedValue b)))
 </span><a href="#local-6989586621687493422"><span class="hs-identifier hs-var">nonCountFields</span></a></span><span>
@@ -7839,7 +7839,7 @@ forall a.
 forall (b :: BackendType) v. Text -&gt; AggregateField b v
 </span><a href="Hasura.RQL.IR.Select.html#AFExp"><span class="hs-identifier hs-var">IR.AFExp</span></a></span><span>
 </span><span id="line-1135"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1136"></span><span>    </span><span class="annot"><a href="#local-6989586621687493392"><span class="hs-identifier hs-type">getCustomAggOpsColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExpUnpreparedValue"><span class="hs-identifier hs-type">AnnRedactionExpUnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExpUnpreparedValue"><span class="hs-identifier hs-type">AnnRedactionExpUnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-1136"></span><span>    </span><span class="annot"><a href="#local-6989586621687493392"><span class="hs-identifier hs-type">getCustomAggOpsColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExpUnpreparedValue"><span class="hs-identifier hs-type">AnnRedactionExpUnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnRedactionExpUnpreparedValue"><span class="hs-identifier hs-type">AnnRedactionExpUnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-1137"></span><span>    </span><span id="local-6989586621687493392"><span class="annot"><span class="annottext">getCustomAggOpsColumns :: [(ColumnInfo b, AnnRedactionExpUnpreparedValue b)]
 -&gt; HashMap (ScalarType b) (ScalarType b)
 -&gt; Maybe
@@ -7867,7 +7867,7 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span>
 </span><span id="line-1140"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687493432"><span class="annot"><span class="annottext">ci :: ColumnInfo b
 </span><a href="#local-6989586621687493432"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687493434"><span id="local-6989586621687493435"><span id="local-6989586621687493436"><span id="local-6989586621687493437"><span id="local-6989586621687493438"><span id="local-6989586621687493439"><span id="local-6989586621687493440"><span class="annot"><span class="annottext">Bool
 Int
@@ -7913,7 +7913,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ScalarType b
 -&gt; HashMap (ScalarType b) (ScalarType b) -&gt; Maybe (ScalarType b)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
 </span><a href="#local-6989586621687493445"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (ScalarType b) (ScalarType b)
 </span><a href="#local-6989586621687493431"><span class="hs-identifier hs-var">typeMap</span></a></span><span>
 </span><span id="line-1145"></span><span>          </span><span class="hs-special">)</span><span>
@@ -7971,7 +7971,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 -&gt; [FieldParser n (SelectionField b (UnpreparedValue b))]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
 </span><span id="line-1151"></span><span>
 </span><span id="line-1152"></span><span>    </span><span class="annot"><a href="#local-6989586621687493449"><span class="hs-identifier hs-type">mkColumnAggComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490615"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490616"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490617"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectionField"><span class="hs-identifier hs-type">IR.SelectionField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687490614"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-1153"></span><span>    </span><span id="local-6989586621687493449"><span class="annot"><span class="annottext">mkColumnAggComputedField :: TableName b
@@ -8135,7 +8135,7 @@ forall (m :: * -&gt; *) a (p :: (* -&gt; *) -&gt; * -&gt; *) (n :: * -&gt; *) b.
  Typeable b) =&gt;
 Name -&gt; a -&gt; m (p n b) -&gt; m (p n b)
 </span><a href="Hasura.GraphQL.Schema.Parser.html#memoizeOn"><span class="hs-identifier hs-var">P.memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">tableAggregationFields</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;mkNumericAggFields&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><span class="hs-string">&quot;mkNumericAggFields&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621687493464"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-1172"></span><span>            </span><span class="annot"><span class="annottext">(SchemaT r m (FieldParser n (SelectionField b (UnpreparedValue b)))
  -&gt; SchemaT
@@ -8752,7 +8752,7 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">[OrderByItemG b (AnnotatedOrderByElement b v)]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">[OrderByItemG b (AnnotatedOrderByElement b v)]
 </span><a href="#local-6989586621687493594"><span class="hs-identifier hs-var">initOrderBys</span></a></span><span> </span><span class="annot"><span class="annottext">((OrderByItemG b (AnnotatedOrderByElement b v) -&gt; Maybe (Column b))
  -&gt; [Column b])
 -&gt; (OrderByItemG b (AnnotatedOrderByElement b v)
@@ -8922,7 +8922,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="#local-6989586621687493714"><span class="hs-identifier hs-var">columnName</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b) -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#member"><span class="hs-operator hs-var">`HashMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#member"><span class="hs-operator hs-var">`HashMap.member`</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
 forall (b :: BackendType).
 SelPermInfo b -&gt; HashMap (Column b) (AnnRedactionExpPartialSQL b)
 </span><a href="Hasura.Table.Cache.html#spiCols"><span class="hs-identifier hs-var">spiCols</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
@@ -9427,7 +9427,7 @@ _noiMutability :: forall (b :: BackendType). NestedObjectInfo b -&gt; ColumnMuta
 </span><span id="line-1362"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 -&gt; LogicalModelCache b -&gt; Maybe (LogicalModelInfo b)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621687493757"><span class="hs-identifier hs-var">_noiType</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelCache b
 </span><a href="#local-6989586621687493704"><span class="hs-identifier hs-var">logicalModelCache</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-1363"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687493768"><span class="annot"><span class="annottext">LogicalModelInfo b
@@ -9946,7 +9946,7 @@ lmtrNullable :: LogicalModelTypeReference -&gt; Bool
 </span><a href="#local-6989586621687493908"><span class="hs-identifier hs-var">objectType'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 -&gt; LogicalModelCache b -&gt; Maybe (LogicalModelInfo b)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelName
 </span><a href="#local-6989586621687493904"><span class="hs-identifier hs-var">lmtrReference</span></a></span><span> </span><span class="annot"><span class="annottext">LogicalModelCache b
 </span><a href="#local-6989586621687493866"><span class="hs-identifier hs-var">objectTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (LogicalModelInfo b)
 -&gt; SchemaT r m (LogicalModelInfo b)
@@ -10740,7 +10740,7 @@ forall (b :: BackendType). RelInfo b -&gt; InsertOrder
 </span><span id="line-1609"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687494140"><span class="annot"><span class="annottext">columns :: [Column b]
 </span><a href="#local-6989586621687494140"><span class="hs-identifier hs-var hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Column b) -&gt; [Column b]
 forall k v. HashMap k v -&gt; [k]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap (Column b) (Column b) -&gt; [Column b])
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#keys"><span class="hs-identifier hs-var">HashMap.keys</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap (Column b) (Column b) -&gt; [Column b])
 -&gt; HashMap (Column b) (Column b) -&gt; [Column b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; HashMap (Column b) (Column b)
@@ -10766,7 +10766,7 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="#local-6989586621687494143"><span class="hs-identifier hs-var hs-var">findColumn</span></a></span></span><span> </span><span id="local-6989586621687494144"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621687494144"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; FieldInfoMap (FieldInfo b) -&gt; Maybe (FieldInfo b)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687491166"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621687494144"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621687494142"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (FieldInfo b)
@@ -10774,13 +10774,13 @@ forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
      (First (ColumnInfo b)) (Maybe (FieldInfo b)) (ColumnInfo b)
 -&gt; Maybe (ColumnInfo b)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Const (First (ColumnInfo b)) (FieldInfo b))
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Const (First (ColumnInfo b)) (FieldInfo b))
 -&gt; Maybe (FieldInfo b)
 -&gt; Const (First (ColumnInfo b)) (Maybe (FieldInfo b))
 forall a b (p :: * -&gt; * -&gt; *) (f :: * -&gt; *).
 (Choice p, Applicative f) =&gt;
 p a (f b) -&gt; p (Maybe a) (f (Maybe b))
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Prism.html#_Just"><span class="hs-identifier hs-var">_Just</span></a></span><span> </span><span class="annot"><span class="annottext">((FieldInfo b -&gt; Const (First (ColumnInfo b)) (FieldInfo b))
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Prism.html#_Just"><span class="hs-identifier hs-var">_Just</span></a></span><span> </span><span class="annot"><span class="annottext">((FieldInfo b -&gt; Const (First (ColumnInfo b)) (FieldInfo b))
  -&gt; Maybe (FieldInfo b)
  -&gt; Const (First (ColumnInfo b)) (Maybe (FieldInfo b)))
 -&gt; ((ColumnInfo b -&gt; Const (First (ColumnInfo b)) (ColumnInfo b))
@@ -11195,7 +11195,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
      (First (NESeq (ColumnInfo b))) (TableInfo b) (NESeq (ColumnInfo b))
 -&gt; Maybe (NESeq (ColumnInfo b))
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">(TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
  -&gt; Const
       (First (NESeq (ColumnInfo b)))
       (TableCoreInfoG b (FieldInfo b) (ColumnInfo b)))
@@ -11266,7 +11266,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a b (p :: * -&gt; * -&gt; *) (f :: * -&gt; *).
 (Choice p, Applicative f) =&gt;
 p a (f b) -&gt; p (Maybe a) (f (Maybe b))
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Prism.html#_Just"><span class="hs-identifier hs-var">_Just</span></a></span><span> </span><span class="annot"><span class="annottext">((PrimaryKey b (ColumnInfo b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Prism.html#_Just"><span class="hs-identifier hs-var">_Just</span></a></span><span> </span><span class="annot"><span class="annottext">((PrimaryKey b (ColumnInfo b)
   -&gt; Const
        (First (NESeq (ColumnInfo b))) (PrimaryKey b (ColumnInfo b)))
  -&gt; Maybe (PrimaryKey b (ColumnInfo b))
@@ -11370,7 +11370,7 @@ TableInfo b
 -&gt; [FieldParser n (AnnotatedField b)]
 forall a. [Maybe a] -&gt; [a]
 forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#catMaybes"><span class="hs-identifier hs-var">catMaybes</span></a></span><span>
 </span><span id="line-1656"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">FieldParser n (AnnotatedField b)
 -&gt; Maybe (FieldParser n (AnnotatedField b))
 forall a. a -&gt; Maybe a

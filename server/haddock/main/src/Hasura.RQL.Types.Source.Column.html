@@ -16,15 +16,15 @@
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-5ef39ba2f8644163fcb391587f08e67fc415caabe4542ede83c35400dafb8ca3/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-d194314756631e03ae2b3181d98f3e53b5c3f58ebf69638d7eb7c5a3917ddb01/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NFData</span></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.TH.html"><span class="hs-identifier">Control.Lens.TH</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.TH.html#makeLenses"><span class="hs-identifier">makeLenses</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.html"><span class="hs-identifier">Data.Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier">Hashable</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier">ToSchema</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier">Text</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.TH.html"><span class="hs-identifier">Control.Lens.TH</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.TH.html#makeLenses"><span class="hs-identifier">makeLenses</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.html"><span class="hs-identifier">Data.Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier">Hashable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier">ToSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier">Text</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">GHC.Generics</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnType"><span class="hs-identifier">RawColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -40,7 +40,7 @@
 </span><span id="line-38"></span><span>    </span><span id="_sciNullable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciNullable"><span class="hs-identifier hs-var hs-var">_sciNullable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-39"></span><span>    </span><span id="_sciDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Maybe Text
-</span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var hs-var">_sciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-27d8e86ddce8dd754c06549efa10988301d41e208fc11cac9fe9ed6d99d6eb35/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var hs-var">_sciDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-40"></span><span>    </span><span id="_sciInsertable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciInsertable"><span class="hs-identifier hs-var hs-var">_sciInsertable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>    </span><span id="_sciUpdatable"><span class="annot"><span class="annottext">forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
@@ -86,7 +86,7 @@ Int -&gt; SourceColumnInfo b -&gt; Int
 hashWithSalt :: Int -&gt; SourceColumnInfo b -&gt; Int
 $chash :: forall (b :: BackendType). Backend b =&gt; SourceColumnInfo b -&gt; Int
 hash :: SourceColumnInfo b -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687250784"><span id="local-6989586621687250790"><span class="annot"><span class="annottext">Value -&gt; Parser [SourceColumnInfo b]
 Value -&gt; Parser (SourceColumnInfo b)
 (Value -&gt; Parser (SourceColumnInfo b))
@@ -108,7 +108,7 @@ $cparseJSONList :: forall (b :: BackendType).
 Backend b =&gt;
 Value -&gt; Parser [SourceColumnInfo b]
 parseJSONList :: Value -&gt; Parser [SourceColumnInfo b]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687250799"><span id="local-6989586621687250805"><span id="local-6989586621687250810"><span id="local-6989586621687250815"><span class="annot"><span class="annottext">[SourceColumnInfo b] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687250799"><span id="local-6989586621687250805"><span id="local-6989586621687250810"><span id="local-6989586621687250815"><span class="annot"><span class="annottext">[SourceColumnInfo b] -&gt; Value
 [SourceColumnInfo b] -&gt; Encoding
 SourceColumnInfo b -&gt; Value
 SourceColumnInfo b -&gt; Encoding
@@ -147,7 +147,7 @@ $ctoEncodingList :: forall (b :: BackendType).
 Backend b =&gt;
 [SourceColumnInfo b] -&gt; Encoding
 toEncodingList :: [SourceColumnInfo b] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687250827"><span class="annot"><span class="annottext">Typeable (SourceColumnInfo b)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687250827"><span class="annot"><span class="annottext">Typeable (SourceColumnInfo b)
 Typeable (SourceColumnInfo b)
 -&gt; (Proxy (SourceColumnInfo b)
     -&gt; Declare (Definitions Schema) NamedSchema)
@@ -171,7 +171,7 @@ Proxy (SourceColumnInfo b)
 -&gt; Declare (Definitions Schema) NamedSchema
 declareNamedSchema :: Proxy (SourceColumnInfo b)
 -&gt; Declare (Definitions Schema) NamedSchema
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250537"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250537"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span id="local-6989586621687250837"><span id="local-6989586621687250840"><span id="local-6989586621687250855"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250837"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250837"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-49"></span><span>
@@ -179,7 +179,7 @@ declareNamedSchema :: Proxy (SourceColumnInfo b)
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span id="local-6989586621687250621"><span id="local-6989586621687250912"><span id="local-6989586621687250929"><span id="local-6989586621687250933"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250621"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250621"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687250589"><span id="local-6989586621687250942"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250589"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250589"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687250589"><span id="local-6989586621687250942"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250589"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#SourceColumnInfo"><span class="hs-identifier hs-type">SourceColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687250589"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-55"></span><span>  </span><span id="local-6989586621687250983"><span class="annot"><span class="annottext">codec :: JSONCodec (SourceColumnInfo b)
 </span><a href="#local-6989586621687250983"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Text
@@ -187,7 +187,7 @@ declareNamedSchema :: Proxy (SourceColumnInfo b)
 -&gt; JSONCodec (SourceColumnInfo b)
 forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ColumnInfo&quot;</span></span><span> </span><span class="annot"><span class="annottext">(ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
  -&gt; JSONCodec (SourceColumnInfo b))
 -&gt; ObjectCodec (SourceColumnInfo b) (SourceColumnInfo b)
@@ -236,7 +236,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Column name&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Column b) (Column b)
 -&gt; (SourceColumnInfo b -&gt; Column b)
@@ -244,7 +244,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Column b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Column b
 forall (b :: BackendType). SourceColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciName"><span class="hs-identifier hs-var">_sciName</span></a></span><span>
 </span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -276,7 +276,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Column type&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (RawColumnType b) (RawColumnType b)
 -&gt; (SourceColumnInfo b -&gt; RawColumnType b)
@@ -284,7 +284,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; RawColumnType b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; RawColumnType b
 forall (b :: BackendType). SourceColumnInfo b -&gt; RawColumnType b
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciType"><span class="hs-identifier hs-var">_sciType</span></a></span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -314,7 +314,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Is column nullable&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
 -&gt; (SourceColumnInfo b -&gt; Bool)
@@ -322,7 +322,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
 forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciNullable"><span class="hs-identifier hs-var">_sciNullable</span></a></span><span>
 </span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -350,7 +350,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull"><span class="hs-identifier hs-var">optionalFieldOrNull</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull"><span class="hs-identifier hs-var">optionalFieldOrNull</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Column description&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Text) (Maybe Text)
 -&gt; (SourceColumnInfo b -&gt; Maybe Text)
@@ -358,7 +358,7 @@ Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe Text
 forall (b :: BackendType). SourceColumnInfo b -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciDescription"><span class="hs-identifier hs-var">_sciDescription</span></a></span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -382,7 +382,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;insertable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Whether or not the column can be inserted into&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
@@ -391,7 +391,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
 forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciInsertable"><span class="hs-identifier hs-var">_sciInsertable</span></a></span><span>
 </span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -412,7 +412,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;updatable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Whether or not the column can be updated&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec Bool Bool
@@ -421,7 +421,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Bool
 forall (b :: BackendType). SourceColumnInfo b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciUpdatable"><span class="hs-identifier hs-var">_sciUpdatable</span></a></span><span>
 </span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Codec
@@ -444,7 +444,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull"><span class="hs-identifier hs-var">optionalFieldOrNull</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldOrNull"><span class="hs-identifier hs-var">optionalFieldOrNull</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;value_generated&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Whether or not and how the value of the column can be generated by the database&quot;</span></span><span> </span><span class="annot"><span class="annottext">ObjectCodec
   (Maybe ColumnValueGenerationStrategy)
@@ -455,7 +455,7 @@ Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
 forall (b :: BackendType).
 SourceColumnInfo b -&gt; Maybe ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#_sciValueGenerated"><span class="hs-identifier hs-var">_sciValueGenerated</span></a></span><span>
@@ -602,7 +602,7 @@ $chashWithSalt :: Int -&gt; ColumnValueGenerationStrategy -&gt; Int
 hashWithSalt :: Int -&gt; ColumnValueGenerationStrategy -&gt; Int
 $chash :: ColumnValueGenerationStrategy -&gt; Int
 hash :: ColumnValueGenerationStrategy -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-3c50bd0e18b247d18178d5211bea77b63bf7c268f9213ac135510791fe4312ad/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687251072"><span id="local-6989586621687251077"><span class="annot"><span class="annottext">Value -&gt; Parser [ColumnValueGenerationStrategy]
 Value -&gt; Parser ColumnValueGenerationStrategy
 (Value -&gt; Parser ColumnValueGenerationStrategy)
@@ -614,7 +614,7 @@ $cparseJSON :: Value -&gt; Parser ColumnValueGenerationStrategy
 parseJSON :: Value -&gt; Parser ColumnValueGenerationStrategy
 $cparseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
 parseJSONList :: Value -&gt; Parser [ColumnValueGenerationStrategy]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687251083"><span id="local-6989586621687251088"><span id="local-6989586621687251093"><span id="local-6989586621687251098"><span class="annot"><span class="annottext">[ColumnValueGenerationStrategy] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687251083"><span id="local-6989586621687251088"><span id="local-6989586621687251093"><span id="local-6989586621687251098"><span class="annot"><span class="annottext">[ColumnValueGenerationStrategy] -&gt; Value
 [ColumnValueGenerationStrategy] -&gt; Encoding
 ColumnValueGenerationStrategy -&gt; Value
 ColumnValueGenerationStrategy -&gt; Encoding
@@ -637,7 +637,7 @@ $ctoJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
 toJSONList :: [ColumnValueGenerationStrategy] -&gt; Value
 $ctoEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
 toEncodingList :: [ColumnValueGenerationStrategy] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687251106"><span class="annot"><span class="annottext">Typeable ColumnValueGenerationStrategy
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687251106"><span class="annot"><span class="annottext">Typeable ColumnValueGenerationStrategy
 Typeable ColumnValueGenerationStrategy
 -&gt; (Proxy ColumnValueGenerationStrategy
     -&gt; Declare (Definitions Schema) NamedSchema)
@@ -652,22 +652,22 @@ $cdeclareNamedSchema :: Proxy ColumnValueGenerationStrategy
 -&gt; Declare (Definitions Schema) NamedSchema
 declareNamedSchema :: Proxy ColumnValueGenerationStrategy
 -&gt; Declare (Definitions Schema) NamedSchema
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span><span>
 </span><span id="line-73"></span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- | We're encoding the different strategies as tagged objects rather than just strings because</span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- it is anticipated that additional information may need to be added to each strategy in future.</span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- For example, the actual default value (a literal), or what type of unique identifier is being</span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- used (eg. a UUID). By using a tagged object, we ensure the addition of such information is not</span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- a breaking change to the shape of the JSON.</span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687251114"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687251114"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.Column.html#ColumnValueGenerationStrategy"><span class="hs-identifier hs-type">ColumnValueGenerationStrategy</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-80"></span><span>  </span><span id="local-6989586621687251130"><span class="annot"><span class="annottext">codec :: JSONCodec ColumnValueGenerationStrategy
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; JSONCodec ColumnValueGenerationStrategy
 -&gt; JSONCodec ColumnValueGenerationStrategy
 forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier hs-var">named</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#named"><span class="hs-identifier hs-var">named</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">(JSONCodec ColumnValueGenerationStrategy
  -&gt; JSONCodec ColumnValueGenerationStrategy)
 -&gt; JSONCodec ColumnValueGenerationStrategy
@@ -679,7 +679,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; JSONCodec ColumnValueGenerationStrategy
 forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ColumnValueGenerationStrategy&quot;</span></span><span> </span><span class="annot"><span class="annottext">(ObjectCodec
    ColumnValueGenerationStrategy ColumnValueGenerationStrategy
  -&gt; JSONCodec ColumnValueGenerationStrategy)
@@ -699,7 +699,7 @@ Text
 -&gt; (input -&gt; (Text, ObjectCodec input ()))
 -&gt; HashMap Text (Text, ObjectCodec Void output)
 -&gt; ObjectCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#discriminatedUnionCodec"><span class="hs-identifier hs-var">discriminatedUnionCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#discriminatedUnionCodec"><span class="hs-identifier hs-var">discriminatedUnionCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 -&gt; (Text, ObjectCodec ColumnValueGenerationStrategy ())
 </span><a href="#local-6989586621687251133"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
@@ -730,7 +730,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; ObjectCodec ColumnValueGenerationStrategy ()
 forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
 </span><a href="#local-6989586621687251137"><span class="hs-identifier hs-var">autoIncrementCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#UniqueIdentifier"><span class="hs-identifier hs-var">UniqueIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -739,7 +739,7 @@ b -&gt; Codec context b any -&gt; Codec context a ()
 -&gt; ObjectCodec ColumnValueGenerationStrategy ()
 forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
 </span><a href="#local-6989586621687251140"><span class="hs-identifier hs-var">uniqueIdentifierCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 </span><a href="Hasura.RQL.Types.Source.Column.html#DefaultValue"><span class="hs-identifier hs-var">DefaultValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
@@ -748,7 +748,7 @@ b -&gt; Codec context b any -&gt; Codec context a ()
 -&gt; ObjectCodec ColumnValueGenerationStrategy ()
 forall b context any a.
 b -&gt; Codec context b any -&gt; Codec context a ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToEncoder"><span class="hs-identifier hs-var">mapToEncoder</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Codec Object () ()
 </span><a href="#local-6989586621687251143"><span class="hs-identifier hs-var">defaultCodec</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>      </span><span id="local-6989586621687251134"><span class="annot"><span class="annottext">dec :: HashMap Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
 </span><a href="#local-6989586621687251134"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -756,7 +756,7 @@ b -&gt; Codec context b any -&gt; Codec context a ()
 -&gt; HashMap
      Text (Text, ObjectCodec Void ColumnValueGenerationStrategy)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-a5b4fa803c841f948b5080a5c7a22f4e3b108a71ab10582fd155001f6f7ca093/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashMap.Internal.Strict.html#fromList"><span class="hs-identifier hs-var">HashMap.fromList</span></a></span><span>
 </span><span id="line-92"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;auto_increment&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;AutoIncrementGenerationStrategy&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(() -&gt; ColumnValueGenerationStrategy)
@@ -764,7 +764,7 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 -&gt; ObjectCodec Void ColumnValueGenerationStrategy
 forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 -&gt; () -&gt; ColumnValueGenerationStrategy
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
@@ -777,7 +777,7 @@ forall a b. a -&gt; b -&gt; a
 -&gt; ObjectCodec Void ColumnValueGenerationStrategy
 forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 -&gt; () -&gt; ColumnValueGenerationStrategy
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
@@ -790,7 +790,7 @@ forall a b. a -&gt; b -&gt; a
 -&gt; ObjectCodec Void ColumnValueGenerationStrategy
 forall b a context any.
 (b -&gt; a) -&gt; Codec context any b -&gt; Codec context Void a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#mapToDecoder"><span class="hs-identifier hs-var">mapToDecoder</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy
 -&gt; () -&gt; ColumnValueGenerationStrategy
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">ColumnValueGenerationStrategy

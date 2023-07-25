@@ -4,8 +4,8 @@
 </span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-5"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-6"></span><span>
-</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator">(^?)</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator">(^?)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span>
@@ -533,7 +533,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="#local-6989586621687414892"><span class="hs-identifier hs-var">relSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-144"></span><span>                  </span><span class="annot"><span class="annottext">ColumnAlias -&gt; SQLExp -&gt; InsOrdHashMap ColumnAlias SQLExp
 forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#singleton"><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#singleton"><span class="hs-identifier hs-var">InsOrdHashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnAlias
 </span><a href="#local-6989586621687414886"><span class="hs-identifier hs-var">relOrderByAlias</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="#local-6989586621687414887"><span class="hs-identifier hs-var">relOrdByExp</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-145"></span><span>                  </span><span class="annot"><span class="annottext">TableIdentifier -&gt; ColumnAlias -&gt; SQLExp
@@ -665,7 +665,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="#local-6989586621687414907"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-171"></span><span>                  </span><span class="annot"><span class="annottext">[(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#fromList"><span class="hs-identifier hs-var">InsOrdHashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#fromList"><span class="hs-identifier hs-var">InsOrdHashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp)
 -&gt; [(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
@@ -857,7 +857,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="#local-6989586621687414938"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-199"></span><span>                  </span><span class="annot"><span class="annottext">[(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#fromList"><span class="hs-identifier hs-var">InsOrdHashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#fromList"><span class="hs-identifier hs-var">InsOrdHashMap.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">([(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp)
 -&gt; [(ColumnAlias, SQLExp)] -&gt; InsOrdHashMap ColumnAlias SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableIdentifier
@@ -1069,7 +1069,7 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-a40f3f0a2ed7f25145b5b00589bf4ea2486662b1e96b7d29d5e6041625ee4a09/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((AnnotatedOrderByElement ('Postgres pgKind) SQLExp,
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-27d2e54ee8e55049a04643f21c35add9624422a067ad828340766ae5c9a5fd18/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">((AnnotatedOrderByElement ('Postgres pgKind) SQLExp,
   (ColumnAlias, SQLExp))
  -&gt; Maybe
       (ColumnInfo ('Postgres pgKind),
@@ -1178,7 +1178,7 @@ forall a. a -&gt; [a] -&gt; NonEmpty a
      (ColumnInfo b, AnnRedactionExp b v)
 -&gt; Maybe (ColumnInfo b, AnnRedactionExp b v)
 forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
   (First (ColumnInfo b, AnnRedactionExp b v))
   (AnnotatedOrderByElement b v)
   (ColumnInfo b, AnnRedactionExp b v)

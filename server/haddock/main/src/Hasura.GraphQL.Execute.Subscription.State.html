@@ -29,13 +29,13 @@
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html"><span class="hs-identifier">Control.Concurrent.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Concurrent.Extended.html#forkImmortal"><span class="hs-identifier">forkImmortal</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier">sleep</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">mask_</span></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-545a537f90441258bc2a7e366e97df5e23ab640a29084964202ec5bb67dab2db/share/doc/html/src/Control.Immortal.html"><span class="hs-identifier">Control.Immortal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Immortal</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-aa372c353b38e66ae57cca88bb7c610cd77e17be2c8817b5f763fea7528b5a07/share/doc/html/src/Control.Immortal.html"><span class="hs-identifier">Control.Immortal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Immortal</span></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Aeson.Extended.html"><span class="hs-identifier">Data.Aeson.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/aeson-ordered-0.1.0.0/opt/doc/html/aeson-ordered/src/Data.Aeson.Ordered.html"><span class="hs-identifier">Data.Aeson.Ordered</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JO</span></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Endo</span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-30c83fbb1c3aefb9d229b459061b8a733cc553371297f751ef6232d54ca71329/share/doc/html/src/Data.UUID.V4.html"><span class="hs-identifier">Data.UUID.V4</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">UUID</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-d2202278c7620b438f77f2efc94595fde788e20c44df667589c30623c4d3156f/share/doc/html/src/Data.UUID.V4.html"><span class="hs-identifier">Data.UUID.V4</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">UUID</span></span><span>
 </span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/GHC.AssertNF.CPP.html"><span class="hs-identifier">GHC.AssertNF.CPP</span></a></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Backend</span></a></span><span>
@@ -65,9 +65,9 @@
 </span><span id="line-65"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#GranularPrometheusMetricsState"><span class="hs-identifier">GranularPrometheusMetricsState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#RequestId"><span class="hs-identifier">RequestId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
-</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html"><span class="hs-identifier">Refined</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier">unrefine</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html"><span class="hs-identifier">StmContainers.Map</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STMMap</span></span><span>
-</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html"><span class="hs-identifier">System.Metrics.Gauge</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG.Gauge</span></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-fa48f8f6b0368a202e19948eebf3d8b2d0cbc92f1bab5f0061ebb3c44fa713b6/share/doc/html/src/Refined.html"><span class="hs-identifier">Refined</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-fa48f8f6b0368a202e19948eebf3d8b2d0cbc92f1bab5f0061ebb3c44fa713b6/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier">unrefine</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html"><span class="hs-identifier">StmContainers.Map</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STMMap</span></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html"><span class="hs-identifier">System.Metrics.Gauge</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG.Gauge</span></span><span>
 </span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ekg-prometheus-0.3.0.0/opt/doc/html/ekg-prometheus/src/System.Metrics.Prometheus.Gauge.html"><span class="hs-identifier">System.Metrics.Prometheus.Gauge</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Prometheus.Gauge</span></span><span>
 </span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ekg-prometheus-0.3.0.0/opt/doc/html/ekg-prometheus/src/System.Metrics.Prometheus.GaugeVector.html"><span class="hs-identifier">System.Metrics.Prometheus.GaugeVector</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GaugeVector</span></span><span>
 </span><span id="line-73"></span><span>
@@ -117,7 +117,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">STM (PollerMap ())
 forall key value. STM (Map key value)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#new"><span class="hs-identifier hs-var">STMMap.new</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#new"><span class="hs-identifier hs-var">STMMap.new</span></a></span><span>
 </span><span id="line-91"></span><span>    </span><span class="annot"><span class="annottext">STM
   (PollerMap (TVar CursorVariableValues)
    -&gt; SubscriptionPostPollHook
@@ -131,7 +131,7 @@ forall a b. STM (a -&gt; b) -&gt; STM a -&gt; STM b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">STM (PollerMap (TVar CursorVariableValues))
 forall key value. STM (Map key value)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#new"><span class="hs-identifier hs-var">STMMap.new</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#new"><span class="hs-identifier hs-var">STMMap.new</span></a></span><span>
 </span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">STM
   (SubscriptionPostPollHook
    -&gt; AsyncActionSubscriptionState -&gt; SubscriptionsState)
@@ -153,7 +153,7 @@ forall k v. STM (TMap k v)
 </span><a href="Hasura.GraphQL.Execute.Subscription.TMap.html#new"><span class="hs-identifier hs-var">TMap.new</span></a></span><span>
 </span><span id="line-94"></span><span>
 </span><span id="line-95"></span><span class="annot"><span class="hs-comment">-- | For dev debugging, output subject to change.</span></span><span>
-</span><span id="line-96"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#dumpSubscriptionsState"><span class="hs-identifier hs-type">dumpSubscriptionsState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#LiveQueriesOptions"><span class="hs-identifier hs-type">LiveQueriesOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#StreamQueriesOptions"><span class="hs-identifier hs-type">StreamQueriesOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#SubscriptionsState"><span class="hs-identifier hs-type">SubscriptionsState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#dumpSubscriptionsState"><span class="hs-identifier hs-type">dumpSubscriptionsState</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#LiveQueriesOptions"><span class="hs-identifier hs-type">LiveQueriesOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#StreamQueriesOptions"><span class="hs-identifier hs-type">StreamQueriesOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#SubscriptionsState"><span class="hs-identifier hs-type">SubscriptionsState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span>
 </span><span id="line-97"></span><span id="dumpSubscriptionsState"><span class="annot"><span class="annottext">dumpSubscriptionsState :: Bool
 -&gt; LiveQueriesOptions
 -&gt; LiveQueriesOptions
@@ -186,30 +186,30 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">(Value -&gt; IO Value) -&gt; Value -&gt; IO Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;options&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; LiveQueriesOptions -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
 </span><a href="#local-6989586621687611039"><span class="hs-identifier hs-var">liveQOpts</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;live_queries_map&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621687611043"><span class="hs-identifier hs-var">lqMapJ</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;stream_queries_map&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621687611045"><span class="hs-identifier hs-var">streamMapJ</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-105"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;stream_queries_options&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; LiveQueriesOptions -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQueriesOptions
 </span><a href="#local-6989586621687611040"><span class="hs-identifier hs-var">streamQOpts</span></a></span><span>
 </span><span id="line-106"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-107"></span><span>
@@ -291,7 +291,7 @@ Subscriber
 forall key value.
 (Eq key, Hashable key) =&gt;
 key -&gt; Map key value -&gt; STM (Maybe value)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611103"><span class="hs-identifier hs-var">pollerKey</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap streamCursorVars
 </span><a href="#local-6989586621687611102"><span class="hs-identifier hs-var">pollerMap</span></a></span><span> </span><span class="annot"><span class="annottext">STM (Maybe (Poller streamCursorVars))
 -&gt; (Maybe (Poller streamCursorVars)
@@ -486,7 +486,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall key value.
 (Eq key, Hashable key) =&gt;
 value -&gt; key -&gt; Map key value -&gt; STM ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#insert"><span class="hs-identifier hs-var">STMMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">Poller streamCursorVars
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#insert"><span class="hs-identifier hs-var">STMMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">Poller streamCursorVars
 </span><a href="#local-6989586621687611120"><span class="hs-identifier hs-var">poller</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611103"><span class="hs-identifier hs-var">pollerKey</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap streamCursorVars
 </span><a href="#local-6989586621687611102"><span class="hs-identifier hs-var">pollerMap</span></a></span><span>
@@ -595,7 +595,7 @@ Logger Hasura
 </span><span id="line-209"></span><span>    </span><span class="hs-special">$</span><span class="annot"><span class="annottext">String
 String -&gt; Subscriber -&gt; IO ()
 forall a. String -&gt; a -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-82e96765a111ac7357f6a4d5ab99098bb54d7b2e354a87ca1cf82e7c4592f45d/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">Subscriber
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-818e82043864096131abb5cabda4aaafdc0c0751f4702e00c0fb3ce8e4b158c6/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">Subscriber
 </span><a href="#local-6989586621687611202"><span class="hs-identifier hs-var">subscriber</span></a></span><span> </span><span class="hs-comment">-- so we don't write thunks to mutable vars</span><span>
 </span><span id="line-210"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687611205"><span class="annot"><span class="annottext">Maybe (Poller ())
 </span><a href="#local-6989586621687611205"><span class="hs-identifier hs-var">pollerMaybe</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
@@ -660,7 +660,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerId"><span class="hs-identifier hs-var">PollerId</span></a></span><span> </span><span class="annot"><span class="annottext">(UUID -&gt; PollerId) -&gt; IO UUID -&gt; IO PollerId
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO UUID
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-30c83fbb1c3aefb9d229b459061b8a733cc553371297f751ef6232d54ca71329/share/doc/html/src/Data.UUID.V4.html#nextRandom"><span class="hs-identifier hs-var">UUID.nextRandom</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-d2202278c7620b438f77f2efc94595fde788e20c44df667589c30623c4d3156f/share/doc/html/src/Data.UUID.V4.html#nextRandom"><span class="hs-identifier hs-var">UUID.nextRandom</span></a></span><span>
 </span><span id="line-226"></span><span>      </span><span id="local-6989586621687611216"><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611216"><span class="hs-identifier hs-var">threadRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Logger Hasura -&gt; IO Void -&gt; IO Thread
 forall (m :: * -&gt; *).
@@ -750,7 +750,7 @@ Poller streamCursor -&gt; TMap (Maybe OperationName) Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative DiffTime -&gt; DiffTime
 forall {k} (p :: k) x. Refined p x -&gt; x
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined NonNegative DiffTime -&gt; DiffTime)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-fa48f8f6b0368a202e19948eebf3d8b2d0cbc92f1bab5f0061ebb3c44fa713b6/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined NonNegative DiffTime -&gt; DiffTime)
 -&gt; Refined NonNegative DiffTime -&gt; DiffTime
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RefetchInterval -&gt; Refined NonNegative DiffTime
@@ -764,7 +764,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-248"></span><span>      </span><span class="hs-special">$</span><span class="annot"><span class="annottext">String
 String -&gt; PollerIOState -&gt; IO ()
 forall a. String -&gt; a -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-82e96765a111ac7357f6a4d5ab99098bb54d7b2e354a87ca1cf82e7c4592f45d/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">PollerIOState
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-818e82043864096131abb5cabda4aaafdc0c0751f4702e00c0fb3ce8e4b158c6/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">PollerIOState
 </span><a href="#local-6989586621687611230"><span class="hs-identifier hs-var">pState</span></a></span><span> </span><span class="hs-comment">-- so we don't write thunks to mutable vars</span><span>
 </span><span id="line-249"></span><span>      </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
@@ -801,7 +801,7 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveSubscriptions"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -864,7 +864,7 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveLiveQueries"><span class="hs-identifier hs-var">smActiveLiveQueries</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -1126,7 +1126,7 @@ Logger Hasura
 </span><span id="line-329"></span><span>    </span><span class="hs-special">$</span><span class="annot"><span class="annottext">String
 String -&gt; Subscriber -&gt; IO ()
 forall a. String -&gt; a -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-82e96765a111ac7357f6a4d5ab99098bb54d7b2e354a87ca1cf82e7c4592f45d/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">Subscriber
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-818e82043864096131abb5cabda4aaafdc0c0751f4702e00c0fb3ce8e4b158c6/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">Subscriber
 </span><a href="#local-6989586621687611333"><span class="hs-identifier hs-var">subscriber</span></a></span><span> </span><span class="hs-comment">-- so we don't write thunks to mutable vars</span><span>
 </span><span id="line-330"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621687611334"><span class="annot"><span class="annottext">Maybe (Poller (TVar CursorVariableValues))
 </span><a href="#local-6989586621687611334"><span class="hs-identifier hs-var">handlerM</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687611335"><span class="annot"><span class="annottext">TVar CursorVariableValues
@@ -1218,7 +1218,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.GraphQL.Execute.Subscription.Poll.Common.html#PollerId"><span class="hs-identifier hs-var">PollerId</span></a></span><span> </span><span class="annot"><span class="annottext">(UUID -&gt; PollerId) -&gt; IO UUID -&gt; IO PollerId
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO UUID
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-30c83fbb1c3aefb9d229b459061b8a733cc553371297f751ef6232d54ca71329/share/doc/html/src/Data.UUID.V4.html#nextRandom"><span class="hs-identifier hs-var">UUID.nextRandom</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/uuid-1.3.15-d2202278c7620b438f77f2efc94595fde788e20c44df667589c30623c4d3156f/share/doc/html/src/Data.UUID.V4.html#nextRandom"><span class="hs-identifier hs-var">UUID.nextRandom</span></a></span><span>
 </span><span id="line-346"></span><span>      </span><span id="local-6989586621687611343"><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611343"><span class="hs-identifier hs-var">threadRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Logger Hasura -&gt; IO Void -&gt; IO Thread
 forall (m :: * -&gt; *).
@@ -1318,7 +1318,7 @@ Poller streamCursor -&gt; TMap (Maybe OperationName) Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Refined NonNegative DiffTime -&gt; DiffTime
 forall {k} (p :: k) x. Refined p x -&gt; x
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-dc79621583531fb7b5097b49350d0651659b726ea5de7adb30f92fc4b62654a1/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined NonNegative DiffTime -&gt; DiffTime)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-fa48f8f6b0368a202e19948eebf3d8b2d0cbc92f1bab5f0061ebb3c44fa713b6/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined NonNegative DiffTime -&gt; DiffTime)
 -&gt; Refined NonNegative DiffTime -&gt; DiffTime
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RefetchInterval -&gt; Refined NonNegative DiffTime
@@ -1332,7 +1332,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-370"></span><span>      </span><span class="hs-special">$</span><span class="annot"><span class="annottext">String
 String -&gt; PollerIOState -&gt; IO ()
 forall a. String -&gt; a -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-82e96765a111ac7357f6a4d5ab99098bb54d7b2e354a87ca1cf82e7c4592f45d/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">PollerIOState
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ghc-heap-view-0.6.4-818e82043864096131abb5cabda4aaafdc0c0751f4702e00c0fb3ce8e4b158c6/share/doc/html/src/GHC.AssertNF.html#assertNFNamed"><span class="hs-identifier hs-var">assertNFHere</span></a></span><span> </span><span class="annot"><span class="annottext">PollerIOState
 </span><a href="#local-6989586621687611353"><span class="hs-identifier hs-var">pState</span></a></span><span> </span><span class="hs-comment">-- so we don't write thunks to mutable vars</span><span>
 </span><span id="line-371"></span><span>      </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
@@ -1370,13 +1370,13 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-375"></span><span>      </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveSubscriptions"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
 </span><a href="#local-6989586621687611318"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
 </span><span id="line-376"></span><span>      </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#inc"><span class="hs-identifier hs-var">EKG.Gauge.inc</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveStreamingSubscriptions"><span class="hs-identifier hs-var">smActiveStreamingSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -1761,7 +1761,7 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveSubscriptions"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -1772,7 +1772,7 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveLiveQueries"><span class="hs-identifier hs-var">smActiveLiveQueries</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -1791,7 +1791,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall key value.
 (Eq key, Hashable key) =&gt;
 key -&gt; Map key value -&gt; STM (Maybe value)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611379"><span class="hs-identifier hs-var">handlerId</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap ()
 </span><a href="#local-6989586621687611397"><span class="hs-identifier hs-var">subMap</span></a></span><span>
 </span><span id="line-441"></span><span>      </span><span class="annot"><span class="annottext">(Maybe (Maybe (Poller (), Cohort ()))
@@ -1943,7 +1943,7 @@ forall a. Maybe a
 forall key value.
 (Eq key, Hashable key) =&gt;
 key -&gt; Map key value -&gt; STM ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#delete"><span class="hs-identifier hs-var">STMMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#delete"><span class="hs-identifier hs-var">STMMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611379"><span class="hs-identifier hs-var">handlerId</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap ()
 </span><a href="#local-6989586621687611386"><span class="hs-identifier hs-var">lqMap</span></a></span><span>
 </span><span id="line-465"></span><span>          </span><span id="local-6989586621687611418"><span class="annot"><span class="annottext">Maybe Thread
@@ -1971,7 +1971,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-470"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687611421"><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611421"><span class="hs-identifier hs-var">threadRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-471"></span><span>                </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-545a537f90441258bc2a7e366e97df5e23ab640a29084964202ec5bb67dab2db/share/doc/html/src/Control.Immortal.html#stop"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-aa372c353b38e66ae57cca88bb7c610cd77e17be2c8817b5f763fea7528b5a07/share/doc/html/src/Control.Immortal.html#stop"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611421"><span class="hs-identifier hs-var">threadRef</span></a></span><span>
 </span><span id="line-472"></span><span>                </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
 forall a. IO a -&gt; IO a
@@ -2252,13 +2252,13 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-531"></span><span>    </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveSubscriptions"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
 </span><a href="#local-6989586621687611434"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
 </span><span id="line-532"></span><span>    </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-b72f8adc75c688919f7e1b722890cca2187e81b4b9e44d58a328465969ce7aed/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ekg-core-0.1.1.7-93f2ed46e22c63a626e0d4152147170c3d5f8bca8a565d95e6bd12f130cd775b/share/doc/html/src/System.Metrics.Gauge.html#dec"><span class="hs-identifier hs-var">EKG.Gauge.dec</span></a></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smActiveStreamingSubscriptions"><span class="hs-identifier hs-var">smActiveStreamingSubscriptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
@@ -2283,7 +2283,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall key value.
 (Eq key, Hashable key) =&gt;
 key -&gt; Map key value -&gt; STM (Maybe value)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#lookup"><span class="hs-identifier hs-var">STMMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611437"><span class="hs-identifier hs-var">handlerId</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap (TVar CursorVariableValues)
 </span><a href="#local-6989586621687611455"><span class="hs-identifier hs-var">subMap</span></a></span><span>
 </span><span id="line-538"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#CursorVariableValues"><span class="hs-identifier hs-type">CursorVariableValues</span></a></span><span> </span><span id="local-6989586621687611457"><span class="annot"><span class="annottext">HashMap Name TxtEncodedVal
@@ -2529,7 +2529,7 @@ forall a. Maybe a
 forall key value.
 (Eq key, Hashable key) =&gt;
 key -&gt; Map key value -&gt; STM ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-30a2014de2cd873c44c86c70e453c1b25aa742616ffa2c377cdb95d7b13dcc1f/share/doc/html/src/StmContainers.Map.html#delete"><span class="hs-identifier hs-var">STMMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/stm-containers-1.2-d88656643666648e6de566e1ee348dfe3dabe64f4cf6a94cb9e25138414b7a78/share/doc/html/src/StmContainers.Map.html#delete"><span class="hs-identifier hs-var">STMMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">BackendPollerKey
 </span><a href="#local-6989586621687611437"><span class="hs-identifier hs-var">handlerId</span></a></span><span> </span><span class="annot"><span class="annottext">PollerMap (TVar CursorVariableValues)
 </span><a href="#local-6989586621687611445"><span class="hs-identifier hs-var">streamQMap</span></a></span><span>
 </span><span id="line-564"></span><span>          </span><span id="local-6989586621687611476"><span class="annot"><span class="annottext">Maybe Thread
@@ -2557,7 +2557,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-569"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687611477"><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611477"><span class="hs-identifier hs-var">threadRef</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-570"></span><span>                </span><span class="annot"><span class="annottext">Thread -&gt; IO ()
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-545a537f90441258bc2a7e366e97df5e23ab640a29084964202ec5bb67dab2db/share/doc/html/src/Control.Immortal.html#stop"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/immortal-0.2.2.1-aa372c353b38e66ae57cca88bb7c610cd77e17be2c8817b5f763fea7528b5a07/share/doc/html/src/Control.Immortal.html#stop"><span class="hs-identifier hs-var">Immortal.stop</span></a></span><span> </span><span class="annot"><span class="annottext">Thread
 </span><a href="#local-6989586621687611477"><span class="hs-identifier hs-var">threadRef</span></a></span><span>
 </span><span id="line-571"></span><span>                </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
 forall a. IO a -&gt; IO a

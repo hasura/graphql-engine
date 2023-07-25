@@ -2,21 +2,21 @@
 </span><span id="line-2"></span><span>
 </span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Metadata.DTO.MetadataV3</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier">MetadataV3</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-4"></span><span>
-</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
-</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-7"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-8"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier">object</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-9"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier">optionalFieldWithOmittedDefault</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-10"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier">optionalFieldWithOmittedDefault'</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-11"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier">optionalFieldWithOmittedDefaultWith</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-12"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#requiredFieldWith"><span class="hs-identifier">requiredFieldWith</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-13"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier">Autodocodec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier">codec</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier">object</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier">optionalFieldWithOmittedDefault</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier">optionalFieldWithOmittedDefault'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier">optionalFieldWithOmittedDefaultWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#requiredFieldWith"><span class="hs-identifier">requiredFieldWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html"><span class="hs-identifier">Autodocodec.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Autodocodec.Extended.html#versionField"><span class="hs-identifier">versionField</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-5ef39ba2f8644163fcb391587f08e67fc415caabe4542ede83c35400dafb8ca3/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-openapi3-0.2.1.1-d194314756631e03ae2b3181d98f3e53b5c3f58ebf69638d7eb7c5a3917ddb01/share/doc/html/src/Autodocodec.OpenAPI.html"><span class="hs-identifier">Autodocodec.OpenAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.InsOrd.Autodocodec.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd.Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.HashMap.Strict.InsOrd.Autodocodec.html#sortedElemsCodec"><span class="hs-identifier">sortedElemsCodec</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.html"><span class="hs-identifier">Data.OpenApi</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier">ActionMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#_amName"><span class="hs-identifier">_amName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html"><span class="hs-identifier">Hasura.RQL.Types.Allowlist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#AllowlistEntry"><span class="hs-identifier">AllowlistEntry</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#aeCollection"><span class="hs-identifier">aeCollection</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Allowlist.html#MetadataAllowlist"><span class="hs-identifier">MetadataAllowlist</span></a></span><span class="hs-special">)</span><span>
@@ -112,7 +112,7 @@ $cparseJSON :: Value -&gt; Parser MetadataV3
 parseJSON :: Value -&gt; Parser MetadataV3
 $cparseJSONList :: Value -&gt; Parser [MetadataV3]
 parseJSONList :: Value -&gt; Parser [MetadataV3]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687455740"><span id="local-6989586621687455746"><span id="local-6989586621687455751"><span id="local-6989586621687455756"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687455740"><span id="local-6989586621687455746"><span id="local-6989586621687455751"><span id="local-6989586621687455756"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
 [MetadataV3] -&gt; Encoding
 MetadataV3 -&gt; Value
 MetadataV3 -&gt; Encoding
@@ -135,7 +135,7 @@ $ctoJSONList :: [MetadataV3] -&gt; Value
 toJSONList :: [MetadataV3] -&gt; Value
 $ctoEncodingList :: [MetadataV3] -&gt; Encoding
 toEncodingList :: [MetadataV3] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687455765"><span class="annot"><span class="annottext">Typeable MetadataV3
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687455765"><span class="annot"><span class="annottext">Typeable MetadataV3
 Typeable MetadataV3
 -&gt; (Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema)
 -&gt; ToSchema MetadataV3
@@ -146,20 +146,20 @@ Typeable a
 -&gt; ToSchema a
 $cdeclareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
 declareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-ce6c44340863a3e9ad277bb20cbe9dc04977c174171fdc4481014e4480d33801/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | Codecs simultaneously provide serialization logic for a type, and</span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- documentation. A codec can be used to generate a specification in OpenAPI or</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- another format that matches the JSON serialization of the same type.</span><span>
 </span><span id="line-62"></span><span class="hs-comment">-- Documentation strings (the second argument to 'optionalField' and to</span><span>
 </span><span id="line-63"></span><span class="hs-comment">-- 'requiredField') appear in the generated specification for users' reference.</span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687455775"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687455775"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-65"></span><span>  </span><span id="local-6989586621687455989"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec MetadataV3 MetadataV3 -&gt; JSONCodec MetadataV3
 forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">object</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MetadataV3&quot;</span></span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec MetadataV3 MetadataV3 -&gt; JSONCodec MetadataV3)
 -&gt; ObjectCodec MetadataV3 MetadataV3 -&gt; JSONCodec MetadataV3
@@ -272,7 +272,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 -&gt; ObjectCodec Sources Sources
 forall input output.
 Text -&gt; ValueCodec input output -&gt; Text -&gt; ObjectCodec input output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#requiredFieldWith"><span class="hs-identifier hs-var">requiredFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#requiredFieldWith"><span class="hs-identifier hs-var">requiredFieldWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;sources&quot;</span></span><span> </span><span class="annot"><span class="annottext">ValueCodec Sources Sources
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#sourcesCodec"><span class="hs-identifier hs-var">sourcesCodec</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;configured databases&quot;</span></span><span>
@@ -281,7 +281,7 @@ Text -&gt; ValueCodec input output -&gt; Text -&gt; ObjectCodec input output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var">metaV3Sources</span></a></span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -332,7 +332,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;remote_schemas&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(RemoteSchemaMetadataG RemoteRelationshipDefinition
  -&gt; RemoteSchemaName)
 -&gt; JSONCodec RemoteSchemas
@@ -350,7 +350,7 @@ forall r. RemoteSchemaMetadataG r -&gt; RemoteSchemaName
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; RemoteSchemas
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; RemoteSchemas
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RemoteSchemas"><span class="hs-identifier hs-var">metaV3RemoteSchemas</span></a></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -399,7 +399,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span>
 </span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;query_collections&quot;</span></span><span>
 </span><span id="line-75"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(CreateCollection -&gt; CollectionName) -&gt; JSONCodec QueryCollections
@@ -419,7 +419,7 @@ forall a. Monoid a =&gt; a
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; QueryCollections
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; QueryCollections
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3QueryCollections"><span class="hs-identifier hs-var">metaV3QueryCollections</span></a></span><span>
 </span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -466,7 +466,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;allowlist&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AllowlistEntry -&gt; CollectionName) -&gt; JSONCodec MetadataAllowlist
 forall a k.
 (HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
@@ -480,7 +480,7 @@ forall a k.
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataAllowlist
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataAllowlist
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Allowlist"><span class="hs-identifier hs-var">metaV3Allowlist</span></a></span><span>
 </span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -525,7 +525,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;actions&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ActionMetadata -&gt; ActionName) -&gt; JSONCodec Actions
 forall a k.
 (HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
@@ -540,7 +540,7 @@ forall a. Monoid a =&gt; a
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Actions
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Actions
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Actions"><span class="hs-identifier hs-var">metaV3Actions</span></a></span><span>
 </span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -578,7 +578,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;custom_types&quot;</span></span><span> </span><span class="annot"><span class="annottext">CustomTypes
 </span><a href="Hasura.RQL.Types.CustomTypes.html#emptyCustomTypes"><span class="hs-identifier hs-var">emptyCustomTypes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;custom type definitions&quot;</span></span><span>
@@ -588,7 +588,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CustomTypes
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CustomTypes
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CustomTypes"><span class="hs-identifier hs-var">metaV3CustomTypes</span></a></span><span>
 </span><span id="line-85"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -629,7 +629,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;cron_triggers&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(CronTriggerMetadata -&gt; TriggerName) -&gt; JSONCodec CronTriggers
 forall a k.
 (HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
@@ -643,7 +643,7 @@ forall a k.
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CronTriggers
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; CronTriggers
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CronTriggers"><span class="hs-identifier hs-var">metaV3CronTriggers</span></a></span><span>
 </span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -682,7 +682,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;rest_endpoints&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(EndpointMetadata QueryReference -&gt; EndpointName)
 -&gt; JSONCodec Endpoints
 forall a k.
@@ -697,7 +697,7 @@ forall query. EndpointMetadata query -&gt; EndpointName
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Endpoints
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Endpoints
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RestEndpoints"><span class="hs-identifier hs-var">metaV3RestEndpoints</span></a></span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -729,7 +729,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;api_limits&quot;</span></span><span> </span><span class="annot"><span class="annottext">ApiLimit
 </span><a href="Hasura.RQL.Types.ApiLimit.html#emptyApiLimit"><span class="hs-identifier hs-var">emptyApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;limts to depth and/or rate of API requests&quot;</span></span><span>
@@ -738,7 +738,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; ApiLimit
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; ApiLimit
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3ApiLimits"><span class="hs-identifier hs-var">metaV3ApiLimits</span></a></span><span>
 </span><span id="line-91"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -768,7 +768,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;metrics_config&quot;</span></span><span> </span><span class="annot"><span class="annottext">MetricsConfig
 </span><a href="Hasura.RQL.Types.Common.html#emptyMetricsConfig"><span class="hs-identifier hs-var">emptyMetricsConfig</span></a></span><span>
 </span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec MetricsConfig MetricsConfig
@@ -777,7 +777,7 @@ Text -&gt; output -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetricsConfig
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetricsConfig
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3MetricsConfig"><span class="hs-identifier hs-var">metaV3MetricsConfig</span></a></span><span>
 </span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -810,7 +810,7 @@ forall output.
 Eq output =&gt;
 Text
 -&gt; JSONCodec output -&gt; output -&gt; Text -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#optionalFieldWithOmittedDefaultWith"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefaultWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;inherited_roles&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Role -&gt; RoleName) -&gt; JSONCodec InheritedRoles
 forall a k.
 (HasCodec a, Hashable k, Ord k, ToTxt k) =&gt;
@@ -824,7 +824,7 @@ forall a k.
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; InheritedRoles
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; InheritedRoles
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3InheritedRoles"><span class="hs-identifier hs-var">metaV3InheritedRoles</span></a></span><span>
 </span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -853,7 +853,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;graphql_schema_introspection&quot;</span></span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
@@ -864,7 +864,7 @@ forall a. Monoid a =&gt; a
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; SetGraphqlIntrospectionOptions
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; SetGraphqlIntrospectionOptions
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3GraphqlSchemaIntrospection"><span class="hs-identifier hs-var">metaV3GraphqlSchemaIntrospection</span></a></span><span>
 </span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -887,7 +887,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;network&quot;</span></span><span> </span><span class="annot"><span class="annottext">Network
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#emptyNetwork"><span class="hs-identifier hs-var">emptyNetwork</span></a></span><span>
 </span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec Network Network
@@ -895,7 +895,7 @@ Text -&gt; output -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Network
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Network
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Network"><span class="hs-identifier hs-var">metaV3Network</span></a></span><span>
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">Codec
   Object
@@ -915,7 +915,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;backend_configs&quot;</span></span><span> </span><span class="annot"><span class="annottext">BackendMap BackendConfigWrapper
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
@@ -926,7 +926,7 @@ forall a. Monoid a =&gt; a
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; BackendMap BackendConfigWrapper
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; BackendMap BackendConfigWrapper
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var">metaV3BackendConfigs</span></a></span><span>
 </span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">Codec Object MetadataV3 (OpenTelemetryConfig -&gt; MetadataV3)
 -&gt; Codec Object MetadataV3 OpenTelemetryConfig
@@ -941,7 +941,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall output.
 (Eq output, HasCodec output) =&gt;
 Text -&gt; output -&gt; ObjectCodec output output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithOmittedDefault%27"><span class="hs-identifier hs-var">optionalFieldWithOmittedDefault'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;opentelemetry&quot;</span></span><span> </span><span class="annot"><span class="annottext">OpenTelemetryConfig
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#emptyOpenTelemetryConfig"><span class="hs-identifier hs-var">emptyOpenTelemetryConfig</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec OpenTelemetryConfig OpenTelemetryConfig
@@ -950,6 +950,6 @@ Text -&gt; output -&gt; ObjectCodec output output
 forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-b66b31631e3f273ddf79329f45ee9fab58d6f85d8d7b0d4947e89793efeb514a/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; OpenTelemetryConfig
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; OpenTelemetryConfig
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var">metaV3OpenTelemetryConfig</span></a></span><span>
 </span><span id="line-103"></span></pre></body></html>

@@ -27,7 +27,7 @@
 </span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier">HGECommand</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier">HGEOptionsRaw</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier">Option</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier">PostgresConnDetailsRaw</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier">PostgresConnInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier">PostgresConnInfoRaw</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier">ServeOptionsRaw</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Config</span></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html"><span class="hs-identifier">Hasura.Server.Init.Env</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Opt</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.html"><span class="hs-identifier">Options.Applicative</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Opt</span></span><span>
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-33"></span><span>
@@ -36,7 +36,7 @@
 </span><span id="line-36"></span><span class="hs-comment">-- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- 2: 'Maybe String' - Representing the metadata connection.</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.</span><span>
-</span><span id="line-39"></span><span id="local-6989586621687464442"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464442"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464442"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-39"></span><span id="local-6989586621687464442"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464442"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464442"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-40"></span><span id="parseHgeOpts"><span class="annot"><span class="annottext">parseHgeOpts :: forall impl.
 EnabledLogTypes impl =&gt;
 Parser (HGEOptionsRaw (ServeOptionsRaw impl))
@@ -83,7 +83,7 @@ EnabledLogTypes impl =&gt;
 Parser (HGECommand (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var">parseHGECommand</span></a></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621687464457"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464457"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464457"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-43"></span><span id="local-6989586621687464457"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464457"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687464457"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-44"></span><span id="parseHGECommand"><span class="annot"><span class="annottext">parseHGECommand :: forall impl.
 EnabledLogTypes impl =&gt;
 Parser (HGECommand (ServeOptionsRaw impl))
@@ -91,24 +91,24 @@ Parser (HGECommand (ServeOptionsRaw impl))
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 -&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall a. Mod CommandFields a -&gt; Parser a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#subparser"><span class="hs-identifier hs-var">Opt.subparser</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#subparser"><span class="hs-identifier hs-var">Opt.subparser</span></a></span><span>
 </span><span id="line-46"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 -&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
 </span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;serve&quot;</span></span><span>
 </span><span id="line-48"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
 </span><span id="line-49"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser
   (HGECommand (ServeOptionsRaw impl)
    -&gt; HGECommand (ServeOptionsRaw impl))
 forall a. Parser (a -&gt; a)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Extra.html#helper"><span class="hs-identifier hs-var">Opt.helper</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Extra.html#helper"><span class="hs-identifier hs-var">Opt.helper</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (HGECommand (ServeOptionsRaw impl)
    -&gt; HGECommand (ServeOptionsRaw impl))
 -&gt; Parser (HGECommand (ServeOptionsRaw impl))
@@ -126,7 +126,7 @@ forall impl. EnabledLogTypes impl =&gt; Parser (ServeOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var">serveCommandParser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Start the GraphQL Engine Server&quot;</span></span><span>
 </span><span id="line-51"></span><span>                </span><span class="annot"><span class="annottext">InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
@@ -134,7 +134,7 @@ forall a. String -&gt; InfoMod a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. Maybe Doc -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#footerDoc"><span class="hs-identifier hs-var">Opt.footerDoc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#footerDoc"><span class="hs-identifier hs-var">Opt.footerDoc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Doc
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCmdFooter"><span class="hs-identifier hs-var">serveCmdFooter</span></a></span><span class="hs-special">)</span><span>
@@ -148,14 +148,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 -&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
 </span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;export&quot;</span></span><span>
 </span><span id="line-56"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
 </span><span id="line-57"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 -&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall a. a -&gt; Parser a
@@ -165,7 +165,7 @@ forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCExport"><span class="hs-identifier hs-var">Config.HCExport</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Export graphql-engine's metadata to stdout&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
@@ -176,14 +176,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 -&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
 </span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;clean&quot;</span></span><span>
 </span><span id="line-62"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
 </span><span id="line-63"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 -&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall a. a -&gt; Parser a
@@ -193,7 +193,7 @@ forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCClean"><span class="hs-identifier hs-var">Config.HCClean</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Clean graphql-engine's metadata to start afresh&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
@@ -204,14 +204,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 -&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
 </span><span id="line-67"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;downgrade&quot;</span></span><span>
 </span><span id="line-68"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
 </span><span id="line-69"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; HGECommand (ServeOptionsRaw impl)
 forall a. DowngradeOptions -&gt; HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">Config.HCDowngrade</span></a></span><span> </span><span class="annot"><span class="annottext">(DowngradeOptions -&gt; HGECommand (ServeOptionsRaw impl))
@@ -222,7 +222,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-var">downgradeCommandParser</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Downgrade the GraphQL Engine schema to the specified version&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
@@ -233,14 +233,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 -&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#command"><span class="hs-identifier hs-var">Opt.command</span></a></span><span>
 </span><span id="line-73"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;version&quot;</span></span><span>
 </span><span id="line-74"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 -&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#info"><span class="hs-identifier hs-var">Opt.info</span></a></span><span>
 </span><span id="line-75"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 -&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall a. a -&gt; Parser a
@@ -250,14 +250,14 @@ forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">Config.HCVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#progDesc"><span class="hs-identifier hs-var">Opt.progDesc</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Prints the version of GraphQL Engine&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier hs-type">PostgresConnInfoRaw</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier hs-type">PostgresConnInfoRaw</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-83"></span><span id="parsePostgresConnInfo"><span class="annot"><span class="annottext">parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 </span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var hs-var">parsePostgresConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-84"></span><span>  </span><span id="local-6989586621687464595"><span class="annot"><span class="annottext">Maybe Int
@@ -308,27 +308,27 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReadM Int -&gt; Mod OptionFields Int -&gt; Parser Int
 forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
 </span><span id="line-93"></span><span>          </span><span class="annot"><span class="annottext">ReadM Int
 forall a. Read a =&gt; ReadM a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#auto"><span class="hs-identifier hs-var">Opt.auto</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#auto"><span class="hs-identifier hs-var">Opt.auto</span></a></span><span>
 </span><span id="line-94"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;retries&quot;</span></span><span>
 </span><span id="line-95"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
 -&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;NO OF RETRIES&quot;</span></span><span>
 </span><span id="line-96"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
 -&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
 forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#retriesNumOption"><span class="hs-identifier hs-var">retriesNumOption</span></a></span><span class="hs-special">)</span><span>
@@ -348,7 +348,7 @@ forall def. Option def -&gt; String
 </span><span class="hs-string">&quot;No.of retries if Postgres connection error occurs (default: 1)&quot;</span></span><span>
 </span><span id="line-105"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-106"></span><span>
-</span><span id="line-107"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-type">parseDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#Template"><span class="hs-identifier hs-type">Template.Template</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-type">parseDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.URL.Template.html#Template"><span class="hs-identifier hs-type">Template.Template</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span id="parseDatabaseUrl"><span class="annot"><span class="annottext">parseDatabaseUrl :: Parser (Maybe Template)
 </span><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-var hs-var">parseDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-109"></span><span>  </span><span class="annot"><span class="annottext">Parser Template -&gt; Parser (Maybe Template)
@@ -359,29 +359,29 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReadM Template -&gt; Mod OptionFields Template -&gt; Parser Template
 forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
 </span><span id="line-111"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String -&gt; Either String Template) -&gt; ReadM Template
 forall a. (String -&gt; Either String a) -&gt; ReadM a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#eitherReader"><span class="hs-identifier hs-var">Opt.eitherReader</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Template
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#eitherReader"><span class="hs-identifier hs-var">Opt.eitherReader</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Template
 forall a. FromEnv a =&gt; String -&gt; Either String a
 </span><a href="Hasura.Server.Init.Env.html#fromEnv"><span class="hs-identifier hs-var">Env.fromEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Template
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;database-url&quot;</span></span><span>
 </span><span id="line-113"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields Template
 -&gt; Mod OptionFields Template -&gt; Mod OptionFields Template
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Template
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;DATABASE-URL&gt;&quot;</span></span><span>
 </span><span id="line-114"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields Template
 -&gt; Mod OptionFields Template -&gt; Mod OptionFields Template
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Template
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
 forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#databaseUrlOption"><span class="hs-identifier hs-var">databaseUrlOption</span></a></span><span class="hs-special">)</span><span>
@@ -401,7 +401,7 @@ forall def. Option def -&gt; String
 </span><span class="hs-string">&quot;Postgres database URL. Example postgres://foo:bar@example.com:2345/database&quot;</span></span><span>
 </span><span id="line-123"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-type">PostgresConnDetailsRaw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-type">PostgresConnDetailsRaw</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span id="parseRawConnDetails"><span class="annot"><span class="annottext">parseRawConnDetails :: Parser (Maybe PostgresConnDetailsRaw)
 </span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var hs-var">parseRawConnDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-127"></span><span>  </span><span id="local-6989586621687464623"><span class="annot"><span class="annottext">Maybe String
@@ -510,24 +510,24 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-145"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;host&quot;</span></span><span>
 </span><span id="line-146"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;HOST&gt;&quot;</span></span><span>
 </span><span id="line-147"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Postgres server host&quot;</span></span><span>
 </span><span id="line-148"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
@@ -541,34 +541,34 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReadM Int -&gt; Mod OptionFields Int -&gt; Parser Int
 forall a. ReadM a -&gt; Mod OptionFields a -&gt; Parser a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#option"><span class="hs-identifier hs-var">Opt.option</span></a></span><span>
 </span><span id="line-153"></span><span>          </span><span class="annot"><span class="annottext">ReadM Int
 forall a. Read a =&gt; ReadM a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#auto"><span class="hs-identifier hs-var">Opt.auto</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#auto"><span class="hs-identifier hs-var">Opt.auto</span></a></span><span>
 </span><span id="line-154"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;port&quot;</span></span><span>
 </span><span id="line-155"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
 -&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'p'</span></span><span>
 </span><span id="line-156"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
 -&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;PORT&gt;&quot;</span></span><span>
 </span><span id="line-157"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Int
 -&gt; Mod OptionFields Int -&gt; Mod OptionFields Int
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Int
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Postgres server port&quot;</span></span><span>
 </span><span id="line-158"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>
@@ -582,31 +582,31 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-163"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;user&quot;</span></span><span>
 </span><span id="line-164"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'u'</span></span><span>
 </span><span id="line-165"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;USER&gt;&quot;</span></span><span>
 </span><span id="line-166"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Database user name&quot;</span></span><span>
 </span><span id="line-167"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>
@@ -614,31 +614,31 @@ forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><a href="#local-6989586621687464630"><span class="hs-identifier hs-var hs-var">password</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-170"></span><span>      </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-171"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;password&quot;</span></span><span>
 </span><span id="line-172"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;PASSWORD&gt;&quot;</span></span><span>
 </span><span id="line-173"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasValue f =&gt; a -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#value"><span class="hs-identifier hs-var">Opt.value</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#value"><span class="hs-identifier hs-var">Opt.value</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span>
 </span><span id="line-174"></span><span>            </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Password of the user&quot;</span></span><span>
 </span><span id="line-175"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
@@ -652,31 +652,31 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-180"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;dbname&quot;</span></span><span>
 </span><span id="line-181"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'d'</span></span><span>
 </span><span id="line-182"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;DBNAME&gt;&quot;</span></span><span>
 </span><span id="line-183"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Database name to connect to&quot;</span></span><span>
 </span><span id="line-184"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-185"></span><span>
@@ -690,36 +690,36 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-189"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;pg-connection-options&quot;</span></span><span>
 </span><span id="line-190"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; Char -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#short"><span class="hs-identifier hs-var">Opt.short</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'o'</span></span><span>
 </span><span id="line-191"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;DATABASE-OPTIONS&gt;&quot;</span></span><span>
 </span><span id="line-192"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;PostgreSQL options&quot;</span></span><span>
 </span><span id="line-193"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="hs-comment">-- TODO(SOLOMON): Should we parse the URL here?</span><span>
-</span><span id="line-196"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-type">parseMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-type">parseMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
 </span><span id="line-197"></span><span id="parseMetadataDbUrl"><span class="annot"><span class="annottext">parseMetadataDbUrl :: Parser (Maybe String)
 </span><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-var hs-var">parseMetadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-198"></span><span>  </span><span class="annot"><span class="annottext">Parser String -&gt; Parser (Maybe String)
@@ -730,24 +730,24 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Mod OptionFields String -&gt; Parser String
 forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#strOption"><span class="hs-identifier hs-var">Opt.strOption</span></a></span><span>
 </span><span id="line-200"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#long"><span class="hs-identifier hs-var">Opt.long</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;metadata-database-url&quot;</span></span><span>
 </span><span id="line-201"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#metavar"><span class="hs-identifier hs-var">Opt.metavar</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;METADATA-DATABASE-URL&gt;&quot;</span></span><span>
 </span><span id="line-202"></span><span>          </span><span class="annot"><span class="annottext">Mod OptionFields String
 -&gt; Mod OptionFields String -&gt; Mod OptionFields String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields String
 forall (f :: * -&gt; *) a. String -&gt; Mod f a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3d80f3721d642249dfdd195644263fea17f5d7fe2c50101dd4c3e07a13a719e2/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-3906aad2528ba97c33aea9e669919d0f96008cc4a9450f47874f7f1bb9f985d7/share/doc/html/src/Options.Applicative.Builder.html#help"><span class="hs-identifier hs-var">Opt.help</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Option () -&gt; String
 forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#metadataDbUrlOption"><span class="hs-identifier hs-var">metadataDbUrlOption</span></a></span><span class="hs-special">)</span><span>
@@ -770,15 +770,15 @@ forall def. Option def -&gt; String
 </span><span id="line-213"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-214"></span><span class="hs-comment">-- Pretty Printer</span><span>
 </span><span id="line-215"></span><span>
-</span><span id="line-216"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-type">mainCmdFooter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-6743ce8d14a2426c14f6aed069af93f0ceddb9a51ac3f5a6b475949909f8c690/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#Doc"><span class="hs-identifier hs-type">PP.Doc</span></a></span><span>
+</span><span id="line-216"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-type">mainCmdFooter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-2bfc741debabba3a1a1b4b9df16f953e6588161431870942b3e74ed2377fdf4c/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#Doc"><span class="hs-identifier hs-type">PP.Doc</span></a></span><span>
 </span><span id="line-217"></span><span id="mainCmdFooter"><span class="annot"><span class="annottext">mainCmdFooter :: Doc
 </span><a href="Hasura.Server.Init.Arg.html#mainCmdFooter"><span class="hs-identifier hs-var hs-var">mainCmdFooter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-218"></span><span>  </span><span class="annot"><span class="annottext">Doc
 </span><a href="#local-6989586621687464686"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-6743ce8d14a2426c14f6aed069af93f0ceddb9a51ac3f5a6b475949909f8c690/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-6743ce8d14a2426c14f6aed069af93f0ceddb9a51ac3f5a6b475949909f8c690/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#text"><span class="hs-identifier hs-var">PP.text</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-2bfc741debabba3a1a1b4b9df16f953e6588161431870942b3e74ed2377fdf4c/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-2bfc741debabba3a1a1b4b9df16f953e6588161431870942b3e74ed2377fdf4c/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#text"><span class="hs-identifier hs-var">PP.text</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-6743ce8d14a2426c14f6aed069af93f0ceddb9a51ac3f5a6b475949909f8c690/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Doc
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-2bfc741debabba3a1a1b4b9df16f953e6588161431870942b3e74ed2377fdf4c/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Doc
 </span><a href="#local-6989586621687464689"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
 </span><span id="line-219"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-220"></span><span>    </span><span id="local-6989586621687464686"><span class="annot"><span class="annottext">examplesDoc :: Doc

@@ -3,7 +3,7 @@
 </span><span id="line-3"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-4"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-5"></span><span>
-</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-c07b938695d7761d70d85d186508d75cfc23c7fb1f8a67632236e75f51030512/share/doc/html/src/Control.Monad.Morph.html"><span class="hs-identifier">Control.Monad.Morph</span></a></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-784197bc1c0df7d00fc39c619a4a0116868bfce1c6947c6f22f58b2dce1360b4/share/doc/html/src/Control.Monad.Morph.html"><span class="hs-identifier">Control.Monad.Morph</span></a></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
 </span><span id="line-9"></span><span>
@@ -176,7 +176,7 @@ $choist :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) (n :: * -&
 hoist :: forall (m :: * -&gt; *) (n :: * -&gt; *) b.
 Monad m =&gt;
 (forall a. m a -&gt; n a) -&gt; TransT t m b -&gt; TransT t n b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-c07b938695d7761d70d85d186508d75cfc23c7fb1f8a67632236e75f51030512/share/doc/html/src/Control.Monad.Morph.html#MFunctor"><span class="hs-identifier hs-var hs-var hs-var hs-var">MFunctor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687177844"><span class="annot"><span class="annottext">MonadTrans (TransT t)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-784197bc1c0df7d00fc39c619a4a0116868bfce1c6947c6f22f58b2dce1360b4/share/doc/html/src/Control.Monad.Morph.html#MFunctor"><span class="hs-identifier hs-var hs-var hs-var hs-var">MFunctor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687177844"><span class="annot"><span class="annottext">MonadTrans (TransT t)
 MFunctor (TransT t)
 MFunctor (TransT t)
 -&gt; MonadTrans (TransT t)
@@ -205,5 +205,5 @@ $cembed :: forall (t :: (* -&gt; *) -&gt; * -&gt; *) (n :: * -&gt; *) (m :: * -&
 embed :: forall (n :: * -&gt; *) (m :: * -&gt; *) b.
 Monad n =&gt;
 (forall a. m a -&gt; TransT t n a) -&gt; TransT t m b -&gt; TransT t n b
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-c07b938695d7761d70d85d186508d75cfc23c7fb1f8a67632236e75f51030512/share/doc/html/src/Control.Monad.Morph.html#MMonad"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">MMonad</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/mmorph-1.2.0-784197bc1c0df7d00fc39c619a4a0116868bfce1c6947c6f22f58b2dce1360b4/share/doc/html/src/Control.Monad.Morph.html#MMonad"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">MMonad</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span></pre></body></html>

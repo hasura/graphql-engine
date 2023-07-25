@@ -10,9 +10,9 @@
 </span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator">(.~)</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator">(.~)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">InsOrdHashMap</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.List.Extended.html"><span class="hs-identifier">Data.List.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.List.Extended.html#duplicates"><span class="hs-identifier">duplicates</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span>
@@ -171,12 +171,12 @@ Lens' Metadata QueryCollections
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; (QueryCollections -&gt; QueryCollections) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 -&gt; CreateCollection -&gt; QueryCollections -&gt; QueryCollections
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519149"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="annot"><span class="annottext">CreateCollection
 </span><a href="#local-6989586621687519146"><span class="hs-identifier hs-var">cc</span></a></span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
@@ -277,7 +277,7 @@ Lens' Metadata QueryCollections
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; (QueryCollections -&gt; QueryCollections) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 -&gt; CollectionName -&gt; QueryCollections -&gt; QueryCollections
 </span><a href="#local-6989586621687519204"><span class="hs-identifier hs-var">changeCollectionName</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519200"><span class="hs-identifier hs-var">oldName</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
@@ -296,7 +296,7 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="#local-6989586621687519206"><span class="hs-identifier hs-var">newKey</span></a></span></span><span> </span><span id="local-6989586621687519207"><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621687519207"><span class="hs-identifier hs-var">oMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; QueryCollections -&gt; Maybe CreateCollection
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519205"><span class="hs-identifier hs-var">oldKey</span></a></span><span> </span><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621687519207"><span class="hs-identifier hs-var">oMap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Maybe CreateCollection
@@ -316,20 +316,20 @@ Lens' CreateCollection CollectionName
  -&gt; CreateCollection -&gt; Identity CreateCollection)
 -&gt; CollectionName -&gt; CreateCollection -&gt; CreateCollection
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519206"><span class="hs-identifier hs-var">newKey</span></a></span><span>
 </span><span id="line-90"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">CollectionName
 -&gt; CreateCollection -&gt; QueryCollections -&gt; QueryCollections
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519206"><span class="hs-identifier hs-var">newKey</span></a></span><span> </span><span class="annot"><span class="annottext">CreateCollection
 </span><a href="#local-6989586621687519210"><span class="hs-identifier hs-var">newVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CollectionName -&gt; QueryCollections -&gt; QueryCollections
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519205"><span class="hs-identifier hs-var">oldKey</span></a></span><span> </span><span class="annot"><span class="annottext">QueryCollections
 </span><a href="#local-6989586621687519207"><span class="hs-identifier hs-var">oMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-91"></span><span>
@@ -433,12 +433,12 @@ Lens' Metadata QueryCollections
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; (QueryCollections -&gt; QueryCollections) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 -&gt; CreateCollection -&gt; QueryCollections -&gt; QueryCollections
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#insert"><span class="hs-identifier hs-var">InsOrdHashMap.insert</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519249"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CollectionName -&gt; CollectionDef -&gt; Maybe Text -&gt; CreateCollection
 </span><a href="Hasura.RQL.Types.QueryCollection.html#CreateCollection"><span class="hs-identifier hs-var">CreateCollection</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519249"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionDef
@@ -552,11 +552,11 @@ Lens' Metadata QueryCollections
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; (QueryCollections -&gt; QueryCollections) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; QueryCollections -&gt; QueryCollections
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; QueryCollections -&gt; QueryCollections
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519303"><span class="hs-identifier hs-var">collName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
@@ -659,7 +659,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Index QueryCollections
 -&gt; Traversal' QueryCollections (IxValue QueryCollections)
 forall m. Ixed m =&gt; Index m -&gt; Traversal' m (IxValue m)
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.At.html#ix"><span class="hs-identifier hs-var">ix</span></a></span><span> </span><span class="annot"><span class="annottext">Index QueryCollections
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.At.html#ix"><span class="hs-identifier hs-var">ix</span></a></span><span> </span><span class="annot"><span class="annottext">Index QueryCollections
 CollectionName
 </span><a href="#local-6989586621687519351"><span class="hs-identifier hs-var">collName</span></a></span><span>
 </span><span id="line-162"></span><span>    </span><span class="annot"><span class="annottext">((CreateCollection -&gt; Identity CreateCollection)
@@ -690,7 +690,7 @@ Iso' CollectionDef [ListedQuery]
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; ([ListedQuery] -&gt; [ListedQuery]) -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">(ListedQuery -&gt; Bool) -&gt; [ListedQuery] -&gt; [ListedQuery]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#%25~"><span class="hs-operator hs-var">%~</span></a></span><span> </span><span class="annot"><span class="annottext">(ListedQuery -&gt; Bool) -&gt; [ListedQuery] -&gt; [ListedQuery]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryName -&gt; QueryName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
@@ -754,14 +754,14 @@ forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><span id="line-178"></span><span>        </span><span class="annot"><span class="annottext">(Value -&gt; EncJSON) -&gt; ([Pair] -&gt; Value) -&gt; [Pair] -&gt; EncJSON
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-179"></span><span>        </span><span class="annot"><span class="annottext">([Pair] -&gt; m EncJSON) -&gt; [Pair] -&gt; m EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-78f82c0a41c76fc62260cf94c4b206816c9efb8c3788f4fbd6184398938cf6fb/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">J..=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687519399"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-180"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621687519403"><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621687519403"><span class="hs-identifier hs-var">allowlist'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -784,7 +784,7 @@ Lens' Metadata MetadataAllowlist
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; MetadataAllowlist -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621687519403"><span class="hs-identifier hs-var">allowlist'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>      </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
@@ -823,7 +823,7 @@ forall (m :: * -&gt; *). MetadataM m =&gt; m MetadataAllowlist
 </span><a href="Hasura.RQL.DDL.QueryCollection.html#fetchAllowlist"><span class="hs-identifier hs-var">fetchAllowlist</span></a></span><span>
 </span><span id="line-193"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; MetadataAllowlist -&gt; Maybe AllowlistEntry
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519429"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621687519430"><span class="hs-identifier hs-var">allowList</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-194"></span><span>    </span><span class="annot"><span class="annottext">Maybe AllowlistEntry
@@ -858,11 +858,11 @@ Lens' Metadata MetadataAllowlist
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; MetadataAllowlist -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; MetadataAllowlist -&gt; MetadataAllowlist
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName -&gt; MetadataAllowlist -&gt; MetadataAllowlist
 forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#delete"><span class="hs-identifier hs-var">InsOrdHashMap.delete</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519429"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621687519430"><span class="hs-identifier hs-var">allowList</span></a></span><span>
 </span><span id="line-196"></span><span>
@@ -962,7 +962,7 @@ Lens' Metadata MetadataAllowlist
  -&gt; Metadata -&gt; Identity Metadata)
 -&gt; MetadataAllowlist -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-70a68698e02c1d9dc133c543e6497a7241e5514570afd4815da4baf2a001e00e/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataAllowlist
 </span><a href="#local-6989586621687519479"><span class="hs-identifier hs-var">al'</span></a></span><span>
 </span><span id="line-219"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
@@ -1048,7 +1048,7 @@ CollectionName -&gt; m (Maybe CreateCollection)
 </span><a href="#local-6989586621687519516"><span class="hs-identifier hs-var">collName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-244"></span><span>  </span><span class="annot"><span class="annottext">CollectionName -&gt; QueryCollections -&gt; Maybe CreateCollection
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-49fbdaf96dc15099eff4ef8a3e0f09875e1be0b1cc3eaf40a128da3b28f930a2/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/insert-ordered-containers-0.2.5.1-088c0f60df85cb7397134bc42d645270355cbb8108d61bfe5cec96c8552addc1/share/doc/html/src/Data.HashMap.Strict.InsOrd.html#lookup"><span class="hs-identifier hs-var">InsOrdHashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">CollectionName
 </span><a href="#local-6989586621687519516"><span class="hs-identifier hs-var">collName</span></a></span><span> </span><span class="annot"><span class="annottext">(QueryCollections -&gt; Maybe CreateCollection)
 -&gt; m QueryCollections -&gt; m (Maybe CreateCollection)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b

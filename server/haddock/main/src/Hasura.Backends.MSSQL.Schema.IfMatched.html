@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html"><span class="hs-identifier">Data.Has</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Insert</span></a></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier">ScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
@@ -141,7 +141,7 @@ forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo 'MSSQL
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-82"></span><span>  </span><span id="local-6989586621687508278"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621687508278"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; MaybeT (SchemaT r m) RoleName
 forall r (m :: * -&gt; *) a b.
@@ -495,7 +495,7 @@ TableInfo 'MSSQL
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; SourceInfo 'MSSQL
 forall a t. Has a t =&gt; t -&gt; a
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-046b1b301c44f043005ecffcde95c748cd1a5249e8b9e9ea3eaa14bac0030231/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/data-has-0.4.0.0-409001560fa2dea9a9b98e0f8b33e33652b8dffe3f47f0ef33c0a91da241d17c/share/doc/html/src/Data.Has.html#getter"><span class="hs-identifier hs-var">getter</span></a></span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687508370"><span class="annot"><span class="annottext">customization :: ResolvedSourceCustomization
 </span><a href="#local-6989586621687508370"><span class="hs-identifier hs-var hs-var">customization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MSSQL -&gt; ResolvedSourceCustomization
 forall (b :: BackendType).
