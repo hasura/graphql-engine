@@ -106,7 +106,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/odbc.git
-  tag: 662268ba4d968a23e67dfd13b1ec9d4d90481493
+  tag: 43b07813d635215b3466824d07890de452920fc2
 
 package odbc
   ghc-options: -Wwarn
