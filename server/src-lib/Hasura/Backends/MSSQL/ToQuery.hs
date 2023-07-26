@@ -666,10 +666,10 @@ fromOrderBys top moffset morderBys =
 
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
-  [ fromNullsOrder orderByFieldName orderByNullsOrder,
+  [ fromNullsOrder orderByExpression orderByNullsOrder,
     -- Above: This doesn't do anything when using text, ntext or image
     -- types. See below on CAST commentary.
-    wrapNullHandling (fromFieldName orderByFieldName)
+    wrapNullHandling (fromExpression orderByExpression)
       <+> " "
       <+> fromOrder orderByOrder
   ]
@@ -695,12 +695,12 @@ fromOrder =
     AscOrder -> "ASC"
     DescOrder -> "DESC"
 
-fromNullsOrder :: FieldName -> NullsOrder -> Printer
-fromNullsOrder fieldName =
+fromNullsOrder :: Expression -> NullsOrder -> Printer
+fromNullsOrder ex =
   \case
     NullsAnyOrder -> ""
-    NullsFirst -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
-    NullsLast -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
+    NullsFirst -> "IIF(" <+> fromExpression ex <+> " IS NULL, 0, 1)"
+    NullsLast -> "IIF(" <+> fromExpression ex <+> " IS NULL, 1, 0)"
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =

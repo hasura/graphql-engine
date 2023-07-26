@@ -328,7 +328,7 @@ data Reselect = Reselect
   }
 
 data OrderBy = OrderBy
-  { orderByFieldName :: FieldName,
+  { orderByExpression :: Expression,
     orderByOrder :: Order,
     orderByNullsOrder :: NullsOrder,
     orderByType :: Maybe ScalarType

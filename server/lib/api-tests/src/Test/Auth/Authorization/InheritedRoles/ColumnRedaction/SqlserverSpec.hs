@@ -339,8 +339,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-  -- Postponed for now.
-  xdescribe "Redaction in ordering and distinct on" $ do
+  describe "Redaction in ordering" $ do
     it "ordering by column is applied over redacted column value" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
@@ -350,9 +349,11 @@ tests = do
               [ ("X-Hasura-Role", "employee"),
                 ("X-Hasura-Employee-Id", "3")
               ]
+              -- Note that this test differs slightly from its Postgres counterpart, since
+              -- the MSSQL backend defaults to sorting nulls last.
               [graphql|
                 query {
-                  #{schemaName}_employee(order_by: [{ monthly_salary: desc }, {id: desc}]) {
+                  #{schemaName}_employee(order_by: [{ monthly_salary: desc_nulls_first }, {id: desc}]) {
                     id
                     first_name
                     last_name
@@ -394,59 +395,6 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "ordering by a computed field is applied over redacted computed field value" \testEnvironment -> do
-      let schemaName = Schema.getSchemaName testEnvironment
-          actual :: IO Value
-          actual =
-            GraphqlEngine.postGraphqlWithHeaders
-              testEnvironment
-              [ ("X-Hasura-Role", "employee"),
-                ("X-Hasura-Employee-Id", "3")
-              ]
-              [graphql|
-                query {
-                  #{schemaName}_employee(order_by: [{ yearly_salary: desc }, {id: desc}]) {
-                    id
-                    first_name
-                    last_name
-                    yearly_salary
-                  }
-                }
-              |]
-
-          -- Xin Cheng can see her own salary, but not her peers' because the
-          -- 'employee_public_info' role does not provide access to
-          -- the monthly_salary column, but the 'employee_private_info' role
-          -- does, but only for the current employee's record (ie. hers).
-          -- This means when she orders by monthly salary, the ordering
-          -- should not know the value of any salary other than hers and therefore
-          -- should fall back to order by the id since all other salaries should
-          -- appear as null.
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              data:
-                #{schemaName}_employee:
-                - id: 4
-                  first_name: Sarah
-                  last_name: Smith
-                  yearly_salary: null
-                - id: 2
-                  first_name: Grant
-                  last_name: Smith
-                  yearly_salary: null
-                - id: 1
-                  first_name: David
-                  last_name: Holden
-                  yearly_salary: null
-                - id: 3
-                  first_name: Xin
-                  last_name: Cheng
-                  yearly_salary: 66000
-            |]
-
-      shouldReturnYaml testEnvironment actual expected
-
     it "ordering by aggregate is applied over the aggregate over the redacted column value" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
@@ -456,9 +404,11 @@ tests = do
               [ ("X-Hasura-Role", "hr_manager"),
                 ("X-Hasura-Manager-Id", "3")
               ]
+              -- Note that this test differs slightly from its Postgres counterpart, since
+              -- the MSSQL backend defaults to sorting nulls last.
               [graphql|
                 query {
-                  #{schemaName}_manager(order_by: [{employees_by_id_to_engineering_manager_id_aggregate: { sum: { monthly_salary: desc } }}, {id: asc}]) {
+                  #{schemaName}_manager(order_by: [{employees_by_id_to_engineering_manager_id_aggregate: { sum: { monthly_salary: desc_nulls_first } }}, {id: asc}]) {
                     id
                     first_name
                     last_name
@@ -517,54 +467,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "distinct_on is applied over redacted column values" \testEnvironment -> do
-      let schemaName = Schema.getSchemaName testEnvironment
-          actual :: IO Value
-          actual =
-            GraphqlEngine.postGraphqlWithHeaders
-              testEnvironment
-              [ ("X-Hasura-Role", "hr_manager"),
-                ("X-Hasura-Manager-Id", "3")
-              ]
-              [graphql|
-                query {
-                  #{schemaName}_employee(distinct_on: [nationality], order_by: [{nationality: asc}, {id: asc}]) {
-                    id
-                    first_name
-                    last_name
-                    nationality
-                  }
-                }
-              |]
-
-          -- Althea Weiss can only see the nationality of the employees she is HR manager for.
-          -- This is because the 'manager_employee_private_info' role provides access to the nationality
-          -- for the current manager's HR-managed employees, but the rest of the employees
-          -- are accessed via 'all_managers', which does not expose 'nationality'.
-          -- So when Althea performs a distinct_on nationality, the distinct should be done over the
-          -- values of nationality after redaction, so only the first redacted nationality row gets kept
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              data:
-                #{schemaName}_employee:
-                - id: 1
-                  first_name: David
-                  last_name: Holden
-                  nationality: Australian
-                - id: 3
-                  first_name: Xin
-                  last_name: Cheng
-                  nationality: Chinese
-                - id: 2
-                  first_name: Grant
-                  last_name: Smith
-                  nationality: null
-            |]
-
-      shouldReturnYaml testEnvironment actual expected
-
-  xdescribe "Redaction in filtering" $ do
+  describe "Redaction in filtering" $ do
     it "filtering by column is applied against redacted column value" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
@@ -585,38 +488,6 @@ tests = do
           -- Xin Cheng can see her own salary, but not her peers' because the
           -- 'employee_public_info' role does not provide access to
           -- the monthly_salary column, but the 'employee_private_info' role
-          -- does, but only for the current employee's record (ie. hers).
-          -- This means she should not be able to compare against salaries
-          -- she does not have access to, such as David Holden's salary
-          expected :: Value
-          expected =
-            [interpolateYaml|
-              data:
-                #{schemaName}_employee: []
-            |]
-
-      shouldReturnYaml testEnvironment actual expected
-
-    it "filtering by computed field is applied against redacted computed field value" \testEnvironment -> do
-      let schemaName = Schema.getSchemaName testEnvironment
-          actual :: IO Value
-          actual =
-            GraphqlEngine.postGraphqlWithHeaders
-              testEnvironment
-              [ ("X-Hasura-Role", "employee"),
-                ("X-Hasura-Employee-Id", "3")
-              ]
-              [graphql|
-                query {
-                  #{schemaName}_employee(where: { yearly_salary: { _eq: 60000 } }) {
-                    id
-                  }
-                }
-              |]
-
-          -- Xin Cheng can see her own salary, but not her peers' because the
-          -- 'employee_public_info' role does not provide access to
-          -- the yearly_salary computed field, but the 'employee_private_info' role
           -- does, but only for the current employee's record (ie. hers).
           -- This means she should not be able to compare against salaries
           -- she does not have access to, such as David Holden's salary
