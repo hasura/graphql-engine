@@ -13,7 +13,7 @@
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Encoding.html"><span class="hs-identifier">Data.Text.Encoding</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TE</span></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.SQLServer.html"><span class="hs-identifier">Database.ODBC.SQLServer</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.SQLServer.html"><span class="hs-identifier">Database.ODBC.SQLServer</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ODBC</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Schema.IfMatched.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Schema.IfMatched</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Insert</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Insert.html#BackendInsert"><span class="hs-identifier">BackendInsert</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MSSQL</span></span><span>
@@ -1272,7 +1272,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Text
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1293,7 +1293,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Text
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1314,7 +1314,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Text
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1335,7 +1335,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Text
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1357,7 +1357,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
@@ -1382,7 +1382,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
@@ -1407,7 +1407,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
@@ -1432,7 +1432,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#IntValue"><span class="hs-identifier hs-var">ODBC.IntValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Value) -&gt; (Int32 -&gt; Int) -&gt; Int32 -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
@@ -1458,7 +1458,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Double
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1479,7 +1479,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Double
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1500,7 +1500,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Double
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1521,7 +1521,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#DoubleValue"><span class="hs-identifier hs-var">ODBC.DoubleValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Double -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Double
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1543,7 +1543,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; SchemaT r m (Parser MetadataObjId 'Both n Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#BoolValue"><span class="hs-identifier hs-var">ODBC.BoolValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#BoolValue"><span class="hs-identifier hs-var">ODBC.BoolValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Value)
 -&gt; Parser MetadataObjId 'Both n Bool
 -&gt; Parser MetadataObjId 'Both n Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1739,7 +1739,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span id="line-233"></span><span>    </span><span class="hs-comment">-- set, if not we pass an NCHAR/NVARCHAR and let MSSQL implicitly convert it.</span><span>
 </span><span id="line-234"></span><span>
 </span><span id="line-235"></span><span>    </span><span class="hs-comment">-- resolves https://github.com/hasura/graphql-engine/issues/8735</span><span>
-</span><span id="line-236"></span><span>    </span><span class="annot"><a href="#local-6989586621687522881"><span class="hs-identifier hs-type">mkCharValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#Value"><span class="hs-identifier hs-type">ODBC.Value</span></a></span><span>
+</span><span id="line-236"></span><span>    </span><span class="annot"><a href="#local-6989586621687522881"><span class="hs-identifier hs-type">mkCharValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#Value"><span class="hs-identifier hs-type">ODBC.Value</span></a></span><span>
 </span><span id="line-237"></span><span>    </span><span id="local-6989586621687522881"><span class="annot"><span class="annottext">mkCharValue :: Text -&gt; Value
 </span><a href="#local-6989586621687522881"><span class="hs-identifier hs-var hs-var">mkCharValue</span></a></span></span><span> </span><span id="local-6989586621687522931"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687522931"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -1748,11 +1748,11 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><span class="hs-identifier hs-var">Char.isAscii</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687522931"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-239"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#ByteStringValue"><span class="hs-identifier hs-var">ODBC.ByteStringValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#ByteStringValue"><span class="hs-identifier hs-var">ODBC.ByteStringValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Encoding.html#encodeUtf8"><span class="hs-identifier hs-var">TE.encodeUtf8</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687522931"><span class="hs-identifier hs-var">txt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- an ODBC.ByteStringValue becomes a VARCHAR</span><span>
 </span><span id="line-240"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621687522931"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-comment">-- an ODBC.TextValue becomes an NVARCHAR</span><span>
 </span><span id="line-241"></span><span>
 </span><span id="line-242"></span><span id="local-6989586621687522936"><span id="local-6989586621687522937"><span id="local-6989586621687522938"><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Schema.html#msEnumParser"><span class="hs-identifier hs-type">msEnumParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -1851,7 +1851,7 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/schema-parsers-1.0.0/opt/doc/html/schema-parsers/src/Hasura.GraphQL.Parser.Schema.Definition.html#EnumValueInfo"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-256"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#TextValue"><span class="hs-identifier hs-var">ODBC.TextValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
@@ -1884,7 +1884,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Maybe Value -&gt; Value
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-ba3fbc6535ead442c7abbfa124b043d4a335513bb506e5691913bc4340a69327/share/doc/html/src/Database.ODBC.Internal.html#NullValue"><span class="hs-identifier hs-var">ODBC.NullValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Parser MetadataObjId 'Both m (Maybe Value)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/odbc-0.2.7-8351f2eff31ee880a9918c6db4e33e6c2d2ed0405059ffd3cd12b264635d923d/share/doc/html/src/Database.ODBC.Internal.html#NullValue"><span class="hs-identifier hs-var">ODBC.NullValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Parser MetadataObjId 'Both m (Maybe Value)
  -&gt; Parser MetadataObjId 'Both m Value)
 -&gt; (Parser MetadataObjId 'Both m Value
     -&gt; Parser MetadataObjId 'Both m (Maybe Value))
