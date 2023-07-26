@@ -3,6 +3,10 @@ Recommend using snake_case naming convertion for table and columns. eg:
 product_skus
 `;
 
+export const columnsDescription = `
+Any data type can be used as an array type. If you don't find it in the list, type it followed by [] (i.e. circle[])
+`;
+
 export const primaryKeyDescription = `
 A primary-key is a column (or set of columns) that uniquely identifies a row
 of a table

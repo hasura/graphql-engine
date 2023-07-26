@@ -115,6 +115,22 @@ export const TypedInput = ({
         </select>
       );
 
+    case dataSource.columnDataTypes.ARRAY: {
+      let defaultValue = standardInputProps.defaultValue;
+      try {
+        defaultValue = JSON.stringify(standardInputProps.defaultValue);
+      } catch (err) {
+        console.error(err);
+      }
+      return (
+        <input
+          {...standardInputProps}
+          defaultValue={defaultValue}
+          placeholder={placeHolder}
+        />
+      );
+    }
+
     default:
       return <input {...standardInputProps} placeholder={placeHolder} />;
   }
