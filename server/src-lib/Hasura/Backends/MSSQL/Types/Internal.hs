@@ -26,6 +26,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     Comment (..),
     ConstraintName (..),
     Countable (..),
+    CountType (..),
     DataLength (..),
     Delete (..),
     DeleteOutput,
@@ -117,6 +118,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.NativeQuery.Metadata (InterpolatedQuery)
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp (AnnRedactionExp)
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.BackendType
 import Hasura.SQL.GeoJSON qualified as Geo
@@ -465,9 +467,11 @@ data JsonPath
   | IndexPath JsonPath Integer
 
 data Aggregate
-  = CountAggregate (Countable FieldName)
+  = CountAggregate (Countable Expression)
   | OpAggregate Text [Expression]
   | TextAggregate Text
+
+newtype CountType field = CountType {getCountType :: Countable (ColumnName, AnnRedactionExp 'MSSQL field)}
 
 data Countable name
   = StarCountable

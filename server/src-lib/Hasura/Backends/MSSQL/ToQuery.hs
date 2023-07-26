@@ -739,12 +739,12 @@ fromAggregate =
         <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
-fromCountable :: Countable FieldName -> Printer
+fromCountable :: Countable Expression -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
-    NonNullFieldCountable field -> fromFieldName field
-    DistinctCountable field -> "DISTINCT " <+> fromFieldName field
+    NonNullFieldCountable field -> fromExpression field
+    DistinctCountable field -> "DISTINCT " <+> fromExpression field
 
 fromWhere :: Where -> Printer
 fromWhere =

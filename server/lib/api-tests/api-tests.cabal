@@ -115,6 +115,7 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.SqlserverSpec
     Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec

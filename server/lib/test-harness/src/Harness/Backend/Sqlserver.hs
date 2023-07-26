@@ -184,22 +184,25 @@ mkPrimaryKey key =
     ]
 
 mkReference :: Schema.Reference -> Text
-mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceCascade} =
   T.unwords
-    [ "CONSTRAINT ",
-      constraintName,
-      "FOREIGN KEY ",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      T.pack Constants.sqlserverDb <> "." <> referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
-    ]
+    $ [ "CONSTRAINT ",
+        constraintName,
+        "FOREIGN KEY ",
+        "(",
+        wrapIdentifier referenceLocalColumn,
+        ")",
+        "REFERENCES",
+        T.pack Constants.sqlserverDb <> "." <> referenceTargetTable,
+        "(",
+        wrapIdentifier referenceTargetColumn,
+        ")"
+      ]
+    ++ [ x | referenceCascade, x <-
+                                 [ "ON DELETE CASCADE",
+                                   "ON UPDATE CASCADE"
+                                 ]
+       ]
   where
     constraintName :: Text
     constraintName =
