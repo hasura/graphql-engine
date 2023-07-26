@@ -4,10 +4,10 @@ import { IconTooltip } from '../../../../../new-components/Tooltip';
 import { Switch } from '../../../../../new-components/Switch';
 import { InputField } from '../../../../../new-components/Form';
 import { FaShieldAlt } from 'react-icons/fa';
-import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 import { BooleanCheckbox } from './BooleanCheckbox';
 import { useFormContext } from 'react-hook-form';
 import { Badge } from '../../../../../new-components/Badge';
+import { RequestHeaders } from '../../../../../new-components/RequestHeader';
 
 export const inputValidationSchema = z.object({
   type: z.enum(['http']),
@@ -70,7 +70,10 @@ export const InputValidation = () => {
             <InputField
               learnMoreLink="https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl"
               tooltipIcon={
-                <FaShieldAlt className="h-4 text-muted cursor-pointer" />
+                <div className="flex items-center">
+                  <p className="text-red-600 pr-xs">*</p>
+                  <FaShieldAlt className="h-4 text-muted cursor-pointer" />
+                </div>
               }
               name="definition.url"
               label="Webhook URL"
@@ -79,7 +82,7 @@ export const InputValidation = () => {
               description="Note: Provide an URL or use an env var to template the handler URL if you have different URLs for multiple environments."
             />
             <div className="mb-xs">
-              <label className="flex items-center text-gray-600 font-semibold mb-xs">
+              <label className="flex items-center text-gray-600 font-semibold">
                 Header
                 <IconTooltip message="Configure headers for the request to the webhook" />
               </label>
@@ -89,7 +92,7 @@ export const InputValidation = () => {
                   text="Forward client headers to webhook"
                 />
               </div>
-              <RequestHeadersSelector
+              <RequestHeaders
                 name="definition.headers"
                 addButtonText="Add Additional Headers"
               />

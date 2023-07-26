@@ -77,8 +77,8 @@ describe('Create a insert type table permission with input validation', () => {
     cy.findByText('Forward client headers to webhook').click();
     cy.get('[name="definition.timeout"]').clear().type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
-    cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
-    cy.findByPlaceholderText('Value...').type('1234');
+    cy.findByPlaceholderText('Key').type('x-hasura-user-id');
+    cy.findByPlaceholderText('Value or {{Environment_Variable}}').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
@@ -174,8 +174,8 @@ describe('Create a update type table permission with input validation', () => {
     cy.findByText('Forward client headers to webhook').click();
     cy.get('[name="definition.timeout"]').clear().type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
-    cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
-    cy.findByPlaceholderText('Value...').type('1234');
+    cy.findByPlaceholderText('Key').type('x-hasura-user-id');
+    cy.findByPlaceholderText('Value or {{Environment_Variable}}').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
@@ -271,8 +271,8 @@ describe('Create a delete type table permission with input validation', () => {
     cy.findByText('Forward client headers to webhook').click();
     cy.get('[name="definition.timeout"]').clear().type('40');
     cy.findByRole('button', { name: 'Add Additional Headers' }).click();
-    cy.findByPlaceholderText('Key...').type('x-hasura-user-id');
-    cy.findByPlaceholderText('Value...').type('1234');
+    cy.findByPlaceholderText('Key').type('x-hasura-user-id');
+    cy.findByPlaceholderText('Value or {{Environment_Variable}}').type('1234');
 
     // --------------------
     cy.log('**--- Click to Save Permission');
