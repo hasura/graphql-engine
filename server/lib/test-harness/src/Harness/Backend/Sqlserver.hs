@@ -159,6 +159,7 @@ createTable testEnvironment Schema.Table {tableName, tableColumns, tablePrimaryK
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "int"
+  Schema.TDouble -> "float(53)"
   Schema.TStr -> "nvarchar(127)"
   Schema.TUTCTime -> "time"
   Schema.TBool -> "bit"
@@ -243,6 +244,7 @@ wrapIdentifier identifier = "[" <> T.replace "]" "]]" identifier <> "]"
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt int -> tshow int
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0

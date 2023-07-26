@@ -80,7 +80,7 @@ employee =
           Schema.column "first_name" Schema.TStr,
           Schema.column "last_name" Schema.TStr,
           Schema.column "nationality" Schema.TStr,
-          Schema.column "monthly_salary" Schema.TInt,
+          Schema.column "monthly_salary" Schema.TDouble,
           Schema.column "engineering_manager_id" Schema.TInt,
           Schema.column "hr_manager_id" Schema.TInt
         ],
@@ -90,10 +90,10 @@ employee =
           Schema.reference "hr_manager_id" "manager" "id"
         ],
       tableData =
-        [ [Schema.VInt 1, Schema.VStr "David", Schema.VStr "Holden", Schema.VStr "Australian", Schema.VInt 5000, Schema.VInt 1, Schema.VInt 3],
-          [Schema.VInt 2, Schema.VStr "Grant", Schema.VStr "Smith", Schema.VStr "Australian", Schema.VInt 6000, Schema.VInt 1, Schema.VInt 4],
-          [Schema.VInt 3, Schema.VStr "Xin", Schema.VStr "Cheng", Schema.VStr "Chinese", Schema.VInt 5500, Schema.VInt 2, Schema.VInt 3],
-          [Schema.VInt 4, Schema.VStr "Sarah", Schema.VStr "Smith", Schema.VStr "British", Schema.VInt 4000, Schema.VInt 2, Schema.VInt 4]
+        [ [Schema.VInt 1, Schema.VStr "David", Schema.VStr "Holden", Schema.VStr "Australian", Schema.VDouble 5000, Schema.VInt 1, Schema.VInt 3],
+          [Schema.VInt 2, Schema.VStr "Grant", Schema.VStr "Smith", Schema.VStr "Australian", Schema.VDouble 6000, Schema.VInt 1, Schema.VInt 4],
+          [Schema.VInt 3, Schema.VStr "Xin", Schema.VStr "Cheng", Schema.VStr "Chinese", Schema.VDouble 5500, Schema.VInt 2, Schema.VInt 3],
+          [Schema.VInt 4, Schema.VStr "Sarah", Schema.VStr "Smith", Schema.VStr "British", Schema.VDouble 4000, Schema.VInt 2, Schema.VInt 4]
         ]
     }
 
@@ -826,6 +826,151 @@ tests = do
             [interpolateYaml|
               data:
                 #{schemaName}_employee: []
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+  describe "Redaction in aggregation predicates" $ do
+    it "aggregation functions are applied over redacted input columns" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "hr_manager"),
+                ("X-Hasura-Manager-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_manager(where: {
+                    employees_by_id_to_hr_manager_id_aggregate: {
+                      max: {
+                        arguments: monthly_salary,
+                        predicate: {_gte: 5500}
+                      }
+                    }
+                  }) {
+                    id
+                    first_name
+                    last_name
+                  }
+                }
+              |]
+
+          -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+          -- This is because the 'manager_employee_private_info' role provides access to the salary
+          -- for the current manager's HR-managed employees, but the rest of the employees
+          -- are accessed via 'all_managers', which does not expose 'monthly_salary'.
+          -- So when Althea applies an aggregation predicate over 'monthly_salary', the aggregation
+          -- should only be computed over monthly salaries she has access to.
+          -- max(monthly_salary) >= 5500 applies to both Althea and Bec's employees, but
+          -- since Althea can only see her employee's salaries, Bec should not be returned
+          -- from this query.
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_manager:
+                  - id: 3
+                    first_name: Althea
+                    last_name: Weiss
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "column filters in aggregation predicates are applied over the redacted column" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "hr_manager"),
+                ("X-Hasura-Manager-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_manager(where: {
+                    employees_by_id_to_hr_manager_id_aggregate: {
+                      count: {
+                        predicate: {_eq: 1}
+                        filter: { monthly_salary: { _gte: 5500 } }
+                      }
+                    }
+                  }) {
+                    id
+                    first_name
+                    last_name
+                  }
+                }
+              |]
+
+          -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+          -- This is because the 'manager_employee_private_info' role provides access to the salary
+          -- for the current manager's HR-managed employees, but the rest of the employees
+          -- are accessed via 'all_managers', which does not expose 'monthly_salary'.
+          -- So when Althea applies an aggregation predicate over 'monthly_salary', the aggregation
+          -- should only be computed over monthly salaries she has access to.
+          -- Both Althea and Bec have one employee with a monthly salary >= 5500, but ALthea
+          -- should only be able to see her employees' monthly salary, not Bec's
+          -- so Bec should get filtered out
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_manager:
+                  - id: 3
+                    first_name: Althea
+                    last_name: Weiss
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "computed field filters in aggregation predicates are applied over the redacted computed field" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "hr_manager"),
+                ("X-Hasura-Manager-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_manager(where: {
+                    employees_by_id_to_hr_manager_id_aggregate: {
+                      count: {
+                        predicate: {_eq: 1}
+                        filter: { yearly_salary: { _gte: 66000 } }
+                      }
+                    }
+                  }) {
+                    id
+                    first_name
+                    last_name
+                  }
+                }
+              |]
+
+          -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+          -- This is because the 'manager_employee_private_info' role provides access to the salary
+          -- for the current manager's HR-managed employees, but the rest of the employees
+          -- are accessed via 'all_managers', which does not expose 'yearly_salary'.
+          -- So when Althea applies an aggregation predicate over 'yearly_salary', the aggregation
+          -- should only be computed over yearly salaries she has access to.
+          -- Both Althea and Bec have one employee with a yearly salary >= 66000, but ALthea
+          -- should only be able to see her employees' yearly salary, not Bec's
+          -- so Bec should get filtered out
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_manager:
+                  - id: 3
+                    first_name: Althea
+                    last_name: Weiss
             |]
 
       shouldReturnYaml testEnvironment actual expected
