@@ -46,6 +46,9 @@ Base.play = async ({ canvasElement }: any) => {
   // --------------------------------------------------
   // Step 6: add headers
   await userEvent.click(canvas.getByText('Add Additional Headers'));
-  await userEvent.type(canvas.getByPlaceholderText('Key...'), 'x-hasura-name');
-  await userEvent.type(canvas.getByPlaceholderText('Value...'), 'hasura_user');
+  await userEvent.type(canvas.getByPlaceholderText('Key'), 'x-hasura-name');
+  await userEvent.type(
+    canvas.getByPlaceholderText('Value or {{Environment_Variable}}'),
+    'hasura_user'
+  );
 };
