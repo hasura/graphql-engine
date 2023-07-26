@@ -13,12 +13,10 @@ import Data.Text qualified as T
 import Harness.Constants qualified as Constants
 import Harness.Logging
 import Harness.Services.Database.Postgres as E
-import Harness.Services.ExternalProcess.DCPostgresAgent as E hiding (drawFromPool)
 import Harness.Services.ExternalProcess.GraphqlEngine as E hiding (drawFromPool)
 import Harness.Services.GraphqlEngine as E
 import Harness.Services.GraphqlEngine.API as E
 import Harness.Services.Schema as E
-import Harness.Services.Source.DCPostgres as E
 import Harness.Services.Source.Postgres as E
 import Hasura.Prelude
 import System.Directory
@@ -29,8 +27,6 @@ data TestServicesConfig = TestServicesConfig
   { tscHgeBinPath :: HgeBinPath,
     tscHgePool :: HgePool,
     tscPassthroughEnvVars :: PassthroughEnvVars,
-    tscDcPgBinPath :: DcPgBinPath,
-    tscDcPgPool :: DcPgPool,
     tscPostgresServerUrl :: PostgresServerUrl
     -- Cockroach/Citus/...
     -- Bigquery credentials?
@@ -52,22 +48,11 @@ instance Has PassthroughEnvVars TestServicesConfig where
   getter = tscPassthroughEnvVars
   modifier f x = x {tscPassthroughEnvVars = f (tscPassthroughEnvVars x)}
 
-instance Has DcPgPool TestServicesConfig where
-  getter = tscDcPgPool
-  modifier f x = x {tscDcPgPool = f (tscDcPgPool x)}
-
-instance Has DcPgBinPath TestServicesConfig where
-  getter = tscDcPgBinPath
-  modifier f x = x {tscDcPgBinPath = f (tscDcPgBinPath x)}
-
 mkTestServicesConfig :: Logger -> IO TestServicesConfig
 mkTestServicesConfig logger = do
   tscHgeBinPath <- HgeBinPath <$> getExeFromEnvVar "GRAPHQL_ENGINE"
   tscHgePool <- mkHgeInstancePool logger
   tscPassthroughEnvVars <- mkPassthroughEnv
-
-  tscDcPgBinPath <- DcPgBinPath <$> getExeFromEnvVar "POSTGRES_AGENT"
-  tscDcPgPool <- mkDcPgInstancePool logger
 
   let tscPostgresServerUrl = PostgresServerUrl $ T.pack postgresqlInitialConnectionString
   pure TestServicesConfig {..}
@@ -75,7 +60,6 @@ mkTestServicesConfig logger = do
 teardownServices :: TestServicesConfig -> IO ()
 teardownServices servicesConfig = do
   hgePoolDestroy (tscHgePool servicesConfig)
-  dcPgPoolDestroy (tscDcPgPool servicesConfig)
 
 getExeFromEnvVar :: String -> IO String
 getExeFromEnvVar envVar = do
