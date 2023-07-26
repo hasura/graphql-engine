@@ -606,15 +606,15 @@ fromAggregateField alias aggregateField =
             selectFor = JsonFor $ ForJson JsonSingleton NoRoot
           }
   where
-    potentiallyRedacted :: IR.AnnRedactionExp 'MSSQL Expression -> Expression -> ReaderT EntityAlias FromIr Expression
-    potentiallyRedacted redactionExp ex = do
-      case redactionExp of
-        IR.NoRedaction -> pure ex
-        IR.RedactIfFalse p -> do
-          condExp <- fromGBoolExp p
-          pure $ ConditionalExpression condExp ex (ValueExpression ODBC.NullValue)
-
     columnFieldAggEntity col = columnNameToFieldName col $ EntityAlias aggSubselectName
+
+potentiallyRedacted :: IR.AnnRedactionExp 'MSSQL Expression -> Expression -> ReaderT EntityAlias FromIr Expression
+potentiallyRedacted redactionExp ex = do
+  case redactionExp of
+    IR.NoRedaction -> pure ex
+    IR.RedactIfFalse p -> do
+      condExp <- fromGBoolExp p
+      pure $ ConditionalExpression condExp ex (ValueExpression ODBC.NullValue)
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
@@ -668,12 +668,7 @@ fromAnnColumnField annColumnField = do
   -- WKT format
   if typ == (IR.ColumnScalar GeometryType) || typ == (IR.ColumnScalar GeographyType)
     then pure $ MethodApplicationExpression (ColumnExpression fieldName) MethExpSTAsText
-    else case redactionExp of
-      IR.NoRedaction -> pure (ColumnExpression fieldName)
-      IR.RedactIfFalse ex -> do
-        ex' <- fromGBoolExp ex
-        let nullValue = ValueExpression ODBC.NullValue
-        pure (ConditionalExpression ex' (ColumnExpression fieldName) nullValue)
+    else potentiallyRedacted redactionExp (ColumnExpression fieldName)
   where
     IR.AnnColumnField
       { _acfColumn = column,
@@ -972,7 +967,7 @@ fromAnnotatedOrderByItemG ::
   IR.AnnotatedOrderByItemG 'MSSQL Expression ->
   WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) OrderBy
 fromAnnotatedOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNulls} = do
-  (orderByFieldName, orderByType) <- unfurlAnnotatedOrderByElement obiColumn
+  (orderByExpression, orderByType) <- unfurlAnnotatedOrderByElement obiColumn
   let orderByNullsOrder = fromMaybe NullsAnyOrder obiNulls
       orderByOrder = fromMaybe AscOrder obiType
   pure OrderBy {..}
@@ -982,14 +977,14 @@ fromAnnotatedOrderByItemG IR.OrderByItemG {obiType, obiColumn = obiColumn, obiNu
 -- IR.AOCArrayAggregation).
 unfurlAnnotatedOrderByElement ::
   IR.AnnotatedOrderByElement 'MSSQL Expression ->
-  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (FieldName, Maybe TSQL.ScalarType)
+  WriterT (Seq UnfurledJoin) (ReaderT EntityAlias FromIr) (Expression, Maybe TSQL.ScalarType)
 unfurlAnnotatedOrderByElement =
   \case
-    -- TODO(redactionExp): Use the redaction expression
-    IR.AOCColumn columnInfo _redactionExp -> do
+    IR.AOCColumn columnInfo redactionExp -> do
       fieldName <- lift (fromColumnInfo columnInfo)
+      ex <- lift $ potentiallyRedacted redactionExp (ColumnExpression fieldName)
       pure
-        ( fieldName,
+        ( ex,
           case IR.ciType columnInfo of
             IR.ColumnScalar t -> Just t
             -- Above: It is of interest to us whether the type is
@@ -1023,10 +1018,10 @@ unfurlAnnotatedOrderByElement =
               (const (fromAlias selectFrom))
               ( case annAggregateOrderBy of
                   IR.AAOCount -> pure (CountAggregate StarCountable)
-                  -- TODO(redactionExp): Use the redaction expression
-                  IR.AAOOp (IR.AggregateOrderByColumn text _resultType columnInfo _redactionExp) -> do
+                  IR.AAOOp (IR.AggregateOrderByColumn text _resultType columnInfo redactionExp) -> do
                     fieldName <- fromColumnInfo columnInfo
-                    pure (OpAggregate text (pure (ColumnExpression fieldName)))
+                    ex <- potentiallyRedacted redactionExp (ColumnExpression fieldName)
+                    pure (OpAggregate text (pure ex))
               )
           )
       tell
@@ -1063,7 +1058,7 @@ unfurlAnnotatedOrderByElement =
             )
         )
       pure
-        ( FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias},
+        ( ColumnExpression $ FieldName {fieldNameEntity = joinAliasEntity, fieldName = alias},
           Nothing
         )
   where
