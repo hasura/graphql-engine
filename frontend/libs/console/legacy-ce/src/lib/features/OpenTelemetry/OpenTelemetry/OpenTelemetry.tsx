@@ -13,7 +13,8 @@ interface OpenTelemetryProps {
   metadataFormValues: FormValues;
   withoutLicense?: boolean;
   setOpenTelemetry: (formValues: FormValues) => Promise<void>;
-  eeAccess: EELiteAccessStatus;
+  eeAccess?: EELiteAccessStatus;
+  loading?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
     withoutLicense = false,
     setOpenTelemetry,
     eeAccess,
+    loading,
   } = props;
 
   const formValues = metadataFormValues || defaultValues;
@@ -75,6 +77,7 @@ export function OpenTelemetry(props: OpenTelemetryProps) {
             defaultValues={formValues}
             skeletonMode={skeletonMode}
             firstTimeSetup={isFirstTimeSetup}
+            loading={loading}
           />
         </div>
       )}

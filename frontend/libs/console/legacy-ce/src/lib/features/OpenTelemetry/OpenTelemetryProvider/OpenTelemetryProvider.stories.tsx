@@ -9,7 +9,7 @@ import {
   handlers,
 } from '../../../mocks/metadata.mock';
 
-import { OpenTelemetryProvider } from './OpenTelemetryProvider';
+import { OpenTelemetryEEProvider } from './OpenTelemetryEEProvider';
 
 // --------------------------------------------------
 // NOT TESTED
@@ -19,7 +19,7 @@ import { OpenTelemetryProvider } from './OpenTelemetryProvider';
 
 export default {
   title: 'Features/OpenTelemetry/OpenTelemetryProvider',
-  component: OpenTelemetryProvider,
+  component: OpenTelemetryEEProvider,
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
@@ -35,18 +35,18 @@ export default {
       }),
     }),
   },
-} as Meta<typeof OpenTelemetryProvider>;
+} as Meta<typeof OpenTelemetryEEProvider>;
 
-export const Default: StoryObj<typeof OpenTelemetryProvider> = {
+export const Default: StoryObj<typeof OpenTelemetryEEProvider> = {
   render: () => {
-    return <OpenTelemetryProvider />;
+    return <OpenTelemetryEEProvider />;
   },
 
   name: '💠 Default',
 };
 
-export const HappyPath: StoryObj<typeof OpenTelemetryProvider> = {
-  render: () => <OpenTelemetryProvider />,
+export const HappyPath: StoryObj<typeof OpenTelemetryEEProvider> = {
+  render: () => <OpenTelemetryEEProvider />,
 
   name: '🧪 Testing - When enable OpenTelemetry, it should update the OpenTelemetry metadata',
 

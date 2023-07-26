@@ -23,10 +23,11 @@ module Hasura.RQL.Types.OpenTelemetry
     -- * Parsed configuration (schema cache)
     OpenTelemetryInfo (..),
     otiExporterOtlp,
-    otiBatchSpanProcessor,
-    emptyOpenTelemetryInfo,
+    otiBatchSpanProcessorInfo,
     OtelExporterInfo (..),
+    emptyOtelExporterInfo,
     getOtelExporterTracesBaseRequest,
+    getOtelExporterMetricsBaseRequest,
     getOtelExporterResourceAttributes,
     OtelBatchSpanProcessorInfo (..),
     getMaxExportBatchSize,
@@ -140,23 +141,27 @@ instance ToJSON OtelStatus where
         OtelEnabled -> "enabled"
         OtelDisabled -> "disabled"
 
--- We currently only support traces
+-- We currently only support traces and metrics
 data OtelDataType
   = OtelTraces
+  | OtelMetrics
   deriving stock (Eq, Ord, Show, Bounded, Enum)
 
 instance HasCodec OtelDataType where
   codec = boundedEnumCodec \case
     OtelTraces -> "traces"
+    OtelMetrics -> "metrics"
 
 instance FromJSON OtelDataType where
   parseJSON = J.withText "OtelDataType" \case
     "traces" -> pure OtelTraces
+    "metrics" -> pure OtelMetrics
     x -> fail $ "unexpected string '" <> show x <> "'."
 
 instance ToJSON OtelDataType where
   toJSON = \case
     OtelTraces -> J.String "traces"
+    OtelMetrics -> J.String "metrics"
 
 defaultOtelEnabledDataTypes :: Set OtelDataType
 defaultOtelEnabledDataTypes = Set.empty
@@ -164,13 +169,19 @@ defaultOtelEnabledDataTypes = Set.empty
 -- | https://opentelemetry.io/docs/reference/specification/protocol/exporter/
 data OtelExporterConfig = OtelExporterConfig
   { -- | Target URL to which the exporter is going to send traces. No default.
+    -- Used as-is without modification (e.g. appending /v1/traces).
     _oecTracesEndpoint :: Maybe Text,
-    -- | The transport protocol
+    -- | Target URL to which the exporter is going to send metrics. No default.
+    -- Used as-is without modification (e.g. appending /v1/metrics).
+    _oecMetricsEndpoint :: Maybe Text,
+    -- | The transport protocol, for all telemetry types.
     _oecProtocol :: OtlpProtocol,
-    -- | Key-value pairs to be used as headers to send with an export request.
+    -- | Key-value pairs to be used as headers to send with an export request,
+    -- for all telemetry types. We currently only support string-valued
+    -- attributes. Like OTEL_EXPORTER_OTLP_HEADERS.
     _oecHeaders :: [HeaderConf],
-    -- | Attributes to send as the resource attributes of an export request. We
-    -- currently only support string-valued attributes.
+    -- | Attributes to send as the resource attributes of an export request,
+    -- for all telemetry types.
     _oecResourceAttributes :: [NameValue]
   }
   deriving stock (Eq, Show)
@@ -181,6 +192,8 @@ instance HasCodec OtelExporterConfig where
       $ OtelExporterConfig
       <$> optionalField "otlp_traces_endpoint" tracesEndpointDoc
       AC..= _oecTracesEndpoint
+        <*> optionalField "otlp_metrics_endpoint" metricsEndpointDoc
+      AC..= _oecMetricsEndpoint
         <*> optionalFieldWithDefault "protocol" defaultOtelExporterProtocol protocolDoc
       AC..= _oecProtocol
         <*> optionalFieldWithDefault "headers" defaultOtelExporterHeaders headersDoc
@@ -189,6 +202,7 @@ instance HasCodec OtelExporterConfig where
       AC..= _oecResourceAttributes
     where
       tracesEndpointDoc = "Target URL to which the exporter is going to send traces. No default."
+      metricsEndpointDoc = "Target URL to which the exporter is going to send metrics. No default."
       protocolDoc = "The transport protocol"
       headersDoc = "Key-value pairs to be used as headers to send with an export request."
       attrsDoc = "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes."
@@ -197,6 +211,8 @@ instance FromJSON OtelExporterConfig where
   parseJSON = J.withObject "OtelExporterConfig" $ \o -> do
     _oecTracesEndpoint <-
       o .:? "otlp_traces_endpoint" .!= defaultOtelExporterTracesEndpoint
+    _oecMetricsEndpoint <-
+      o .:? "otlp_metrics_endpoint" .!= defaultOtelExporterMetricsEndpoint
     _oecProtocol <-
       o .:? "protocol" .!= defaultOtelExporterProtocol
     _oecHeaders <-
@@ -206,10 +222,11 @@ instance FromJSON OtelExporterConfig where
     pure OtelExporterConfig {..}
 
 instance ToJSON OtelExporterConfig where
-  toJSON (OtelExporterConfig otlpTracesEndpoint protocol headers resourceAttributes) =
+  toJSON (OtelExporterConfig otlpTracesEndpoint otlpMetricsEndpoint protocol headers resourceAttributes) =
     J.object
       $ catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
+          ("otlp_metrics_endpoint" .=) <$> otlpMetricsEndpoint,
           Just $ "protocol" .= protocol,
           Just $ "headers" .= headers,
           Just $ "resource_attributes" .= resourceAttributes
@@ -219,6 +236,7 @@ defaultOtelExporterConfig :: OtelExporterConfig
 defaultOtelExporterConfig =
   OtelExporterConfig
     { _oecTracesEndpoint = defaultOtelExporterTracesEndpoint,
+      _oecMetricsEndpoint = defaultOtelExporterMetricsEndpoint,
       _oecProtocol = defaultOtelExporterProtocol,
       _oecHeaders = defaultOtelExporterHeaders,
       _oecResourceAttributes = defaultOtelExporterResourceAttributes
@@ -282,6 +300,9 @@ instance FromJSON NameValue where
 defaultOtelExporterTracesEndpoint :: Maybe Text
 defaultOtelExporterTracesEndpoint = Nothing
 
+defaultOtelExporterMetricsEndpoint :: Maybe Text
+defaultOtelExporterMetricsEndpoint = Nothing
+
 defaultOtelExporterProtocol :: OtlpProtocol
 defaultOtelExporterProtocol = OtlpProtocolHttpProtobuf
 
@@ -338,23 +359,22 @@ $(makeLenses ''OpenTelemetryConfig)
 
 -- | Schema cache configuration for all OpenTelemetry-related features
 data OpenTelemetryInfo = OpenTelemetryInfo
-  { _otiExporterOtlp :: Maybe OtelExporterInfo,
-    -- | A value of 'Nothing' indicates that the export of trace data is
-    -- disabled.
-    _otiBatchSpanProcessor :: Maybe OtelBatchSpanProcessorInfo
+  { _otiExporterOtlp :: OtelExporterInfo,
+    -- | This configuration will be used for traces and logs (when implemented)
+    _otiBatchSpanProcessorInfo :: OtelBatchSpanProcessorInfo
   }
-
-emptyOpenTelemetryInfo :: OpenTelemetryInfo
-emptyOpenTelemetryInfo =
-  OpenTelemetryInfo
-    { _otiExporterOtlp = Nothing,
-      _otiBatchSpanProcessor = Nothing
-    }
 
 data OtelExporterInfo = OtelExporterInfo
   { -- | HTTP 'Request' containing (1) the target URL to which the exporter is
     -- going to send spans, and (2) the user-specified request headers.
-    _oteleiTracesBaseRequest :: Request,
+    --  A value of 'Nothing' indicates that the export of trace data is
+    -- disabled.
+    _oteleiTracesBaseRequest :: Maybe Request,
+    -- | HTTP 'Request' containing (1) the target URL to which the exporter is
+    -- going to send metrics, and (2) the user-specified request headers.
+    --  A value of 'Nothing' indicates that the export of trace data is
+    -- disabled.
+    _oteleiMetricsBaseRequest :: Maybe Request,
     -- | Attributes to send as the resource attributes of an export request. We
     -- currently only support string-valued attributes.
     --
@@ -365,12 +385,27 @@ data OtelExporterInfo = OtelExporterInfo
     _oteleiResourceAttributes :: Map Text Text
   }
 
-getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Request
+emptyOtelExporterInfo :: OtelExporterInfo
+emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing mempty
+
+-- | @Nothing@ means this exporter is disabled
+getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Maybe Request
 getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest
+
+-- | @Nothing@ means this exporter is disabled
+getOtelExporterMetricsBaseRequest :: OtelExporterInfo -> Maybe Request
+getOtelExporterMetricsBaseRequest = _oteleiMetricsBaseRequest
 
 getOtelExporterResourceAttributes :: OtelExporterInfo -> Map Text Text
 getOtelExporterResourceAttributes = _oteleiResourceAttributes
 
+-- | Batch processor configuration for trace export.
+--
+-- https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md
+--
+-- NOTE: we could share this configuration with logs when implemented, but that
+-- change is invasive; I recommend just adding a new separate configuration. See:
+--     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/sdk.md#batching-processor
 data OtelBatchSpanProcessorInfo = OtelBatchSpanProcessorInfo
   { -- | The maximum batch size of every export. It must be smaller or equal to
     -- maxQueueSize. Default 512.

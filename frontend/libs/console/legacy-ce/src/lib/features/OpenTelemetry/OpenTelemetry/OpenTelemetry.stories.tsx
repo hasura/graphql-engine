@@ -52,7 +52,8 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
       enabled: false,
 
       headers: [],
-      endpoint: '',
+      tracesEndpoint: '',
+      metricsEndpoint: '',
       batchSize: 512,
       attributes: [],
       dataType: ['traces'],
@@ -84,7 +85,8 @@ export const Enabled: StoryObj<typeof OpenTelemetry> = {
       enabled: true,
 
       headers: [],
-      endpoint: '',
+      tracesEndpoint: '',
+      metricsEndpoint: '',
       batchSize: 512,
       attributes: [],
       dataType: ['traces'],
@@ -150,9 +152,10 @@ const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
     // Using non-default values
     enabled: true,
     batchSize: 99,
-    dataType: ['traces'],
+    dataType: ['traces', 'metrics'],
     connectionType: 'http/protobuf',
-    endpoint: 'http://localhost:1234',
+    tracesEndpoint: 'http://localhost:1234',
+    metricsEndpoint: 'http://localhost:1234',
     headers: [{ name: 'foo', value: 'bar', type: 'from_value' }],
     attributes: [{ name: 'foo', value: 'bar', type: 'from_value' }],
   },
@@ -202,7 +205,20 @@ export const DefaultValues: StoryObj = {
     const batchSizeInputField = await canvas.findByLabelText('Batch Size', {
       selector: 'input',
     });
+
+    // STEP: check the value of the Traces Endpoint
+    const tracesEndpoint = await canvas.findByLabelText('Traces Endpoint', {
+      selector: 'input',
+    });
+
+    // STEP: check the value of the Metrics Endpoint
+    const metricsEndpoint = await canvas.findByLabelText('Metrics Endpoint', {
+      selector: 'input',
+    });
+
     expect(batchSizeInputField).toHaveValue(99);
+    expect(tracesEndpoint).toHaveValue('http://localhost:1234');
+    expect(metricsEndpoint).toHaveValue('http://localhost:1234');
 
     // All the other input fields are not tested since if one input field has the correct default value
     // all of the other input fields have the correct default value.

@@ -1351,28 +1351,29 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       m OpenTelemetryInfo
     buildOpenTelemetry OpenTelemetryConfig {..} = do
       -- Always perform validation, even if OpenTelemetry is disabled
-      mOtelExporterInfo <-
-        fmap join
-          $ withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON _ocExporterOtlp))
-          $ liftEither
-          $ parseOtelExporterConfig _ocStatus env _ocExporterOtlp
-      mOtelBatchSpanProcessorInfo <-
-        withRecordInconsistencyM (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON _ocBatchSpanProcessor))
-          $ liftEither
+      _otiBatchSpanProcessorInfo <-
+        withRecordAndDefaultM OtelSubobjectBatchSpanProcessor _ocBatchSpanProcessor defaultOtelBatchSpanProcessorInfo
           $ parseOtelBatchSpanProcessorConfig _ocBatchSpanProcessor
-      pure
-        $ case _ocStatus of
-          OtelDisabled ->
+      case _ocStatus of
+        OtelDisabled ->
+          pure
+            $
             -- Disable all components if OpenTelemetry export not enabled
-            OpenTelemetryInfo Nothing Nothing
-          OtelEnabled ->
-            OpenTelemetryInfo
-              mOtelExporterInfo
-              -- Disable data types if they are not in the enabled set
-              ( if OtelTraces `S.member` _ocEnabledDataTypes
-                  then mOtelBatchSpanProcessorInfo
-                  else Nothing
-              )
+            OpenTelemetryInfo emptyOtelExporterInfo defaultOtelBatchSpanProcessorInfo
+        OtelEnabled -> do
+          -- Do no validation here if OpenTelemetry is disabled (formerly we
+          -- validated headers, but not URIs, but this was not worth the
+          -- complexity)
+          _otiExporterOtlp <-
+            withRecordAndDefaultM OtelSubobjectExporterOtlp _ocExporterOtlp emptyOtelExporterInfo
+              $ parseOtelExporterConfig env _ocEnabledDataTypes _ocExporterOtlp
+          pure $ OpenTelemetryInfo {..}
+      where
+        -- record a validation failure and return a default object in case validation fails, so we can continue:
+        withRecordAndDefaultM objTy fld dfault =
+          fmap (fromMaybe dfault)
+            . withRecordInconsistencyM (MetadataObject (MOOpenTelemetry objTy) (toJSON fld))
+            . liftEither
 
     buildRESTEndpoints ::
       (MonadWriter (Seq CollectItem) m) =>
