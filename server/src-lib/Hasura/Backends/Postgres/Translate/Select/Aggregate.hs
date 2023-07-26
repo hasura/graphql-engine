@@ -12,7 +12,7 @@ import Database.PG.Query (Query)
 import Hasura.Backends.Postgres.SQL.DML (BoolExp (BELit), Select)
 import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier))
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect, generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnAggregateSelect)
 import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs, MultiRowSelectNode (MultiRowSelectNode), SelectNode (SelectNode), SelectWriter (..), SourcePrefixes (SourcePrefixes), initialNativeQueryFreshIdStore)
@@ -27,7 +27,7 @@ import Hasura.RQL.Types.Common (FieldName (FieldName))
 -- See 'mkAggregateSelect' for the Postgres AST.
 selectAggregateQuerySQL ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind) =>
   AnnAggregateSelect ('Postgres pgKind) ->
   Query
 selectAggregateQuerySQL =
@@ -42,6 +42,7 @@ mkAggregateSelect ::
   forall pgKind m.
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   AnnAggregateSelect ('Postgres pgKind) ->
@@ -60,7 +61,7 @@ mkAggregateSelect annAggSel = do
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
   tell customSQLCTEs
 
-  pure $ generateSQLSelectFromArrayNode selectSource arrayNode $ BELit True
+  pure $ generateSQLSelectFromArrayNode @pgKind selectSource arrayNode $ BELit True
   where
     strfyNum = _asnStrfyNum annAggSel
     rootFieldName = FieldName "root"

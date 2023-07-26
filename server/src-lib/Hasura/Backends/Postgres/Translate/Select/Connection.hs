@@ -11,7 +11,7 @@ import Database.PG.Query (Query)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (connectionToSelectWith)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect, connectionToSelectWith)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (customSQLToTopLevelCTEs, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processConnectionSelect)
 import Hasura.Backends.Postgres.Translate.Types
@@ -30,7 +30,8 @@ import Hasura.RQL.Types.Common (FieldName (FieldName))
 connectionSelectQuerySQL ::
   forall pgKind.
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind
   ) =>
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   Query
@@ -50,6 +51,7 @@ mkConnectionSelect ::
   forall pgKind m.
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
@@ -71,7 +73,7 @@ mkConnectionSelect connectionSelect = do
         MultiRowSelectNode [topExtractor]
           $ SelectNode nodeExtractors joinTree
       selectWith =
-        connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
+        connectionToSelectWith @pgKind (S.toTableAlias rootIdentifier) connectionSource selectNode
   tell customSQLCTEs
 
   pure selectWith

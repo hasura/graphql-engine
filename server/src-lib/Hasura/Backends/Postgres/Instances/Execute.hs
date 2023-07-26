@@ -39,7 +39,7 @@ import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
-import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
+import Hasura.Backends.Postgres.Translate.Select (PostgresTranslateSelect)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Update qualified as Postgres
@@ -106,7 +106,7 @@ data PreparedSql = PreparedSql
 
 instance
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   BackendExecute ('Postgres pgKind)
   where
@@ -128,7 +128,7 @@ pgDBQueryPlan ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
@@ -175,7 +175,7 @@ pgDBQueryExplain ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   RootFieldAlias ->
   UserInfo ->
@@ -237,7 +237,7 @@ convertDelete ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m,
     MonadIO m,
     Tracing.MonadTrace m
@@ -265,7 +265,7 @@ convertUpdate ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m,
     MonadIO m,
     Tracing.MonadTrace m
@@ -297,7 +297,7 @@ convertInsert ::
   ( MonadError QErr m,
     MonadIO m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m,
     Tracing.MonadTrace m
   ) =>
@@ -327,7 +327,7 @@ convertFunction ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
@@ -355,7 +355,7 @@ pgDBMutationPlan ::
   ( MonadError QErr m,
     MonadIO m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m,
     Tracing.MonadTrace m
   ) =>
@@ -402,7 +402,7 @@ pgDBLiveQuerySubscriptionPlan ::
   ( MonadError QErr m,
     MonadIO m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
@@ -465,7 +465,7 @@ pgDBStreamingSubscriptionPlan ::
   ( MonadError QErr m,
     MonadIO m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
@@ -573,7 +573,7 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   PrepArgMap ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
@@ -611,7 +611,7 @@ pgDBRemoteRelationshipPlan ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   UserInfo ->
   SourceName ->

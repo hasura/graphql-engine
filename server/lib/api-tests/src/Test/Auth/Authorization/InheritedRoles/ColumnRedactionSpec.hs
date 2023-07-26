@@ -6,6 +6,8 @@ where
 import Data.Aeson (Value (String), object, (.=))
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Permissions (InheritedRoleDetails (..), Permission (..), SelectPermissionDetails (..), selectPermission)
@@ -18,7 +20,7 @@ import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -32,6 +34,16 @@ spec =
                 Postgres.setupTablesAction schema testEnv
                   : computedFieldSetupActions testEnv
                     <> [setupPermissionsAction permissions testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                Citus.setupTablesAction schema testEnv
+                  : [setupPermissionsAction (removeComputedFields <$> permissions) testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                Cockroach.setupTablesAction schema testEnv
+                  : [setupPermissionsAction (removeComputedFields <$> permissions) testEnv]
             }
         ]
     )
@@ -183,13 +195,18 @@ permissions =
         }
   ]
 
+removeComputedFields :: Permission -> Permission
+removeComputedFields = \case
+  SelectPermission selectPermission' -> SelectPermission $ selectPermission' {selectPermissionComputedFields = []}
+  other -> other
+
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: SpecWith TestEnvironment
 tests = do
   describe "Redaction in column selection sets" $ do
-    it "Check redaction in regular queries" \testEnvironment -> do
+    it "Check column redaction in regular queries" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -205,16 +222,14 @@ tests = do
                     first_name
                     last_name
                     monthly_salary
-                    yearly_salary
                   }
                 }
               |]
 
           -- Xin Cheng can see her own salary, but not her peers' because the
-          -- 'employee_public_info' role does not provide access to
-          -- the monthly_salary column & yearly_salary computed field,
-          -- but the 'employee_private_info' role does, but only for the current
-          -- employee's record (ie. hers)
+          -- 'employee_public_info' role does not provide access to the
+          -- monthly_salary column, but the 'employee_private_info' role does,
+          -- but only for the current employee's record (ie. hers)
           expected :: Value
           expected =
             [interpolateYaml|
@@ -224,21 +239,69 @@ tests = do
                   first_name: David
                   last_name: Holden
                   monthly_salary: null
-                  yearly_salary: null
                 - id: 2
                   first_name: Grant
                   last_name: Smith
                   monthly_salary: null
-                  yearly_salary: null
                 - id: 3
                   first_name: Xin
                   last_name: Cheng
                   monthly_salary: 5500
-                  yearly_salary: 66000
                 - id: 4
                   first_name: Sarah
                   last_name: Smith
                   monthly_salary: null
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Check computed field redaction in regular queries" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_employee(order_by: { id: asc }) {
+                    id
+                    first_name
+                    last_name
+                    yearly_salary
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to the
+          -- yearly_salary computed field, but the 'employee_private_info' role
+          -- does, but only for the current employee's record (ie. hers)
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_employee:
+                - id: 1
+                  first_name: David
+                  last_name: Holden
+                  yearly_salary: null
+                - id: 2
+                  first_name: Grant
+                  last_name: Smith
+                  yearly_salary: null
+                - id: 3
+                  first_name: Xin
+                  last_name: Cheng
+                  yearly_salary: 66000
+                - id: 4
+                  first_name: Sarah
+                  last_name: Smith
                   yearly_salary: null
             |]
 
@@ -261,17 +324,15 @@ tests = do
                       first_name
                       last_name
                       monthly_salary
-                      yearly_salary
                     }
                   }
                 }
               |]
 
           -- Xin Cheng can see her own salary, but not her peers' because the
-          -- 'employee_public_info' role does not provide access to
-          -- the monthly_salary column & yearly_salary computed field,
-          -- but the 'employee_private_info' role does, but only for the current
-          -- employee's record (ie. hers)
+          -- 'employee_public_info' role does not provide access to the
+          -- monthly_salary column, but the 'employee_private_info' role does,
+          -- but only for the current employee's record (ie. hers)
           expected :: Value
           expected =
             [interpolateYaml|
@@ -282,28 +343,79 @@ tests = do
                     first_name: David
                     last_name: Holden
                     monthly_salary: null
-                    yearly_salary: null
                   - id: 2
                     first_name: Grant
                     last_name: Smith
                     monthly_salary: null
-                    yearly_salary: null
                   - id: 3
                     first_name: Xin
                     last_name: Cheng
                     monthly_salary: 5500
-                    yearly_salary: 66000
                   - id: 4
                     first_name: Sarah
                     last_name: Smith
                     monthly_salary: null
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Check computed field redaction in nodes in aggregate queries" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_employee_aggregate(order_by: { id: asc }) {
+                    nodes {
+                      id
+                      first_name
+                      last_name
+                      yearly_salary
+                    }
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to the
+          -- yearly_salary computed field, but the 'employee_private_info' role
+          -- does, but only for the current employee's record (ie. hers)
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_employee_aggregate:
+                  nodes:
+                  - id: 1
+                    first_name: David
+                    last_name: Holden
+                    yearly_salary: null
+                  - id: 2
+                    first_name: Grant
+                    last_name: Smith
+                    yearly_salary: null
+                  - id: 3
+                    first_name: Xin
+                    last_name: Cheng
+                    yearly_salary: 66000
+                  - id: 4
+                    first_name: Sarah
+                    last_name: Smith
                     yearly_salary: null
             |]
 
       shouldReturnYaml testEnvironment actual expected
 
   describe "Redaction in aggregation calculations" $ do
-    it "Check redaction of input values to aggregation functions" \testEnvironment -> do
+    it "Check redaction of column input values to aggregation functions" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -319,7 +431,6 @@ tests = do
                       count
                       sum {
                         monthly_salary
-                        yearly_salary
                       }
                     }
                   }
@@ -327,10 +438,9 @@ tests = do
               |]
 
           -- Xin Cheng can see her own salary, but not her peers' because the
-          -- 'employee_public_info' role does not provide access to
-          -- the monthly_salary column & yearly_salary computed field,
-          -- but the 'employee_private_info' role does, but only for the current
-          -- employee's record (ie. hers)
+          -- 'employee_public_info' role does not provide access to the
+          -- monthly_salary column, but the 'employee_private_info' role does,
+          -- but only for the current employee's record (ie. hers)
           expected :: Value
           expected =
             [interpolateYaml|
@@ -340,6 +450,47 @@ tests = do
                     count: 4
                     sum:
                       monthly_salary: 5500
+            |]
+
+      shouldReturnYaml testEnvironment actual expected
+
+    it "Check redaction of computed field input values to aggregation functions" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
+      let schemaName = Schema.getSchemaName testEnvironment
+          actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  #{schemaName}_employee_aggregate {
+                    aggregate {
+                      count
+                      sum {
+                        yearly_salary
+                      }
+                    }
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to the
+          -- yearly_salary computed field, but the 'employee_private_info' role
+          -- does, but only for the current employee's record (ie. hers)
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_employee_aggregate:
+                  aggregate:
+                    count: 4
+                    sum:
                       yearly_salary: 66000
             |]
 
@@ -439,6 +590,9 @@ tests = do
       shouldReturnYaml testEnvironment actual expected
 
     it "ordering by a computed field is applied over redacted computed field value" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -642,6 +796,9 @@ tests = do
       shouldReturnYaml testEnvironment actual expected
 
     it "filtering by computed field is applied against redacted computed field value" \testEnvironment -> do
+      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+        $ pendingWith "Backend does not support computed fields"
+
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =

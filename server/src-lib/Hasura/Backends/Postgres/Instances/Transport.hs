@@ -22,7 +22,7 @@ import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.Instances.Execute qualified as EQ
 import Hasura.Backends.Postgres.SQL.Value
-import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
+import Hasura.Backends.Postgres.Translate.Select (PostgresTranslateSelect)
 import Hasura.Base.Error
 import Hasura.CredentialCache
 import Hasura.EncJSON
@@ -50,7 +50,7 @@ import Hasura.Tracing
 
 instance
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   BackendTransport ('Postgres pgKind)
   where

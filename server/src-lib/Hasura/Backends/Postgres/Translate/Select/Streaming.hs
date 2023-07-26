@@ -20,7 +20,7 @@ import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (contextualizeBaseTableColumn)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
-import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect, generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
@@ -65,7 +65,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 selectStreamQuerySQL ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   Query
 selectStreamQuerySQL =
@@ -77,6 +77,7 @@ mkStreamSQLSelect ::
   forall pgKind m.
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
@@ -139,7 +140,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
   tell customSQLCTEs
 
-  pure $ generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+  pure $ generateSQLSelectFromArrayNode @pgKind selectSource arrayNode $ S.BELit True
   where
     rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
     sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)
