@@ -10,6 +10,8 @@ import { PermissionsSchema } from '../../../schema';
 import { AccessType, QueryType } from '../../../types';
 import { isPermission, keyToPermission } from '../../../utils';
 import { api } from '../../api';
+import { permissionsTableKey } from '../../../PermissionsTable/hooks';
+import { permissionsFormKey } from '../dataFetchingHooks';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;
@@ -130,17 +132,18 @@ export const useSubmitForm = (args: UseSubmitFormArgs) => {
           });
         },
         onSettled: () => {
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionFormData',
-            JSON.stringify(table),
-            roleName,
-          ]);
-          queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionsTable',
-            JSON.stringify(table),
-          ]);
+          queryClient.invalidateQueries(
+            permissionsFormKey({
+              dataSourceName,
+              table,
+            })
+          );
+          queryClient.invalidateQueries(
+            permissionsTableKey({
+              dataSourceName,
+              table,
+            })
+          );
         },
       }
     );

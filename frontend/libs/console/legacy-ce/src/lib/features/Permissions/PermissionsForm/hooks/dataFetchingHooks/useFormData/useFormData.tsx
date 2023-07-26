@@ -9,6 +9,7 @@ import { useHttpClient } from '../../../../../Network';
 
 import { createDefaultValues } from './createDefaultValues';
 import { createFormData } from './createFormData';
+import { Table } from '../../../../../hasura-metadata-types';
 
 export type Args = {
   dataSourceName: string;
@@ -22,6 +23,16 @@ export type ReturnValue = {
   defaultValues: ReturnType<typeof createDefaultValues> | undefined;
 };
 
+export function permissionsFormKey({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: Table;
+}) {
+  return [dataSourceName, 'permissionFormData', table];
+}
+
 /**
  *
  * creates data for displaying in the form e.g. column names, roles etc.
@@ -30,7 +41,10 @@ export type ReturnValue = {
 export const useFormData = ({ dataSourceName, table }: Args) => {
   const httpClient = useHttpClient();
   return useQuery({
-    queryKey: [dataSourceName, 'permissionFormData', table],
+    queryKey: permissionsFormKey({
+      dataSourceName,
+      table,
+    }),
     queryFn: async () => {
       const metadata = await exportMetadata({ httpClient });
 
