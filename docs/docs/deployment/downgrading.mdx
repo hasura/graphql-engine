@@ -86,9 +86,9 @@ you can utilize the following SQL on your Metadata database:
 ALTER TABLE hdb_catalog.hdb_version
   DROP COLUMN ee_client_id,
   DROP COLUMN ee_client_secret;
-INSERT INTO hdb_catalog.hdb_version (version) VALUES (47)
+INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES (47, NOW())
     ON CONFLICT ((version IS NOT NULL))
-    DO UPDATE SET version = 47;
+    DO UPDATE SET version = EXCLUDED.version;
 ```
 This will downgrade your Hasura instance from catalog version 48 to version 47, which was introduced in `v2.0.7`.
 
