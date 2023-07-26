@@ -17,7 +17,7 @@ module Hasura.GraphQL.Schema.Table
   )
 where
 
-import Control.Lens ((^?), _1)
+import Control.Lens ((^?))
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as Set
@@ -142,14 +142,14 @@ tableSelectColumnsPredEnum ::
   (ColumnType b -> Bool) ->
   GQLNameIdentifier ->
   TableInfo b ->
-  SchemaT r m (Maybe (Parser 'Both n (Column b)))
+  SchemaT r m (Maybe (Parser 'Both n (Column b, AnnRedactionExpUnpreparedValue b)))
 tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
   customization <- retrieve $ _siCustomization @b
   let tCase = _rscNamingConvention customization
       mkTypename = runMkTypename $ _rscTypeNames customization
       predName' = applyFieldNameCaseIdentifier tCase predName
   tableGQLName <- getTableIdentifierName @b tableInfo
-  columns <- filter (columnPredicate . ciType) . mapMaybe (^? _1 . _SCIScalarColumn) <$> tableSelectColumns tableInfo
+  columns <- filter (columnPredicate . ciType . fst) . mapMaybe (\(column, redactionExp) -> (,redactionExp) <$> (column ^? _SCIScalarColumn)) <$> tableSelectColumns tableInfo
   let enumName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkSelectColumnPredTypeName tableGQLName predName
       description =
         Just
@@ -162,9 +162,9 @@ tableSelectColumnsPredEnum columnPredicate predName tableInfo = do
     $ P.enum enumName description
     <$> nonEmpty
       [ ( define $ ciName column,
-          ciColumn column
+          (ciColumn column, redactionExp)
         )
-        | column <- columns
+        | (column, redactionExp) <- columns
       ]
   where
     define name =

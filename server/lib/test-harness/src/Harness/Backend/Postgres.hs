@@ -279,6 +279,7 @@ createUniqueIndexSql (SchemaName schemaName) tableName = \case
 scalarType :: (HasCallStack) => Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "integer"
+  Schema.TDouble -> "double precision"
   Schema.TStr -> "text"
   Schema.TUTCTime -> "timestamp"
   Schema.TBool -> "boolean"
@@ -347,6 +348,7 @@ wrapIdentifier identifier = "\"" <> identifier <> "\""
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt n -> tshow n
+  VDouble d -> tshow d
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> if b then "TRUE" else "FALSE"

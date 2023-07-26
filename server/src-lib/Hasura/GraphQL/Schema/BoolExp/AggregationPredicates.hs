@@ -102,8 +102,7 @@ defaultAggregationPredicatesParser aggFns ti = runMaybeT do
                     ArgumentsStar ->
                       maybe AggregationPredicateArgumentsStar AggregationPredicateArguments
                         . nonEmpty
-                        -- TODO(redactionExp): Probably need to deal with the redaction expressions from tableSelectColumnsEnum here
-                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list . fmap fst <$> fails (tableSelectColumnsEnum relTable))
+                        <$> fuse (fieldOptionalDefault Name._arguments Nothing [] . P.list <$> fails (tableSelectColumnsEnum relTable))
                     SingleArgument typ ->
                       AggregationPredicateArguments
                         . (NE.:| [])

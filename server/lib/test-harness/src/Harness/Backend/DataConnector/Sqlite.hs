@@ -264,6 +264,7 @@ mkReference _schemaName Schema.Reference {referenceLocalColumn, referenceTargetT
 scalarType :: Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "INTEGER"
+  Schema.TDouble -> "REAL"
   Schema.TStr -> "TEXT"
   Schema.TUTCTime -> "TIMESTAMP"
   Schema.TBool -> "BOOLEAN"
@@ -274,6 +275,7 @@ scalarType = \case
 serialize :: Schema.ScalarValue -> Text
 serialize = \case
   Schema.VInt i -> tshow i
+  Schema.VDouble d -> tshow d
   Schema.VStr s -> "'" <> Text.replace "'" "\'" s <> "'"
   Schema.VUTCTime t -> Text.pack $ Time.formatTime Time.defaultTimeLocale "'%F %T'" t
   Schema.VBool b -> if b then "1" else "0"
