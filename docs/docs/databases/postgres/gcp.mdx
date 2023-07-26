@@ -1,7 +1,7 @@
 ---
-sidebar_label: GCP Postgres
-description: Using Hasura with a GCP Postgres database
-title: 'Cloud: Using Hasura Cloud with a GCP Postgres database'
+sidebar_label: Google Cloud SQL Postgres
+description: Using Hasura with a Google Cloud SQL Postgres database
+title: 'Cloud: Using Hasura Cloud with a Google Cloud SQL Postgres database'
 keywords:
   - hasura
   - docs
@@ -14,13 +14,13 @@ sidebar_position: 13
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Connecting Hasura to a GCP Postgres Database
+# Connecting Hasura to a Google Cloud SQL Postgres Database
 
 ## Introduction
 
-This guide explains how to connect a new or existing [GCP Postgres database](https://cloud.google.com/sql) to a Hasura
+This guide explains how to connect a new or existing [Google Cloud SQL Postgres database](https://cloud.google.com/sql) to a Hasura
 instance, either on [Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
-[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring GCP Postgres and are interested in
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions. If you're exploring Google Cloud SQL Postgres and are interested in
 migrating an existing Postgres database - such as from Heroku - check out their
 [docs](https://cloud.google.com/database-migration/docs/postgres) before continuing below.
 
@@ -125,7 +125,7 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/
 - `public-ip`: The public IP can be obtained by clicking on `Overview` on the left-side navigation and then scrolling
   down to `Connect to this instance`:
 
-<Thumbnail src="/img/cloud-dbs/gcp/public-ip.png" alt="Find the public IP for a GCP Postgres database" width="700px" />
+<Thumbnail src="/img/cloud-dbs/gcp/public-ip.png" alt="Find the public IP for a Google Cloud SQL Postgres database" width="700px" />
 
 - `postgres-port`: The default port for Postgres is `5432` if not specified otherwise.
 - `db`: The DB is `postgres` by default unless otherwise specified.
