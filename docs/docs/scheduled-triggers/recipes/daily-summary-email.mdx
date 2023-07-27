@@ -1,29 +1,28 @@
 ---
-title: Using Schedule Triggers for Sending Review Request Email
+title: Using Schedule Triggers for Sending a Daily Summary Email
 description: Succinct, tested, and reusable code recipes for common use cases in Hasura.
-sidebar_label: Product review
+sidebar_label: Daily summary email
 keywords:
   - hasura
   - docs
   - recipes
   - scheduled triggers
-  - review
-  - request
+  - daily
+  - summary
   - automated
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Send a Product Review Request Email
+# Send a Daily Summary Email
 
 Scheduled Triggers allows you to schedule business, or other logic to occur at specific times or intervals. In this
-guide, we'll explore how to use Scheduled Triggers to send a review request email for a product seven days after the
-order is delivered. We'll do this by executing this trigger every day at midnight to check whether it has been seven
-days since an order has been completed, if it has, and the user has not already received a reminder and has not left a
-review for their purchase, we'll send them an email asking them to do so.
+guide, we'll explore how to use Scheduled Triggers to send each user a daily summary of recent notifications which they
+have received. We'll do this by executing this trigger every morning and seeing what new notifications have come through
+in the last twenty-four hours. If a user has new notifications, they'll get an email listing them all.
 
 ## Prerequisites
 
@@ -45,10 +44,10 @@ When sending transactionary emails such as this, there are three fundamental com
   email? How will you return information so that you have the correct data to include in the email?
 - **Your email templating**: How will you generate and send the email containing the information you want to send?
 
-For simplicity, we're assuming there are three tables in our database: `orders`, `products`, and `users`. The `orders`
-table contains the details of all orders placed by customers, including the product ID, customer ID, order status, and
-delivery date. The `products` table contains the details of all products, including the product name and description.
-The `users` table contains the details of all users, including the user's email address.
+For simplicity, we're assuming there are two tables in our database: `users` and `notifications`. The `users` table
+contains the details of all users, including the user's email address. The `notifications` table contains all
+notifications sent to users. Each notification has a `user_id` property that references the user to whom the
+notification was sent.
 
 <details>
 <summary>
@@ -56,55 +55,36 @@ Click here for the SQL to generate these tables and some seed data.
 </summary>
 
 ```sql
--- Create the 'users' table
+-- create the users table
 CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    email TEXT NOT NULL
+    id uuid PRIMARY KEY,
+    email varchar(255) NOT NULL,
+    name varchar(100) NOT NULL
 );
 
--- Create the 'products' table
-CREATE TABLE public.products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT
+-- create the notifications table
+CREATE TABLE public.notifications (
+    id serial PRIMARY KEY,
+    user_id uuid NOT NULL REFERENCES public.users(id),
+    message text NOT NULL,
+    created_at timestamp DEFAULT now()
 );
 
--- Create the 'orders' table
-CREATE TABLE public.orders (
-    id SERIAL PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES products(id),
-    customer_id INTEGER NOT NULL REFERENCES users(id),
-    status VARCHAR(255),
-    delivery_date DATE,
-    is_reviewed BOOLEAN DEFAULT FALSE
-);
+-- seed data for the users table
+INSERT INTO public.users (id, email, name) VALUES
+    ('6f809f39-07a1-4c3b-a5e5-8e6d905366f1', 'user1@example.com', 'Daniel Ricciardo'),
+    ('d0f29c98-c789-4ec0-b84c-1593a6a8d0c2', 'user2@example.com', 'Charles Leclerc'),
+    ('acde545e-32d3-4f28-9475-61ab26a555d9', 'user3@example.com', 'Carlos Sainz');
 
--- Seed data for the 'users' table
-INSERT INTO public.users (name, email) VALUES
-    ('Daniel Ricciardo', 'user1@example.com'),
-    ('Charles Leclerc', 'user2@example.com'),
-    ('Carlos Sainz', 'user3@example.com');
-
--- Seed data for the 'products' table
-INSERT INTO public.products (name, description) VALUES
-    ('Product A', 'Description for Product A'),
-    ('Product B', 'Description for Product B'),
-    ('Product C', 'Description for Product C');
-
--- Seed data for the 'orders' table
-INSERT INTO public.orders (product_id, customer_id, status, delivery_date) VALUES
-    (1, 1, 'Delivered', '2023-01-05'),
-    (2, 1, 'In Progress', '2023-02-10'),
-    (3, 2, 'Delivered', '2023-03-15'),
-    (1, 3, 'Cancelled', '2023-04-20');
-
+-- seed data for the notifications table
+INSERT INTO public.notifications (user_id, message, created_at) VALUES
+    ('6f809f39-07a1-4c3b-a5e5-8e6d905366f1', 'Your order has been shipped!', NOW() - INTERVAL '30 hours'),
+    ('d0f29c98-c789-4ec0-b84c-1593a6a8d0c2', 'New product added: Smartphone XYZ is now available!', NOW() - INTERVAL '30 hours'),
+    ('acde545e-32d3-4f28-9475-61ab26a555d9', 'Special offer: Get 20% off on all electronics!', NOW() - INTERVAL '30 hours');
 ```
 
 You can copy / paste this into the `RUN SQL` tab in the Hasura Console on the `Data` page. Then, track all relationships
 under the `Public` schema on the `Data` page.
-
-**For any order that is delivered, do be sure to change the date to a time within the last seven days.**
 
 </details>
 
@@ -121,9 +101,9 @@ Head to your the Hasura Console of your project and navigate to the "Events" tab
 
 ## Step 2: Configure the Scheduled Event
 
-First, provide a name for your trigger, e.g., `send_review_request_email`. Then, enter a webhook URL that will be called
-when the event is triggered. This webhook will be responsible for sending the review request email and can be hosted
-anywhere, and written in any language, you like.
+First, provide a name for your trigger, e.g., `daily_recap_email`. Then, enter a webhook URL that will be called when
+the event is triggered. This webhook will be responsible for sending the summary email and can be hosted anywhere, and
+written in any language, you like.
 
 In the example below, if we're using Docker, we'll use a webhook endpoint hosted on our own machine running on port
 `4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
@@ -142,20 +122,20 @@ You'll need to modify your webhook URL to use the public URL provided by ngrok.
 
 :::
 
-Next, we'll configure the cron expression that will trigger the event. In this example, we want to send requests at
-midnight. We can do that with the following cron expression:
+Next, we'll configure the cron expression that will trigger the event. In this example, we want to send requests at 9:00
+AM every morning. We can do that with the following cron expression:
 
 ```
-0 0 * * *
+0 9 * * *
 ```
 
 Our trigger must also have a payload. This payload will be sent to the webhook endpoint when the event is triggered. We
 don't have to include any data in the payload, but we can if we want to. In this example, we'll simply send a
-`trigger_type` property categorizing the event as a `review_requests`. In the `Payload` section, enter the following:
+`trigger_type` property categorizing the event as a `daily_recap_email`. In the `Payload` section, enter the following:
 
 ```json
 {
-  "trigger_type": "review_requests"
+  "trigger_type": "daily_recap_email"
 }
 ```
 
@@ -177,7 +157,7 @@ Finally, click the `Add Cron Trigger` button to create the Scheduled Event.
 
 Whenever a cron job is triggered, Hasura will send a request to the webhook URL you provided. In this example, we're
 simply going to send a `POST` request. Our webhook will parse the request, ensure the header is correct, and then query
-the database to determine which customers should receive a review request email.
+the database to determine which customers should receive a summary of their new notifications.
 
 Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
 attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
@@ -234,14 +214,11 @@ nodemailer.createTestAccount((err, account) => {
 
     // get our date ready for the query
     const today = new Date();
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const formattedDate = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+    const twentyFourHoursPrior = new Date(today.setDate(today.getDate() - 1));
+    const twentyFourHoursPriorAsTimestamp = twentyFourHoursPrior.toISOString().split('T')[0];
 
     // Fetch the data from our Hasura instance
-    async function getRecentOrders() {
+    async function getRecentNotifications() {
       const response = await fetch('http://localhost:8080/v1/graphql', {
         method: 'POST',
         headers: {
@@ -250,51 +227,59 @@ nodemailer.createTestAccount((err, account) => {
         },
         body: JSON.stringify({
           query: `
-          query ReviewRequestQuery($delivery_date: date!) {
-            orders(where: {delivery_date: {_eq: $delivery_date}, is_reviewed: {_eq: false}}) {
-              user {
+          query DailyNotificationsQuery($start_time: timestamp!) {
+            users {
                 id
-                name
                 email
-              }
-              product {
-                id
                 name
-              }
+                notifications(where: {created_at: {_gte: $start_time}}) {
+                id
+                message
+                }
             }
-          }
-          
+            }
           `,
           variables: {
-            delivery_date: formattedDate,
+            start_time: twentyFourHoursPriorAsTimestamp,
           },
         }),
       });
       const { data } = await response.json();
-      return data.orders;
+      return data.users;
     }
 
-    let orders = await getRecentOrders();
+    // get our users and filter out the ones with no notifications
+    let users = await getRecentNotifications();
+    users = users.filter(user => user.notifications.length > 0);
 
-    // map over the data and send an email to each customer
+    // helper function to list the notifications in the email
+    function listNotifications(notifications) {
+      let list = '';
+      notifications.map(notification => {
+        list += `- ${notification.message}\n`;
+      });
+      return list;
+    }
+
+    // map over the data and send an email to each user
     async function sendReviewRequests() {
       let outcomes = [];
-      orders.map(async order => {
+      users.map(async user => {
         // Create a message object
         const message = {
           from: 'SuperStore.com <sender@SuperStore.com>',
-          to: `${order.user.name} <${order.user.email}>`,
-          subject: `We need your review, ${order.user.name.split(' ')[0]}!`,
-          text: `Hi ${order.user.name.split(' ')[0]}, we hope you're enjoying your ${
-            order.product.name
-          }. Please leave us a review!`,
+          to: `${user.name} <${user.email}>`,
+          subject: `You've got new notifications, ${user.name.split(' ')[0]}!`,
+          text: `Hi ${user.name.split(' ')[0]},\n\nCheck out your recent notifications:\n\n${listNotifications(
+            user.notifications
+          )}`,
         };
 
         // Send the message using the Nodemailer transporter
         const info = await transporter.sendMail(message);
 
         // Log the message info
-        console.log(`\nMessage sent to ${order.user.name}: ${nodemailer.getTestMessageUrl(info)}`);
+        console.log(`\nMessage sent to ${user.name}: ${nodemailer.getTestMessageUrl(info)}`);
 
         // add the info to the outcomes array
         outcomes.push({
@@ -305,7 +290,7 @@ nodemailer.createTestAccount((err, account) => {
       });
     }
 
-    await sendReviewRequests(orders);
+    await sendReviewRequests(users);
 
     // Return a JSON response to the client
     res.json({
@@ -327,8 +312,8 @@ You can run the server by running `node index.js` in your terminal. If you see t
 
 ## Step 4: Test the setup
 
-With your server running, Hasura should start hitting our endpoint. As we set our cron expression to `0 0 * * *`, the
-webhook will be triggered at midnight every day. We don't want to wait that long to test it. For now, update the
+With your server running, Hasura should start hitting our endpoint. As we set our cron expression to `0 9 * * *`, the
+webhook will be triggered at 9:00 AM every day. We don't want to wait that long to test it. For now, update the
 expression to `* * * * *` to trigger the webhook every minute. Then, check out your invocation logs in the Hasura
 Console to verify that the webhook was triggered successfully and your terminal to see the outputted information and
 link to a handy email 🎉
