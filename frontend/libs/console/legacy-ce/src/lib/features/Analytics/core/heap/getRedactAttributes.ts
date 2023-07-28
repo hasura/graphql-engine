@@ -3,8 +3,6 @@ import type { RedactOptions, HtmlRedactAttributes } from './types';
 /**
  * The options to use to redact every data from an HTML element.
  *
- * @see: the list of sensitive data in the DOM elements https://docs.google.com/document/d/1bVXpz0p1k2os7lmvSuwDzQDUoYwGQ9thOyckcuI6Hgk/edit#heading=h.c9iw8i7zh51x
- *
  * @deprecated It is meant for migrating from app-redaction to section-redaction, but must be removed
  * when all the sections have been migrated to surgically redact only the components that contain sensitive data.
  */
