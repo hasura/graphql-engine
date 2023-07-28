@@ -5,7 +5,7 @@ import {
   SupportedDrivers,
 } from '../../../hasura-metadata-types';
 import { ModifyFunctionConfiguration } from './ModifyFunctionConfiguration';
-import { ModifyFunctionPermissionsDialog } from '../FunctionPermissions/ModifyFunctionPermissionsDialog';
+import { ModifyFunctionPermissionsDialog } from '../../../Permissions/FunctionPermissions/ModifyFunctionPermissionsDialog';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 import { FaEdit, FaKey } from 'react-icons/fa';
 import { DisplayConfigurationDetails } from './DisplayConfigurationDetails';

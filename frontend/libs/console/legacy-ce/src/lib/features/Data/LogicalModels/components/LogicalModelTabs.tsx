@@ -1,6 +1,6 @@
 import { Tabs } from '../../../../new-components/Tabs';
+import { LogicalModelPermissionsPage } from '../../../Permissions/LogicalModelPermissions/LogicalModelPermissionsPage';
 import { ViewLogicalModelPage } from '../LogicalModel/ViewLogicalModelPage';
-import { LogicalModelPermissionsPage } from '../LogicalModelPermissions/LogicalModelPermissionsPage';
 
 export const LogicalModelTabs = ({
   defaultValue,

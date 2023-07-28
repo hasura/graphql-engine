@@ -9,7 +9,6 @@ import { expect } from '@storybook/jest';
 import { userEvent } from '@storybook/testing-library';
 
 export default {
-  title: 'Features/Permissions',
   component: PermissionsTab,
   decorators: [ReactQueryDecorator()],
 } as Meta;

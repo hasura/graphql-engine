@@ -1,5 +1,5 @@
 import { getPermissionValues } from './getPermissionValues';
-import { LogicalModel, Source } from '../../../../../hasura-metadata-types';
+import { LogicalModel, Source } from '../../../../hasura-metadata-types';
 import { Permission } from '../../components/types';
 import { mapPostgresToPg } from '.';
 

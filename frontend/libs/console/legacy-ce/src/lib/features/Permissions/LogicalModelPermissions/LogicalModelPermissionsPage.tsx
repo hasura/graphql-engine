@@ -1,13 +1,13 @@
 import { InjectedRouter, withRouter } from 'react-router';
-import { RouteWrapper } from '../components/RouteWrapper';
 import { LogicalModelPermissions } from './LogicalModelPermissions';
 import { useCreateLogicalModelsPermissions } from './hooks/useCreateLogicalModelsPermissions';
 import { useRemoveLogicalModelsPermissions } from './hooks/useRemoveLogicalModelsPermissions';
-import { useMetadata } from '../../../hasura-metadata-api';
-import { usePermissionComparators } from '../../../Permissions/PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
+import { useMetadata } from '../../hasura-metadata-api';
+import { usePermissionComparators } from '../PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
 import Skeleton from 'react-loading-skeleton';
-import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-api/selectors';
-import { LogicalModelTabs } from '../components/LogicalModelTabs';
+import { extractModelsAndQueriesFromMetadata } from '../../hasura-metadata-api/selectors';
+import { LogicalModelTabs } from '../../Data/LogicalModels/components/LogicalModelTabs';
+import { RouteWrapper } from '../../Data/LogicalModels/components/RouteWrapper';
 
 export const LogicalModelPermissionsPage = ({
   source,

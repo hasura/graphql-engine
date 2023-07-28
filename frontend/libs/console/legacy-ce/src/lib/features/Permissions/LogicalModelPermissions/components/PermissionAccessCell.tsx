@@ -1,4 +1,4 @@
-import { PermissionsIcon } from '../../../../Permissions/PermissionsTable/components/PermissionsIcons';
+import { PermissionsIcon } from '../../PermissionsTable/components/PermissionsIcons';
 
 interface PermissionAccessCellProps extends React.ComponentProps<'button'> {
   access: 'fullAccess' | 'partialAccess' | 'noAccess';

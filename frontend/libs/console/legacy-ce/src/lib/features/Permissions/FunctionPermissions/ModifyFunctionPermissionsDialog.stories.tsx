@@ -1,13 +1,12 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { expect } from '@storybook/jest';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ModifyFunctionPermissionsDialog } from './ModifyFunctionPermissionsDialog';
 import { handlers } from './mocks';
 import { action } from '@storybook/addon-actions';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 
 export default {
-  title: 'Features/Permissions/Form/UDF Permissions',
   component: ModifyFunctionPermissionsDialog,
   decorators: [ReactQueryDecorator()],
   parameters: {

@@ -1,4 +1,4 @@
-import { LogicalModel, Source } from '../../../../hasura-metadata-types';
+import { LogicalModel, Source } from '../../../hasura-metadata-types';
 
 export type LogicalModelWithSourceName = LogicalModel & {
   source: Source;

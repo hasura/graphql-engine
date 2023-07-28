@@ -1,21 +1,21 @@
-import { Dialog } from '../../../../new-components/Dialog';
+import { Dialog } from '../../../new-components/Dialog';
 import {
   MetadataFunction,
   QualifiedFunction,
-} from '../../../hasura-metadata-types';
-import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
+} from '../../hasura-metadata-types';
+import { areTablesEqual, useMetadata } from '../../hasura-metadata-api';
 import { FaCheck, FaTimes } from 'react-icons/fa';
 import React from 'react';
-import { Switch } from '../../../../new-components/Switch';
+import { Switch } from '../../../new-components/Switch';
 import clsx from 'clsx';
-import { hasuraToast } from '../../../../new-components/Toasts';
+import { hasuraToast } from '../../../new-components/Toasts';
 import { QueryClient, useQueryClient } from 'react-query';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
 import { Link } from 'react-router';
-import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { LearnMoreLink } from '../../../new-components/LearnMoreLink';
 import { getMetadataDataSource } from './utils';
-import { useManageFunctionPermission } from '../../../MetadataAPI/hooks/useManageFunctionPermission';
-import { MetadataHelpers } from '../../../hasura-metadata-api/metadataHelpers';
+import { useManageFunctionPermission } from '../../MetadataAPI/hooks/useManageFunctionPermission';
+import { MetadataHelpers } from '../../hasura-metadata-api/metadataHelpers';
 
 export type ModifyFunctionPermissionsProps = {
   qualifiedFunction: QualifiedFunction[];

@@ -1,11 +1,11 @@
 import { ReactNode } from 'react';
-import { Button } from '../../../../../new-components/Button';
-import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../new-components/Button';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import { usePermissionsFormContext } from '../hooks/usePermissionForm';
 import { Permission } from './types';
-import { Collapse } from '../../../../../new-components/deprecated';
-import { getEdForm } from '../../../../../components/Services/Data/utils';
-import { Badge } from '../../../../../new-components/Badge';
+import { Collapse } from '../../../../new-components/deprecated';
+import { getEdForm } from '../../../../components/Services/Data/utils';
+import { Badge } from '../../../../new-components/Badge';
 
 type PermissionsFormProps = {
   permission: Permission;

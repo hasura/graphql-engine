@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
-import { useFireNotification } from '../../../../../new-components/Notifications/index';
-import { exportMetadata } from '../../../../DataSource';
-import { useMetadataMigration } from '../../../../MetadataAPI';
-import { useHttpClient } from '../../../../Network';
-import { LogicalModel, Source } from '../../../../hasura-metadata-types';
+import { useFireNotification } from '../../../../new-components/Notifications/index';
+import { exportMetadata } from '../../../DataSource';
+import { useMetadataMigration } from '../../../MetadataAPI';
+import { useHttpClient } from '../../../Network';
+import { LogicalModel, Source } from '../../../hasura-metadata-types';
 import { Permission } from '../components/types';
 import { errorTransform } from './utils/errorTransform';
 import { getDeleteLogicalModelBody } from './utils/getDeleteLogicalModelBody';

@@ -1,5 +1,5 @@
-import { Metadata } from '../../../hasura-metadata-types';
-import { MetadataSelectors } from '../../../hasura-metadata-api';
+import { Metadata } from '../../hasura-metadata-types';
+import { MetadataSelectors } from '../../hasura-metadata-api';
 
 export const getMetadataDataSource =
   (dataSourceName: string) => (m: Metadata) => {

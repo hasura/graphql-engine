@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import {
   Comparators,
   RowPermissionsInput,
-} from '../../../Permissions/PermissionsForm/components/RowPermissionsBuilder/components';
+} from '../PermissionsForm/components/RowPermissionsBuilder/components';
 import {
   LogicalModelWithPermissions,
   OnDelete,

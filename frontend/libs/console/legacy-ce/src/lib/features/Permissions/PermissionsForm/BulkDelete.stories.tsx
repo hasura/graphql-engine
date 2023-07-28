@@ -8,7 +8,6 @@ import { BulkDelete, BulkDeleteProps } from './BulkDelete';
 import { handlers } from './mocks/handlers.mock';
 
 export default {
-  title: 'Features/Permissions/Bulk Update',
   component: BulkDelete,
   decorators: [ReactQueryDecorator()],
 } as Meta;

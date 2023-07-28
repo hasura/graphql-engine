@@ -7,7 +7,6 @@ import { action } from '@storybook/addon-actions';
 import { AggregationProps, AggregationSection } from './Aggregation';
 
 export default {
-  title: 'Features/Permissions/Form/Aggregation Section',
   component: AggregationSection,
   parameters: {
     // Disable storybook for playground stories

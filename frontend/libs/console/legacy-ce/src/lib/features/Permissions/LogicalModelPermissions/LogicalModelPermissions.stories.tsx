@@ -1,13 +1,12 @@
 import { Meta, StoryObj } from '@storybook/react';
 
 import { LogicalModelPermissions } from './LogicalModelPermissions';
-import { comparators } from '../../../Permissions/PermissionsForm/components/RowPermissionsBuilder/components/__tests__/fixtures/comparators';
+import { comparators } from '../PermissionsForm/components/RowPermissionsBuilder/components/__tests__/fixtures/comparators';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ComponentProps } from 'react';
 
 export default {
-  title: 'Features/Permissions/Form/Logical Model Permissions',
   component: LogicalModelPermissions,
 } as Meta;
 

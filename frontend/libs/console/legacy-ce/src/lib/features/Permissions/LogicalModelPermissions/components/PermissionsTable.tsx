@@ -1,7 +1,7 @@
 import { createRef } from 'react';
-import { PermissionsIcon } from '../../../../Permissions/PermissionsTable/components/PermissionsIcons';
 import { Action, Permission } from './types';
 import { PermissionsRow } from './PermissionsRow';
+import { PermissionsIcon } from '../../PermissionsTable/components/PermissionsIcons';
 
 export type PermissionsTableProps = {
   allowedActions: Action[];

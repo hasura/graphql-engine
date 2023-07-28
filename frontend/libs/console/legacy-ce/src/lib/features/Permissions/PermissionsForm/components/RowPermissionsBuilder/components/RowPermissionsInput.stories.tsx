@@ -23,7 +23,6 @@ import { useState } from 'react';
 import { Permissions } from './types';
 
 export default {
-  title: 'Features/Permissions/Form/Row Permissions Input',
   component: RowPermissionsInput,
   parameters: {
     msw: handlers(),

@@ -1,14 +1,13 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { LogicalModelPermissionsPage } from './LogicalModelPermissionsPage';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
-import { RouteWrapper } from '../components/RouteWrapper';
 import { handlers, deleteHandlers } from './mocks';
+import { RouteWrapper } from '../../Data/LogicalModels/components/RouteWrapper';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 const name = 'LogicalModel';
 const source = 'Postgres';
 
 export default {
-  title: 'Features/Permissions/Form/Logical Model Permissions Page',
   component: params => {
     return (
       <RouteWrapper

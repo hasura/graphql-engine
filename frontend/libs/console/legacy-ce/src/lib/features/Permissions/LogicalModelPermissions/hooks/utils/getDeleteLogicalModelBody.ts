@@ -1,5 +1,5 @@
 import { mapPostgresToPg } from '.';
-import { Source } from '../../../../../hasura-metadata-types';
+import { Source } from '../../../../hasura-metadata-types';
 import { Permission } from '../../components/types';
 export interface DeleteLogicalModalBodyArgs {
   logicalModelName: string;
