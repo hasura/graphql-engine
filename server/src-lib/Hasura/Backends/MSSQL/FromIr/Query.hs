@@ -382,13 +382,13 @@ fromStoredProcedure storedProcedure = do
           <$> InsOrdHashMap.toList (columnsFromFields $ lmFields storedProcedureReturnType)
 
   -- \| add create temp table to "the environment"
-  tellBefore (CreateTemp (TempTableName rawTempTableName) columns)
+  tellBefore (TempTableCreate (TempTableName rawTempTableName) columns)
 
   -- \| add insert into temp table
-  tellBefore (InsertTemp declares (TempTableName rawTempTableName) sql)
+  tellBefore (TempTableInsert (TempTableName rawTempTableName) declares sql)
 
   -- \| when we're done, drop the temp table
-  tellAfter (DropTemp (TempTableName rawTempTableName))
+  tellAfter (TempTableDrop (TempTableName rawTempTableName))
 
   pure $ TSQL.FromTempTable aliasedTempTableName
 

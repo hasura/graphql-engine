@@ -179,7 +179,6 @@ common common-all
     -Wno-implicit-lift
     -Wno-identities
     -Wno-operator-whitespace
-    -Wno-partial-fields
     -Wno-redundant-bang-patterns
     -Wno-unused-type-patterns
 

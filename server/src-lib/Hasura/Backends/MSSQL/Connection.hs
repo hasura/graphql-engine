@@ -10,6 +10,7 @@ module Hasura.Backends.MSSQL.Connection
     MSSQLSourceConfig (MSSQLSourceConfig, _mscExecCtx, _mscReadReplicas),
     MSSQLConnectionInfo (..),
     MSSQLPoolSettings (..),
+    MSSQLPoolConnectionSettings (..),
     MSSQLExecCtx (..),
     MonadMSSQLTx (..),
     defaultMSSQLMaxConnections,
@@ -99,12 +100,19 @@ instance FromJSON InputConnectionString where
       s@(String _) -> RawString <$> parseJSON s
       _ -> fail "one of string or object must be provided"
 
+data MSSQLPoolConnectionSettings = MSSQLPoolConnectionSettings
+  { mpsMaxConnections :: Maybe Int,
+    mpsTotalMaxConnections :: Maybe Int,
+    mpsIdleTimeout :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+instance Hashable MSSQLPoolConnectionSettings
+
+instance NFData MSSQLPoolConnectionSettings
+
 data MSSQLPoolSettings
-  = MSSQLPoolSettings
-      { _mpsMaxConnections :: Maybe Int,
-        _mpsTotalMaxConnections :: Maybe Int,
-        _mpsIdleTimeout :: Int
-      }
+  = MSSQLPoolSettingsPool MSSQLPoolConnectionSettings
   | MSSQLPoolSettingsNoPool
   deriving (Show, Eq, Generic)
 
@@ -123,7 +131,7 @@ instance HasCodec MSSQLPoolSettings where
       toInput :: MSSQLPoolSettings -> Either MSSQLPoolSettings MSSQLPoolSettings
       toInput = \case
         p@MSSQLPoolSettingsNoPool {} -> Left p
-        p@MSSQLPoolSettings {} -> Right p
+        p@MSSQLPoolSettingsPool {} -> Right p
 
       codecNoPool :: AC.JSONCodec MSSQLPoolSettings
       codecNoPool =
@@ -142,30 +150,37 @@ instance HasCodec MSSQLPoolSettings where
 
       codecWithPool :: AC.JSONCodec MSSQLPoolSettings
       codecWithPool =
-        AC.object "MSSQLPoolSettings"
-          $ MSSQLPoolSettings
-          <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
-          AC..= _mpsMaxConnections
-            <*> optionalFieldOrNull' "total_max_connections"
-          AC..= _mpsTotalMaxConnections
-            <*> optionalFieldWithDefault' "idle_timeout" (_mpsIdleTimeout defaultMSSQLPoolSettings)
-          AC..= _mpsIdleTimeout
+        AC.dimapCodec MSSQLPoolSettingsPool (\case MSSQLPoolSettingsPool p -> p; MSSQLPoolSettingsNoPool -> error "unexpected MSSQLPoolSettingsNoPool")
+          $ AC.object
+            "MSSQLPoolSettings"
+            ( MSSQLPoolConnectionSettings
+                <$> optionalFieldWithDefault' "max_connections" (Just defaultMSSQLMaxConnections)
+                AC..= mpsMaxConnections
+                  <*> optionalFieldOrNull' "total_max_connections"
+                AC..= mpsTotalMaxConnections
+                  <*> optionalFieldWithDefault' "idle_timeout" defaultMSSQLIdleTimeout
+                AC..= mpsIdleTimeout
+            )
 
 defaultMSSQLMaxConnections :: Int
 defaultMSSQLMaxConnections = 50
 
+defaultMSSQLIdleTimeout :: Int
+defaultMSSQLIdleTimeout = 5
+
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 defaultMSSQLPoolSettings =
-  MSSQLPoolSettings
-    { _mpsMaxConnections = Nothing,
-      _mpsTotalMaxConnections = Nothing,
-      _mpsIdleTimeout = 5
-    }
+  MSSQLPoolSettingsPool
+    $ MSSQLPoolConnectionSettings
+      { mpsMaxConnections = Nothing,
+        mpsTotalMaxConnections = Nothing,
+        mpsIdleTimeout = defaultMSSQLIdleTimeout
+      }
 
 data MSSQLConnectionInfo = MSSQLConnectionInfo
-  { _mciConnectionString :: InputConnectionString,
-    _mciPoolSettings :: MSSQLPoolSettings,
-    _mciIsolationLevel :: MSTx.TxIsolation
+  { mciConnectionString :: InputConnectionString,
+    mciPoolSettings :: MSSQLPoolSettings,
+    mciIsolationLevel :: MSTx.TxIsolation
   }
   deriving (Show, Eq, Generic)
 
@@ -178,11 +193,11 @@ instance HasCodec MSSQLConnectionInfo where
     AC.object "MSSQLConnectionInfo"
       $ MSSQLConnectionInfo
       <$> requiredField' "connection_string"
-      AC..= _mciConnectionString
+      AC..= mciConnectionString
         <*> requiredField' "pool_settings"
-      AC..= _mciPoolSettings
+      AC..= mciPoolSettings
         <*> AC.optionalFieldWithDefault "isolation_level" MSTx.ReadCommitted isolationLevelDoc
-      AC..= _mciIsolationLevel
+      AC..= mciIsolationLevel
     where
       isolationLevelDoc =
         T.unwords
@@ -206,8 +221,8 @@ instance FromJSON MSSQLConnectionInfo where
       .!= MSTx.ReadCommitted
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
-  { _mccConnectionInfo :: MSSQLConnectionInfo,
-    _mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
+  { mccConnectionInfo :: MSSQLConnectionInfo,
+    mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
   }
   deriving (Show, Eq, Generic)
 
@@ -220,9 +235,9 @@ instance HasCodec MSSQLConnConfiguration where
     AC.object "MSSQLConnConfiguration"
       $ MSSQLConnConfiguration
       <$> requiredField' "connection_info"
-      AC..= _mccConnectionInfo
+      AC..= mccConnectionInfo
         <*> optionalFieldOrNull' "read_replicas"
-      AC..= _mccReadReplicas
+      AC..= mccReadReplicas
 
 instance FromJSON MSSQLConnConfiguration where
   parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}

@@ -440,7 +440,7 @@ fromUpdateSet setColumns =
 
 fromTempTableDDL :: TempTableDDL -> Printer
 fromTempTableDDL = \case
-  CreateTemp tempTableName tempColumns ->
+  TempTableCreate tempTableName tempColumns ->
     "CREATE TABLE "
       <+> fromTempTableName tempTableName
       <+> " ( "
@@ -456,7 +456,7 @@ fromTempTableDDL = \case
           <+> " "
           <+> fromString (T.unpack (scalarTypeDBName DataLengthMax ty))
           <+> " null"
-  InsertTemp declares tempTableName interpolatedQuery ->
+  TempTableInsert tempTableName declares interpolatedQuery ->
     SepByPrinter
       NewlinePrinter
       ( map fromDeclare declares
@@ -466,7 +466,7 @@ fromTempTableDDL = \case
                  <+> renderInterpolatedQuery interpolatedQuery
              ]
       )
-  DropTemp tempTableName ->
+  TempTableDrop tempTableName ->
     "DROP TABLE "
       <+> fromTempTableName tempTableName
 

@@ -397,19 +397,11 @@ data CTEBody
 -- query to do things like setup temp tables
 data TempTableDDL
   = -- | create a temp table
-    CreateTemp
-      { stcTempTableName :: TempTableName,
-        stcColumns :: [UnifiedColumn]
-      }
+    TempTableCreate TempTableName [UnifiedColumn]
   | -- | insert output of a statement into a temp table
-    InsertTemp
-      { stiDeclares :: [Declare],
-        stiTempTableName :: TempTableName,
-        stiExpression :: InterpolatedQuery Expression
-      }
+    TempTableInsert TempTableName [Declare] (InterpolatedQuery Expression)
   | -- | Drop a temp table
-    DropTemp
-      {stdTempTableName :: TempTableName}
+    TempTableDrop TempTableName
 
 data Declare = Declare
   { dName :: Text,
