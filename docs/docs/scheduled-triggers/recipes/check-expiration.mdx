@@ -1,29 +1,25 @@
 ---
-title: Using Schedule Triggers for Sending Review Request Email
+title: Using Schedule Triggers for Checking the expiration of a coupon
 description: Succinct, tested, and reusable code recipes for common use cases in Hasura.
-sidebar_label: Product review
+sidebar_label: Check expiration
 keywords:
   - hasura
   - docs
   - recipes
   - scheduled triggers
-  - review
-  - request
+  - expiration
+  - coupon
   - automated
-sidebar_position: 1
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Send a Product Review Request Email
+# Send a Coupon Expiration Reminder Email
 
 Scheduled Triggers allows you to schedule business, or other logic to occur at specific times or intervals. In this
-guide, we'll explore how to use Scheduled Triggers to send a review request email for a product seven days after the
-order is delivered. We'll do this by executing this trigger every day at midnight to check whether it has been seven
-days since an order has been completed, if it has, and the user has not already received a reminder and has not left a
-review for their purchase, we'll send them an email asking them to do so.
+guide, we'll walk through how to use Scheduled Triggers on an e-commerce type application to send a reminder email to users when their coupon is about to expire. Nudges like this can help increase conversion rates and improve the overall user experience.
 
 ## Prerequisites
 
@@ -45,10 +41,8 @@ When sending transactional emails such as this, there are three fundamental comp
   email? How will you return information so that you have the correct data to include in the email?
 - **Your email templating**: How will you generate and send the email containing the information you want to send?
 
-For simplicity, we're assuming there are three tables in our database: `orders`, `products`, and `users`. The `orders`
-table contains the details of all orders placed by customers, including the product ID, customer ID, order status, and
-delivery date. The `products` table contains the details of all products, including the product name and description.
-The `users` table contains the details of all users, including the user's email address.
+For simplicity, we're assuming two tables in our database: `users` and `coupons`. The `users` table contains the details
+of our users, and the `coupons` table contains the details of the coupons that we want to send reminders for.
 
 <details>
 <summary>
@@ -63,21 +57,12 @@ CREATE TABLE public.users (
     email TEXT NOT NULL
 );
 
--- Create the 'products' table
-CREATE TABLE public.products (
+-- Create the 'coupons' table
+CREATE TABLE public.coupons (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT
-);
-
--- Create the 'orders' table
-CREATE TABLE public.orders (
-    id SERIAL PRIMARY KEY,
-    product_id INTEGER NOT NULL REFERENCES products(id),
-    customer_id INTEGER NOT NULL REFERENCES users(id),
-    status VARCHAR(255),
-    delivery_date DATE,
-    is_reviewed BOOLEAN DEFAULT FALSE
+    user_id INTEGER REFERENCES public.users(id),
+    code VARCHAR(255),
+    expiration_date DATE
 );
 
 -- Seed data for the 'users' table
@@ -86,24 +71,18 @@ INSERT INTO public.users (name, email) VALUES
     ('Charles Leclerc', 'user2@example.com'),
     ('Carlos Sainz', 'user3@example.com');
 
--- Seed data for the 'products' table
-INSERT INTO public.products (name, description) VALUES
-    ('Product A', 'Description for Product A'),
-    ('Product B', 'Description for Product B'),
-    ('Product C', 'Description for Product C');
-
--- Seed data for the 'orders' table
-INSERT INTO public.orders (product_id, customer_id, status, delivery_date) VALUES
-    (1, 1, 'Delivered', NOW() - INTERVAl '7 days'),
-    (2, 1, 'In Progress', NOW() - INTERVAl '14 days'),
-    (3, 2, 'Delivered', NOW() - INTERVAl '7 days'),
-    (1, 3, 'Cancelled', NOW() - INTERVAl '30 days');
+-- Seed data for the 'coupons' table
+INSERT INTO public.coupons (user_id, code, expiration_date) VALUES
+    (1, 'COUPON3', NOW() + INTERVAL '2 day'),
+    (2, 'COUPON16', NOW() + INTERVAL '2 day'),
+    (3, 'COUPON55', NOW() + INTERVAL '2 day');
 ```
 
 You can copy / paste this into the `RUN SQL` tab in the Hasura Console on the `Data` page. Then, track all relationships
 under the `Public` schema on the `Data` page.
 
-**For any order that is delivered, do be sure to change the date to a time within the last seven days.**
+**We're generating coupons that expire in two days so that we can test our Scheduled Trigger. If you run this SQL and
+come back to the project later, remember to update the `expiration_date` field.**
 
 </details>
 
@@ -120,15 +99,15 @@ Head to your the Hasura Console of your project and navigate to the "Events" tab
 
 ## Step 2: Configure the Scheduled Event
 
-First, provide a name for your trigger, e.g., `send_review_request_email`. Then, enter a webhook URL that will be called
-when the event is triggered. This webhook will be responsible for sending the review request email and can be hosted
-anywhere, and written in any language, you like.
+First, provide a name for your trigger, e.g., `send_coupon_expiration_email`. Then, enter a webhook URL that will be
+called when the event is triggered. This webhook will be responsible for sending the review request email and can be
+hosted anywhere, and written in any language, you like.
 
 In the example below, if we're using Docker, we'll use a webhook endpoint hosted on our own machine running on port
 `4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
 
 ```
-http://host.docker.internal:4000/review-request
+http://host.docker.internal:4000/expiration_check
 ```
 
 :::info Tunneling your webhook endpoint
@@ -150,11 +129,11 @@ midnight. We can do that with the following cron expression:
 
 Our trigger must also have a payload. This payload will be sent to the webhook endpoint when the event is triggered. We
 don't have to include any data in the payload, but we can if we want to. In this example, we'll simply send a
-`trigger_type` property categorizing the event as a `review_requests`. In the `Payload` section, enter the following:
+`trigger_type` property categorizing the event as a `coupon_reminder`. In the `Payload` section, enter the following:
 
 ```json
 {
-  "trigger_type": "review_requests"
+  "trigger_type": "coupon_reminder"
 }
 ```
 
@@ -168,15 +147,16 @@ Under `Advanced Settings`, we can configure the headers that will be sent with t
   width="1000"
 />
 
-Also, change the `Request Transform Options` to `POST` so that the payload is sent in the request body.
-
 Finally, click the `Add Cron Trigger` button to create the Scheduled Event.
 
 ## Step 3: Create a webhook to handle the request
 
 Whenever a cron job is triggered, Hasura will send a request to the webhook URL you provided. In this example, we're
-simply going to send a `POST` request. Our webhook will parse the request, ensure the header is correct, and then query
-the database to determine which customers should receive a review request email.
+simply going to send a `POST` request. Our webhook will needs to do three things when triggered:
+
+1. Ensure the auth header is correct.
+2. Query the database to see which coupons are expiring in two days.
+3. For each coupon returned, send an email to the user.
 
 Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
 attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
@@ -222,7 +202,7 @@ nodemailer.createTestAccount((err, account) => {
   });
 
   // Our route for the webhook
-  app.post('/review-request', async (req, res) => {
+  app.post('/expiration_check', async (req, res) => {
     // confirm the auth header is correct — ideally, you'd keep the secret in an environment variable
     const authHeader = req.headers['secret-authorization-string'];
     if (authHeader !== 'super_secret_string_123') {
@@ -233,14 +213,11 @@ nodemailer.createTestAccount((err, account) => {
 
     // get our date ready for the query
     const today = new Date();
-    const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const formattedDate = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(
-      2,
-      '0'
-    )}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`;
+    const twoDaysFromNow = today.setDate(today.getDate() + 2);
+    const twoDaysFromNowString = new Date(twoDaysFromNow).toISOString().split('T')[0];
 
     // Fetch the data from our Hasura instance
-    async function getRecentOrders() {
+    async function getExpiringCoupons() {
       const response = await fetch('http://localhost:8080/v1/graphql', {
         method: 'POST',
         headers: {
@@ -249,51 +226,49 @@ nodemailer.createTestAccount((err, account) => {
         },
         body: JSON.stringify({
           query: `
-          query ReviewRequestQuery($delivery_date: date!) {
-            orders(where: {delivery_date: {_eq: $delivery_date}, is_reviewed: {_eq: false}}) {
-              user {
+          query GetExpiringCoupons($two_days_from_now: date!) {
+            coupons(where: {expiration_date: {_lte: $two_days_from_now}}) {
+                id
+                code
+                expiration_date
+                user {
                 id
                 name
                 email
-              }
-              product {
-                id
-                name
+                }
               }
             }
-          }
-          
           `,
           variables: {
-            delivery_date: formattedDate,
+            two_days_from_now: twoDaysFromNowString,
           },
         }),
       });
       const { data } = await response.json();
-      return data.orders;
+      return data.coupons;
     }
 
-    let orders = await getRecentOrders();
+    let coupons = await getExpiringCoupons();
 
     // map over the data and send an email to each customer
-    async function sendReviewRequests() {
+    async function sendCouponReminder(coupons) {
       let outcomes = [];
-      orders.map(async order => {
+      coupons.map(async (coupon) => {
         // Create a message object
         const message = {
           from: 'SuperStore.com <sender@SuperStore.com>',
-          to: `${order.user.name} <${order.user.email}>`,
-          subject: `We need your review, ${order.user.name.split(' ')[0]}!`,
-          text: `Hi ${order.user.name.split(' ')[0]}, we hope you're enjoying your ${
-            order.product.name
-          }. Please leave us a review!`,
+          to: `${coupon.user.name} <${coupon.user.email}>`,
+          subject: `You've got a coupon expiring soon, ${coupon.user.name.split(' ')[0]}!`,
+          text: `Yo ${coupon.user.name.split(' ')[0]},\n\nYour coupon code, ${
+            coupon.code
+          }, is expiring soon! Use it before ${coupon.expiration_date}.\n\nThanks,\nSuperStore.com`,
         };
 
         // Send the message using the Nodemailer transporter
         const info = await transporter.sendMail(message);
 
         // Log the message info
-        console.log(`\nMessage sent to ${order.user.name}: ${nodemailer.getTestMessageUrl(info)}`);
+        console.log(`\nMessage sent to ${coupon.user.name}: ${nodemailer.getTestMessageUrl(info)}`);
 
         // add the info to the outcomes array
         outcomes.push({
@@ -304,11 +279,11 @@ nodemailer.createTestAccount((err, account) => {
       });
     }
 
-    await sendReviewRequests(orders);
+    await sendCouponReminder(coupons);
 
     // Return a JSON response to the client
     res.json({
-      message: 'Review requests sent!',
+      message: 'Coupons sent!',
     });
   });
 
