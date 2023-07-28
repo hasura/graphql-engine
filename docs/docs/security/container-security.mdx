@@ -1,0 +1,40 @@
+---
+description: Container security of Hasura GraphQL Engine images
+sidebar_label: Container Security
+keywords:
+  - hasura
+  - docs
+  - deployment
+  - container
+sidebar_position: 4
+---
+
+# Container Security
+
+## Non-root user and group
+
+By default, all `hasura/graphql-engine` images come with a non-root user and group named `hasura`. Both the user ID
+(UID) and group ID (GID) for this non-root user are `1001`.
+
+We strongly recommend using this non-root user and group to run the `graphql-engine` container. This practice enhances 
+system security and mitigates potential risks in the event of a future container escape vulnerability.
+
+If you're using docker-compose, this can be done by implementing the `user` field like this:
+
+```yaml
+version: '3.6'
+services:
+  graphql-engine:
+    image: hasura/graphql-engine:v2.30.0
+    user: 1001:1001
+    ports:
+      - '8080:8080'
+```
+
+:::info Existing UID and GID
+
+Since the non-root UID and GID is `1001`, you will need to make sure that the host machine in which the container is
+running does not have an existing UID and GID that are `1001`. This will ensure that even if a container escape happens, the
+attacker would not be able to do anything useful in the system.
+
+:::
