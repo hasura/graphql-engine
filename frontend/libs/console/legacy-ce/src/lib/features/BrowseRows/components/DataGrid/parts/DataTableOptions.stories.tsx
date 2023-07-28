@@ -102,8 +102,8 @@ export const Testing: StoryObj<typeof DataTableOptions> = {
     const canvas = within(canvasElement);
 
     // the two where clauses should be present
-    expect(await canvas.findByText('AlbumId > 12')).toBeVisible();
-    expect(await canvas.findByText('ArtistId < 12')).toBeVisible();
+    expect(await canvas.findByText('AlbumId > "12"')).toBeVisible();
+    expect(await canvas.findByText('ArtistId < "12"')).toBeVisible();
 
     // the two order by clauses should be present
     expect(await canvas.findByText('First Name (asc)')).toBeVisible();
