@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687235678"><span id="local-6989586621687235679"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687237031"><span id="local-6989586621687237032"></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
 </span><span id="line-3"></span><span>
 </span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Webhook.Transform.Class</span><span>
@@ -22,7 +22,7 @@
 </span><span id="line-22"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unTemplate"><span class="annot"><span class="annottext">Template -&gt; Text
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#unTemplate"><span class="hs-identifier hs-var hs-var">unTemplate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235688"><span id="local-6989586621687235692"><span class="annot"><span class="annottext">Template -&gt; Template -&gt; Bool
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237041"><span id="local-6989586621687237045"><span class="annot"><span class="annottext">Template -&gt; Template -&gt; Bool
 (Template -&gt; Template -&gt; Bool)
 -&gt; (Template -&gt; Template -&gt; Bool) -&gt; Eq Template
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -30,7 +30,7 @@ $c== :: Template -&gt; Template -&gt; Bool
 == :: Template -&gt; Template -&gt; Bool
 $c/= :: Template -&gt; Template -&gt; Bool
 /= :: Template -&gt; Template -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235697"><span id="local-6989586621687235699"><span class="annot"><span class="annottext">(forall x. Template -&gt; Rep Template x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237050"><span id="local-6989586621687237052"><span class="annot"><span class="annottext">(forall x. Template -&gt; Rep Template x)
 -&gt; (forall x. Rep Template x -&gt; Template) -&gt; Generic Template
 forall x. Rep Template x -&gt; Template
 forall x. Template -&gt; Rep Template x
@@ -40,7 +40,7 @@ $cfrom :: forall x. Template -&gt; Rep Template x
 from :: forall x. Template -&gt; Rep Template x
 $cto :: forall x. Rep Template x -&gt; Template
 to :: forall x. Rep Template x -&gt; Template
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235705"><span id="local-6989586621687235709"><span id="local-6989586621687235712"><span id="local-6989586621687235716"><span id="local-6989586621687235719"><span id="local-6989586621687235722"><span id="local-6989586621687235725"><span class="annot"><span class="annottext">Eq Template
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237058"><span id="local-6989586621687237062"><span id="local-6989586621687237065"><span id="local-6989586621687237069"><span id="local-6989586621687237072"><span id="local-6989586621687237075"><span id="local-6989586621687237078"><span class="annot"><span class="annottext">Eq Template
 Eq Template
 -&gt; (Template -&gt; Template -&gt; Ordering)
 -&gt; (Template -&gt; Template -&gt; Bool)
@@ -77,7 +77,7 @@ $cmax :: Template -&gt; Template -&gt; Template
 max :: Template -&gt; Template -&gt; Template
 $cmin :: Template -&gt; Template -&gt; Template
 min :: Template -&gt; Template -&gt; Template
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235729"><span id="local-6989586621687235735"><span id="local-6989586621687235739"><span class="annot"><span class="annottext">Int -&gt; Template -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237082"><span id="local-6989586621687237088"><span id="local-6989586621687237092"><span class="annot"><span class="annottext">Int -&gt; Template -&gt; ShowS
 [Template] -&gt; ShowS
 Template -&gt; String
 (Int -&gt; Template -&gt; ShowS)
@@ -91,7 +91,7 @@ show :: Template -&gt; String
 $cshowList :: [Template] -&gt; ShowS
 showList :: [Template] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235745"><span id="local-6989586621687235750"><span class="annot"><span class="annottext">Eq Template
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237098"><span id="local-6989586621687237103"><span class="annot"><span class="annottext">Eq Template
 Eq Template
 -&gt; (Int -&gt; Template -&gt; Int)
 -&gt; (Template -&gt; Int)
@@ -103,7 +103,7 @@ $chashWithSalt :: Int -&gt; Template -&gt; Int
 hashWithSalt :: Int -&gt; Template -&gt; Int
 $chash :: Template -&gt; Int
 hash :: Template -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235756"><span id="local-6989586621687235761"><span class="annot"><span class="annottext">FromJSONKeyFunction [Template]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237109"><span id="local-6989586621687237114"><span class="annot"><span class="annottext">FromJSONKeyFunction [Template]
 FromJSONKeyFunction Template
 FromJSONKeyFunction Template
 -&gt; FromJSONKeyFunction [Template] -&gt; FromJSONKey Template
@@ -113,7 +113,7 @@ $cfromJSONKey :: FromJSONKeyFunction Template
 fromJSONKey :: FromJSONKeyFunction Template
 $cfromJSONKeyList :: FromJSONKeyFunction [Template]
 fromJSONKeyList :: FromJSONKeyFunction [Template]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235767"><span id="local-6989586621687235772"><span class="annot"><span class="annottext">ToJSONKeyFunction [Template]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237120"><span id="local-6989586621687237125"><span class="annot"><span class="annottext">ToJSONKeyFunction [Template]
 ToJSONKeyFunction Template
 ToJSONKeyFunction Template
 -&gt; ToJSONKeyFunction [Template] -&gt; ToJSONKey Template
@@ -124,15 +124,15 @@ toJSONKey :: ToJSONKeyFunction Template
 $ctoJSONKeyList :: ToJSONKeyFunction [Template]
 toJSONKeyList :: ToJSONKeyFunction [Template]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235778"><span class="annot"><span class="annottext">Template -&gt; ()
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237131"><span class="annot"><span class="annottext">Template -&gt; ()
 (Template -&gt; ()) -&gt; NFData Template
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: Template -&gt; ()
 rnf :: Template -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235794"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-29"></span><span>  </span><span id="local-6989586621687235800"><span class="annot"><span class="annottext">codec :: JSONCodec Template
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237147"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621687237153"><span class="annot"><span class="annottext">codec :: JSONCodec Template
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Template)
 -&gt; (Template -&gt; Text)
 -&gt; Codec Value Text Text
@@ -148,9 +148,9 @@ forall oldOutput newOutput newInput oldInput context.
 forall value. HasCodec value =&gt; JSONCodec value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235803"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621687235809"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Template
-</span><a href="#local-6989586621687235809"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser Template) -&gt; Value -&gt; Parser Template
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237156"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621687237162"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Template
+</span><a href="#local-6989586621687237162"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser Template) -&gt; Value -&gt; Parser Template
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withText"><span class="hs-identifier hs-var">J.withText</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Template&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Template -&gt; Parser Template
@@ -162,9 +162,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Template
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-var">Template</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235815"><span id="local-6989586621687235819"><span id="local-6989586621687235822"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>  </span><span id="local-6989586621687235826"><span class="annot"><span class="annottext">toJSON :: Template -&gt; Value
-</span><a href="#local-6989586621687235826"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237168"><span id="local-6989586621687237172"><span id="local-6989586621687237175"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621687237179"><span class="annot"><span class="annottext">toJSON :: Template -&gt; Value
+</span><a href="#local-6989586621687237179"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (Template -&gt; Text) -&gt; Template -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Template -&gt; Text
@@ -180,7 +180,7 @@ forall a b. Coercible a b =&gt; a -&gt; b
 </span><span id="line-43"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="getUnescapedTemplate"><span class="annot"><span class="annottext">UnescapedTemplate -&gt; Text
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#getUnescapedTemplate"><span class="hs-identifier hs-var hs-var">getUnescapedTemplate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235832"><span id="local-6989586621687235835"><span class="annot"><span class="annottext">UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237185"><span id="local-6989586621687237188"><span class="annot"><span class="annottext">UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
 (UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool)
 -&gt; (UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool)
 -&gt; Eq UnescapedTemplate
@@ -189,7 +189,7 @@ $c== :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
 == :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
 $c/= :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
 /= :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235839"><span id="local-6989586621687235841"><span class="annot"><span class="annottext">(forall x. UnescapedTemplate -&gt; Rep UnescapedTemplate x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237192"><span id="local-6989586621687237194"><span class="annot"><span class="annottext">(forall x. UnescapedTemplate -&gt; Rep UnescapedTemplate x)
 -&gt; (forall x. Rep UnescapedTemplate x -&gt; UnescapedTemplate)
 -&gt; Generic UnescapedTemplate
 forall x. Rep UnescapedTemplate x -&gt; UnescapedTemplate
@@ -200,7 +200,7 @@ $cfrom :: forall x. UnescapedTemplate -&gt; Rep UnescapedTemplate x
 from :: forall x. UnescapedTemplate -&gt; Rep UnescapedTemplate x
 $cto :: forall x. Rep UnescapedTemplate x -&gt; UnescapedTemplate
 to :: forall x. Rep UnescapedTemplate x -&gt; UnescapedTemplate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235846"><span id="local-6989586621687235849"><span id="local-6989586621687235852"><span id="local-6989586621687235856"><span id="local-6989586621687235859"><span id="local-6989586621687235862"><span id="local-6989586621687235865"><span class="annot"><span class="annottext">Eq UnescapedTemplate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237199"><span id="local-6989586621687237202"><span id="local-6989586621687237205"><span id="local-6989586621687237209"><span id="local-6989586621687237212"><span id="local-6989586621687237215"><span id="local-6989586621687237218"><span class="annot"><span class="annottext">Eq UnescapedTemplate
 Eq UnescapedTemplate
 -&gt; (UnescapedTemplate -&gt; UnescapedTemplate -&gt; Ordering)
 -&gt; (UnescapedTemplate -&gt; UnescapedTemplate -&gt; Bool)
@@ -237,7 +237,7 @@ $cmax :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; UnescapedTemplate
 max :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; UnescapedTemplate
 $cmin :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; UnescapedTemplate
 min :: UnescapedTemplate -&gt; UnescapedTemplate -&gt; UnescapedTemplate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235868"><span id="local-6989586621687235872"><span id="local-6989586621687235876"><span class="annot"><span class="annottext">Int -&gt; UnescapedTemplate -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237221"><span id="local-6989586621687237225"><span id="local-6989586621687237229"><span class="annot"><span class="annottext">Int -&gt; UnescapedTemplate -&gt; ShowS
 [UnescapedTemplate] -&gt; ShowS
 UnescapedTemplate -&gt; String
 (Int -&gt; UnescapedTemplate -&gt; ShowS)
@@ -253,7 +253,7 @@ show :: UnescapedTemplate -&gt; String
 $cshowList :: [UnescapedTemplate] -&gt; ShowS
 showList :: [UnescapedTemplate] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235881"><span id="local-6989586621687235885"><span class="annot"><span class="annottext">Eq UnescapedTemplate
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237234"><span id="local-6989586621687237238"><span class="annot"><span class="annottext">Eq UnescapedTemplate
 Eq UnescapedTemplate
 -&gt; (Int -&gt; UnescapedTemplate -&gt; Int)
 -&gt; (UnescapedTemplate -&gt; Int)
@@ -265,7 +265,7 @@ $chashWithSalt :: Int -&gt; UnescapedTemplate -&gt; Int
 hashWithSalt :: Int -&gt; UnescapedTemplate -&gt; Int
 $chash :: UnescapedTemplate -&gt; Int
 hash :: UnescapedTemplate -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235890"><span id="local-6989586621687235894"><span class="annot"><span class="annottext">FromJSONKeyFunction [UnescapedTemplate]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-1d076a512beff6efb520b4a868dd7c042a5da8caf76238be06645e5a6bdcfacd/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237243"><span id="local-6989586621687237247"><span class="annot"><span class="annottext">FromJSONKeyFunction [UnescapedTemplate]
 FromJSONKeyFunction UnescapedTemplate
 FromJSONKeyFunction UnescapedTemplate
 -&gt; FromJSONKeyFunction [UnescapedTemplate]
@@ -276,7 +276,7 @@ $cfromJSONKey :: FromJSONKeyFunction UnescapedTemplate
 fromJSONKey :: FromJSONKeyFunction UnescapedTemplate
 $cfromJSONKeyList :: FromJSONKeyFunction [UnescapedTemplate]
 fromJSONKeyList :: FromJSONKeyFunction [UnescapedTemplate]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235899"><span id="local-6989586621687235903"><span class="annot"><span class="annottext">ToJSONKeyFunction [UnescapedTemplate]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237252"><span id="local-6989586621687237256"><span class="annot"><span class="annottext">ToJSONKeyFunction [UnescapedTemplate]
 ToJSONKeyFunction UnescapedTemplate
 ToJSONKeyFunction UnescapedTemplate
 -&gt; ToJSONKeyFunction [UnescapedTemplate]
@@ -288,15 +288,15 @@ toJSONKey :: ToJSONKeyFunction UnescapedTemplate
 $ctoJSONKeyList :: ToJSONKeyFunction [UnescapedTemplate]
 toJSONKeyList :: ToJSONKeyFunction [UnescapedTemplate]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235908"><span class="annot"><span class="annottext">UnescapedTemplate -&gt; ()
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237261"><span class="annot"><span class="annottext">UnescapedTemplate -&gt; ()
 (UnescapedTemplate -&gt; ()) -&gt; NFData UnescapedTemplate
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: UnescapedTemplate -&gt; ()
 rnf :: UnescapedTemplate -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235920"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621687235924"><span class="annot"><span class="annottext">codec :: JSONCodec UnescapedTemplate
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237273"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621687237277"><span class="annot"><span class="annottext">codec :: JSONCodec UnescapedTemplate
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; UnescapedTemplate)
 -&gt; (UnescapedTemplate -&gt; Text)
 -&gt; Codec Value Text Text
@@ -312,8 +312,8 @@ forall oldOutput newOutput newInput oldInput context.
 forall value. HasCodec value =&gt; JSONCodec value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235927"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621687235931"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UnescapedTemplate
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237280"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">J.FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621687237284"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UnescapedTemplate
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser UnescapedTemplate)
 -&gt; Value
@@ -329,8 +329,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; UnescapedTemplate
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-var">UnescapedTemplate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687235934"><span id="local-6989586621687235938"><span id="local-6989586621687235941"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>  </span><span id="local-6989586621687235944"><span class="annot"><span class="annottext">toJSON :: UnescapedTemplate -&gt; Value
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237287"><span id="local-6989586621687237291"><span id="local-6989586621687237294"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#UnescapedTemplate"><span class="hs-identifier hs-type">UnescapedTemplate</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621687237297"><span class="annot"><span class="annottext">toJSON :: UnescapedTemplate -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
 -&gt; (UnescapedTemplate -&gt; Text) -&gt; UnescapedTemplate -&gt; Value
@@ -344,14 +344,14 @@ forall a b. Coercible a b =&gt; a -&gt; b
 </span><span id="line-60"></span><span class="annot"><span class="hs-comment">-- | Available templating engines.</span></span><span>
 </span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="TemplatingEngine"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-var">TemplatingEngine</span></a></span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Kriti"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#Kriti"><span class="hs-identifier hs-var">Kriti</span></a></span></span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687235947"><span id="local-6989586621687235949"><span class="annot"><span class="annottext">TemplatingEngine
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237300"><span id="local-6989586621687237302"><span class="annot"><span class="annottext">TemplatingEngine
 TemplatingEngine -&gt; TemplatingEngine -&gt; Bounded TemplatingEngine
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: TemplatingEngine
 minBound :: TemplatingEngine
 $cmaxBound :: TemplatingEngine
 maxBound :: TemplatingEngine
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235953"><span id="local-6989586621687235961"><span id="local-6989586621687235967"><span id="local-6989586621687235980"><span id="local-6989586621687235982"><span id="local-6989586621687235986"><span id="local-6989586621687235990"><span id="local-6989586621687235994"><span class="annot"><span class="annottext">Int -&gt; TemplatingEngine
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237306"><span id="local-6989586621687237314"><span id="local-6989586621687237320"><span id="local-6989586621687237333"><span id="local-6989586621687237335"><span id="local-6989586621687237339"><span id="local-6989586621687237343"><span id="local-6989586621687237347"><span class="annot"><span class="annottext">Int -&gt; TemplatingEngine
 TemplatingEngine -&gt; Int
 TemplatingEngine -&gt; [TemplatingEngine]
 TemplatingEngine -&gt; TemplatingEngine
@@ -396,7 +396,7 @@ $cenumFromThenTo :: TemplatingEngine
 -&gt; TemplatingEngine -&gt; TemplatingEngine -&gt; [TemplatingEngine]
 enumFromThenTo :: TemplatingEngine
 -&gt; TemplatingEngine -&gt; TemplatingEngine -&gt; [TemplatingEngine]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687235998"><span id="local-6989586621687236000"><span class="annot"><span class="annottext">TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237351"><span id="local-6989586621687237353"><span class="annot"><span class="annottext">TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
 (TemplatingEngine -&gt; TemplatingEngine -&gt; Bool)
 -&gt; (TemplatingEngine -&gt; TemplatingEngine -&gt; Bool)
 -&gt; Eq TemplatingEngine
@@ -405,7 +405,7 @@ $c== :: TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
 == :: TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
 $c/= :: TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
 /= :: TemplatingEngine -&gt; TemplatingEngine -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236004"><span id="local-6989586621687236006"><span class="annot"><span class="annottext">(forall x. TemplatingEngine -&gt; Rep TemplatingEngine x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237357"><span id="local-6989586621687237359"><span class="annot"><span class="annottext">(forall x. TemplatingEngine -&gt; Rep TemplatingEngine x)
 -&gt; (forall x. Rep TemplatingEngine x -&gt; TemplatingEngine)
 -&gt; Generic TemplatingEngine
 forall x. Rep TemplatingEngine x -&gt; TemplatingEngine
@@ -416,7 +416,7 @@ $cfrom :: forall x. TemplatingEngine -&gt; Rep TemplatingEngine x
 from :: forall x. TemplatingEngine -&gt; Rep TemplatingEngine x
 $cto :: forall x. Rep TemplatingEngine x -&gt; TemplatingEngine
 to :: forall x. Rep TemplatingEngine x -&gt; TemplatingEngine
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236009"><span id="local-6989586621687236011"><span id="local-6989586621687236015"><span class="annot"><span class="annottext">Int -&gt; TemplatingEngine -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237362"><span id="local-6989586621687237364"><span id="local-6989586621687237368"><span class="annot"><span class="annottext">Int -&gt; TemplatingEngine -&gt; ShowS
 [TemplatingEngine] -&gt; ShowS
 TemplatingEngine -&gt; String
 (Int -&gt; TemplatingEngine -&gt; ShowS)
@@ -432,15 +432,15 @@ show :: TemplatingEngine -&gt; String
 $cshowList :: [TemplatingEngine] -&gt; ShowS
 showList :: [TemplatingEngine] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687236018"><span class="annot"><span class="annottext">TemplatingEngine -&gt; ()
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237371"><span class="annot"><span class="annottext">TemplatingEngine -&gt; ()
 (TemplatingEngine -&gt; ()) -&gt; NFData TemplatingEngine
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: TemplatingEngine -&gt; ()
 rnf :: TemplatingEngine -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687236029"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621687236037"><span class="annot"><span class="annottext">codec :: JSONCodec TemplatingEngine
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237382"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621687237390"><span class="annot"><span class="annottext">codec :: JSONCodec TemplatingEngine
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty (TemplatingEngine, Text) -&gt; JSONCodec TemplatingEngine
 forall constant.
 Eq constant =&gt;
@@ -450,8 +450,8 @@ NonEmpty (constant, Text) -&gt; JSONCodec constant
 </span><span class="hs-string">&quot;Kriti&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- XXX(jkachmar): We need roundtrip tests for these instances.</span><span>
-</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687236040"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-71"></span><span>  </span><span id="local-6989586621687236087"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TemplatingEngine
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237393"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687237440"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TemplatingEngine
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser TemplatingEngine
 forall a.
@@ -461,13 +461,13 @@ Options -&gt; Value -&gt; Parser a
 </span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">J.defaultOptions</span></a></span><span>
 </span><span id="line-74"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">tagSingleConstructors :: Bool
-</span><a href="#local-6989586621687236090"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687237443"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-75"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- XXX(jkachmar): We need roundtrip tests for these instances.</span><span>
-</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687236094"><span id="local-6989586621687236098"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-79"></span><span>  </span><span id="local-6989586621687236143"><span class="annot"><span class="annottext">toJSON :: TemplatingEngine -&gt; Value
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687237447"><span id="local-6989586621687237451"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>  </span><span id="local-6989586621687237496"><span class="annot"><span class="annottext">toJSON :: TemplatingEngine -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; TemplatingEngine -&gt; Value
 forall a.
@@ -477,12 +477,12 @@ Options -&gt; a -&gt; Value
 </span><span id="line-81"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">J.defaultOptions</span></a></span><span>
 </span><span id="line-82"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">tagSingleConstructors :: Bool
-</span><a href="#local-6989586621687236090"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687237443"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-83"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621687236180"><span class="annot"><span class="annottext">toEncoding :: TemplatingEngine -&gt; Encoding
-</span><a href="#local-6989586621687236180"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621687237533"><span class="annot"><span class="annottext">toEncoding :: TemplatingEngine -&gt; Encoding
+</span><a href="#local-6989586621687237533"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; TemplatingEngine -&gt; Encoding
 forall a.
 (Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
@@ -491,7 +491,7 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Options
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">J.defaultOptions</span></a></span><span>
 </span><span id="line-88"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">tagSingleConstructors :: Bool
-</span><a href="#local-6989586621687236090"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687237443"><span class="hs-identifier hs-var">J.tagSingleConstructors</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-89"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-90"></span><span>
@@ -500,9 +500,9 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-93"></span><span class="hs-comment">--</span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- In most cases it is some variation on a piece of template text describing</span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- the transformation.</span><span>
-</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span id="local-6989586621687236183"><span class="annot"><a href="#local-6989586621687236183"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span id="local-6989586621687237536"><span class="annot"><a href="#local-6989586621687237536"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span id="local-6989586621687236184"><span class="annot"><a href="#local-6989586621687236184"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-98"></span><span class="hs-keyword">data</span><span> </span><span class="hs-keyword">family</span><span> </span><span id="TransformCtx"><span class="annot"><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#TransformCtx"><span class="hs-identifier hs-var">TransformCtx</span></a></span></span><span> </span><span id="local-6989586621687237537"><span class="annot"><a href="#local-6989586621687237537"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-101"></span><span>
@@ -511,7 +511,7 @@ Options -&gt; a -&gt; Encoding
 </span><span id="line-104"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="tebMessages"><span class="annot"><span class="annottext">TransformErrorBundle -&gt; [Value]
 </span><a href="Hasura.RQL.Types.Webhook.Transform.Class.html#tebMessages"><span class="hs-identifier hs-var hs-var">tebMessages</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#Value"><span class="hs-identifier hs-type">J.Value</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687236188"><span id="local-6989586621687236193"><span class="annot"><span class="annottext">TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237541"><span id="local-6989586621687237546"><span class="annot"><span class="annottext">TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
 (TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool)
 -&gt; (TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool)
 -&gt; Eq TransformErrorBundle
@@ -520,7 +520,7 @@ $c== :: TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
 == :: TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
 $c/= :: TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
 /= :: TransformErrorBundle -&gt; TransformErrorBundle -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236198"><span id="local-6989586621687236200"><span class="annot"><span class="annottext">(forall x. TransformErrorBundle -&gt; Rep TransformErrorBundle x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237551"><span id="local-6989586621687237553"><span class="annot"><span class="annottext">(forall x. TransformErrorBundle -&gt; Rep TransformErrorBundle x)
 -&gt; (forall x. Rep TransformErrorBundle x -&gt; TransformErrorBundle)
 -&gt; Generic TransformErrorBundle
 forall x. Rep TransformErrorBundle x -&gt; TransformErrorBundle
@@ -531,7 +531,7 @@ $cfrom :: forall x. TransformErrorBundle -&gt; Rep TransformErrorBundle x
 from :: forall x. TransformErrorBundle -&gt; Rep TransformErrorBundle x
 $cto :: forall x. Rep TransformErrorBundle x -&gt; TransformErrorBundle
 to :: forall x. Rep TransformErrorBundle x -&gt; TransformErrorBundle
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236203"><span id="local-6989586621687236209"><span id="local-6989586621687236213"><span class="annot"><span class="annottext">Int -&gt; TransformErrorBundle -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237556"><span id="local-6989586621687237562"><span id="local-6989586621687237566"><span class="annot"><span class="annottext">Int -&gt; TransformErrorBundle -&gt; ShowS
 [TransformErrorBundle] -&gt; ShowS
 TransformErrorBundle -&gt; String
 (Int -&gt; TransformErrorBundle -&gt; ShowS)
@@ -547,7 +547,7 @@ show :: TransformErrorBundle -&gt; String
 $cshowList :: [TransformErrorBundle] -&gt; ShowS
 showList :: [TransformErrorBundle] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687236220"><span id="local-6989586621687236225"><span id="local-6989586621687236229"><span class="annot"><span class="annottext">Semigroup TransformErrorBundle
+</span><span id="line-107"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237573"><span id="local-6989586621687237578"><span id="local-6989586621687237582"><span class="annot"><span class="annottext">Semigroup TransformErrorBundle
 TransformErrorBundle
 Semigroup TransformErrorBundle
 -&gt; TransformErrorBundle
@@ -568,7 +568,7 @@ mappend :: TransformErrorBundle
 -&gt; TransformErrorBundle -&gt; TransformErrorBundle
 $cmconcat :: [TransformErrorBundle] -&gt; TransformErrorBundle
 mconcat :: [TransformErrorBundle] -&gt; TransformErrorBundle
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236235"><span id="local-6989586621687236240"><span id="local-6989586621687236246"><span class="annot"><span class="annottext">NonEmpty TransformErrorBundle -&gt; TransformErrorBundle
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237588"><span id="local-6989586621687237593"><span id="local-6989586621687237599"><span class="annot"><span class="annottext">NonEmpty TransformErrorBundle -&gt; TransformErrorBundle
 TransformErrorBundle
 -&gt; TransformErrorBundle -&gt; TransformErrorBundle
 (TransformErrorBundle
@@ -598,7 +598,7 @@ b -&gt; TransformErrorBundle -&gt; TransformErrorBundle
 stimes :: forall b.
 Integral b =&gt;
 b -&gt; TransformErrorBundle -&gt; TransformErrorBundle
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236253"><span id="local-6989586621687236259"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformErrorBundle]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237606"><span id="local-6989586621687237612"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformErrorBundle]
 Value -&gt; Parser TransformErrorBundle
 (Value -&gt; Parser TransformErrorBundle)
 -&gt; (Value -&gt; Parser [TransformErrorBundle])
@@ -609,7 +609,7 @@ $cparseJSON :: Value -&gt; Parser TransformErrorBundle
 parseJSON :: Value -&gt; Parser TransformErrorBundle
 $cparseJSONList :: Value -&gt; Parser [TransformErrorBundle]
 parseJSONList :: Value -&gt; Parser [TransformErrorBundle]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687236266"><span id="local-6989586621687236272"><span id="local-6989586621687236277"><span id="local-6989586621687236282"><span class="annot"><span class="annottext">[TransformErrorBundle] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687237619"><span id="local-6989586621687237625"><span id="local-6989586621687237630"><span id="local-6989586621687237635"><span class="annot"><span class="annottext">[TransformErrorBundle] -&gt; Value
 [TransformErrorBundle] -&gt; Encoding
 TransformErrorBundle -&gt; Value
 TransformErrorBundle -&gt; Encoding
@@ -633,7 +633,7 @@ toJSONList :: [TransformErrorBundle] -&gt; Value
 $ctoEncodingList :: [TransformErrorBundle] -&gt; Encoding
 toEncodingList :: [TransformErrorBundle] -&gt; Encoding
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687236289"><span class="annot"><span class="annottext">TransformErrorBundle -&gt; ()
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687237642"><span class="annot"><span class="annottext">TransformErrorBundle -&gt; ()
 (TransformErrorBundle -&gt; ()) -&gt; NFData TransformErrorBundle
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: TransformErrorBundle -&gt; ()
