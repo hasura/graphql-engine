@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687217556"><span id="local-6989586621687217557"><span id="local-6989586621687217558"><span id="local-6989586621687217559"><span id="local-6989586621687217560"><span id="local-6989586621687217561"></span></span></span></span></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621687217827"><span id="local-6989586621687217828"><span id="local-6989586621687217829"><span id="local-6989586621687217830"><span id="local-6989586621687217831"><span id="local-6989586621687217832"></span></span></span></span></span></span><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
 </span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
 </span><span id="line-4"></span><span>
@@ -66,7 +66,7 @@
 </span><span id="line-63"></span><span>    </span><span id="_ocBatchSpanProcessor"><span class="annot"><span class="annottext">OpenTelemetryConfig -&gt; OtelBatchSpanProcessorConfig
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_ocBatchSpanProcessor"><span class="hs-identifier hs-var hs-var">_ocBatchSpanProcessor</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217599"><span id="local-6989586621687217610"><span class="annot"><span class="annottext">OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217870"><span id="local-6989586621687217881"><span class="annot"><span class="annottext">OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
 (OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool)
 -&gt; (OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool)
 -&gt; Eq OpenTelemetryConfig
@@ -75,7 +75,7 @@ $c== :: OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
 == :: OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
 $c/= :: OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
 /= :: OpenTelemetryConfig -&gt; OpenTelemetryConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217616"><span id="local-6989586621687217629"><span id="local-6989586621687217633"><span class="annot"><span class="annottext">Int -&gt; OpenTelemetryConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217887"><span id="local-6989586621687217900"><span id="local-6989586621687217904"><span class="annot"><span class="annottext">Int -&gt; OpenTelemetryConfig -&gt; ShowS
 [OpenTelemetryConfig] -&gt; ShowS
 OpenTelemetryConfig -&gt; String
 (Int -&gt; OpenTelemetryConfig -&gt; ShowS)
@@ -92,9 +92,9 @@ $cshowList :: [OpenTelemetryConfig] -&gt; ShowS
 showList :: [OpenTelemetryConfig] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217639"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621687217667"><span class="annot"><span class="annottext">codec :: JSONCodec OpenTelemetryConfig
-</span><a href="#local-6989586621687217667"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217910"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621687217938"><span class="annot"><span class="annottext">codec :: JSONCodec OpenTelemetryConfig
+</span><a href="#local-6989586621687217938"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; ObjectCodec OpenTelemetryConfig OpenTelemetryConfig
 -&gt; JSONCodec OpenTelemetryConfig
@@ -240,9 +240,9 @@ ObjectCodec oldInput output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">OpenTelemetryConfig -&gt; OtelBatchSpanProcessorConfig
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_ocBatchSpanProcessor"><span class="hs-identifier hs-var">_ocBatchSpanProcessor</span></a></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217676"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621687217702"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OpenTelemetryConfig
-</span><a href="#local-6989586621687217702"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217947"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OpenTelemetryConfig"><span class="hs-identifier hs-type">OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621687217973"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OpenTelemetryConfig
+</span><a href="#local-6989586621687217973"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser OpenTelemetryConfig)
 -&gt; Value
 -&gt; Parser OpenTelemetryConfig
@@ -254,8 +254,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser OpenTelemetryConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687217705"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687217705"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687217976"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687217976"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">OtelStatus
 -&gt; Set OtelDataType
 -&gt; OtelExporterConfig
@@ -275,7 +275,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; OpenTelemetryConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687217705"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687217976"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe OtelStatus)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -296,7 +296,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687217705"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687217976"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (Set OtelDataType))
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -314,7 +314,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687217705"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687217976"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe OtelExporterConfig)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -330,7 +330,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687217705"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687217976"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe OtelBatchSpanProcessorConfig)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -370,7 +370,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span id="line-112"></span><span>    </span><span id="OtelSubobjectAll"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelSubobjectAll"><span class="hs-identifier hs-var">OtelSubobjectAll</span></a></span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OtelSubobjectExporterOtlp"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelSubobjectExporterOtlp"><span class="hs-identifier hs-var">OtelSubobjectExporterOtlp</span></a></span></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OtelSubobjectBatchSpanProcessor"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelSubobjectBatchSpanProcessor"><span class="hs-identifier hs-var">OtelSubobjectBatchSpanProcessor</span></a></span></span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217710"><span id="local-6989586621687217712"><span class="annot"><span class="annottext">OpenTelemetryConfigSubobject
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217981"><span id="local-6989586621687217983"><span class="annot"><span class="annottext">OpenTelemetryConfigSubobject
 -&gt; OpenTelemetryConfigSubobject -&gt; Bool
 (OpenTelemetryConfigSubobject
  -&gt; OpenTelemetryConfigSubobject -&gt; Bool)
@@ -386,7 +386,7 @@ $c/= :: OpenTelemetryConfigSubobject
 -&gt; OpenTelemetryConfigSubobject -&gt; Bool
 /= :: OpenTelemetryConfigSubobject
 -&gt; OpenTelemetryConfigSubobject -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217716"><span id="local-6989586621687217718"><span class="annot"><span class="annottext">(forall x.
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217987"><span id="local-6989586621687217989"><span class="annot"><span class="annottext">(forall x.
  OpenTelemetryConfigSubobject -&gt; Rep OpenTelemetryConfigSubobject x)
 -&gt; (forall x.
     Rep OpenTelemetryConfigSubobject x -&gt; OpenTelemetryConfigSubobject)
@@ -405,7 +405,7 @@ $cto :: forall x.
 Rep OpenTelemetryConfigSubobject x -&gt; OpenTelemetryConfigSubobject
 to :: forall x.
 Rep OpenTelemetryConfigSubobject x -&gt; OpenTelemetryConfigSubobject
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217724"><span id="local-6989586621687217726"><span id="local-6989586621687217728"><span id="local-6989586621687217732"><span id="local-6989586621687217735"><span id="local-6989586621687217738"><span id="local-6989586621687217741"><span class="annot"><span class="annottext">Eq OpenTelemetryConfigSubobject
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217995"><span id="local-6989586621687217997"><span id="local-6989586621687217999"><span id="local-6989586621687218003"><span id="local-6989586621687218006"><span id="local-6989586621687218009"><span id="local-6989586621687218012"><span class="annot"><span class="annottext">Eq OpenTelemetryConfigSubobject
 Eq OpenTelemetryConfigSubobject
 -&gt; (OpenTelemetryConfigSubobject
     -&gt; OpenTelemetryConfigSubobject -&gt; Ordering)
@@ -466,7 +466,7 @@ $cmin :: OpenTelemetryConfigSubobject
 -&gt; OpenTelemetryConfigSubobject -&gt; OpenTelemetryConfigSubobject
 min :: OpenTelemetryConfigSubobject
 -&gt; OpenTelemetryConfigSubobject -&gt; OpenTelemetryConfigSubobject
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217745"><span id="local-6989586621687217747"><span id="local-6989586621687217751"><span class="annot"><span class="annottext">Int -&gt; OpenTelemetryConfigSubobject -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218016"><span id="local-6989586621687218018"><span id="local-6989586621687218022"><span class="annot"><span class="annottext">Int -&gt; OpenTelemetryConfigSubobject -&gt; ShowS
 [OpenTelemetryConfigSubobject] -&gt; ShowS
 OpenTelemetryConfigSubobject -&gt; String
 (Int -&gt; OpenTelemetryConfigSubobject -&gt; ShowS)
@@ -482,7 +482,7 @@ show :: OpenTelemetryConfigSubobject -&gt; String
 $cshowList :: [OpenTelemetryConfigSubobject] -&gt; ShowS
 showList :: [OpenTelemetryConfigSubobject] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217756"><span id="local-6989586621687217763"><span class="annot"><span class="annottext">Eq OpenTelemetryConfigSubobject
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218027"><span id="local-6989586621687218034"><span class="annot"><span class="annottext">Eq OpenTelemetryConfigSubobject
 Eq OpenTelemetryConfigSubobject
 -&gt; (Int -&gt; OpenTelemetryConfigSubobject -&gt; Int)
 -&gt; (OpenTelemetryConfigSubobject -&gt; Int)
@@ -498,7 +498,7 @@ hash :: OpenTelemetryConfigSubobject -&gt; Int
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="annot"><span class="hs-comment">-- | Should the OpenTelemetry exporter be enabled?</span></span><span>
 </span><span id="line-119"></span><span class="hs-keyword">data</span><span> </span><span id="OtelStatus"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-var">OtelStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OtelEnabled"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelEnabled"><span class="hs-identifier hs-var">OtelEnabled</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="OtelDisabled"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDisabled"><span class="hs-identifier hs-var">OtelDisabled</span></a></span></span><span>
-</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217780"><span id="local-6989586621687217782"><span class="annot"><span class="annottext">OtelStatus -&gt; OtelStatus -&gt; Bool
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218051"><span id="local-6989586621687218053"><span class="annot"><span class="annottext">OtelStatus -&gt; OtelStatus -&gt; Bool
 (OtelStatus -&gt; OtelStatus -&gt; Bool)
 -&gt; (OtelStatus -&gt; OtelStatus -&gt; Bool) -&gt; Eq OtelStatus
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -506,7 +506,7 @@ $c== :: OtelStatus -&gt; OtelStatus -&gt; Bool
 == :: OtelStatus -&gt; OtelStatus -&gt; Bool
 $c/= :: OtelStatus -&gt; OtelStatus -&gt; Bool
 /= :: OtelStatus -&gt; OtelStatus -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217785"><span id="local-6989586621687217787"><span id="local-6989586621687217790"><span class="annot"><span class="annottext">Int -&gt; OtelStatus -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218056"><span id="local-6989586621687218058"><span id="local-6989586621687218061"><span class="annot"><span class="annottext">Int -&gt; OtelStatus -&gt; ShowS
 [OtelStatus] -&gt; ShowS
 OtelStatus -&gt; String
 (Int -&gt; OtelStatus -&gt; ShowS)
@@ -521,14 +521,14 @@ $cshow :: OtelStatus -&gt; String
 show :: OtelStatus -&gt; String
 $cshowList :: [OtelStatus] -&gt; ShowS
 showList :: [OtelStatus] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217793"><span id="local-6989586621687217795"><span class="annot"><span class="annottext">OtelStatus
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218064"><span id="local-6989586621687218066"><span class="annot"><span class="annottext">OtelStatus
 OtelStatus -&gt; OtelStatus -&gt; Bounded OtelStatus
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: OtelStatus
 minBound :: OtelStatus
 $cmaxBound :: OtelStatus
 maxBound :: OtelStatus
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217799"><span id="local-6989586621687217807"><span id="local-6989586621687217813"><span id="local-6989586621687217826"><span id="local-6989586621687217828"><span id="local-6989586621687217832"><span id="local-6989586621687217836"><span id="local-6989586621687217840"><span class="annot"><span class="annottext">Int -&gt; OtelStatus
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218070"><span id="local-6989586621687218078"><span id="local-6989586621687218084"><span id="local-6989586621687218097"><span id="local-6989586621687218099"><span id="local-6989586621687218103"><span id="local-6989586621687218107"><span id="local-6989586621687218111"><span class="annot"><span class="annottext">Int -&gt; OtelStatus
 OtelStatus -&gt; Int
 OtelStatus -&gt; [OtelStatus]
 OtelStatus -&gt; OtelStatus
@@ -576,8 +576,8 @@ enumFromThenTo :: OtelStatus -&gt; OtelStatus -&gt; OtelStatus -&gt; [OtelStatus
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelStatus"><span class="hs-identifier hs-var hs-var">defaultOtelStatus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OtelStatus
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDisabled"><span class="hs-identifier hs-var">OtelDisabled</span></a></span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217845"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-126"></span><span>  </span><span id="local-6989586621687217850"><span class="annot"><span class="annottext">codec :: JSONCodec OtelStatus
+</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218116"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621687218121"><span class="annot"><span class="annottext">codec :: JSONCodec OtelStatus
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OtelStatus -&gt; String) -&gt; JSONCodec OtelStatus
 forall enum.
 (Eq enum, Enum enum, Bounded enum) =&gt;
@@ -590,13 +590,13 @@ forall enum.
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDisabled"><span class="hs-identifier hs-var">OtelDisabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span>
 </span><span id="line-129"></span><span>
-</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217853"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621687217864"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelStatus
+</span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218124"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621687218135"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelStatus
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-132"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span id="local-6989586621687217866"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687217866"><span class="hs-identifier hs-var">s</span></a></span></span><span>
+</span><span id="line-132"></span><span>    </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-type">J.String</span></a></span><span> </span><span id="local-6989586621687218137"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687218137"><span class="hs-identifier hs-var">s</span></a></span></span><span>
 </span><span id="line-133"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687217866"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621687218137"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;enabled&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OtelStatus -&gt; Parser OtelStatus
@@ -605,7 +605,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">OtelStatus
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelEnabled"><span class="hs-identifier hs-var">OtelEnabled</span></a></span><span>
 </span><span id="line-134"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687217866"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621687218137"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;disabled&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OtelStatus -&gt; Parser OtelStatus
@@ -620,16 +620,16 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;OpenTelemetry status must be either \&quot;enabled\&quot; or \&quot;disabled\&quot;&quot;</span></span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217869"><span id="local-6989586621687217873"><span id="local-6989586621687217876"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-138"></span><span>  </span><span id="local-6989586621687217881"><span class="annot"><span class="annottext">toJSON :: OtelStatus -&gt; Value
-</span><a href="#local-6989586621687217881"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621687217883"><span class="annot"><span class="annottext">OtelStatus
-</span><a href="#local-6989586621687217883"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218140"><span id="local-6989586621687218144"><span id="local-6989586621687218147"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelStatus"><span class="hs-identifier hs-type">OtelStatus</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-138"></span><span>  </span><span id="local-6989586621687218152"><span class="annot"><span class="annottext">toJSON :: OtelStatus -&gt; Value
+</span><a href="#local-6989586621687218152"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span id="local-6989586621687218154"><span class="annot"><span class="annottext">OtelStatus
+</span><a href="#local-6989586621687218154"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#String"><span class="hs-identifier hs-var">J.String</span></a></span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; Text -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OtelStatus
-</span><a href="#local-6989586621687217883"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687218154"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-141"></span><span>        </span><span class="annot"><span class="annottext">OtelStatus
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelEnabled"><span class="hs-identifier hs-var">OtelEnabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;enabled&quot;</span></span><span>
@@ -641,7 +641,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-145"></span><span class="hs-keyword">data</span><span> </span><span id="OtelDataType"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-var">OtelDataType</span></a></span></span><span>
 </span><span id="line-146"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OtelTraces"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelTraces"><span class="hs-identifier hs-var">OtelTraces</span></a></span></span><span>
 </span><span id="line-147"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OtelMetrics"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelMetrics"><span class="hs-identifier hs-var">OtelMetrics</span></a></span></span><span>
-</span><span id="line-148"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687217887"><span id="local-6989586621687217889"><span class="annot"><span class="annottext">OtelDataType -&gt; OtelDataType -&gt; Bool
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218158"><span id="local-6989586621687218160"><span class="annot"><span class="annottext">OtelDataType -&gt; OtelDataType -&gt; Bool
 (OtelDataType -&gt; OtelDataType -&gt; Bool)
 -&gt; (OtelDataType -&gt; OtelDataType -&gt; Bool) -&gt; Eq OtelDataType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -649,7 +649,7 @@ $c== :: OtelDataType -&gt; OtelDataType -&gt; Bool
 == :: OtelDataType -&gt; OtelDataType -&gt; Bool
 $c/= :: OtelDataType -&gt; OtelDataType -&gt; Bool
 /= :: OtelDataType -&gt; OtelDataType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217894"><span id="local-6989586621687217896"><span id="local-6989586621687217898"><span id="local-6989586621687217901"><span id="local-6989586621687217904"><span id="local-6989586621687217907"><span id="local-6989586621687217910"><span class="annot"><span class="annottext">Eq OtelDataType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218165"><span id="local-6989586621687218167"><span id="local-6989586621687218169"><span id="local-6989586621687218172"><span id="local-6989586621687218175"><span id="local-6989586621687218178"><span id="local-6989586621687218181"><span class="annot"><span class="annottext">Eq OtelDataType
 Eq OtelDataType
 -&gt; (OtelDataType -&gt; OtelDataType -&gt; Ordering)
 -&gt; (OtelDataType -&gt; OtelDataType -&gt; Bool)
@@ -686,7 +686,7 @@ $cmax :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType
 max :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType
 $cmin :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType
 min :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217913"><span id="local-6989586621687217915"><span id="local-6989586621687217918"><span class="annot"><span class="annottext">Int -&gt; OtelDataType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218184"><span id="local-6989586621687218186"><span id="local-6989586621687218189"><span class="annot"><span class="annottext">Int -&gt; OtelDataType -&gt; ShowS
 [OtelDataType] -&gt; ShowS
 OtelDataType -&gt; String
 (Int -&gt; OtelDataType -&gt; ShowS)
@@ -701,14 +701,14 @@ $cshow :: OtelDataType -&gt; String
 show :: OtelDataType -&gt; String
 $cshowList :: [OtelDataType] -&gt; ShowS
 showList :: [OtelDataType] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217921"><span id="local-6989586621687217923"><span class="annot"><span class="annottext">OtelDataType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218192"><span id="local-6989586621687218194"><span class="annot"><span class="annottext">OtelDataType
 OtelDataType -&gt; OtelDataType -&gt; Bounded OtelDataType
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: OtelDataType
 minBound :: OtelDataType
 $cmaxBound :: OtelDataType
 maxBound :: OtelDataType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687217926"><span id="local-6989586621687217932"><span id="local-6989586621687217938"><span id="local-6989586621687217949"><span id="local-6989586621687217951"><span id="local-6989586621687217954"><span id="local-6989586621687217958"><span id="local-6989586621687217962"><span class="annot"><span class="annottext">Int -&gt; OtelDataType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218197"><span id="local-6989586621687218203"><span id="local-6989586621687218209"><span id="local-6989586621687218220"><span id="local-6989586621687218222"><span id="local-6989586621687218225"><span id="local-6989586621687218229"><span id="local-6989586621687218233"><span class="annot"><span class="annottext">Int -&gt; OtelDataType
 OtelDataType -&gt; Int
 OtelDataType -&gt; [OtelDataType]
 OtelDataType -&gt; OtelDataType
@@ -751,8 +751,8 @@ $cenumFromThenTo :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType -&gt; [Ot
 enumFromThenTo :: OtelDataType -&gt; OtelDataType -&gt; OtelDataType -&gt; [OtelDataType]
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217966"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-151"></span><span>  </span><span id="local-6989586621687217971"><span class="annot"><span class="annottext">codec :: JSONCodec OtelDataType
+</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218237"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621687218242"><span class="annot"><span class="annottext">codec :: JSONCodec OtelDataType
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OtelDataType -&gt; String) -&gt; JSONCodec OtelDataType
 forall enum.
 (Eq enum, Enum enum, Bounded enum) =&gt;
@@ -765,8 +765,8 @@ forall enum.
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelMetrics"><span class="hs-identifier hs-var">OtelMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;metrics&quot;</span></span><span>
 </span><span id="line-154"></span><span>
-</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217974"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-156"></span><span>  </span><span id="local-6989586621687217991"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelDataType
+</span><span id="line-155"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218245"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621687218262"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelDataType
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser OtelDataType) -&gt; Value -&gt; Parser OtelDataType
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
@@ -784,8 +784,8 @@ forall a. a -&gt; Parser a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelMetrics"><span class="hs-identifier hs-var">OtelMetrics</span></a></span><span>
-</span><span id="line-159"></span><span>    </span><span id="local-6989586621687217993"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687217993"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser OtelDataType
+</span><span id="line-159"></span><span>    </span><span id="local-6989586621687218264"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687218264"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser OtelDataType
 forall a. String -&gt; Parser a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser OtelDataType) -&gt; String -&gt; Parser OtelDataType
@@ -796,13 +796,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687217993"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621687218264"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;'.&quot;</span></span><span>
 </span><span id="line-160"></span><span>
-</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687217997"><span id="local-6989586621687218001"><span id="local-6989586621687218004"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-162"></span><span>  </span><span id="local-6989586621687218008"><span class="annot"><span class="annottext">toJSON :: OtelDataType -&gt; Value
+</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218268"><span id="local-6989586621687218272"><span id="local-6989586621687218275"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelDataType"><span class="hs-identifier hs-type">OtelDataType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621687218279"><span class="annot"><span class="annottext">toJSON :: OtelDataType -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-163"></span><span>    </span><span class="annot"><span class="annottext">OtelDataType
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelTraces"><span class="hs-identifier hs-var">OtelTraces</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
@@ -842,7 +842,7 @@ forall a. Set a
 </span><span id="line-185"></span><span>    </span><span id="_oecResourceAttributes"><span class="annot"><span class="annottext">OtelExporterConfig -&gt; [NameValue]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_oecResourceAttributes"><span class="hs-identifier hs-var hs-var">_oecResourceAttributes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-186"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-187"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218017"><span id="local-6989586621687218030"><span class="annot"><span class="annottext">OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
+</span><span id="line-187"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218288"><span id="local-6989586621687218301"><span class="annot"><span class="annottext">OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
 (OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool)
 -&gt; (OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool)
 -&gt; Eq OtelExporterConfig
@@ -851,7 +851,7 @@ $c== :: OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
 == :: OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
 $c/= :: OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
 /= :: OtelExporterConfig -&gt; OtelExporterConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218035"><span id="local-6989586621687218049"><span id="local-6989586621687218052"><span class="annot"><span class="annottext">Int -&gt; OtelExporterConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218306"><span id="local-6989586621687218320"><span id="local-6989586621687218323"><span class="annot"><span class="annottext">Int -&gt; OtelExporterConfig -&gt; ShowS
 [OtelExporterConfig] -&gt; ShowS
 OtelExporterConfig -&gt; String
 (Int -&gt; OtelExporterConfig -&gt; ShowS)
@@ -868,8 +868,8 @@ $cshowList :: [OtelExporterConfig] -&gt; ShowS
 showList :: [OtelExporterConfig] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-188"></span><span>
-</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218058"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621687218083"><span class="annot"><span class="annottext">codec :: JSONCodec OtelExporterConfig
+</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218329"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621687218354"><span class="annot"><span class="annottext">codec :: JSONCodec OtelExporterConfig
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-191"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; ObjectCodec OtelExporterConfig OtelExporterConfig
@@ -912,7 +912,7 @@ HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;otlp_traces_endpoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218084"><span class="hs-identifier hs-var">tracesEndpointDoc</span></a></span><span>
+</span><a href="#local-6989586621687218355"><span class="hs-identifier hs-var">tracesEndpointDoc</span></a></span><span>
 </span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Text) (Maybe Text)
 -&gt; (OtelExporterConfig -&gt; Maybe Text)
 -&gt; Codec Object OtelExporterConfig (Maybe Text)
@@ -945,7 +945,7 @@ HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;otlp_metrics_endpoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218085"><span class="hs-identifier hs-var">metricsEndpointDoc</span></a></span><span>
+</span><a href="#local-6989586621687218356"><span class="hs-identifier hs-var">metricsEndpointDoc</span></a></span><span>
 </span><span id="line-196"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Text) (Maybe Text)
 -&gt; (OtelExporterConfig -&gt; Maybe Text)
 -&gt; Codec Object OtelExporterConfig (Maybe Text)
@@ -976,7 +976,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;protocol&quot;</span></span><span> </span><span class="annot"><span class="annottext">OtlpProtocol
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterProtocol"><span class="hs-identifier hs-var">defaultOtelExporterProtocol</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218087"><span class="hs-identifier hs-var">protocolDoc</span></a></span><span>
+</span><a href="#local-6989586621687218358"><span class="hs-identifier hs-var">protocolDoc</span></a></span><span>
 </span><span id="line-198"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec OtlpProtocol OtlpProtocol
 -&gt; (OtelExporterConfig -&gt; OtlpProtocol)
 -&gt; Codec Object OtelExporterConfig OtlpProtocol
@@ -1005,7 +1005,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterHeaders"><span class="hs-identifier hs-var">defaultOtelExporterHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218089"><span class="hs-identifier hs-var">headersDoc</span></a></span><span>
+</span><a href="#local-6989586621687218360"><span class="hs-identifier hs-var">headersDoc</span></a></span><span>
 </span><span id="line-200"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec [HeaderConf] [HeaderConf]
 -&gt; (OtelExporterConfig -&gt; [HeaderConf])
 -&gt; Codec Object OtelExporterConfig [HeaderConf]
@@ -1029,7 +1029,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;resource_attributes&quot;</span></span><span> </span><span class="annot"><span class="annottext">[NameValue]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterResourceAttributes"><span class="hs-identifier hs-var">defaultOtelExporterResourceAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218091"><span class="hs-identifier hs-var">attrsDoc</span></a></span><span>
+</span><a href="#local-6989586621687218362"><span class="hs-identifier hs-var">attrsDoc</span></a></span><span>
 </span><span id="line-202"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec [NameValue] [NameValue]
 -&gt; (OtelExporterConfig -&gt; [NameValue])
 -&gt; Codec Object OtelExporterConfig [NameValue]
@@ -1039,24 +1039,24 @@ ObjectCodec oldInput output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">OtelExporterConfig -&gt; [NameValue]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_oecResourceAttributes"><span class="hs-identifier hs-var">_oecResourceAttributes</span></a></span><span>
 </span><span id="line-203"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-204"></span><span>      </span><span id="local-6989586621687218084"><span class="annot"><span class="annottext">tracesEndpointDoc :: Text
-</span><a href="#local-6989586621687218084"><span class="hs-identifier hs-var hs-var">tracesEndpointDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-204"></span><span>      </span><span id="local-6989586621687218355"><span class="annot"><span class="annottext">tracesEndpointDoc :: Text
+</span><a href="#local-6989586621687218355"><span class="hs-identifier hs-var hs-var">tracesEndpointDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Target URL to which the exporter is going to send traces. No default.&quot;</span></span><span>
-</span><span id="line-205"></span><span>      </span><span id="local-6989586621687218085"><span class="annot"><span class="annottext">metricsEndpointDoc :: Text
-</span><a href="#local-6989586621687218085"><span class="hs-identifier hs-var hs-var">metricsEndpointDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-205"></span><span>      </span><span id="local-6989586621687218356"><span class="annot"><span class="annottext">metricsEndpointDoc :: Text
+</span><a href="#local-6989586621687218356"><span class="hs-identifier hs-var hs-var">metricsEndpointDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Target URL to which the exporter is going to send metrics. No default.&quot;</span></span><span>
-</span><span id="line-206"></span><span>      </span><span id="local-6989586621687218087"><span class="annot"><span class="annottext">protocolDoc :: Text
-</span><a href="#local-6989586621687218087"><span class="hs-identifier hs-var hs-var">protocolDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-206"></span><span>      </span><span id="local-6989586621687218358"><span class="annot"><span class="annottext">protocolDoc :: Text
+</span><a href="#local-6989586621687218358"><span class="hs-identifier hs-var hs-var">protocolDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;The transport protocol&quot;</span></span><span>
-</span><span id="line-207"></span><span>      </span><span id="local-6989586621687218089"><span class="annot"><span class="annottext">headersDoc :: Text
-</span><a href="#local-6989586621687218089"><span class="hs-identifier hs-var hs-var">headersDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-207"></span><span>      </span><span id="local-6989586621687218360"><span class="annot"><span class="annottext">headersDoc :: Text
+</span><a href="#local-6989586621687218360"><span class="hs-identifier hs-var hs-var">headersDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Key-value pairs to be used as headers to send with an export request.&quot;</span></span><span>
-</span><span id="line-208"></span><span>      </span><span id="local-6989586621687218091"><span class="annot"><span class="annottext">attrsDoc :: Text
-</span><a href="#local-6989586621687218091"><span class="hs-identifier hs-var hs-var">attrsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-208"></span><span>      </span><span id="local-6989586621687218362"><span class="annot"><span class="annottext">attrsDoc :: Text
+</span><a href="#local-6989586621687218362"><span class="hs-identifier hs-var hs-var">attrsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes.&quot;</span></span><span>
 </span><span id="line-209"></span><span>
-</span><span id="line-210"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218099"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-211"></span><span>  </span><span id="local-6989586621687218127"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelExporterConfig
+</span><span id="line-210"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218370"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-211"></span><span>  </span><span id="local-6989586621687218398"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelExporterConfig
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser OtelExporterConfig)
 -&gt; Value
@@ -1069,52 +1069,52 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser OtelExporterConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218128"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-212"></span><span>    </span><span id="local-6989586621687218129"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218129"><span class="hs-identifier hs-var">_oecTracesEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218399"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-212"></span><span>    </span><span id="local-6989586621687218400"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687218400"><span class="hs-identifier hs-var">_oecTracesEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-213"></span><span>      </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (Maybe Text))
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (Maybe Text))
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;otlp_traces_endpoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Maybe Text)) -&gt; Maybe Text -&gt; Parser (Maybe Text)
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterTracesEndpoint"><span class="hs-identifier hs-var">defaultOtelExporterTracesEndpoint</span></a></span><span>
-</span><span id="line-214"></span><span>    </span><span id="local-6989586621687218131"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218131"><span class="hs-identifier hs-var">_oecMetricsEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621687218402"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687218402"><span class="hs-identifier hs-var">_oecMetricsEndpoint</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (Maybe Text))
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe (Maybe Text))
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;otlp_metrics_endpoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Maybe Text)) -&gt; Maybe Text -&gt; Parser (Maybe Text)
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterMetricsEndpoint"><span class="hs-identifier hs-var">defaultOtelExporterMetricsEndpoint</span></a></span><span>
-</span><span id="line-216"></span><span>    </span><span id="local-6989586621687218133"><span class="annot"><span class="annottext">OtlpProtocol
-</span><a href="#local-6989586621687218133"><span class="hs-identifier hs-var">_oecProtocol</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-216"></span><span>    </span><span id="local-6989586621687218404"><span class="annot"><span class="annottext">OtlpProtocol
+</span><a href="#local-6989586621687218404"><span class="hs-identifier hs-var">_oecProtocol</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-217"></span><span>      </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe OtlpProtocol)
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe OtlpProtocol)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;protocol&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OtlpProtocol) -&gt; OtlpProtocol -&gt; Parser OtlpProtocol
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">OtlpProtocol
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterProtocol"><span class="hs-identifier hs-var">defaultOtelExporterProtocol</span></a></span><span>
-</span><span id="line-218"></span><span>    </span><span id="local-6989586621687218134"><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621687218134"><span class="hs-identifier hs-var">_oecHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-218"></span><span>    </span><span id="local-6989586621687218405"><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621687218405"><span class="hs-identifier hs-var">_oecHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-219"></span><span>      </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [HeaderConf])
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [HeaderConf])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [HeaderConf]) -&gt; [HeaderConf] -&gt; Parser [HeaderConf]
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterHeaders"><span class="hs-identifier hs-var">defaultOtelExporterHeaders</span></a></span><span>
-</span><span id="line-220"></span><span>    </span><span id="local-6989586621687218135"><span class="annot"><span class="annottext">[NameValue]
-</span><a href="#local-6989586621687218135"><span class="hs-identifier hs-var">_oecResourceAttributes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-220"></span><span>    </span><span id="local-6989586621687218406"><span class="annot"><span class="annottext">[NameValue]
+</span><a href="#local-6989586621687218406"><span class="hs-identifier hs-var">_oecResourceAttributes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-221"></span><span>      </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218128"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [NameValue])
+</span><a href="#local-6989586621687218399"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe [NameValue])
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;resource_attributes&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [NameValue]) -&gt; [NameValue] -&gt; Parser [NameValue]
@@ -1140,14 +1140,14 @@ _oecHeaders :: [HeaderConf]
 _oecResourceAttributes :: [NameValue]
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_oecTracesEndpoint"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-223"></span><span>
-</span><span id="line-224"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218138"><span id="local-6989586621687218142"><span id="local-6989586621687218145"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-225"></span><span>  </span><span id="local-6989586621687218177"><span class="annot"><span class="annottext">toJSON :: OtelExporterConfig -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span><span> </span><span id="local-6989586621687218178"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218178"><span class="hs-identifier hs-var">otlpTracesEndpoint</span></a></span></span><span> </span><span id="local-6989586621687218179"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218179"><span class="hs-identifier hs-var">otlpMetricsEndpoint</span></a></span></span><span> </span><span id="local-6989586621687218180"><span class="annot"><span class="annottext">OtlpProtocol
-</span><a href="#local-6989586621687218180"><span class="hs-identifier hs-var">protocol</span></a></span></span><span> </span><span id="local-6989586621687218181"><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621687218181"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621687218182"><span class="annot"><span class="annottext">[NameValue]
-</span><a href="#local-6989586621687218182"><span class="hs-identifier hs-var">resourceAttributes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-224"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218409"><span id="local-6989586621687218413"><span id="local-6989586621687218416"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-225"></span><span>  </span><span id="local-6989586621687218448"><span class="annot"><span class="annottext">toJSON :: OtelExporterConfig -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span><span> </span><span id="local-6989586621687218449"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687218449"><span class="hs-identifier hs-var">otlpTracesEndpoint</span></a></span></span><span> </span><span id="local-6989586621687218450"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687218450"><span class="hs-identifier hs-var">otlpMetricsEndpoint</span></a></span></span><span> </span><span id="local-6989586621687218451"><span class="annot"><span class="annottext">OtlpProtocol
+</span><a href="#local-6989586621687218451"><span class="hs-identifier hs-var">protocol</span></a></span></span><span> </span><span id="local-6989586621687218452"><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621687218452"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621687218453"><span class="annot"><span class="annottext">[NameValue]
+</span><a href="#local-6989586621687218453"><span class="hs-identifier hs-var">resourceAttributes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-226"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
@@ -1163,7 +1163,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Pair) -&gt; Maybe Text -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218178"><span class="hs-identifier hs-var">otlpTracesEndpoint</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687218449"><span class="hs-identifier hs-var">otlpTracesEndpoint</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-229"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;otlp_metrics_endpoint&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -1171,7 +1171,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Pair) -&gt; Maybe Text -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687218179"><span class="hs-identifier hs-var">otlpMetricsEndpoint</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687218450"><span class="hs-identifier hs-var">otlpMetricsEndpoint</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-230"></span><span>          </span><span class="annot"><span class="annottext">Pair -&gt; Maybe Pair
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Maybe Pair) -&gt; Pair -&gt; Maybe Pair
@@ -1181,7 +1181,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">OtlpProtocol
-</span><a href="#local-6989586621687218180"><span class="hs-identifier hs-var">protocol</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687218451"><span class="hs-identifier hs-var">protocol</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-231"></span><span>          </span><span class="annot"><span class="annottext">Pair -&gt; Maybe Pair
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Maybe Pair) -&gt; Pair -&gt; Maybe Pair
@@ -1191,7 +1191,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621687218181"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621687218452"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-232"></span><span>          </span><span class="annot"><span class="annottext">Pair -&gt; Maybe Pair
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Pair -&gt; Maybe Pair) -&gt; Pair -&gt; Maybe Pair
@@ -1201,7 +1201,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[NameValue]
-</span><a href="#local-6989586621687218182"><span class="hs-identifier hs-var">resourceAttributes</span></a></span><span>
+</span><a href="#local-6989586621687218453"><span class="hs-identifier hs-var">resourceAttributes</span></a></span><span>
 </span><span id="line-233"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-234"></span><span>
 </span><span id="line-235"></span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelExporterConfig"><span class="hs-identifier hs-type">defaultOtelExporterConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelExporterConfig"><span class="hs-identifier hs-type">OtelExporterConfig</span></a></span><span>
@@ -1231,7 +1231,7 @@ forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><span id="line-248"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OtlpProtocolHttpProtobuf"><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocolHttpProtobuf"><span class="hs-identifier hs-var">OtlpProtocolHttpProtobuf</span></a></span></span><span>
 </span><span id="line-249"></span><span>  </span><span class="hs-comment">-- OtlpProtocolHttpJson</span><span>
 </span><span id="line-250"></span><span>  </span><span class="hs-comment">-- OtlpProtocolGrpc</span><span>
-</span><span id="line-251"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218187"><span id="local-6989586621687218189"><span class="annot"><span class="annottext">OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
+</span><span id="line-251"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218458"><span id="local-6989586621687218460"><span class="annot"><span class="annottext">OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
 (OtlpProtocol -&gt; OtlpProtocol -&gt; Bool)
 -&gt; (OtlpProtocol -&gt; OtlpProtocol -&gt; Bool) -&gt; Eq OtlpProtocol
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1239,7 +1239,7 @@ $c== :: OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
 == :: OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
 $c/= :: OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
 /= :: OtlpProtocol -&gt; OtlpProtocol -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218192"><span id="local-6989586621687218194"><span id="local-6989586621687218197"><span class="annot"><span class="annottext">Int -&gt; OtlpProtocol -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218463"><span id="local-6989586621687218465"><span id="local-6989586621687218468"><span class="annot"><span class="annottext">Int -&gt; OtlpProtocol -&gt; ShowS
 [OtlpProtocol] -&gt; ShowS
 OtlpProtocol -&gt; String
 (Int -&gt; OtlpProtocol -&gt; ShowS)
@@ -1254,14 +1254,14 @@ $cshow :: OtlpProtocol -&gt; String
 show :: OtlpProtocol -&gt; String
 $cshowList :: [OtlpProtocol] -&gt; ShowS
 showList :: [OtlpProtocol] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218200"><span id="local-6989586621687218202"><span class="annot"><span class="annottext">OtlpProtocol
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218471"><span id="local-6989586621687218473"><span class="annot"><span class="annottext">OtlpProtocol
 OtlpProtocol -&gt; OtlpProtocol -&gt; Bounded OtlpProtocol
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: OtlpProtocol
 minBound :: OtlpProtocol
 $cmaxBound :: OtlpProtocol
 maxBound :: OtlpProtocol
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218205"><span id="local-6989586621687218211"><span id="local-6989586621687218217"><span id="local-6989586621687218228"><span id="local-6989586621687218230"><span id="local-6989586621687218233"><span id="local-6989586621687218237"><span id="local-6989586621687218241"><span class="annot"><span class="annottext">Int -&gt; OtlpProtocol
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218476"><span id="local-6989586621687218482"><span id="local-6989586621687218488"><span id="local-6989586621687218499"><span id="local-6989586621687218501"><span id="local-6989586621687218504"><span id="local-6989586621687218508"><span id="local-6989586621687218512"><span class="annot"><span class="annottext">Int -&gt; OtlpProtocol
 OtlpProtocol -&gt; Int
 OtlpProtocol -&gt; [OtlpProtocol]
 OtlpProtocol -&gt; OtlpProtocol
@@ -1304,8 +1304,8 @@ $cenumFromThenTo :: OtlpProtocol -&gt; OtlpProtocol -&gt; OtlpProtocol -&gt; [Ot
 enumFromThenTo :: OtlpProtocol -&gt; OtlpProtocol -&gt; OtlpProtocol -&gt; [OtlpProtocol]
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-252"></span><span>
-</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218245"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-254"></span><span>  </span><span id="local-6989586621687218251"><span class="annot"><span class="annottext">codec :: JSONCodec OtlpProtocol
+</span><span id="line-253"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218516"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-254"></span><span>  </span><span id="local-6989586621687218522"><span class="annot"><span class="annottext">codec :: JSONCodec OtlpProtocol
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-255"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">(OtlpProtocol -&gt; String) -&gt; JSONCodec OtlpProtocol
 forall enum.
@@ -1322,8 +1322,8 @@ ValueCodec input output -&gt; Text -&gt; ValueCodec input output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Possible protocol to use with OTLP. Currently, only http/protobuf is supported.&quot;</span></span><span>
 </span><span id="line-259"></span><span>
-</span><span id="line-260"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218254"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-261"></span><span>  </span><span id="local-6989586621687218272"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtlpProtocol
+</span><span id="line-260"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218525"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-261"></span><span>  </span><span id="local-6989586621687218543"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtlpProtocol
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser OtlpProtocol) -&gt; Value -&gt; Parser OtlpProtocol
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
@@ -1347,8 +1347,8 @@ forall a. String -&gt; Parser a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;gRPC is not supported&quot;</span></span><span>
-</span><span id="line-265"></span><span>    </span><span id="local-6989586621687218273"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218273"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser OtlpProtocol
+</span><span id="line-265"></span><span>    </span><span id="local-6989586621687218544"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687218544"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser OtlpProtocol
 forall a. String -&gt; Parser a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser OtlpProtocol) -&gt; String -&gt; Parser OtlpProtocol
@@ -1359,13 +1359,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218273"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621687218544"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;'.&quot;</span></span><span>
 </span><span id="line-266"></span><span>
-</span><span id="line-267"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218276"><span id="local-6989586621687218279"><span id="local-6989586621687218282"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-268"></span><span>  </span><span id="local-6989586621687218285"><span class="annot"><span class="annottext">toJSON :: OtlpProtocol -&gt; Value
+</span><span id="line-267"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218547"><span id="local-6989586621687218550"><span id="local-6989586621687218553"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocol"><span class="hs-identifier hs-type">OtlpProtocol</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-268"></span><span>  </span><span id="local-6989586621687218556"><span class="annot"><span class="annottext">toJSON :: OtlpProtocol -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-269"></span><span>    </span><span class="annot"><span class="annottext">OtlpProtocol
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtlpProtocolHttpProtobuf"><span class="hs-identifier hs-var">OtlpProtocolHttpProtobuf</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
@@ -1379,7 +1379,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-274"></span><span>    </span><span id="nv_value"><span class="annot"><span class="annottext">NameValue -&gt; Text
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#nv_value"><span class="hs-identifier hs-var hs-var">nv_value</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
 </span><span id="line-275"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-276"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218290"><span id="local-6989586621687218294"><span class="annot"><span class="annottext">NameValue -&gt; NameValue -&gt; Bool
+</span><span id="line-276"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218561"><span id="local-6989586621687218565"><span class="annot"><span class="annottext">NameValue -&gt; NameValue -&gt; Bool
 (NameValue -&gt; NameValue -&gt; Bool)
 -&gt; (NameValue -&gt; NameValue -&gt; Bool) -&gt; Eq NameValue
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1387,7 +1387,7 @@ $c== :: NameValue -&gt; NameValue -&gt; Bool
 == :: NameValue -&gt; NameValue -&gt; Bool
 $c/= :: NameValue -&gt; NameValue -&gt; Bool
 /= :: NameValue -&gt; NameValue -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218297"><span id="local-6989586621687218302"><span id="local-6989586621687218305"><span class="annot"><span class="annottext">Int -&gt; NameValue -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218568"><span id="local-6989586621687218573"><span id="local-6989586621687218576"><span class="annot"><span class="annottext">Int -&gt; NameValue -&gt; ShowS
 [NameValue] -&gt; ShowS
 NameValue -&gt; String
 (Int -&gt; NameValue -&gt; ShowS)
@@ -1404,8 +1404,8 @@ $cshowList :: [NameValue] -&gt; ShowS
 showList :: [NameValue] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-277"></span><span>
-</span><span id="line-278"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218309"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-279"></span><span>  </span><span id="local-6989586621687218319"><span class="annot"><span class="annottext">codec :: JSONCodec NameValue
+</span><span id="line-278"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218580"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-279"></span><span>  </span><span id="local-6989586621687218590"><span class="annot"><span class="annottext">codec :: JSONCodec NameValue
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-280"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec NameValue NameValue -&gt; JSONCodec NameValue
 forall input output.
@@ -1454,12 +1454,12 @@ ValueCodec input output -&gt; Text -&gt; ValueCodec input output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#%3C%3F%3E"><span class="hs-operator hs-var">&lt;?&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Internal helper type for JSON lists of key-value pairs&quot;</span></span><span>
 </span><span id="line-289"></span><span>
-</span><span id="line-290"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218322"><span id="local-6989586621687218325"><span id="local-6989586621687218328"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-291"></span><span>  </span><span id="local-6989586621687218338"><span class="annot"><span class="annottext">toJSON :: NameValue -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687218339"><span class="annot"><span class="annottext">Text
+</span><span id="line-290"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218593"><span id="local-6989586621687218596"><span id="local-6989586621687218599"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-291"></span><span>  </span><span id="local-6989586621687218609"><span class="annot"><span class="annottext">toJSON :: NameValue -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687218610"><span class="annot"><span class="annottext">Text
 nv_name :: NameValue -&gt; Text
 nv_name :: Text
-</span><a href="Hasura.RQL.Types.OpenTelemetry.html#nv_name"><span class="hs-identifier hs-var hs-var">nv_name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218340"><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.RQL.Types.OpenTelemetry.html#nv_name"><span class="hs-identifier hs-var hs-var">nv_name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218611"><span class="annot"><span class="annottext">Text
 nv_value :: NameValue -&gt; Text
 nv_value :: Text
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#nv_value"><span class="hs-identifier hs-var hs-var">nv_value</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
@@ -1469,32 +1469,32 @@ nv_value :: Text
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218339"><span class="hs-identifier hs-var">nv_name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621687218610"><span class="hs-identifier hs-var">nv_name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218340"><span class="hs-identifier hs-var">nv_value</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621687218611"><span class="hs-identifier hs-var">nv_value</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-293"></span><span>
-</span><span id="line-294"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218343"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-295"></span><span>  </span><span id="local-6989586621687218352"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NameValue
+</span><span id="line-294"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218614"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#NameValue"><span class="hs-identifier hs-type">NameValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-295"></span><span>  </span><span id="local-6989586621687218623"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NameValue
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Object -&gt; Parser NameValue) -&gt; Value -&gt; Parser NameValue
 forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;name-value pair&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser NameValue) -&gt; Value -&gt; Parser NameValue)
 -&gt; (Object -&gt; Parser NameValue) -&gt; Value -&gt; Parser NameValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218353"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218353"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-296"></span><span>    </span><span id="local-6989586621687218354"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218354"><span class="hs-identifier hs-var">nv_name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218353"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218624"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687218624"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-296"></span><span>    </span><span id="local-6989586621687218625"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687218625"><span class="hs-identifier hs-var">nv_name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687218624"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
-</span><span id="line-297"></span><span>    </span><span id="local-6989586621687218355"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218355"><span class="hs-identifier hs-var">nv_value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218353"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+</span><span id="line-297"></span><span>    </span><span id="local-6989586621687218626"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687218626"><span class="hs-identifier hs-var">nv_value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687218624"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;value&quot;</span></span><span>
@@ -1540,7 +1540,7 @@ forall a. Maybe a
 </span><span id="line-319"></span><span>    </span><span id="_obspcMaxExportBatchSize"><span class="annot"><span class="annottext">OtelBatchSpanProcessorConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_obspcMaxExportBatchSize"><span class="hs-identifier hs-var hs-var">_obspcMaxExportBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-320"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-321"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218359"><span id="local-6989586621687218362"><span class="annot"><span class="annottext">OtelBatchSpanProcessorConfig
+</span><span id="line-321"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218630"><span id="local-6989586621687218633"><span class="annot"><span class="annottext">OtelBatchSpanProcessorConfig
 -&gt; OtelBatchSpanProcessorConfig -&gt; Bool
 (OtelBatchSpanProcessorConfig
  -&gt; OtelBatchSpanProcessorConfig -&gt; Bool)
@@ -1556,7 +1556,7 @@ $c/= :: OtelBatchSpanProcessorConfig
 -&gt; OtelBatchSpanProcessorConfig -&gt; Bool
 /= :: OtelBatchSpanProcessorConfig
 -&gt; OtelBatchSpanProcessorConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218365"><span id="local-6989586621687218369"><span id="local-6989586621687218372"><span class="annot"><span class="annottext">Int -&gt; OtelBatchSpanProcessorConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687218636"><span id="local-6989586621687218640"><span id="local-6989586621687218643"><span class="annot"><span class="annottext">Int -&gt; OtelBatchSpanProcessorConfig -&gt; ShowS
 [OtelBatchSpanProcessorConfig] -&gt; ShowS
 OtelBatchSpanProcessorConfig -&gt; String
 (Int -&gt; OtelBatchSpanProcessorConfig -&gt; ShowS)
@@ -1573,8 +1573,8 @@ $cshowList :: [OtelBatchSpanProcessorConfig] -&gt; ShowS
 showList :: [OtelBatchSpanProcessorConfig] -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-322"></span><span>
-</span><span id="line-323"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218376"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-324"></span><span>  </span><span id="local-6989586621687218383"><span class="annot"><span class="annottext">codec :: JSONCodec OtelBatchSpanProcessorConfig
+</span><span id="line-323"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218647"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-324"></span><span>  </span><span id="local-6989586621687218654"><span class="annot"><span class="annottext">codec :: JSONCodec OtelBatchSpanProcessorConfig
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-325"></span><span>    </span><span class="annot"><span class="annottext">Text
 -&gt; ObjectCodec
@@ -1605,7 +1605,7 @@ Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max_export_batch_size&quot;</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultMaxExportBatchSize"><span class="hs-identifier hs-var">defaultMaxExportBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621687218385"><span class="hs-identifier hs-var">maxSizeDoc</span></a></span><span>
+</span><a href="#local-6989586621687218656"><span class="hs-identifier hs-var">maxSizeDoc</span></a></span><span>
 </span><span id="line-328"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec Int Int
 -&gt; (OtelBatchSpanProcessorConfig -&gt; Int)
 -&gt; Codec Object OtelBatchSpanProcessorConfig Int
@@ -1615,12 +1615,12 @@ ObjectCodec oldInput output
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">OtelBatchSpanProcessorConfig -&gt; Int
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_obspcMaxExportBatchSize"><span class="hs-identifier hs-var">_obspcMaxExportBatchSize</span></a></span><span>
 </span><span id="line-329"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-330"></span><span>      </span><span id="local-6989586621687218385"><span class="annot"><span class="annottext">maxSizeDoc :: Text
-</span><a href="#local-6989586621687218385"><span class="hs-identifier hs-var hs-var">maxSizeDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-330"></span><span>      </span><span id="local-6989586621687218656"><span class="annot"><span class="annottext">maxSizeDoc :: Text
+</span><a href="#local-6989586621687218656"><span class="hs-identifier hs-var hs-var">maxSizeDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;The maximum batch size of every export. It must be smaller or equal to maxQueueSize (not yet configurable). Default 512.&quot;</span></span><span>
 </span><span id="line-331"></span><span>
-</span><span id="line-332"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218389"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-333"></span><span>  </span><span id="local-6989586621687218395"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelBatchSpanProcessorConfig
+</span><span id="line-332"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218660"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-333"></span><span>  </span><span id="local-6989586621687218666"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OtelBatchSpanProcessorConfig
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser OtelBatchSpanProcessorConfig)
 -&gt; Value
@@ -1633,15 +1633,15 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser OtelBatchSpanProcessorConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218396"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218396"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687218667"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687218667"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-334"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; OtelBatchSpanProcessorConfig
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-var">OtelBatchSpanProcessorConfig</span></a></span><span>
 </span><span id="line-335"></span><span>      </span><span class="annot"><span class="annottext">(Int -&gt; OtelBatchSpanProcessorConfig)
 -&gt; Parser Int -&gt; Parser OtelBatchSpanProcessorConfig
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621687218396"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621687218667"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-336"></span><span>      </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Int)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
@@ -1651,10 +1651,10 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultMaxExportBatchSize"><span class="hs-identifier hs-var">defaultMaxExportBatchSize</span></a></span><span>
 </span><span id="line-338"></span><span>
-</span><span id="line-339"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218399"><span id="local-6989586621687218403"><span id="local-6989586621687218406"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-340"></span><span>  </span><span id="local-6989586621687218414"><span class="annot"><span class="annottext">toJSON :: OtelBatchSpanProcessorConfig -&gt; Value
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span> </span><span id="local-6989586621687218415"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687218415"><span class="hs-identifier hs-var">maxExportBatchSize</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-339"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687218670"><span id="local-6989586621687218674"><span id="local-6989586621687218677"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-340"></span><span>  </span><span id="local-6989586621687218685"><span class="annot"><span class="annottext">toJSON :: OtelBatchSpanProcessorConfig -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span> </span><span id="local-6989586621687218686"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687218686"><span class="hs-identifier hs-var">maxExportBatchSize</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-341"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
 </span><span id="line-342"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
@@ -1662,7 +1662,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621687218415"><span class="hs-identifier hs-var">maxExportBatchSize</span></a></span><span>
+</span><a href="#local-6989586621687218686"><span class="hs-identifier hs-var">maxExportBatchSize</span></a></span><span>
 </span><span id="line-343"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-344"></span><span>
 </span><span id="line-345"></span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#defaultOtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">defaultOtelBatchSpanProcessorConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.OpenTelemetry.html#OtelBatchSpanProcessorConfig"><span class="hs-identifier hs-type">OtelBatchSpanProcessorConfig</span></a></span><span>
@@ -1763,7 +1763,7 @@ forall a. Monoid a =&gt; a
 </span><span id="line-415"></span><span>    </span><span id="_obspiMaxQueueSize"><span class="annot"><span class="annottext">OtelBatchSpanProcessorInfo -&gt; Int
 </span><a href="Hasura.RQL.Types.OpenTelemetry.html#_obspiMaxQueueSize"><span class="hs-identifier hs-var hs-var">_obspiMaxQueueSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-416"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-417"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218459"><span id="local-6989586621687218468"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *).
+</span><span id="line-417"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687218730"><span id="local-6989586621687218739"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *).
  Quote m =&gt;
  OtelBatchSpanProcessorInfo -&gt; m Exp)
 -&gt; (forall (m :: * -&gt; *).
