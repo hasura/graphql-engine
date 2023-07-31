@@ -63,6 +63,9 @@ export const VariantMode: StoryObj<typeof Card> = {
       <Card mode="error">
         <span>Error</span>
       </Card>
+      <Card mode="warning">
+        <span>Warning</span>
+      </Card>
     </>
   ),
 
@@ -89,6 +92,9 @@ export const StateActionnable: StoryObj<typeof Card> = {
       </Card>
       <Card mode="error" onClick={action('onClick')}>
         <span>Error</span>
+      </Card>
+      <Card mode="warning" onClick={action('onClick')}>
+        <span>Warning</span>
       </Card>
     </>
   ),
@@ -128,6 +134,9 @@ export const StateDisabled: StoryObj<typeof Card> = {
       </Card>
       <Card mode="error" onClick={action('onClick')} disabled>
         <span>Error with action</span>
+      </Card>
+      <Card mode="warning" onClick={action('onClick')} disabled>
+        <span>Warning with action</span>
       </Card>
     </>
   ),

@@ -2,11 +2,13 @@ import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
 import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 
 import { Configuration } from './Configuration';
 
 export default {
   component: Configuration,
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof Configuration>;
 
 export const Primary: StoryFn<typeof Configuration> = () => (

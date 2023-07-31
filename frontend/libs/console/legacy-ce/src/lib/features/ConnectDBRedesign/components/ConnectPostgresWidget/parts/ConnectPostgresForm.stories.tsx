@@ -37,6 +37,12 @@ export const TestPostgresForm: StoryObj<typeof ConnectPostgresForm> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    const databaseUrlOption = await canvas.findByTestId(
+      'configuration.connectionInfo.databaseUrl.connectionType-databaseUrl'
+    );
+    await expect(databaseUrlOption).toBeInTheDocument();
+    await userEvent.click(databaseUrlOption);
+
     // verify if all the fields are present (in oss mode)
 
     await userEvent.type(

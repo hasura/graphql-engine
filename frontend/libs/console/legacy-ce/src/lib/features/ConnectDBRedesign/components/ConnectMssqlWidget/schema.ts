@@ -43,8 +43,8 @@ export const getDefaultValues = (
       configuration: {
         connectionInfo: {
           connectionString: {
-            connectionType: 'databaseUrl',
-            url: '',
+            connectionType: 'envVar',
+            envVar: '',
           },
         },
       },
