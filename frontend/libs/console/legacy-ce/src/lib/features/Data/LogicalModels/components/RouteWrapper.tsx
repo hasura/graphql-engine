@@ -43,7 +43,6 @@ export const RouteWrapper: React.FC<RouteWrapperProps> = props => {
               </div>
               <div className="text-muted">{subtitleOverride ?? subtitle}</div>
             </div>
-            <div className="text-muted">{subtitle}</div>
           </div>
         </div>
         <div className="">{children}</div>
