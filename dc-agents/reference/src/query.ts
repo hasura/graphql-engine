@@ -96,6 +96,12 @@ const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator):
   };
 };
 
+const getComparisonColumnSelector = (comparisonColumn: ComparisonColumn): string => {
+  if (typeof comparisonColumn.name === "string")
+    return comparisonColumn.name;
+  return comparisonColumn.name[0];
+}
+
 const prettyPrintComparisonColumn = (comparisonColumn: ComparisonColumn): string => {
   return (comparisonColumn.path ?? []).concat(comparisonColumn.name).map(p => `[${p}]`).join(".");
 }
@@ -460,12 +466,12 @@ const addRelationshipFilterToQuery = (row: Record<string, RawScalarValue>, relat
 const makeGetComparisonColumnValue = (parentQueryRowChain: Record<string, RawScalarValue>[]) => (comparisonColumn: ComparisonColumn, row: Record<string, RawScalarValue>): RawScalarValue => {
   const path = comparisonColumn.path ?? [];
   if (path.length === 0) {
-    return coerceUndefinedToNull(row[comparisonColumn.name]);
+    return coerceUndefinedToNull(row[getComparisonColumnSelector(comparisonColumn)]);
   } else if (path.length === 1 && path[0] === "$") {
     const queryRow = parentQueryRowChain.length === 0
       ? row
       : parentQueryRowChain[0];
-    return coerceUndefinedToNull(queryRow[comparisonColumn.name]);
+    return coerceUndefinedToNull(queryRow[getComparisonColumnSelector(comparisonColumn)]);
   } else {
     throw new Error(`Unsupported path on ComparisonColumn: ${prettyPrintComparisonColumn(comparisonColumn)}`);
   }

@@ -221,7 +221,7 @@ tests = do
                          Just
                            $ API.ApplyBinaryComparisonOperator
                              API.Equal
-                             (API.ComparisonColumn API.CurrentTable (API.ColumnName "ArtistId") $ API.ScalarType "number")
+                             (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") $ API.ScalarType "number")
                              (API.ScalarValueComparison $ API.ScalarValue (J.Number 2) (API.ScalarType "number")),
                        API._imoReturningFields =
                          mkFieldsMap

@@ -37,6 +37,7 @@ module Autodocodec.Extended
     fromEnvCodec,
     optionalVersionField,
     versionField,
+    oneOrManyCodec,
     module Autodocodec,
   )
 where
@@ -431,3 +432,12 @@ discriminatorBoolField name value =
 -- reference.
 fromEnvCodec :: JSONCodec Text
 fromEnvCodec = object "FromEnv" $ requiredField' "from_env"
+
+oneOrManyCodec :: forall a. (HasCodec a) => JSONCodec [a]
+oneOrManyCodec =
+  matchChoiceCodec singletonCodec (codec @[a]) chooser
+  where
+    singletonCodec = dimapCodec pure id (codec @a)
+    chooser = \case
+      [x] -> Left x
+      xs -> Right xs

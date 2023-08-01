@@ -47,7 +47,7 @@ spec TestData {..} (ScalarTypesCapabilities scalarTypesCapabilities) = describe 
             ApplyBinaryComparisonOperator
               (CustomBinaryComparisonOperator (unName operatorName))
               (_tdCurrentComparisonColumn (unColumnName columnName) columnType)
-              (AnotherColumnComparison $ ComparisonColumn CurrentTable argColumnName argType)
+              (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector argColumnName) argType)
           query =
             queryRequest
               & qrQuery . qWhere ?~ where'

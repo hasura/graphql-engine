@@ -517,8 +517,8 @@ mkTestData schemaResponse testConfig =
       _tdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
       _tdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
       _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
-      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . formatColumnName testConfig . API.ColumnName,
-      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName,
+      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName,
+      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName,
       _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName testConfig $ API.ColumnName name)
     }
   where
@@ -561,7 +561,7 @@ mkEdgeCasesTestData testConfig schemaResponse =
       _ectdColumnField = columnField schemaResponse testConfig,
       _ectdMkDefaultTableInsertSchema = mkDefaultTableInsertSchema schemaResponse testConfig edgeCasesSchemaTables,
       _ectdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
-      _ectdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . formatColumnName testConfig . API.ColumnName
+      _ectdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName
     }
   where
     tableExists :: API.TableName -> Bool

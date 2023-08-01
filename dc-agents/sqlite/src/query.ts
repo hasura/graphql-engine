@@ -228,12 +228,13 @@ function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, qu
   const path = comparisonColumn.path ?? [];
   const queryTablePrefix = queryTableAlias ? `${queryTableAlias}.` : '';
   const currentTablePrefix = currentTableAlias ? `${currentTableAlias}.` : '';
+  const selector = getComparisonColumnSelector(comparisonColumn);
   if (path.length === 0) {
-    return `${currentTablePrefix}${escapeIdentifier(comparisonColumn.name)}`
+    return `${currentTablePrefix}${escapeIdentifier(selector)}`
   } else if (path.length === 1 && path[0] === "$") {
-    return `${queryTablePrefix}${escapeIdentifier(comparisonColumn.name)}`
+    return `${queryTablePrefix}${escapeIdentifier(selector)}`
   } else {
-    throw new Error(`Unsupported path on ComparisonColumn: ${[...path, comparisonColumn.name].join(".")}`);
+    throw new Error(`Unsupported path on ComparisonColumn: ${[...path, selector].join(".")}`);
   }
 }
 
@@ -882,3 +883,8 @@ type AnalysisEntry = {
   detail: string
 }
 
+const getComparisonColumnSelector = (comparisonColumn: ComparisonColumn): string => {
+  if (typeof comparisonColumn.name === "string")
+    return comparisonColumn.name;
+  return comparisonColumn.name[0];
+}

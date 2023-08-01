@@ -68,7 +68,7 @@ spec = do
 
   describe "ComparisonColumn" $ do
     testToFromJSONToSchema
-      (ComparisonColumn QueryTable (ColumnName "column_name") (ScalarType "string"))
+      (ComparisonColumn QueryTable (mkColumnSelector $ ColumnName "column_name") (ScalarType "string"))
       [aesonQQ|{"path": ["$"], "name": "column_name", "column_type": "string"}|]
 
     jsonOpenApiProperties genComparisonColumn
@@ -80,10 +80,17 @@ spec = do
       $ testToFromJSONToSchema CurrentTable [aesonQQ|[]|]
     jsonOpenApiProperties genColumnPath
 
+  describe "ColumnSelector" $ do
+    describe "single column selector"
+      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo"]) [aesonQQ|"foo"|]
+    describe "nested path selector"
+      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo", ColumnName "bar"]) [aesonQQ|["foo","bar"]|]
+    jsonOpenApiProperties genColumnSelector
+
   describe "ComparisonValue" $ do
     describe "AnotherColumnComparison"
       $ testToFromJSONToSchema
-        (AnotherColumnComparison $ ComparisonColumn CurrentTable (ColumnName "my_column_name") (ScalarType "string"))
+        (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|{"type": "column", "column": {"name": "my_column_name", "column_type": "string"}}|]
     describe "ScalarValueComparison"
       $ testToFromJSONToSchema
@@ -112,7 +119,7 @@ spec = do
     jsonOpenApiProperties genExistsInTable
 
   describe "Expression" $ do
-    let comparisonColumn = ComparisonColumn CurrentTable (ColumnName "my_column_name") (ScalarType "string")
+    let comparisonColumn = ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string")
     let scalarValue = ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string")
     let scalarValues = [String "scalar value"]
     let unaryComparisonExpression = ApplyUnaryComparisonOperator IsNull comparisonColumn
@@ -247,12 +254,16 @@ genComparisonColumn :: (MonadGen m, GenBase m ~ Identity) => m ComparisonColumn
 genComparisonColumn =
   ComparisonColumn
     <$> genColumnPath
-    <*> genColumnName
+    <*> genColumnSelector
     <*> genScalarType
 
 genColumnPath :: (MonadGen m) => m ColumnPath
 genColumnPath =
   Gen.element [CurrentTable, QueryTable]
+
+genColumnSelector :: (MonadGen m) => m ColumnSelector
+genColumnSelector =
+  ColumnSelector <$> Gen.nonEmpty defaultRange genColumnName
 
 genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =

@@ -130,7 +130,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               whereClause =
                 API.ApplyBinaryComparisonOperator
                   API.LessThan
-                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "id") (API.ScalarType "number"))
+                  (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "id") (API.ScalarType "number"))
                   (API.ScalarValueComparison (API.ScalarValue (Number 10) (API.ScalarType "number")))
               query' = Data.emptyQuery & qFields ?~ fields & qWhere ?~ whereClause & qLimit ?~ 2
               authorRelationship =

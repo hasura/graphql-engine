@@ -417,8 +417,8 @@ tests = describe "Object Relationships Tests" $ do
                     (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers")
                     ( API.ApplyBinaryComparisonOperator
                         API.Equal
-                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
+                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string")
+                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string"))
                     )
                     & API.qOrderBy
                   ?~ API.OrderBy
@@ -429,8 +429,8 @@ tests = describe "Object Relationships Tests" $ do
                                   $ API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep")
                                   $ API.ApplyBinaryComparisonOperator
                                     API.Equal
-                                    (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") $ API.ScalarType "string")
-                                    (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") $ API.ScalarType "string"))
+                                    (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string")
+                                    (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string"))
                               )
                               mempty
                           )

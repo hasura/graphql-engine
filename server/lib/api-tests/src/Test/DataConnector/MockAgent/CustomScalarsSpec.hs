@@ -165,27 +165,27 @@ tests = describe "Custom scalar parsing tests" $ do
                     ( Set.fromList
                         [ ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyBooleanColumn") (ScalarType "MyBoolean"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyBooleanColumn") (ScalarType "MyBoolean"))
                             (ScalarValueComparison $ ScalarValue (J.Bool True) (ScalarType "MyBoolean")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyFloatColumn") (ScalarType "MyFloat"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyFloatColumn") (ScalarType "MyFloat"))
                             (ScalarValueComparison $ ScalarValue (J.Number 3.14) (ScalarType "MyFloat")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyStringColumn") (ScalarType "MyString"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyStringColumn") (ScalarType "MyString"))
                             (ScalarValueComparison $ ScalarValue (J.String "foo") (ScalarType "MyString")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyIDColumn") (ScalarType "MyID"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyIDColumn") (ScalarType "MyID"))
                             (ScalarValueComparison $ ScalarValue (J.String "x") (ScalarType "MyID")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyIntColumn") (ScalarType "MyInt"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyIntColumn") (ScalarType "MyInt"))
                             (ScalarValueComparison $ ScalarValue (J.Number 42.0) (ScalarType "MyInt")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyAnythingColumn") (ScalarType "MyAnything"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyAnythingColumn") (ScalarType "MyAnything"))
                             (ScalarValueComparison $ ScalarValue (J.Object mempty) (ScalarType "MyAnything"))
                         ]
                     )

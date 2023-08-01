@@ -301,7 +301,7 @@ tests = describe "Basic Tests" $ do
                     (API.UnrelatedTable $ mkTableName "Employee")
                     ( API.ApplyBinaryComparisonOperator
                         API.Equal
-                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") $ API.ScalarType "number")
+                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "EmployeeId") $ API.ScalarType "number")
                         (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                     )
               )

@@ -36,6 +36,7 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
@@ -221,6 +222,20 @@ parseSessionVariable varName varType varValue = do
 
 --------------------------------------------------------------------------------
 
+newtype ColumnStack = ColumnStack [ColumnName]
+
+emptyColumnStack :: ColumnStack
+emptyColumnStack = ColumnStack []
+
+pushColumn :: ColumnStack -> ColumnName -> ColumnStack
+pushColumn (ColumnStack stack) columnName = ColumnStack $ columnName : stack
+
+toColumnSelector :: ColumnStack -> ColumnName -> API.ColumnSelector
+toColumnSelector (ColumnStack stack) columnName =
+  API.ColumnSelector $ NonEmpty.reverse $ Witch.from columnName :| fmap Witch.from stack
+
+--------------------------------------------------------------------------------
+
 translateBoolExpToExpression ::
   ( Has TableRelationships writerOutput,
     Monoid writerOutput,
@@ -233,7 +248,7 @@ translateBoolExpToExpression ::
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m (Maybe API.Expression)
 translateBoolExpToExpression sessionVariables sourceName boolExp = do
-  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceName boolExp
+  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceName emptyColumnStack boolExp
 
 translateBoolExp ::
   ( Has TableRelationships writerOutput,
@@ -244,25 +259,29 @@ translateBoolExp ::
   ) =>
   SessionVariables ->
   TableRelationshipsKey ->
+  ColumnStack ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
   CPS.WriterT writerOutput m API.Expression
-translateBoolExp sessionVariables sourceName = \case
+translateBoolExp sessionVariables sourceName columnStack = \case
   BoolAnd xs ->
-    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceName) xs
+    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceName columnStack) xs
   BoolOr xs ->
-    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName) xs
+    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName columnStack) xs
   BoolNot x ->
-    API.Not <$> (translateBoolExp' sourceName) x
-  BoolField (AVColumn c _redactionExp opExps) ->
+    API.Not <$> (translateBoolExp' sourceName columnStack) x
+  BoolField (AVColumn c _redactionExp opExps) -> do
     -- TODO(redactionExp): Deal with the redaction expression
-    lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) opExps
+    let columnSelector = toColumnSelector columnStack $ ciColumn c
+    lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables columnSelector (Witch.from . columnTypeToScalarType $ ciType c)) opExps
+  BoolField (AVNestedObject NestedObjectInfo {..} nestedExp) ->
+    translateBoolExp' sourceName (pushColumn columnStack _noiColumn) nestedExp
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' (TableNameKey _rTargetTable) (BoolAnd [rfTargetTablePermissions, rfFilter])
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' (TableNameKey _rTargetTable) emptyColumnStack (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
-     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' (TableNameKey tableName) _geWhere
+     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' (TableNameKey tableName) emptyColumnStack _geWhere
   where
     translateBoolExp' = translateBoolExp sessionVariables
 
@@ -288,7 +307,7 @@ removeAlwaysFalseExpression = \case
 translateOp ::
   (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
   SessionVariables ->
-  API.ColumnName ->
+  API.ColumnSelector ->
   API.ScalarType ->
   OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
   m API.Expression
@@ -358,7 +377,9 @@ translateOp sessionVariables columnName columnType opExp = do
       let columnPath = case rootOrCurrent of
             IsRoot -> API.QueryTable
             IsCurrent -> API.CurrentTable
-       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
+          otherColumnSelector = API.mkColumnSelector $ Witch.from otherColumnName
+       in -- TODO(dmoverton): allow otherColumnName to refer to nested object fields.
+          API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath otherColumnSelector columnType)
 
     inOperator :: Literal -> API.Expression
     inOperator literal =

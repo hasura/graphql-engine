@@ -789,6 +789,8 @@ getLogicalModelColExpDeps source logicalModelLocation = \case
   AVRelationship {} -> []
   AVComputedField _ -> []
   AVAggregationPredicates _ -> []
+  AVNestedObject NestedObjectInfo {..} boolExp ->
+    getLogicalModelBoolExpDeps source (LMLLogicalModel _noiType) boolExp
   AVColumn colInfo _redactionExp opExps -> do
     let columnName :: Column b
         columnName = ciColumn colInfo
@@ -851,6 +853,8 @@ getColExpDeps bexp = do
           colDepReason = bool DRSessionVariable DROnType $ any hasStaticExp opExps
           colDep = mkColDep @b colDepReason source currTable columnName
        in (colDep :) <$> getOpExpDeps opExps
+    AVNestedObject NestedObjectInfo {..} boolExp ->
+      pure $ getLogicalModelBoolExpDeps source (LMLLogicalModel _noiType) boolExp
     AVRelationship relInfo RelationshipFilters {rfTargetTablePermissions, rfFilter} ->
       case riTarget relInfo of
         RelTargetNativeQuery _ -> error "getColExpDeps RelTargetNativeQuery"

@@ -9,6 +9,8 @@ module Hasura.Backends.DataConnector.API.V0.Expression
     UnaryComparisonOperator (..),
     ComparisonColumn (..),
     ColumnPath (..),
+    ColumnSelector (..),
+    mkColumnSelector,
     ComparisonValue (..),
   )
 where
@@ -21,6 +23,8 @@ import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty (..))
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
 import Data.Set (Set)
 import Data.Text (Text)
@@ -244,7 +248,7 @@ data ComparisonColumn = ComparisonColumn
   { -- | The path to the table that contains the specified column.
     _ccPath :: ColumnPath,
     -- | The name of the column
-    _ccName :: API.V0.ColumnName,
+    _ccName :: ColumnSelector,
     -- | The scalar type of the column
     _ccColumnType :: API.V0.ScalarType
   }
@@ -290,6 +294,20 @@ instance HasCodec ColumnPath where
       encode = \case
         CurrentTable -> []
         QueryTable -> ["$"]
+
+newtype ColumnSelector = ColumnSelector {unColumnSelector :: NonEmpty API.V0.ColumnName}
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnSelector
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec ColumnSelector where
+  codec = bimapCodec dec enc oneOrManyCodec
+    where
+      dec = maybe (Left "Unexpected empty list in ColumnSelector") (Right . ColumnSelector) . NonEmpty.nonEmpty
+      enc = NonEmpty.toList . unColumnSelector
+
+mkColumnSelector :: API.V0.ColumnName -> ColumnSelector
+mkColumnSelector = ColumnSelector . NonEmpty.singleton
 
 -- | A serializable representation of comparison values used in comparisons inside 'Expression's.
 data ComparisonValue

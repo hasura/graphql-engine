@@ -1759,8 +1759,19 @@
             "$ref": "#/components/schemas/ScalarType"
           },
           "name": {
-            "description": "The name of the column",
-            "type": "string"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ],
+            "description": "The name of the column"
           },
           "path": {
             "default": [],
