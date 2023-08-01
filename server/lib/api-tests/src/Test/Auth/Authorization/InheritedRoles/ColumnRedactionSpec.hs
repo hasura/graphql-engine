@@ -15,6 +15,7 @@ import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema (Table (..), table)
 import Harness.Schema qualified as Schema
+import Harness.Subscriptions (getNextResponse, withSubscriptionsHeaders)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.SetupAction (setupPermissionsAction)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment, getBackendTypeConfig)
@@ -974,3 +975,171 @@ tests = do
             |]
 
       shouldReturnYaml testEnvironment actual expected
+
+  describe "Redaction in streaming subscriptions" $ do
+    withSubscriptionsHeaders
+      [ ("X-Hasura-Role", "hr_manager"),
+        ("X-Hasura-Manager-Id", "3")
+      ]
+      $ it "Redaction of a cursor column results in redacted rows being skipped" \(mkSubscription, testEnvironment) -> do
+        let schemaName = Schema.getSchemaName testEnvironment
+
+        subscriptionHandle <-
+          mkSubscription
+            [graphql|
+              subscription {
+                #{schemaName}_employee_stream(
+                  batch_size: 10,
+                  cursor: {
+                    initial_value: { monthly_salary: 0 },
+                    ordering: ASC
+                  }
+                ) {
+                  id
+                  first_name
+                  last_name
+                  monthly_salary
+                }
+              }
+            |]
+            []
+
+        -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+        -- This is because the 'manager_employee_private_info' role provides access to the salary
+        -- for the current manager's HR-managed employees, but the rest of the employees
+        -- are accessed via 'all_managers', which does not expose 'monthly_salary'.
+        -- This means that all employee monthly salaries other than for the employees
+        -- she manages will be null and because rows with cursor values of null are skipped by
+        -- streaming subscriptions, she will only get her managed employees returned here
+        shouldReturnYaml
+          testEnvironment
+          (getNextResponse subscriptionHandle)
+          [interpolateYaml|
+            data:
+              #{schemaName}_employee_stream:
+                - id: 1
+                  first_name: David
+                  last_name: Holden
+                  monthly_salary: 5000
+                - id: 3
+                  first_name: Xin
+                  last_name: Cheng
+                  monthly_salary: 5500
+          |]
+
+    withSubscriptionsHeaders
+      [ ("X-Hasura-Role", "hr_manager"),
+        ("X-Hasura-Manager-Id", "3")
+      ]
+      $ it "Columns in the selection set are redacted" \(mkSubscription, testEnvironment) -> do
+        let schemaName = Schema.getSchemaName testEnvironment
+
+        subscriptionHandle <-
+          mkSubscription
+            [graphql|
+              subscription {
+                #{schemaName}_employee_stream(
+                  batch_size: 10,
+                  cursor: {
+                    initial_value: { id: 0 },
+                    ordering: ASC
+                  }
+                ) {
+                  id
+                  first_name
+                  last_name
+                  monthly_salary
+                }
+              }
+            |]
+            []
+
+        -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+        -- This is because the 'manager_employee_private_info' role provides access to the salary
+        -- for the current manager's HR-managed employees, but the rest of the employees
+        -- are accessed via 'all_managers', which does not expose 'monthly_salary'.
+        -- This means that all employee monthly salaries other than for the employees
+        -- she manages will be null.
+        shouldReturnYaml
+          testEnvironment
+          (getNextResponse subscriptionHandle)
+          [interpolateYaml|
+            data:
+              #{schemaName}_employee_stream:
+                - id: 1
+                  first_name: David
+                  last_name: Holden
+                  monthly_salary: 5000
+                - id: 2
+                  first_name: Grant
+                  last_name: Smith
+                  monthly_salary: null
+                - id: 3
+                  first_name: Xin
+                  last_name: Cheng
+                  monthly_salary: 5500
+                - id: 4
+                  first_name: Sarah
+                  last_name: Smith
+                  monthly_salary: null
+          |]
+
+    withSubscriptionsHeaders
+      [ ("X-Hasura-Role", "hr_manager"),
+        ("X-Hasura-Manager-Id", "3")
+      ]
+      $ it "Computed fields in the selection set are redacted" \(mkSubscription, testEnvironment) -> do
+        when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+          $ pendingWith "Backend does not support computed fields"
+
+        let schemaName = Schema.getSchemaName testEnvironment
+
+        subscriptionHandle <-
+          mkSubscription
+            [graphql|
+              subscription {
+                #{schemaName}_employee_stream(
+                  batch_size: 10,
+                  cursor: {
+                    initial_value: { id: 0 },
+                    ordering: ASC
+                  }
+                ) {
+                  id
+                  first_name
+                  last_name
+                  yearly_salary
+                }
+              }
+            |]
+            []
+
+        -- Althea Weiss can only see the salaries of the employees she is HR manager for.
+        -- This is because the 'manager_employee_private_info' role provides access to the salary
+        -- for the current manager's HR-managed employees, but the rest of the employees
+        -- are accessed via 'all_managers', which does not expose 'yearly_salary'.
+        -- This means that all employee yearly salaries other than for the employees
+        -- she manages will be null.
+        shouldReturnYaml
+          testEnvironment
+          (getNextResponse subscriptionHandle)
+          [interpolateYaml|
+            data:
+              #{schemaName}_employee_stream:
+                - id: 1
+                  first_name: David
+                  last_name: Holden
+                  yearly_salary: 60000
+                - id: 2
+                  first_name: Grant
+                  last_name: Smith
+                  yearly_salary: null
+                - id: 3
+                  first_name: Xin
+                  last_name: Cheng
+                  yearly_salary: 66000
+                - id: 4
+                  first_name: Sarah
+                  last_name: Smith
+                  yearly_salary: null
+          |]

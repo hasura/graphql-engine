@@ -37,7 +37,6 @@ import Hasura.Backends.Postgres.Types.Column (unsafePGColumnToBackend)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
   ( AnnBoolExpFld (AVColumn),
-    AnnRedactionExp (..),
     GBoolExp (BoolField),
     OpExpG (AGT, ALT),
     andAnnBoolExps,
@@ -85,7 +84,7 @@ mkStreamSQLSelect ::
 mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
   let cursorArg = _ssaCursorArg args
       cursorColInfo = _sciColInfo cursorArg
-      annOrderbyCol = AOCColumn cursorColInfo NoRedaction -- TODO(redactionExp): Does a redaction expression need to go here?
+      annOrderbyCol = AOCColumn cursorColInfo (_sciRedactionExpression cursorArg)
       basicOrderType =
         bool S.OTAsc S.OTDesc $ _sciOrdering cursorArg == CODescending
       orderByItems =
@@ -96,7 +95,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
               fromResVars
                 (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
                 ["cursor", G.unName $ ciName cursorColInfo]
-         in BoolField $ AVColumn cursorColInfo NoRedaction [(orderByOpExp sqlExp)] -- TODO(redactionExp): Does a redaction expression need to go here?
+         in BoolField $ AVColumn cursorColInfo (_sciRedactionExpression cursorArg) [(orderByOpExp sqlExp)]
       selectArgs =
         noSelectArgs
           { _saWhere =
