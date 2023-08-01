@@ -35,13 +35,15 @@ export const TypedInput = ({
     return '';
   };
 
+  const defaultValue = getDefaultValue();
+
   const standardInputProps = {
     onChange,
     onClick,
     disabled,
     'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
-    defaultValue: getDefaultValue(),
+    defaultValue,
     type: 'text',
     placeholder: 'text',
   };
@@ -118,7 +120,10 @@ export const TypedInput = ({
     case dataSource.columnDataTypes.ARRAY: {
       let defaultValue = standardInputProps.defaultValue;
       try {
-        defaultValue = JSON.stringify(standardInputProps.defaultValue);
+        defaultValue =
+          standardInputProps.defaultValue !== ''
+            ? JSON.stringify(standardInputProps.defaultValue)
+            : '';
       } catch (err) {
         console.error(err);
       }
