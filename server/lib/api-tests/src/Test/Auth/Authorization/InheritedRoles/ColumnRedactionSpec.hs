@@ -4,13 +4,14 @@ module Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
 where
 
 import Data.Aeson (Value (String), object, (.=))
+import Data.Has (Has (..))
 import Data.List.NonEmpty qualified as NE
 import Data.String.Interpolate (i)
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Permissions (InheritedRoleDetails (..), Permission (..), SelectPermissionDetails (..), selectPermission)
+import Harness.Permissions (InheritedRoleDetails (..), LogicalModelSelectPermissionDetails (..), Permission (..), SelectPermissionDetails (..), logicalModelSelectPermission, selectPermission)
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Schema (Table (..), table)
@@ -34,7 +35,9 @@ spec =
             { Fixture.setupTeardown = \(testEnv, _) ->
                 Postgres.setupTablesAction schema testEnv
                   : computedFieldSetupActions testEnv
-                    <> [setupPermissionsAction permissions testEnv]
+                    <> [ nativeQuerySetupAction testEnv,
+                         setupPermissionsAction (permissions <> logicalModelPermissions) testEnv
+                       ]
             },
           (Fixture.fixture $ Fixture.Backend Citus.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
@@ -131,6 +134,38 @@ computedFieldSetupActions testEnv =
 employee_yearly_salary :: Schema.SchemaName -> Text
 employee_yearly_salary (Schema.SchemaName name) = name <> ".employee_yearly_salary"
 
+nativeQuerySetupAction :: TestEnvironment -> Fixture.SetupAction
+nativeQuerySetupAction testEnv =
+  let schemaName = Schema.getSchemaName testEnv
+      backendTypeMetadata = fromMaybe (error "Unknown backend") $ getBackendTypeConfig testEnv
+      source = Fixture.backendSourceName backendTypeMetadata
+      logicalModel =
+        (Schema.logicalModel "logical_employee")
+          { Schema.logicalModelColumns =
+              [ Schema.logicalModelScalar "id" Schema.TInt,
+                Schema.logicalModelScalar "first_name" Schema.TStr,
+                Schema.logicalModelScalar "last_name" Schema.TStr,
+                Schema.logicalModelScalar "nationality" Schema.TStr,
+                Schema.logicalModelScalar "monthly_salary" Schema.TDouble,
+                Schema.logicalModelScalar "engineering_manager_id" Schema.TInt,
+                Schema.logicalModelScalar "hr_manager_id" Schema.TInt
+              ]
+          }
+      nativeQuerySql = \_backendType ->
+        [i|
+          SELECT id, first_name, last_name, nationality, monthly_salary, engineering_manager_id, hr_manager_id
+          FROM #{schemaName}.employee
+        |]
+      nativeQuery = Schema.nativeQuery "native_employee" nativeQuerySql "logical_employee"
+
+      setupAction = do
+        Schema.trackLogicalModel source logicalModel testEnv
+        Schema.trackNativeQuery source nativeQuery testEnv
+   in Fixture.SetupAction
+        { Fixture.setupAction = setupAction,
+          Fixture.teardownAction = \_ -> pure ()
+        }
+
 --------------------------------------------------------------------------------
 -- Permissions
 
@@ -196,6 +231,27 @@ permissions =
         }
   ]
 
+logicalModelPermissions :: [Permission]
+logicalModelPermissions =
+  [ LogicalModelSelectPermission
+      logicalModelSelectPermission
+        { lmSelectPermissionName = "logical_employee",
+          lmSelectPermissionRole = "employee_public_info",
+          lmSelectPermissionColumns = ["id", "first_name", "last_name"],
+          lmSelectPermissionFilter = object []
+        },
+    LogicalModelSelectPermission
+      logicalModelSelectPermission
+        { lmSelectPermissionName = "logical_employee",
+          lmSelectPermissionRole = "employee_private_info",
+          lmSelectPermissionColumns = ["id", "first_name", "last_name", "monthly_salary"],
+          lmSelectPermissionFilter =
+            object
+              [ "id" .= String "X-Hasura-Employee-Id"
+              ]
+        }
+  ]
+
 removeComputedFields :: Permission -> Permission
 removeComputedFields = \case
   SelectPermission selectPermission' -> SelectPermission $ selectPermission' {selectPermissionComputedFields = []}
@@ -203,6 +259,18 @@ removeComputedFields = \case
 
 --------------------------------------------------------------------------------
 -- Tests
+
+requiresComputedFields :: (Has TestEnvironment a) => (a -> IO ()) -> a -> IO ()
+requiresComputedFields action testEnvironment = do
+  when ((Fixture.backendType <$> getBackendTypeConfig (getter testEnvironment)) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+    $ pendingWith "Backend does not support computed fields"
+  action testEnvironment
+
+requiresNativeQueries :: (Has TestEnvironment a) => (a -> IO ()) -> a -> IO ()
+requiresNativeQueries action testEnvironment = do
+  when ((Fixture.backendType <$> getBackendTypeConfig (getter testEnvironment)) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
+    $ pendingWith "Backend does not support native queries"
+  action testEnvironment
 
 tests :: SpecWith TestEnvironment
 tests = do
@@ -256,10 +324,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "Check computed field redaction in regular queries" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "Check computed field redaction in regular queries" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -360,10 +425,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "Check computed field redaction in nodes in aggregate queries" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "Check computed field redaction in nodes in aggregate queries" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -455,10 +517,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "Check redaction of computed field input values to aggregation functions" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "Check redaction of computed field input values to aggregation functions" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -590,10 +649,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "ordering by a computed field is applied over redacted computed field value" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "ordering by a computed field is applied over redacted computed field value" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -796,10 +852,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "filtering by computed field is applied against redacted computed field value" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "filtering by computed field is applied against redacted computed field value" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -926,10 +979,7 @@ tests = do
 
       shouldReturnYaml testEnvironment actual expected
 
-    it "computed field filters in aggregation predicates are applied over the redacted computed field" \testEnvironment -> do
-      when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-        $ pendingWith "Backend does not support computed fields"
-
+    it "computed field filters in aggregation predicates are applied over the redacted computed field" $ requiresComputedFields $ \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
           actual :: IO Value
           actual =
@@ -1088,10 +1138,9 @@ tests = do
       [ ("X-Hasura-Role", "hr_manager"),
         ("X-Hasura-Manager-Id", "3")
       ]
-      $ it "Computed fields in the selection set are redacted" \(mkSubscription, testEnvironment) -> do
-        when ((Fixture.backendType <$> getBackendTypeConfig testEnvironment) `elem` [Just Fixture.Citus, Just Fixture.Cockroach])
-          $ pendingWith "Backend does not support computed fields"
-
+      $ it "Computed fields in the selection set are redacted"
+      $ requiresComputedFields
+      $ \(mkSubscription, testEnvironment) -> do
         let schemaName = Schema.getSchemaName testEnvironment
 
         subscriptionHandle <-
@@ -1143,3 +1192,52 @@ tests = do
                   last_name: Smith
                   yearly_salary: null
           |]
+
+  describe "Redaction in native queries" $ do
+    it "Column selections are redacted" $ requiresNativeQueries $ \testEnvironment -> do
+      let actual :: IO Value
+          actual =
+            GraphqlEngine.postGraphqlWithHeaders
+              testEnvironment
+              [ ("X-Hasura-Role", "employee"),
+                ("X-Hasura-Employee-Id", "3")
+              ]
+              [graphql|
+                query {
+                  native_employee(order_by: { id: asc }) {
+                    id
+                    first_name
+                    last_name
+                    monthly_salary
+                  }
+                }
+              |]
+
+          -- Xin Cheng can see her own salary, but not her peers' because the
+          -- 'employee_public_info' role does not provide access to the
+          -- monthly_salary column, but the 'employee_private_info' role does,
+          -- but only for the current employee's record (ie. hers)
+          expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                native_employee:
+                - id: 1
+                  first_name: David
+                  last_name: Holden
+                  monthly_salary: null
+                - id: 2
+                  first_name: Grant
+                  last_name: Smith
+                  monthly_salary: null
+                - id: 3
+                  first_name: Xin
+                  last_name: Cheng
+                  monthly_salary: 5500
+                - id: 4
+                  first_name: Sarah
+                  last_name: Smith
+                  monthly_salary: null
+            |]
+
+      shouldReturnYaml testEnvironment actual expected

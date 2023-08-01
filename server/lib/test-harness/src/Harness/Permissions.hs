@@ -3,11 +3,13 @@
 module Harness.Permissions
   ( Types.Permission (..),
     Types.SelectPermissionDetails (..),
+    Types.LogicalModelSelectPermissionDetails (..),
     Types.UpdatePermissionDetails (..),
     Types.InsertPermissionDetails (..),
     Types.DeletePermissionDetails (..),
     Types.InheritedRoleDetails (..),
     Types.selectPermission,
+    Types.logicalModelSelectPermission,
     Types.updatePermission,
     Types.insertPermission,
     Types.deletePermission,
