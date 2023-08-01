@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Schema.BoolExp](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/BoolExp.hs#L251).
+This note is in [Hasura.GraphQL.Schema.BoolExp](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/BoolExp.hs#L255).
 
 # Nullability in comparison operators
 
