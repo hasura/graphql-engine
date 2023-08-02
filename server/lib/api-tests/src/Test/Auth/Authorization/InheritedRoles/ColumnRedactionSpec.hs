@@ -111,7 +111,7 @@ computedFieldSetupActions testEnv =
               Postgres.run_ testEnv
                 $ [i|
                   CREATE FUNCTION #{ employee_yearly_salary schemaName }(employee_row employee)
-                  RETURNS integer AS $$
+                  RETURNS double precision AS $$
                     SELECT employee_row.monthly_salary * 12
                   $$ LANGUAGE sql STABLE;
                 |],
