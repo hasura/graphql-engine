@@ -86,7 +86,9 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField.Name (ComputedFieldName (..))
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Source.TableType (SourceTableType (..))
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
@@ -789,49 +791,52 @@ instance ToJSON PGRawFunctionInfo where
   toJSON = genericToJSON hasuraJSON
   toEncoding = genericToEncoding hasuraJSON
 
-mkScalarTypeName :: (MonadError QErr m) => PGScalarType -> m G.Name
-mkScalarTypeName PGInteger = pure GName._Int
-mkScalarTypeName PGBoolean = pure GName._Boolean
-mkScalarTypeName PGFloat = pure GName._Float
-mkScalarTypeName PGText = pure GName._String
-mkScalarTypeName PGVarchar = pure GName._String
-mkScalarTypeName (PGCompositeScalar compositeScalarType) =
-  -- When the function argument is a row type argument
-  -- then it's possible that there can be an object type
-  -- with the table name depending upon whether the table
-  -- is tracked or not. As a result, we get a conflict between
-  -- both these types (scalar and object type with same name).
-  -- To avoid this, we suffix the table name with `_scalar`
-  -- and create a new scalar type
-  (<> Name.__scalar)
-    <$> G.mkName compositeScalarType
-    `onNothing` throw400
-      ValidationFailed
-      ( "cannot use SQL type "
-          <> compositeScalarType
-          <<> " in the GraphQL schema because its name is not a "
-          <> "valid GraphQL identifier"
-      )
-mkScalarTypeName (PGArray innerScalarType) =
-  -- previous to Postgres array changes, an array of a type was called `_thing`, and this made
-  -- nice GraphQL names, so maintaining this
-  G.mkName ("_" <> pgScalarTypeToText innerScalarType)
-    `onNothing` throw400
-      ValidationFailed
-      ( "cannot use SQL type "
-          <> innerScalarType
-          <<> " in the GraphQL schema because its name is not a "
-          <> "valid GraphQL identifier"
-      )
-mkScalarTypeName scalarType =
-  G.mkName (pgScalarTypeToText scalarType)
-    `onNothing` throw400
-      ValidationFailed
-      ( "cannot use SQL type "
-          <> scalarType
-          <<> " in the GraphQL schema because its name is not a "
-          <> "valid GraphQL identifier"
-      )
+mkScalarTypeName :: (MonadError QErr m) => NamingCase -> PGScalarType -> m G.Name
+mkScalarTypeName tCase typ = applyTypeNameCaseCust tCase <$> go typ
+  where
+    go :: (MonadError QErr m) => PGScalarType -> m G.Name
+    go PGInteger = pure GName._Int
+    go PGBoolean = pure GName._Boolean
+    go PGFloat = pure GName._Float
+    go PGText = pure GName._String
+    go PGVarchar = pure GName._String
+    go (PGCompositeScalar compositeScalarType) =
+      -- When the function argument is a row type argument
+      -- then it's possible that there can be an object type
+      -- with the table name depending upon whether the table
+      -- is tracked or not. As a result, we get a conflict between
+      -- both these types (scalar and object type with same name).
+      -- To avoid this, we suffix the table name with `_scalar`
+      -- and create a new scalar type
+      (<> Name.__scalar)
+        <$> G.mkName compositeScalarType
+        `onNothing` throw400
+          ValidationFailed
+          ( "cannot use SQL type "
+              <> compositeScalarType
+              <<> " in the GraphQL schema because its name is not a "
+              <> "valid GraphQL identifier"
+          )
+    go (PGArray innerScalarType) =
+      -- previous to Postgres array changes, an array of a type was called `_thing`, and this made
+      -- nice GraphQL names, so maintaining this
+      G.mkName ("_" <> pgScalarTypeToText innerScalarType)
+        `onNothing` throw400
+          ValidationFailed
+          ( "cannot use SQL type "
+              <> innerScalarType
+              <<> " in the GraphQL schema because its name is not a "
+              <> "valid GraphQL identifier"
+          )
+    go scalarType =
+      G.mkName (pgScalarTypeToText scalarType)
+        `onNothing` throw400
+          ValidationFailed
+          ( "cannot use SQL type "
+              <> scalarType
+              <<> " in the GraphQL schema because its name is not a "
+              <> "valid GraphQL identifier"
+          )
 
 instance IsIdentifier RelName where
   toIdentifier rn = Identifier $ relNameToTxt rn

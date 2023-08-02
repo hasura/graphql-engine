@@ -51,7 +51,9 @@ import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..), _cfmDefinition)
+import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.Server.Migrate.Internal
 import Hasura.Server.Migrate.Version qualified as Version
 import Hasura.Table.Cache
@@ -175,9 +177,11 @@ resolveDatabaseMetadata sourceMetadata sourceConfig =
             <> concatMap getComputedFieldFunctionsMetadata (InsOrdHashMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
-    let scalarsMap = HashMap.fromList do
+    let customization = _smCustomization sourceMetadata
+        tCase = fromMaybe HasuraCase $ _scNamingConvention customization
+        scalarsMap = HashMap.fromList do
           scalar <- Set.toList pgScalars
-          name <- afold @(Either QErr) $ mkScalarTypeName scalar
+          name <- afold @(Either QErr) $ mkScalarTypeName tCase scalar
           pure (name, scalar)
     pure $ DBObjectsIntrospection tablesMeta functionsMeta (ScalarMap scalarsMap) mempty
   where
