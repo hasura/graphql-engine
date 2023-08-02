@@ -27,19 +27,15 @@ import { CLI_CONSOLE_MODE } from './constants';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
 import FormRestView from './components/Services/ApiExplorer/Rest/Form';
-import RestListView from './components/Services/ApiExplorer/Rest/List';
-import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
 import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
+import { SlackCallbackHandler } from './features/SchemaRegistry/components/TempSlackCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
-import {
-  checkFeatureSupport,
-  INSECURE_TLS_ALLOW_LIST,
-} from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
-import { PrometheusSettings } from './features/Prometheus';
 import { FeatureFlags } from './features/FeatureFlags';
 import { AllowListDetail } from './components/Services/AllowList';
+import { RestEndpointList } from './features/RestEndpoints/components/RestEndpointList';
+import { RestEndpointDetailsPage } from './features/RestEndpoints/components/RestEndpointDetails/RestEndpointDetailsPage';
 
 const routes = store => {
   // load hasuraCliServer migration status
@@ -105,6 +101,10 @@ const routes = store => {
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route path="heroku-callback" component={HerokuCallbackHandler} />
       <Route path="neon-integration/callback" component={NeonCallbackHandler} />
+      <Route
+        path="slack-integration/callback"
+        component={SlackCallbackHandler}
+      />
       <Route path="" component={AuthContainer}>
         <Route
           path=""
@@ -125,8 +125,8 @@ const routes = store => {
             <Route path="rest">
               <IndexRedirect to="list" />
               <Route path="create" component={FormRestView} />
-              <Route path="list" component={RestListView} />
-              <Route path="details/:name" component={DetailsView} />
+              <Route path="list" component={RestEndpointList} />
+              <Route path="details/:name" component={RestEndpointDetailsPage} />
               <Route path="edit/:name" component={FormRestView} />
             </Route>
             <Route path="allow-list">
@@ -155,10 +155,9 @@ const routes = store => {
             <Route path="logout" component={logoutConnector(connect)} />
             <Route path="about" component={aboutConnector(connect)} />
             <Route path="inherited-roles" component={inheritedRolesConnector} />
-            {checkFeatureSupport(INSECURE_TLS_ALLOW_LIST) && (
-              <Route path="insecure-domain" component={InsecureDomains} />
-            )}
-            <Route path="prometheus-settings" component={PrometheusSettings} />
+
+            <Route path="insecure-domain" component={InsecureDomains} />
+
             <Route path="feature-flags" component={FeatureFlags} />
           </Route>
           {dataRouter}

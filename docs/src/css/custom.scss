@@ -4,15 +4,17 @@
  * work well for content-centric websites.
  */
 @use 'default-fonts-and-colors';
-@use 'cloud-and-enterprise-menu-icons';
 @use 'header';
 @use 'sidebar';
 @use 'table-of-contents';
 @use 'doc';
 @use 'footer';
 @use 'introduction-page';
+@use 'overview-page';
 @use 'cloud-db-icon-gallery';
 @use 'admonitions';
+@use 'badges';
+@use 'tables';
 
 /* Custom Styles */
 .no-shadow {
@@ -32,6 +34,24 @@
   }
 }
 
+.front-matter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 40px;
+  grid-column: 1 / -1;
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+  }
+}
+
 .arrow {
   transition: all 0.3s ease-in-out;
   display: grid;
@@ -44,11 +64,13 @@
 
 .heading-badge {
   font-size: 0.9rem;
+  + p {
+    margin-top: 1rem;
+  }
 }
 
-// Table body fix for longer types and args
-tbody {
-  word-break: break-word;
+.theme-doc-sidebar-item-link {
+  font-size: 0.8rem;
 }
 
 /* Dark Mode Styles */

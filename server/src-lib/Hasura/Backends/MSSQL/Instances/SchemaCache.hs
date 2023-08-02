@@ -6,7 +6,7 @@
 module Hasura.Backends.MSSQL.Instances.SchemaCache () where
 
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType (BackendType (MSSQL))
 import Hasura.RQL.Types.SchemaCacheTypes (GetAggregationPredicatesDeps)
-import Hasura.SQL.Backend (BackendType (MSSQL))
 
 instance (Backend 'MSSQL) => GetAggregationPredicatesDeps 'MSSQL

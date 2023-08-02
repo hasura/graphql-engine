@@ -1,4 +1,4 @@
-import { InputField } from '@/new-components/Form';
+import { InputField } from '../../../new-components/Form';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React from 'react';
 import { getInputAttributes } from '../utils';

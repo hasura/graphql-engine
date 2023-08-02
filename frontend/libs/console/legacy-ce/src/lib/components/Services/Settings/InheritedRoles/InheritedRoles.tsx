@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { redirectToMetadataStatus } from '@/components/Common/utils/routesUtils';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { redirectToMetadataStatus } from '../../../Common/utils/routesUtils';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { connect, ConnectedProps } from 'react-redux';
 import {
   getInheritedRoles,
@@ -96,7 +96,7 @@ const InheritedRoles: React.FC<Props> = props => {
 
   return (
     <Analytics name="InheritedRoles" {...REDACT_EVERYTHING}>
-      <div className="clear-both pl-md pt-md mb-md">
+      <div className="clear-both pl-md pt-md mb-md bootstrap-jail">
         <div className="flex items-center">
           <Heading fontSize="24px">Inherited Roles</Heading>
         </div>

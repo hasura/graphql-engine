@@ -1,10 +1,12 @@
 module Test.Expectations
   ( jsonShouldBe,
     rowsShouldBe,
+    mutationResponseShouldBe,
+    yamlShow,
   )
 where
 
-import Control.Lens ((%~), (&))
+import Control.Lens ((%~), (&), _Just)
 import Control.Monad (unless)
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO, liftIO)
@@ -16,7 +18,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.Yaml qualified as Yaml
 import GHC.Stack (HasCallStack)
-import Hasura.Backends.DataConnector.API (FieldName, FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
+import Hasura.Backends.DataConnector.API
 import System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR (..), hSupportsANSIColor, setSGRCode)
 import System.IO (stdout)
 import Test.Sandwich (expectationFailure)
@@ -27,6 +29,9 @@ newtype YamlShow = YamlShow {unYamlShow :: Value}
 
 instance Show YamlShow where
   show = T.unpack . TE.decodeUtf8With TE.lenientDecode . Yaml.encode . unYamlShow
+
+yamlShow :: (ToJSON value) => value -> String
+yamlShow = show . YamlShow . toJSON
 
 -- | Compares two JSON values for equality, but prints their diff upon failure
 -- as formatted YAML, which is a much nicer way to visualise the difference in
@@ -98,3 +103,11 @@ renderDiffString useColor actual expected =
 
     colorSpan c s = colorCode (SetColor Foreground Dull c) ++ s ++ colorCode Reset
     colorCode sgr = if useColor then setSGRCode [sgr] else ""
+
+mutationResponseShouldBe :: (HasCallStack, MonadThrow m, MonadIO m) => MutationResponse -> MutationResponse -> m ()
+mutationResponseShouldBe actual expected =
+  (normalizeMutationResponse actual) `jsonShouldBe` (normalizeMutationResponse expected)
+
+normalizeMutationResponse :: MutationResponse -> MutationResponse
+normalizeMutationResponse response =
+  response & mrOperationResults . traverse %~ (morReturning . _Just . traverse %~ normalize)

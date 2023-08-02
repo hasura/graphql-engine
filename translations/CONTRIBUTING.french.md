@@ -40,7 +40,7 @@ divisé en 3 composants, chacun ayant son propre guide de contribution:
 
 1. [Server (Haskell)](../server/CONTRIBUTING.md)
 2. [CLI (Go)](../cli/CONTRIBUTING.md)
-3. [Console (JavaScript)](../console/README.md#contributing-to-hasura-console)
+3. [Console (JavaScript)](../frontend/docs/generic-info.md#contributing-to-hasura-console)
 
 Chacun de ces trois composants possède une version unique, désignée soit par le tag git, soit par une
 combinaison du nom de la branche et du SHA de commit git.
@@ -80,7 +80,7 @@ Nous avons identifié :
 
 - [boilerplates](../community/boilerplates)
 
-- [sample-apps](../community/sample-apps) 
+- [sample-apps](https://github.com/hasura/sample-apps/tree/main)
 
 - [outils](../community/tools) 
 

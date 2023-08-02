@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Connect } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
-import { Checkbox, InputField, SimpleForm } from '@/new-components/Form';
+import { Analytics, REDACT_EVERYTHING } from '../../features/Analytics';
+import { Button } from '../../new-components/Button';
+import {
+  CheckboxesField,
+  InputField,
+  SimpleForm,
+} from '../../new-components/Form';
 import { push } from 'react-router-redux';
 import { z } from 'zod';
 import Helmet from 'react-helmet';
@@ -12,13 +16,14 @@ import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
 import { ConnectInjectedProps } from '../../types';
+import { isProConsole } from '../../utils/proConsole';
 
 import hasuraLogo from './black-logo.svg';
 import hasuraEELogo from './black-logo-ee.svg';
 
 const validationSchema = z.object({
   password: z.string().min(1, { message: 'Please add password' }),
-  savePassword: z.boolean().or(z.string()).optional(),
+  savePassword: z.enum(['checked']).array().optional(),
 });
 
 const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
@@ -102,12 +107,12 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
             </div>
             <div>
               <label className="cursor-pointer flex items-center pt-sm">
-                <Checkbox
+                <CheckboxesField
                   name="savePassword"
                   options={[
                     {
                       value: 'checked',
-                      label: 'Remember in this browser',
+                      label: 'Remember on the browser',
                     },
                   ]}
                 />
@@ -145,12 +150,11 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch, children }) => {
     );
   };
 
-  const showLogo =
-    globals.consoleType === 'pro' || globals.consoleType === 'pro-lite' ? (
-      <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
-    ) : (
-      <img src={hasuraLogo} alt="Hasura" />
-    );
+  const showLogo = isProConsole(globals) ? (
+    <img className="flex w-36 mx-auto" src={hasuraEELogo} alt="Hasura EE" />
+  ) : (
+    <img src={hasuraLogo} alt="Hasura" />
+  );
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">

@@ -1,7 +1,7 @@
 /* eslint no-loop-func: 0 */ // --> OFF
 
-import Globals from '@/Globals';
-import Endpoints from '@/Endpoints';
+import Globals from '../../../../../Globals';
+import Endpoints from '../../../../../Endpoints';
 
 export const generateRandomString = (stringLength = 16) => {
   const allChars =
@@ -129,7 +129,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
           value: dbURL,
         },
       ]).then(() => {
-        return emptyEnvVar;
+        return { envVar: emptyEnvVar, oldConfigHash: hash };
       });
     })
     .catch(e => {
@@ -137,7 +137,7 @@ export const setDBURLInEnvVars = (dbURL: string) => {
     });
 };
 
-const getProjectHealth = () => {
+export const getProjectHealth = () => {
   const healthEndpoint = `${Globals.dataApiUrl}/healthz`;
   return fetch(healthEndpoint, {
     method: 'GET',

@@ -52,8 +52,21 @@ X-Hasura-Role: admin
           "connection_lifetime": 600
         },
         "use_prepared_statements": true,
-        "isolation_level": "read-committed",
-      }
+        "isolation_level": "read-committed"
+      },
+      "connection_template": {
+        "template": "{{ if $.request.session?[\"x-hasura-role\"] == \"admin\" }} {{$.primary}} {{else}} {{$.connection_set.db_1}} {{ end }}"
+      },
+      "connection_set": [
+        {
+          "name": "db_1",
+          "connection_info": {
+            "database_url": {
+              "from_env": "<DB_URL_ENV_VAR>"
+            }
+          }
+        }
+      ]
     },
     "replace_configuration": false,
     "customization": {
@@ -121,6 +134,28 @@ X-Hasura-Role: admin
 | ------- | -------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | name    | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database                                                                                                                                      |
 | cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
+
+## pg_get_source_tables {#metadata-pg-get-source-tables}
+
+`pg_get_source_tables` is used to list the tables available on a given Postgres
+database.
+
+List the tables available on a database with name `pg1`:
+
+```http
+{
+  "type": "pg_get_source_tables",
+  "args": {
+    "source": "pg1"
+  }
+}
+```
+
+### Args syntax {#metadata-pg-get-source-tables-syntax}
+
+| Key    | Required | Schema                                                  | Description                   |
+| ------ | -------- | ------------------------------------------------------- | ------------------------------|
+| source | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the Postgres database |
 
 ## rename_source {#metadata-rename-source}
 
@@ -289,6 +324,28 @@ X-Hasura-Role: admin
 | name    | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database                                                                                                                                 |
 | cascade | false    | Boolean                                                 | When set to `true`, the effect (if possible) is cascaded to any Metadata dependent objects (relationships, permissions etc.) from other sources (default: `false`) |
 
+## mssql_get_source_tables {#mssql-get-source-tables}
+
+`mssql_get_source_tables` is used to list the tables available on a given
+MS SQL Server database.
+
+List the tables available on a database with name `mssql1`:
+
+```http
+{
+  "type": "mssql_get_source_tables",
+  "args": {
+    "source": "mssql1"
+  }
+}
+```
+
+### Args syntax {#mssql-get-source-tables-syntax}
+
+| Key    | Required | Schema                                                  | Description                        |
+| ------ | -------- | ------------------------------------------------------- | ---------------------------------- |
+| source | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the MS SQL Server database |
+
 ## mssql_update_source {#mssql-update-source}
 
 `mssql_update_source` is used to update an already existing MS SQL Server source in Hasura.
@@ -356,7 +413,7 @@ X-Hasura-Role: admin
     "configuration": {
       "service_account": "bigquery_service_account",
       "project_id": "bigquery_project_id",
-      "datasets": "dataset1, dataset2"
+      "datasets": ["dataset1", "dataset2"]
     },
     "customization": {
       "root_fields": {
@@ -433,7 +490,7 @@ X-Hasura-Role: admin
     "configuration": {
       "service_account": "bigquery_service_account",
       "project_id": "bigquery_project_id",
-      "datasets": "dataset1, dataset2"
+      "datasets": ["dataset1", "dataset2"]
     },
     "customization": {
       "root_fields": {

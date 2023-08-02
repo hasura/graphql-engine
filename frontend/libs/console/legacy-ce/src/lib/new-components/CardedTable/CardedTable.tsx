@@ -71,7 +71,7 @@ const TableBody = ({ children }: ChildrenProps) => {
 const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
   const { children, className, ...tableRowAttributes } = props;
   return (
-    <tr className={clsx('group', className)} {...tableRowAttributes}>
+    <tr className={clsx('group relative', className)} {...tableRowAttributes}>
       {children}
     </tr>
   );
@@ -80,7 +80,8 @@ const TableBodyRow = (props: React.ComponentProps<'tr'>) => {
 const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
     <td
-      className="px-sm py-xs whitespace-nowrap text-muted"
+      // style={{ maxWidth: '20ch' }}
+      className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
       {...cellAttributes}
     >
       {children}
@@ -90,7 +91,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
 
 const TableBodyActionCell = ({ children }: ChildrenProps) => {
   return (
-    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold">
       {children}
     </td>
   );
@@ -99,19 +100,34 @@ const TableBodyActionCell = ({ children }: ChildrenProps) => {
 interface BodyProps {
   data: ReactNode[][];
   showActionCell?: boolean;
+  keyBuilder?: (cellIndex: number) => string;
+  rowClassNames?: string[];
 }
 
-const Body = ({ data, showActionCell = false }: BodyProps) => {
+const Body = ({
+  data,
+  showActionCell = false,
+  keyBuilder,
+  rowClassNames,
+}: BodyProps) => {
   return (
     <TableBody>
-      {data.map(row => {
+      {data.map((row, rowIndex) => {
         return (
-          <TableBodyRow>
-            {row.map((cell, index) => {
-              if (showActionCell && index + 1 === row.length) {
-                return <TableBodyActionCell>{cell}</TableBodyActionCell>;
+          <TableBodyRow
+            className={rowClassNames?.[rowIndex]}
+            key={keyBuilder?.(rowIndex) ?? rowIndex}
+            data-key={keyBuilder?.(rowIndex) ?? rowIndex}
+          >
+            {row.map((cell, cellIndex) => {
+              if (showActionCell && cellIndex + 1 === row.length) {
+                return (
+                  <TableBodyActionCell key={cellIndex}>
+                    {cell}
+                  </TableBodyActionCell>
+                );
               }
-              return <TableBodyCell>{cell}</TableBodyCell>;
+              return <TableBodyCell key={cellIndex}>{cell}</TableBodyCell>;
             })}
           </TableBodyRow>
         );
@@ -126,12 +142,19 @@ export const CardedTable = ({
   columns,
   data,
   showActionCell,
+  keyBuilder,
+  rowClassNames,
   ...rest
 }: CardedTableProps) => {
   return (
     <Table {...rest}>
       <Header columns={columns} />
-      <Body data={data} showActionCell={showActionCell} />
+      <Body
+        data={data}
+        showActionCell={showActionCell}
+        rowClassNames={rowClassNames}
+        keyBuilder={keyBuilder}
+      />
     </Table>
   );
 };

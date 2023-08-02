@@ -1,6 +1,16 @@
-import { MetadataResponse } from '@/features/MetadataAPI';
+import { MetadataResponse } from '../features/MetadataAPI';
+import { Api } from '../hooks/apiUtils';
+import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
+import dataHeaders from '../components/Services/Data/Common/Headers';
+import {
+  ConnectDBEvent,
+  sendTelemetryEvent,
+  trackRuntimeError,
+} from '../telemetry';
+import { RunSQLSelectResponse } from '../features/DataSource';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
+
 import {
   ConnectionParams,
   ConnectionPoolSettings,
@@ -14,56 +24,59 @@ import {
   SSLConfigOptions,
 } from './types';
 import {
-  showSuccessNotification,
   showErrorNotification,
   showNotification,
+  showSuccessNotification,
 } from '../components/Services/Common/Notification';
 import {
-  deleteAllowListQuery,
-  deleteAllowedQueryQuery,
-  createAllowListQuery,
   addAllowedQueriesQuery,
+  addAllowedQuery,
   addInheritedRole,
+  addInsecureDomainQuery,
+  allowedQueriesCollection,
+  createAllowListQuery,
+  deleteAllowedQueryQuery,
+  deleteAllowListQuery,
+  deleteDomain,
   deleteInheritedRole,
-  updateInheritedRole,
   getReloadCacheAndGetInconsistentObjectsQuery,
+  getRemoteSchemaNameFromInconsistentObjects,
+  getSourceFromInconistentObjects,
   reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery,
   updateAllowedQueryQuery,
-  allowedQueriesCollection,
-  addAllowedQuery,
-  getSourceFromInconistentObjects,
-  getRemoteSchemaNameFromInconsistentObjects,
-  addInsecureDomainQuery,
-  deleteDomain,
+  updateInheritedRole,
 } from './utils';
 import {
+  fetchDataInit,
   makeMigrationCall,
   setConsistentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
-  fetchDataInit,
 } from '../components/Services/Data/DataActions';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { clearIntrospectionSchemaCache } from '../components/Services/RemoteSchema/graphqlUtils';
 import {
-  inconsistentObjectsQuery,
+  createRESTEndpointQuery,
   dropInconsistentObjectsQuery,
+  dropRESTEndpointQuery,
   exportMetadataQuery,
   generateReplaceMetadataQuery,
+  inconsistentObjectsQuery,
   resetMetadataQuery,
-  createRESTEndpointQuery,
-  dropRESTEndpointQuery,
 } from './queryUtils';
-import { Driver, setDriver } from '../dataSources';
-import { addSource, removeSource, reloadSource } from './sourcesUtils';
+import { currentDriver, dataSource, Driver, setDriver } from '../dataSources';
+import { addSource, reloadSource, removeSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
 import {
   getConfirmation,
   isConsoleError,
+  hashString,
 } from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
 import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
 import { getSourceDriver } from '../components/Services/Data/utils';
+import { hasuraToast } from '../new-components/Toasts';
+import { createTextWithLinks } from './hyperlinkErrorMessageLink';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -251,13 +264,11 @@ export const exportMetadata =
     errorCb?: (err: string) => void
   ): Thunk<Promise<ReduxState | void>, MetadataActions> =>
   (dispatch, getState) => {
-    const { dataHeaders } = getState().tables;
-
     const query = exportMetadataQuery;
 
     const options = {
       method: 'POST',
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(query),
     };
 
@@ -274,6 +285,105 @@ export const exportMetadata =
         if (errorCb) errorCb(err);
       });
   };
+
+const fetchDBEntities = (
+  dataSourceName: string,
+  headers: Record<string, string>,
+  successHandler: (response: string[]) => void,
+  errorCb?: (err: string) => void,
+  noSupportCb?: () => void
+) => {
+  const dbTableNamesQuery = dataSource?.getDatabaseTableNames;
+
+  if (!dbTableNamesQuery) {
+    if (noSupportCb) noSupportCb();
+    return;
+  }
+
+  const url = Endpoints.query;
+
+  const query = getRunSqlQuery(dbTableNamesQuery, dataSourceName, false, true);
+
+  Api.post<RunSQLSelectResponse>({
+    url,
+    headers,
+    body: query,
+  })
+    .then(dbTablesResponse => {
+      // sample: dbTablesResponse.result = [['table_name'], ['<table1>'], ['<table2>'], ...]
+      const tableNames = dbTablesResponse.result
+        .slice(1) // remove db results header
+        .map((res: string[]) => res[0]) // extract table name from result array
+        .sort(); // ensure order is maintained for consistent results
+
+      successHandler(tableNames);
+    })
+    .catch(err => {
+      trackRuntimeError(err);
+      if (errorCb) errorCb(err);
+    });
+};
+
+const makeConnectDBTelemetryEvent = (
+  eventHandler: (event: ConnectDBEvent) => void,
+  dbKind: Driver,
+  dbEntities?: string[]
+) => {
+  // send entity_count only if DB entity data is available
+  const connectDBEvent: ConnectDBEvent = {
+    type: 'CONNECT_DB',
+    data: {
+      db_kind: dbKind,
+      entity_count: dbEntities ? dbEntities.length : undefined,
+      entity_hash: undefined,
+    },
+  };
+
+  // set entity_hash only if non-zero entities exist
+  if (dbEntities) {
+    if (dbEntities.length) {
+      const setEntityHashAndHandleEvent = (hash: string) => {
+        connectDBEvent.data.entity_hash = hash;
+
+        eventHandler(connectDBEvent);
+      };
+
+      hashString(dbEntities.toString()).then(entityHash =>
+        setEntityHashAndHandleEvent(entityHash)
+      );
+    } else {
+      // set fixed hash value for 0 entities
+      connectDBEvent.data.entity_hash = '00000000000000000000000000000000';
+      eventHandler(connectDBEvent);
+    }
+  } else {
+    eventHandler(connectDBEvent);
+  }
+};
+
+// TODO: move to some utils
+const sendInitialDBStateTelemetry = (
+  dataSourceName: string,
+  headers: Record<string, string>
+) => {
+  const dbKind = currentDriver;
+
+  const onDataFetch = (dbEntities: string[]) => {
+    makeConnectDBTelemetryEvent(sendTelemetryEvent, dbKind, dbEntities);
+  };
+
+  const onNoDBSupport = () => {
+    makeConnectDBTelemetryEvent(sendTelemetryEvent, dbKind);
+  };
+
+  fetchDBEntities(
+    dataSourceName,
+    headers,
+    onDataFetch,
+    undefined,
+    onNoDBSupport
+  );
+};
 
 export const addDataSource =
   (
@@ -311,6 +421,10 @@ export const addDataSource =
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
+
+        // send DB initial state to telemetry
+        sendInitialDBStateTelemetry(data.payload.name, dataHeaders(getState));
+
         if (shouldShowNotifications) {
           dispatch(
             showNotification(
@@ -538,8 +652,29 @@ export const replaceMetadata =
       const successMsg = 'Metadata imported';
       const errorMsg = 'Failed importing metadata';
 
-      const customOnSuccess = () => {
+      const customOnSuccess = (
+        response: [{ warnings: { code: string; message: string }[] }]
+      ) => {
         if (successCb) successCb();
+        const title = (code: string) => {
+          if (code === 'illegal-event-trigger-name')
+            return 'Rename Event Trigger Suggested';
+          if (code === 'source-cleanup-failed') {
+            return 'Manual Event Trigger Cleanup Needed';
+          } else {
+            return 'Time Limit Exceeded System Limit';
+          }
+        };
+        response?.[0]?.warnings?.forEach(i => {
+          hasuraToast({
+            type: 'warning',
+            title: title(i.code),
+            children: createTextWithLinks(i.message),
+            toastOptions: {
+              duration: Infinity,
+            },
+          });
+        });
 
         const updateCurrentDataSource = (newState: MetadataResponse) => {
           const currentSource = newState.metadata.sources.find(
@@ -609,7 +744,7 @@ export const resetMetadata =
     errorCb: (err: string) => void
   ): Thunk<void, MetadataActions> =>
   (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
 
     const options = {
       method: 'POST',
@@ -621,13 +756,23 @@ export const resetMetadata =
     return dispatch(
       requestAction(Endpoints.metadata, options as RequestInit)
     ).then(
-      () => {
+      (response: { warnings: { code: string; message: string }[] }) => {
         dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: '' });
         dispatch(exportMetadata());
-        if (successCb) {
-          successCb();
-        }
-        dispatch(showSuccessNotification('Metadata reset successfully!'));
+        if (successCb) successCb();
+
+        response?.warnings?.forEach(i => {
+          hasuraToast({
+            type: 'warning',
+            title: 'Manual Event Trigger Cleanup Needed',
+            children: createTextWithLinks(i.message),
+            toastOptions: {
+              duration: Infinity,
+            },
+          });
+        });
+
+        hasuraToast({ title: 'Metadata reset successfully!', type: 'success' });
       },
       error => {
         console.error(error);
@@ -714,7 +859,7 @@ export const loadInconsistentObjects = (
     const inconsistentRemoteSchemas =
       getRemoteSchemaNameFromInconsistentObjects(inconsistentObjectsInMetadata);
 
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     const source = getState().tables.currentDataSource;
     const {
       shouldReloadMetadata,
@@ -784,13 +929,11 @@ export const reloadDataSource =
     data: ReloadDataSourceRequest['data']
   ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
   (dispatch, getState) => {
-    const { dataHeaders } = getState().tables;
-
     const query = reloadSource(data.name);
 
     const options = {
       method: 'POST',
-      headers: dataHeaders,
+      headers: dataHeaders(getState),
       body: JSON.stringify(query),
     };
 
@@ -812,7 +955,7 @@ export const reloadRemoteSchema = (
   failureCb: (err: string) => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     const source = getState().tables.currentDataSource;
 
     const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
@@ -879,7 +1022,7 @@ export const dropInconsistentObjects = (
   failureCb: () => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const headers = getState().tables.dataHeaders;
+    const headers = dataHeaders(getState);
     dispatch({ type: 'Metadata/DROP_INCONSISTENT_METADATA_REQUEST' });
     return dispatch(
       requestAction(Endpoints.metadata, {
@@ -1088,6 +1231,7 @@ export const addAllowedQueries = (
 
 export const addInsecureDomain = (
   host: string,
+  port: string,
   callback: any
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
@@ -1096,17 +1240,19 @@ export const addInsecureDomain = (
 
       return;
     }
-    const upQuery = addInsecureDomainQuery(host);
+    const upQuery = addInsecureDomainQuery(host, port);
     const migrationName = `add_insecure_tls_domains`;
     const requestMsg = 'Adding domain to insecure TLS allow list...';
     const successMsg = `Domain added to insecure TLS allow list successfully`;
     const errorMsg = 'Adding domain to insecure TLS allow list failed';
 
     const onSuccess = () => {
+      dispatch(exportMetadata());
       callback();
     };
 
     const onError = () => {};
+
     makeMigrationCall(
       dispatch,
       getState,
@@ -1123,16 +1269,19 @@ export const addInsecureDomain = (
 };
 
 export const deleteInsecureDomain = (
-  host: string
+  host: string,
+  port?: string
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
-    const upQuery = deleteDomain(host);
+    const upQuery = deleteDomain(host, port);
     const migrationName = `delete_insecure_domain`;
     const requestMsg = 'Deleting Insecure domain...';
     const successMsg = 'Domain deleted!';
     const errorMsg = 'Deleting domain failed!';
 
-    const onSuccess = () => {};
+    const onSuccess = () => {
+      dispatch(exportMetadata());
+    };
 
     const onError = () => {};
 

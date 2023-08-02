@@ -1,9 +1,12 @@
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
-import { Button } from '@/new-components/Button';
-import { Dialog } from '@/new-components/Dialog';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { sanitizeGraphQLFieldNames } from '@/utils';
-import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../hasura-metadata-api';
+import { Button } from '../../../../../new-components/Button';
+import { Dialog } from '../../../../../new-components/Dialog';
+import { InputField, SimpleForm } from '../../../../../new-components/Form';
+import { sanitizeGraphQLFieldNames } from '../../../../../utils';
+import { SanitizeTips } from '../../../../../utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { useUpdateTableConfiguration } from '../../../ModifyTable/hooks';
 import { ModifyTableProps } from '../../ModifyTable';

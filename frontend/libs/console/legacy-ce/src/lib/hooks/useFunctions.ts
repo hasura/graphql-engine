@@ -1,6 +1,6 @@
-import { services } from '@/dataSources/services';
-import { PGFunction } from '@/dataSources/services/postgresql/types';
-import { QualifiedFunction } from '@/metadata/types';
+import { services } from '../dataSources/services';
+import { PGFunction } from '../dataSources/services/postgresql/types';
+import { QualifiedFunction } from '../metadata/types';
 import { UseQueryResult } from 'react-query';
 import { APIError } from './error';
 import { QualifiedDataSource, RunSQLResponse } from './types';

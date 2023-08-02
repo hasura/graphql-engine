@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-legacy-ce';
 
 import { NewOperations } from './NewOperations';
 import { ExistingTestsOperations } from './ExistingTestsOperations';
@@ -32,26 +32,30 @@ export const RegressionTests = props => {
         >
           <TabList className={styles.tabListWrapper}>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 0 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 0 && styles.tabListActive
+              }`}
             >
               Test suite
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 1 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 1 && styles.tabListActive
+              }`}
             >
               New operations
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 2 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 2 && styles.tabListActive
+              }`}
             >
               Run tests
             </Tab>
             <Tab
-              className={`${styles.tabList} ${tabIndex === 3 &&
-                styles.tabListActive}`}
+              className={`${styles.tabList} ${
+                tabIndex === 3 && styles.tabListActive
+              }`}
             >
               Past runs
             </Tab>

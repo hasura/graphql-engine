@@ -1,7 +1,7 @@
-import { FieldWrapper } from '@/new-components/Form';
+import { FieldWrapper } from '../../../new-components/Form';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import {

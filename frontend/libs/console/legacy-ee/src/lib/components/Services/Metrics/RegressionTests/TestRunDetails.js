@@ -1,5 +1,5 @@
-import React, { useState, Fragment } from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
+import { useState, Fragment } from 'react';
+import { Dialog } from '@hasura/console-legacy-ce';
 import { useQuery } from '@apollo/react-hooks';
 
 import CustomCopy from '../Common/CustomCopy';
@@ -67,72 +67,67 @@ const TestRunDetailsModal = ({ onHide, show, operationName, testRunId }) => {
     },
   });
 
+  if (!show) return null;
+
   return (
-    <BootstrapModal
+    <Dialog
       id="operationInspect"
-      onHide={onHide}
-      show={show}
-      size="modal-lg"
-      className={styles.modalWrapper}
+      onClose={onHide}
+      hasBackdrop
+      size="xxl"
+      title="Test details"
     >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Test details
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body className={styles.modalContainer}>
-        {loading && <LoadingBody />}
-        {error && <ErrorBody error={error} />}
-        {data && data.test_run_details && data.test_run_details.length && (
-          <Fragment>
-            <div
-              className={`col-md-6 ${styles.noPadd} ${styles.borderRight} ${
-                styles.halfWidth
-              }`}
-            >
-              <CustomCopy
-                key="graphql-query"
-                label="Query"
-                copy={data.test_run_details[0].query}
-              />
-              <CustomCopy
-                key="session_variables"
-                label="Session variables"
-                copy={JSON.stringify(
-                  data.test_run_details[0].user_vars,
-                  null,
-                  2
-                )}
-              />
-              <CustomCopy
-                key="variables"
-                label="Variables"
-                copy={JSON.stringify(
-                  data.test_run_details[0].variables,
-                  null,
-                  2
-                )}
-              />
-            </div>
-            <div
-              className={`col-md-6 ${styles.noPadd} ${styles.halfWidth} ${
-                styles.longCopy
-              }`}
-            >
-              <CustomCopy
-                key="response"
-                label="Response"
-                copy={JSON.stringify(
-                  data.test_run_details[0].response,
-                  null,
-                  2
-                )}
-              />
-            </div>
-          </Fragment>
-        )}
-      </BootstrapModal.Body>
-    </BootstrapModal>
+      <div className={`p-md ${styles.modalWrapper}`}>
+        <div className={styles.modalContainer}>
+          {loading && <LoadingBody />}
+          {error && <ErrorBody error={error} />}
+          {data && data.test_run_details && data.test_run_details.length && (
+            <Fragment>
+              <div
+                className={`col-md-6 ${styles.noPadd} ${styles.borderRight} ${styles.halfWidth}`}
+              >
+                <CustomCopy
+                  key="graphql-query"
+                  label="Query"
+                  copy={data.test_run_details[0].query}
+                />
+                <CustomCopy
+                  key="session_variables"
+                  label="Session variables"
+                  copy={JSON.stringify(
+                    data.test_run_details[0].user_vars,
+                    null,
+                    2
+                  )}
+                />
+                <CustomCopy
+                  key="variables"
+                  label="Variables"
+                  copy={JSON.stringify(
+                    data.test_run_details[0].variables,
+                    null,
+                    2
+                  )}
+                />
+              </div>
+              <div
+                className={`col-md-6 ${styles.noPadd} ${styles.halfWidth} ${styles.longCopy}`}
+              >
+                <CustomCopy
+                  key="response"
+                  label="Response"
+                  copy={JSON.stringify(
+                    data.test_run_details[0].response,
+                    null,
+                    2
+                  )}
+                />
+              </div>
+            </Fragment>
+          )}
+        </div>
+      </div>
+    </Dialog>
   );
 };
 

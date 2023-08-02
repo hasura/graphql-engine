@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
 import downloadList from '../images/download_bottom.svg';

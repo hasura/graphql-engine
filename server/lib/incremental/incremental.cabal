@@ -1,0 +1,98 @@
+cabal-version: 3.6
+name: incremental
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+extra-source-files: README.md
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+
+  build-depends:
+    , base
+    , arrows-extra
+    , dependent-map
+    , dependent-sum
+    , hasura-prelude
+    , profunctors
+    , reflection
+    , some
+    , unordered-containers
+
+  exposed-modules:
+    Hasura.Incremental
+    Hasura.Incremental.Internal.Cache
+    Hasura.Incremental.Internal.Dependency
+    Hasura.Incremental.Internal.Rule
+    Hasura.Incremental.Select
+
+  default-extensions:
+    BlockArguments
+    DefaultSignatures
+    DerivingVia
+    FunctionalDependencies
+    LambdaCase
+    MultiWayIf
+    NoImplicitPrelude
+    PackageImports
+    RoleAnnotations
+    TypeFamilies
+
+test-suite incremental-tests
+  type: exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is: Spec.hs
+  default-language: GHC2021
+
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+
+  other-modules:
+    Hasura.IncrementalSpec
+
+  build-depends:
+    , base
+    , arrows-extra
+    , incremental
+    , hasura-prelude
+    , hspec
+    , unordered-containers
+
+  build-tool-depends:
+    hspec-discover:hspec-discover
+
+  default-extensions:
+    BlockArguments
+    NoImplicitPrelude

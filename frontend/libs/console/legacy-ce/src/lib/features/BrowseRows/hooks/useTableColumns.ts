@@ -1,7 +1,7 @@
-import { DEFAULT_STALE_TIME } from '@/features/DatabaseRelationships';
-import { DataSource, Feature } from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
+import { DataSource, Feature } from '../../DataSource';
+import { DEFAULT_STALE_TIME } from '../../hasura-metadata-api/useMetadata';
+import { Table } from '../../hasura-metadata-types';
+import { useHttpClient } from '../../Network';
 import { useQuery } from 'react-query';
 
 export const useTableColumns = ({

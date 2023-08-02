@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
-import { Operator, TableColumn } from '@/features/DataSource';
+import { Button } from '../../../../../new-components/Button';
+import { DropdownMenu } from '../../../../../new-components/DropdownMenu';
+import { Operator, TableColumn } from '../../../../DataSource';
 import { FormProvider, useForm } from 'react-hook-form';
 import { FaFileExport } from 'react-icons/fa';
 import { FilterRows } from '../Filter';

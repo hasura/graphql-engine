@@ -16,5 +16,5 @@ PyYAML
 redis
 requests
 ruamel.yaml
-sqlalchemy
+sqlalchemy == 1.*  # v2 changes the API
 websocket-client == 0.56.0  # 0.58.0 and above changed the function signatures of callbacks

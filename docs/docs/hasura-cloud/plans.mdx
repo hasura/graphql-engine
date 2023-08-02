@@ -1,0 +1,192 @@
+---
+description: Billing and pricing breakdown for Hasura Cloud
+keywords:
+  - hasura
+  - cloud
+  - tiers
+  - billing
+  - pricing
+sidebar_position: 10
+---
+
+import VersionedLink from '@site/src/components/VersionedLink';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Plans and Pricing
+
+<ProductBadge free standard pro ee />
+
+## Overview
+
+[Hasura Cloud](https://cloud.hasura.io) offers three plans: Hasura Cloud Free, Hasura Cloud Professional, and Hasura
+Cloud Enterprise.
+
+Hasura Cloud billing is based on the consumption of resources. For paid plans, you can either pay as you go monthly in
+arrears with the Cloud Professional Plan, or make an annual commitment with an upfront payment for the usage with the
+Cloud Enterprise Plan.
+
+Below, you'll find a guide to help you choose the right plan for your use case, an overview of each plan, and details on
+how we calculate billing. Check out our [pricing FAQ](https://hasura.io/pricing#faq) for common questions.
+
+## Choose the right plan
+
+To help you choose the right plan for your use case, this section describes the application types and use cases that are
+best suited for each plan. For a full feature comparison list, see the [pricing page](https://hasura.io/pricing). To
+better understand how we calculate billing, see the [billing calculation](#billing-calculations) section.
+
+<table className="pricing-table">
+  <thead>
+    <tr>
+      <th>Application type</th>
+      <th>Plan</th>
+      <th>Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <ul>
+          <li>Testing, starter, and hobby projects</li>
+        </ul>
+      </td>
+      <td>
+        <b>Cloud Free</b>: If you're interested in trying out Hasura Cloud, you can start with the Cloud Free plan. It's
+        completely free to use, requires no credit card, and gives you a fully-managed GraphQL API - with some of our
+        best features - right out of the box.
+      </td>
+      <td>
+        <ul>
+          <li>Instant GraphQL and REST APIs with role-based authorization</li>
+          <li>Premium connectors, including Snowflake, SQL Server, and more</li>
+          <li>Up to three Projects</li>
+          <li>Up to two data connectors</li>
+          <li>Up to 3M API requests/month</li>
+          <li>100 MB of data passthrough per month</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <ul>
+          <li>Low-scale production APIs</li>
+        </ul>
+      </td>
+      <td>
+        <b>Cloud Professional</b>: If you're building a low-scale production API, you can start with the Cloud
+        Professional plan. It's a pay-as-you-go monthly subscription plan. You only pay for your consumption every
+        month. Consumption is calculated based on the{' '}
+        <VersionedLink to="/hasura-cloud/plans#billing-calculations">number of hours</VersionedLink> each Project runs
+        and the amount of data passthrough.
+      </td>
+      <td>
+        <ul>
+          <li>Unlimited databases per project</li>
+          <li>Unlimited data passthrough at $0.13/GB</li>
+          <li>Up to 6M API requests/month</li>
+          <li>Performance tuning (query caching and read replicas)</li>
+          <li>Observability data and integrations</li>
+          <li>Core security features (for e.g., role-based API limits and allow lists)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <ul>
+          <li>High-scale production APIs</li>
+          <li>Mission-critical APIs</li>
+          <li>APIs with security and compliance needs</li>
+        </ul>
+      </td>
+      <td>
+        <b>Cloud Enterprise</b>: For APIs that are mission-critical, require high-scale, and have security and
+        compliance needs, we have the Cloud Enterprise plan, which offers the ability to commit to a minimum spending
+        amount over a minimum 12-month commitment period. You can view the total amount of accrued usage during the
+        commitment term and the amount of committed spending left in your account. You can renew your commitment if your
+        commitment is depleted before the expiry of the commitment period.
+        <br />
+        <br />
+        Talk to a Hasura <a href="mailto:sales@hasura.io">sales representative</a> to discuss your specific use case and
+        the pricing.
+      </td>
+      <td>
+        <ul>
+          <li>Unlimited databases per project</li>
+          <li>Unlimited data passthrough at $0.13/GB</li>
+          <li>Unlimited API requests/month</li>
+          <li>Dedicated infrastructure and VPC peering</li>
+          <li>Unlimited query caching and read replicas</li>
+          <li>Advanced security (e.g., SSO) and compliance</li>
+          <li>Expert 24x7 technical support, with customizable SLAs</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+## Billing calculations for Hasura Cloud Professional {#billing-calculations}
+
+For Hasura Cloud Professional we calculate billing, using the following categories, per Project:
+
+- Types of databases connected to the Project
+- Data passthrough
+
+Hasura Cloud Professional is billed for the number of hours each Project runs and the amount of data passthrough. The
+price depends on the type(s) of database(s) connected to the Project. If a Project uses a generic Postgres database and
+a premium database, **you are billed only once for a premium database no matter how many or how different types you
+add**.
+
+| Database Type      | Rate            |
+| ------------------ | --------------- |
+| Generic Postgres   | $1.50/active-hr |
+| Snowflake          | $3.00/active-hr |
+| BigQuery           | $3.00/active-hr |
+| Athena             | $3.00/active-hr |
+| MSSQL              | $3.00/active-hr |
+| CockroachDB        | $3.00/active-hr |
+| Google AlloyDB     | $3.00/active-hr |
+| Citus / Hyperscale | $3.00/active-hr |
+| MySQL              | $3.00/active-hr |
+| Oracle             | $3.00/active-hr |
+| MariaDB            | $3.00/active-hr |
+
+:::info Active-hr
+
+An hour is considered an active hour when an activity is attributed to a Project during that hour. A few examples of
+activity are:
+
+- any GraphQL, REST, Metadata API request
+- an active subscription
+- an open websocket connection
+- an event-triggered activity
+
+:::
+
+:::info Projects without databases
+
+A Project without a connected database is billed at $1.50/active-hr.
+
+:::
+
+#### Data passthrough
+
+Hasura Cloud meters data passing through it to external services, including request data that is sent to upstream
+services (e.g., databases) and response data sent to downstream services (e.g., web apps) at a rate of $0.13/GB.
+
+You will be billed based on this volume of data which passes through your Project on Hasura Cloud every month.
+
+#### Example Calculation
+
+Assuming thirty days in the month, you start with one Project with a Postgres data connector for the first twenty days
+of the Project and add Snowflake data connector for the remaining 10 days.
+
+Assuming your Project is active for 8 hrs a day
+
+`20 days * 8 hrs/day * $1.50/hr = $240`
+
+`10 days * 8 hrs/day * $3.00/hr = $240`
+
+Let's assume the data passthrough for the entire month is 100 GB:
+
+`100 GB * $0.13/GB = $13 Total`
+
+The total cost for the month is $493.

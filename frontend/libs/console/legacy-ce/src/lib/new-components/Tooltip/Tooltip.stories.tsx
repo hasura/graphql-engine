@@ -1,10 +1,10 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 
-import { Tooltip } from '@/new-components/Tooltip';
+import { Tooltip } from '.';
 
 export default {
   title: 'components/Tooltip 📁/Tooltip ⚛️',
@@ -22,7 +22,7 @@ Default CSS display is \`inline\`, provided without padding and margin (displaye
     Story => <div className="p-16 w-full flex justify-center">{Story()}</div>,
   ],
   component: Tooltip,
-} as ComponentMeta<typeof Tooltip>;
+} as Meta<typeof Tooltip>;
 
 const ChildrenExample = () => (
   <div
@@ -37,106 +37,187 @@ const TooltipChildrenExample = () => (
   <span>The tooltip tooltipContentChildren</span>
 );
 
-export const ApiPlayground: ComponentStory<typeof Tooltip> = args => (
-  <Tooltip {...args} />
-);
-ApiPlayground.storyName = '⚙️ API';
-ApiPlayground.args = {
-  children: 'The tooltip children',
-  tooltipContentChildren: 'The tooltip content children',
-};
+export const ApiPlayground: StoryObj<typeof Tooltip> = {
+  name: '⚙️ API',
 
-export const Basic: ComponentStory<typeof Tooltip> = () => (
-  <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
-    <ChildrenExample />
-  </Tooltip>
-);
-Basic.storyName = '🧰 Basic';
-Basic.parameters = {
-  docs: {
-    source: { state: 'open' },
+  args: {
+    children: 'The tooltip children',
+    tooltipContentChildren: 'The tooltip content children',
   },
 };
 
-export const VariantSide: ComponentStory<typeof Tooltip> = () => (
-  <>
+export const Basic: StoryObj<typeof Tooltip> = {
+  render: () => (
     <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
       <ChildrenExample />
     </Tooltip>
-    <Tooltip side="bottom" tooltipContentChildren={<TooltipChildrenExample />}>
-      <ChildrenExample />
-    </Tooltip>
-    <Tooltip side="left" tooltipContentChildren={<TooltipChildrenExample />}>
-      <ChildrenExample />
-    </Tooltip>
-    <Tooltip side="top" tooltipContentChildren={<TooltipChildrenExample />}>
-      <ChildrenExample />
-    </Tooltip>
-  </>
-);
-VariantSide.storyName = '🎭 Variant - Side';
-VariantSide.parameters = {
-  docs: {
-    source: { state: 'open' },
-  },
-};
+  ),
 
-export const TestingHoveredStyle: ComponentStory<typeof Tooltip> = () => (
-  <Tooltip tooltipContentChildren={<TooltipChildrenExample />} defaultOpen>
-    <ChildrenExample />
-  </Tooltip>
-);
-TestingHoveredStyle.storyName = '🧪 Testing - Hovered style';
-TestingHoveredStyle.parameters = {
-  docs: {
-    description: {
-      story: 'Story with forced tooltip display for snapshot testing style',
+  name: '🧰 Basic',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
     },
-    source: { state: 'open' },
   },
 };
 
-export const TestingHoveredInteraction: ComponentStory<typeof Tooltip> = () => (
-  <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
-    <ChildrenExample />
-  </Tooltip>
-);
-TestingHoveredInteraction.storyName = '🧪 Testing - Hovered interaction';
-TestingHoveredInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  await waitFor(async () => {
-    await userEvent.hover(canvas.getByTestId('tooltip-trigger'));
-  });
-  await waitFor(() => {
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
-  });
-};
-TestingHoveredInteraction.parameters = {
-  docs: {
-    description: {
-      story: 'Interaction test, tootlip is displayed then hidden.',
+export const VariantSide: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <>
+      <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip
+        side="bottom"
+        tooltipContentChildren={<TooltipChildrenExample />}
+      >
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip side="left" tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip side="top" tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+    </>
+  ),
+
+  name: '🎭 Variant - Side',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
     },
-    source: { state: 'open' },
   },
 };
 
-export const TestingScalability: ComponentStory<typeof Tooltip> = () => (
-  <Tooltip
-    tooltipContentChildren={`Lorem ipsum dolor sit amet, consectetur adipiscing 
-        elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi 
-        ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
-        in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur 
-        sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.`}
-    defaultOpen
-  >
-    <ChildrenExample />
-  </Tooltip>
-);
-TestingScalability.storyName = '🧪 Testing - Scalability';
-TestingScalability.parameters = {
-  docs: {
-    source: { state: 'open' },
+export const VariantAlign: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <>
+      <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip
+        align="start"
+        tooltipContentChildren={<TooltipChildrenExample />}
+      >
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip
+        align="center"
+        tooltipContentChildren={<TooltipChildrenExample />}
+      >
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip align="end" tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+    </>
+  ),
+
+  name: '🎭 Variant - Align',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
+    },
+  },
+};
+
+export const VariantTheme: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <>
+      <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+        <ChildrenExample />
+      </Tooltip>
+      <Tooltip
+        theme="light"
+        tooltipContentChildren={<TooltipChildrenExample />}
+      >
+        <ChildrenExample />
+      </Tooltip>
+    </>
+  ),
+
+  name: '🎭 Variant - Theme',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
+    },
+  },
+};
+
+export const TestingHoveredStyle: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <Tooltip tooltipContentChildren={<TooltipChildrenExample />} defaultOpen>
+      <ChildrenExample />
+    </Tooltip>
+  ),
+
+  name: '🧪 Testing - Hovered style',
+
+  parameters: {
+    docs: {
+      description: {
+        story: 'Story with forced tooltip display for snapshot testing style',
+      },
+      source: { state: 'open' },
+    },
+  },
+};
+
+export const TestingHoveredInteraction: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <Tooltip tooltipContentChildren={<TooltipChildrenExample />}>
+      <ChildrenExample />
+    </Tooltip>
+  ),
+
+  name: '🧪 Testing - Hovered interaction',
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => {
+      userEvent.hover(canvas.getByTestId('tooltip-trigger'));
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    });
+  },
+
+  parameters: {
+    docs: {
+      description: {
+        story: 'Interaction test, tootlip is displayed then hidden.',
+      },
+      source: { state: 'open' },
+    },
+  },
+};
+
+export const TestingScalability: StoryObj<typeof Tooltip> = {
+  render: () => (
+    <Tooltip
+      tooltipContentChildren={`Lorem ipsum dolor sit amet, consectetur adipiscing 
+          elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi 
+          ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit 
+          in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur 
+          sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+          mollit anim id est laborum.`}
+      defaultOpen
+    >
+      <ChildrenExample />
+    </Tooltip>
+  ),
+
+  name: '🧪 Testing - Scalability',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
+    },
   },
 };

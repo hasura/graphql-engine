@@ -1,0 +1,2418 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
+"""
+whether this query should be cached (Hasura Cloud only)
+"""
+directive @cached(
+  """
+  measured in seconds
+  """
+  ttl: Int! = 60
+
+  """
+  refresh the cache entry
+  """
+  refresh: Boolean! = false
+) on QUERY
+
+"""
+CREATE TABLE [Album]
+(
+    [AlbumId] INTEGER  NOT NULL,
+    [Title] NVARCHAR(160)  NOT NULL,
+    [ArtistId] INTEGER  NOT NULL,
+    CONSTRAINT [PK_Album] PRIMARY KEY  ([AlbumId]),
+    FOREIGN KEY ([ArtistId]) REFERENCES [Artist] ([ArtistId])
+		ON DELETE NO ACTION ON UPDATE NO ACTION
+)
+"""
+type Album {
+  AlbumId: number!
+  ArtistId: number!
+
+  """
+  An object relationship
+  """
+  Creator: Artist
+  Title: string!
+}
+
+"""
+aggregated selection of "Album"
+"""
+type Album_aggregate {
+  aggregate: Album_aggregate_fields
+  nodes: [Album!]!
+}
+
+"""
+aggregate fields of "Album"
+"""
+type Album_aggregate_fields {
+  count(column: Album_select_column, distinct: Boolean): Int!
+}
+
+"""
+Boolean expression to filter rows from the table "Album". All fields are combined with a logical 'AND'.
+"""
+input Album_bool_exp {
+  AlbumId: number_SQLite_comparison_exp
+  ArtistId: number_SQLite_comparison_exp
+  Creator: Artist_bool_exp
+  Title: string_SQLite_comparison_exp
+  _and: [Album_bool_exp!]
+  _not: Album_bool_exp
+  _or: [Album_bool_exp!]
+}
+
+"""
+Ordering options when selecting data from "Album".
+"""
+input Album_order_by {
+  AlbumId: SQLite_order_by
+  ArtistId: SQLite_order_by
+  Creator: Artist_order_by
+  Title: SQLite_order_by
+}
+
+"""
+select columns of table "Album"
+"""
+enum Album_select_column {
+  """
+  column name
+  """
+  AlbumId
+
+  """
+  column name
+  """
+  ArtistId
+
+  """
+  column name
+  """
+  Title
+}
+
+"""
+CREATE TABLE [Artist]
+(
+    [ArtistId] INTEGER  NOT NULL,
+    [Name] NVARCHAR(120),
+    CONSTRAINT [PK_Artist] PRIMARY KEY  ([ArtistId])
+)
+"""
+type Artist {
+  ArtistId: number!
+  Name: string
+}
+
+"""
+aggregated selection of "Artist"
+"""
+type Artist_aggregate {
+  aggregate: Artist_aggregate_fields
+  nodes: [Artist!]!
+}
+
+"""
+aggregate fields of "Artist"
+"""
+type Artist_aggregate_fields {
+  count(column: Artist_select_column, distinct: Boolean): Int!
+}
+
+"""
+Boolean expression to filter rows from the table "Artist". All fields are combined with a logical 'AND'.
+"""
+input Artist_bool_exp {
+  ArtistId: number_SQLite_comparison_exp
+  Name: string_SQLite_comparison_exp
+  _and: [Artist_bool_exp!]
+  _not: Artist_bool_exp
+  _or: [Artist_bool_exp!]
+}
+
+"""
+Ordering options when selecting data from "Artist".
+"""
+input Artist_order_by {
+  ArtistId: SQLite_order_by
+  Name: SQLite_order_by
+}
+
+"""
+select columns of table "Artist"
+"""
+enum Artist_select_column {
+  """
+  column name
+  """
+  ArtistId
+
+  """
+  column name
+  """
+  Name
+}
+
+"""
+columns and relationships of "bigquery_sample.sample_table"
+"""
+type bigquery_sample_sample_table {
+  Data_value: Float
+  Group: String
+  Magnitude: Int
+  Period: Float
+  STATUS: String
+  Series_reference: String
+  Series_title_1: String
+  Series_title_2: String
+  Series_title_3: String
+  Series_title_4: String
+  Series_title_5: String
+  Subject: String
+  Suppressed: Boolean
+  UNITS: String
+}
+
+"""
+aggregated selection of "bigquery_sample.sample_table"
+"""
+type bigquery_sample_sample_table_aggregate {
+  aggregate: bigquery_sample_sample_table_aggregate_fields
+  nodes: [bigquery_sample_sample_table!]!
+}
+
+"""
+aggregate fields of "bigquery_sample.sample_table"
+"""
+type bigquery_sample_sample_table_aggregate_fields {
+  avg: bigquery_sample_sample_table_avg_fields
+  count(
+    columns: [bigquery_sample_sample_table_select_column!]
+    distinct: Boolean
+  ): Int!
+  max: bigquery_sample_sample_table_max_fields
+  min: bigquery_sample_sample_table_min_fields
+  stddev: bigquery_sample_sample_table_stddev_fields
+  stddev_pop: bigquery_sample_sample_table_stddev_pop_fields
+  stddev_samp: bigquery_sample_sample_table_stddev_samp_fields
+  sum: bigquery_sample_sample_table_sum_fields
+  var_pop: bigquery_sample_sample_table_var_pop_fields
+  var_samp: bigquery_sample_sample_table_var_samp_fields
+  variance: bigquery_sample_sample_table_variance_fields
+}
+
+"""
+aggregate avg on columns
+"""
+type bigquery_sample_sample_table_avg_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+Boolean expression to filter rows from the table "bigquery_sample.sample_table".
+All fields are combined with a logical 'AND'.
+"""
+input bigquery_sample_sample_table_bool_exp {
+  Data_value: Float_BigQuery_comparison_exp
+  Group: String_BigQuery_comparison_exp
+  Magnitude: Int_BigQuery_comparison_exp
+  Period: Float_BigQuery_comparison_exp
+  STATUS: String_BigQuery_comparison_exp
+  Series_reference: String_BigQuery_comparison_exp
+  Series_title_1: String_BigQuery_comparison_exp
+  Series_title_2: String_BigQuery_comparison_exp
+  Series_title_3: String_BigQuery_comparison_exp
+  Series_title_4: String_BigQuery_comparison_exp
+  Series_title_5: String_BigQuery_comparison_exp
+  Subject: String_BigQuery_comparison_exp
+  Suppressed: Boolean_BigQuery_comparison_exp
+  UNITS: String_BigQuery_comparison_exp
+  _and: [bigquery_sample_sample_table_bool_exp!]
+  _not: bigquery_sample_sample_table_bool_exp
+  _or: [bigquery_sample_sample_table_bool_exp!]
+}
+
+"""
+aggregate max on columns
+"""
+type bigquery_sample_sample_table_max_fields {
+  Data_value: Float
+  Group: String
+  Magnitude: Int
+  Period: Float
+  STATUS: String
+  Series_reference: String
+  Series_title_1: String
+  Series_title_2: String
+  Series_title_3: String
+  Series_title_4: String
+  Series_title_5: String
+  Subject: String
+  Suppressed: Boolean
+  UNITS: String
+}
+
+"""
+aggregate min on columns
+"""
+type bigquery_sample_sample_table_min_fields {
+  Data_value: Float
+  Group: String
+  Magnitude: Int
+  Period: Float
+  STATUS: String
+  Series_reference: String
+  Series_title_1: String
+  Series_title_2: String
+  Series_title_3: String
+  Series_title_4: String
+  Series_title_5: String
+  Subject: String
+  Suppressed: Boolean
+  UNITS: String
+}
+
+"""
+Ordering options when selecting data from "bigquery_sample.sample_table".
+"""
+input bigquery_sample_sample_table_order_by {
+  Data_value: order_by
+  Group: order_by
+  Magnitude: order_by
+  Period: order_by
+  STATUS: order_by
+  Series_reference: order_by
+  Series_title_1: order_by
+  Series_title_2: order_by
+  Series_title_3: order_by
+  Series_title_4: order_by
+  Series_title_5: order_by
+  Subject: order_by
+  Suppressed: order_by
+  UNITS: order_by
+}
+
+"""
+select columns of table "bigquery_sample.sample_table"
+"""
+enum bigquery_sample_sample_table_select_column {
+  """
+  column name
+  """
+  Data_value
+
+  """
+  column name
+  """
+  Group
+
+  """
+  column name
+  """
+  Magnitude
+
+  """
+  column name
+  """
+  Period
+
+  """
+  column name
+  """
+  STATUS
+
+  """
+  column name
+  """
+  Series_reference
+
+  """
+  column name
+  """
+  Series_title_1
+
+  """
+  column name
+  """
+  Series_title_2
+
+  """
+  column name
+  """
+  Series_title_3
+
+  """
+  column name
+  """
+  Series_title_4
+
+  """
+  column name
+  """
+  Series_title_5
+
+  """
+  column name
+  """
+  Subject
+
+  """
+  column name
+  """
+  Suppressed
+
+  """
+  column name
+  """
+  UNITS
+}
+
+"""
+aggregate stddev on columns
+"""
+type bigquery_sample_sample_table_stddev_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+aggregate stddev_pop on columns
+"""
+type bigquery_sample_sample_table_stddev_pop_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+aggregate stddev_samp on columns
+"""
+type bigquery_sample_sample_table_stddev_samp_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+aggregate sum on columns
+"""
+type bigquery_sample_sample_table_sum_fields {
+  Data_value: Float
+  Magnitude: Int
+  Period: Float
+}
+
+"""
+aggregate var_pop on columns
+"""
+type bigquery_sample_sample_table_var_pop_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+aggregate var_samp on columns
+"""
+type bigquery_sample_sample_table_var_samp_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+aggregate variance on columns
+"""
+type bigquery_sample_sample_table_variance_fields {
+  Data_value: Float
+  Magnitude: Float
+  Period: Float
+}
+
+"""
+Boolean expression to compare columns of type "Boolean". All fields are combined with logical 'AND'.
+"""
+input Boolean_BigQuery_comparison_exp {
+  _eq: Boolean
+  _gt: Boolean
+  _gte: Boolean
+  _in: [Boolean!]
+  _is_null: Boolean
+  _lt: Boolean
+  _lte: Boolean
+  _neq: Boolean
+  _nin: [Boolean!]
+}
+
+"""
+columns and relationships of "City"
+"""
+type City {
+  city_id: String
+  id: Int!
+  name: String!
+}
+
+"""
+aggregated selection of "City"
+"""
+type City_aggregate {
+  aggregate: City_aggregate_fields
+  nodes: [City!]!
+}
+
+"""
+aggregate fields of "City"
+"""
+type City_aggregate_fields {
+  avg: City_avg_fields
+  count(columns: [City_select_column!], distinct: Boolean): Int!
+  max: City_max_fields
+  min: City_min_fields
+  stddev: City_stddev_fields
+  stddev_pop: City_stddev_pop_fields
+  stddev_samp: City_stddev_samp_fields
+  sum: City_sum_fields
+  var_pop: City_var_pop_fields
+  var_samp: City_var_samp_fields
+  variance: City_variance_fields
+}
+
+"""
+aggregate avg on columns
+"""
+type City_avg_fields {
+  id: Float
+}
+
+"""
+Boolean expression to filter rows from the table "City". All fields are combined with a logical 'AND'.
+"""
+input City_bool_exp {
+  _and: [City_bool_exp!]
+  _not: City_bool_exp
+  _or: [City_bool_exp!]
+  city_id: String_comparison_exp
+  id: Int_comparison_exp
+  name: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "City"
+"""
+enum City_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  City_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "City"
+"""
+input City_inc_input {
+  id: Int
+}
+
+"""
+input type for inserting data into table "City"
+"""
+input City_insert_input {
+  city_id: String
+  id: Int
+  name: String
+}
+
+"""
+aggregate max on columns
+"""
+type City_max_fields {
+  city_id: String
+  id: Int
+  name: String
+}
+
+"""
+aggregate min on columns
+"""
+type City_min_fields {
+  city_id: String
+  id: Int
+  name: String
+}
+
+"""
+response of any mutation on the table "City"
+"""
+type City_mutation_response {
+  """
+  number of rows affected by the mutation
+  """
+  affected_rows: Int!
+
+  """
+  data from the rows affected by the mutation
+  """
+  returning: [City!]!
+}
+
+"""
+input type for inserting object relation for remote table "City"
+"""
+input City_obj_rel_insert_input {
+  data: City_insert_input!
+
+  """
+  upsert condition
+  """
+  on_conflict: City_on_conflict
+}
+
+"""
+on_conflict condition type for table "City"
+"""
+input City_on_conflict {
+  constraint: City_constraint!
+  update_columns: [City_update_column!]! = []
+  where: City_bool_exp
+}
+
+"""
+Ordering options when selecting data from "City".
+"""
+input City_order_by {
+  city_id: order_by
+  id: order_by
+  name: order_by
+}
+
+"""
+primary key columns input for table: City
+"""
+input City_pk_columns_input {
+  id: Int!
+}
+
+"""
+select columns of table "City"
+"""
+enum City_select_column {
+  """
+  column name
+  """
+  city_id
+
+  """
+  column name
+  """
+  id
+
+  """
+  column name
+  """
+  name
+}
+
+"""
+input type for updating data in table "City"
+"""
+input City_set_input {
+  city_id: String
+  id: Int
+  name: String
+}
+
+"""
+aggregate stddev on columns
+"""
+type City_stddev_fields {
+  id: Float
+}
+
+"""
+aggregate stddev_pop on columns
+"""
+type City_stddev_pop_fields {
+  id: Float
+}
+
+"""
+aggregate stddev_samp on columns
+"""
+type City_stddev_samp_fields {
+  id: Float
+}
+
+"""
+Streaming cursor of the table "City"
+"""
+input City_stream_cursor_input {
+  """
+  Stream column input with initial value
+  """
+  initial_value: City_stream_cursor_value_input!
+
+  """
+  cursor ordering
+  """
+  ordering: cursor_ordering
+}
+
+"""
+Initial value of the column from where the streaming should start
+"""
+input City_stream_cursor_value_input {
+  city_id: String
+  id: Int
+  name: String
+}
+
+"""
+aggregate sum on columns
+"""
+type City_sum_fields {
+  id: Int
+}
+
+"""
+update columns of table "City"
+"""
+enum City_update_column {
+  """
+  column name
+  """
+  city_id
+
+  """
+  column name
+  """
+  id
+
+  """
+  column name
+  """
+  name
+}
+
+input City_updates {
+  """
+  increments the numeric columns with given value of the filtered values
+  """
+  _inc: City_inc_input
+
+  """
+  sets the columns of the filtered rows to the given values
+  """
+  _set: City_set_input
+
+  """
+  filter the rows which have to be updated
+  """
+  where: City_bool_exp!
+}
+
+"""
+aggregate var_pop on columns
+"""
+type City_var_pop_fields {
+  id: Float
+}
+
+"""
+aggregate var_samp on columns
+"""
+type City_var_samp_fields {
+  id: Float
+}
+
+"""
+aggregate variance on columns
+"""
+type City_variance_fields {
+  id: Float
+}
+
+"""
+ordering argument of a cursor
+"""
+enum cursor_ordering {
+  """
+  ascending ordering of the cursor
+  """
+  ASC
+
+  """
+  descending ordering of the cursor
+  """
+  DESC
+}
+
+"""
+CREATE TABLE [Customer]
+(
+    [CustomerId] INTEGER  NOT NULL,
+    [FirstName] NVARCHAR(40)  NOT NULL,
+    [LastName] NVARCHAR(20)  NOT NULL,
+    [Company] NVARCHAR(80),
+    [Address] NVARCHAR(70),
+    [City] NVARCHAR(40),
+    [State] NVARCHAR(40),
+    [Country] NVARCHAR(40),
+    [PostalCode] NVARCHAR(10),
+    [Phone] NVARCHAR(24),
+    [Fax] NVARCHAR(24),
+    [Email] NVARCHAR(60)  NOT NULL,
+    [SupportRepId] INTEGER,
+    CONSTRAINT [PK_Customer] PRIMARY KEY  ([CustomerId]),
+    FOREIGN KEY ([SupportRepId]) REFERENCES [Employee] ([EmployeeId])
+		ON DELETE NO ACTION ON UPDATE NO ACTION
+)
+"""
+type Customer {
+  Address: string
+  City: string
+  Company: string
+  Country: string
+  CustomerId: number!
+  Email: string!
+  Fax: string
+  FirstName: string!
+  LastName: string!
+  Phone: string
+  PostalCode: string
+  State: string
+  SupportRepId: number
+}
+
+"""
+aggregated selection of "Customer"
+"""
+type Customer_aggregate {
+  aggregate: Customer_aggregate_fields
+  nodes: [Customer!]!
+}
+
+"""
+aggregate fields of "Customer"
+"""
+type Customer_aggregate_fields {
+  count(column: Customer_select_column, distinct: Boolean): Int!
+}
+
+"""
+Boolean expression to filter rows from the table "Customer". All fields are combined with a logical 'AND'.
+"""
+input Customer_bool_exp {
+  Address: string_SQLite_comparison_exp
+  City: string_SQLite_comparison_exp
+  Company: string_SQLite_comparison_exp
+  Country: string_SQLite_comparison_exp
+  CustomerId: number_SQLite_comparison_exp
+  Email: string_SQLite_comparison_exp
+  Fax: string_SQLite_comparison_exp
+  FirstName: string_SQLite_comparison_exp
+  LastName: string_SQLite_comparison_exp
+  Phone: string_SQLite_comparison_exp
+  PostalCode: string_SQLite_comparison_exp
+  State: string_SQLite_comparison_exp
+  SupportRepId: number_SQLite_comparison_exp
+  _and: [Customer_bool_exp!]
+  _not: Customer_bool_exp
+  _or: [Customer_bool_exp!]
+}
+
+"""
+Ordering options when selecting data from "Customer".
+"""
+input Customer_order_by {
+  Address: SQLite_order_by
+  City: SQLite_order_by
+  Company: SQLite_order_by
+  Country: SQLite_order_by
+  CustomerId: SQLite_order_by
+  Email: SQLite_order_by
+  Fax: SQLite_order_by
+  FirstName: SQLite_order_by
+  LastName: SQLite_order_by
+  Phone: SQLite_order_by
+  PostalCode: SQLite_order_by
+  State: SQLite_order_by
+  SupportRepId: SQLite_order_by
+}
+
+"""
+select columns of table "Customer"
+"""
+enum Customer_select_column {
+  """
+  column name
+  """
+  Address
+
+  """
+  column name
+  """
+  City
+
+  """
+  column name
+  """
+  Company
+
+  """
+  column name
+  """
+  Country
+
+  """
+  column name
+  """
+  CustomerId
+
+  """
+  column name
+  """
+  Email
+
+  """
+  column name
+  """
+  Fax
+
+  """
+  column name
+  """
+  FirstName
+
+  """
+  column name
+  """
+  LastName
+
+  """
+  column name
+  """
+  Phone
+
+  """
+  column name
+  """
+  PostalCode
+
+  """
+  column name
+  """
+  State
+
+  """
+  column name
+  """
+  SupportRepId
+}
+
+"""
+Boolean expression to compare columns of type "Float". All fields are combined with logical 'AND'.
+"""
+input Float_BigQuery_comparison_exp {
+  _eq: Float
+  _gt: Float
+  _gte: Float
+  _in: [Float!]
+  _is_null: Boolean
+  _lt: Float
+  _lte: Float
+  _neq: Float
+  _nin: [Float!]
+}
+
+"""
+Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
+"""
+input Int_BigQuery_comparison_exp {
+  _eq: Int
+  _gt: Int
+  _gte: Int
+  _in: [Int!]
+  _is_null: Boolean
+  _lt: Int
+  _lte: Int
+  _neq: Int
+  _nin: [Int!]
+}
+
+"""
+Boolean expression to compare columns of type "Int". All fields are combined with logical 'AND'.
+"""
+input Int_comparison_exp {
+  _eq: Int
+  _gt: Int
+  _gte: Int
+  _in: [Int!]
+  _is_null: Boolean
+  _lt: Int
+  _lte: Int
+  _neq: Int
+  _nin: [Int!]
+}
+
+"""
+columns and relationships of "Label"
+"""
+type Label {
+  """
+  An object relationship
+  """
+  City: City
+
+  """
+  An object relationship
+  """
+  ParentLabel: Label
+  bio: String
+  city_id: Int
+  id: Int!
+  name: String!
+}
+
+"""
+aggregated selection of "Label"
+"""
+type Label_aggregate {
+  aggregate: Label_aggregate_fields
+  nodes: [Label!]!
+}
+
+"""
+aggregate fields of "Label"
+"""
+type Label_aggregate_fields {
+  avg: Label_avg_fields
+  count(columns: [Label_select_column!], distinct: Boolean): Int!
+  max: Label_max_fields
+  min: Label_min_fields
+  stddev: Label_stddev_fields
+  stddev_pop: Label_stddev_pop_fields
+  stddev_samp: Label_stddev_samp_fields
+  sum: Label_sum_fields
+  var_pop: Label_var_pop_fields
+  var_samp: Label_var_samp_fields
+  variance: Label_variance_fields
+}
+
+"""
+aggregate avg on columns
+"""
+type Label_avg_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+Boolean expression to filter rows from the table "Label". All fields are combined with a logical 'AND'.
+"""
+input Label_bool_exp {
+  City: City_bool_exp
+  ParentLabel: Label_bool_exp
+  _and: [Label_bool_exp!]
+  _not: Label_bool_exp
+  _or: [Label_bool_exp!]
+  bio: String_comparison_exp
+  city_id: Int_comparison_exp
+  id: Int_comparison_exp
+  name: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "Label"
+"""
+enum Label_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  Label_pkey
+}
+
+"""
+input type for incrementing numeric columns in table "Label"
+"""
+input Label_inc_input {
+  city_id: Int
+  id: Int
+}
+
+"""
+input type for inserting data into table "Label"
+"""
+input Label_insert_input {
+  City: City_obj_rel_insert_input
+  ParentLabel: Label_obj_rel_insert_input
+  bio: String
+  city_id: Int
+  id: Int
+  name: String
+}
+
+"""
+aggregate max on columns
+"""
+type Label_max_fields {
+  bio: String
+  city_id: Int
+  id: Int
+  name: String
+}
+
+"""
+aggregate min on columns
+"""
+type Label_min_fields {
+  bio: String
+  city_id: Int
+  id: Int
+  name: String
+}
+
+"""
+response of any mutation on the table "Label"
+"""
+type Label_mutation_response {
+  """
+  number of rows affected by the mutation
+  """
+  affected_rows: Int!
+
+  """
+  data from the rows affected by the mutation
+  """
+  returning: [Label!]!
+}
+
+"""
+input type for inserting object relation for remote table "Label"
+"""
+input Label_obj_rel_insert_input {
+  data: Label_insert_input!
+
+  """
+  upsert condition
+  """
+  on_conflict: Label_on_conflict
+}
+
+"""
+on_conflict condition type for table "Label"
+"""
+input Label_on_conflict {
+  constraint: Label_constraint!
+  update_columns: [Label_update_column!]! = []
+  where: Label_bool_exp
+}
+
+"""
+Ordering options when selecting data from "Label".
+"""
+input Label_order_by {
+  City: City_order_by
+  ParentLabel: Label_order_by
+  bio: order_by
+  city_id: order_by
+  id: order_by
+  name: order_by
+}
+
+"""
+primary key columns input for table: Label
+"""
+input Label_pk_columns_input {
+  id: Int!
+}
+
+"""
+select columns of table "Label"
+"""
+enum Label_select_column {
+  """
+  column name
+  """
+  bio
+
+  """
+  column name
+  """
+  city_id
+
+  """
+  column name
+  """
+  id
+
+  """
+  column name
+  """
+  name
+}
+
+"""
+input type for updating data in table "Label"
+"""
+input Label_set_input {
+  bio: String
+  city_id: Int
+  id: Int
+  name: String
+}
+
+"""
+aggregate stddev on columns
+"""
+type Label_stddev_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+aggregate stddev_pop on columns
+"""
+type Label_stddev_pop_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+aggregate stddev_samp on columns
+"""
+type Label_stddev_samp_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+Streaming cursor of the table "Label"
+"""
+input Label_stream_cursor_input {
+  """
+  Stream column input with initial value
+  """
+  initial_value: Label_stream_cursor_value_input!
+
+  """
+  cursor ordering
+  """
+  ordering: cursor_ordering
+}
+
+"""
+Initial value of the column from where the streaming should start
+"""
+input Label_stream_cursor_value_input {
+  bio: String
+  city_id: Int
+  id: Int
+  name: String
+}
+
+"""
+aggregate sum on columns
+"""
+type Label_sum_fields {
+  city_id: Int
+  id: Int
+}
+
+"""
+update columns of table "Label"
+"""
+enum Label_update_column {
+  """
+  column name
+  """
+  bio
+
+  """
+  column name
+  """
+  city_id
+
+  """
+  column name
+  """
+  id
+
+  """
+  column name
+  """
+  name
+}
+
+input Label_updates {
+  """
+  increments the numeric columns with given value of the filtered values
+  """
+  _inc: Label_inc_input
+
+  """
+  sets the columns of the filtered rows to the given values
+  """
+  _set: Label_set_input
+
+  """
+  filter the rows which have to be updated
+  """
+  where: Label_bool_exp!
+}
+
+"""
+aggregate var_pop on columns
+"""
+type Label_var_pop_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+aggregate var_samp on columns
+"""
+type Label_var_samp_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+aggregate variance on columns
+"""
+type Label_variance_fields {
+  city_id: Float
+  id: Float
+}
+
+"""
+mutation root
+"""
+type mutation_root {
+  """
+  delete data from the table: "City"
+  """
+  delete_City(
+    """
+    filter the rows which have to be deleted
+    """
+    where: City_bool_exp!
+  ): City_mutation_response
+
+  """
+  delete single row from the table: "City"
+  """
+  delete_City_by_pk(id: Int!): City
+
+  """
+  delete data from the table: "Label"
+  """
+  delete_Label(
+    """
+    filter the rows which have to be deleted
+    """
+    where: Label_bool_exp!
+  ): Label_mutation_response
+
+  """
+  delete single row from the table: "Label"
+  """
+  delete_Label_by_pk(id: Int!): Label
+
+  """
+  insert data into the table: "City"
+  """
+  insert_City(
+    """
+    the rows to be inserted
+    """
+    objects: [City_insert_input!]!
+
+    """
+    upsert condition
+    """
+    on_conflict: City_on_conflict
+  ): City_mutation_response
+
+  """
+  insert a single row into the table: "City"
+  """
+  insert_City_one(
+    """
+    the row to be inserted
+    """
+    object: City_insert_input!
+
+    """
+    upsert condition
+    """
+    on_conflict: City_on_conflict
+  ): City
+
+  """
+  insert data into the table: "Label"
+  """
+  insert_Label(
+    """
+    the rows to be inserted
+    """
+    objects: [Label_insert_input!]!
+
+    """
+    upsert condition
+    """
+    on_conflict: Label_on_conflict
+  ): Label_mutation_response
+
+  """
+  insert a single row into the table: "Label"
+  """
+  insert_Label_one(
+    """
+    the row to be inserted
+    """
+    object: Label_insert_input!
+
+    """
+    upsert condition
+    """
+    on_conflict: Label_on_conflict
+  ): Label
+
+  """
+  update data of the table: "City"
+  """
+  update_City(
+    """
+    increments the numeric columns with given value of the filtered values
+    """
+    _inc: City_inc_input
+
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: City_set_input
+
+    """
+    filter the rows which have to be updated
+    """
+    where: City_bool_exp!
+  ): City_mutation_response
+
+  """
+  update single row of the table: "City"
+  """
+  update_City_by_pk(
+    """
+    increments the numeric columns with given value of the filtered values
+    """
+    _inc: City_inc_input
+
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: City_set_input
+    pk_columns: City_pk_columns_input!
+  ): City
+
+  """
+  update multiples rows of table: "City"
+  """
+  update_City_many(
+    """
+    updates to execute, in order
+    """
+    updates: [City_updates!]!
+  ): [City_mutation_response]
+
+  """
+  update data of the table: "Label"
+  """
+  update_Label(
+    """
+    increments the numeric columns with given value of the filtered values
+    """
+    _inc: Label_inc_input
+
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: Label_set_input
+
+    """
+    filter the rows which have to be updated
+    """
+    where: Label_bool_exp!
+  ): Label_mutation_response
+
+  """
+  update single row of the table: "Label"
+  """
+  update_Label_by_pk(
+    """
+    increments the numeric columns with given value of the filtered values
+    """
+    _inc: Label_inc_input
+
+    """
+    sets the columns of the filtered rows to the given values
+    """
+    _set: Label_set_input
+    pk_columns: Label_pk_columns_input!
+  ): Label
+
+  """
+  update multiples rows of table: "Label"
+  """
+  update_Label_many(
+    """
+    updates to execute, in order
+    """
+    updates: [Label_updates!]!
+  ): [Label_mutation_response]
+}
+
+"""
+A custom scalar type
+"""
+scalar number
+
+"""
+Boolean expression to compare columns of type "number". All fields are combined with logical 'AND'.
+"""
+input number_SQLite_comparison_exp {
+  _eq: number
+  _gt: number
+  _gte: number
+  _in: [number!]
+  _is_null: Boolean
+  _lt: number
+  _lte: number
+  _neq: number
+  _nin: [number!]
+}
+
+"""
+column ordering options
+"""
+enum order_by {
+  """
+  in ascending order, nulls last
+  """
+  asc
+
+  """
+  in ascending order, nulls first
+  """
+  asc_nulls_first
+
+  """
+  in ascending order, nulls last
+  """
+  asc_nulls_last
+
+  """
+  in descending order, nulls first
+  """
+  desc
+
+  """
+  in descending order, nulls first
+  """
+  desc_nulls_first
+
+  """
+  in descending order, nulls last
+  """
+  desc_nulls_last
+}
+
+type query_root {
+  """
+  fetch data from the table: "Album"
+  """
+  Album(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Album_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Album_bool_exp
+  ): [Album!]!
+
+  """
+  fetch aggregated fields from the table: "Album"
+  """
+  Album_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Album_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Album_bool_exp
+  ): Album_aggregate!
+
+  """
+  fetch data from the table: "Album" using primary key columns
+  """
+  Album_by_pk(AlbumId: number!): Album
+
+  """
+  fetch data from the table: "Artist"
+  """
+  Artist(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Artist_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Artist_bool_exp
+  ): [Artist!]!
+
+  """
+  fetch aggregated fields from the table: "Artist"
+  """
+  Artist_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Artist_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Artist_bool_exp
+  ): Artist_aggregate!
+
+  """
+  fetch data from the table: "Artist" using primary key columns
+  """
+  Artist_by_pk(ArtistId: number!): Artist
+
+  """
+  fetch data from the table: "City"
+  """
+  City(
+    """
+    distinct select on columns
+    """
+    distinct_on: [City_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [City_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: City_bool_exp
+  ): [City!]!
+
+  """
+  fetch aggregated fields from the table: "City"
+  """
+  City_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [City_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [City_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: City_bool_exp
+  ): City_aggregate!
+
+  """
+  fetch data from the table: "City" using primary key columns
+  """
+  City_by_pk(id: Int!): City
+
+  """
+  fetch data from the table: "Customer"
+  """
+  Customer(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Customer_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Customer_bool_exp
+  ): [Customer!]!
+
+  """
+  fetch aggregated fields from the table: "Customer"
+  """
+  Customer_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Customer_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Customer_bool_exp
+  ): Customer_aggregate!
+
+  """
+  fetch data from the table: "Customer" using primary key columns
+  """
+  Customer_by_pk(CustomerId: number!): Customer
+
+  """
+  fetch data from the table: "Label"
+  """
+  Label(
+    """
+    distinct select on columns
+    """
+    distinct_on: [Label_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Label_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Label_bool_exp
+  ): [Label!]!
+
+  """
+  fetch aggregated fields from the table: "Label"
+  """
+  Label_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [Label_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Label_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Label_bool_exp
+  ): Label_aggregate!
+
+  """
+  fetch data from the table: "Label" using primary key columns
+  """
+  Label_by_pk(id: Int!): Label
+
+  """
+  fetch data from the table: "bigquery_sample.sample_table"
+  """
+  bigquery_sample_sample_table(
+    """
+    distinct select on columns
+    """
+    distinct_on: [bigquery_sample_sample_table_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [bigquery_sample_sample_table_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: bigquery_sample_sample_table_bool_exp
+  ): [bigquery_sample_sample_table!]!
+
+  """
+  fetch aggregated fields from the table: "bigquery_sample.sample_table"
+  """
+  bigquery_sample_sample_table_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [bigquery_sample_sample_table_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [bigquery_sample_sample_table_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: bigquery_sample_sample_table_bool_exp
+  ): bigquery_sample_sample_table_aggregate!
+}
+
+"""
+column ordering options
+"""
+enum SQLite_order_by {
+  """
+  in ascending order
+  """
+  asc
+
+  """
+  in descending order
+  """
+  desc
+}
+
+"""
+A custom scalar type
+"""
+scalar string
+
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_BigQuery_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+  _in: [String!]
+  _is_null: Boolean
+
+  """
+  does the column match the given pattern
+  """
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+  _nin: [String!]
+
+  """
+  does the column NOT match the given pattern
+  """
+  _nlike: String
+}
+
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+
+  """
+  does the column match the given case-insensitive pattern
+  """
+  _ilike: String
+  _in: [String!]
+
+  """
+  does the column match the given POSIX regular expression, case insensitive
+  """
+  _iregex: String
+  _is_null: Boolean
+
+  """
+  does the column match the given pattern
+  """
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+
+  """
+  does the column NOT match the given case-insensitive pattern
+  """
+  _nilike: String
+  _nin: [String!]
+
+  """
+  does the column NOT match the given POSIX regular expression, case insensitive
+  """
+  _niregex: String
+
+  """
+  does the column NOT match the given pattern
+  """
+  _nlike: String
+
+  """
+  does the column NOT match the given POSIX regular expression, case sensitive
+  """
+  _nregex: String
+
+  """
+  does the column NOT match the given SQL regular expression
+  """
+  _nsimilar: String
+
+  """
+  does the column match the given POSIX regular expression, case sensitive
+  """
+  _regex: String
+
+  """
+  does the column match the given SQL regular expression
+  """
+  _similar: String
+}
+
+"""
+Boolean expression to compare columns of type "string". All fields are combined with logical 'AND'.
+"""
+input string_SQLite_comparison_exp {
+  _eq: string
+  _gt: string
+  _gte: string
+  _in: [string!]
+  _is_null: Boolean
+  _lt: string
+  _lte: string
+  _neq: string
+  _nin: [string!]
+}
+
+type subscription_root {
+  """
+  fetch data from the table: "Album"
+  """
+  Album(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Album_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Album_bool_exp
+  ): [Album!]!
+
+  """
+  fetch aggregated fields from the table: "Album"
+  """
+  Album_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Album_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Album_bool_exp
+  ): Album_aggregate!
+
+  """
+  fetch data from the table: "Album" using primary key columns
+  """
+  Album_by_pk(AlbumId: number!): Album
+
+  """
+  fetch data from the table: "Artist"
+  """
+  Artist(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Artist_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Artist_bool_exp
+  ): [Artist!]!
+
+  """
+  fetch aggregated fields from the table: "Artist"
+  """
+  Artist_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Artist_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Artist_bool_exp
+  ): Artist_aggregate!
+
+  """
+  fetch data from the table: "Artist" using primary key columns
+  """
+  Artist_by_pk(ArtistId: number!): Artist
+
+  """
+  fetch data from the table: "City"
+  """
+  City(
+    """
+    distinct select on columns
+    """
+    distinct_on: [City_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [City_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: City_bool_exp
+  ): [City!]!
+
+  """
+  fetch aggregated fields from the table: "City"
+  """
+  City_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [City_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [City_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: City_bool_exp
+  ): City_aggregate!
+
+  """
+  fetch data from the table: "City" using primary key columns
+  """
+  City_by_pk(id: Int!): City
+
+  """
+  fetch data from the table in a streaming manner: "City"
+  """
+  City_stream(
+    """
+    maximum number of rows returned in a single batch
+    """
+    batch_size: Int!
+
+    """
+    cursor to stream the results returned by the query
+    """
+    cursor: [City_stream_cursor_input]!
+
+    """
+    filter the rows returned
+    """
+    where: City_bool_exp
+  ): [City!]!
+
+  """
+  fetch data from the table: "Customer"
+  """
+  Customer(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Customer_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Customer_bool_exp
+  ): [Customer!]!
+
+  """
+  fetch aggregated fields from the table: "Customer"
+  """
+  Customer_aggregate(
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Customer_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Customer_bool_exp
+  ): Customer_aggregate!
+
+  """
+  fetch data from the table: "Customer" using primary key columns
+  """
+  Customer_by_pk(CustomerId: number!): Customer
+
+  """
+  fetch data from the table: "Label"
+  """
+  Label(
+    """
+    distinct select on columns
+    """
+    distinct_on: [Label_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Label_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Label_bool_exp
+  ): [Label!]!
+
+  """
+  fetch aggregated fields from the table: "Label"
+  """
+  Label_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [Label_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [Label_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: Label_bool_exp
+  ): Label_aggregate!
+
+  """
+  fetch data from the table: "Label" using primary key columns
+  """
+  Label_by_pk(id: Int!): Label
+
+  """
+  fetch data from the table in a streaming manner: "Label"
+  """
+  Label_stream(
+    """
+    maximum number of rows returned in a single batch
+    """
+    batch_size: Int!
+
+    """
+    cursor to stream the results returned by the query
+    """
+    cursor: [Label_stream_cursor_input]!
+
+    """
+    filter the rows returned
+    """
+    where: Label_bool_exp
+  ): [Label!]!
+
+  """
+  fetch data from the table: "bigquery_sample.sample_table"
+  """
+  bigquery_sample_sample_table(
+    """
+    distinct select on columns
+    """
+    distinct_on: [bigquery_sample_sample_table_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [bigquery_sample_sample_table_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: bigquery_sample_sample_table_bool_exp
+  ): [bigquery_sample_sample_table!]!
+
+  """
+  fetch aggregated fields from the table: "bigquery_sample.sample_table"
+  """
+  bigquery_sample_sample_table_aggregate(
+    """
+    distinct select on columns
+    """
+    distinct_on: [bigquery_sample_sample_table_select_column!]
+
+    """
+    limit the number of rows returned
+    """
+    limit: Int
+
+    """
+    skip the first n rows. Use only with order_by
+    """
+    offset: Int
+
+    """
+    sort the rows by one or more columns
+    """
+    order_by: [bigquery_sample_sample_table_order_by!]
+
+    """
+    filter the rows returned
+    """
+    where: bigquery_sample_sample_table_bool_exp
+  ): bigquery_sample_sample_table_aggregate!
+}

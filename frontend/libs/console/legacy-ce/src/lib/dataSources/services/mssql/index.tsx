@@ -1,6 +1,5 @@
-import { TriggerOperation } from '@/components/Common/FilterQuery/state';
-import globals from '@/Globals';
-import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import globals from '../../../Globals';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import React from 'react';
 import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
@@ -71,7 +70,7 @@ const isTable = (table: NormalizedTable) => {
 };
 
 export const isColTypeString = (colType: string) =>
-  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType.toLowerCase());
 
 const columnDataTypes = {
   INTEGER: 'integer',
@@ -529,10 +528,10 @@ FROM sys.objects as obj
     // add comment to the table using MS_Description property
     if (tableComment && tableComment !== '') {
       const commentStr = sqlHandleApostrophe(tableComment);
-      const commentSQL = `EXEC sys.sp_addextendedproperty   
-      @name = N'MS_Description',   
-      @value = N'${commentStr}',   
-      @level0type = N'SCHEMA', @level0name = '${currentSchema}',  
+      const commentSQL = `EXEC sys.sp_addextendedproperty
+      @name = N'MS_Description',
+      @value = N'${commentStr}',
+      @level0type = N'SCHEMA', @level0name = '${currentSchema}',
       @level1type = N'TABLE',  @level1name = '${tableName}';`;
       sqlCreateTable += `${commentSQL}`;
     }
@@ -575,7 +574,7 @@ FROM sys.objects as obj
     ALTER TABLE "${from.schemaName}"."${from.tableName}"
     ADD CONSTRAINT "${newConstraint}"
     FOREIGN KEY (${from.columns.join(', ')})
-    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')}) 
+    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')})
     ON UPDATE ${onUpdate} ON DELETE ${onDelete};
     COMMIT transaction;
     `;
@@ -764,7 +763,7 @@ FROM sys.objects as obj
       ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
       .map(pkc => `"${pkc}"`)
       .join(', ')});
-    
+
     COMMIT TRANSACTION;`;
   },
   getFunctionDefinitionSql: null,
@@ -915,13 +914,13 @@ INNER JOIN sys.schemas sch2
     eventLogTable: QualifiedTable,
     eventId: string
   ) => {
-    const sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",  
-        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response", 
-        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name, 
+    const sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",
+        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response",
+        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name,
         data_table.table_name, data_table.trigger_name, CONVERT(varchar(MAX), data_table.payload) AS "payload", data_table.delivered, data_table.error,
-        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked", 
-        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived 
-        FROM "${logTableDef.schema}"."${logTableDef.name}" AS original_table JOIN "${eventLogTable.schema}"."${eventLogTable.name}" 
+        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked",
+        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived
+        FROM "${logTableDef.schema}"."${logTableDef.name}" AS original_table JOIN "${eventLogTable.schema}"."${eventLogTable.name}"
         AS data_table ON original_table.event_id = data_table.id
         WHERE original_table.event_id = '${eventId}'
         ORDER BY original_table.created_at DESC `;
@@ -999,15 +998,15 @@ WHERE
     comment,
   }) => {
     const commentStr = sqlHandleApostrophe(comment);
-    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'column_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))    
-        EXECUTE sp_dropextendedproperty   
-        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
+    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'column_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))
+        EXECUTE sp_dropextendedproperty
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',
         @level0type = N'SCHEMA', @level0name = '${schemaName}'
     `;
     const commonCommentStatement = `
-        exec sys.sp_addextendedproperty   
-        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
-        @value = N'${commentStr}',   
+        exec sys.sp_addextendedproperty
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',
+        @value = N'${commentStr}',
         @level0type = N'SCHEMA', @level0name = '${schemaName}'
     `;
     return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
@@ -1021,117 +1020,13 @@ WHERE
   },
   // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
   // https://github.com/hasura/graphql-engine-mono/issues/4641
-  getDataTriggerLogsCountQuery: (
-    triggerName: string,
-    triggerOp: TriggerOperation
-  ): string => {
-    const triggerTypes = {
-      pending: 'pending',
-      processed: 'processed',
-      invocation: 'invocation',
-    };
-    const eventRelTable = `"hdb_catalog"."event_log"`;
-    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-
-    let logsCountQuery = `SELECT
-    COUNT(*)
-    FROM ${eventRelTable} data_table
-    WHERE data_table.trigger_name = '${triggerName}' `;
-
-    switch (triggerOp) {
-      case triggerTypes.pending:
-        logsCountQuery += `AND delivered=0 AND error=0 AND archived=0;`;
-        break;
-
-      case triggerTypes.processed:
-        logsCountQuery += `AND (delivered=1 OR error=1) AND archived=0;`;
-        break;
-      case triggerTypes.invocation:
-        logsCountQuery = `SELECT
-          COUNT(*)
-          FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-          ON original_table.event_id = data_table.id
-          WHERE data_table.trigger_name = '${triggerName}' `;
-        break;
-      default:
-        break;
-    }
-    return logsCountQuery;
-  },
-  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
-  // https://github.com/hasura/graphql-engine-mono/issues/4641
-  getDataTriggerLogsQuery: (
-    triggerOp: TriggerOperation,
-    triggerName: string,
-    limit?: number,
-    offset?: number
-  ): string => {
-    const triggerTypes = {
-      pending: 'pending',
-      processed: 'processed',
-      invocation: 'invocation',
-    };
-    const eventRelTable = `"hdb_catalog"."event_log"`;
-    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-    let sql = '';
-
-    switch (triggerOp) {
-      case triggerTypes.pending:
-        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
-        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
-        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
-        FROM ${eventRelTable} AS data_table
-        WHERE data_table.trigger_name = '${triggerName}'  
-        AND delivered=0 AND error=0 AND archived=0 ORDER BY created_at DESC `;
-        break;
-
-      case triggerTypes.processed:
-        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
-        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
-        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
-        FROM ${eventRelTable} AS data_table 
-        WHERE data_table.trigger_name = '${triggerName}' 
-        AND (delivered=1 OR error=1) AND archived=0 ORDER BY created_at DESC `;
-        break;
-
-      case triggerTypes.invocation:
-        sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",  
-        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response", 
-        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name, 
-        data_table.table_name, data_table.trigger_name, CONVERT(varchar(MAX), data_table.payload) AS "payload", data_table.delivered, data_table.error,
-        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked", 
-        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived 
-        FROM ${eventInvTable} AS original_table JOIN ${eventRelTable} AS data_table ON original_table.event_id = data_table.id
-        WHERE data_table.trigger_name = '${triggerName}' 
-        ORDER BY original_table.created_at DESC `;
-        break;
-      default:
-        break;
-    }
-
-    if (offset) {
-      sql += ` OFFSET ${offset} ROWS`;
-    } else {
-      sql += ` OFFSET 0 ROWS`;
-    }
-
-    if (limit) {
-      sql += ` FETCH NEXT ${limit} ROWS ONLY;`;
-    } else {
-      sql += ` FETCH NEXT 10 ROWS ONLY;`;
-    }
-
-    return sql;
-  },
-  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
-  // https://github.com/hasura/graphql-engine-mono/issues/4641
   getDataTriggerInvocations: (eventId: string): string => {
     const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
-    const sql = `SELECT CONVERT(varchar(MAX), id) AS "id", CONVERT(varchar(MAX), event_id) AS "event_id",  
-    status,  CONVERT(varchar(MAX), request) AS "request", CONVERT(varchar(MAX), response) AS "response", 
+    const sql = `SELECT CONVERT(varchar(MAX), id) AS "id", CONVERT(varchar(MAX), event_id) AS "event_id",
+    status,  CONVERT(varchar(MAX), request) AS "request", CONVERT(varchar(MAX), response) AS "response",
     CONVERT(varchar(MAX), CAST(created_at as datetime2)) AS "created_at"
-    FROM ${eventInvTable} 
-    WHERE event_id = '${eventId}' 
+    FROM ${eventInvTable}
+    WHERE event_id = '${eventId}'
     ORDER BY created_at DESC;`;
     return sql;
   },

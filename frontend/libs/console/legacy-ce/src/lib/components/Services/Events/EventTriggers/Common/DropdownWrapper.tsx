@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import DropdownButton from '@/components/Common/DropdownButton/DropdownButton';
+import { useDebouncedEffect } from '../../../../../hooks/useDebounceEffect';
+import DropdownButton from '../../../../Common/DropdownButton/DropdownButton';
 
 type DropdownWrapperProps = {
   title: string;

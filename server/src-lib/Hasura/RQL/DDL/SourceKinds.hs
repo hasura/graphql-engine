@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.SourceKinds
     -- * Source Kind Info
     SourceKindInfo (..),
     SourceType (..),
+    SourceKinds (..),
 
     -- * List Capabilities
     GetSourceKindCapabilities (..),
@@ -18,9 +19,9 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON, (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as HashMap
-import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
+import Data.Map.Strict qualified as Map
 import Data.Text.Extended (ToTxt (..))
 import Data.Text.Extended qualified as Text.E
 import Data.Text.NonEmpty (NonEmptyText)
@@ -30,10 +31,10 @@ import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
 import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType qualified as Backend
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -42,10 +43,10 @@ import Language.GraphQL.Draft.Syntax qualified as GQL
 data ListSourceKinds = ListSourceKinds
 
 instance FromJSON ListSourceKinds where
-  parseJSON = Aeson.withObject "ListSourceKinds" (const $ pure ListSourceKinds)
+  parseJSON = J.withObject "ListSourceKinds" (const $ pure ListSourceKinds)
 
 instance ToJSON ListSourceKinds where
-  toJSON ListSourceKinds = Aeson.object []
+  toJSON ListSourceKinds = J.object []
 
 --------------------------------------------------------------------------------
 
@@ -53,48 +54,58 @@ data SourceKindInfo = SourceKindInfo
   { _skiSourceKind :: Text,
     _skiDisplayName :: Maybe Text,
     _skiReleaseName :: Maybe Text,
-    _skiBuiltin :: SourceType
+    _skiBuiltin :: SourceType,
+    _skiAvailable :: Bool
   }
 
 instance FromJSON SourceKindInfo where
-  parseJSON = Aeson.withObject "SourceKindInfo" \o -> do
+  parseJSON = J.withObject "SourceKindInfo" \o -> do
     _skiSourceKind <- o .: "kind"
     _skiDisplayName <- o .:? "display_name"
     _skiReleaseName <- o .:? "release_name"
     _skiBuiltin <- o .: "builtin"
+    _skiAvailable <- o .: "available"
     pure SourceKindInfo {..}
 
 instance ToJSON SourceKindInfo where
   toJSON SourceKindInfo {..} =
-    Aeson.object $
-      [ "kind" .= _skiSourceKind,
-        "builtin" .= _skiBuiltin
-      ]
-        ++ (if nullishT _skiDisplayName then [] else ["display_name" .= _skiDisplayName])
-        ++ (if nullishT _skiReleaseName then [] else ["release_name" .= _skiReleaseName])
+    J.object
+      $ [ "kind" .= _skiSourceKind,
+          "builtin" .= _skiBuiltin,
+          "available" .= _skiAvailable
+        ]
+      ++ ["display_name" .= _skiDisplayName | has _skiDisplayName]
+      ++ ["release_name" .= _skiReleaseName | has _skiReleaseName]
     where
-      nullishT x = isNothing x || x == Just ""
+      has :: Maybe Text -> Bool
+      has x = not $ isNothing x || x == Just ""
 
 data SourceType = Builtin | Agent
 
 instance FromJSON SourceType where
-  parseJSON = Aeson.withBool "source type" \case
+  parseJSON = J.withBool "source type" \case
     True -> pure Builtin
     False -> pure Agent
 
 instance ToJSON SourceType where
-  toJSON Builtin = Aeson.Bool True
-  toJSON Agent = Aeson.Bool False
+  toJSON Builtin = J.Bool True
+  toJSON Agent = J.Bool False
 
 --------------------------------------------------------------------------------
 
-agentSourceKinds :: (Metadata.MetadataM m) => m [SourceKindInfo]
+newtype SourceKinds = SourceKinds {unSourceKinds :: [SourceKindInfo]}
+  deriving newtype (Semigroup, Monoid)
+
+instance ToJSON SourceKinds where
+  toJSON SourceKinds {..} = J.object ["sources" .= unSourceKinds]
+
+agentSourceKinds :: (Metadata.MetadataM m) => m SourceKinds
 agentSourceKinds = do
   agentsM <- BackendMap.lookup @'Backend.DataConnector . Metadata._metaBackendConfigs <$> Metadata.getMetadata
   case agentsM of
-    Nothing -> pure []
+    Nothing -> pure mempty
     Just (Metadata.BackendConfigWrapper agents) ->
-      pure $ fmap mkAgentSource $ InsOrdHashMap.toList agents
+      pure $ SourceKinds $ fmap mkAgentSource $ Map.toList agents
 
 mkAgentSource :: (DC.Types.DataConnectorName, DC.Types.DataConnectorOptions) -> SourceKindInfo
 mkAgentSource (dcName, DC.Types.DataConnectorOptions {_dcoDisplayName}) =
@@ -102,7 +113,8 @@ mkAgentSource (dcName, DC.Types.DataConnectorOptions {_dcoDisplayName}) =
     { _skiSourceKind = skiKind,
       _skiDisplayName = _dcoDisplayName,
       _skiReleaseName = Nothing,
-      _skiBuiltin = Agent
+      _skiBuiltin = Agent,
+      _skiAvailable = True
     }
   where
     skiKind = GQL.unName (DC.Types.unDataConnectorName dcName)
@@ -116,70 +128,54 @@ mkNativeSource = \case
         { _skiSourceKind = fromMaybe (toTxt b) (Backend.backendShortName b),
           _skiBuiltin = Builtin,
           _skiDisplayName = Nothing,
-          _skiReleaseName = Nothing
+          _skiReleaseName = Nothing,
+          _skiAvailable = True
         }
 
-runListSourceKinds'' ::
+builtinSourceKinds :: SourceKinds
+builtinSourceKinds =
+  SourceKinds $ mapMaybe mkNativeSource (filter (/= Backend.DataConnector) Backend.supportedBackends)
+
+-- | Collect 'SourceKindInfo' from Native and GDC backend types.
+collectSourceKinds :: (Metadata.MetadataM m) => m SourceKinds
+collectSourceKinds = fmap (builtinSourceKinds <>) agentSourceKinds
+
+runListSourceKinds ::
   forall m.
   ( Metadata.MetadataM m,
     MonadError Error.QErr m,
     SchemaCache.CacheRM m
   ) =>
   ListSourceKinds ->
-  m [SourceKindInfo]
-runListSourceKinds'' x = do
-  sks <- runListSourceKinds' x
-  mapM setNames sks
+  m EncJSON
+runListSourceKinds ListSourceKinds = fmap EncJSON.encJFromJValue $ do
+  sks <- collectSourceKinds
+  fmap SourceKinds $ traverse setNames $ unSourceKinds sks
   where
-    suffixKey :: Text -> Text -> Text
-    suffixKey a b = b <> " (" <> a <> ")"
-
     setNames :: SourceKindInfo -> m SourceKindInfo
-    setNames ski@SourceKindInfo {_skiSourceKind, _skiDisplayName} = do
-      ci <- getCapabilities ski
-      -- Prefer metadata, then capabilities, then source-kind key
-      pure
-        ski
-          { _skiReleaseName = DC.Types._dciReleaseName =<< ci,
-            _skiDisplayName =
-              (suffixKey _skiSourceKind <$> _skiDisplayName) -- Question: Should we suffix the key if the user explicitly sets a name?
-                <|> (suffixKey _skiSourceKind <$> (DC.Types._dciDisplayName =<< ci))
-                <|> Just _skiSourceKind
-          }
+    setNames ski@SourceKindInfo {_skiSourceKind, _skiDisplayName} =
+      -- If there are issues fetching the capabilities for an agent, then list it as unavailable.
+      flip catchError (const $ pure $ ski {_skiAvailable = False}) do
+        ci <- getSourceKindCapabilities ski
+        -- Prefer metadata, then capabilities, then source-kind key
+        pure
+          ski
+            { _skiReleaseName = DC.Types._dciReleaseName =<< ci,
+              _skiDisplayName = asum [_skiDisplayName, (DC.Types._dciDisplayName =<< ci), Just _skiSourceKind]
+            }
 
-    getCapabilities :: SourceKindInfo -> m (Maybe DC.Types.DataConnectorInfo)
-    getCapabilities SourceKindInfo {_skiSourceKind, _skiBuiltin} = case (_skiBuiltin, NE.Text.mkNonEmptyText _skiSourceKind) of
+    getSourceKindCapabilities :: SourceKindInfo -> m (Maybe DC.Types.DataConnectorInfo)
+    getSourceKindCapabilities SourceKindInfo {_skiSourceKind, _skiBuiltin} = case (_skiBuiltin, NE.Text.mkNonEmptyText _skiSourceKind) of
       (Builtin, _) -> pure Nothing
       (Agent, Nothing) -> pure Nothing
       (Agent, Just nesk) -> Just <$> runGetSourceKindCapabilities' (GetSourceKindCapabilities nesk)
-
-runListSourceKinds ::
-  ( MonadError Error.QErr m,
-    Metadata.MetadataM m,
-    SchemaCache.CacheRM m
-  ) =>
-  ListSourceKinds ->
-  m EncJSON
-runListSourceKinds x = do
-  sks <- runListSourceKinds'' x
-  pure $ EncJSON.encJFromJValue $ Aeson.object ["sources" .= sks]
-
--- TODO: This kind of direct encoding seems unsafe.
---       Perhaps we chould have these functions defined as ToJSON j => ... -> j
---       Then wrap them with an encoder at invocation?
---       Or even existentailly quantify them over the ToJSON class?
-runListSourceKinds' :: Metadata.MetadataM m => ListSourceKinds -> m [SourceKindInfo]
-runListSourceKinds' ListSourceKinds = do
-  let builtins = mapMaybe mkNativeSource (filter (/= Backend.DataConnector) Backend.supportedBackends)
-  agents <- agentSourceKinds
-  pure (builtins <> agents)
 
 --------------------------------------------------------------------------------
 
 newtype GetSourceKindCapabilities = GetSourceKindCapabilities {_gskcKind :: NonEmptyText}
 
 instance FromJSON GetSourceKindCapabilities where
-  parseJSON = Aeson.withObject "GetSourceKindCapabilities" \o -> do
+  parseJSON = J.withObject "GetSourceKindCapabilities" \o -> do
     _gskcKind <- o .: "name"
     pure $ GetSourceKindCapabilities {..}
 
@@ -192,7 +188,7 @@ runGetSourceKindCapabilities ::
   m EncJSON
 runGetSourceKindCapabilities x = EncJSON.encJFromJValue <$> runGetSourceKindCapabilities' x
 
--- Main implementation of runGetSourceKindCapabilities that actually returns the DataConnectorInfo
+-- | Main implementation of runGetSourceKindCapabilities that actually returns the DataConnectorInfo
 -- and defers json encoding to `runGetSourceKindCapabilities`. This allows reuse and ensures a
 -- correct assembly of DataConnectorInfo
 runGetSourceKindCapabilities' ::

@@ -9,16 +9,17 @@ keywords:
   - source health
 sidebar_label: Source Health Check
 sidebar_position: 20
-sidebar_class_name: cloud-icon
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Source Health Check
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<ProductBadge free standard ee self />
 
 ## Overview
 
@@ -114,10 +115,10 @@ X-Hasura-Role: admin
 
 ### API
 
-Health Check reports of sources can be obtained through a `GET` request from the
-`/healthz/sources` API, on demand. Learn more about the API [here](/api-reference/source-health.mdx).
+Health Check reports of sources can be obtained through a `GET` request from the `/healthz/sources` API, on demand.
+Learn more about the API [here](/api-reference/source-health.mdx).
 
 ### Logging
 
-Hasura logs the Health Check status and other information via `health-check-log` type when enabled.
-Learn more about the Health Checks logs [here](/deployment/logging.mdx#health-check-log-structure).
+Hasura logs the Health Check status and other information via `health-check-log` type when enabled. Learn more about the
+Health Checks logs [here](/deployment/logging.mdx#health-check-log-structure).

@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { ScalarType } from './ScalarType';
 import type { SingleColumnAggregateFunction } from './SingleColumnAggregateFunction';
 
 export type SingleColumnAggregate = {
@@ -10,6 +11,7 @@ export type SingleColumnAggregate = {
    */
   column: string;
   function: SingleColumnAggregateFunction;
+  result_type: ScalarType;
   type: 'single_column';
 };
 

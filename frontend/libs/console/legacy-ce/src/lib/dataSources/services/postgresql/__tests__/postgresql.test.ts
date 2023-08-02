@@ -7,8 +7,6 @@ const {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   createIndexSql,
-  getDataTriggerLogsCountQuery,
-  getDataTriggerLogsQuery,
   getDataTriggerInvocations,
 } = postgres;
 
@@ -111,8 +109,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"firstname\\", \\"lastname\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("firstname", "lastname");
           "
         `);
       }
@@ -129,8 +127,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"firstName\\", \\"lastName\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("firstName", "lastName");
           "
         `);
       }
@@ -147,8 +145,8 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE  INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"first name\\", \\"last name\\");
+            CREATE  INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("first name", "last name");
           "
         `);
       }
@@ -165,124 +163,14 @@ describe('postgresql datasource tests', () => {
         });
         expect(query).toMatchInlineSnapshot(`
           "
-            CREATE UNIQUE INDEX \\"test_index_name\\" on
-            \\"test_schema\\".\\"test_table\\" using btree (\\"first name\\", \\"last_name\\", \\"fullName\\");
+            CREATE UNIQUE INDEX "test_index_name" on
+            "test_schema"."test_table" using btree ("first name", "last_name", "fullName");
           "
         `);
       }
     });
   });
 
-  describe('getDataTriggerLogsCountQuery', () => {
-    if (getDataTriggerLogsCountQuery) {
-      it('should generate SQL query for pending event count ', () => {
-        const pendingCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'pending'
-        );
-        expect(pendingCountQuery).toContain(
-          'delivered=false AND error=false AND archived=false'
-        );
-        expect(pendingCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(pendingCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(pendingCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for processed event count', () => {
-        const processedCountQuery = getDataTriggerLogsCountQuery(
-          'new_user',
-          'processed'
-        );
-        expect(processedCountQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(processedCountQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(processedCountQuery).toContain('FROM "hdb_catalog"."event_log"');
-
-        expect(processedCountQuery).toMatchSnapshot();
-      });
-
-      it('should generate SQL query for invocation event count', () => {
-        const invocationCountQuery = getDataTriggerLogsCountQuery(
-          'test_event',
-          'invocation'
-        );
-        expect(invocationCountQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(invocationCountQuery).toContain(
-          'FROM "hdb_catalog"."event_invocation_logs"'
-        );
-        expect(invocationCountQuery).toMatchSnapshot();
-      });
-    }
-  });
-
-  describe('getDataTriggerLogsQuery', () => {
-    if (getDataTriggerLogsQuery) {
-      it('should generate SQL query for pending event logs', () => {
-        // pending
-        const pendingLogsQuery = getDataTriggerLogsQuery(
-          'pending',
-          'new_user',
-          10,
-          10
-        );
-        expect(pendingLogsQuery).toContain(
-          'delivered=false AND error=false AND archived=false'
-        );
-        expect(pendingLogsQuery).toContain(
-          "data_table.trigger_name = 'new_user'"
-        );
-        expect(pendingLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(pendingLogsQuery).toContain('LIMIT 10');
-        expect(pendingLogsQuery).toContain('OFFSET 10');
-        expect(pendingLogsQuery).toMatchSnapshot();
-      });
-      it('should generate SQL query for processed event logs', () => {
-        // Processed
-        const processedLogsQuery = getDataTriggerLogsQuery(
-          'processed',
-          'test_event',
-          100,
-          0
-        );
-        expect(processedLogsQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(processedLogsQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(processedLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(processedLogsQuery).toContain('LIMIT 100');
-        expect(processedLogsQuery).toContain('OFFSET 0');
-        expect(processedLogsQuery).toMatchSnapshot();
-      });
-      it('should generate SQL query for event invocation logs', () => {
-        // Invocation
-        const invocationLogsQuery = getDataTriggerLogsQuery(
-          'processed',
-          'test_event',
-          100,
-          0
-        );
-        expect(invocationLogsQuery).toContain(
-          'AND (delivered=true OR error=true) AND archived=false'
-        );
-        expect(invocationLogsQuery).toContain(
-          "data_table.trigger_name = 'test_event'"
-        );
-        expect(invocationLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
-        expect(invocationLogsQuery).toContain('LIMIT 100');
-        expect(invocationLogsQuery).toContain('OFFSET 0');
-        expect(invocationLogsQuery).toMatchSnapshot();
-      });
-    }
-  });
   describe('getDataTriggerInvocations', () => {
     if (getDataTriggerInvocations) {
       it('should generate SQL to fetch invocations for an event', () => {

@@ -1,5 +1,5 @@
-import { LabeledInput } from '@/components/Common/LabeledInput';
-import { ConnectionSettingsFormProps } from '@/components/Services/Data/DataSources/ConnectionSettings/ConnectionSettingsForm';
+import { LabeledInput } from '../../../../../Common/LabeledInput';
+import { ConnectionSettingsFormProps } from '../ConnectionSettingsForm';
 import React from 'react';
 import styles from '../../DataSources.module.scss';
 

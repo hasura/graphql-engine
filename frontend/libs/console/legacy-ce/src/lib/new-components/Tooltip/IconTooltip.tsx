@@ -1,5 +1,5 @@
-import React from 'react';
-import { Tooltip, TooltipProps } from '@/new-components/Tooltip';
+import React, { ReactElement, ReactNode } from 'react';
+import { Tooltip, TooltipProps } from '.';
 import { FaQuestionCircle } from 'react-icons/fa';
 
 export type IconTooltipProps = {
@@ -11,6 +11,10 @@ export type IconTooltipProps = {
    * The tooltip icon classes
    */
   className?: string;
+  /**
+   * tooltip icon other then ?
+   */
+  icon?: ReactNode;
 } & Pick<TooltipProps, 'side'> &
   Pick<TooltipProps, 'defaultOpen'>;
 
@@ -19,6 +23,7 @@ export const IconTooltip: React.VFC<IconTooltipProps> = ({
   className,
   side = 'right',
   defaultOpen = false,
+  icon,
 }) => (
   <Tooltip
     tooltipContentChildren={message}
@@ -26,8 +31,12 @@ export const IconTooltip: React.VFC<IconTooltipProps> = ({
     defaultOpen={defaultOpen}
     className="flex items-center"
   >
-    <FaQuestionCircle
-      className={`h-4 text-muted cursor-pointer ${className}`}
-    />
+    {!icon ? (
+      <FaQuestionCircle
+        className={`h-4 text-muted cursor-pointer ${className}`}
+      />
+    ) : (
+      icon
+    )}
   </Tooltip>
 );

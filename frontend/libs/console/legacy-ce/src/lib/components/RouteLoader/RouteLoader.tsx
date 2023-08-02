@@ -1,4 +1,4 @@
-import { onEnterHook } from '@/utils/router';
+import { onEnterHook } from '../../utils/router';
 import { LocationDescriptorObject } from 'history';
 import React from 'react';
 import { InjectedRouter, withRouter } from 'react-router';

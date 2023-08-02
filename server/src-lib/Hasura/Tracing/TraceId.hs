@@ -26,8 +26,7 @@ import Hasura.Prelude
 import System.Random.Stateful qualified as Random
 
 --------------------------------------------------------------------------------
-
--- * TraceId
+-- TraceId
 
 -- | 128-bit trace identifiers.
 --
@@ -42,8 +41,8 @@ data TraceId
 traceIdBytes :: Int
 traceIdBytes = 16
 
-randomTraceId :: IO TraceId
-randomTraceId = do
+randomTraceId :: (MonadIO m) => m TraceId
+randomTraceId = liftIO do
   (w1, w2) <-
     flip Random.applyAtomicGen Random.globalStdGen $ \gen0 ->
       let (!w1, !gen1) = Random.random gen0
@@ -61,9 +60,11 @@ traceIdFromBytes :: ByteString -> Maybe TraceId
 traceIdFromBytes bs = do
   guard $ ByteString.length bs == traceIdBytes
   (w1, w2) <-
-    eitherToMaybe $
-      flip Serialize.runGet bs $
-        (,) <$> Serialize.getWord64be <*> Serialize.getWord64be
+    eitherToMaybe
+      $ flip Serialize.runGet bs
+      $ (,)
+      <$> Serialize.getWord64be
+      <*> Serialize.getWord64be
   guard $ w1 .|. w2 /= 0
   pure $ TraceId w1 w2
 
@@ -84,8 +85,7 @@ traceIdToHex :: TraceId -> ByteString
 traceIdToHex = Base16.encode . traceIdToBytes
 
 --------------------------------------------------------------------------------
-
----- * SpanId
+-- SpanId
 
 -- | 64-bit span identifiers
 --
@@ -97,8 +97,8 @@ newtype SpanId = SpanId Word64
 spanIdBytes :: Int
 spanIdBytes = 8
 
-randomSpanId :: IO SpanId
-randomSpanId = do
+randomSpanId :: (MonadIO m) => m SpanId
+randomSpanId = liftIO do
   w <- Random.uniformM Random.globalStdGen
   if w == 0
     then randomSpanId

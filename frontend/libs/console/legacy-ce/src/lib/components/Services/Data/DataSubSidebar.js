@@ -19,7 +19,7 @@ import {
   getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
 import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
@@ -123,6 +123,8 @@ const DataSubSidebar = props => {
   const getItems = (schemaInfo = null) => {
     let sourceItems = [];
     sources.forEach(source => {
+      if (source.kind === 'bigquery') return;
+
       if (isInconsistentSource(source.name, inconsistentObjects)) return;
 
       const sourceItem = { name: source.name, type: 'database' };

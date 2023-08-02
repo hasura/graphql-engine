@@ -11,15 +11,20 @@ keywords:
 
 # Hasura CLI: hasura metadata export
 
-Export Hasura GraphQL Engine metadata from the database.
+Export Hasura GraphQL Engine Metadata from the database.
 
 ## Synopsis
 
-Export Hasura Metadata and save it in the `/metadata` directory.
-The output is a bunch of yaml files which captures all the metadata required
+Export Hasura Metadata and save it in the ``/metadata`` directory.
+The output is a collection of yaml files which captures all the Metadata required
 by the GraphQL Engine. This includes info about tables that are tracked,
-permission rules, relationships and Event Triggers that are defined
+permission rules, relationships, and event triggers that are defined
 on those tables.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/metadata-format/
+
 
 ```bash
 hasura metadata export [flags]

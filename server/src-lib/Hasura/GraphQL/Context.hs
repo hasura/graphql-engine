@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.GraphQL.Context
   ( RoleContext (..),
     GQLContext (..),
@@ -8,7 +6,6 @@ module Hasura.GraphQL.Context
 where
 
 import Data.Aeson qualified as J
-import Data.Aeson.TH
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser
@@ -25,9 +22,11 @@ data RoleContext a = RoleContext
     -- | The context for sessions with backend privilege.
     _rctxBackend :: !(Maybe a)
   }
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
-$(deriveToJSON hasuraJSON ''RoleContext)
+instance (J.ToJSON a) => J.ToJSON (RoleContext a) where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data GQLContext = GQLContext
   { gqlQueryParser :: ParserFn (RootFieldMap (IR.QueryRootField IR.UnpreparedValue)),

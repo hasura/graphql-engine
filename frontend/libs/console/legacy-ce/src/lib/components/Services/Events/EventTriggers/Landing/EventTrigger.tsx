@@ -4,8 +4,11 @@
 import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { Button } from '../../../../../new-components/Button';
 import globals from '../../../../../Globals';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddETRoute } from '../../../../Common/utils/routesUtils';
@@ -18,7 +21,7 @@ import TryItOut from '../../../Common/Landing/TryItOut';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 import _push from '../../../Data/push';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const EventTrigger: React.FC<Props> = props => {
   const { dispatch } = props;
@@ -36,7 +39,7 @@ insert_user(objects: [{name: "testuser"}] ){
           imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
           imgAlt={`${EVENT_TRIGGER}s`}
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
-          knowMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
+          learnMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />
         <hr className="clear-both my-lg" />
       </div>
@@ -51,7 +54,7 @@ insert_user(objects: [{name: "testuser"}] ){
 
     return (
       <Button
-        data-test="data-create-trigger"
+        data-testid="data-create-trigger"
         mode="primary"
         type="submit"
         className="ml-md"
@@ -71,7 +74,7 @@ insert_user(objects: [{name: "testuser"}] ){
 
   return (
     <Analytics name="EventTriggersLanding" {...REDACT_EVERYTHING}>
-      <div className="pl-0 w-full pt-md">
+      <div className="pl-0 w-full pt-md bootstrap-jail">
         <div className="pl-md">
           <Helmet
             title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}

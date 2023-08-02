@@ -10,3 +10,14 @@
     max-width: 75%;
   }
 }
+
+h1 {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+
+  svg {
+    width: 42px;
+    height: 42px;
+  }
+}

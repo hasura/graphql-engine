@@ -1,11 +1,14 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import {
   FaCloud,
   FaCog,
   FaCogs,
   FaDatabase,
+  FaInfoCircle,
   FaExclamationCircle,
+  FaExclamationTriangle,
   FaFlask,
   FaPlug,
 } from 'react-icons/fa';
@@ -25,7 +28,6 @@ import {
   getDataSourceBaseRoute,
 } from '../Common/utils/routesUtils';
 import { getPathRoot } from '../Common/utils/urlUtils';
-import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 import _push from '../Services/Data/push';
 import {
   emitProClickedEvent,
@@ -49,7 +51,14 @@ import {
   setLoveConsentState,
   setProClickState,
 } from './utils';
-import HeaderNavItem from './HeaderNavItem';
+import HeaderNavItem, {
+  linkStyle,
+  itemContainerStyle,
+  activeLinkStyle,
+} from './HeaderNavItem';
+import { Tooltip } from './../../new-components/Tooltip';
+import { Badge } from './../../new-components/Badge';
+import { ConsoleDevTools } from '../../utils/console-dev-tools/ConsoleDevTools';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -77,7 +86,7 @@ export const updateRequestHeaders = props => {
     }
   }
 };
-
+/*
 const getSettingsSelectedMarker = pathname => {
   const currentActiveBlock = getPathRoot(pathname);
 
@@ -87,6 +96,7 @@ const getSettingsSelectedMarker = pathname => {
 
   return null;
 };
+ */
 
 class Main extends React.Component {
   constructor(props) {
@@ -264,10 +274,7 @@ class Main extends React.Component {
       serverVersion,
     } = this.props;
 
-    const {
-      proClickState: { isProClicked },
-      isPopUpOpen,
-    } = this.state;
+    const { isPopUpOpen } = this.state;
 
     const appPrefix = '';
 
@@ -295,19 +302,19 @@ class Main extends React.Component {
       return mainContent;
     };
 
-    const getMetadataStatusIcon = () => {
+    const getMetadataStatusIcon = pathname => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <FaCog className={styles.question} />;
+        return <FaCog />;
       }
 
       return (
-        <div className={styles.question}>
+        <div className="relative">
           <FaCog />
-          <div className={styles.overlappingExclamation}>
-            <div className={styles.iconWhiteBackground} />
-            <div>
-              <FaExclamationCircle />
-            </div>
+          <div className="absolute -top-2 left-2 ">
+            <FaExclamationCircle
+              className="bg-white rounded-full"
+              color="#d9534f"
+            />
           </div>
         </div>
       );
@@ -318,22 +325,24 @@ class Main extends React.Component {
 
       if (!globals.isAdminSecretSet) {
         adminSecretHtml = (
-          <div className={styles.secureSection}>
-            <a
-              href="https://hasura.io/docs/latest/deployment/securing-graphql-endpoint/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <WarningSymbol
-                tooltipText={tooltips.secureEndpoint}
-                tooltipPlacement={'left'}
-                customStyle={styles.secureSectionSymbol}
-              />
-              <span className={styles.secureSectionText}>
-                &nbsp;Secure your endpoint
-              </span>
-            </a>
-          </div>
+          <Tooltip
+            side="bottom"
+            tooltipContentChildren={`This graphql endpoint is public and you should add an ${globals.adminSecretLabel}`}
+          >
+            <div className={itemContainerStyle}>
+              <a
+                className={clsx(linkStyle)}
+                href="https://hasura.io/docs/latest/deployment/securing-graphql-endpoint/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Badge color="yellow">
+                  <FaExclamationTriangle />
+                  &nbsp;Secure your endpoint
+                </Badge>
+              </a>
+            </div>
+          </Tooltip>
         );
       }
       return adminSecretHtml;
@@ -349,24 +358,22 @@ class Main extends React.Component {
           metadata={metadata.metadataObject}
         />
         <div className={styles.flexRow}>
-          <div className={styles.sidebar}>
-            <div className={styles.header_logo_wrapper}>
-              <div className={styles.logoParent}>
-                <div className={styles.logo}>
-                  <Link to="/">
-                    <img className="img img-responsive" src={logo} />
-                  </Link>
-                </div>
+          <div className="font-sans bg-slate-700 text-slate-100 flex h-16">
+            <div className="flex gap-1 flex-grow">
+              <div className="px-5 py-2 flex items-center gap-3">
                 <Link to="/">
-                  <div className={styles.project_version}>{serverVersion}</div>
+                  <img className="w-24" src={logo} alt="" />
+                </Link>
+                <Link to="/">
+                  <div className="text-white text-xs max-w-[128px]">
+                    {serverVersion}
+                  </div>
                 </Link>
               </div>
-            </div>
-            <div className={styles.header_items}>
-              <ul className={styles.sidebarItems}>
+              <ul className="flex gap-2" data-testid="Nav bar">
                 <HeaderNavItem
                   title="API"
-                  icon={FaFlask}
+                  icon={<FaFlask aria-hidden="true" />}
                   tooltipText={tooltips.apiExplorer}
                   path="/api/api-explorer"
                   appPrefix={appPrefix}
@@ -375,7 +382,7 @@ class Main extends React.Component {
                 />
                 <HeaderNavItem
                   title="Data"
-                  icon={FaDatabase}
+                  icon={<FaDatabase aria-hidden="true" />}
                   tooltipText={tooltips.data}
                   path={getDataPath()}
                   appPrefix={appPrefix}
@@ -383,7 +390,7 @@ class Main extends React.Component {
                 />
                 <HeaderNavItem
                   title="Actions"
-                  icon={FaCogs}
+                  icon={<FaCogs aria-hidden="true" />}
                   tooltipText={tooltips.actions}
                   path="/actions/manage/actions"
                   appPrefix={appPrefix}
@@ -391,7 +398,7 @@ class Main extends React.Component {
                 />
                 <HeaderNavItem
                   title="Remote Schemas"
-                  icon={FaPlug}
+                  icon={<FaPlug aria-hidden="true" />}
                   tooltipText={tooltips.remoteSchema}
                   path="/remote-schemas/manage/schemas"
                   appPrefix={appPrefix}
@@ -399,7 +406,7 @@ class Main extends React.Component {
                 />
                 <HeaderNavItem
                   title="Events"
-                  icon={FaCloud}
+                  icon={<FaCloud aria-hidden="true" />}
                   tooltipText={tooltips.events}
                   path="/events/data/manage"
                   appPrefix={appPrefix}
@@ -407,51 +414,70 @@ class Main extends React.Component {
                 />
               </ul>
             </div>
-            <div
-              id="dropdown_wrapper"
-              className={`${styles.clusterInfoWrapper} ${
-                this.state.isDropdownOpen ? 'open' : ''
-              }`}
-            >
-              {getAdminSecretSection()}
+            <div className="bootstrap-jail">
               <div
-                className={`${styles.headerRightNavbarBtn} ${styles.proWrapper}`}
-                onClick={this.onProIconClick}
+                id="dropdown_wrapper"
+                className={clsx(
+                  'flex gap-2 justify-end items-stretch relative mr-4 h-full',
+                  this.state.isDropdownOpen ? 'open' : ''
+                )}
               >
-                <span
-                  className={`
-                    ${isProClicked ? styles.proNameClicked : styles.proName}
-                    ${isPopUpOpen ? styles.navActive : ''}`}
-                >
-                  CLOUD
-                </span>
-                {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
+                {getAdminSecretSection()}
+                <div className={itemContainerStyle}>
+                  <Link
+                    className={clsx(
+                      linkStyle,
+                      currentActiveBlock === 'settings' && activeLinkStyle
+                    )}
+                    to="/settings"
+                  >
+                    <span className="text-sm self-baseline">
+                      {getMetadataStatusIcon()}
+                    </span>
+                    <span className="uppercase text-left">Settings</span>
+                  </Link>
+                </div>
+                {/* Compensate legacy styles directly with style attribute */}
+                <div className={styles.proWrapper} style={{ padding: '0' }}>
+                  <div className={itemContainerStyle}>
+                    <div
+                      className={clsx(
+                        linkStyle,
+                        isPopUpOpen && activeLinkStyle
+                      )}
+                      onClick={this.onProIconClick}
+                    >
+                      <span className="text-sm self-baseline">
+                        <FaInfoCircle />
+                      </span>
+                      <span className="uppercase text-left">CLOUD</span>
+                    </div>
+                  </div>
+                  {isPopUpOpen && <ProPopup toggleOpen={this.toggleProPopup} />}
+                </div>
+
+                <Help isSelected={currentActiveBlock === 'support'} />
+                <NotificationSection
+                  isDropDownOpen={this.state.isDropdownOpen}
+                  closeDropDown={this.closeDropDown}
+                  toggleDropDown={this.toggleDropDown}
+                />
+                {!this.state.loveConsentState.isDismissed ? (
+                  <div className="bootstrap-jail">
+                    <div
+                      id="dropdown_wrapper"
+                      className={`self-stretch h-full ${
+                        this.state.isLoveSectionOpen ? 'open' : ''
+                      }`}
+                    >
+                      <LoveSection
+                        closeLoveSection={this.closeLoveSection}
+                        toggleLoveSection={this.toggleLoveSection}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
-              <Link to="/settings">
-                <div className={styles.headerRightNavbarBtn}>
-                  {getMetadataStatusIcon()}
-                  {getSettingsSelectedMarker(pathname)}
-                </div>
-              </Link>
-              <Help isSelected={currentActiveBlock === 'support'} />
-              <NotificationSection
-                isDropDownOpen={this.state.isDropdownOpen}
-                closeDropDown={this.closeDropDown}
-                toggleDropDown={this.toggleDropDown}
-              />
-              {!this.state.loveConsentState.isDismissed ? (
-                <div
-                  id="dropdown_wrapper"
-                  className={`self-stretch ${
-                    this.state.isLoveSectionOpen ? 'open' : ''
-                  }`}
-                >
-                  <LoveSection
-                    closeLoveSection={this.closeLoveSection}
-                    toggleLoveSection={this.toggleLoveSection}
-                  />
-                </div>
-              ) : null}
             </div>
           </div>
           <div className={styles.main + ' container-fluid'}>
@@ -464,6 +490,7 @@ class Main extends React.Component {
             updateNotificationVersion={this.state.updateNotificationVersion}
           />
         </div>
+        <ConsoleDevTools />
       </div>
     );
   }

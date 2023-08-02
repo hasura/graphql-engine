@@ -1,6 +1,6 @@
 ---
 sidebar_label: Manage Metadata
-sidebar_position: 17
+sidebar_position: 20
 description: Manage Metadata with the Hasura Metadata API
 keywords:
   - hasura
@@ -102,7 +102,8 @@ For version 2, the following structure is used:
 
 ```json
 {
-    allow_inconsistent_metadata: Boolean
+    allow_inconsistent_metadata: Boolean,
+    allow_warnings: Boolean,
     metadata: metadata-object
 }
 ```
@@ -110,6 +111,7 @@ For version 2, the following structure is used:
 | Key                         | Required | Schema                                       | Description                                                                                                                           |
 | --------------------------- | -------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | allow_inconsistent_metadata | false    | Boolean                                      | If set to `true`, Metadata will be replaced with a warning in the response indicating which items are inconsistent (default: `false`) |
+| allow_warnings              | false    | Boolean                                      | If set to `false`, any warnings will cause the metadata API call to fail (default: `true`)                                            |
 | metadata                    | true     | [export_metadata](#metadata-export-metadata) | The Metadata that will replace the current metadata.                                                                                  |
 
 If the version is not specified, then it is inferred from the format of `args`.
@@ -126,6 +128,7 @@ X-Hasura-Role: admin
     "version": 2
     "args": {
       "allow_inconsistent_metadata": Boolean,
+      "allow_warnings": Boolean,
       "metadata": <metadata-object>
     }
 }
@@ -197,6 +200,46 @@ HTTP/1.1 409 Conflict
   "path": "$",
   "error": "metadata resource version referenced (2) did not match current version",
   "code": "conflict"
+}
+```
+
+Version 2 example with warnings allow_warnings=true
+
+```http
+HTTP/1.1 200 OK
+
+{
+  "is_consistent": true,
+  "inconsistent_objects": [],
+  "warnings: [
+    {
+      "code": "illegal-event-trigger-name",
+      "message": "The event trigger with name \"weird]name]\" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name",
+      "type": "event_trigger",
+      "name": "event_trigger weird]name] in table hasura.authors in source mssql"
+    },
+    ...
+  ]
+}
+```
+
+Version 2 example with warnings allow_warnings=false
+
+```http
+HTTP/1.1 400 Bad Request
+
+{
+  "code": "metadata-warnings",
+  "error": "failed due to metadata warnings",
+  "internal": [
+    {
+      "code": "illegal-event-trigger-name",
+      "message": "The event trigger with name \"weird]name]\" may not work as expected, hasura suggests to use only alphanumeric, underscore and hyphens in an event trigger name",
+      "name": "event_trigger weird]name] in table hasura.authors in source mssql",
+      "type": "event_trigger"
+    }
+  ],
+  "path": "$.args"
 }
 ```
 

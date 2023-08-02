@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
   getAdhocEventsRoute,

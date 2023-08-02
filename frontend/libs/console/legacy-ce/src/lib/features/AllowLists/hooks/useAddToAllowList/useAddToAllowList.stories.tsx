@@ -1,11 +1,11 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { Meta, Story } from '@storybook/react';
-import { Button } from '@/new-components/Button';
+import { StoryObj, Meta } from '@storybook/react';
+import { Button } from '../../../../new-components/Button';
 
-import { handlers } from '@/mocks/metadata.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 import { useAddToAllowList } from './useAddToAllowList';
 
 const UseQueryCollections: React.FC<{ name: string }> = ({ name }) => {
@@ -26,8 +26,10 @@ const UseQueryCollections: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
-export const Primary: Story = ({ collectionName }) => {
-  return <UseQueryCollections name={collectionName} />;
+export const Primary: StoryObj = {
+  render: ({ collectionName }) => {
+    return <UseQueryCollections name={collectionName} />;
+  },
 };
 
 export default {

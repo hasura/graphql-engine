@@ -1,0 +1,34 @@
+{
+  "name": "console-ee-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/console-ee-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {
+      "executor": "@nrwl/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/console-ee-e2e/cypress.config.ts",
+        "devServerTarget": "console-ee:serve:development",
+        "testingType": "e2e"
+      },
+      "configurations": {
+        "production": {
+          "devServerTarget": "console-ee:serve:production"
+        },
+        "ci": {
+          "parallel": true,
+          "record": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/console-ee-e2e/**/*.{js,ts,json}"]
+      }
+    }
+  },
+  "tags": ["scope:console", "type:e2e", "meta:legacy"],
+  "implicitDependencies": ["console-ee"]
+}

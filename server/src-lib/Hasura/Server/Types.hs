@@ -13,22 +13,24 @@ module Hasura.Server.Types
     PGVersion (PGVersion),
     pgToDbVersion,
     RequestId (..),
-    ServerConfigCtx (..),
-    HasServerConfigCtx (..),
-    askMetadataDefaults,
+    CheckFeatureFlag (..),
     getRequestId,
+    ApolloFederationStatus (..),
+    isApolloFederationEnabled,
+    GranularPrometheusMetricsState (..),
+    OpenTelemetryExporterState (..),
+    CloseWebsocketsOnMetadataChangeStatus (..),
+    isCloseWebsocketsOnMetadataChangeStatusEnabled,
+    MonadGetPolicies (..),
   )
 where
 
 import Data.Aeson
-import Data.HashSet qualified as Set
 import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude hiding (intercalate)
-import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.ApiLimit
+import Hasura.Server.Init.FeatureFlag (CheckFeatureFlag (..))
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -66,6 +68,8 @@ newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
 mdDbIdToDbUid :: MetadataDbId -> DbUid
 mdDbIdToDbUid = DbUid . getMetadataDbId
 
+-- | A UUID for each running instance of graphql-engine, generated fresh each
+-- time graphql-engine starts up
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
@@ -83,6 +87,8 @@ data ExperimentalFeature
   | EFBigQueryStringNumericInput
   | EFHideAggregationPredicates
   | EFHideStreamFields
+  | EFGroupByAggregations
+  | EFDisablePostgresArrays
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -96,6 +102,8 @@ experimentalFeatureKey = \case
   EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
   EFHideStreamFields -> "hide_stream_fields"
+  EFGroupByAggregations -> "group_by_aggregations"
+  EFDisablePostgresArrays -> "disable_postgres_arrays"
 
 instance Hashable ExperimentalFeature
 
@@ -103,9 +111,9 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     k | Just (_, ef) <- find ((== k) . fst) experimentalFeatures -> return $ ef
     _ ->
-      fail $
-        "ExperimentalFeature can only be one of these values: "
-          <> unpack (intercalate "," (map fst experimentalFeatures))
+      fail
+        $ "ExperimentalFeature can only be one of these values: "
+        <> unpack (intercalate "," (map fst experimentalFeatures))
     where
       experimentalFeatures :: [(Text, ExperimentalFeature)]
       experimentalFeatures =
@@ -121,8 +129,9 @@ data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
 
 instance FromJSON (MaintenanceMode ()) where
   parseJSON =
-    withBool "MaintenanceMode" $
-      pure . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
+    withBool "MaintenanceMode"
+      $ pure
+      . bool MaintenanceModeDisabled (MaintenanceModeEnabled ())
 
 instance ToJSON (MaintenanceMode ()) where
   toJSON = Bool . (== MaintenanceModeEnabled ())
@@ -137,33 +146,104 @@ data ReadOnlyMode = ReadOnlyModeEnabled | ReadOnlyModeDisabled
 data EventingMode = EventingEnabled | EventingDisabled
   deriving (Show, Eq)
 
-data ServerConfigCtx = ServerConfigCtx
-  { _sccFunctionPermsCtx :: Options.InferFunctionPermissions,
-    _sccRemoteSchemaPermsCtx :: Options.RemoteSchemaPermissions,
-    _sccSQLGenCtx :: SQLGenCtx,
-    _sccMaintenanceMode :: MaintenanceMode (),
-    _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,
-    _sccEventingMode :: EventingMode,
-    _sccReadOnlyMode :: ReadOnlyMode,
-    -- | stores global default naming convention
-    _sccDefaultNamingConvention :: Maybe NamingCase,
-    _sccMetadataDefaults :: MetadataDefaults
-  }
-  deriving (Show, Eq)
+-- | Whether or not to enable apollo federation fields.
+data ApolloFederationStatus = ApolloFederationEnabled | ApolloFederationDisabled
+  deriving stock (Show, Eq, Ord, Generic)
 
-askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
-askMetadataDefaults = do
-  ServerConfigCtx {_sccMetadataDefaults} <- askServerConfigCtx
-  pure _sccMetadataDefaults
+instance NFData ApolloFederationStatus
 
-class (Monad m) => HasServerConfigCtx m where
-  askServerConfigCtx :: m ServerConfigCtx
+instance Hashable ApolloFederationStatus
 
-instance HasServerConfigCtx m => HasServerConfigCtx (ReaderT r m) where
-  askServerConfigCtx = lift askServerConfigCtx
+instance FromJSON ApolloFederationStatus where
+  parseJSON = fmap (bool ApolloFederationDisabled ApolloFederationEnabled) . parseJSON
 
-instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
-  askServerConfigCtx = lift askServerConfigCtx
+isApolloFederationEnabled :: ApolloFederationStatus -> Bool
+isApolloFederationEnabled = \case
+  ApolloFederationEnabled -> True
+  ApolloFederationDisabled -> False
 
-instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
-  askServerConfigCtx = lift askServerConfigCtx
+instance ToJSON ApolloFederationStatus where
+  toJSON = toJSON . isApolloFederationEnabled
+
+-- | Whether or not to enable granular metrics for Prometheus.
+--
+-- `GranularMetricsOn` will enable the dynamic labels for the metrics.
+-- `GranularMetricsOff` will disable the dynamic labels for the metrics.
+--
+-- **Warning**: Enabling dynamic labels for Prometheus metrics can cause cardinality
+-- issues and can cause memory usage to increase.
+data GranularPrometheusMetricsState
+  = GranularMetricsOff
+  | GranularMetricsOn
+  deriving (Eq, Show)
+
+instance FromJSON GranularPrometheusMetricsState where
+  parseJSON = withBool "GranularPrometheusMetricsState" $ \case
+    False -> pure GranularMetricsOff
+    True -> pure GranularMetricsOn
+
+instance ToJSON GranularPrometheusMetricsState where
+  toJSON = \case
+    GranularMetricsOff -> Bool False
+    GranularMetricsOn -> Bool True
+
+-- | Whether or not to enable OpenTelemetry Exporter.
+--
+-- `OpenTelemetryExporterOn` will enable exporting of traces & metrics via the OTel Exporter.
+-- `OpenTelemetryExporterOff` will disable exporting of traces & metrics via the OTel Exporter.
+data OpenTelemetryExporterState
+  = OpenTelemetryExporterOff
+  | OpenTelemetryExporterOn
+  deriving (Eq, Show)
+
+instance FromJSON OpenTelemetryExporterState where
+  parseJSON = withBool "OpenTelemetryExporterState" $ \case
+    False -> pure OpenTelemetryExporterOff
+    True -> pure OpenTelemetryExporterOn
+
+instance ToJSON OpenTelemetryExporterState where
+  toJSON = \case
+    OpenTelemetryExporterOff -> Bool False
+    OpenTelemetryExporterOn -> Bool True
+
+-- | Whether or not to close websocket connections on metadata change.
+data CloseWebsocketsOnMetadataChangeStatus = CWMCEnabled | CWMCDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance NFData CloseWebsocketsOnMetadataChangeStatus
+
+instance Hashable CloseWebsocketsOnMetadataChangeStatus
+
+instance FromJSON CloseWebsocketsOnMetadataChangeStatus where
+  parseJSON = fmap (bool CWMCDisabled CWMCEnabled) . parseJSON
+
+isCloseWebsocketsOnMetadataChangeStatusEnabled :: CloseWebsocketsOnMetadataChangeStatus -> Bool
+isCloseWebsocketsOnMetadataChangeStatusEnabled = \case
+  CWMCEnabled -> True
+  CWMCDisabled -> False
+
+instance ToJSON CloseWebsocketsOnMetadataChangeStatus where
+  toJSON = toJSON . isCloseWebsocketsOnMetadataChangeStatusEnabled
+
+class (Monad m) => MonadGetPolicies m where
+  runGetApiTimeLimit ::
+    m (Maybe MaxTime)
+
+  -- 'GranularPrometheusMetricsState' is used to decide if dynamic labels needs to be
+  -- added when emitting the prometheus metric. The state of this can be dynamically
+  -- changed via policies. Hence we need to fetch the value from the policy everytime
+  -- before emitting the metric. Thus we create an IO action which fetches the value.
+  runGetPrometheusMetricsGranularity ::
+    m (IO GranularPrometheusMetricsState)
+
+instance (MonadGetPolicies m) => MonadGetPolicies (ReaderT r m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+
+instance (MonadGetPolicies m) => MonadGetPolicies (ExceptT e m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+
+instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
+  runGetApiTimeLimit = lift runGetApiTimeLimit
+  runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity

@@ -1,6 +1,5 @@
-import React, { useState, Fragment } from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
-import { Tooltip } from '@hasura/console-oss';
+import { useState, Fragment } from 'react';
+import { Dialog, Tooltip } from '@hasura/console-legacy-ce';
 import { useMutation } from '@apollo/react-hooks';
 
 import CustomCopy from '../Common/CustomCopy';
@@ -101,7 +100,7 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
             />
           </div>
           <div
-            className={`col-md-6 ${styles.noPadd} ${styles.longCopy} ${styles.paddingBottom}`}
+            className={`col-md-6 ${styles.noPadd} ${styles.longCopy} ${styles.paddingBottom} w-full`}
           >
             {isEditing ? (
               <EditData
@@ -114,14 +113,12 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
                 onCancel={() => setIsEditing(false)}
               />
             ) : (
-              <Fragment>
-                <CustomCopy
-                  key="variables"
-                  copy={JSON.stringify(variables, null, 2)}
-                  label="Variables"
-                  onEdit={() => setIsEditing(true)}
-                />
-              </Fragment>
+              <CustomCopy
+                key="variables"
+                copy={JSON.stringify(variables, null, 2)}
+                label="Variables"
+                onEdit={() => setIsEditing(true)}
+              />
             )}
           </div>
         </Fragment>
@@ -140,22 +137,19 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
     }
   };
 
+  if (!show) return null;
+
   return (
-    <BootstrapModal
+    <Dialog
       id="operationInspect"
-      onHide={onHide}
-      show={show}
-      size="modal-lg"
-      className={styles.modalWrapper}
+      onClose={onHide}
+      hasBackdrop
+      size="xxl"
+      title="Inspect"
     >
-      <BootstrapModal.Header className={styles.modalHeader} closeButton>
-        <BootstrapModal.Title className={styles.title}>
-          Edit test
-        </BootstrapModal.Title>
-      </BootstrapModal.Header>
-      <BootstrapModal.Body className={styles.modalContainer}>
-        {renderModalBody()}
-      </BootstrapModal.Body>
-    </BootstrapModal>
+      <div className={styles.modalWrapper}>
+        <div className={styles.modalContainer}>{renderModalBody()}</div>
+      </div>
+    </Dialog>
   );
 };

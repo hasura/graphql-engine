@@ -1,4 +1,4 @@
-import { useMetadata, useMetadataMigration } from '@/features/MetadataAPI';
+import { useMetadata, useMetadataMigration } from '../../../MetadataAPI';
 
 export const useRenameQueryCollection = () => {
   const { data: metadata } = useMetadata();

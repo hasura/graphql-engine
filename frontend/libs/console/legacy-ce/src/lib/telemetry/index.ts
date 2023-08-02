@@ -1,41 +1,62 @@
 import endpoints from '../Endpoints';
 import globals from '../Globals';
 import { sanitiseUrl } from './filters';
-import { RUN_TIME_ERROR } from '../components/Main/Actions';
-import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
+import { Driver } from '../dataSources';
 
-interface TelemetryGlobals {
-  serverVersion: string;
-  consoleMode: string;
-  cliUUID: string;
-  hasuraUUID: string;
-}
-
-export type ErrorPayload = {
-  message: string;
-  stack?: string;
+export type RunTimeErrorEvent = {
+  type: 'RUN_TIME_ERROR';
+  data: {
+    message: string;
+    stack?: string;
+  };
 };
 
-export type TelemetryAction =
+export type ConnectDBEvent = {
+  type: 'CONNECT_DB';
+  data: {
+    db_kind: Driver;
+    entity_count?: number;
+    entity_hash?: string;
+  };
+};
+
+export type SetFeatureFlagEvent = {
+  type: 'SET_FEATURE_FLAG';
+  data: {
+    feature_flag: string;
+    value: boolean;
+  };
+};
+
+export type HTMLUserEvent =
   | {
-      type: typeof REDUX_LOCATION_CHANGE_ACTION_TYPE;
-      payload: {
-        pathname: string;
+      type: 'CLICK_EVENT';
+      data: {
+        id: string;
       };
     }
   | {
-      type: typeof RUN_TIME_ERROR;
-      data?: ErrorPayload;
+      type: 'INPUT_CHANGE_EVENT';
+      data: {
+        id: string;
+      };
     };
+
+export type TelemetryEvent =
+  | RunTimeErrorEvent
+  | ConnectDBEvent
+  | SetFeatureFlagEvent
+  | HTMLUserEvent;
 
 export type TelemetryPayload = {
   server_version: string;
-  event_type: string;
   url: string;
   console_mode: string;
+  console_type: string;
   cli_uuid: string;
   server_uuid: string;
-  data?: ErrorPayload;
+  event_type: TelemetryEvent['type'];
+  event_data: TelemetryEvent['data'];
 };
 
 const createClient = () => {
@@ -69,26 +90,58 @@ const isTelemetryConnectionReady = () => {
   return !!(client && client.readyState === client.OPEN);
 };
 
-const sendEvent = (payload: TelemetryPayload) => {
+export const sendTelemetryEvent = (event: TelemetryEvent) => {
   if (client && isTelemetryConnectionReady()) {
+    const payload: TelemetryPayload = {
+      server_version: globals.serverVersion,
+      url: sanitiseUrl(window.location.pathname),
+      console_mode: globals.consoleMode,
+      console_type: globals.consoleType,
+      cli_uuid: globals.cliUUID,
+      server_uuid: globals.hasuraCloudProjectId || globals.hasuraUUID,
+      event_type: event.type,
+      event_data: event.data,
+    };
     client.send(
       JSON.stringify({ data: payload, topic: globals.telemetryTopic })
     );
   }
 };
 
-export const trackRuntimeError = (
-  telemeteryGlobals: TelemetryGlobals,
-  error: Error
-) => {
-  const reqBody: TelemetryPayload = {
-    server_version: telemeteryGlobals.serverVersion,
-    event_type: RUN_TIME_ERROR,
-    url: sanitiseUrl(window.location.pathname),
-    console_mode: telemeteryGlobals.consoleMode,
-    cli_uuid: telemeteryGlobals.cliUUID,
-    server_uuid: telemeteryGlobals.hasuraUUID,
+export const trackRuntimeError = (error: Error) => {
+  sendTelemetryEvent({
+    type: 'RUN_TIME_ERROR',
     data: { message: error.message, stack: error.stack },
-  };
-  sendEvent(reqBody);
+  });
+};
+
+// This function accepts the event identifier and kind, constructs the telemetry payload and sends it
+export const telemetryUserEventsTracker = (
+  id: string,
+  kind: 'click' | 'change'
+) => {
+  const isNotProduction = process.env.NODE_ENV !== 'production';
+  // Keeping this log in debug mode so that it's easier to see the tracking items
+  if (isNotProduction) {
+    console.log('Tracking: ', id, kind);
+  }
+  switch (kind) {
+    case 'change': {
+      sendTelemetryEvent({
+        type: 'INPUT_CHANGE_EVENT',
+        data: {
+          id,
+        },
+      });
+      break;
+    }
+    case 'click': {
+      sendTelemetryEvent({
+        type: 'CLICK_EVENT',
+        data: {
+          id,
+        },
+      });
+    }
+  }
 };

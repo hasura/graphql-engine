@@ -21,9 +21,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@fastify/cors": "^7.0.0",
-    "@hasura/dc-api-types": "0.19.0",
-    "fastify": "^3.29.0",
+    "@fastify/cors": "^8.1.0",
+    "@hasura/dc-api-types": "0.35.0",
+    "fastify": "^4.13.0",
     "mathjs": "^11.0.0",
     "pino-pretty": "^8.0.0",
     "xml2js": "github:Leonidas-from-XIV/node-xml2js"

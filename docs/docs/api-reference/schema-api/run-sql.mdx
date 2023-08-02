@@ -40,6 +40,26 @@ the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
+### Supported databases
+
+`run_sql` can be invoked on most supported databases, but typically it requires
+a prefix corresponding to that database.
+
+In order to use it, you will need to specify the correct `type` in the query, as
+below:
+
+| Database      | `type` parameter              |
+| ------------- | ----------------------------- |
+| Postgres      | `"run_sql"` or `"pg_run_sql"` |
+| MS SQL Server | `"mssql_run_sql"`             |
+| Citus         | `"citus_run_sql"`             |
+| CockroachDB   | `"cockroach_run_sql"`         |
+| BigQuery      | `"bigquery_run_sql"`          |
+
+When using a data connector, use the connector's prefix.
+
+All examples below will use the Postgres `type` parameter, `"run_sql"`.
+
 ### Use cases
 
 1.  To execute DDL operations that are not supported by the Console
@@ -202,13 +222,13 @@ not consider Metadata dependencies.
 
 ### Args syntax {#schema-run-sql-syntax}
 
-| Key                        | Required | Schema  | Description                                                                                                                                                                                                                        |
-| -------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sql                        | true     | String  | The sql to be executed                                                                                                                                                                                                             |
-| source                     | false    | String  | The database on which the sql is to be executed (default: 'default' database)                                                                                                                                                      |
-| cascade                    | false    | Boolean | When set to `true`, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).                                                                                                |
-| check_metadata_consistency | false    | Boolean | When set to `false`, the sql is executed without checking Metadata dependencies.                                                                                                                                                   |
-| read_only                  | false    | Boolean | When set to `true`, the request will be run in `READ ONLY` transaction access mode which means only `select` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant. |
+| Key                          | Required | Supported databases        | Schema  | Description                                                                                                                                                                                                                        |
+| ---------------------------- | -------- | -------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sql`                        | true     | _all_                      | String  | The sql to be executed                                                                                                                                                                                                             |
+| `source`                     | false    | _all_                      | String  | The database on which the sql is to be executed (default: 'default' database)                                                                                                                                                      |
+| `cascade`                    | false    | Postgres and MS SQL Server | Boolean | When set to `true`, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).                                                                                                |
+| `check_metadata_consistency` | false    | Postgres and MS SQL Server | Boolean | When set to `false`, the sql is executed without checking Metadata dependencies.                                                                                                                                                   |
+| `read_only`                  | false    | Postgres                   | Boolean | When set to `true`, the request will be run in `READ ONLY` transaction access mode which means only `select` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant. |
 
 ### Response
 

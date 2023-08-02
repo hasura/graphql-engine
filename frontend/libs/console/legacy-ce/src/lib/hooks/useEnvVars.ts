@@ -1,4 +1,4 @@
-import globals from '@/Globals';
+import globals from '../Globals';
 
 export interface ConsoleConfig {
   mode: 'server' | 'cli';

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../hooks/useDebounceEffect';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import { editorDebounceTime } from './utils';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';

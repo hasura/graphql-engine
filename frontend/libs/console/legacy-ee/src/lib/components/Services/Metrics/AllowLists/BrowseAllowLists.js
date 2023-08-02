@@ -6,7 +6,7 @@ import { getAllowList } from './utils';
 
 // import { fetchOperations } from './graphql.queries';
 
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import { createFilter } from '../Error/utils';
 
@@ -38,7 +38,7 @@ import {
 
 import { OPERATION_NAME_SYMBOL, relativeModulePath } from '../constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import inspectRow from '../images/usage.svg';
 import styles from '../Metrics.module.scss';
@@ -314,13 +314,11 @@ const BrowseAllowLists = props => {
       return <Link to={linkParam}>{icon}</Link>;
     };
     return (
-      <React.Fragment>
-        <div className={styles.iconPadding}>
-          <Tooltip side="right" tooltipContentChildren="View operations">
-            {renderLink()}
-          </Tooltip>
-        </div>
-      </React.Fragment>
+      <div className={styles.iconPadding}>
+        <Tooltip side="right" tooltipContentChildren="View operations">
+          {renderLink()}
+        </Tooltip>
+      </div>
     );
   };
 

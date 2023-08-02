@@ -1,9 +1,9 @@
-import { Collapsible } from '@/new-components/Collapsible';
+import { Collapsible } from '../../../new-components/Collapsible';
 import { OpenApiReference, OpenApiSchema } from '@hasura/dc-api-types';
-import { capitalize } from '@/components/Common/utils/tsUtils';
+import { capitalize } from '../../../components/Common/utils/tsUtils';
 import React from 'react';
-import get from 'lodash.get';
-import { ErrorComponentTemplate } from '@/new-components/Form';
+import get from 'lodash/get';
+import { ErrorComponentTemplate } from '../../../new-components/Form';
 import { FaExclamationCircle } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
 import { RenderProperty } from './RenderProperty';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CardRadioGroup } from '@/new-components/CardRadioGroup';
+import { CardRadioGroup } from '../../../../../new-components/CardRadioGroup';
 
 export type RemoteRelOption = 'remoteSchema' | 'remoteDB';
 

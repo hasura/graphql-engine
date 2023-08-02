@@ -1,12 +1,16 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
-import { canAccessSecuritySettings } from '@/utils/permissions';
+import { isProConsole } from '../../../utils/proConsole';
+import { useEELiteAccess } from '../../../features/EETrial';
+import globals from '../../../Globals';
 
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];
 };
 
 const TopNav: React.FC<TopNavProps> = ({ location }) => {
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+
   const sectionsData = [
     [
       {
@@ -32,7 +36,7 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
     ],
   ];
 
-  if (canAccessSecuritySettings()) {
+  if (isProConsole(globals) || eeLiteAccess !== 'forbidden') {
     sectionsData[1].push({
       key: 'security',
       link: '/api/security/api_limits',

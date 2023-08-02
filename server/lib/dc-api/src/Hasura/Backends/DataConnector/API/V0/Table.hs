@@ -5,6 +5,7 @@
 module Hasura.Backends.DataConnector.API.V0.Table
   ( TableName (..),
     TableInfo (..),
+    singletonTableName,
     tableNameToText,
     tiName,
     tiType,
@@ -17,6 +18,7 @@ module Hasura.Backends.DataConnector.API.V0.Table
     tiDeletable,
     TableType (..),
     ForeignKeys (..),
+    unForeignKeys,
     ConstraintName (..),
     Constraint (..),
     cForeignTable,
@@ -34,6 +36,7 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
 import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.OpenApi (ToSchema)
 import Data.Text (Text, intercalate)
@@ -51,6 +54,9 @@ newtype TableName = TableName {unTableName :: NonEmpty.NonEmpty Text}
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableName
 
+singletonTableName :: Text -> TableName
+singletonTableName name = TableName (NonEmpty.singleton name)
+
 tableNameToText :: TableName -> Text
 tableNameToText (TableName tns) = intercalate "." (NonEmpty.toList tns)
 
@@ -67,7 +73,7 @@ data TableInfo = TableInfo
   { _tiName :: TableName,
     _tiType :: TableType,
     _tiColumns :: [API.V0.ColumnInfo],
-    _tiPrimaryKey :: [API.V0.ColumnName],
+    _tiPrimaryKey :: Maybe (NonEmpty API.V0.ColumnName),
     _tiForeignKeys :: ForeignKeys,
     _tiDescription :: Maybe Text,
     _tiInsertable :: Bool,
@@ -85,12 +91,15 @@ instance HasCodec TableInfo where
         <$> requiredField "name" "The name of the table" .= _tiName
         <*> optionalFieldWithDefault "type" Table "The type of table" .= _tiType
         <*> requiredField "columns" "The columns of the table" .= _tiColumns
-        <*> optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table" .= _tiPrimaryKey
+        <*> dimapMaybeNonEmpty (optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table") .= _tiPrimaryKey
         <*> optionalFieldWithOmittedDefault "foreign_keys" (ForeignKeys mempty) "Foreign key constraints" .= _tiForeignKeys
         <*> optionalFieldOrNull "description" "Description of the table" .= _tiDescription
         <*> optionalFieldWithDefault "insertable" False "Whether or not new rows can be inserted into the table" .= _tiInsertable
         <*> optionalFieldWithDefault "updatable" False "Whether or not existing rows can be updated in the table" .= _tiUpdatable
         <*> optionalFieldWithDefault "deletable" False "Whether or not existing rows can be deleted in the table" .= _tiDeletable
+    where
+      dimapMaybeNonEmpty :: Codec context [a] [a] -> Codec context (Maybe (NonEmpty a)) (Maybe (NonEmpty a))
+      dimapMaybeNonEmpty = dimapCodec NonEmpty.nonEmpty (maybe [] NonEmpty.toList)
 
 --------------------------------------------------------------------------------
 
@@ -99,6 +108,7 @@ data TableType
   | View
   deriving stock (Eq, Ord, Show, Generic, Enum, Bounded)
   deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON) via Autodocodec TableType
 
 instance HasCodec TableType where
   codec =
@@ -111,13 +121,13 @@ instance HasCodec TableType where
 
 --------------------------------------------------------------------------------
 
-newtype ForeignKeys = ForeignKeys {unForeignKeys :: HashMap ConstraintName Constraint}
+newtype ForeignKeys = ForeignKeys {_unForeignKeys :: HashMap ConstraintName Constraint}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
 instance HasCodec ForeignKeys where
-  codec = dimapCodec ForeignKeys unForeignKeys $ codec @(HashMap ConstraintName Constraint)
+  codec = dimapCodec ForeignKeys _unForeignKeys $ codec @(HashMap ConstraintName Constraint)
 
 --------------------------------------------------------------------------------
 
@@ -145,3 +155,4 @@ instance HasCodec Constraint where
 
 $(makeLenses ''TableInfo)
 $(makeLenses ''Constraint)
+$(makeLenses ''ForeignKeys)

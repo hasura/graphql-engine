@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
-import { RequestTransformBodyActions } from '@/metadata/types';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { RequestTransformBodyActions } from '../../../metadata/types';
+import { useDebouncedEffect } from '../../../hooks/useDebounceEffect';
 import { FaExclamationCircle } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import CrossIcon from '../Icons/Cross';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import JsonEditor from './CustomEditors/JsonEditor';

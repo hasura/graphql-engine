@@ -7,6 +7,7 @@ import Data.ByteString qualified as BS (ByteString, intercalate, writeFile)
 import Data.Char (toLower)
 import Database.PostgreSQL.Simple.Options qualified as Options
 import Harness.Exceptions
+import Harness.Logging
 import Harness.TestEnvironment qualified as TestEnvironment
 import Hasura.FeatureMatrix qualified as FeatureMatrix
 import Hasura.Prelude
@@ -50,31 +51,31 @@ data Options w = Options
   { connectionString ::
       w
         ::: String
-        <?> "Postgres connection string"
+          <?> "Postgres connection string"
           <!> "postgresql://hasura:hasura@127.0.0.1:65002/hasura",
     output ::
       w
         ::: FilePath
-        <?> "Feature matrix output file path"
+          <?> "Feature matrix output file path"
           <!> "/tmp/feature_matrix_tool_output.html",
     overrideOutputFile ::
       w
         ::: Bool
-        <?> "Override output file if exists",
+          <?> "Override output file if exists",
     createDirectory ::
       w
         ::: Bool
-        <?> "Create directory if not exists",
+          <?> "Create directory if not exists",
     -- this is just a flag, we take care of splitting the arguments ourselves.
     noAsk ::
       w
         ::: Bool
-        <?> "Do not ask to override output file or create a directory if missing",
+          <?> "Do not ask to override output file or create a directory if missing",
     -- this is just a flag, we take care of splitting the arguments ourselves.
     hspec ::
       w
         ::: Bool
-        <?> "arguments for hspec"
+          <?> "arguments for hspec"
   }
   deriving (Generic)
 
@@ -105,9 +106,10 @@ runSuite uri hspecArgs = do
     queue <- newTQueueIO
     -- setup mode and logging
     postgresOptions <- Options.parseConnectionString uri `onLeft` error
+    (logger', cleanupLogger) <- FL.newFastLogger $ FL.LogCallback (atomically . writeTQueue queue) (pure ())
     SpecHook.setupGlobalConfig
       (TestEnvironment.TestNewPostgresVariant postgresOptions)
-      (FL.LogCallback (atomically . writeTQueue queue) (pure ()))
+      (flLogger logger', cleanupLogger)
     -- run the tests
     isSuccess <- catch
       (Hspec.hspec Spec.spec $> True)

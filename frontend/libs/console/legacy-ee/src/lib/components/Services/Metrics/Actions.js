@@ -12,7 +12,4 @@ const metricsReducer = (state = defaultState, action) => {
 };
 
 export default metricsReducer;
-export {
-  UPDATE_LOG_SETTINGS
-};
-
+export { UPDATE_LOG_SETTINGS };

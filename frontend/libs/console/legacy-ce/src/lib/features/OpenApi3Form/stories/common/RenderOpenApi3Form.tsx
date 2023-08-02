@@ -1,5 +1,5 @@
-import { useConsoleForm } from '@/new-components/Form';
-import { Button } from '@/new-components/Button';
+import { useConsoleForm } from '../../../../new-components/Form';
+import { Button } from '../../../../new-components/Button';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
 import ReactJson from 'react-json-view';
@@ -26,10 +26,7 @@ export const RenderOpenApi3Form = ({
     configSchema,
     otherSchemas,
   });
-  const {
-    methods: { formState },
-    Form,
-  } = useConsoleForm({
+  const { Form } = useConsoleForm({
     schema: z.object(schema ? { [name]: schema } : {}),
     options: {
       defaultValues,
@@ -61,7 +58,6 @@ export const RenderOpenApi3Form = ({
             <ReactJson src={submittedValues} name={false} />
           )}
         </div>
-        {console.log(formState.errors)}
       </>
     </Form>
   );

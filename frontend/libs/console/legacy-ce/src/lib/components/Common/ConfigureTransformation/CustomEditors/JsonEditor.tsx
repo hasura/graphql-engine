@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import AceEditor from '../../AceEditor/BaseEditor';
 import CrossIcon from '../../Icons/Cross';
 import { isConsoleError, isJsonString } from '../../utils/jsUtils';

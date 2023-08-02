@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
 import syncOperationsIcon from '../images/sync.svg';

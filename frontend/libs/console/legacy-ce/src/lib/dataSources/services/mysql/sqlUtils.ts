@@ -1,4 +1,4 @@
-import { DataSourcesAPI } from '@/dataSources';
+import { DataSourcesAPI } from '../..';
 import { AlterFKTableInfo, MySQLTrigger, CreatePKArgs } from './types';
 
 export const getMySQLNameString = (schemaName: string, itemName: string) =>
@@ -249,7 +249,7 @@ export const getAlterColumnTypeSql = (
   alter table ${getMySQLNameString(
     schemaName,
     tableName
-  )} modify column \`${columnName}\` ${columnType};  
+  )} modify column \`${columnName}\` ${columnType};
 `;
 
 export const getDropColumnDefaultSql = (

@@ -1,107 +1,140 @@
-import React, { ReactText } from 'react';
-import clsx from 'clsx';
+import React, { PropsWithChildren } from 'react';
 import { v4 as uuid } from 'uuid';
-import get from 'lodash.get';
-import { FieldError, useFormContext } from 'react-hook-form';
-import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
+import { FaCheck, FaMinus } from 'react-icons/fa';
 
-type CheckboxItem = {
-  label: ReactText;
-  value: ReactText;
-  disabled?: boolean;
-};
+import * as RadixCheckbox from '@radix-ui/react-checkbox';
+import clsx from 'clsx';
 
-export type CheckboxProps = FieldWrapperPassThroughProps & {
+type CheckboxProps = PropsWithChildren<{
   /**
    * The checkbox name
    */
-  name: string;
+  name?: string;
   /**
-   * The options to display with checkboxes
+   * The checkbox class name
    */
-  options: CheckboxItem[];
+  className?: string;
   /**
-   * The checkbox list orientation
+   * Flag to indicate if the checkbox is checked
    */
-  orientation?: 'vertical' | 'horizontal';
+  checked?: RadixCheckbox.CheckedState;
+  /**
+   * Flag to indicate if the checkbox is default checked
+   */
+  defaultChecked?: RadixCheckbox.CheckedState;
+  /**
+   * Handler for the checked change event
+   */
+  onCheckedChange?: (event: RadixCheckbox.CheckedState) => void;
   /**
    * Flag to indicate if the field is disabled
    */
   disabled?: boolean;
   /**
-   * Removing styling only necessary for the error placeholder
+   * Flag to indicate if the field is invalid
    */
-  noErrorPlaceholder?: boolean;
-};
+  invalid?: boolean;
+  /**
+   * The checkbox options
+   */
+  options?: {
+    root: RadixCheckbox.CheckboxProps;
+    indicator: RadixCheckbox.CheckboxIndicatorProps;
+  };
+}>;
 
-export const Checkbox: React.FC<CheckboxProps> = ({
-  name,
-  options = [],
-  orientation = 'vertical',
-  disabled = false,
-  dataTest,
-  noErrorPlaceholder,
-  ...wrapperProps
-}: CheckboxProps) => {
+export const Checkbox: React.FC<CheckboxProps> = props => {
   const {
-    register,
-    formState: { errors },
-  } = useFormContext();
+    children,
+    name,
+    disabled,
+    invalid,
+    className,
+    checked,
+    defaultChecked,
+    onCheckedChange,
+    options,
+  } = props;
+  const componentId = `${name}-${uuid()}`;
+  const [internalCheckedState, setChecked] = React.useState<
+    RadixCheckbox.CheckedState | undefined
+  >(undefined);
 
-  const maybeError = get(errors, name) as FieldError | undefined;
+  React.useEffect(() => {
+    if (defaultChecked !== undefined) {
+      setChecked(defaultChecked);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (checked !== undefined) {
+      setChecked(checked);
+    }
+  }, [checked]);
+
+  const onCheckedChangeLocal = (
+    checkedFromEvent: RadixCheckbox.CheckedState
+  ) => {
+    setChecked(checkedFromEvent);
+    if (onCheckedChange !== undefined) {
+      onCheckedChange(checkedFromEvent);
+    }
+  };
+
   return (
-    <FieldWrapper
-      noErrorPlaceholder={noErrorPlaceholder}
-      id={name}
-      {...wrapperProps}
-      error={maybeError}
-    >
-      <div
+    <div className={clsx(className, 'flex items-start pr-sm')}>
+      <RadixCheckbox.Root
+        {...options?.root}
+        id={componentId}
+        checked={internalCheckedState}
+        onCheckedChange={onCheckedChangeLocal}
         className={clsx(
-          'flex',
-          { vertical: 'flex-col', horizontal: 'flex-row gap-6' }[orientation]
+          'w-4 h-4 relative mt-1 cursor-pointer rounded border drop-shadow-sm border-gray-400 hover:border-gray-500 focus-visible:ring-2 ring-offset-2 ring-yellow-400 data-state-checked:ring-blue-600 shrink-0',
+          invalid && '!border-red-600 !hover:border-red-700',
+          disabled && '!cursor-not-allowed !bg-gray-300 !border-gray-300'
         )}
+        disabled={disabled}
       >
-        {options.map(({ label, value, disabled: optionDisabled = false }) => {
-          const componentId = `${name}-${uuid()}`;
-          return (
-            <div key={value} className="flex items-center">
-              <input
-                type="checkbox"
-                id={componentId}
-                value={value}
-                aria-invalid={maybeError ? 'true' : 'false'}
-                aria-label={wrapperProps.label}
-                data-test={dataTest}
-                className={clsx(
-                  'cursor-pointer rounded border shadow-sm',
-                  maybeError
-                    ? 'border-red-600 hover:border-red-700'
-                    : disabled || optionDisabled
-                    ? 'cursor-not-allowed bg-gray-200 border-gray-300'
-                    : ' border-gray-400 hover:border-gray-500 focus-visible:ring-yellow-400'
-                )}
-                // Force margin to mitigate bug introduced by a too much restrictive reset
-                style={{ marginTop: '0' }}
-                {...register(name)}
-                disabled={disabled || optionDisabled}
-                data-testid={`${name}-${value}`}
-              />
-              <label
-                htmlFor={componentId}
-                className={clsx(
-                  'cursor-pointer m-0 ml-xs font-normal',
-                  disabled || optionDisabled
-                    ? 'text-gray-500 cursor-not-allowed'
-                    : ''
-                )}
-              >
-                {label}
-              </label>
-            </div>
-          );
-        })}
-      </div>
-    </FieldWrapper>
+        <RadixCheckbox.Indicator
+          {...options?.indicator}
+          className={clsx(
+            (internalCheckedState === true ||
+              internalCheckedState === 'indeterminate') &&
+              'absolute inset-[-1px] bg-blue-600 border border-blue-600 rounded',
+            invalid && '!border-red-600 !hover:border-red-700',
+            invalid && !disabled && '!bg-red-600',
+            disabled && '!cursor-not-allowed !bg-gray-300 !border-gray-300'
+          )}
+        >
+          {internalCheckedState === 'indeterminate' ? (
+            <FaMinus
+              className={clsx(
+                'text-white absolute inset-px w-3 h-3 flex items-center'
+              )}
+              size="8px"
+            />
+          ) : internalCheckedState === true ? (
+            <FaCheck
+              className={clsx(
+                'text-white absolute inset-px w-3 h-3 flex items-center'
+              )}
+              size="8px"
+            />
+          ) : null}
+        </RadixCheckbox.Indicator>
+      </RadixCheckbox.Root>
+      {children ? (
+        <label
+          className={clsx(
+            'font-normal m-0', // compensate boostrap leaking style
+            'text-gray-900 pl-xs cursor-pointer',
+            disabled && '!cursor-not-allowed'
+          )}
+          htmlFor={componentId}
+        >
+          {children}
+        </label>
+      ) : null}
+    </div>
   );
 };

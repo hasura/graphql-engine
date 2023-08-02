@@ -1,14 +1,6 @@
 <!-- prettier-ignore-start -->
 
-# Hasura Console
+# Deprecated
+Please note that all console related code has been moved to `frontend` folder in this repo, which uses NX based build system. All old code (now deleted) in this directory has been deprecated as of Feb 7, 2023, or commits since the [v2.18.0-beta.1 tag](https://github.com/hasura/graphql-engine/tree/v2.18.0-beta.1). Please refer to this new [Readme](https://github.com/hasura/graphql-engine/blob/master/frontend/README.md). 
 
-The Hasura console is an admin dashboard to manage the connected database and to try out GraphQL APIs. It is a React application bundled with Webpack and the state is managed mostly using Redux.
-
-## Table of contents
-
-- [Generic info](./docs/console-generic-info.md)
-- [Development Tooling](https://main--614d7904644d03004addd43b.chromatic.com/?path=/story/dev-tooling--page)
-- [Design System's Storybook](https://main--614d7904644d03004addd43b.chromatic.com)
-  - [How to create/document new Components](./src/docs/dev/ComponentDoc.stories.mdx)
-- [Cypress Dashboard](https://dashboard.cypress.io/projects/5yiuic)
-- [Cypress README](./cypress/README.md)
+More details on how to contribute can be found [here](https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md)

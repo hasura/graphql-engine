@@ -1,7 +1,7 @@
-import { QualifiedTable } from '@/metadata/types';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { QualifiedTable } from '../../../../metadata/types';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import ReactJson from 'react-json-view';
 import { useTableColumns } from '../useTableColumns';
@@ -23,17 +23,17 @@ function FetchTableColumnsComponent({
   );
 }
 
-export const FetchTableColumns: ComponentStory<
-  typeof FetchTableColumnsComponent
-> = args => {
-  return <FetchTableColumnsComponent {...args} />;
-};
+export const FetchTableColumns: StoryObj<typeof FetchTableColumnsComponent> = {
+  render: args => {
+    return <FetchTableColumnsComponent {...args} />;
+  },
 
-FetchTableColumns.args = {
-  database: 'default',
-  table: {
-    name: 'test',
-    schema: 'public',
+  args: {
+    database: 'default',
+    table: {
+      name: 'test',
+      schema: 'public',
+    },
   },
 };
 
@@ -43,4 +43,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof FetchTableColumnsComponent>;
+} as Meta<typeof FetchTableColumnsComponent>;

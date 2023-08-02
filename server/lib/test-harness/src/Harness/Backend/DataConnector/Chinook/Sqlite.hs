@@ -4,24 +4,27 @@
 --
 -- NOTE: This module is intended to be imported qualified.
 module Harness.Backend.DataConnector.Chinook.Sqlite
-  ( agentConfig,
-    sourceConfiguration,
-    backendTypeMetadata,
-    formatForeignKeyName,
+  ( backendTypeConfig,
+    mkChinookCloneTestEnvironment,
+    chinookFixture,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Control.Monad.Managed (Managed)
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (Fixture (..), FixtureName (..))
+import Harness.TestEnvironment
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
-backendTypeMetadata :: BackendType.BackendTypeConfig
-backendTypeMetadata =
+backendTypeConfig :: BackendType.BackendTypeConfig
+backendTypeConfig =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorSqlite,
       backendSourceName = "chinook_sqlite",
@@ -35,91 +38,101 @@ backendTypeMetadata =
               DateTime:
                 comparison_operators:
                   _in_year: int
-                  _eq: DateTime
-                  _gt: DateTime
-                  _gte: DateTime
-                  _lt: DateTime
-                  _lte: DateTime
-                  _neq: DateTime
+                graphql_type: String
               string:
                 comparison_operators:
                   _like: string
                   _glob: string
-                  _eq: string
-                  _gt: string
-                  _gte: string
-                  _lt: string
-                  _lte: string
-                  _neq: string
+                aggregate_functions:
+                  min: string
+                  max: string
+                graphql_type: String
               decimal:
                 comparison_operators:
-                  _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
+                  _modulus_is_zero: decimal
+                aggregate_functions:
+                  min: decimal
+                  max: decimal
+                  sum: decimal
+                update_column_operators:
+                  inc:
+                    argument_type: decimal
+                  dec:
+                    argument_type: decimal
+                graphql_type: Float
               number:
                 comparison_operators:
                   _modulus_is_zero: number
-                  _eq: number
-                  _gt: number
-                  _gte: number
-                  _lt: number
-                  _lte: number
-                  _neq: number
+                aggregate_functions:
+                  min: number
+                  max: number
+                  sum: number
+                update_column_operators:
+                  inc:
+                    argument_type: number
+                  dec:
+                    argument_type: number
+                graphql_type: Float
               bool:
                 comparison_operators:
                   _and: bool
                   _or: bool
                   _nand: bool
                   _xor: bool
-                  _eq: bool
-                  _gt: bool
-                  _gte: bool
-                  _lt: bool
-                  _lte: bool
-                  _neq: bool
-            queries: {}
+                graphql_type: Boolean
+            queries:
+              foreach: {}
             relationships: {}
             comparisons:
               subquery:
                 supports_relations: true
             explain: {}
+            mutations:
+              atomicity_support_level: heterogeneous_operations
+              delete: {}
+              insert:
+                supports_nested_inserts: true
+              returning: {}
+              update: {}
             metrics: {}
             raw: {}
         |],
       backendTypeString = "sqlite",
-      backendDisplayNameString = "Hasura SQLite (sqlite)",
+      backendDisplayNameString = "Hasura SQLite",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------
 
--- | Reference Agent @backend_configs@ field.
-agentConfig :: Aeson.Value
-agentConfig =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-   in [yaml|
-dataconnector:
-  *backendType:
-    uri: "http://127.0.0.1:65007/"
-|]
+mkChinookCloneTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
+mkChinookCloneTestEnvironment = Chinook.mkChinookCloneTestEnvironment nameFormatting scalarTypes
 
--- | Sqlite Agent specific @sources@ entry @configuration@ field.
-sourceConfiguration :: Aeson.Value
-sourceConfiguration =
-  [yaml|
-value:
-  db: "/db.chinook.sqlite"
-template:
-timeout:
-|]
+nameFormatting :: NameFormatting
+nameFormatting = NameFormatting id id formatForeignKeyName
 
 -- | Construct foreign key relationship names.
 formatForeignKeyName :: Text -> Text
 formatForeignKeyName = \case
-  "Artist" -> "ArtistId->Artist.ArtistId"
+  "Artist" -> "Album.ArtistId->Artist.ArtistId"
   x -> x
+
+scalarTypes :: ScalarTypes
+scalarTypes =
+  ScalarTypes
+    { _stFloatType = "number",
+      _stIntegerType = "number",
+      _stStringType = "string"
+    }
+
+chinookFixture :: Fixture ChinookTestEnv
+chinookFixture =
+  Fixture
+    { name = Backend backendTypeConfig,
+      mkLocalTestEnvironment = mkChinookCloneTestEnvironment,
+      setupTeardown = \testEnvs ->
+        [Chinook.setupChinookSourceAction testEnvs],
+      customOptions = Nothing
+    }

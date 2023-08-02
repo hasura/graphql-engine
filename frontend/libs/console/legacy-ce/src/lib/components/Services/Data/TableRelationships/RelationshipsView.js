@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import {
   FeatureFlagToast,
   useFeatureFlags,
   availableFeatureFlagIds,
-} from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
+} from '../../../../features/FeatureFlags';
+import { DatabaseRelationshipsTab } from '../../../../features/DatabaseRelationships';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { areTablesEqual } from '../../../../features/hasura-metadata-api';
 import TableHeader from '../TableCommon/TableHeader';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
@@ -15,7 +17,6 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import {
   currentDriver,
   findAllFromRel,
@@ -44,6 +45,7 @@ const RelationshipsView = ({
   schemaList,
   remoteSchemas,
   currentSource,
+  source,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -59,6 +61,13 @@ const RelationshipsView = ({
   const tableSchema = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
+
+  const normalizedTableObject = source.tables.find(t => {
+    return areTablesEqual(t.table, {
+      table_schema: tableSchema.table_schema,
+      table_name: tableSchema.table_name,
+    });
+  });
 
   const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
     useFeatureFlags();
@@ -76,6 +85,7 @@ const RelationshipsView = ({
     return (
       <DatabaseRelationshipsTab
         table={tableSchema}
+        metadataTable={normalizedTableObject.table}
         driver={currentDriver}
         currentSource={currentSource}
         migrationMode={migrationMode}
@@ -207,7 +217,7 @@ const RelationshipsView = ({
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
                   &nbsp;
-                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                  <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
                 </h4>
                 {addedRelationshipsView}
                 <div className={styles.activeEdit}>
@@ -282,6 +292,9 @@ const mapStateToProps = (state, ownProps) => {
     schemaList: state.tables.schemaList,
     remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
     currentSource: state.tables.currentDataSource,
+    source: state.metadata.metadataObject.sources.find(
+      s => s.name === state.tables.currentDataSource
+    ),
     ...state.tables.modify,
   };
 };

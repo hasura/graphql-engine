@@ -1,0 +1,82 @@
+cabal-version: 2.2
+name: upgrade-tests
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+extra-source-files:
+  introspection.gql
+
+common common-all
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    NumericUnderscores
+    OverloadedStrings
+    PatternGuards
+    QuasiQuotes
+    RecordWildCards
+    ScopedTypeVariables
+    TypeApplications
+    TypeFamilies
+
+  ghc-options:
+    -Werror
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+
+test-suite upgrade-tests
+  import: common-all
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src
+  main-is: Main.hs
+  other-modules:
+    Hasura.UpgradeTests.Database
+    Hasura.UpgradeTests.Dataset
+    Hasura.UpgradeTests.Options
+    Hasura.UpgradeTests.Server
+
+  build-depends:
+    , aeson
+    , base
+    , graphql-engine
+    , pg-client
+    , test-harness
+    , aeson
+    , async
+    , bytestring
+    , file-embed
+    , hasura-base
+    , hasura-prelude
+    , hspec
+    , network
+    , optparse-applicative
+    , random
+    , testcontainers
+    , text
+    , vector
+    , zlib
+
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options:
+    -O0
+    -threaded
+    -rtsopts "-with-rtsopts=-N4"

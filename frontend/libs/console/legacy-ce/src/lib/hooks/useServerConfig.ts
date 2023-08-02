@@ -1,5 +1,5 @@
-import Endpoints from '@/Endpoints';
-import { useAppSelector } from '@/store';
+import Endpoints from '../Endpoints';
+import { useAppSelector } from '../storeHooks';
 import React from 'react';
 import { useQuery, UseQueryOptions } from 'react-query';
 import { APIError } from './error';
@@ -9,6 +9,12 @@ type ExperimentalFeature =
   | 'streaming_subscriptions'
   | 'naming_convention'
   | 'apollo_federation';
+
+type FeatureFlag = {
+  name: string;
+  description: string;
+  enabled: boolean;
+};
 
 export interface ServerConfig {
   version: string;
@@ -20,6 +26,7 @@ export interface ServerConfig {
   is_remote_schema_permissions_enabled: boolean;
   is_jwt_set: boolean;
   experimental_features: ExperimentalFeature[];
+  feature_flags: FeatureFlag[];
   jwt: {
     claims_namespace: string;
     claims_format: string;

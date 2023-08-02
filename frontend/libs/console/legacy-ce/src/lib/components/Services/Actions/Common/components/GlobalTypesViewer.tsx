@@ -16,37 +16,35 @@ const GlobalTypes: React.FC<InjectedProps> = ({ allTypes }) => {
   }
 
   return (
-    <>
-      <div>
-        <label
-          htmlFor="types"
-          className="flex items-center block text-gray-600 font-medium mb-xs"
-        >
-          <GlobalTypesDefIcon />
-          Declared Global Types
-        </label>
-        <p className="text-sm text-gray-600 mb-sm">
-          Global types which have been declared previously.
-        </p>
-        <AceEditor
-          name="global-types-editor"
-          editorRef={editorRef}
-          value={existingTypeDefSdl}
-          highlightActiveLine={false}
-          fontSize="12px"
-          height="200px"
-          mode="graphqlschema"
-          width="100%"
-          showPrintMargin={false}
-          style={{ background: '#e2e8f0' }}
-          setOptions={{
-            highlightGutterLine: false,
-            useWorker: false,
-          }}
-          readOnly
-        />
-      </div>
-    </>
+    <div>
+      <label
+        htmlFor="types"
+        className="flex items-center block text-gray-600 font-medium mb-xs"
+      >
+        <GlobalTypesDefIcon />
+        Declared Global Types
+      </label>
+      <p className="text-sm text-gray-600 mb-sm">
+        Global types which have been declared previously.
+      </p>
+      <AceEditor
+        name="global-types-editor"
+        editorRef={editorRef}
+        value={existingTypeDefSdl}
+        highlightActiveLine={false}
+        fontSize="12px"
+        height="200px"
+        mode="graphqlschema"
+        width="100%"
+        showPrintMargin={false}
+        style={{ background: '#e2e8f0' }}
+        setOptions={{
+          highlightGutterLine: false,
+          useWorker: false,
+        }}
+        readOnly
+      />
+    </div>
   );
 };
 

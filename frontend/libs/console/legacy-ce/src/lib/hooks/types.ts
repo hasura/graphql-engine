@@ -1,4 +1,4 @@
-import { Driver } from '@/dataSources';
+import { Driver } from '../dataSources';
 
 export type RunSQLResponse =
   | {

@@ -238,6 +238,7 @@
 }
 
 .clusterInfoWrapper {
+  align-items: stretch;
   width: auto;
   margin-left: auto;
   display: flex;
@@ -515,7 +516,6 @@
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  position: fixed;
   width: 100%;
   z-index: 100;
 
@@ -632,6 +632,7 @@
 
     .navSideBarActive {
       border-bottom: 4px solid #ffc627;
+      color: #ffc627 !important;
 
       i {
         color: #ffc627;
@@ -718,7 +719,7 @@
 }
 
 .main {
-  padding: 0;
+  padding: 0 !important;
   // width: 100vw;
   min-width: $minContainerWidth;
   background-color: #f8fafb;
@@ -726,7 +727,6 @@
   font-family: 'Gudea';
   // color: #767E93;
   color: #4d4d4d;
-  padding-top: 54px;
 }
 
 .mainCollapsed {
@@ -1001,6 +1001,7 @@
 .headerRightNavbarBtn {
   display: flex;
   align-items: center;
+  height: 100%;
   padding: 15px;
   position: relative;
   color: #fff;
@@ -1298,14 +1299,6 @@
   }
 }
 
-.telemetryNotification {
-  background-color: red;
-  padding: 10px;
-  position: fixed;
-  bottom: 50px;
-  right: 0px;
-}
-
 .overlappingExclamation {
   position: relative;
   font-size: 12px;
@@ -1350,23 +1343,5 @@
     a {
       font-size: 12px;
     }
-  }
-}
-
-@media (max-width: 1300px) {
-  .sidebar {
-    .sidebarItems {
-      li {
-        p {
-          display: none;
-        }
-      }
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .sidebar {
-    min-width: 600px;
   }
 }

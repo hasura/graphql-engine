@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { findTable, generateTableDef } from '@/dataSources';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
+import { findTable, generateTableDef } from '../../../../dataSources';
 import { setTable } from '../DataActions';
 import { fetchEnumOptions, editItem, E_ONGOING_REQ } from './EditActions';
 import { ColumnName } from '../TableCommon/DataTableRowItem.types';
@@ -43,11 +43,19 @@ export const TableEditItemContainer = (
   const { ongoingRequest, lastError, lastSuccess, enumOptions, oldItem } =
     update;
 
+  const [touchedValues, setTouchedValues] = useState<Record<string, boolean>>(
+    {}
+  );
+
   const [values, setValues] = useState<Record<ColumnName, unknown>>(
     oldItem ?? {}
   );
   const onColumnUpdate = (columnName: string, value: unknown) => {
     setValues({ ...values, [columnName]: value });
+    setTouchedValues(prev => ({
+      ...prev,
+      [columnName]: true,
+    }));
   };
 
   useEffect(() => {
@@ -84,6 +92,10 @@ export const TableEditItemContainer = (
       ...nullCheckedValues,
       [columnName]: value,
     });
+    setTouchedValues(prev => ({
+      ...prev,
+      [columnName]: true,
+    }));
   };
 
   const [defaultValueColumns, setDefaultValueColumns] = useState<
@@ -95,6 +107,10 @@ export const TableEditItemContainer = (
       ...defaultValueColumns,
       [columnName]: value,
     });
+    setTouchedValues(prev => ({
+      ...prev,
+      [columnName]: true,
+    }));
   };
 
   const onClickSave: React.MouseEventHandler = e => {
@@ -108,6 +124,10 @@ export const TableEditItemContainer = (
     const columns = currentTable?.columns.sort(ordinalColSort) || [];
     const inputValues = columns.reduce((tally, col) => {
       const colName = col.column_name;
+      if (!touchedValues[colName]) {
+        return tally;
+      }
+
       if (defaultValueColumns[colName]) {
         return {
           ...tally,
@@ -120,6 +140,7 @@ export const TableEditItemContainer = (
           [colName]: null,
         };
       }
+
       const isAutoIncrement = isColumnAutoIncrement(col);
       if (!isAutoIncrement && typeof values[colName] !== 'undefined') {
         return { ...tally, [colName]: values[colName] };

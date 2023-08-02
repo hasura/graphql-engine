@@ -1,5 +1,5 @@
 import React from 'react';
-import { CodeEditorField } from '@/new-components/Form';
+import { CodeEditorField } from '../../../../../new-components/Form';
 import { IAceOptions } from 'react-ace';
 
 export const CronPayloadInput = () => {

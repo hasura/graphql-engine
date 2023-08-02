@@ -3,6 +3,7 @@ module Hasura.Backends.Postgres.Instances.PingSource
   )
 where
 
+import Data.Environment qualified as Env
 import Data.Text qualified as T
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
@@ -12,14 +13,15 @@ import Hasura.RQL.Types.Common (SourceName, sourceNameToText)
 import Hasura.Server.Version
 
 runCockroachDBPing ::
+  Env.Environment ->
   (String -> IO ()) ->
   SourceName ->
   PG.PostgresConnConfiguration ->
   IO ()
-runCockroachDBPing pingLog sourceName sourceConnection = do
+runCockroachDBPing env pingLog sourceName sourceConnection = do
   let versionMessage = "hasura-graphql-engine-version=" <> tshow currentVersion
       query = PG.fromText ("select 1 /* " <> versionMessage <> " */")
-  result <- withPostgresDB sourceConnection $ do
+  result <- withPostgresDB env sourceName sourceConnection $ do
     PG.discardQE PG.dmlTxErrorHandler query () False
   case result of
     Left _ ->

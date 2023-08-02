@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import { GraphQLSchema } from 'graphql';
-import { useGetAnalyticsAttributes } from '@/features/Analytics';
-import { useInconsistentObject } from '@/features/MetadataAPI';
+import { useGetAnalyticsAttributes } from '../../../../features/Analytics';
+import { useInconsistentObject } from '../../../../features/MetadataAPI';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
@@ -139,7 +139,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
   }
 
   return (
-    <div>
+    <div className="bootstrap-jail">
       <Helmet>
         <title
           {...titleAnalyticsAttributes}

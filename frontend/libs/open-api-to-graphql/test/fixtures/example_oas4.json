@@ -1,0 +1,634 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API 4",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Erik Wittern",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3004"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/oneOf": {
+      "get": {
+        "description": "Basic oneOf test",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOf2": {
+      "get": {
+        "description": "oneOf test with non-object type member schema",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOf3": {
+      "get": {
+        "description": "oneOf test with no object type member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOf4": {
+      "get": {
+        "description": "oneOf test with extraneous member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "oneOf": [
+                    {
+                      "minimum": -90
+                    },
+                    {
+                      "maximum": 90
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOf5": {
+      "get": {
+        "description": "Basic oneOf test with allOf",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/anotherAttributeObject"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOf6": {
+      "get": {
+        "description": "oneOf test with allOf, requiring oneOf collapse",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/anotherAttributeObject"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf": {
+      "get": {
+        "description": "Basic anyOf test using the same member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf2": {
+      "get": {
+        "description": "Basic anyOf test with different member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf3": {
+      "get": {
+        "description": "anyOf test with the same nested member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "commonAttribute": {
+                          "$ref": "#/components/schemas/commonAttributeObject"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "commonAttribute": {
+                          "$ref": "#/components/schemas/commonAttributeObject"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf4": {
+      "get": {
+        "description": "anyOf test with different nested member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "commonAttribute": {
+                          "$ref": "#/components/schemas/commonAttributeObject"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "differentAttribute": {
+                          "$ref": "#/components/schemas/commonAttributeObject"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf5": {
+      "get": {
+        "description": "anyOf test with different nested member schemas, leading to conflict",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "properties": {
+                        "commonAttribute": {
+                          "$ref": "#/components/schemas/commonAttributeObject"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "commonAttribute": {
+                          "$ref": "#/components/schemas/differentAttributeObject"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf6": {
+      "get": {
+        "description": "anyOf test with incompatible member schema types",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf7": {
+      "get": {
+        "description": "anyOf test with some extraneous member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "minimum": -90
+                    },
+                    {
+                      "maximum": 90
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf8": {
+      "get": {
+        "description": "anyOf test with no object type member schemas",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "minimum": -90
+                    },
+                    {
+                      "maximum": 90
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf9": {
+      "get": {
+        "description": "anyOf test with extraneous member schemas with external type",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "anyOf": [
+                    {
+                      "minimum": -90
+                    },
+                    {
+                      "maximum": 90
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf10": {
+      "get": {
+        "description": "Basic anyOf test with allOf",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/anotherAttributeObject"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/anyOf11": {
+      "get": {
+        "description": "anyOf test with allOf, requiring anyOf collapse",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/commonAttributeObject"
+                    },
+                    {
+                      "$ref": "#/components/schemas/differentAttributeObject"
+                    }
+                  ],
+                  "allOf": [
+                    {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/anotherAttributeObject"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/testLink": {
+      "get": {
+        "operationId": "testLink",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oneOfWithAllOfsAndLink": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Return a user.\n\nEquivalent to GET /oneOfWithAllOfsAndLink",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OneOfWithAllOfsAndLink"
+                }
+              }
+            },
+            "links": {
+              "testLink": {
+                "operationId": "testLink",
+                "parameters": {
+                  "someId": "$request.path.id"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "commonAttributeObject": {
+        "type": "object",
+        "properties": {
+          "commonAttribute": {
+            "type": "string"
+          }
+        }
+      },
+      "differentAttributeObject": {
+        "type": "object",
+        "properties": {
+          "differentAttribute": {
+            "type": "string"
+          }
+        }
+      },
+      "anotherAttributeObject": {
+        "type": "object",
+        "properties": {
+          "anotherAttribute": {
+            "type": "string"
+          }
+        }
+      },
+      "OneOfWithAllOfsAndLink": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/One"
+          },
+          {
+            "$ref": "#/components/schemas/Two"
+          }
+        ]
+      },
+      "Abstract": {
+        "type": "object",
+        "properties": {
+          "commonProp": {
+            "type": "string"
+          }
+        }
+      },
+      "OneProps": {
+        "type": "object",
+        "properties": {
+          "differentOneProp": {
+            "type": "string"
+          }
+        }
+      },
+      "TwoProps": {
+        "type": "object",
+        "properties": {
+          "differentTwoProp": {
+            "type": "string"
+          }
+        }
+      },
+      "One": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Abstract"
+          },
+          {
+            "$ref": "#/components/schemas/OneProps"
+          }
+        ]
+      },
+      "Two": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Abstract"
+          },
+          {
+            "$ref": "#/components/schemas/TwoProps"
+          }
+        ]
+      }
+    }
+  }
+}

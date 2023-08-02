@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import globals from '../../../Globals';

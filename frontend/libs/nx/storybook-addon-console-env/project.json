@@ -1,0 +1,70 @@
+{
+  "name": "nx-storybook-addon-console-env",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/nx/storybook-addon-console-env/src",
+  "projectType": "library",
+  "tags": ["scope:shared", "type:feature", "meta:package"],
+  "targets": {
+    "build": {
+      "executor": "@nrwl/js:swc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/nx/storybook-addon-console-env",
+        "main": "libs/nx/storybook-addon-console-env/src/lib/index.ts",
+        "tsConfig": "libs/nx/storybook-addon-console-env/tsconfig.lib.json",
+        "assets": [
+          "libs/nx/storybook-addon-console-env/*.md",
+          {
+            "glob": "**/*",
+            "input": "libs/nx/storybook-addon-console-env/prod/",
+            "output": ""
+          }
+        ]
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "libs/nx/storybook-addon-console-env/**/*.{ts,tsx,js,jsx,json}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/libs/nx/storybook-addon-console-env"
+      ],
+      "options": {
+        "jestConfig": "libs/nx/storybook-addon-console-env/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "storybook": {
+      "dependsOn": ["build"],
+      "executor": "@nrwl/storybook:storybook",
+      "options": {
+        "port": 4400,
+        "configDir": "libs/nx/storybook-addon-console-env/.storybook"
+      },
+      "configurations": {
+        "ci": {
+          "quiet": true
+        }
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/publish.mjs nx-storybook-addon-console-env {args.ver} {args.tag}"
+      },
+      "dependsOn": [
+        {
+          "projects": "self",
+          "target": "build"
+        }
+      ]
+    }
+  }
+}

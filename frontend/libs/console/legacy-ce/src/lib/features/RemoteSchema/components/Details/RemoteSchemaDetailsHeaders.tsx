@@ -1,6 +1,6 @@
 import React from 'react';
-import { CardedTable } from '@/new-components/CardedTable';
-import { ServerHeader } from '@/features/hasura-metadata-types';
+import { CardedTable } from '../../../../new-components/CardedTable';
+import { ServerHeader } from '../../../hasura-metadata-types';
 
 interface RemoteSchemaDetailsHeadersProps {
   headers?: ServerHeader[];

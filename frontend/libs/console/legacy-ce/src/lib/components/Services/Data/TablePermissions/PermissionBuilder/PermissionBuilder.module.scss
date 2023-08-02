@@ -1,6 +1,7 @@
-@import "../../../../Common/Common.module";
+@import '../../../../Common/Common.module';
 
-.qb_select, .qb_input {
+.qb_select,
+.qb_input {
   border: none;
   background-color: transparent;
   border-bottom: 2px dotted;
@@ -12,7 +13,8 @@
   cursor: pointer;
 }
 
-.qb_select:focus, .qb_input:focus {
+.qb_select:focus,
+.qb_input:focus {
   outline: none;
 }
 

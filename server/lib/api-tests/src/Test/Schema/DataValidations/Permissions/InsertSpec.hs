@@ -7,19 +7,19 @@ module Test.Schema.DataValidations.Permissions.InsertSpec (spec) where
 
 import Control.Lens ((.~))
 import Data.Aeson (Value)
-import Data.Aeson.Key qualified as Key (toString)
 import Data.Aeson.Lens (atKey, key, values)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -52,6 +52,12 @@ spec = do
                 [ Sqlserver.setupTablesAction schema testEnvironment,
                   setupMetadata Sqlserver.backendTypeMetadata testEnvironment
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment,
+                  setupMetadata Sqlite.backendTypeMetadata testEnvironment
+                ]
             }
         ]
     )
@@ -81,54 +87,52 @@ schema =
             Schema.column "author_id" Schema.TInt
           ],
         tablePrimaryKey = ["id"],
-        tableReferences = [Schema.Reference "author_id" "author" "id"]
+        tableReferences = [Schema.reference "author_id" "author" "id"]
       }
   ]
 
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
-      -- The error path differs across backends. Since it's immaterial for the tests we want to make we simply ignore it.
+tests :: SpecWith TestEnvironment
+tests = describe "Permissions on mutations" do
+  let -- The error path and internal property differs across backends. Since it's immaterial for the tests we want to make we simply ignore it.
       removeErrorPath :: Value -> Value
       removeErrorPath = key "errors" . values . key "extensions" . atKey "path" .~ Nothing
+      removeErrorInternal :: Value -> Value
+      removeErrorInternal = key "errors" . values . key "extensions" . atKey "internal" .~ Nothing
 
-  describe "Permissions on mutations" do
-    it "Rejects insertions by authors on behalf of others" \testEnvironment -> do
-      let schemaName :: Schema.SchemaName
-          schemaName = Schema.getSchemaName testEnvironment
+  it "Rejects insertions by authors on behalf of others" \testEnvironment -> do
+    let schemaName :: Schema.SchemaName
+        schemaName = Schema.getSchemaName testEnvironment
 
-      let expected :: Value
-          expected =
-            [interpolateYaml|
-              errors:
-              - extensions:
-                  code: permission-error
-                message: check constraint of an insert/update permission has failed
+    let expected :: Value
+        expected =
+          [interpolateYaml|
+            errors:
+            - extensions:
+                code: permission-error
+              message: check constraint of an insert/update permission has failed
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphqlWithHeaders
+            testEnvironment
+            [ ("X-Hasura-Role", "user"),
+              ("X-Hasura-User-Id", "2")
+            ]
+            [graphql|
+              mutation {
+                insert_#{schemaName}_article(objects: [
+                  { id: 1, title: "Author 1 article", author_id: 1 }
+                ]) {
+                  affected_rows
+                }
+              }
             |]
 
-          actual :: IO Value
-          actual =
-            postGraphqlWithHeaders
-              testEnvironment
-              [ ("X-Hasura-Role", "user"),
-                ("X-Hasura-User-Id", "2")
-              ]
-              [graphql|
-                mutation {
-                  insert_#{schemaName}_article(objects: [
-                    { id: 1, title: "Author 1 article", author_id: 1 }
-                  ]) {
-                    affected_rows
-                  }
-                }
-              |]
-
-      fmap removeErrorPath actual `shouldBe` expected
+    shouldReturnYaml testEnvironment (fmap (removeErrorPath . removeErrorInternal) actual) expected
 
   it "Allows authors to insert their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -170,7 +174,7 @@ tests opts = do
               }
             |]
 
-    fmap removeErrorPath actual `shouldBe` expected
+    shouldReturnYaml testEnvironment (fmap (removeErrorPath . removeErrorInternal) actual) expected
 
   it "Authors can't add other authors" $ \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -202,7 +206,7 @@ tests opts = do
               }
             |]
 
-    fmap removeErrorPath actual `shouldBe` expected
+    shouldReturnYaml testEnvironment (fmap (removeErrorPath . removeErrorInternal) actual) expected
 
 --------------------------------------------------------------------------------
 -- Metadata
@@ -212,14 +216,17 @@ setupMetadata backendTypeMetadata testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
-      schemaKeyword :: String
-      schemaKeyword = Key.toString $ Fixture.backendSchemaKeyword backendTypeMetadata
-
       backendPrefix :: String
       backendPrefix = Fixture.backendTypeString backendTypeMetadata
 
       source :: String
       source = Fixture.backendSourceName backendTypeMetadata
+
+      articleTable :: Value
+      articleTable = Schema.mkTableField backendTypeMetadata schemaName "article"
+
+      authorTable :: Value
+      authorTable = Schema.mkTableField backendTypeMetadata schemaName "author"
 
       setup :: IO ()
       setup =
@@ -231,9 +238,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_insert_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: user
                 permission:
                   check:
@@ -247,9 +252,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: user
                 permission:
                   filter:
@@ -263,9 +266,7 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_create_insert_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
                 permission:
                   check:
@@ -285,23 +286,17 @@ setupMetadata backendTypeMetadata testEnvironment = do
             - type: #{backendPrefix}_drop_insert_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: user
             - type: #{backendPrefix}_drop_select_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: article
+                table: #{articleTable}
                 role: user
             - type: #{backendPrefix}_drop_insert_permission
               args:
                 source: #{source}
-                table:
-                  #{schemaKeyword}: #{schemaName}
-                  name: author
+                table: #{authorTable}
                 role: user
           |]
 

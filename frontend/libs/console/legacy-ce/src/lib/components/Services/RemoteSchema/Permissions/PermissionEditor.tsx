@@ -142,7 +142,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
       <Button
         onClick={saveFunc}
         color="yellow"
-        className={buttonStyle}
+        className={`${buttonStyle} bg-yellow-300`}
         disabled={isSaveDisabled}
         data-test="save-remote-schema-permissions"
       >
@@ -152,7 +152,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
         <Button
           onClick={removeFunc}
           color="red"
-          className={buttonStyle}
+          className={`${buttonStyle} bg-red-500`}
           disabled={isFetching}
           data-test="delete-remote-schema-permissions"
         >

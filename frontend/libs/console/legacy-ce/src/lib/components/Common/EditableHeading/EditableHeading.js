@@ -1,7 +1,9 @@
 import React from 'react';
 import { FaEdit } from 'react-icons/fa';
 import styles from '../Common.module.scss';
+import { PrimaryDBInfo } from './PrimaryDBInfo';
 import { TryOperation } from './TryOperation';
+import { CreateRestEndpoint } from './CreateRestEndpoints';
 
 class Heading extends React.Component {
   state = {
@@ -47,10 +49,18 @@ class Heading extends React.Component {
 
     if (!editable) {
       return (
-        <div className={styles.editable_heading_text}>
-          <h2>{currentValue}</h2>
-          <TryOperation table={table} dispatch={dispatch} source={source} />
-        </div>
+        <>
+          <div className={`${styles.editable_heading_text} pb-2`}>
+            <h2>{currentValue}</h2>
+            <div className="text-base font-normal flex gap-2">
+              <TryOperation table={table} dispatch={dispatch} source={source} />
+              <CreateRestEndpoint tableName={table.table_name} />
+            </div>
+          </div>
+          <div className="pb-5">
+            <PrimaryDBInfo source={source} />
+          </div>
+        </>
       );
     }
 
@@ -60,17 +70,25 @@ class Heading extends React.Component {
 
     if (!isEditting) {
       return (
-        <div className={styles.editable_heading_text}>
-          <h2>{currentValue}</h2>
-          <TryOperation table={table} dispatch={dispatch} source={source} />
-          <div
-            onClick={this.toggleEditting}
-            className={styles.editable_heading_action}
-            data-test={`heading-edit-${property}`}
-          >
-            <FaEdit />
+        <>
+          <div className={styles.editable_heading_text}>
+            <h2>{currentValue}</h2>
+            <div className="text-base font-normal flex gap-2">
+              <TryOperation table={table} dispatch={dispatch} source={source} />
+              <CreateRestEndpoint tableName={table.table_name} />
+            </div>
+            <div
+              onClick={this.toggleEditting}
+              className={styles.editable_heading_action}
+              data-test={`heading-edit-${property}`}
+            >
+              <FaEdit />
+            </div>
           </div>
-        </div>
+          <div className="pb-5">
+            <PrimaryDBInfo source={source} />
+          </div>
+        </>
       );
     }
 

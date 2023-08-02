@@ -20,8 +20,7 @@ import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.SchemaCache
+import Hasura.Server.AppStateRef
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
@@ -72,17 +71,14 @@ data WSConnData = WSConnData
     _wscAPIType :: !E.GraphQLQueryType
   }
 
-data WSServerEnv = WSServerEnv
+data WSServerEnv impl = WSServerEnv
   { _wseLogger :: !(L.Logger L.Hasura),
     _wseSubscriptionState :: !ES.SubscriptionsState,
-    -- | an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
-    _wseGCtxMap :: !(IO (SchemaCache, SchemaCacheVer)),
+    _wseAppStateRef :: AppStateRef impl,
     _wseHManager :: !HTTP.Manager,
-    _wseCorsPolicy :: !CorsPolicy,
-    _wseSQLCtx :: !SQLGenCtx,
+    _wseCorsPolicy :: IO CorsPolicy,
     _wseReadOnlyMode :: ReadOnlyMode,
     _wseServer :: !WSServer,
-    _wseEnableAllowlist :: !Bool,
     _wseKeepAliveDelay :: !KeepAliveDelay,
     _wseServerMetrics :: !ServerMetrics,
     _wsePrometheusMetrics :: !PrometheusMetrics,

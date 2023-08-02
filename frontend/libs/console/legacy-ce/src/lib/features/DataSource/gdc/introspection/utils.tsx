@@ -1,22 +1,37 @@
+import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';
+import { TableColumn } from '../../types';
+import { TbMathFunction } from 'react-icons/tb';
 
 export function convertToTreeData(
   tables: string[][],
   key: string[],
-  dataSourceName: string
+  dataSourceName: string,
+  mode?: 'function'
 ): DataNode[] {
   if (tables.length === 0) return [];
 
   if (tables[0].length === 1) {
     const leafNodes: DataNode[] = tables.map(table => {
       return {
-        icon: <FaTable />,
-        key: JSON.stringify({
-          database: dataSourceName,
-          table: [...key, table[0]],
-        }),
+        icon:
+          mode === 'function' ? (
+            <TbMathFunction className="text-muted mr-xs" />
+          ) : (
+            <FaTable />
+          ),
+        key:
+          mode === 'function'
+            ? JSON.stringify({
+                database: dataSourceName,
+                function: [...key, table[0]],
+              })
+            : JSON.stringify({
+                database: dataSourceName,
+                table: [...key, table[0]],
+              }),
         title: table[0],
       };
     });
@@ -51,4 +66,38 @@ export function convertToTreeData(
   }, acc);
 
   return values;
+}
+
+export function adaptAgentDataType(
+  sqlDataType: string
+): TableColumn['dataType'] {
+  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
+    bool: ['bool'],
+    string: ['string'],
+    number: ['number', 'integer', 'float'],
+    datetime: ['datetime'],
+    timestamp: ['timestamp'],
+    xml: ['xml'],
+    json: ['json', 'jsonb'],
+  };
+
+  const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
+    value.includes(
+      // Check if sqlDataType is a string or an object
+      // Reason is `Error: sqlDataType.toLowerCase is not a function`
+      /*
+        sqlDataType ->
+          {
+            element_type: "string",
+            nullable: false,
+            type: "array"
+          }
+      */
+      typeof sqlDataType === 'string'
+        ? sqlDataType.toLowerCase()
+        : (sqlDataType as any).type.toLowerCase() // Doubt: Could also be element_type in the case of arrays
+    )
+  ) ?? ['string', []];
+
+  return dataType;
 }

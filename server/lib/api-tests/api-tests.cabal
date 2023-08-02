@@ -5,14 +5,32 @@ build-type: Simple
 copyright: Hasura Inc.
 extra-source-files: README.md
 
+common common-all
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missed-specialisations
+    -Wno-missing-import-lists
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-partial-fields
+    -Wno-missing-export-lists
+    -Wno-implicit-prelude
+
 library
+  import: common-all
   build-tool-depends: hspec-discover:hspec-discover
   hs-source-dirs: src
   default-language: GHC2021
-
-  ghc-options:
-    -Wall
-    -Werror
 
   default-extensions:
     BlockArguments
@@ -38,9 +56,15 @@ library
     , aeson-pretty
     , base
     , bytestring
+    , containers
+    , data-has
     , dc-api
+    , directory
     , fast-logger
+    , filepath
+    , graphql-engine
     , graphql-parser
+    , hasura-extras
     , hasura-prelude
     , hspec
     , hspec-core
@@ -51,26 +75,38 @@ library
     , managed
     , morpheus-graphql
     , pg-client
-    , postgresql-simple
     , postgres-options
+    , postgresql-simple
     , safe-exceptions
+    , sop-core
     , split
     , string-interpolate
-    , sop-core
     , test-harness
     , text
     , unordered-containers
     , uuid
     , vector
+    , time
+    , QuickCheck
 
   exposed-modules:
     Spec
     SpecHook
     Test.API.ConcurrentBulkSpec
     Test.API.ExplainSpec
+    Test.API.GraphQL.ContentLengthSpec
+    Test.API.Metadata.BulkAtomicSpec
+    Test.API.Metadata.BulkKeepGoingSpec
     Test.API.Metadata.ComputedFieldsSpec
     Test.API.Metadata.InconsistentSpec
+    Test.API.Metadata.LogicalModelsSpec
+    Test.API.Metadata.SuggestRelationshipsSpec
+    Test.API.Metadata.TablesSpec
+    Test.API.Metadata.TestConnectionTemplateSpec
+    Test.API.Metadata.TrackTablesSpec
     Test.API.Metadata.TransparentDefaultsSpec
+    Test.API.Metadata.UntrackTablesSpec
+    Test.API.Metadata.WarningsSpec
     Test.API.Schema.RunSQLSpec
     Test.Auth.Authorization.DisableRootFields.Common
     Test.Auth.Authorization.DisableRootFields.DefaultRootFieldsSpec
@@ -79,68 +115,94 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
-    Test.Databases.BigQuery.Queries.SpatialTypesSpec
-    Test.Databases.BigQuery.Queries.TypeInterpretationSpec
-    Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
-    Test.Databases.Postgres.BackendOnlyPermissionsSpec
-    Test.Databases.Postgres.DataValidation.PermissionSpec
-    Test.Databases.Postgres.JsonbSpec
-    Test.Databases.Postgres.TimestampSpec
-    Test.Databases.Postgres.UniqueConstraintsSpec
-    Test.Databases.SQLServer.DefaultValues.OnConflictSpec
-    Test.Databases.SQLServer.InsertVarcharColumnSpec
-    Test.Databases.SQLServer.VarcharLiteralsSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.SqlserverSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.CustomScalarsSpec
+    Test.DataConnector.MockAgent.DeleteMutationsSpec
     Test.DataConnector.MockAgent.ErrorSpec
+    Test.DataConnector.MockAgent.InsertMutationsSpec
     Test.DataConnector.MockAgent.MetadataApiSpec
+    Test.DataConnector.MockAgent.OrderBySpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
+    Test.DataConnector.MockAgent.RemoteRelationshipsSpec
+    Test.DataConnector.MockAgent.TestHelpers
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
+    Test.DataConnector.MockAgent.UpdateMutationsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
+    Test.Databases.BigQuery.Queries.SpatialTypesSpec
+    Test.Databases.BigQuery.Queries.TypeInterpretationSpec
+    Test.Databases.BigQuery.Schema.ComputedFields.TableSpec
+    Test.Databases.Postgres.ArraySpec
+    Test.Databases.Postgres.BackendOnlyPermissionsSpec
+    Test.Databases.Postgres.DataValidation.PermissionSpec
+    Test.Databases.Postgres.JsonbSpec
+    Test.Databases.Postgres.TimestampSpec
+    Test.Databases.Postgres.UniqueConstraintsSpec
+    Test.Databases.SQLServer.ConnectionPoolSpec
+    Test.Databases.SQLServer.DefaultValues.OnConflictSpec
+    Test.Databases.SQLServer.InsertVarcharColumnSpec
+    Test.Databases.SQLServer.VarcharLiteralsSpec
+    Test.EventTriggers.EventTriggersSpecialCharactersSpec
     Test.EventTriggers.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTriggers.MSSQL.EventTriggerNextRetryAtTimezoneSpec
     Test.EventTriggers.MSSQL.EventTriggersForReplicationSpec
+    Test.EventTriggers.MSSQL.EventTriggersNameQuotingSpec
     Test.EventTriggers.MSSQL.EventTriggersUniqueNameSpec
     Test.EventTriggers.MSSQL.EventTriggersUntrackTableCleanupSpec
     Test.EventTriggers.PG.EventTriggersExtensionSchemaSpec
     Test.EventTriggers.PG.EventTriggersForReplicationSpec
     Test.EventTriggers.PG.EventTriggersRecreationSpec
     Test.EventTriggers.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTriggers.PG.EventTriggersClearMetadataSpec
     Test.EventTriggers.PG.EventTriggersRunSQLSpec
     Test.EventTriggers.PG.EventTriggersUniqueNameSpec
     Test.EventTriggers.PG.EventTriggersUntrackTableCleanupSpec
     Test.Harness.Quoter.YamlSpec
+    Test.HealthCheckSpec
     Test.HelloWorldSpec
     Test.Mutations.Delete.AllSpec
     Test.Mutations.Delete.FieldSpec
     Test.Mutations.Delete.NestedFieldSpec
     Test.Mutations.Delete.PrimaryKeySpec
+    Test.Mutations.Delete.ValidationSpec
     Test.Mutations.Insert.MultipleSpec
+    Test.Mutations.Insert.NestedSpec
     Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Insert.ValidationSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
+    Test.Mutations.Update.ValidationSpec
     Test.Mutations.Upsert.OnConflictSpec
+    Test.NamingConventionsSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec
     Test.Queries.CustomFunctions.PortedSpec
     Test.Queries.DistinctSpec
+    Test.Queries.Errors.EmptyRootsAreNotAvailableSpec
+    Test.Queries.Errors.InvalidQuerySpec
+    Test.Queries.Errors.MissingTableSpec
+    Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
+    Test.Queries.NativeQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
-    Test.Queries.Simple.InvalidQuerySpec
-    Test.Queries.Simple.MissingTableSpec
-    Test.Queries.Simple.NoQueriesAvailableSpec
+    Test.Queries.PermissionsKnowAboutColumnNullabilitySpec
+    Test.Queries.Relationship.PermissionRootReferenceSpec
+    Test.Queries.Simple.JSONSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.StoredProceduresSpec
     Test.Queries.VariablesAliasesFragments.AliasesSpec
     Test.Queries.VariablesAliasesFragments.Directives.DirectivesSpec
     Test.Queries.VariablesAliasesFragments.Directives.IncludeAndSkipSpec
@@ -155,13 +217,18 @@ library
     Test.Regression.InsertOnConflict8260Spec
     Test.Regression.LongIdentifiers3796Spec
     Test.Regression.MultiColumnObjectRelationshipsSpec
+    Test.Regression.MultiplexQuerySpec
     Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.OptimizePermissionFiltersSpec
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
+    Test.Regression.RootExistElementAliasing9457Spec
+    Test.Regression.SqlServerIdentifierQuotingSpec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-    Test.Regression.MultiplexQuerySpec
+    Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
+    Test.Schema.ComputedFields.AggregationSpec
     Test.Schema.ComputedFields.ScalarSpec
     Test.Schema.ComputedFields.TableSpec
     Test.Schema.ConflictsSpec
@@ -184,6 +251,8 @@ library
     Test.Schema.RemoteRelationships.XToRemoteSchemaRelationshipSpec
     Test.Schema.RemoteSchemaCustomizationSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
+    Test.Schema.TableRelationships.CrossSchemaArrayRelationshipsSpec
+    Test.Schema.TableRelationships.CrossSchemaObjectRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.TableRelationships.PortedSpec
     Test.Schema.ViewsSpec
@@ -193,17 +262,16 @@ library
     Test.Webhook.WebhookTransformSpec
 
 executable api-tests
+  import: common-all
   build-depends:
     , lens-aeson
     , api-tests
     , base
-    , hspec
+    , hspec-core
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
@@ -212,6 +280,7 @@ executable api-tests
   main-is: Main.hs
 
 library feature-matrix
+  import: common-all
   build-depends:
     , aeson
     , attoparsec
@@ -247,11 +316,8 @@ library feature-matrix
   exposed-modules:
       Hasura.FeatureMatrix
 
-  ghc-options:
-    -Wall
-    -Werror
-
 executable render-feature-matrix
+  import: common-all
   build-depends:
     , base
     , feature-matrix
@@ -280,14 +346,13 @@ executable render-feature-matrix
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
   main-is: Main.hs
 
 executable produce-feature-matrix
+  import: common-all
   build-depends:
     , api-tests
     , base
@@ -296,6 +361,7 @@ executable produce-feature-matrix
     , fast-logger
     , feature-matrix
     , filepath
+    , hasura-extras
     , hasura-prelude
     , hspec
     , optparse-generic
@@ -319,8 +385,6 @@ executable produce-feature-matrix
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
     -O0
-    -Wall
-    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N4"
 

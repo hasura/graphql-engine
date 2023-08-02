@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs } from '@/components/Services/RemoteSchema/Common/Tabs';
+import { Tabs } from '../../../../components/Services/RemoteSchema/Common/Tabs';
 
 interface RemoteSchemaDetailsNavigationProps {
   remoteSchemaName: string;

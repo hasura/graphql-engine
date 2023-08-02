@@ -13,8 +13,8 @@ const defaultOptions = {
   animationData: animationData,
   renderer: 'svg',
   rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
+    preserveAspectRatio: 'xMidYMid slice',
+  },
 };
 const LottieScreen = () => {
   return (
@@ -31,14 +31,11 @@ const LoadingScreen = ({ children, isError }) => {
     <div className={styles.oauth_wrapper}>
       <div className={styles.oauth}>
         <div className={styles.logo}>
-          {
-            (isError) ? (
-              <img src={hasuraLogo} alt={'Hasura Logo'} />
-            ) : (
-              <LottieScreen />
-            )
-          }
-
+          {isError ? (
+            <img src={hasuraLogo} alt={'Hasura Logo'} />
+          ) : (
+            <LottieScreen />
+          )}
         </div>
         {children}
       </div>

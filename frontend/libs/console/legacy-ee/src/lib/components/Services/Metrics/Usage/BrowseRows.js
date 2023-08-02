@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { fetchQueryList } from './graphql.queries';
 import Inspect from './Inspect';
@@ -20,18 +20,18 @@ import { getWhereClauseEx } from '../Error/utils';
 
 import { FILTER_MAP } from './constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { TIME_RANGE_SYMBOL } from '../constants';
 
 import { aliasedNames, headerTitleLabel, defaultColumns } from './constants';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
-const LIMIT = 10;
-
 import styles from '../Metrics.module.scss';
 import failure from '../images/failure.svg';
 import success from '../images/success.svg';
+
+const LIMIT = 10;
 
 const BrowserRows = props => {
   const defaultState = {

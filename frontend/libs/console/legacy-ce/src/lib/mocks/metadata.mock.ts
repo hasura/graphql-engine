@@ -1,9 +1,13 @@
-import { allowListInitialData } from '@/features/AllowLists';
-import { queryCollectionInitialData } from '@/features/QueryCollections';
-import { TMigration } from '@/features/MetadataAPI';
-import { Metadata } from '@/features/hasura-metadata-types';
+import type { ServerConfig } from '../hooks';
+import type { TMigration } from '../features/MetadataAPI';
+import type { Metadata } from '../features/hasura-metadata-types';
 
-import { ServerConfig } from '@/hooks';
+import { allowListInitialData } from '../features/AllowLists';
+import { queryCollectionInitialData } from '../features/QueryCollections';
+import { openTelemetryInitialData } from '../features/OpenTelemetry';
+import { restEndpointsInitialData } from '../features/RestEndpoints';
+import { dataInitialData } from '../features/Data';
+
 import { rest } from 'msw';
 import { metadataReducer } from './actions';
 
@@ -15,6 +19,9 @@ export const createDefaultInitialData = (): Metadata => ({
     inherited_roles: [],
     ...allowListInitialData,
     ...queryCollectionInitialData,
+    ...openTelemetryInitialData,
+    ...dataInitialData,
+    ...restEndpointsInitialData,
   },
 });
 
@@ -31,9 +38,9 @@ type HandlersOptions = {
 
 const defaultOptions: HandlersOptions = {
   delay: 0,
-  initialData: createDefaultInitialData,
   config: defaultConfig,
   url: 'http://localhost:8080',
+  initialData: createDefaultInitialData,
 };
 
 export const handlers = (options?: HandlersOptions) => {
@@ -49,8 +56,9 @@ export const handlers = (options?: HandlersOptions) => {
     rest.get(`${url}/v1alpha1/config`, (req, res, ctx) => {
       return res(ctx.delay(delay), ctx.status(200), ctx.json(config));
     }),
-    rest.post(`${url}/v1/metadata`, (req, res, ctx) => {
-      const body = req.body as TMigration['query'];
+
+    rest.post(`${url}/v1/metadata`, async (req, res, ctx) => {
+      const body = (await req.json()) as TMigration['query'];
 
       const response = metadataReducer(metadata, body);
 

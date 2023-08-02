@@ -34,6 +34,7 @@ type metadata struct {
 	RestEndpoints    v3yaml.Node `yaml:"rest_endpoints,omitempty" mapstructure:"rest_endpoints,omitempty"`
 	InheritedRoles   v3yaml.Node `yaml:"inherited_roles,omitempty" mapstructure:"inherited_roles,omitempty"`
 	Opentelemetry    v3yaml.Node `yaml:"opentelemetry,omitempty" mapstructure:"opentelemetry,omitempty"`
+	BackendConfig    v3yaml.Node `yaml:"backend_configs,omitempty" mapstructure:"backend_configs,omitempty"`
 
 	// HGE Pro
 	GraphQLSchemaIntrospection v3yaml.Node `yaml:"graphql_schema_introspection,omitempty" mapstructure:"graphql_schema_introspection,omitempty"`

@@ -1,10 +1,10 @@
-import { Dialog } from '@/new-components/Dialog';
-import { InputField, SimpleForm } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React from 'react';
 import { z } from 'zod';
-import { useManageLocalRelationship } from '../../hooks/useManageLocalRelationship';
+import { Dialog } from '../../../../new-components/Dialog';
+import { InputField, SimpleForm } from '../../../../new-components/Form';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { Relationship } from '../../types';
+import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
 
 interface RenameRelationshipProps {
   relationship: Relationship;
@@ -15,11 +15,10 @@ interface RenameRelationshipProps {
 
 export const RenameRelationship = (props: RenameRelationshipProps) => {
   const { relationship, onCancel, onSuccess, onError } = props;
-  const { renameRelationship } = useManageLocalRelationship({
-    dataSourceName: relationship.fromSource,
-    onSuccess,
-    onError,
-  });
+  const { renameRelationships } = useCreateTableRelationships(
+    relationship.fromSource,
+    { onSuccess, onError }
+  );
 
   if (
     relationship.type === 'remoteDatabaseRelationship' ||
@@ -46,11 +45,25 @@ export const RenameRelationship = (props: RenameRelationshipProps) => {
       onClose={onCancel}
     >
       <SimpleForm
+        options={{
+          defaultValues: {
+            updatedName: relationship.name,
+          },
+        }}
         schema={z.object({
           updatedName: z.string().min(1, 'Updated name cannot be empty!'),
         })}
         onSubmit={data => {
-          renameRelationship(relationship, data.updatedName);
+          renameRelationships({
+            data: [
+              {
+                name: relationship.name,
+                new_name: data.updatedName,
+                source: relationship.fromSource,
+                table: relationship.fromTable,
+              },
+            ],
+          });
         }}
       >
         <>

@@ -134,7 +134,6 @@ export function Analytics(props: AnalyticsProps) {
           const overrideError = new Error(
             `All the following attributes will be overridden: ${overrideHtmlAttributes} for the element with name "${name}"`
           );
-          console.error(overrideError);
           programmaticallyTraceError(overrideError);
         }
       }

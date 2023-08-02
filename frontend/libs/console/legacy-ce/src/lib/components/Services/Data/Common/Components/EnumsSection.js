@@ -1,7 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
 const enumCompatibilityDocsUrl =
   'https://hasura.io/docs/latest/graphql/core/schema/enums.html#create-enum-table';
@@ -38,7 +38,7 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
   return (
     <div className="mb-lg">
       <div className="flex items-center mb-formlabel">
-        <h4 className="flex items-center text-gray-600 font-semibold mr-sm">
+        <h4 className="flex items-center text-gray-600 font-semibold">
           Set Table as Enum
           <ToolTip
             message={
@@ -46,9 +46,9 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
             }
           />
         </h4>
-        <KnowMoreLink
+        <LearnMoreLink
           href={enumCompatibilityDocsUrl}
-          text={'See table requirements'}
+          text={'(See table requirements)'}
         />
       </div>
 

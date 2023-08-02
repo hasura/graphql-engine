@@ -4,11 +4,12 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { Button } from '../../../../new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
 import { parseCreateSQL, removeCommentsSQL } from './utils';
@@ -17,6 +18,7 @@ import {
   executeSQL,
   SET_SQL,
   SET_CASCADE_CHECKED,
+  SET_READ_ONLY_CHECKED,
   SET_MIGRATION_CHECKED,
   SET_TRACK_TABLE_CHECKED,
 } from './Actions';
@@ -37,18 +39,29 @@ import { services } from '../../../../dataSources/services';
 import { isFeatureSupported, setDriver } from '../../../../dataSources';
 import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
 import { unsupportedRawSQLDrivers } from './utils';
-import { nativeDrivers } from '@/features/DataSource';
+import { nativeDrivers } from '../../../../features/DataSource';
 import { useRunSQL } from './hooks/useRunSQL';
-import { useFireNotification } from '@/new-components/Notifications';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import _push from '../push';
+import { hasuraToast } from '../../../../new-components/Toasts';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (
     !sql?.match(/(?:\$\$\s+)?language\s+plpgsql/i) && selectedDriver === 'citus'
   );
+};
+
+const checkTextLength = sql => {
+  const LIMIT = 5000;
+  if (sql.length > LIMIT) {
+    hasuraToast({
+      type: 'warning',
+      title: 'SQL query wont be saved in local storage',
+      message: `Only SQL queries with less than ${LIMIT} characters will be saved.`,
+    });
+    return false;
+  }
+  return true;
 };
 
 /**
@@ -66,6 +79,7 @@ const checkChangeLang = (sql, selectedDriver) => {
  * @property {boolean} lastSuccess
  * @property {boolean} isModalOpen
  * @property {boolean} isCascadeChecked
+ * @property {boolean} isReadOnlyChecked
  * @property {boolean} isMigrationChecked
  * @property {boolean} isTableTrackChecked
  * @property {boolean} migrationMode
@@ -84,17 +98,14 @@ const RawSQL = ({
   lastSuccess,
   isModalOpen,
   isCascadeChecked,
+  isReadOnlyChecked,
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
   allSchemas,
-  // sources,
   currentDataSource,
   metadataSources,
 }) => {
-  const { enabled: areGDCFeaturesEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
   const { fireNotification } = useFireNotification();
   const { fetchRunSQLResult, data, isLoading } = useRunSQL({
     onError: err => {
@@ -155,7 +166,9 @@ const RawSQL = ({
       }
     }
     return () => {
-      setLSItem(LS_KEYS.rawSQLKey, sqlText);
+      if (checkTextLength(sqlText)) {
+        setLSItem(LS_KEYS.rawSQLKey, sqlText);
+      }
     };
   }, [dispatch, sql, sqlText]);
 
@@ -180,9 +193,10 @@ const RawSQL = ({
     if (!sqlText) {
       setLSItem(LS_KEYS.rawSQLKey, '');
       return;
+    } else if (checkTextLength(sqlText)) {
+      // set SQL to LS
+      setLSItem(LS_KEYS.rawSQLKey, sqlText);
     }
-    // set SQL to LS
-    setLSItem(LS_KEYS.rawSQLKey, sqlText);
 
     // check migration mode global
     if (migrationMode) {
@@ -209,9 +223,11 @@ const RawSQL = ({
           selectedDriver
         )
       );
+      dispatch(_push('/data/sql'));
       return;
     }
     dispatch(executeSQL(false, '', statementTimeout, selectedDatabase));
+    dispatch(_push('/data/sql'));
   };
 
   const getMigrationWarningModal = () => {
@@ -354,6 +370,33 @@ const RawSQL = ({
     );
   };
 
+  const getReadOnlySection = () => {
+    return (
+      <div className={styles.add_mar_top_small}>
+        <label>
+          <input
+            checked={isReadOnlyChecked}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
+            id="read-only-checkbox"
+            type="checkbox"
+            onChange={() => {
+              dispatch({
+                type: SET_READ_ONLY_CHECKED,
+                data: !isReadOnlyChecked,
+              });
+            }}
+          />
+          Read only
+        </label>
+        <Tooltip
+          message={
+            'When set to true, the request will be run in READ ONLY transaction access mode which means only select queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.'
+          }
+        />
+      </div>
+    );
+  };
+
   const getTrackThisSection = () => {
     const dispatchTrackThis = () => {
       dispatch({
@@ -378,12 +421,13 @@ const RawSQL = ({
         </label>
         <Tooltip
           message={
-            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
+            'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as ' +
+            'top level fields. Functions only intended to be used as computed fields should not be tracked.'
           }
         />
-        &nbsp;
-        <KnowMoreLink
-          text={'See supported functions requirements'}
+
+        <LearnMoreLink
+          text={'(See supported functions requirements)'}
           href={
             'https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#supported-sql-functions'
           }
@@ -496,15 +540,10 @@ const RawSQL = ({
               <b>Database</b>
             </label>{' '}
             <DropDownSelector
-              options={metadataSources
-                .filter(source => {
-                  if (areGDCFeaturesEnabled) return source;
-                  return nativeDrivers.includes(source.kind);
-                })
-                .map(source => ({
-                  name: source.name,
-                  driver: source.kind,
-                }))}
+              options={metadataSources.map(source => ({
+                name: source.name,
+                driver: source.kind,
+              }))}
               defaultValue={currentDataSource}
               onChange={dropDownSelectorValueChange}
             />
@@ -522,6 +561,7 @@ const RawSQL = ({
                   ? getTrackThisSection()
                   : null}
                 {getMetadataCascadeSection()}
+                {getReadOnlySection()}
                 {getMigrationSection()}
               </>
             )}
@@ -609,16 +649,32 @@ RawSQL.propTypes = {
   statementTimeout: PropTypes.string.isRequired,
 };
 
-const mapStateToProps = state => ({
-  ...state.rawSQL,
-  migrationMode: state.main.migrationMode,
-  currentSchema: state.tables.currentSchema,
-  allSchemas: state.tables.allSchemas,
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-  sources: getDataSources(state),
-  currentDataSource: state.tables.currentDataSource,
-  metadataSources: state.metadata.metadataObject.sources,
-});
+const mapStateToProps = state => {
+  const nativeSources = state.metadata.metadataObject.sources.filter(source =>
+    nativeDrivers.includes(source.kind)
+  );
+
+  const sources = getDataSources(state).filter(source =>
+    nativeDrivers.includes(source.driver)
+  );
+
+  const currentDataSource = sources.find(
+    source => source.name === state.tables.currentDataSource
+  )
+    ? state.tables.currentDataSource
+    : sources?.[0]?.name || '';
+
+  return {
+    ...state.rawSQL,
+    migrationMode: state.main.migrationMode,
+    currentSchema: state.tables.currentSchema,
+    allSchemas: state.tables.allSchemas,
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    sources,
+    currentDataSource,
+    metadataSources: nativeSources,
+  };
+};
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);
 

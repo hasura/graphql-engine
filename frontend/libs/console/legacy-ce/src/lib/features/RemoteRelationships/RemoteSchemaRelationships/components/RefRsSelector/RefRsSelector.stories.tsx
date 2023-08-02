@@ -1,8 +1,8 @@
 import React from 'react';
 import * as z from 'zod';
-import { Meta, Story } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../new-components/Form';
 import {
   refRemoteSchemaSelectorKey,
   RefRsSelector,
@@ -31,13 +31,13 @@ export default {
   ],
 } as Meta;
 
-export const Primary: Story<RefRsSelectorProps> = args => (
-  <RefRsSelector {...args} />
-);
-Primary.args = {
-  allRemoteSchemas: ['rs1', 'rs2', 'pokemon', 'countries'],
-};
-Primary.parameters = {
-  // Disable chromatic snapshot for playground stories
-  chromatic: { disableSnapshot: true },
+export const Primary: StoryObj<RefRsSelectorProps> = {
+  args: {
+    allRemoteSchemas: ['rs1', 'rs2', 'pokemon', 'countries'],
+  },
+
+  parameters: {
+    // Disable chromatic snapshot for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 };

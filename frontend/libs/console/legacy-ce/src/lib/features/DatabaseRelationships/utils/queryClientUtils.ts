@@ -1,12 +1,16 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../../hasura-metadata-types';
 
 interface BaseParams {
   dataSourceName: string;
   table: Table;
 }
 
+interface ManyTablesParams {
+  dataSourceName: string;
+  tables: Table[] | undefined;
+}
+
 export const generateQueryKeys = {
-  metadata: () => ['export_metadata'],
   fkConstraints: (params: BaseParams) =>
     [
       'dal-introspection',
@@ -14,7 +18,13 @@ export const generateQueryKeys = {
       params.table,
       'fkConstraints',
     ] as const,
-
+  manyFkConstraints: (params: ManyTablesParams) =>
+    [
+      'dal-introspection',
+      params.dataSourceName,
+      params.tables,
+      'fkConstraints',
+    ] as const,
   columns: (params: BaseParams) =>
     [
       'dal-introspection',
@@ -30,6 +40,9 @@ export const generateQueryKeys = {
       params.table,
       'database_relationships',
     ] as const,
+
+  suggestedRelationships: (params: BaseParams) =>
+    ['suggested_relationships', params.dataSourceName, params.table] as const,
 
   relationship: (params: BaseParams & { relationshipName: string }) =>
     [

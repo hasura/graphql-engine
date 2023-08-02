@@ -13,9 +13,9 @@ TODO:- Test Actions metadata
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def graphql_service(hge_fixture_env: dict[str, str]):
+def graphql_service(worker_id: str, hge_fixture_env: dict[str, str]):
     (_, port) = extract_server_address_from('GRAPHQL_SERVICE_HANDLER')
-    server = NodeGraphQL(['node', 'remote_schemas/nodejs/actions_remote_join_schema.js'], port=port)
+    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/actions_remote_join_schema.js', port=port)
     server.start()
     print(f'{graphql_service.__name__} server started on {server.url}')
     hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = server.url
@@ -80,6 +80,9 @@ class TestActionsSync:
 
     def test_null_response(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/null_response.yaml')
+    
+    def test_omitted_field_response_for_nullable_field(self, hge_ctx):
+        check_query_secret(hge_ctx, self.dir() + '/omitted_field_response_for_nullable_field.yaml')
 
     def test_expecting_object_response_got_null(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_null.yaml')

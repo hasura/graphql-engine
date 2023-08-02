@@ -1,6 +1,14 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { useMetadata } from '../../hasura-metadata-api';
+import { MetadataSelectors } from '../../hasura-metadata-api';
+import { getSupportsForeignKeys } from '../../hasura-metadata-api/utils';
+import { Table } from '../../hasura-metadata-types';
 import React from 'react';
-import { TableColumns, TableComments, TableRootFields } from './components';
+import {
+  TableColumns,
+  TableComments,
+  TableRootFields,
+  ForeignKeys,
+} from './components';
 import { Section } from './parts';
 
 export type ModifyTableProps = {
@@ -10,6 +18,12 @@ export type ModifyTableProps = {
 };
 
 export const ModifyTable: React.VFC<ModifyTableProps> = props => {
+  const { data: source } = useMetadata(
+    MetadataSelectors.findSource(props.dataSourceName)
+  );
+
+  const supportsForeignKeys = getSupportsForeignKeys(source);
+
   return (
     <div className="w-full bg-white p-4 rounded-sm border my-2">
       <Section headerText="Table Comments">
@@ -18,6 +32,16 @@ export const ModifyTable: React.VFC<ModifyTableProps> = props => {
       <Section headerText="Table Columns">
         <TableColumns {...props} />
       </Section>
+      {supportsForeignKeys && (
+        <Section
+          headerText="Foreign Keys"
+          tooltipMessage={`
+        Foreign keys are one or more columns that point to another table's primary key. They link both tables.
+        `}
+        >
+          <ForeignKeys {...props} />
+        </Section>
+      )}
       <Section
         headerText="Custom Field Names"
         tooltipMessage="Customize table and column root names for GraphQL operations."

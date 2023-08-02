@@ -16,7 +16,6 @@ export const isProloginWithPAT = () => {
   return loadPATState() || globals.personalAccessToken;
 };
 
-
 export const isJsonString = str => {
   try {
     JSON.parse(str);

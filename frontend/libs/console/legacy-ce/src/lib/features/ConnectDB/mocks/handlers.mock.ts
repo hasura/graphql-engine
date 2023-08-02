@@ -1,5 +1,5 @@
 import { rest } from 'msw';
-import { HasuraMetadataV3 } from '@/metadata/types';
+import { HasuraMetadataV3 } from '../../../metadata/types';
 
 const baseUrl = 'http://localhost:8080';
 

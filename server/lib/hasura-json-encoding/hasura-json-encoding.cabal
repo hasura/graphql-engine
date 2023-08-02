@@ -1,0 +1,62 @@
+cabal-version: 3.6
+name: hasura-json-encoding
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -foptimal-applicative-do
+    -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
+    -fmax-simplifier-iterations=2
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-deriving-typeable
+    -Wno-prepositive-qualified-module
+    -Wno-implicit-lift
+    -Wno-identities
+    -Wno-operator-whitespace
+    -Wno-partial-fields
+    -Wno-redundant-bang-patterns
+    -Wno-unused-type-patterns
+
+  build-depends:
+    , aeson
+    , aeson-ordered
+    , base
+    , bytestring
+    , hasura-extras
+    , hasura-prelude
+    , insert-ordered-containers
+    , pg-client
+    , text
+    , vector
+
+  default-extensions:
+    DerivingStrategies
+    FunctionalDependencies
+    ImportQualifiedPost
+    LambdaCase
+    NoImplicitPrelude
+    QuasiQuotes
+    OverloadedStrings
+    TypeFamilies
+
+  exposed-modules:
+    Hasura.EncJSON

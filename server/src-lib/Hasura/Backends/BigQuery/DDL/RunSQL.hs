@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- |
 -- Working example:
 --
@@ -21,9 +19,8 @@ module Hasura.Backends.BigQuery.DDL.RunSQL
 where
 
 import Data.Aeson qualified as J
-import Data.Aeson.TH (deriveJSON)
 import Data.Aeson.Text (encodeToLazyText)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
@@ -33,19 +30,24 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (RunSQLRes (..))
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.SQL.Backend
 
 data BigQueryRunSQL = BigQueryRunSQL
   { _mrsSql :: Text,
     _mrsSource :: SourceName
   }
-  deriving (Show, Eq)
+  deriving (Eq, Generic, Show)
 
-$(deriveJSON hasuraJSON ''BigQueryRunSQL)
+instance J.FromJSON BigQueryRunSQL where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON BigQueryRunSQL where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runSQL ::
   (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) =>
@@ -89,7 +91,7 @@ runSQL_ f (BigQueryRunSQL query source) = do
     Right recordSet ->
       pure
         ( encJFromJValue
-            (RunSQLRes "TuplesOk" (f recordSet))
+            (RunSQLRes "TuplesOk" (f (snd recordSet)))
         )
 
 recordSetAsHeaderAndRows :: Execute.RecordSet -> J.Value
@@ -99,16 +101,16 @@ recordSetAsHeaderAndRows Execute.RecordSet {rows} = J.toJSON (thead : tbody)
       case rows V.!? 0 of
         Nothing -> []
         Just row ->
-          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (OMap.keys row)
+          map (J.toJSON . (coerce :: Execute.FieldNameText -> Text)) (InsOrdHashMap.keys row)
     tbody :: [[J.Value]]
-    tbody = map (map J.toJSON . OMap.elems) (toList rows)
+    tbody = map (map J.toJSON . InsOrdHashMap.elems) (toList rows)
 
 recordSetAsSchema :: Execute.RecordSet -> J.Value
 recordSetAsSchema rs@(Execute.RecordSet {rows}) =
-  recordSetAsHeaderAndRows $
-    rs
+  recordSetAsHeaderAndRows
+    $ rs
       { Execute.rows =
-          OMap.adjust
+          InsOrdHashMap.adjust
             (Execute.TextOutputValue . LT.toStrict . encodeToLazyText . J.toJSON)
             (Execute.FieldNameText "columns")
             <$> rows

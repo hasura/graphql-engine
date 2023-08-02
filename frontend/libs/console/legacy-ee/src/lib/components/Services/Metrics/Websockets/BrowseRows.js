@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
-import { Tooltip } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import { Link } from 'react-router';
 
 import { getFetchWebsocketsStatus } from './graphql.queries';
@@ -18,7 +18,7 @@ import { createFilter } from '../Error/utils';
 
 import { relativeModulePath, WEBSOCKET_ID_SYMBOL } from '../constants';
 
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import { defaultColumns, FILTER_MAP, DEFAULT_ORDER_BY } from './constants';
 import moment from 'moment';

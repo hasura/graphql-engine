@@ -24,7 +24,9 @@ module Hasura.RQL.DDL.Permission
     runSetPermComment,
     PermInfo,
     buildPermInfo,
+    buildLogicalModelPermInfo,
     addPermissionToMetadata,
+    annBoolExp,
   )
 where
 
@@ -32,13 +34,17 @@ import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict qualified as HM
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Environment qualified as Env
+import Data.Has
+import Data.HashMap.Strict qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
+import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
 import Hasura.RQL.IR.BoolExp
@@ -51,13 +57,22 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
-import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
-import Hasura.Session
+import Hasura.Session (UserInfoM)
+import Hasura.Table.Cache
+import Hasura.Table.Metadata
+  ( Permissions,
+    TableMetadata,
+    tmDeletePermissions,
+    tmInsertPermissions,
+    tmSelectPermissions,
+    tmUpdatePermissions,
+  )
 
 {- Note [Backend only permissions]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -168,32 +183,36 @@ We've a table "user" tracked by hasura and a role "public"
   mutation operations are visible by default.
 -}
 procSetObj ::
-  forall b m.
-  (QErrM m, BackendMetadata b) =>
+  forall b m r.
+  (QErrM m, BackendMetadata b, MonadReader r m, Has (ScalarTypeParsingContext b) r) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   Maybe (ColumnValues b Value) ->
   m (PreSetColsPartial b, [Text], Seq SchemaDependency)
 procSetObj source tn fieldInfoMap mObj = do
-  (setColTups, deps) <- withPathK "set" $
-    fmap unzip $
-      forM (HM.toList setObj) $ \(pgCol, val) -> do
-        ty <-
-          askColumnType fieldInfoMap pgCol $
-            "column " <> pgCol <<> " not found in table " <>> tn
-        sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
-        let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
-        return ((pgCol, sqlExp), dep)
-  return (HM.fromList setColTups, depHeaders, Seq.fromList deps)
+  (setColTups, deps) <- withPathK "set"
+    $ fmap unzip
+    $ forM (HashMap.toList setObj)
+    $ \(pgCol, val) -> do
+      ty <-
+        askColumnType fieldInfoMap pgCol
+          $ "column "
+          <> pgCol
+          <<> " not found in table "
+          <>> tn
+      sqlExp <- parseCollectableType (CollectableTypeScalar ty) val
+      let dep = mkColDep @b (getDepReason sqlExp) source tn pgCol
+      return ((pgCol, sqlExp), dep)
+  return (HashMap.fromList setColTups, depHeaders, Seq.fromList deps)
   where
     setObj = fromMaybe mempty mObj
     depHeaders =
-      getDepHeadersFromVal $
-        Object $
-          KM.fromList $
-            map (first (K.fromText . toTxt)) $
-              HM.toList setObj
+      getDepHeadersFromVal
+        $ Object
+        $ KM.fromList
+        $ map (first (K.fromText . toTxt))
+        $ HashMap.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 
@@ -208,28 +227,52 @@ addPermissionToMetadata ::
   TableMetadata b ->
   TableMetadata b
 addPermissionToMetadata permDef = case _pdPermission permDef of
-  InsPerm' _ -> tmInsertPermissions %~ OMap.insert (_pdRole permDef) permDef
-  SelPerm' _ -> tmSelectPermissions %~ OMap.insert (_pdRole permDef) permDef
-  UpdPerm' _ -> tmUpdatePermissions %~ OMap.insert (_pdRole permDef) permDef
-  DelPerm' _ -> tmDeletePermissions %~ OMap.insert (_pdRole permDef) permDef
+  InsPerm' _ -> tmInsertPermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  SelPerm' _ -> tmSelectPermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  UpdPerm' _ -> tmUpdatePermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
+  DelPerm' _ -> tmDeletePermissions %~ InsOrdHashMap.insert (_pdRole permDef) permDef
 
 buildPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   RoleName ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildPermInfo x1 x2 x3 roleName = \case
+buildPermInfo e x1 x2 x3 roleName = \case
   SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName p
-  InsPerm' p -> buildInsPermInfo x1 x2 x3 p
-  UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
-  DelPerm' p -> buildDelPermInfo x1 x2 x3 p
+  InsPerm' p -> buildInsPermInfo e x1 x2 x3 p
+  UpdPerm' p -> buildUpdPermInfo e x1 x2 x3 p
+  DelPerm' p -> buildDelPermInfo e x1 x2 x3 p
+
+-- | Given the logical model's definition and the permissions as defined in the
+-- logical model's metadata, try to construct the permission definition.
+buildLogicalModelPermInfo ::
+  ( BackendMetadata b,
+    QErrM m,
+    TableCoreInfoRM b m,
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
+  ) =>
+  SourceName ->
+  LogicalModelLocation ->
+  InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
+  PermDefPermission b perm ->
+  m (WithDeps (PermInfo perm b))
+buildLogicalModelPermInfo sourceName logicalModelLocation fieldInfoMap = \case
+  SelPerm' p -> buildLogicalModelSelPermInfo sourceName logicalModelLocation fieldInfoMap p
+  InsPerm' _ -> error "Not implemented yet"
+  UpdPerm' _ -> error "Not implemented yet"
+  DelPerm' _ -> error "Not implemented yet"
 
 doesPermissionExistInMetadata ::
   forall b.
@@ -257,10 +300,10 @@ runCreatePerm (CreatePerm (WithTable source tableName permissionDefn)) = do
       ptText = permTypeToCode permissionType
       role = _pdRole permissionDefn
       metadataObject =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b tableName $
-              MTOPerm role permissionType
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b tableName
+          $ MTOPerm role permissionType
 
   -- NOTE: we check if a permission exists for a `(table, role)` entity in the metadata
   -- and not in the `RolePermInfoMap b` because there may exist a permission for the `role`
@@ -269,12 +312,17 @@ runCreatePerm (CreatePerm (WithTable source tableName permissionDefn)) = do
   -- The metadata will not contain the permissions for the admin role,
   -- because the graphql-engine automatically creates the role and it's
   -- assumed that the admin role is an implicit role of the graphql-engine.
-  when (doesPermissionExistInMetadata tableMetadata role permissionType || role == adminRoleName) $
-    throw400 AlreadyExists $
-      ptText <> " permission already defined on table " <> tableName <<> " with role " <>> role
-  buildSchemaCacheFor metadataObject $
-    MetadataModifier $
-      tableMetadataSetter @b source tableName %~ addPermissionToMetadata permissionDefn
+  when (doesPermissionExistInMetadata tableMetadata role permissionType || role == adminRoleName)
+    $ throw400 AlreadyExists
+    $ ptText
+    <> " permission already defined on table "
+    <> tableName
+    <<> " with role "
+    <>> role
+  buildSchemaCacheFor metadataObject
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName
+    %~ addPermissionToMetadata permissionDefn
   pure successMsg
 
 runDropPerm ::
@@ -288,51 +336,58 @@ runDropPerm permType (DropPerm source table role) = do
   unless (doesPermissionExistInMetadata tableMetadata role permType) $ do
     let errMsg = permTypeToCode permType <> " permission on " <> table <<> " for role " <> role <<> " does not exist"
     throw400 PermissionDenied errMsg
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      MetadataModifier $
-        tableMetadataSetter @b source table %~ dropPermissionInMetadata role permType
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table
+    %~ dropPermissionInMetadata role permType
   return successMsg
 
 buildInsPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   InsPerm b ->
   m (WithDeps (InsPermInfo b))
-buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly) =
+buildInsPermInfo env source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly validateInput) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp source tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj source tn fieldInfoMap set
-    void $
-      withPathK "columns" $ do
+    void
+      $ withPathK "columns"
+      $ do
         indexedForM insCols $ \col -> do
           -- Check that all columns specified do in fact exist and are columns
           _ <- askColumnType fieldInfoMap col relInInsErr
           -- Check that the column is insertable
           ci <- askColInfo fieldInfoMap col ""
-          unless (_cmIsInsertable $ ciMutability ci) $
-            throw500
+          unless (_cmIsInsertable $ ciMutability ci)
+            $ throw500
               ( "Column "
                   <> col
-                    <<> " is not insertable and so cannot have insert permissions defined"
+                  <<> " is not insertable and so cannot have insert permissions defined"
               )
 
     let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `HS.union` (HS.fromList setHdrs)
         insColDeps = mkColDep @b DRUntyped source tn <$> insCols
         deps = mkParentDep @b source tn Seq.:<| beDeps <> setColDeps <> Seq.fromList insColDeps
-        insColsWithoutPresets = HS.fromList insCols `HS.difference` HM.keysSet setColsSQL
+        insColsWithoutPresets = HS.fromList insCols `HS.difference` HashMap.keysSet setColsSQL
 
-    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs, deps)
+    resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+
+    return (InsPermInfo insColsWithoutPresets be setColsSQL backendOnly reqHdrs resolvedValidateInput, deps)
   where
-    allInsCols = map ciColumn $ filter (_cmIsInsertable . ciMutability) $ getCols fieldInfoMap
+    allInsCols = map structuredColumnInfoColumn $ filter (_cmIsInsertable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
@@ -371,14 +426,14 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
       ARFAllowConfiguredRootFields allowedRootFields -> rootField `HS.member` allowedRootFields
 
     pkValidationError =
-      throw400 ValidationFailed $
-        "The \"select_by_pk\" field cannot be included in the query_root_fields or subscription_root_fields"
-          <> " because the role "
-          <> roleName
-            <<> " does not have access to the primary key of the table "
-          <> tableName
-            <<> " in the source "
-            <>> sourceName
+      throw400 ValidationFailed
+        $ "The \"select_by_pk\" field cannot be included in the query_root_fields or subscription_root_fields"
+        <> " because the role "
+        <> roleName
+        <<> " does not have access to the primary key of the table "
+        <> tableName
+        <<> " in the source "
+        <>> sourceName
     validatePrimaryKeyRootField TableCoreInfo {..} =
       case _tciPrimaryKey of
         Nothing -> pkValidationError
@@ -391,17 +446,96 @@ validateAllowedRootFields sourceName tableName roleName SelPerm {..} = do
               unless (all ((`HS.member` selPermCols) . ciColumn) pkCols) pkValidationError
 
     validateAggregationRootField =
-      unless spAllowAggregations $
-        throw400 ValidationFailed $
-          "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
-            <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
+      unless spAllowAggregations
+        $ throw400 ValidationFailed
+        $ "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
+        <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
 
-buildSelPermInfo ::
-  forall b m.
+-- | Given the native query's definition and the permissions as defined in the
+-- native query's metadata, try to construct the @SELECT@ permission
+-- definition.
+buildLogicalModelSelPermInfo ::
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
+  ) =>
+  SourceName ->
+  LogicalModelLocation ->
+  InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b) ->
+  SelPerm b ->
+  m (WithDeps (SelPermInfo b))
+buildLogicalModelSelPermInfo source logicalModelLocation logicalModelFieldMap sp = withPathK "permission" do
+  let columns :: [Column b]
+      columns = interpColSpec (lmfName <$> InsOrdHashMap.elems logicalModelFieldMap) (spColumns sp)
+
+  -- Interpret the row permissions in the 'SelPerm' definition.
+  -- TODO: do row permisions work on non-scalar fields? Going to assume not and
+  -- filter out the non-scalars.
+  (spiFilter, boolExpDeps) <-
+    withPathK "filter"
+      $ procLogicalModelBoolExp source logicalModelLocation (logicalModelFieldsToFieldInfo logicalModelFieldMap) (spFilter sp)
+
+  let -- What parts of the metadata are interesting when computing the
+      -- permissions? These dependencies bubble all the way up to
+      -- 'buildSchemaCacheRule' so we can know when we need to rebuild the
+      -- schema.
+      deps :: Seq SchemaDependency
+      deps =
+        mconcat
+          [ Seq.singleton (mkLogicalModelParentDep @b source logicalModelLocation),
+            boolExpDeps,
+            fmap (mkLogicalModelColDep @b DRUntyped source logicalModelLocation)
+              $ Seq.fromList columns
+          ]
+
+      -- What headers are required in order to evaluate a given permission? For
+      -- example, does the permission mention the user's ID? If so, this
+      -- permission will require @x-hasura-user-id@.
+      spiRequiredHeaders :: HashSet Text
+      spiRequiredHeaders = getDependentHeaders (spFilter sp)
+
+  -- Are any row limits being applied to the user's results?
+  spiLimit <- withPathK "limit" case spLimit sp of
+    Just value | value < 0 -> throw400 NotSupported "unexpected negative value"
+    _ -> pure (spLimit sp)
+
+  let -- The columns accessible to this role.
+      --
+      -- TODO: do we care about inherited roles? We don't seem to set this to
+      -- anything other than 'Nothing' for in 'buildSelPermInfo' either.
+      spiCols :: HashMap (Column b) (AnnRedactionExpPartialSQL b)
+      spiCols = HashMap.fromList (map (,NoRedaction) columns)
+
+      -- Native queries don't have computed fields.
+      spiComputedFields :: HashMap ComputedFieldName (AnnRedactionExpPartialSQL b)
+      spiComputedFields = mempty
+
+  let -- We don't need something like validateAllowedRootFields because we
+      -- don't have any primary key or aggregate fields (table_by_pk etc).
+      spiAllowedQueryRootFields :: AllowedRootFields QueryRootFieldType
+      spiAllowedQueryRootFields = spAllowedQueryRootFields sp
+
+      spiAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
+      spiAllowedSubscriptionRootFields = spAllowedSubscriptionRootFields sp
+
+      -- We don't currently allow for aggregations over native queries.
+      spiAllowAgg :: Bool
+      spiAllowAgg = spAllowAggregations sp
+
+  return (SelPermInfo {..}, deps)
+
+buildSelPermInfo ::
+  forall b m r.
+  ( QErrM m,
+    TableCoreInfoRM b m,
+    BackendMetadata b,
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
   TableName b ->
@@ -410,33 +544,35 @@ buildSelPermInfo ::
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
 buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permission" $ do
-  let pgCols = interpColSpec (ciColumn <$> getCols fieldInfoMap) $ spColumns sp
+  let pgCols = interpColSpec (structuredColumnInfoColumn <$> getCols fieldInfoMap) $ spColumns sp
 
   (spiFilter, boolExpDeps) <-
-    withPathK "filter" $
-      procBoolExp source tableName fieldInfoMap $
-        spFilter sp
+    withPathK "filter"
+      $ procBoolExp source tableName fieldInfoMap
+      $ spFilter sp
 
   -- check if the columns exist
-  void $
-    withPathK "columns" $
-      indexedForM pgCols $ \pgCol ->
-        askColumnType fieldInfoMap pgCol autoInferredErr
+  void
+    $ withPathK "columns"
+    $ indexedForM pgCols
+    $ \pgCol ->
+      askColumnType fieldInfoMap pgCol autoInferredErr
 
   -- validate computed fields
   validComputedFields <-
-    withPathK "computed_fields" $
-      indexedForM computedFields $ \fieldName -> do
+    withPathK "computed_fields"
+      $ indexedForM computedFields
+      $ \fieldName -> do
         computedFieldInfo <- askComputedFieldInfo fieldInfoMap fieldName
         case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
           ReturnsScalar _ -> pure fieldName
           ReturnsTable returnTable ->
-            throw400 NotSupported $
-              "select permissions on computed field "
-                <> fieldName
-                  <<> " are auto-derived from the permissions on its returning table "
-                <> returnTable
-                  <<> " and cannot be specified manually"
+            throw400 NotSupported
+              $ "select permissions on computed field "
+              <> fieldName
+              <<> " are auto-derived from the permissions on its returning table "
+              <> returnTable
+              <<> " and cannot be specified manually"
           ReturnsOthers -> pure fieldName
 
   let deps =
@@ -448,11 +584,11 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
       spiLimit = spLimit sp
 
   withPathK "limit" $ for_ spiLimit \value ->
-    when (value < 0) $
-      throw400 NotSupported "unexpected negative value"
+    when (value < 0)
+      $ throw400 NotSupported "unexpected negative value"
 
-  let spiCols = HM.fromList $ map (,Nothing) pgCols
-      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
+  let spiCols = HashMap.fromList $ map (,NoRedaction) pgCols
+      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> NoRedaction
 
   (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
     validateAllowedRootFields source tableName roleName sp
@@ -464,72 +600,80 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 buildUpdPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   UpdPerm b ->
   m (WithDeps (UpdPermInfo b))
-buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendOnly) = do
+buildUpdPermInfo env source tn fieldInfoMap (UpdPerm colSpec set fltr check backendOnly validateInput) = do
   (be, beDeps) <-
-    withPathK "filter" $
-      procBoolExp source tn fieldInfoMap fltr
+    withPathK "filter"
+      $ procBoolExp source tn fieldInfoMap fltr
 
   checkExpr <- traverse (withPathK "check" . procBoolExp source tn fieldInfoMap) check
 
   (setColsSQL, setHeaders, setColDeps) <- procSetObj source tn fieldInfoMap set
 
   -- check if the columns exist
-  void $
-    withPathK "columns" $
-      indexedForM updCols $ \updCol -> do
-        -- Check that all columns specified do in fact exist and are columns
-        _ <- askColumnType fieldInfoMap updCol relInUpdErr
-        -- Check that the column is updatable
-        ci <- askColInfo fieldInfoMap updCol ""
-        unless (_cmIsUpdatable $ ciMutability ci) $
-          throw500
-            ( "Column "
-                <> updCol
-                  <<> " is not updatable and so cannot have update permissions defined"
-            )
+  void
+    $ withPathK "columns"
+    $ indexedForM updCols
+    $ \updCol -> do
+      -- Check that all columns specified do in fact exist and are columns
+      _ <- askColumnType fieldInfoMap updCol relInUpdErr
+      -- Check that the column is updatable
+      ci <- askColInfo fieldInfoMap updCol ""
+      unless (_cmIsUpdatable $ ciMutability ci)
+        $ throw500
+          ( "Column "
+              <> updCol
+              <<> " is not updatable and so cannot have update permissions defined"
+          )
 
   let updColDeps = mkColDep @b DRUntyped source tn <$> updCols
       deps = mkParentDep @b source tn Seq.:<| beDeps <> maybe mempty snd checkExpr <> Seq.fromList updColDeps <> setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
-      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HM.keysSet setColsSQL
-
-  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders, deps)
+      updColsWithoutPreSets = HS.fromList updCols `HS.difference` HashMap.keysSet setColsSQL
+  resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+  return (UpdPermInfo updColsWithoutPreSets tn be (fst <$> checkExpr) setColsSQL backendOnly reqHeaders resolvedValidateInput, deps)
   where
-    allUpdCols = map ciColumn $ filter (_cmIsUpdatable . ciMutability) $ getCols fieldInfoMap
+    allUpdCols = map structuredColumnInfoColumn $ filter (_cmIsUpdatable . structuredColumnInfoMutability) $ getCols fieldInfoMap
     updCols = interpColSpec allUpdCols colSpec
     relInUpdErr = "Only table columns can have update permissions defined, not relationships or other field types"
 
 buildDelPermInfo ::
-  forall b m.
+  forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
     BackendMetadata b,
-    GetAggregationPredicatesDeps b
+    GetAggregationPredicatesDeps b,
+    MonadReader r m,
+    Has (ScalarTypeParsingContext b) r
   ) =>
+  Env.Environment ->
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
   DelPerm b ->
   m (WithDeps (DelPermInfo b))
-buildDelPermInfo source tn fieldInfoMap (DelPerm fltr backendOnly) = do
+buildDelPermInfo env source tn fieldInfoMap (DelPerm fltr backendOnly validateInput) = do
   (be, beDeps) <-
-    withPathK "filter" $
-      procBoolExp source tn fieldInfoMap fltr
+    withPathK "filter"
+      $ procBoolExp source tn fieldInfoMap fltr
   let deps = mkParentDep @b source tn Seq.:<| beDeps
       depHeaders = getDependentHeaders fltr
-  return (DelPermInfo tn be backendOnly depHeaders, deps)
+  resolvedValidateInput <- for validateInput (traverse (resolveWebhook env))
+  return (DelPermInfo tn be backendOnly depHeaders resolvedValidateInput, deps)
 
 data SetPermComment b = SetPermComment
   { apSource :: SourceName,
@@ -542,11 +686,17 @@ data SetPermComment b = SetPermComment
 instance (Backend b) => FromJSON (SetPermComment b) where
   parseJSON = withObject "SetPermComment" $ \o ->
     SetPermComment
-      <$> o .:? "source" .!= defaultSource
-      <*> o .: "table"
-      <*> o .: "role"
-      <*> o .: "permission"
-      <*> o .:? "comment"
+      <$> o
+      .:? "source"
+      .!= defaultSource
+      <*> o
+      .: "table"
+      <*> o
+      .: "role"
+      <*> o
+      .: "permission"
+      <*> o
+      .:? "comment"
 
 runSetPermComment ::
   forall b m.
@@ -572,11 +722,12 @@ runSetPermComment (SetPermComment source table roleName permType comment) = do
       pure $ tmDeletePermissions . ix roleName . pdComment .~ comment
 
   let metadataObject =
-        MOSourceObjId source $
-          AB.mkAnyBackend $
-            SMOTableObj @b table $
-              MTOPerm roleName permType
-  buildSchemaCacheFor metadataObject $
-    MetadataModifier $
-      tableMetadataSetter @b source table %~ permModifier
+        MOSourceObjId source
+          $ AB.mkAnyBackend
+          $ SMOTableObj @b table
+          $ MTOPerm roleName permType
+  buildSchemaCacheFor metadataObject
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table
+    %~ permModifier
   pure successMsg

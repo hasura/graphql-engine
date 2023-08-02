@@ -1,8 +1,0 @@
-subscription {
-  message ( order_by: {id:desc} limit: 1) {
-    id
-    username
-    text
-    timestamp
-  } 
-}

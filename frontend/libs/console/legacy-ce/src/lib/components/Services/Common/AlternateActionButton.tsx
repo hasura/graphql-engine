@@ -1,4 +1,4 @@
-import { useGetAnalyticsAttributes } from '@/features/Analytics';
+import { useGetAnalyticsAttributes } from '../../../features/Analytics';
 import React, { ReactText } from 'react';
 
 type Props = {

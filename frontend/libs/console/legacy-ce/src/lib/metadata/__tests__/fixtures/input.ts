@@ -1,4 +1,5 @@
-import { HasuraMetadataV3 } from '../../types';
+import { LocalEventTriggerState } from '../../../components/Services/Events/EventTriggers/state';
+import { HasuraMetadataV3, RequestTransform } from '../../types';
 import { APILimitInputType } from '../../utils';
 
 export const inconsistentSourceObjects = [
@@ -107,6 +108,111 @@ export const multipleInconsistencyRemoteSchema = [
     type: 'remote_relationship',
   },
 ];
+
+export const eventTriggerState: LocalEventTriggerState = {
+  name: 'trigger_name',
+  table: {
+    name: 'table_name',
+    schema: 'public',
+  },
+  operations: {
+    insert: true,
+    update: false,
+    delete: false,
+    enable_manual: false,
+  },
+  operationColumns: [
+    {
+      name: 'name',
+      enabled: true,
+      type: 'text',
+    },
+    {
+      name: 'id',
+      enabled: true,
+      type: 'integer',
+    },
+  ],
+  webhook: {
+    type: 'static',
+    value: 'http://httpbin.org/post',
+  },
+  retryConf: {
+    num_retries: 10,
+    interval_sec: 20,
+    timeout_sec: 90,
+  },
+  headers: [
+    {
+      name: 'key',
+      type: 'static',
+      value: 'value',
+    },
+  ],
+  source: 'default',
+  isAllColumnChecked: true,
+};
+
+export const eventTriggerStateWithoutHeaders: LocalEventTriggerState = {
+  table: {
+    schema: 'public',
+    name: 'table_name',
+  },
+  operationColumns: [
+    {
+      name: 'name',
+      enabled: false,
+      type: 'text',
+    },
+    {
+      name: 'id',
+      enabled: false,
+      type: 'integer',
+    },
+  ],
+  name: 'trigger_name_1',
+  retryConf: {
+    interval_sec: 10,
+    num_retries: 0,
+    timeout_sec: 60,
+  },
+  source: 'default',
+  operations: {
+    insert: true,
+    update: false,
+    delete: false,
+    enable_manual: false,
+  },
+  isAllColumnChecked: false,
+  headers: [],
+  webhook: {
+    value: 'http://httpbin.org/post',
+    type: 'static',
+  },
+};
+
+export const source = {
+  name: 'default',
+  driver: 'postgres',
+} as const;
+
+export const requestTransform: RequestTransform = {
+  version: 2,
+  template_engine: 'Kriti',
+  method: 'GET',
+  url: '{{$base_url}}/me',
+  query_params: {
+    userId: '123',
+  },
+  request_headers: {
+    remove_headers: ['content-type'],
+  },
+  body: {
+    action: 'transform',
+    template:
+      '{\n  "table": {\n    "name": {{$body.table.name}},\n    "schema": {{$body.table.schema}}\n  }\n}',
+  },
+};
 
 type apiLimitsType = {
   old_state: HasuraMetadataV3['api_limits'];

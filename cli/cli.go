@@ -28,6 +28,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/pgdump"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1graphql"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1version"
 	"github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/v1metadata"
@@ -228,7 +229,6 @@ func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error
 	if err != nil {
 		return errors.E(op, fmt.Errorf("error fetching config from server: %w", err))
 	}
-
 	r, err := client.Do(ctx, req, &c.HasuraServerInternalConfig)
 	if err != nil {
 		return errors.E(op, errors.KindNetwork, err)
@@ -771,6 +771,7 @@ You could fix this problem by taking one of the following actions:
 		V2Query:    v2query.New(httpClient, ec.Config.GetV2QueryEndpoint()),
 		PGDump:     pgdump.New(httpClient, ec.Config.GetPGDumpEndpoint()),
 		V1Graphql:  v1graphql.New(httpClient, ec.Config.GetV1GraphqlEndpoint()),
+		V1Version:  v1version.New(httpClient, ec.Config.GetVersionEndpoint()),
 	}
 	var state *util.ServerState
 	if ec.HasMetadataV3 {

@@ -25,6 +25,7 @@ newtype RemoteSchemaName = RemoteSchemaName
       J.ToJSON,
       J.ToJSONKey,
       J.FromJSON,
+      J.FromJSONKey,
       PG.ToPrepArg,
       PG.FromCol,
       ToTxt,

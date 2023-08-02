@@ -1,7 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
-import { useServerConfig } from '@/hooks';
-import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
+import { useServerConfig } from '../../../../../hooks';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 export type ApolloFederationSupportProps = {
@@ -28,14 +28,11 @@ export const ApolloFederationSupport = ({
   return (
     <div className="mb-lg">
       <div className="flex items-center mb-formlabel">
-        <h4 className="flex items-center text-gray-600 font-semibold mr-sm">
+        <h4 className="flex items-center text-gray-600 font-semibold">
           Enable Apollo Federation
           <ToolTip message="Allows Apollo federated subgraphs to use this table in their schema by adding the `@key` directive" />
         </h4>
-        <KnowMoreLink
-          href="https://hasura.io/docs/latest/data-federation/apollo-federation/"
-          text="Know More"
-        />
+        <LearnMoreLink href="https://hasura.io/docs/latest/data-federation/apollo-federation/" />
       </div>
       {!isSupportForApolloFederationEnabled ? (
         <div className="font-thin">

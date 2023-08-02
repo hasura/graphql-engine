@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import { FaInfoCircle } from 'react-icons/fa';
 
 const AllowListHeader = ({ title }) => {

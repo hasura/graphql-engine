@@ -1,4 +1,4 @@
-import { isPostgresFlavour } from '@/components/Services/Data/DataSources/utils';
+import { isPostgresFlavour } from '../components/Services/Data/DataSources/utils';
 import { Driver } from '../dataSources';
 import { getDataSourcePrefix, isPostgres } from './dataSource.utils';
 import {

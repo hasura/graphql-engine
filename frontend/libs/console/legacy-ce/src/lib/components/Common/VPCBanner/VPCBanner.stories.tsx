@@ -1,6 +1,6 @@
 import React from 'react';
-import { ComponentMeta } from '@storybook/react';
-import VPCBanner from '@/components/Common/VPCBanner/VPCBanner';
+import { Meta } from '@storybook/react';
+import VPCBanner from './VPCBanner';
 
 export default {
   title: 'components/VPCBanner',
@@ -8,7 +8,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-} as ComponentMeta<typeof VPCBanner>;
+} as Meta<typeof VPCBanner>;
 
 export const Showcase = () => (
   <VPCBanner onClose={() => window.alert('Close banner clicked')} />

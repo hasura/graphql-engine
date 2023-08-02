@@ -11,7 +11,7 @@ import {
   UPDATE_PROJECT_ID,
   UPDATE_PROJECT_NAME,
 } from '../Main/Actions';
-import { IconTooltip } from '@hasura/console-oss';
+import { IconTooltip } from '@hasura/console-legacy-ce';
 
 // import { FT_LOGIN_WITH_HASURA } from '../../helpers/versionUtils';
 
@@ -30,6 +30,7 @@ import ssoIcon from './black-building.svg';
 import keyIcon from './black-key.svg';
 import { AdminSecretLogin } from './AdminSecretLogin';
 import { SSOLogin } from './SSOLogin';
+import SSOLoginButton from './SSOLoginButton';
 
 class Login extends Component {
   constructor(props) {
@@ -100,6 +101,26 @@ class Login extends Component {
         );
         // return <LoginWith location={location} />;
       }
+    };
+
+    // render SSO login buttons from 3rd-party identity providers
+    // that EE users define
+    const sso3rdPartyEnabled = () =>
+      Array.isArray(globals.ssoIdentityProviders) &&
+      globals.ssoIdentityProviders.length > 0 &&
+      ['pro', 'cloud', 'pro-lite'].includes(globals.consoleType);
+
+    const render3rdPartySSOLogin = () => {
+      return globals.ssoIdentityProviders.map((idp, i) => (
+        <SSOLoginButton
+          key={`idp-${idp.client_id}-${i}`}
+          location={location}
+          clientId={idp.client_id}
+          name={idp.name}
+          authorizationUrl={idp.authorization_url}
+          scope={idp.scope}
+        />
+      ));
     };
 
     const handleLoginClick = e => {
@@ -223,14 +244,28 @@ class Login extends Component {
     };
 
     if (globals.consoleType === 'pro-lite' && !globals.ssoEnabled) {
-      return <AdminSecretLogin />;
+      // the ssoEnabled boolean variable enables Hasura Lux SSO
+      // 3rd-party SSO buttons are rendered regardless the ssoEnabled variable is enabled or not
+      return (
+        <AdminSecretLogin>
+          {sso3rdPartyEnabled() && (
+            <div className="space-y-md mb-md">{render3rdPartySSOLogin()}</div>
+          )}
+        </AdminSecretLogin>
+      );
     }
 
     if (globals.consoleType === 'pro-lite' && globals.ssoEnabled) {
       return (
         <div>
           {this.state.showAdminSecretLogin ? (
-            <AdminSecretLogin backToLoginHome={backToLoginHome} />
+            <AdminSecretLogin backToLoginHome={backToLoginHome}>
+              {sso3rdPartyEnabled() && (
+                <div className="space-y-md mb-md">
+                  {render3rdPartySSOLogin()}
+                </div>
+              )}
+            </AdminSecretLogin>
           ) : (
             <SSOLogin
               ssoIcon={ssoIcon}
@@ -238,7 +273,9 @@ class Login extends Component {
               doAdminSecretLogin={doAdminSecretLogin}
               doSSOLogin={doSSOLogin}
               keyIcon={keyIcon}
-            />
+            >
+              {sso3rdPartyEnabled() && render3rdPartySSOLogin()}
+            </SSOLogin>
           )}
         </div>
       );
@@ -250,10 +287,15 @@ class Login extends Component {
           <div className={styles.loginCenter}>
             <Helmet title={'Login | ' + 'Hasura'} />
             <div className={styles.hasuraLogo}>
-              <img src={hasuraLogo} />
+              <img src={hasuraLogo} alt="hasura logo" />
             </div>
             <div className={styles.loginWrapper}>
               <form className="form-horizontal" onSubmit={handleLoginClick}>
+                {sso3rdPartyEnabled() && (
+                  <div className="px-md mt-sm space-y-md">
+                    {render3rdPartySSOLogin()}
+                  </div>
+                )}
                 <div
                   className={styles.input_addon_group + ' ' + styles.padd_top}
                 >

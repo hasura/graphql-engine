@@ -178,6 +178,18 @@ You can also leave out the `--endpoint` flag if the project has already been ini
 will use the endpoint information from the config.yaml file. Note that Hasura Server keeps track of which Migrations
 have already been applied and will not reapply a migration if it has already been applied.
 
+## Marking Migrations as applied {#mark-migrations-applied}
+
+If the schema already exists on your database or you have already applied a Migration to a database, you can let
+Hasura Engine know by marking it as applied in the Hasura Metadata. This is in order to make the Migration states
+consistent.
+
+To do this, use the `--skip-execution` flag with the `migrate apply` command in the Hasura CLI, eg:
+
+```bash
+hasura migrate apply --skip-execution --version 1650879664716 --endpoint https://another-hasura-instance.hasura.app
+```
+
 ## Rolling back applied Migrations {#roll-back-migrations}
 
 If there are any issues with changes made to the database schema and Hasura Metadata it is possible to roll back the
@@ -292,7 +304,7 @@ version (identified by its timestamp number) having been applied.
 
 For example to delete Migrations on the server only
 
-:::info Best Practise
+:::info Best Practice
 
 It's a good idea to always copy or move your Migrations before deleting them in case there is an error or mistake and
 you need them again. You can use the command `mv migrations migrations_backup` to quickly move your Migrations folder to
@@ -322,7 +334,7 @@ hasura migrate delete --all --database-name <database-name>
 
 ## Auto-Applying Migrations in CI/CD {#auto-apply-migrations}
 
-If you need an automated way of applying Migrations and Metadata, take a look at the [cli-migrations]
-(/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply Migrations and
-Metadata when the Hasura Server starts.
+If you need an automated way of applying Migrations and Metadata, take a look at the
+[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply
+Migrations and Metadata when the Hasura Server starts.
 [Check out more information here](/migrations-metadata-seeds/auto-apply-migrations.mdx).

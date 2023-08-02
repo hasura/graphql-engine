@@ -309,7 +309,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 		buf.WriteString(fmt.Sprintf("%s\n\n", long))
 		buf.WriteString("```\n\n")
 	} else {
-		buf.WriteString(fmt.Sprintf("%s\n\n", long+"."))
+		buf.WriteString(fmt.Sprintf("%s\n\n", long))
 	}
 
 	if cmd.Runnable() {
@@ -340,7 +340,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 			pname := parent.CommandPath()
 			link := pname + ".mdx"
 			link = strings.ReplaceAll(link, " ", "_")
-			buf.WriteString(fmt.Sprintf("* [%s](%s)\t - %s\n", pname, linkHandler(link), parent.Short))
+			buf.WriteString(fmt.Sprintf("- [%s](%s) - %s\n", pname, linkHandler(link), parent.Short))
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -358,7 +358,7 @@ func genMarkdownXCustom(cmd *cobra.Command, w io.Writer, linkHandler func(string
 			cname := name + " " + child.Name()
 			link := cname + ".mdx"
 			link = strings.ReplaceAll(link, " ", "_")
-			buf.WriteString(fmt.Sprintf("* [%s](%s)\t - %s\n", cname, linkHandler(link), child.Short))
+			buf.WriteString(fmt.Sprintf("- [%s](%s) - %s\n", cname, linkHandler(link), child.Short))
 		}
 		buf.WriteString("\n")
 	}

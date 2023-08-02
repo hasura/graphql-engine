@@ -13,13 +13,11 @@ keywords:
 
 ## Introduction
 
-The PG Dump API is an admin-only endpoint that can be used to execute
-`pg_dump` on the Postgres instance that Hasura is configured with.
+The PG Dump API is an **admin-only** endpoint that can be used to execute `pg_dump` on the Postgres instance that Hasura
+is configured with.
 
-The primary motive of this API is to provide convenience methods to
-initialise Migrations from an existing Hasura instance. But the
-functionality can be later expanded to do other things such as taking a
-data dump etc.
+The primary motive of this API is to provide convenience methods to initialize Migrations from an existing Hasura
+instance. But the functionality can be later expanded to do other things such as taking a data dump, etc.
 
 ## Endpoint
 
@@ -33,6 +31,7 @@ All requests are `POST` requests to the `/v1alpha1/pg_dump` endpoint.
 POST /v1alpha1/pg_dump HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
+X-Hasura-Admin-Secret: <admin-secret>
 
 {
   "opts": ["-O", "-x", "--schema-only", "--schema", "public"],
@@ -41,15 +40,15 @@ X-Hasura-Role: admin
 }
 ```
 
-- `opts`: Arguments to be passed to the `pg_dump` tool. Represented as
-  array of strings. The underlying command that is executed is:
+- `opts`: Arguments to be passed to the `pg_dump` tool. Represented as array of strings. The underlying command that is
+  executed is:
 
   ```bash
   pg_dump $DATABASE_URL $OPTS -f $FILENAME
   ```
 
-- `clean_output`: When this optional argument is set to `true`, the
-  output SQL from the command is cleaned to remove the following:
+- `clean_output`: When this optional argument is set to `true`, the output SQL from the command is cleaned to remove the
+  following:
 
   - SQL front matter, like SET statements.
   - `CREATE SCHEMA public`.
@@ -57,8 +56,7 @@ X-Hasura-Role: admin
   - Comments (`--`) and empty newlines.
   - Postgres triggers created by Hasura for Event Triggers.
 
-- `source`: the name of the connected database on which to run
-  `pg_dump` on. If skipped, it is set to `default`
+- `source`: the name of the connected database on which to run `pg_dump` on. If skipped, it is set to `default`
 
 ### Sample response
 
@@ -84,13 +82,12 @@ ALTER TABLE ONLY public.author ALTER COLUMN id SET DEFAULT nextval('public.autho
 
 ## Disabling PG Dump API
 
-Since this API can be used to dump all the Postgres data and schema, it
-can be disabled, especially in production deployments.
+Since this API can be used to dump all the Postgres data and schema, it can be disabled, especially in production
+deployments.
 
-The `enabled-apis` flag or the `HASURA_GRAPHQL_ENABLED_APIS` env var can
-be used to enable/disable this API. By default, The PG DumpAPI is
-enabled. To disable it, you need to explicitly state that this API is
-not enabled. i.e. remove it from the list of enabled APIs.
+The `enabled-apis` flag or the `HASURA_GRAPHQL_ENABLED_APIS` env var can be used to enable/disable this API. By default,
+The PG DumpAPI is enabled. To disable it, you need to explicitly state that this API is not enabled. i.e. remove it from
+the list of enabled APIs.
 
 ```bash
 # enable only graphql & Metadata apis, disable pgdump
@@ -98,4 +95,5 @@ not enabled. i.e. remove it from the list of enabled APIs.
 HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 ```
 
-See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for info on setting the above flag/env var.
+See [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx) for info on setting the
+above flag/env var.

@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -21,7 +22,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     TableBuildInput (TableBuildInput, _tbiName),
     TablePermissionInputs (..),
     addTableContext,
-    bindErrorA,
+    addLogicalModelContext,
     boActions,
     boCustomTypes,
     boBackendCache,
@@ -38,22 +39,26 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     runCacheBuild,
     runCacheBuildM,
     withRecordDependencies,
+    SourcesIntrospectionStatus (..),
   )
 where
 
 import Control.Arrow.Extended
 import Control.Arrow.Interpret
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Unique
-import Data.HashMap.Strict.Extended qualified as M
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.Extended qualified as HashMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.Incremental qualified as Inc
+import Hasura.LogicalModel.Types (LogicalModelLocation (..), LogicalModelName)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache.Config
+import Hasura.RQL.DDL.SchemaRegistry (SchemaRegistryAction)
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
@@ -68,27 +73,25 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RemoteSchema.Metadata
-import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.Server.Types
-import Hasura.Session
-import Network.HTTP.Client.Manager (HasHttpManagerM (..))
+import Hasura.Services
+import Hasura.Table.Metadata (TableMetadata (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
 
 newtype BackendInvalidationKeysWrapper (b :: BackendType) = BackendInvalidationKeysWrapper
   { unBackendInvalidationKeysWrapper :: BackendInvalidationKeys b
   }
 
-deriving newtype instance Eq (BackendInvalidationKeys b) => Eq (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Eq (BackendInvalidationKeys b)) => Eq (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Ord (BackendInvalidationKeys b) => Ord (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Ord (BackendInvalidationKeys b)) => Ord (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Show (BackendInvalidationKeys b) => Show (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Show (BackendInvalidationKeys b)) => Show (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Semigroup (BackendInvalidationKeys b) => Semigroup (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Semigroup (BackendInvalidationKeys b)) => Semigroup (BackendInvalidationKeysWrapper b)
 
-deriving newtype instance Monoid (BackendInvalidationKeys b) => Monoid (BackendInvalidationKeysWrapper b)
+deriving newtype instance (Monoid (BackendInvalidationKeys b)) => Monoid (BackendInvalidationKeysWrapper b)
 
 instance Inc.Select (BackendInvalidationKeysWrapper b)
 
@@ -118,11 +121,11 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     }
   where
     invalidate ::
-      Hashable a =>
+      (Hashable a) =>
       a ->
       HashMap a Inc.InvalidationKey ->
       HashMap a Inc.InvalidationKey
-    invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
+    invalidate = HashMap.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
     invalidateDataConnectors :: BackendInvalidationKeysWrapper 'DataConnector -> BackendInvalidationKeysWrapper 'DataConnector
     invalidateDataConnectors (BackendInvalidationKeysWrapper invalidationKeys) =
@@ -132,7 +135,8 @@ data TableBuildInput b = TableBuildInput
   { _tbiName :: TableName b,
     _tbiIsEnum :: Bool,
     _tbiConfiguration :: TableConfig b,
-    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig
+    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig,
+    _tbiLogicalModel :: Maybe LogicalModelName
   }
   deriving (Show, Eq, Generic)
 
@@ -165,21 +169,21 @@ mkTableInputs ::
 mkTableInputs TableMetadata {..} =
   (buildInput, nonColumns, permissions)
   where
-    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig _tmLogicalModel
     nonColumns =
       NonColumnTableInputs
         _tmTable
-        (OMap.elems _tmObjectRelationships)
-        (OMap.elems _tmArrayRelationships)
-        (OMap.elems _tmComputedFields)
-        (OMap.elems _tmRemoteRelationships)
+        (InsOrdHashMap.elems _tmObjectRelationships)
+        (InsOrdHashMap.elems _tmArrayRelationships)
+        (InsOrdHashMap.elems _tmComputedFields)
+        (InsOrdHashMap.elems _tmRemoteRelationships)
     permissions =
       TablePermissionInputs
         _tmTable
-        (OMap.elems _tmInsertPermissions)
-        (OMap.elems _tmSelectPermissions)
-        (OMap.elems _tmUpdatePermissions)
-        (OMap.elems _tmDeletePermissions)
+        (InsOrdHashMap.elems _tmInsertPermissions)
+        (InsOrdHashMap.elems _tmSelectPermissions)
+        (InsOrdHashMap.elems _tmUpdatePermissions)
+        (InsOrdHashMap.elems _tmDeletePermissions)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
 -- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
@@ -205,12 +209,12 @@ data CacheBuildParams = CacheBuildParams
   { _cbpManager :: HTTP.Manager,
     _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
     _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
-    _cbpServerConfigCtx :: ServerConfigCtx
+    _cbpStaticConfig :: CacheStaticConfig
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
 newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
-  deriving
+  deriving newtype
     ( Functor,
       Applicative,
       Monad,
@@ -218,15 +222,14 @@ newtype CacheBuild a = CacheBuild (ReaderT CacheBuildParams (ExceptT QErr IO) a)
       MonadReader CacheBuildParams,
       MonadIO,
       MonadBase IO,
-      MonadBaseControl IO,
-      MonadUnique
+      MonadBaseControl IO
     )
 
-instance HasHttpManagerM CacheBuild where
-  askHttpManager = asks _cbpManager
+instance HasCacheStaticConfig CacheBuild where
+  askCacheStaticConfig = asks _cbpStaticConfig
 
-instance HasServerConfigCtx CacheBuild where
-  askServerConfigCtx = asks _cbpServerConfigCtx
+instance ProvidesNetwork CacheBuild where
+  askHTTPManager = asks _cbpManager
 
 instance MonadResolveSource CacheBuild where
   getPGSourceResolver = asks _cbpPGSourceResolver
@@ -245,35 +248,38 @@ runCacheBuild params (CacheBuild m) = do
 runCacheBuildM ::
   ( MonadIO m,
     MonadError QErr m,
-    HasHttpManagerM m,
-    HasServerConfigCtx m,
-    MonadResolveSource m
+    MonadResolveSource m,
+    ProvidesNetwork m,
+    HasCacheStaticConfig m
   ) =>
   CacheBuild a ->
   m a
 runCacheBuildM m = do
   params <-
     CacheBuildParams
-      <$> askHttpManager
+      <$> askHTTPManager
       <*> getPGSourceResolver
       <*> getMSSQLSourceResolver
-      <*> askServerConfigCtx
+      <*> askCacheStaticConfig
   runCacheBuild params m
+
+-- | The status of collection of stored introspections of remote schemas and data sources.
+data SourcesIntrospectionStatus
+  = -- | A full introspection collection of all available remote schemas and data sources.
+    SourcesIntrospectionChangedFull StoredIntrospection
+  | -- | A partial introspection collection. Does not include all configured remote schemas and data sources, because they were not available.
+    SourcesIntrospectionChangedPartial StoredIntrospection
+  | -- | None of remote schemas or data sources introspection is refetched.
+    SourcesIntrospectionUnchanged
 
 data RebuildableSchemaCache = RebuildableSchemaCache
   { lastBuiltSchemaCache :: SchemaCache,
     _rscInvalidationMap :: InvalidationKeys,
-    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
   }
 
-bindErrorA ::
-  (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m) =>
-  arr (m a) a
-bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
-{-# INLINE bindErrorA #-}
-
 withRecordDependencies ::
-  (ArrowWriter (Seq (Either im MetadataDependency)) arr) =>
+  (ArrowWriter (Seq CollectItem) arr) =>
   WriterA (Seq SchemaDependency) arr (e, s) a ->
   arr (e, (MetadataObject, (SchemaObjId, s))) a
 withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
@@ -283,7 +289,7 @@ withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
 {-# INLINEABLE withRecordDependencies #-}
 
 noDuplicates ::
-  (MonadWriter (Seq (Either InconsistentMetadata md)) m) =>
+  (MonadWriter (Seq CollectItem) m) =>
   (a -> MetadataObject) ->
   [a] ->
   m (Maybe a)
@@ -293,7 +299,7 @@ noDuplicates mkMetadataObject = \case
   values@(value : _) -> do
     let objectId = _moId $ mkMetadataObject value
         definitions = map (_moDefinition . mkMetadataObject) values
-    tell $ Seq.singleton $ Left (DuplicateObjects objectId definitions)
+    tell $ Seq.singleton $ CollectInconsistentMetadata (DuplicateObjects objectId definitions)
     return Nothing
 
 -- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
@@ -301,7 +307,7 @@ noDuplicates mkMetadataObject = \case
 buildInfoMap ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -309,7 +315,7 @@ buildInfoMap ::
   (e, a) `arr` Maybe b ->
   (e, [a]) `arr` HashMap k b
 buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <-
     (|
       Inc.keyed
@@ -319,12 +325,13 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) -> do
               Nothing -> returnA -< Nothing
               Just info -> buildInfo -< (e, info)
         )
-      |) groupedInfos
+      |)
+      groupedInfos
   returnA -< catMaybes infoMapMaybes
 {-# INLINEABLE buildInfoMap #-}
 
 buildInfoMapM ::
-  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+  ( MonadWriter (Seq CollectItem) m,
     Hashable k
   ) =>
   (a -> k) ->
@@ -333,7 +340,7 @@ buildInfoMapM ::
   [a] ->
   m (HashMap k b)
 buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
-  let groupedInfos = M.groupOn extractKey infos
+  let groupedInfos = HashMap.groupOn extractKey infos
   infoMapMaybes <- for groupedInfos \duplicateInfos -> do
     infoMaybe <- noDuplicates mkMetadataObject duplicateInfos
     case infoMaybe of
@@ -348,7 +355,7 @@ buildInfoMapM extractKey mkMetadataObject buildInfo infos = do
 buildInfoMapPreservingMetadata ::
   ( ArrowChoice arr,
     Inc.ArrowDistribute arr,
-    ArrowWriter (Seq (Either InconsistentMetadata md)) arr,
+    ArrowWriter (Seq CollectItem) arr,
     Hashable k
   ) =>
   (a -> k) ->
@@ -364,7 +371,7 @@ buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
 {-# INLINEABLE buildInfoMapPreservingMetadata #-}
 
 buildInfoMapPreservingMetadataM ::
-  ( MonadWriter (Seq (Either InconsistentMetadata md)) m,
+  ( MonadWriter (Seq CollectItem) m,
     Hashable k
   ) =>
   (a -> k) ->
@@ -381,3 +388,7 @@ buildInfoMapPreservingMetadataM extractKey mkMetadataObject buildInfo =
 
 addTableContext :: (Backend b) => TableName b -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
+
+addLogicalModelContext :: LogicalModelLocation -> Text -> Text
+addLogicalModelContext (LMLLogicalModel logicalModelName) e = "in logical model " <> logicalModelName <<> ": " <> e
+addLogicalModelContext (LMLNativeQuery nativeQueryName) e = "in logical model for native query" <> nativeQueryName <<> ": " <> e

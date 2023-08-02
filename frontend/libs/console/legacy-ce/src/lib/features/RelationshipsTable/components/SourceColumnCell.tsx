@@ -42,11 +42,9 @@ type SourceColumnCellType = {
 
 const SourceColumnCell = ({ type, name }: SourceColumnCellType) => {
   return (
-    <>
-      <div className="flex items-center">
-        {getRelationIcon(type)} {name}
-      </div>
-    </>
+    <div className="flex items-center">
+      {getRelationIcon(type)} {name}
+    </div>
   );
 };
 

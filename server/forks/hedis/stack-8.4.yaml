@@ -1,0 +1,11 @@
+resolver: nightly-2018-03-17
+packages:
+- '.'
+extra-deps:
+- slave-thread-1.0.2
+- list-t-1.0.1
+- stm-containers-0.2.16
+flags:
+  hedis:
+    dev: true
+extra-package-dbs: []

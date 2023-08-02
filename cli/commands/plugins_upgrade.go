@@ -13,9 +13,9 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/plugins"
 	"github.com/hasura/graphql-engine/cli/v2/util"
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 
 	"github.com/spf13/cobra"
 )
@@ -27,6 +27,7 @@ func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsUpgradeCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade a plugin to a newer version",
+		Long:  "To upgrade a plugin, run the upgrade command with the name of the plugin as an argument. If unsure of the plugin's name, you can run the `Hasura plugins list` command to see a list of all the available plugins.",
 		Example: `  # Upgrade a plugin to a newer version
   hasura plugins upgrade [plugin-name]`,
 		SilenceUsage: true,
@@ -72,8 +73,8 @@ type PluginUpgradeOptions struct {
 
 func (o *PluginUpgradeOptions) Run() (plugins.Plugin, error) {
 	var op errors.Op = "commands.PluginUpgradeOptions.Run"
-	p ,err := o.EC.PluginsConfig.Upgrade(o.Name, o.Version.Version)
-	if  err != nil {
+	p, err := o.EC.PluginsConfig.Upgrade(o.Name, o.Version.Version)
+	if err != nil {
 		return p, errors.E(op, err)
 	}
 	return p, nil

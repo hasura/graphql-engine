@@ -4,7 +4,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../features/Analytics';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';

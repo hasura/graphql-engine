@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 import UniqueKeyWrapper from './UniqueKeyWrapper';
@@ -53,6 +53,7 @@ import {
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
+  columnsDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
@@ -507,7 +508,7 @@ class AddTable extends Component {
 
     return (
       <Analytics name="AddTable" {...REDACT_EVERYTHING}>
-        <div className="p-lg">
+        <div className="p-lg bootstrap-jail">
           <Helmet title={`Add Table - Data | Hasura`} />
           <div>
             <h2 className="text-xl font-semibold mb-lg">Add a New Table</h2>
@@ -535,6 +536,7 @@ class AddTable extends Component {
             <div className="w-full mb-lg">
               <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
                 Columns
+                <ToolTip message={columnsDescription} />
               </h4>
               <TableColumns
                 uniqueKeys={uniqueKeys}

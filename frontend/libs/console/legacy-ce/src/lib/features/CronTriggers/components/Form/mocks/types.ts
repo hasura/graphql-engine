@@ -1,4 +1,4 @@
-import { CronTrigger } from '@/metadata/types';
+import { CronTrigger } from '../../../../../metadata/types';
 
 type ResponseBodyOnSuccess = {
   message: 'success';

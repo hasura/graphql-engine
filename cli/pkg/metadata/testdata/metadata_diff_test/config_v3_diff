@@ -1,6 +1,6 @@
 - server
 + project
-@@ -13,14 +13,20 @@
+@@ -13,15 +13,20 @@
 -    tables: []
 +    tables:
 +      - table:
@@ -19,5 +19,6 @@
 -api_limits: {}
 -inherited_roles: []
 -opentelemetry: {}
+-backend_configs: {}
 -graphql_schema_introspection:
 -  disabled_for_roles: []

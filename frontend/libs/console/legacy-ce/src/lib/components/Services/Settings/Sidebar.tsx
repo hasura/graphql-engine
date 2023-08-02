@@ -1,22 +1,22 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { Link, RouteComponentProps } from 'react-router';
-import { useServerConfig } from '@/hooks';
+import { RouteComponentProps } from 'react-router';
+import { useServerConfig } from '../../../hooks';
+import { useMetadata } from '../../../features/MetadataAPI';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
-import CheckIcon from '../../Common/Icons/Check';
-import CrossIcon from '../../Common/Icons/Cross';
-import TimesCircleIcon from '../../Common/Icons/TimesCircle';
-import ExclamationTriangleIcon from '../../Common/Icons/ExclamationTriangle';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
-import { isProLiteConsole } from '../../../utils/proConsole';
-
-import styles from '../../Common/TableCommon/Table.module.scss';
 import {
-  checkFeatureSupport,
-  INSECURE_TLS_ALLOW_LIST,
-} from '../../../helpers/versionUtils';
+  NavigationSidebar,
+  NavigationSidebarProps,
+  NavigationSidebarSection,
+} from '../../../new-components/NavigationSidebar';
+
+import { useEELiteAccess } from '../../../features/EETrial';
+import { getQueryResponseCachingRoute } from '../../../utils/routeUtils';
+import { isCloudConsole } from '../../../utils/cloudConsole';
+import { isOpenTelemetrySupported } from '../../../utils/proConsole';
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -29,58 +29,73 @@ type SidebarProps = {
 };
 
 type SectionDataKey =
-  | 'actions'
-  | 'status'
-  | 'allow-list'
-  | 'logout'
+  | 'metadata'
+  | 'security'
+  | 'monitoring'
+  | 'performance'
   | 'about'
-  | 'inherited-roles'
-  | 'insecure-domain'
-  | 'prometheus-settings'
-  | 'feature-flags';
-
-interface SectionData {
-  key: SectionDataKey;
-  link: string;
-  dataTestVal: string;
-  title: string | JSX.Element;
-}
+  | 'graphql';
 
 const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
-  const sectionsData: SectionData[] = [];
+  const eeLiteAccess = useEELiteAccess(globals);
 
-  sectionsData.push({
+  const sectionsData: Partial<
+    Record<SectionDataKey, NavigationSidebarSection>
+  > = {};
+  sectionsData.metadata = {
+    key: 'metadata',
+    label: 'Metadata',
+    items: [],
+  };
+
+  if (
+    isCloudConsole(globals) &&
+    (globals.userRole === 'admin' || globals.userRole === 'owner')
+  ) {
+    sectionsData.graphql = {
+      key: 'graphql',
+      label: 'GraphQL',
+      items: [
+        {
+          key: 'schema-registry',
+          label: 'Schema Registry (Beta)',
+          route: '/settings/schema-registry',
+          dataTestVal: 'metadata-schema-registry-link',
+        },
+      ],
+    };
+  }
+
+  sectionsData.metadata.items.push({
     key: 'actions',
-    link: '/settings/metadata-actions',
+    label: 'Metadata Actions',
+    route: '/settings/metadata-actions',
     dataTestVal: 'metadata-actions-link',
-    title: 'Metadata Actions',
   });
 
-  const consistentIcon =
-    metadata.inconsistentObjects.length === 0 &&
-    metadata.inconsistentInheritedRoles.length === 0 ? (
-      <CheckIcon />
-    ) : (
-      <CrossIcon />
-    );
-
-  sectionsData.push({
+  sectionsData.metadata.items.push({
     key: 'status',
-    link: '/settings/metadata-status',
+    label: 'Metadata Status',
+    route: '/settings/metadata-status',
+    status:
+      metadata.inconsistentObjects.length === 0 &&
+      metadata.inconsistentInheritedRoles.length === 0
+        ? 'enabled'
+        : 'error',
     dataTestVal: 'metadata-status-link',
-    title: (
-      <div className={styles.display_flex}>
-        Metadata Status
-        <span className={styles.add_mar_left}>{consistentIcon}</span>
-      </div>
-    ),
   });
 
-  sectionsData.push({
+  sectionsData.security = {
+    key: 'security',
+    label: 'Security',
+    items: [],
+  };
+
+  sectionsData.security.items.push({
     key: 'allow-list',
-    link: '/api/allow-list',
+    label: 'Allow List',
+    route: '/api/allow-list',
     dataTestVal: 'allow-list-link',
-    title: 'Allow List',
   });
 
   const adminSecret = getAdminSecret();
@@ -90,100 +105,154 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     globals.consoleMode !== CLI_CONSOLE_MODE &&
     globals.consoleType !== 'cloud'
   ) {
-    sectionsData.push({
+    sectionsData.security.items.push({
       key: 'logout',
-      link: '/settings/logout',
+      label: 'Logout (clear admin-secret)',
+      route: '/settings/logout',
       dataTestVal: 'logout-page-link',
-      title: 'Logout (clear admin-secret)',
     });
   }
 
-  sectionsData.push({
-    key: 'about',
-    link: '/settings/about',
-    dataTestVal: 'about-link',
-    title: 'About',
-  });
-
-  sectionsData.push({
+  sectionsData.security.items.push({
     key: 'inherited-roles',
-    link: '/settings/inherited-roles',
+    label: 'Inherited Roles',
+    route: '/settings/inherited-roles',
     dataTestVal: 'inherited-roles-link',
-    title: 'Inherited Roles',
   });
 
-  if (checkFeatureSupport(INSECURE_TLS_ALLOW_LIST))
-    sectionsData.push({
-      key: 'insecure-domain',
-      link: '/settings/insecure-domain',
-      dataTestVal: 'insecure-domain-link',
-      title: 'Insecure TLS Allow List',
+  sectionsData.security.items.push({
+    key: 'insecure-domain',
+    label: 'Insecure TLS Allow List',
+    route: '/settings/insecure-domain',
+    dataTestVal: 'insecure-domain-link',
+  });
+
+  const { data: openTelemetry } = useMetadata(m => m.metadata.opentelemetry);
+  const { data: configData, isLoading, isError } = useServerConfig();
+
+  if (eeLiteAccess.access !== 'forbidden') {
+    sectionsData.monitoring = {
+      key: 'monitoring',
+      label: 'Monitoring & observability',
+      items: [],
+    };
+    sectionsData.monitoring.items.push({
+      key: 'prometheus-settings',
+      label: 'Prometheus Metrics',
+      status:
+        eeLiteAccess.access !== 'active'
+          ? 'disabled'
+          : isLoading
+          ? 'loading'
+          : isError
+          ? 'error'
+          : configData?.is_prometheus_metrics_enabled
+          ? 'enabled'
+          : 'disabled',
+      route: '/settings/prometheus-settings',
+      dataTestVal: 'prometheus-settings-link',
+    });
+  }
+
+  if (isOpenTelemetrySupported(window.__env)) {
+    if (!sectionsData.monitoring) {
+      sectionsData.monitoring = {
+        key: 'monitoring',
+        label: 'Monitoring & observability',
+        items: [],
+      };
+    }
+
+    sectionsData.monitoring.items.push({
+      key: 'opentelemetry-settings',
+      label: 'OpenTelemetry Exporter (Beta)',
+      status:
+        eeLiteAccess.access !== 'active' &&
+        !isOpenTelemetrySupported(window.__env)
+          ? 'disabled'
+          : !openTelemetry
+          ? 'none'
+          : openTelemetry.status === 'enabled'
+          ? 'enabled'
+          : 'disabled',
+      route: '/settings/opentelemetry',
+      dataTestVal: 'opentelemetry-settings-link',
+    });
+  }
+
+  if (eeLiteAccess.access !== 'forbidden') {
+    sectionsData.security.items.push({
+      key: 'multiple-admin-secrets',
+      label: 'Multiple admin secrets',
+      route: '/settings/multiple-admin-secrets',
+      dataTestVal: 'multiple-admin-secrets',
     });
 
-  const { data: configData, isLoading, isError } = useServerConfig();
-  const PrometheusStateIcon = () => {
-    if (isLoading) {
-      return <span>...</span>;
-    }
+    sectionsData.security.items.push({
+      key: 'multiple-jwt-secrets',
+      label: 'Multiple jwt secrets',
+      route: '/settings/multiple-jwt-secrets',
+      dataTestVal: 'multiple-jwt-secrets',
+    });
 
-    if (isError) {
-      return (
-        <ExclamationTriangleIcon className="ml-sm mb-1 text-red-600 h-5 w-5" />
-      );
-    }
+    // sectionsData.security.items.push({
+    //   key: 'single-sign-on',
+    //   label: 'Single Sign On',
+    //   route: '/settings/single-sign-on',
+    //   dataTestVal: 'single-sign-on',
+    // });
 
-    return configData?.is_prometheus_metrics_enabled ? (
-      <CheckIcon className="ml-sm" />
-    ) : (
-      <TimesCircleIcon className="ml-sm mb-1 h-5 w-5" />
-    );
+    sectionsData.performance = {
+      key: 'performance',
+      label: 'Performance',
+      items: [
+        {
+          key: 'query-response-caching',
+          label: 'Query Response Caching',
+          // // TODO: Figure out the disabled/enabled logic
+          // status:
+          //   licenseInfo?.status !== 'active'
+          //     ? 'disabled'
+          //     : isLoading
+          //     ? 'loading'
+          //     : isError
+          //     ? 'error'
+          //     : 'enabled',
+          route: getQueryResponseCachingRoute(),
+          dataTestVal: 'query-response-caching',
+        },
+      ],
+    };
+  }
+
+  sectionsData.about = {
+    key: 'about',
+    label: 'About',
+    items: [],
   };
 
-  if (isProLiteConsole(window.__env)) {
-    sectionsData.push({
-      key: 'prometheus-settings',
-      link: '/settings/prometheus-settings',
-      dataTestVal: 'prometheus-settings-link',
-      title: (
-        <span>
-          Prometheus Metrics <PrometheusStateIcon />
-        </span>
-      ),
-    });
-  }
-
-  sectionsData.push({
+  sectionsData.about.items.push({
     key: 'feature-flags',
-    link: '/settings/feature-flags',
+    label: 'Feature Flags',
+    route: '/settings/feature-flags',
     dataTestVal: 'feature-flags-link',
-    title: 'Feature Flags',
   });
 
-  const currentLocation = location.pathname;
-
-  const sections: JSX.Element[] = [];
-
-  sectionsData.forEach(section => {
-    sections.push(
-      <li
-        role="presentation"
-        key={section.key}
-        className={currentLocation.includes(section.link) ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={section.link}
-          data-test={section.dataTestVal}
-        >
-          {section.title}
-        </Link>
-      </li>
-    );
+  sectionsData.about.items.push({
+    key: 'about',
+    label: 'About',
+    route: '/settings/about',
+    dataTestVal: 'about-link',
   });
 
-  const content = <ul>{sections}</ul>;
+  const sections: NavigationSidebarProps['sections'] =
+    Object.values(sectionsData);
 
-  return <LeftContainer>{content}</LeftContainer>;
+  return (
+    <LeftContainer>
+      <NavigationSidebar location={location} sections={sections} />
+    </LeftContainer>
+  );
 };
 
 export default Sidebar;

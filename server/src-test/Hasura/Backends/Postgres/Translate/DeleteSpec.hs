@@ -6,8 +6,7 @@ module Hasura.Backends.Postgres.Translate.DeleteSpec
 where
 
 import Database.PG.Query.Pool qualified as QQ
-import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..))
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
 import Test.Backend.Postgres.Delete qualified as Test
 import Test.Backend.Postgres.Misc qualified as P
@@ -23,7 +22,7 @@ spec =
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.idColumn, [AEQ True P.integerOne])],
+          where_ = [(P.idColumn, [AEQ NonNullableComparison P.integerOne])],
           expectedSQL =
             [QQ.sql|
 DELETE FROM "public"."test"
@@ -39,7 +38,7 @@ DELETE FROM "public"."test"
           table = Expect.mkTable "test",
           columns = [P.idColumn, P.nameColumn],
           mutationOutput = MOutMultirowFields [("affected_rows", MCount)],
-          where_ = [(P.nameColumn, [AEQ True P.textOld])],
+          where_ = [(P.nameColumn, [AEQ NonNullableComparison P.textOld])],
           expectedSQL =
             [QQ.sql|
 DELETE FROM "public"."test"

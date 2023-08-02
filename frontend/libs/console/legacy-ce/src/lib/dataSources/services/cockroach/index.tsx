@@ -54,7 +54,6 @@ import {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
 } from './sqlUtils';
 import {
@@ -83,7 +82,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     ssl_certificates:
       globals.consoleType === 'cloud' ||
       globals.consoleType === 'pro' ||
-      globals.consoleType === 'pro-lite',
+      globals.consoleType === 'pro-lite', // TODO: Should be allowed only if the license is active
   },
   driver: {
     name: 'cockroach',
@@ -215,7 +214,6 @@ export const cockroach: DataSourcesAPI = {
   getAlterColumnCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
   getDataTriggerLogsQuery,
   createIndexSql: getCreateIndexSql,
   dropIndexSql: getDropIndexSql,

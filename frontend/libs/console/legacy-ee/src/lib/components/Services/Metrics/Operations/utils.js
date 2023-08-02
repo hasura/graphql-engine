@@ -26,7 +26,7 @@ const transformExecutionTime = d => {
 };
 
 const transformRequestResponseTime = d => {
-  return Math.round((d / 10)) / 100;
+  return Math.round(d / 10) / 100;
 };
 
 const transformedVals = {

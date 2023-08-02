@@ -1,7 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { Collapsible } from '@/new-components/Collapsible';
-import { isProConsole } from '@/utils/proConsole';
+import { Collapsible } from '../../../../../new-components/Collapsible';
 import { LocalEventTriggerState } from '../state';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
@@ -18,9 +17,10 @@ import {
 } from '../../types';
 import ColumnList from '../Common/ColumnList';
 import FormLabel from './FormLabel';
-import DebouncedDropdownInput from '../Common/DropdownWrapper';
 import { inputStyles, heading } from '../../constants';
 import { AutoCleanupForm } from '../Common/AutoCleanupForm';
+import { FaShieldAlt } from 'react-icons/fa';
+import { EELiteAccessStatus } from '../../../../../features/EETrial';
 
 type CreateETFormProps = {
   state: LocalEventTriggerState;
@@ -39,6 +39,7 @@ type CreateETFormProps = {
   handleHeadersChange: (h: Header[]) => void;
   handleToggleAllColumn: () => void;
   handleAutoCleanupChange: (config: EventTriggerAutoCleanup) => void;
+  autoCleanupSupport: EELiteAccessStatus;
 };
 
 const CreateETForm: React.FC<CreateETFormProps> = props => {
@@ -62,7 +63,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
     handleDatabaseChange,
     handleSchemaChange,
     handleTableChange,
-    handleWebhookTypeChange,
     handleWebhookValueChange,
     handleOperationsChange,
     handleOperationsColumnsChange,
@@ -70,6 +70,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
     handleHeadersChange,
     handleToggleAllColumn,
     handleAutoCleanupChange,
+    autoCleanupSupport,
   } = props;
 
   const supportedDrivers = getSupportedDrivers('events.triggers.add');
@@ -82,7 +83,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       />
       <input
         type="text"
-        data-test="trigger-name"
         placeholder="trigger_name"
         required
         pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
@@ -96,8 +96,8 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       <select
         className={`${inputStyles} pl-md w-72`}
         onChange={handleDatabaseChange}
-        data-test="select-source"
         value={source}
+        name="source"
       >
         <option value="">Select database</option>
         {dataSourcesList
@@ -113,9 +113,9 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       <div className="flex">
         <select
           onChange={handleSchemaChange}
-          data-test="select-schema"
           className={`${inputStyles} w-72`}
           value={table.schema}
+          name="schema"
         >
           <option value="">Select schema</option>
           {Object.keys(databaseInfo)
@@ -128,10 +128,10 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         </select>
         <select
           onChange={handleTableChange}
-          data-test="select-table"
           required
           className={`${inputStyles} w-72 ml-md`}
           value={table.name}
+          name="tableName"
         >
           <option value="">Select table</option>
           {databaseInfo[table.schema] &&
@@ -159,6 +159,26 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
             readOnly={false}
             tableName={table.name}
           />
+          <FormLabel
+            title="Listen columns for update"
+            tooltip={tooltip.advancedOperationDescription}
+          />
+          {operations.update ? (
+            <div className="clear-both w-72">
+              <ColumnList
+                operationColumns={operationColumns}
+                table={table}
+                isAllColumnChecked={isAllColumnChecked}
+                readOnlyMode={readOnlyMode}
+                handleToggleAllColumn={handleToggleAllColumn}
+                handleOperationsColumnsChange={handleOperationsColumnsChange}
+              />
+            </div>
+          ) : (
+            <div className="clear-both w-80">
+              <i>Applicable only if update operation is selected.</i>
+            </div>
+          )}
         </div>
       </div>
       <hr className="my-md" />
@@ -166,39 +186,34 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         <FormLabel
           title="Webhook (HTTP/S) Handler"
           tooltip={tooltip.webhookUrlDescription}
+          tooltipIcon={
+            <FaShieldAlt className="h-4 text-muted cursor-pointer" />
+          }
+          knowMoreLink="https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl"
         />
         <div>
-          <div className="w-72">
-            <DebouncedDropdownInput
-              dropdownOptions={[
-                { display_text: 'URL', value: 'static' },
-                { display_text: 'From env var', value: 'env' },
-              ]}
-              title={webhook.type === 'static' ? 'URL' : 'From env var'}
-              dataKey={webhook.type === 'static' ? 'static' : 'env'}
-              onButtonChange={handleWebhookTypeChange}
-              onHandlerValChange={handleWebhookValueChange}
+          <div className="w-1/2">
+            <p className="text-sm text-gray-600 mb-sm">
+              Note: Provide an URL or use an env var to template the handler URL
+              if you have different URLs for multiple environments.
+            </p>
+            <input
+              type="text"
+              name="handler"
+              onChange={e => handleWebhookValueChange(e.target.value)}
               required
-              bsClass="w-72"
-              handlerVal={webhook.value}
+              value={webhook.value}
               id="webhook-url"
-              inputPlaceHolder={
-                webhook.type === 'static'
-                  ? 'http://httpbin.org/post'
-                  : 'MY_WEBHOOK_URL'
-              }
-              testId="webhook"
+              placeholder="http://httpbin.org/post or {{MY_WEBHOOK_URL}}/handler"
+              data-test="webhook"
+              className={`w-82 ${inputStyles}`}
             />
           </div>
         </div>
         <br />
-        <small>
-          Note: Specifying the webhook URL via an environmental variable is
-          recommended if you have different URLs for multiple environments.
-        </small>
       </div>
       <hr className="my-md" />
-      {isProConsole(window.__env) && (
+      {autoCleanupSupport !== 'forbidden' && (
         <>
           <div className="mb-md">
             <div className="mb-md cursor-pointer">
@@ -219,28 +234,6 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         }
       >
         <div>
-          <div>
-            <FormLabel
-              title="Listen columns for update"
-              tooltip={tooltip.advancedOperationDescription}
-            />
-            {operations.update ? (
-              <div className="clear-both w-72">
-                <ColumnList
-                  operationColumns={operationColumns}
-                  table={table}
-                  isAllColumnChecked={isAllColumnChecked}
-                  readOnlyMode={readOnlyMode}
-                  handleToggleAllColumn={handleToggleAllColumn}
-                  handleOperationsColumnsChange={handleOperationsColumnsChange}
-                />
-              </div>
-            ) : (
-              <div className="clear-both w-80">
-                <i>Applicable only if update operation is selected.</i>
-              </div>
-            )}
-          </div>
           <hr className="my-md" />
           <div className="mt-md">
             <h4 className={heading}>Retry Logic</h4>

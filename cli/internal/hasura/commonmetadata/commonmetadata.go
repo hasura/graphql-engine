@@ -109,7 +109,7 @@ func (c *ClientCommonMetadataOps) ReplaceMetadata(metadata io.Reader) (io.Reader
 	var op errors.Op = "commonmetadata.ClientCommonMetadataOps.ReplaceMetadata"
 	var body interface{}
 	if err := json.NewDecoder(metadata).Decode(&body); err != nil {
-		return nil, fmt.Errorf("decoding json: %w", err)
+		return nil, errors.E(op, fmt.Errorf("decoding json: %w", err))
 	}
 	request := hasura.RequestBody{
 		Type: "replace_metadata",

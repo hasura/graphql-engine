@@ -12,17 +12,130 @@ slug: index
 sidebar_label: Server configuration
 ---
 
+import Thumbnail from '@site/src/components/Thumbnail';
+
 # GraphQL Engine Server Configuration
 
 ## Introduction
 
-Hasura supports various flags/env vars for customizing how you are
-running the GraphQL Engine in your environment.
+You can customize the configuration of the Hasura GraphQL Engine using either server flags or environment variables.
 
-## Server config
+See the [Server config reference](/deployment/graphql-engine-flags/reference.mdx) for the list of all available flags
+and environment variables that can be configured.
 
-See the [server config reference](/deployment/graphql-engine-flags/reference.mdx) for all the
-available flags/env vars.
+## Setting server configurations
+
+### Using flags
+
+You can configure self-hosted Hasura GraphQL Engine instances by setting flags on the `graphql-engine` command and the
+`serve` sub-command.
+
+#### The `graphql-engine` command
+
+The `graphql-engine` command has a limited number of flags and environment variables; these pertain directly to the
+databases used in your project.
+
+Every `graphql-engine` command is structured as:
+
+```bash
+$ graphql-engine <server-flags>
+```
+
+As an example, we can set the metadata database url for a project using a flag:
+
+```bash
+$ graphql-engine --metadata-database-url "postgres://<user>:<password>@<host>:<port>/<db-name>"
+```
+
+#### The `serve` sub-command
+
+The `serve` sub-command provides opportunities to further customize Hasura's configuration.
+
+Building on the previous example, we can set the port by which Hasura is served by pairing the `serve` sub-command with
+the `--port` flag and assigning a value:
+
+```bash
+$ graphql-engine --metadata-database-url "postgres://user:password@host:port/db-name" serve --port 3000
+```
+
+:::info Note
+
+The following options can be configured via flags _only_:
+
+```none
+    --host                      Postgres server host
+-p, --port                      Postgres server port
+-u, --user                      Database user name
+-p, --password                  Password of the user
+-d, --dbname                    Database name to connect to
+-o, --pg-connection-options     PostgreSQL connection options
+```
+
+All other flags can also be passed as environment variables.
+
+:::
+
+### Using environment variables
+
+You can also use environment variables to configure the Hasura GraphQL Engine. As an example, if you're using
+[Docker on a self-hosted instance](/deployment/deployment-guides/docker.mdx), you can set these values by modifying your
+`docker-compose.yaml` file used to run Hasura:
+
+```yaml
+# docker-compose.yaml
+
+version: '3.6'
+services:
+  postgres:
+    image: postgres:12
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+  graphql-engine:
+    image: hasura/graphql-engine:v2.15.0
+    ports:
+      - '8080:8080'
+    depends_on:
+      - 'postgres'
+    restart: always
+    # highlight-start
+    environment:
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
+      PG_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
+      # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+      ## uncomment next line to set an admin secret
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      # highlight-end
+volumes:
+  db_data:
+```
+
+Alternatively, if you're using Hasura Cloud, you can set and add environment variables from a project's dashboard:
+
+<Thumbnail src="/img/deployment/server-config/cloud-env-var.png" alt="Setting env vars from Cloud" />
+
+:::info Flags vs. environment variables
+
+When the equivalent flags for environment variables are used, the flags will take precedence.
+
+:::
+
+:::info Zero downtime environment variable updates
+
+When adding or updating environment variables on [Hasura Cloud](/hasura-cloud/overview.mdx), you will not need to
+restart your project and there will be no downtime.
+
+:::
 
 ## Use cases
 
@@ -31,6 +144,6 @@ The following are a few configuration use cases:
 - [Add an admin secret](/deployment/graphql-engine-flags/config-examples.mdx#add-admin-secret)
 - [Using CLI commands with admin secret](/deployment/graphql-engine-flags/config-examples.mdx#cli-with-admin-secret)
 - [Configure CORS](/deployment/graphql-engine-flags/config-examples.mdx#configure-cors)
-- [Run the Console offline (i.e load Console assets from server instead of CDN)](/deployment/graphql-engine-flags/config-examples.mdx#console-assets-on-server)
+- [Run console offline (i.e load console assets from server instead of CDN)](/deployment/graphql-engine-flags/config-examples.mdx#console-assets-on-server)
 - [Dev (debugging) mode](/deployment/graphql-engine-flags/config-examples.mdx#dev-mode)
-- [Add a Metadata database](/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database)
+- [Add a metadata database](/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database)

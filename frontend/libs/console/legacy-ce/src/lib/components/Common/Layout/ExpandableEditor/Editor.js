@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 class Editor extends React.Component {
   static getDerivedStateFromProps(nextProps, state) {
@@ -36,8 +36,6 @@ class Editor extends React.Component {
     const {
       readOnlyMode = false,
       isCollapsable,
-      service,
-      property,
       collapseButtonText,
       expandButtonText,
     } = this.props;
@@ -47,14 +45,16 @@ class Editor extends React.Component {
       return null;
     }
 
+    const { dataTest } = this.props;
+
     return (
       <Button
         mode="default"
         size="sm"
         className="mr-sm"
-        data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
+        data-test={dataTest}
       >
         {isEditing ? collapseButtonText || 'Close' : expandButtonText || 'Edit'}
       </Button>
@@ -67,7 +67,7 @@ class Editor extends React.Component {
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="primary"
         isLoading={isProcessing}
         loadingText="Saving..."
@@ -87,7 +87,7 @@ class Editor extends React.Component {
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
-        type="submit"
+        type="button"
         mode="destructive"
         isLoading={isProcessing}
         loadingText="Removing..."

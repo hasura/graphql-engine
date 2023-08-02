@@ -1,5 +1,5 @@
 import React from 'react';
-import { CodeEditorField } from '@/new-components/Form';
+import { CodeEditorField } from '../../../../../new-components/Form';
 import { IAceOptions } from 'react-ace';
 
 export const ScheduleEventPayloadInput = () => {
@@ -16,7 +16,7 @@ export const ScheduleEventPayloadInput = () => {
     <CodeEditorField
       name="payload"
       label="Payload"
-      tooltip="The request payload for the cron trigger, should be a valid JSON"
+      tooltip="The request payload for the scheduled events, should be a valid JSON"
       editorOptions={editorOptions}
       theme="eclipse"
     />

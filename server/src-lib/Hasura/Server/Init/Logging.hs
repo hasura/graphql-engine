@@ -17,15 +17,15 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON, (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.ByteString.Char8 qualified as Char8
 import Data.HashSet qualified as HashSet
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text.Encoding
 import Database.PG.Query qualified as Query
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Logging qualified as Server.Logging
@@ -59,7 +59,7 @@ connInfoToLog connInfo =
     infoVal = case details of
       Query.CDDatabaseURI uri -> mkDBUriLog $ Text.unpack $ bsToTxt uri
       Query.CDOptions co ->
-        Aeson.object
+        J.object
           [ "host" .= Query.connHost co,
             "port" .= Query.connPort co,
             "user" .= Query.connUser co,
@@ -70,31 +70,31 @@ connInfoToLog connInfo =
     mkDBUriLog uri =
       case show . censorURI "sslpassword" <$> URI.parseURI uri of
         Nothing ->
-          Aeson.object
+          J.object
             ["error" .= ("parsing database url failed" :: String)]
         Just s ->
-          Aeson.object
+          J.object
             [ "retries" .= retries,
               "database_url" .= s
             ]
 
 -- | Generate a 'StartupLog' from the final 'ServeOptions'.
-serveOptsToLog :: ToJSON (Logging.EngineLogType impl) => Config.ServeOptions impl -> Server.Logging.StartupLog
+serveOptsToLog :: (ToJSON (Logging.EngineLogType impl)) => Config.ServeOptions impl -> Server.Logging.StartupLog
 serveOptsToLog so =
   Server.Logging.StartupLog Logging.LevelInfo "server_configuration" infoVal
   where
     infoVal =
-      Aeson.object
+      J.object
         [ "port" .= Config.soPort so,
           "server_host" .= show (Config.soHost so),
           "transaction_isolation" .= show (Config.soTxIso so),
           "admin_secret_set" .= not (HashSet.null (Config.soAdminSecret so)),
           "auth_hook" .= (Auth.ahUrl <$> Config.soAuthHook so),
           "auth_hook_mode" .= (show . Auth.ahType <$> Config.soAuthHook so),
-          "jwt_secret" .= (Aeson.toJSON <$> Config.soJwtSecret so),
+          "jwt_secret" .= (J.toJSON <$> Config.soJwtSecret so),
           "unauth_role" .= Config.soUnAuthRole so,
           "cors_config" .= Config.soCorsConfig so,
-          "enable_console" .= Config.soEnableConsole so,
+          "enable_console" .= Config.soConsoleStatus so,
           "console_assets_dir" .= Config.soConsoleAssetsDir so,
           "console_sentry_dsn" .= Config.soConsoleSentryDsn so,
           "enable_telemetry" .= Config.soEnableTelemetry so,
@@ -105,7 +105,7 @@ serveOptsToLog so =
           "v1-boolean-null-collapse" .= Config.soDangerousBooleanCollapse so,
           "enabled_apis" .= Config.soEnabledAPIs so,
           "live_query_options" .= Config.soLiveQueryOpts so,
-          "enable_allowlist" .= Config.soEnableAllowlist so,
+          "enable_allowlist" .= Config.isAllowListEnabled (Config.soEnableAllowList so),
           "enabled_log_types" .= Config.soEnabledLogTypes so,
           "log_level" .= Config.soLogLevel so,
           "remote_schema_permissions" .= Config.soEnableRemoteSchemaPermissions so,
@@ -120,9 +120,9 @@ serveOptsToLog so =
           "enable_metadata_query_logging" .= Config.soEnableMetadataQueryLogging so
         ]
 
-mkGenericLog :: ToJSON a => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
+mkGenericLog :: (ToJSON a) => Logging.LogLevel -> Text -> a -> Server.Logging.StartupLog
 mkGenericLog logLevel k msg =
-  Server.Logging.StartupLog logLevel k $ Aeson.toJSON msg
+  Server.Logging.StartupLog logLevel k $ J.toJSON msg
 
 data StartupTimeInfo = StartupTimeInfo
   { _stiMessage :: !Text,
@@ -130,11 +130,11 @@ data StartupTimeInfo = StartupTimeInfo
   }
 
 instance FromJSON StartupTimeInfo where
-  parseJSON = Aeson.withObject "StartupTimeInfo" \obj -> do
-    _stiMessage <- obj Aeson..: "message"
-    _stiTimeTaken <- obj Aeson..: "time_taken"
+  parseJSON = J.withObject "StartupTimeInfo" \obj -> do
+    _stiMessage <- obj J..: "message"
+    _stiTimeTaken <- obj J..: "time_taken"
     pure StartupTimeInfo {..}
 
 instance ToJSON StartupTimeInfo where
   toJSON StartupTimeInfo {..} =
-    Aeson.object ["message" Aeson..= _stiMessage, "time_taken" Aeson..= _stiTimeTaken]
+    J.object ["message" J..= _stiMessage, "time_taken" J..= _stiTimeTaken]

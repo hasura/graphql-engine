@@ -12,11 +12,12 @@ sidebar_class_name: cloud-icon
 ---
 
 import TOCInline from '@theme/TOCInline';
+import ProductBadge from '@site/src/components/ProductBadge';
 import Thumbnail from '@site/src/components/Thumbnail';
 
 # Hasura Cloud API Reference
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<ProductBadge free standard pro ee />
 
 ## Introduction
 
@@ -169,7 +170,7 @@ mutation createGitHubPreviewApp {
 | Argument                               | Description                                                                                                                                                                                                                                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `githubPersonalAccessToken`            | GitHub personal access token for Hasura Cloud to access the Migrations and Metadata from your repository. Refer to GitHub docs on how to create a [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). The token should have read access to the repository. |
-| under `githubRepoDetails`: `owner`     | GitHub repository owner (user or organisation)                                                                                                                                                                                                                                                                                                          |
+| under `githubRepoDetails`: `owner`     | GitHub repository owner (user or organization)                                                                                                                                                                                                                                                                                                          |
 | under `githubRepoDetails`: `repo`      | GitHub repository name.                                                                                                                                                                                                                                                                                                                                 |
 | under `githubRepoDetails`: `branch`    | Name of the branch from which to create a Preview App.                                                                                                                                                                                                                                                                                                  |
 | under `githubRepoDetails`: `directory` | Path to the Hasura Project directory (typically created by the Hasura CLI) containing Migrations and Metadata. The path should be relative to the project's root directory.                                                                                                                                                                             |

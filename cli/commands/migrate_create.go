@@ -21,6 +21,9 @@ import (
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
   hasura migrate create "init" --from-server
 
+  # Setup migration files for the first time by introspecting a server when there are multiple schemas:
+  hasura migrate create "init" --from-server --schema myschema1,myschema2
+
   # Use with admin secret:
   hasura migrate create --admin-secret "<admin-secret>"
 
@@ -40,9 +43,13 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	migrateCreateCmd := &cobra.Command{
-		Use:          "create [migration-name]",
-		Short:        "Create files required for a migration",
-		Long:         "Create ``sql`` files required for a migration",
+		Use:   "create [migration-name]",
+		Short: "Create ``sql`` files required for a migration",
+		Long: `As you make changes to your database's schema, Hasura tracks these changes via migrations. This command creates a ` + "``sql``" + ` file that contains the changes you made that can then be applied to a database.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+`,
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
@@ -66,7 +73,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 					// this can be ignored for `migrate create`
 					// we can allow users to create migration files for databases
 					// which are not connected
-					ec.Logger.Warnf("database %s is not connected to hasura", ec.Source.Name)
+					ec.Logger.Warnf("database '%s' is not connected to hasura", ec.Source.Name)
 					ec.Source.Kind = hasura.SourceKindPG // the default kind is postgres
 					return nil
 				}

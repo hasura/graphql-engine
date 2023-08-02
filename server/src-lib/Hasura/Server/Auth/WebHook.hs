@@ -11,7 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict qualified as HashMap
 import Data.Parser.CacheControl (parseMaxAge)
 import Data.Parser.Expires
 import Data.Text qualified as T
@@ -24,7 +24,6 @@ import Hasura.Prelude
 import Hasura.Server.Logging
 import Hasura.Server.Utils
 import Hasura.Session
-import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wreq qualified as Wreq
 
@@ -39,7 +38,9 @@ instance Show AuthHookType where
 
 data AuthHook = AuthHook
   { ahUrl :: Text,
-    ahType :: AuthHookType
+    ahType :: AuthHookType,
+    -- | Whether to send the request body to the auth hook
+    ahSendRequestBody :: Bool
   }
   deriving (Show, Eq)
 
@@ -54,7 +55,7 @@ hookMethod authHook = case ahType authHook of
 --   for finer-grained auth. (#2666)
 userInfoFromAuthHook ::
   forall m.
-  (MonadIO m, MonadBaseControl IO m, MonadError QErr m, Tracing.MonadTrace m) =>
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   Logger Hasura ->
   HTTP.Manager ->
   AuthHook ->
@@ -73,27 +74,36 @@ userInfoFromAuthHook logger manager hook reqHeaders reqs = do
     performHTTPRequest = do
       let url = T.unpack $ ahUrl hook
       req <- liftIO $ HTTP.mkRequestThrow $ T.pack url
-      Tracing.tracedHttpRequest req \req' -> liftIO do
+      liftIO do
         case ahType hook of
           AHTGet -> do
             let isCommonHeader = (`elem` commonClientHeadersIgnored)
                 filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
-                req'' = req' & set HTTP.headers (addDefaultHeaders filteredHeaders)
-            HTTP.performRequest req'' manager
+                req' = req & set HTTP.headers (addDefaultHeaders filteredHeaders)
+            HTTP.httpLbs req' manager
           AHTPost -> do
             let contentType = ("Content-Type", "application/json")
-                headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-                req'' =
+                headersPayload = J.toJSON $ HashMap.fromList $ hdrsToText reqHeaders
+                req' =
                   req
                     & set HTTP.method "POST"
                     & set HTTP.headers (addDefaultHeaders [contentType])
-                    & set HTTP.body (Just $ J.encode $ object ["headers" J..= headersPayload, "request" J..= reqs])
-            HTTP.performRequest req'' manager
+                    & set
+                      HTTP.body
+                      ( HTTP.RequestBodyLBS
+                          $ J.encode
+                          $ object
+                            ( ["headers" J..= headersPayload]
+                                -- We will only send the request if `ahSendRequestBody` is set to true
+                                <> ["request" J..= reqs | ahSendRequestBody hook]
+                            )
+                      )
+            HTTP.httpLbs req' manager
 
     logAndThrow :: HTTP.HttpException -> m a
     logAndThrow err = do
-      unLogger logger $
-        WebHookLog
+      unLogger logger
+        $ WebHookLog
           LevelError
           Nothing
           (ahUrl hook)
@@ -128,16 +138,16 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
   where
     getUserInfoFromHdrs rawHeaders responseHdrs = do
       userInfo <-
-        mkUserInfo URBFromSessionVariables UAdminSecretNotSent $
-          mkSessionVariablesText rawHeaders
+        mkUserInfo URBFromSessionVariables UAdminSecretNotSent
+          $ mkSessionVariablesText rawHeaders
       logWebHookResp LevelInfo Nothing Nothing
       expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
       pure (userInfo, expiration, responseHdrs)
 
-    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
+    logWebHookResp :: (MonadIO m) => LogLevel -> Maybe BL.ByteString -> Maybe Text -> m ()
     logWebHookResp logLevel mResp message =
-      logger $
-        WebHookLog
+      logger
+        $ WebHookLog
           logLevel
           (Just statusCode)
           url
@@ -149,9 +159,9 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody respHdrs
     logError = logWebHookResp LevelError (Just respBody) Nothing
 
     timeFromCacheControl headers = do
-      header <- afold $ Map.lookup "Cache-Control" headers
+      header <- afold $ HashMap.lookup "Cache-Control" headers
       duration <- parseMaxAge header `onLeft` \err -> logWarn (T.pack err) *> empty
       addUTCTime (fromInteger duration) <$> liftIO getCurrentTime
     timeFromExpires headers = do
-      header <- afold $ Map.lookup "Expires" headers
+      header <- afold $ HashMap.lookup "Expires" headers
       parseExpirationTime header `onLeft` \err -> logWarn (T.pack err) *> empty

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Button } from '@/new-components/Button';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { Dispatch, ReduxState } from '../../../../types';
 import AddDomain from './AddDomain';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -17,17 +17,17 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
   const { dispatch, insecureDomains } = props;
   const [toggle, setToggle] = useState(false);
 
-  const handleDeleteDomain = (domain: string) => {
+  const handleDeleteDomain = (host: string, port?: string) => {
     const confirmMessage = `This will permanently delete the domain.`;
     const isOk = getConfirmation(confirmMessage);
     if (isOk) {
-      dispatch(deleteInsecureDomain(domain));
+      dispatch(deleteInsecureDomain(host, port));
     }
   };
 
   return (
     <Analytics name="InsecureDomains" {...REDACT_EVERYTHING}>
-      <div className="p-lg bg-[#f8fafc]">
+      <div className="p-lg bg-[#f8fafc] bootstrap-jail">
         <div className="max-w-[72rem]">
           <h1 className="text-4xl font-bold my-sm">
             {' '}
@@ -38,7 +38,7 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
             Triggers,etc) to use self-signed certificates. For more information
             refer to{' '}
             <a
-              href="https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/network.html#metadata-add-host-to-tls-allowlist"
+              href="https://hasura.io/docs/latest/deployment/tls-allow-list/"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -56,10 +56,16 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
                 {insecureDomains.length ? (
                   insecureDomains.map(domain => (
                     <div className="p-xs px-sm bg-white border-t border-gray-300 flex justify-between">
-                      <div data-test={domain.host}>{domain.host}</div>
+                      <div data-test={domain.host}>
+                        {domain.suffix
+                          ? `${domain.host}:${domain.suffix}`
+                          : `${domain.host}`}
+                      </div>
                       <Button
                         mode="destructive"
-                        onClick={() => handleDeleteDomain(domain.host)}
+                        onClick={() =>
+                          handleDeleteDomain(domain.host, domain.suffix)
+                        }
                         data-test={`delete-domain-${domain.host}`}
                       >
                         Delete

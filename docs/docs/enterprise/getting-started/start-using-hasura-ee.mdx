@@ -1,7 +1,7 @@
 ---
-sidebar_label: Start using Hasura EE
-description: Start using Hasura EE
-title: 'EE: Start Using Hasura EE'
+sidebar_label: Start using Hasura Enterprise Edition
+description: Start using Hasura Enterprise Edition
+title: 'Start Using Hasura Enterprise Edition'
 keywords:
   - hasura
   - docs
@@ -9,18 +9,20 @@ keywords:
 sidebar_position: 5
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Start Using Hasura EE
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
+<ProductBadge self />
 
 ## Instructions
 
-After following one of the Hasura EE get started guides:
+After following one of the Hasura Enterprise Edition get started guides:
 
 - Head to `http://localhost:8080/console` to open the Hasura Console.
 - Log in using the admin secret key that you set.
-- Learn more about [connecting data sources](/databases/connect-db/index.mdx).
-- Check out the [Hasura Enterprise features](/enterprise/index.mdx).
+- Learn more about [connecting data sources](/databases/quickstart.mdx).
+- Check out the [Hasura Enterprise features](/enterprise/overview.mdx).
 
 ## Complete your production-readiness checklist (optional)
 
@@ -31,4 +33,4 @@ When you are ready to move Hasura to production, check out our
   continuous availability.
 - We recommend running Hasura with at least 4 CPU cores and a minimum of 8 GB RAM in production. Please set autoscaling
   on CPU.
-- [Enable and consume metrics](/enterprise/metrics.mdx/#enable-metrics-endpoint).
+- [Enable and consume metrics](/observability/enterprise-edition/prometheus/index.mdx).

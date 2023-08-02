@@ -12,6 +12,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/update"
 	"github.com/hasura/graphql-engine/cli/v2/version"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -31,7 +32,7 @@ var ec *cli.ExecutionContext
 // rootCmd is the main "hasura" command
 var rootCmd = &cobra.Command{
 	Use:           "hasura",
-	Short:         "Hasura GraphQL engine command line tool",
+	Short:         "Hasura GraphQL Engine command line tool",
 	Long:          hasuraASCIIText,
 	SilenceUsage:  true,
 	SilenceErrors: true,
@@ -142,11 +143,18 @@ func Execute() error {
 		ec.Spinner.Stop()
 	}
 	if err != nil {
+		if e, ok := err.(*errors.Error); ok {
+			ec.Logger.WithFields(logrus.Fields{
+				"ops":      errors.Ops(e),
+				"kind":     errors.GetKind(e),
+				"location": errors.GetLocation(e).String(),
+			}).Debug(err)
+		}
 		return errors.E(op, err)
 	}
 	return nil
 }
 
 func genOpName(cmd *cobra.Command, funcName string) errors.Op {
-	return errors.Op("command: " + cmd.Name() + "." + funcName)
+	return errors.Op("command: " + cmd.CommandPath() + "." + funcName)
 }

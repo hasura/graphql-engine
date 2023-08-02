@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { Button } from '@/new-components/Button';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import globals from '../../../../Globals';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
@@ -9,7 +9,7 @@ import { CRON_TRIGGER } from '../constants';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import _push from '../../Data/push';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const Landing: React.FC<Props> = props => {
   const { dispatch } = props;
@@ -31,7 +31,7 @@ const Landing: React.FC<Props> = props => {
 
   return (
     <Analytics name="ScheduledTriggerLanding" {...REDACT_EVERYTHING}>
-      <div className="pl-0 w-full mt-md">
+      <div className="pl-0 w-full mt-md bootstrap-jail">
         <div className="pl-md">
           <div className="flex">
             <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>
@@ -40,6 +40,7 @@ const Landing: React.FC<Props> = props => {
                 mode="primary"
                 size="md"
                 onClick={() => dispatch(_push(getAddSTRoute()))}
+                data-test="create-cron-trigger"
               >
                 Create
               </Button>

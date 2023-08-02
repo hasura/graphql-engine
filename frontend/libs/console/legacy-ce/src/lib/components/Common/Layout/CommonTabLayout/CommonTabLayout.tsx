@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 import BreadCrumb, {
   BreadCrumb as BreadCrumbType,
@@ -32,7 +33,7 @@ const CommonTabLayout: React.FC<Props> = props => {
   } = props;
 
   return (
-    <div className={styles.subHeader}>
+    <div className={clsx(styles.subHeader, 'bootstrap-jail')}>
       {breadCrumbs.length ? <BreadCrumb breadCrumbs={breadCrumbs} /> : null}
       <h2 className={`${styles.heading_text} ${styles.set_line_height}`}>
         {heading || ''}

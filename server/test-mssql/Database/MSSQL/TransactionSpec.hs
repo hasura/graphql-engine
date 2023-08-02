@@ -196,7 +196,7 @@ transactionStateTests =
 --
 -- Please also note that we are discarding 'Left's from "setup" transactions
 -- (all but the last transaction). See the 'runSetup' helper below.
-run :: forall a. Eq a => Show a => TestCase a -> SpecWith ConnectionString
+run :: forall a. (Eq a) => (Show a) => TestCase a -> SpecWith ConnectionString
 run TestCase {..} =
   it description \connString -> do
     case reverse transactions of
@@ -206,9 +206,9 @@ run TestCase {..} =
         runSetup connString (reverse leadingTransactions)
         -- Get the result from the last transaction.
         result <-
-          runInConn connString $
-            runQueries runWith $
-              unTransaction mainTransaction
+          runInConn connString
+            $ runQueries runWith
+            $ unTransaction mainTransaction
         case (result, expectation) of
           -- Validate the error is the one we were expecting.
           (Left err, Left expected) ->
@@ -219,13 +219,17 @@ run TestCase {..} =
           -- Expected success but got error. Needs special case because the expected
           -- Left is a validator (function).
           (Left err, Right expected) ->
-            expectationFailure $
-              "Expected " <> show expected <> " but got error: " <> show err
+            expectationFailure
+              $ "Expected "
+              <> show expected
+              <> " but got error: "
+              <> show err
           -- Expected error but got success. Needs special case because the expected
           -- Left is a validator (function).
           (Right res, Left _) ->
-            expectationFailure $
-              "Expected error but got success: " <> show res
+            expectationFailure
+              $ "Expected error but got success: "
+              <> show res
   where
     runSetup :: ConnectionString -> [Transaction] -> IO ()
     runSetup _ [] = pure ()
@@ -249,7 +253,13 @@ runInConn connString query =
 
 createMinimalPool :: ConnectionString -> IO MSSQLPool
 createMinimalPool connString =
-  initMSSQLPool connString $ ConnectionOptions 1 1 5
+  initMSSQLPool connString
+    $ ConnectionOptionsPool
+    $ PoolOptions
+      { poConnections = 1,
+        poStripes = 1,
+        poIdleTime = 5
+      }
 
 invalidSyntaxError :: String
 invalidSyntaxError =

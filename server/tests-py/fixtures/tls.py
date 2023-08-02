@@ -27,15 +27,15 @@ class TLSCAConfiguration(NamedTuple):
         csr_file = self.tmp_path / 'webhook.csr'
         cert_file = self.tmp_path / 'webhook.pem'
         # generate a private key
-        subprocess.run(['openssl', 'genrsa', '-out', key_file, '2048']).check_returncode()
+        subprocess.run(['openssl', 'genrsa', '-out', key_file, '2048'], check=True, capture_output=True)
         # generate a certificate signing request for the private key
-        subprocess.run(['openssl', 'req', '-new', '-key', key_file, '-out', csr_file, '-subj', '/CN=hge-webhook', '-config', config_file]).check_returncode()
+        subprocess.run(['openssl', 'req', '-new', '-key', key_file, '-out', csr_file, '-subj', '/CN=hge-webhook', '-config', config_file], check=True, capture_output=True)
         if trust == TLSTrust.INSECURE:
             # self-sign the certificate with its own key, making it untrusted
-            subprocess.run(['openssl', 'x509', '-req', '-in', csr_file, '-signkey', key_file, '-out', cert_file, '-days', '10', '-extensions', 'v3_req', '-extfile', config_file]).check_returncode()
+            subprocess.run(['openssl', 'x509', '-req', '-in', csr_file, '-signkey', key_file, '-out', cert_file, '-days', '10', '-extensions', 'v3_req', '-extfile', config_file], check=True, capture_output=True)
         else:
             # sign the certificate with the provided CA key, which should be trusted
-            subprocess.run(['openssl', 'x509', '-req', '-in', csr_file, '-CA', self.cert_file, '-CAkey', self.key_file, '-CAcreateserial', '-out', cert_file, '-days', '10', '-extensions', 'v3_req', '-extfile', config_file]).check_returncode()
+            subprocess.run(['openssl', 'x509', '-req', '-in', csr_file, '-CA', self.cert_file, '-CAkey', self.key_file, '-CAcreateserial', '-out', cert_file, '-days', '10', '-extensions', 'v3_req', '-extfile', config_file], check=True, capture_output=True)
 
         ssl_context = ssl.create_default_context(
             purpose=ssl.Purpose.CLIENT_AUTH,

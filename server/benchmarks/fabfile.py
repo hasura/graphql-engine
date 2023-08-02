@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import boto3
@@ -196,7 +196,10 @@ def run_benchmark_set(benchmark_set, use_spot=True):
                         ImageId=runner_image_id,
                         MinCount=1, MaxCount=1,
                         # NOTE: benchmarks are tuned very specifically to this instance type  and
-                        # the other settings here (see bench.hs):
+                        # the other settings here (see bench.sh):
+                        #   Lately AWS seems to be running out of capacity and so we may need to research 
+                        # (check numa configuration, etc) and switch to one of these:
+                        #   https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/processor_state_control.html
                         InstanceType='c4.8xlarge',
                         KeyName='hasura-benchmarks-runner',
                         InstanceInitiatedShutdownBehavior='terminate',
@@ -281,7 +284,9 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             break
 
         # Install any extra dependencies (TODO: bake these into AMI)
-        c.sudo('apt install -y jq')
+        c.sudo('apt-get update')
+        c.sudo('apt-get upgrade -y')
+        c.sudo('apt-get install -y jq')
 
         # In case our heroic exception handling and cleanup attempts here fail,
         # make sure this instance shuts down (and is terminated, per
@@ -307,7 +312,8 @@ def run_benchmark_set(benchmark_set, use_spot=True):
             post_setup_sleep = 90 if benchmark_set == 'huge_schema' else 0
             # NOTE: it seems like K6 is what requires pty here:
             # NOTE: add hide='both' here if we decide to suppress output
-            bench_result = c.run(f"./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
+            lkey = os.environ['HASURA_GRAPHQL_EE_LICENSE_KEY']
+            bench_result = c.run(f"HASURA_GRAPHQL_EE_LICENSE_KEY={lkey} ./bench.sh {benchmark_set} {hasura_docker_image_name} {post_setup_sleep}", pty=True)
 
         with tempfile.TemporaryDirectory("-hasura-benchmarks") as tmp:
             filename = f"{benchmark_set}.json"
@@ -438,9 +444,25 @@ def generate_regression_report():
                 warn(f"Skipping '{name}' which is not found in the old report")
                 continue
 
-            # We also want to skip any metrics not present in both reports,
+            # NOTE: below we want to skip any metrics not present in both reports,
             # since we might decide to add or need to remove some:
             metrics = {}
+
+            # if this is a throughput benchmark set ( identified by the word
+            # "throughput" in the name)  then for now just look at the average
+            # RPS for the purposes of this regression report
+            if "throughput" in benchmark_set_name:
+                try:
+                    metrics['avg_peak_rps'] = pct_change(
+                        merge_base_bench["requests"]["average"],
+                        this_bench[      "requests"]["average"]
+                    )
+                    benchmark_set_results.append((name, metrics))
+                except KeyError:
+                    pass
+                # skip remaining metrics:
+                continue
+
             try:
                 metrics['bytes_alloc_per_req'] = pct_change(
                     merge_base_bench["extended_hasura_checks"]["bytes_allocated_per_request"],
@@ -504,7 +526,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     f = open(output_filename, "w")
     def out(s): f.write(s+"\n")
 
-    out(f"## Benchmark Results") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
+    out(f"## Benchmark Results (graphql-engine-pro)") # NOTE: We use this header to identify benchmark reports in `hide-benchmark-reports.sh`
     out(f"<details closed><summary>Click for detailed reports, and help docs</summary>")
     out(f"")
     out((f"The regression report below shows, for each benchmark, the **percent change** for "
@@ -514,6 +536,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
          f"(https://github.com/hasura/graphql-engine-mono/blob/main/server/benchmarks/README.md)."))
     out(f"")
     out(f"More significant regressions or improvements will be colored with `#b31d28` or `#22863a`, respectively.")
+    out(f"NOTE: throughput benchmarks are quite variable for now, and have a looser threshold for highlighting.")
     out(f"")
     out(f"You can view graphs of the full reports here:")
     for benchmark_set_name, _ in results.items():
@@ -528,7 +551,7 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
     out(f"")
 
     # Return what should be the first few chars of the line, which will detemine its styling:
-    def col(val=None):
+    def highlight_sensitive(val=None):
         if val == None:        return "#   "  # GRAY
         elif abs(val) <= 2.0:  return "#   "  # GRAY
         elif abs(val) <= 3.5:  return "*   "  # NORMAL
@@ -539,6 +562,17 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         elif -15.0 <= val < 0: return "+   "  # GREEN
         elif -25.0 <= val < 0: return "++  "  # GREEN
         else:                  return "+++ "  # GREEN
+    # For noisier benchmarks (tuned for throughput benchmarks, for now)
+    def highlight_lax(val=None):
+        if val == None:        return "#   "  # GRAY
+        elif abs(val) <= 8.0:  return "#   "  # GRAY
+        elif abs(val) <= 12.0: return "*   "  # NORMAL
+        elif 0 < val <= 20.0:  return "-   "  # RED
+        elif 0 < val <= 35.0:  return "--  "  # RED
+        elif 0 < val:          return "--- "  # RED
+        elif -20.0 <= val < 0: return "+   "  # GREEN
+        elif -35.0 <= val < 0: return "++  "  # GREEN
+        else:                  return "+++ "  # GREEN
 
     out(f"``` diff")  # START DIFF SYNTAX
     for benchmark_set_name, (mem_in_use_before_diff, live_bytes_before_diff, mem_in_use_after_diff, live_bytes_after_diff, benchmarks) in results.items():
@@ -548,15 +582,21 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
         u0 = mem_in_use_before_diff
         # u1 = mem_in_use_after_diff
 
+        col = highlight_sensitive
         out(        f"{col(u0)} {benchmark_set_name[:-5]+'  ':─<21s}{'┤ MEMORY RESIDENCY (from RTS)': <30}{'mem_in_use (BEFORE benchmarks)': >38}{u0:>12.1f} ┐")
         out(        f"{col(l0)} {                        '  ': <21s}{'│'                            : <30}{'live_bytes (BEFORE benchmarks)': >38}{l0:>12.1f} │")
         out(        f"{col(l1)} {                        '  ': <21s}{'│'                              }{'   live_bytes  (AFTER benchmarks)':_>67}{l1:>12.1f} ┘")
         for bench_name, metrics in benchmarks:
             bench_name_pretty = bench_name.replace('-k6-custom','').replace('_',' ') # need at least 40 chars
+            if "throughput" in benchmark_set_name:
+                # invert the sign so we color properly, since higher throughput is better:
+                col = lambda v: highlight_lax(-v)
+            else:
+                col = highlight_sensitive
+
             for metric_name, d in metrics.items():
-              if len(list(metrics.items())) == 1:  # need to waste a line if only one metric:
-                out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
-                out(f"{col(  )} {                        '  ': <21s}{'│'                                 }{                              '':_>67}{''  :>12s} ┘")
+              if len(list(metrics.items())) == 1:  # if only one metric:
+                out(f"{col(d )} {                        '  ': <21s}{'│_'+bench_name_pretty+' '     :_<40}{                     metric_name:_>28}{d :>12.1f}  ")
               elif metric_name == list(metrics.items())[0][0]:  # first:
                 out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
               elif metric_name == list(metrics.items())[-1][0]:  # last:

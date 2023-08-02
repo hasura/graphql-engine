@@ -2,6 +2,8 @@ import type { RedactOptions } from './heap/types';
 import type { HtmlAnalyticsAttributes, HtmlNameAttributes } from '../types';
 import { getRedactAttributes } from './heap/getRedactAttributes';
 
+export const DATA_ANALYTICS_ATTRIBUTE = 'data-analytics-name';
+
 export type AnalyticsOptions = RedactOptions & {
   /**
    * @deprecated It is meant for the old components that already had a `data-trackid` attribute
@@ -17,7 +19,7 @@ export function getAnalyticsAttributes(
   name: string,
   options?: AnalyticsOptions
 ): HtmlAnalyticsAttributes {
-  let htmlAttributes: HtmlNameAttributes = { 'data-analytics-name': name };
+  let htmlAttributes: HtmlNameAttributes = { [DATA_ANALYTICS_ATTRIBUTE]: name };
 
   if (!options) return htmlAttributes;
 

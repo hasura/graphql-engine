@@ -1,7 +1,7 @@
 ---
 sidebar_label: Extend with views
 sidebar_position: 4
-description: Customise the Hasura GraphQL schema with views
+description: Customize the Hasura GraphQL schema with views
 keywords:
   - hasura
   - docs
@@ -69,6 +69,16 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
+
+<div id="permissions" />
+
+:::info Allowing permissions on views
+
+In order to generate create, update, and delete permissions for a view, it must be
+[**insertable**](https://www.postgresql.org/docs/current/sql-createview.html#SQL-CREATEVIEW-EXAMPLES). Otherwise, you'll
+only be able to generate read permissions (select) for the view.
+
+:::
 
 ## Tracking views
 

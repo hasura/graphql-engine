@@ -1,9 +1,10 @@
 {- ORMOLU_DISABLE -}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
 -- NOTE: This module previously used Template Haskell to generate its instances,
 -- but additional restrictions on Template Haskell splices introduced in GHC 9.0 impose an ordering
--- on the generated instances that is difficult to satisfy (see ../MySQL/Types/Instances.hs).
+-- on the generated instances that is difficult to satisfy
 -- To avoid these difficulties, we now use CPP.
 
 -- | MSSQL Types Instances
@@ -19,9 +20,13 @@ import Data.Text.Extended (ToTxt (..))
 import Data.Time as Time
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax
 import Hasura.Base.ToErrorValue
+import Hasura.RQL.Types.Backend qualified as Backend
+import Hasura.RQL.Types.BackendType qualified as Backend
+import qualified Hasura.RQL.Types.Backend as IR
 
 deriving instance Generic (Aliased a)
 instance Hashable a => Hashable (Aliased a)
@@ -50,7 +55,6 @@ INSTANCE_CLUMP_1(UnifiedColumn)
 INSTANCE_CLUMP_1(TempTableName)
 INSTANCE_CLUMP_1(SomeTableName)
 INSTANCE_CLUMP_1(ConstraintName)
-INSTANCE_CLUMP_1(FunctionName)
 
 
 #define INSTANCE_CLUMP_2(name) \
@@ -79,8 +83,10 @@ INSTANCE_CLUMP_2(NullsOrder)
 INSTANCE_CLUMP_2(Order)
 INSTANCE_CLUMP_2(ScalarType)
 INSTANCE_CLUMP_2(TableName)
+INSTANCE_CLUMP_2(FunctionName)
 INSTANCE_CLUMP_2(Select)
 INSTANCE_CLUMP_2(With)
+INSTANCE_CLUMP_2(CTEBody)
 INSTANCE_CLUMP_2(Top)
 INSTANCE_CLUMP_2(FieldName)
 INSTANCE_CLUMP_2(JsonPath)
@@ -111,9 +117,11 @@ INSTANCE_CLUMP_2(MergeWhenMatched)
 INSTANCE_CLUMP_2(MergeWhenNotMatched)
 
 deriving instance Ord TableName
+deriving instance Ord FunctionName
 deriving instance Ord ScalarType
 
 deriving instance Lift TableName
+deriving instance Lift FunctionName
 deriving instance Lift NullsOrder
 deriving instance Lift Order
 
@@ -138,7 +146,7 @@ instance ToErrorValue ColumnName where
   toErrorValue = ErrorValue.squote . columnNameText
 
 instance ToErrorValue FunctionName where
-  toErrorValue = ErrorValue.squote . functionNameText
+  toErrorValue = ErrorValue.squote . tshow
 
 instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
@@ -149,14 +157,17 @@ instance ToTxt TableName where
       then tableName
       else tableSchema <> "." <> tableName
 
+instance ToTxt FunctionName where
+  toTxt (FunctionName functionName (SchemaName functionSchema)) =
+    if functionSchema == "dbo"
+      then functionName
+      else functionSchema <> "." <> functionName
+
 instance ToTxt ColumnName where
   toTxt = columnNameText
 
 instance ToTxt ConstraintName where
   toTxt = constraintNameText
-
-instance ToTxt FunctionName where
-  toTxt = functionNameText
 
 #define INSTANCE_CLUMP_3(name) \
          instance ToJSON name where \
@@ -165,8 +176,14 @@ instance ToTxt FunctionName where
            { parseJSON = genericParseJSON hasuraJSON }
 INSTANCE_CLUMP_3(Order)
 INSTANCE_CLUMP_3(NullsOrder)
-INSTANCE_CLUMP_3(ScalarType)
 INSTANCE_CLUMP_3(FieldName)
+
+instance ToJSON ScalarType where
+  toJSON scalarType = String $ scalarTypeDBName DataLengthUnspecified scalarType
+
+instance FromJSON ScalarType where
+  parseJSON (String s) = pure (parseScalarType s)
+  parseJSON _ = fail "expected a string"
 
 instance HasCodec ColumnName where
   codec = dimapCodec ColumnName columnNameText codec
@@ -177,7 +194,31 @@ deriving instance ToJSON ColumnName
 
 deriving instance ToJSON ConstraintName
 
-deriving instance ToJSON FunctionName
+instance ToJSON FunctionName where
+  toJSON = genericToJSON hasuraJSON
+
+instance HasCodec FunctionName where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object "MSSQLFunctionName" $
+          FunctionName
+            <$> requiredField' "name" AC..= functionName
+            <*> optionalFieldWithDefault' "schema" "dbo" AC..= functionSchema
+      strCodec = flip FunctionName "dbo" <$> codec
+
+instance FromJSON FunctionName where
+  parseJSON v@(String _) =
+    FunctionName <$> parseJSON v <*> pure "dbo"
+  parseJSON (Object o) =
+    FunctionName
+      <$> o .: "name"
+      <*> o .:? "schema" .!= "dbo"
+  parseJSON _ =
+    fail "expecting a string/object for FunctionName"
+
+instance ToJSONKey FunctionName where
+  toJSONKey = toJSONKeyText $ \(FunctionName name (SchemaName schema)) -> schema <> "." <> name
 
 instance HasCodec TableName where
   codec = parseAlternative objCodec strCodec
@@ -216,10 +257,26 @@ deriving newtype instance ToJSONKey ColumnName
 
 deriving newtype instance FromJSONKey ColumnName
 
-deriving newtype instance ToJSONKey FunctionName
-
 --------------------------------------------------------------------------------
 -- Manual instances
+
+deriving instance Generic (CountType n)
+
+deriving instance (Backend.Backend 'Backend.MSSQL, Show n,
+  Show (IR.AggregationPredicates 'Backend.MSSQL n),
+  Show (IR.FunctionArgumentExp 'Backend.MSSQL n),
+  Show (IR.BooleanOperators 'Backend.MSSQL n)) => Show (CountType n)
+deriving instance (Backend.Backend 'Backend.MSSQL) => Functor CountType
+deriving instance (Backend.Backend 'Backend.MSSQL) => Foldable CountType
+deriving instance (Backend.Backend 'Backend.MSSQL) => Traversable CountType
+
+deriving instance Foldable Countable
+deriving instance Traversable Countable
+
+deriving instance (Backend.Backend 'Backend.MSSQL, Eq n,
+  Eq (IR.AggregationPredicates 'Backend.MSSQL n),
+  Eq (IR.FunctionArgumentExp 'Backend.MSSQL n),
+  Eq (IR.BooleanOperators 'Backend.MSSQL n)) => Eq (CountType n)
 
 deriving instance Generic (Countable n)
 
@@ -238,9 +295,6 @@ instance ToJSON n => ToJSON (Countable n)
 instance FromJSON n => FromJSON (Countable n)
 
 deriving instance Ord ColumnName
-
-instance HasCodec FunctionName where
-  codec = dimapCodec FunctionName functionNameText codec
 
 deriving instance Monoid Where
 
@@ -280,3 +334,6 @@ instance ToJSON a => ToJSONKeyValue (BooleanOperators a) where
     ASTOverlaps a -> ("_st_overlaps", toJSON a)
     ASTTouches a -> ("_st_touches", toJSON a)
     ASTWithin a -> ("_st_within", toJSON a)
+
+instance HasCodec ScalarType where
+  codec = AC.named "ScalarType" placeholderCodecViaJSON

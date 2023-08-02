@@ -1,4 +1,4 @@
-import { Table } from '@/features/hasura-metadata-types';
+import { Table } from '../hasura-metadata-types';
 
 type BasicRelationshipDetails = {
   name: string;
@@ -21,8 +21,8 @@ export type RemoteSchemaRelationship = BasicRelationshipDetails & {
   relationshipType: 'Remote';
   definition: {
     toRemoteSchema: string;
-    toTable: Table;
-    mapping: Record<string, string>;
+    lhs_fields: string[];
+    remote_field: Record<string, any>;
   };
 };
 
@@ -31,6 +31,9 @@ export type LocalRelationship = BasicRelationshipDetails & {
   relationshipType: 'Array' | 'Object';
   definition: {
     toTable: Table;
+    toColumns?: string[];
+    fromTable?: Table;
+    fromColumns?: string[];
     mapping: Record<string, string>;
   };
 };
@@ -46,3 +49,17 @@ export enum MODE {
   DELETE = 'delete',
   RENAME = 'rename',
 }
+
+export type SuggestedRelationship = {
+  type: 'object' | 'array';
+  from: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+  to: {
+    table: Table;
+    columns: string[];
+    constraint_name?: string;
+  };
+};

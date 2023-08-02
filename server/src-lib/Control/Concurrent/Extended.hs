@@ -1,5 +1,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
+{-# HLINT ignore "Use withAsync" #-}
+
 module Control.Concurrent.Extended
   ( module Control.Concurrent,
     sleep,
@@ -55,7 +57,7 @@ sleep = Base.threadDelay . round . Microseconds
 -- | Note: Please consider using 'forkManagedT' instead to ensure reliable
 -- resource cleanup.
 forkImmortal ::
-  ForkableMonadIO m =>
+  (ForkableMonadIO m) =>
   -- | A label describing this thread's function (see 'labelThread').
   String ->
   Logger Hasura ->
@@ -94,7 +96,7 @@ newtype ThreadShutdown m = ThreadShutdown {tsThreadShutdown :: m ()}
 -- used. Generally, the result should only be used later in the same ManagedT
 -- scope.
 forkManagedT ::
-  ForkableMonadIO m =>
+  (ForkableMonadIO m) =>
   String ->
   Logger Hasura ->
   m Void ->
@@ -122,7 +124,7 @@ data Forever m = forall a. Forever a (a -> m a)
 --   For reference, this function is used to run the async actions processor. Check
 --   `asyncActionsProcessor`
 forkManagedTWithGracefulShutdown ::
-  ForkableMonadIO m =>
+  (ForkableMonadIO m) =>
   String ->
   Logger Hasura ->
   ThreadShutdown m ->
@@ -136,30 +138,31 @@ forkManagedTWithGracefulShutdown label logger (ThreadShutdown threadShutdownHand
         liftIO $ unLogger logger (ImmortalThreadRestarted label)
         -- In this case, we are handling unexpected exceptions.
         -- i.e This does not catch the asynchronous exception which stops the thread.
-        Immortal.onUnexpectedFinish this logAndPause $
-          ( do
-              let mLoop (Forever loopFunctionInitArg loopFunction) =
-                    flip iterateM_ loopFunctionInitArg $ \args -> do
-                      liftIO $
-                        STM.atomically $ do
-                          STM.readTVar threadStateTVar >>= \case
-                            ThreadShutdownInitiated -> do
-                              -- signal to the finalizer that we are now blocking
-                              -- and blocking forever since this
-                              -- var moves monotonically from forked -> shutdown -> blocking
-                              STM.writeTVar threadStateTVar ThreadBlocking
-                            ThreadBlocking -> STM.retry
-                            ThreadForked -> pure ()
-                      loopFunction args
-              t <- LA.async $ mLoop =<< loopIteration
-              LA.link t
-              void $ LA.wait t
-          )
+        Immortal.onUnexpectedFinish this logAndPause
+          $ ( do
+                let mLoop (Forever loopFunctionInitArg loopFunction) =
+                      flip iterateM_ loopFunctionInitArg $ \args -> do
+                        liftIO
+                          $ STM.atomically
+                          $ do
+                            STM.readTVar threadStateTVar >>= \case
+                              ThreadShutdownInitiated -> do
+                                -- signal to the finalizer that we are now blocking
+                                -- and blocking forever since this
+                                -- var moves monotonically from forked -> shutdown -> blocking
+                                STM.writeTVar threadStateTVar ThreadBlocking
+                              ThreadBlocking -> STM.retry
+                              ThreadForked -> pure ()
+                        loopFunction args
+                t <- LA.async $ mLoop =<< loopIteration
+                LA.link t
+                void $ LA.wait t
+            )
     )
     ( \thread -> do
-        liftIO $
-          STM.atomically $
-            STM.modifyTVar' threadStateTVar (const ThreadShutdownInitiated)
+        liftIO
+          $ STM.atomically
+          $ STM.modifyTVar' threadStateTVar (const ThreadShutdownInitiated)
         -- the threadShutdownHandler here will wait for any in-flight events
         -- to finish processing
         {-
@@ -199,8 +202,9 @@ forkManagedTWithGracefulShutdown label logger (ThreadShutdown threadShutdownHand
             processing events without the graceful shutdown timeout.
         -}
         threadShutdownHandler
-        liftIO $
-          STM.atomically $ do
+        liftIO
+          $ STM.atomically
+          $ do
             STM.readTVar threadStateTVar >>= STM.check . (== ThreadBlocking)
         unLogger logger (ImmortalThreadStopping label)
         liftIO $ Immortal.stop thread

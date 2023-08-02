@@ -1,9 +1,10 @@
-import { HasuraMetadataV3 } from '@/metadata/types';
-import { MetadataQueryType } from '@/metadata/queryUtils';
-import { IntrospectionQuery } from 'graphql';
-import { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
+import type { HasuraMetadataV3 } from '../../metadata/types';
+import type { MetadataQueryType } from '../../metadata/queryUtils';
+import type { OpenTelemetryQueries } from '../hasura-metadata-types';
+import type { IntrospectionQuery } from 'graphql';
+import type { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
 
-import { DataTarget } from '../Datasources';
+import type { DataTarget } from '../Datasources';
 
 export interface MetadataResponse {
   resource_version: number;
@@ -26,6 +27,7 @@ export const allowedMetadataTypesArr = [
   'pg_drop_delete_permission',
   'pg_set_permission_comment',
   'pg_track_table',
+  'pg_set_function_customization',
   'mssql_create_insert_permission',
   'mssql_drop_insert_permission',
   'mssql_create_select_permission',
@@ -90,6 +92,7 @@ export type AllMetadataQueries =
 
 // TODO: these could be more strongly typed
 export type allowedMetadataTypes =
-  | typeof allowedMetadataTypesArr[number]
+  | (typeof allowedMetadataTypesArr)[number]
   | AllMetadataQueries
-  | MetadataQueryType;
+  | MetadataQueryType
+  | OpenTelemetryQueries;

@@ -24,25 +24,19 @@ spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     tests
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-tests opts = describe "SelectPermissionsSpec" $ do
+tests :: SpecWith (TestEnvironment, a)
+tests = describe "SelectPermissionsSpec" $ do
   it "permissions filter using _ceq that traverses an object relationship" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [("X-Hasura-Role", Chinook.testRoleName)]
@@ -76,7 +70,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
 
   it "permissions filter using _ceq that traverses an array relationship" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [("X-Hasura-Role", Chinook.testRoleName)]
@@ -139,7 +133,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
 
   it "Query involving two tables with their own permissions filter" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [("X-Hasura-Role", Chinook.testRoleName)]
@@ -214,7 +208,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
 
   it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [("X-Hasura-Role", Chinook.testRoleName)]
@@ -267,7 +261,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
 
   it "Query that allows access to a table using an exists-based permissions filter" $ \(testEnvironment, _) -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [ ("X-Hasura-Role", Chinook.testRoleName),
@@ -291,7 +285,7 @@ tests opts = describe "SelectPermissionsSpec" $ do
 
   it "Query that disallows access to a table using an exists-based permissions filter" $ \(testEnvironment, _) -> do
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphqlWithHeaders
           testEnvironment
           [ ("X-Hasura-Role", Chinook.testRoleName),

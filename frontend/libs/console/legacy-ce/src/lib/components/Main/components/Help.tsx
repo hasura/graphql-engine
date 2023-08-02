@@ -1,20 +1,26 @@
+import clsx from 'clsx';
 import React from 'react';
+import { FaQuestionCircle } from 'react-icons/fa';
 import { Link } from 'react-router';
-
-import styles from '../Main.module.scss';
+import {
+  activeLinkStyle,
+  itemContainerStyle,
+  linkStyle,
+} from '../HeaderNavItem';
 
 export const Help = ({ isSelected }: { isSelected: boolean }) => {
   return (
-    <Link to="/support/forums/">
-      <div className={styles.headerRightNavbarBtn}>
-        HELP
-        {isSelected ? (
-          <span
-            className={styles.selected}
-            style={{ width: '90%', marginLeft: '5%' }}
-          />
-        ) : null}
-      </div>
-    </Link>
+    <div className={itemContainerStyle}>
+      <Link
+        id="help"
+        className={clsx(linkStyle, isSelected && activeLinkStyle)}
+        to="/support/forums/"
+      >
+        <span className="text-sm">
+          <FaQuestionCircle />
+        </span>
+        <span className="uppercase">HELP</span>
+      </Link>
+    </div>
   );
 };

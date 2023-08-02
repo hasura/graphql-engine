@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import PopUp from './PopUp';
 import Rectangle from './images/Rectangle.svg';
 import styles from '../../RemoteSchema/RemoteSchema.module.scss';

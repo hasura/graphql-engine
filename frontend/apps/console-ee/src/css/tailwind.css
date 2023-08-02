@@ -1,3 +1,8 @@
+@import url('https://fonts.googleapis.com/css?family=Gudea:400,500,700');
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
+
+@import url('./../../../console-ce/src/css/legacy-boostrap.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

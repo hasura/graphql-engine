@@ -1,6 +1,7 @@
 import os
 import pytest
 import subprocess
+import threading
 from typing import Optional
 
 import ports
@@ -21,8 +22,8 @@ _PASS_THROUGH_ENV_VARS = set([
 ])
 
 
-def hge_port() -> int:
-    return ports.find_free_port()
+def hge_port(worker_id: str) -> int:
+    return ports.find_free_port(worker_id)
 
 
 def hge_server(
@@ -33,7 +34,7 @@ def hge_server(
     hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
     metadata_schema_url: str,
-) -> Optional[str]:
+) -> subprocess.Popen[bytes]:
     hge_env: dict[str, str] = {name: value for name, value in os.environ.items() if name in _PASS_THROUGH_ENV_VARS}
     hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env') if marker.args[1] is not None}
     env = {
@@ -43,6 +44,15 @@ def hge_server(
     }
 
     hge_key_args = ['--admin-secret', hge_key] if hge_key else []
+
+    if request.node.get_closest_marker('capture_hge_logs'):
+        # capture the logs
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT # combine with stdout
+    else:
+        # just stream outwards, so that the user can see the logs on a failing test
+        stdout = None
+        stderr = None
 
     print(f'Starting GraphQL Engine on {hge_url}...')
     hge_process = subprocess.Popen(
@@ -55,6 +65,8 @@ def hge_server(
             *hge_key_args,
         ],
         env = env,
+        stdout = stdout,
+        stderr = stderr,
     )
 
     def stop():
@@ -72,11 +84,15 @@ def hge_server(
         else:
             print(f'GraphQL Engine on {hge_url} has already stopped.')
 
-    # We can re-enable stopping in the background once tests no longer share a database.
-    # Until then, HGE can interfere with other tests.
-    request.addfinalizer(stop)
-    ## Stop in the background so we don't hold up other tests.
-    # request.addfinalizer(lambda: threading.Thread(target = stop).start())
+    # Stop in the background so we don't hold up other tests.
+    request.addfinalizer(lambda: threading.Thread(target = stop).start())
 
-    ports.wait_for_port(hge_port, timeout = 30)
-    return hge_url
+    try:
+        ports.wait_for_port(hge_port, timeout = 30)
+    except TimeoutError:
+        # print the logs so we can diagnose the issue
+        if hge_process.stdout:
+            print(hge_process.stdout.read())
+        raise
+
+    return hge_process

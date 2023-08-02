@@ -4,12 +4,11 @@ This guide explains how to set up the graphql-engine server for development on y
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 9.2.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 9.4.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
   - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
-  - [hpack](https://github.com/sol/hpack), for generating Cabal files
   - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
 - [Docker](https://www.docker.com/get-started/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
@@ -53,10 +52,10 @@ After making your changes
 
 ...console assets:
 
-    $ cd console
+    $ cd frontend
     $ nvm use
     $ npm ci
-    $ npm run server-build
+    $ npm run server-build:ce
     $ cd ..
 
 ...and the server:
@@ -141,10 +140,10 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 $ cabal new-run -- exe:graphql-engine \
     --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-    serve --enable-console --console-assets-dir=console/static/dist
+    serve --enable-console --console-assets-dir=frontend/dist/apps/server-assets-console-ce
 ```
 
-This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
+This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build:ce` as mentioned above.
 
 #### Test
 

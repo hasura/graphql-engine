@@ -6,22 +6,22 @@ module Harness.Logging
   )
 where
 
+import Data.Has
 import Data.Text qualified as T
 import Harness.Logging.Messages as Messages
-import Harness.TestEnvironment
 import Hasura.Prelude
 import Test.Hspec.Core.Format qualified as Hspec
 import Test.Hspec.Core.Runner
 import Test.Hspec.Core.Spec
 
 -- | Make the logger in the 'GlobalTestEnvironment' add context about the specs that use it.
-contextualizeLogger :: SpecWith GlobalTestEnvironment -> SpecWith GlobalTestEnvironment
+contextualizeLogger :: (Has Logger a) => SpecWith a -> SpecWith a
 contextualizeLogger = mapSpecForest (map contextualizeTree)
 
-contextualizeTree :: SpecTree GlobalTestEnvironment -> SpecTree GlobalTestEnvironment
+contextualizeTree :: forall a. (Has Logger a) => SpecTree a -> SpecTree a
 contextualizeTree spectree = go [] spectree
   where
-    go :: [Text] -> SpecTree GlobalTestEnvironment -> SpecTree GlobalTestEnvironment
+    go :: [Text] -> SpecTree a -> SpecTree a
     go ps (Node path children) = Node path (map (go (T.pack path : ps)) children)
     go ps (NodeWithCleanup loc action children) =
       NodeWithCleanup
@@ -29,8 +29,8 @@ contextualizeTree spectree = go [] spectree
         action
         (map (go ps) children)
     go ps (Leaf item) =
-      Leaf $
-        item
+      Leaf
+        $ item
           { itemExample =
               \params actionRunner progressCallback ->
                 itemExample
@@ -40,11 +40,8 @@ contextualizeTree spectree = go [] spectree
                   progressCallback
           }
 
-    attachPrefix :: [Text] -> GlobalTestEnvironment -> GlobalTestEnvironment
-    attachPrefix prefixes gte =
-      gte
-        { logger = Logger $ \msg -> runLogger (logger gte) $ LogWithContext prefixes (fromLoggableMessage msg)
-        }
+    attachPrefix :: [Text] -> a -> a
+    attachPrefix prefixes = modifier (\logger -> Logger $ \msg -> runLogger logger $ LogWithContext prefixes (fromLoggableMessage msg))
 
 -- | A Hspec 'Formatter' that outputs to a 'Logger'.
 loggingFormatter :: Logger -> Hspec.FormatConfig -> IO Hspec.Format

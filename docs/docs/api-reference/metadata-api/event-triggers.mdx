@@ -1,6 +1,6 @@
 ---
 sidebar_label: Event Triggers
-sidebar_position: 9
+sidebar_position: 12
 description: Manage Event Triggers with the Hasura Metadata API
 keywords:
   - hasura
@@ -10,24 +10,24 @@ keywords:
   - event trigger
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Metadata API Reference: Event Triggers
 
 ## Introduction
 
-Event Triggers are used to capture database changes and send them to a
-configured webhook.
+Event Triggers are used to capture database changes and send them to a configured webhook.
 
 :::tip Supported from
 
-The Metadata API is supported for versions `v2.0.0` and above and
-replaces the older [schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
+The Metadata API is supported for versions `v2.0.0` and above and replaces the older
+[schema/Metadata API](/api-reference/schema-metadata-api/index.mdx).
 
 :::
 
 ## pg_create_event_trigger {#metadata-pg-create-event-trigger}
 
-`pg_create_event_trigger` is used to create a new Event Trigger or
-replace an existing Event Trigger.
+`pg_create_event_trigger` is used to create a new Event Trigger or replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -80,24 +80,24 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-pg-create-event-trigger-syntax}
 
-| Key                    | Required | Schema                                                                                                                                 | Description                                                                       |
-| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| name                   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                              | Name of the Event Trigger                                                         |
-| table                  | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                        | Object with table name and schema                                                 |
-| source                 | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                                                | Name of the source database of the table (default: `default`)                     |
-| webhook                | false    | String                                                                                                                                 | Full url of webhook (\*)                                                          |
-| webhook_from_env       | false    | String                                                                                                                                 | Environment variable name of webhook (must exist at boot time) (\*)               |
-| insert                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for insert operation                                                |
-| update                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for update operation                                                |
-| delete                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for delete operation                                                |
-| headers                | false    | [ [HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv) ] | List of headers to be sent with the webhook                                       |
-| retry_conf             | false    | [RetryConf](/api-reference/syntax-defs.mdx#retryconf)                                                                                  | Retry configuration if event delivery fails                                       |
-| replace                | false    | Boolean                                                                                                                                | If set to true, the Event Trigger is replaced with the new definition             |
-| enable_manual          | false    | Boolean                                                                                                                                | If set to true, the Event Trigger can be invoked manually                         |
-| request_transform      | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                          | Attaches a Request Transformation to the Event Trigger.                           |
-| response_transform     | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                        | Attaches a Request Transformation to the Event Trigger.                           |
-| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (EE/Cloud only).                      |
-| trigger_on_replication | false    | Boolean                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication |
+| Key                    | Required | Schema                                                                                                                                 | Description                                                                                                            |
+| ---------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| name                   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                              | Name of the Event Trigger                                                                                              |
+| table                  | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                        | Object with table name and schema                                                                                      |
+| source                 | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                                                | Name of the source database of the table (default: `default`)                                                          |
+| webhook                | false    | [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)                                                                                | Event Trigger webhook URL                                                                                              |
+| webhook_from_env       | false    | String                                                                                                                                 | Environment variable name of webhook (Deprecated in favour of [WebhookURL](/api-reference/syntax-defs.mdx#webhookurl)) |
+| insert                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for insert operation                                                                                     |
+| update                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for update operation                                                                                     |
+| delete                 | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                          | Specification for delete operation                                                                                     |
+| headers                | false    | [ [HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv) ] | List of headers to be sent with the webhook                                                                            |
+| retry_conf             | false    | [RetryConf](/api-reference/syntax-defs.mdx#retryconf)                                                                                  | Retry configuration if event delivery fails                                                                            |
+| replace                | false    | Boolean                                                                                                                                | If set to true, the Event Trigger is replaced with the new definition                                                  |
+| enable_manual          | false    | Boolean                                                                                                                                | If set to true, the Event Trigger can be invoked manually                                                              |
+| request_transform      | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                          | Attaches a Request Transformation to the Event Trigger.                                                                |
+| response_transform     | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                        | Attaches a Request Transformation to the Event Trigger.                                                                |
+| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (Enterprise Edition/Cloud only).                                           |
+| trigger_on_replication | false    | Boolean                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication                                      |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
@@ -135,11 +135,9 @@ X-Hasura-Role: admin
 
 ## pg_redeliver_event {#metadata-pg-redeliver-event}
 
-`redeliver_event` is used to redeliver an existing event. For example,
-if an event is marked as error ( say it did not succeed after retries),
-you can redeliver it using this API. Note that this will reset the count
-of retries so far. If the event fails to deliver, it will be retried
-automatically according to its `retry_conf`.
+`redeliver_event` is used to redeliver an existing event. For example, if an event is marked as error ( say it did not
+succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far. If
+the event fails to deliver, it will be retried automatically according to its `retry_conf`.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -187,12 +185,97 @@ X-Hasura-Role: admin
 | payload | true     | JSON                                                      | Some JSON payload to send to trigger                            |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
+## pg_get_event_logs {#metadata-pg-get-event-logs}
+
+`pg_get_event_logs` is used to fetch the event logs for a given event trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_get_event_logs",
+  "args": {
+    "name": "sample_trigger",
+    "source": "default",
+    "status": "processed",
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
+### Args syntax {#metadata-pg-get-event-logs-syntax}
+| Key            | Required | Schema                                                    | Description                                                                                            |
+| -------        | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| name           | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                                                              |
+| source         | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                                        |
+| status         | false    | \[`pending` \| `processed` \]                             | Type of event logs to be fetched. If `status` is not provided then all types of status are included    |
+| limit          | false    | Integer                                                   | Maximum number of event logs to be returned in one API call (default: `100`)                           |
+| offset         | false    | Integer                                                   | Starting point from where the event logs need to be returned (default: `0`)                            |
+
+## pg_get_event_invocation_logs {#metadata-pg-get-event-invocation-logs}
+
+`pg_get_event_invocation_logs` is used to fetch the invocation logs for a given event trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_get_event_invocation_logs",
+  "args": {
+    "name": "sample_trigger",
+    "source": "default",
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
+### Args syntax {#metadata-pg-get-event-invocation-logs-syntax}
+| Key            | Required | Schema                                                    | Description                                                                                            |
+| -------        | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| name           | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                                                              |
+| source         | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                                        |
+| limit          | false    | Integer                                                   | Maximum number of invocation logs to be returned in one API call (default: `100`)                      |
+| offset         | false    | Integer                                                   | Starting point from where the invocation logs need to be returned (default: `0`)                       |
+
+## pg_get_event_by_id {#metadata-pg-get-event-by-id}
+
+`pg_get_event_by_id` is used to fetch the event and invocation logs for a given `event_id`.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_get_event_by_id",
+  "args": {
+    "source" : "default",
+    "event_id" : "009335c9-7b01-4ea5-b790-66a112e165f9",
+    "invocation_log_limit" : 100,
+    "invocation_log_offset" : 0
+  }
+}
+```
+
+### Args syntax {#metadata-pg-get-event-by-id-syntax}
+| Key                   | Required | Schema                                                    | Description                                                                       |
+| -------               | -------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| source                | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                   |
+| event_id              | true     | String                                                    | UUID of the event                                                                 |
+| invocation_log_limit  | false    | Integer                                                   | Maximum number of invocation logs to be returned in one API call (default: `100`) |
+| invocation_log_offset | false    | Integer                                                   | Starting point from where the invocation logs need to be returned (default: `0`)  |
+
 ---
 
 ## mssql_create_event_trigger {#metadata-mssql-create-event-trigger}
 
-`mssql_create_event_trigger` is used to create a new Event Trigger or
-replace an existing Event Trigger.
+`mssql_create_event_trigger` is used to create a new Event Trigger or replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -261,7 +344,7 @@ X-Hasura-Role: admin
 | enable_manual          | false    | Boolean                                                                                                                                | If set to true, the Event Trigger can be invoked manually                         |
 | request_transform      | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                          | Attaches a Request Transformation to the Event Trigger.                           |
 | response_transform     | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                        | Attaches a Request Transformation to the Event Trigger.                           |
-| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (EE/Cloud only).                      |
+| cleanup_config         | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                          | Cleanup config for the auto cleanup process (Enterprise Edition/Cloud only).      |
 | trigger_on_replication | false    | Boolean                                                                                                                                | Specification for enabling/disabling the Event Trigger during logical replication |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
@@ -293,18 +376,16 @@ X-Hasura-Role: admin
 
 ### Args syntax {#metadata-mssql-delete-event-trigger-syntax}
 
-| Key    | Required | Schema                                                    | Description                                                     |
-| ------ | -------- | --------------------------------------------------------- | --------------------------------------------------------------- |
-| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
+| Key    | Required | Schema                                                    | Description                                                           |
+| ------ | -------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                             |
 | source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the Event Trigger (default: `default`) |
 
 ## mssql_redeliver_event {#metadata-mssql-redeliver-event}
 
-`mssql_redeliver_event` is used to redeliver an existing event. For example,
-if an event is marked as error (say it did not succeed after retries),
-you can redeliver it using this API. Note that this will reset the count
-of retries so far. If the event fails to deliver, it will be retried
-automatically according to its `retry_conf`.
+`mssql_redeliver_event` is used to redeliver an existing event. For example, if an event is marked as error (say it did
+not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
+If the event fails to deliver, it will be retried automatically according to its `retry_conf`.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -352,9 +433,95 @@ X-Hasura-Role: admin
 | payload | true     | JSON                                                      | Some JSON payload to send to trigger                            |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
+## mssql_get_event_logs {#metadata-mssql-get-event-logs}
+
+`mssql_get_event_logs` is used to fetch the event logs for a given event trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_get_event_logs",
+  "args": {
+    "name": "sample_trigger",
+    "source": "default",
+    "status": "processed",
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-get-event-logs-syntax}
+| Key            | Required | Schema                                                    | Description                                                                                            |
+| -------        | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| name           | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                                                              |
+| source         | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                                        |
+| status         | false    | \[`pending` \| `processed` \]                             | Type of event logs to be fetched. If `status` is not provided then all types of status are included    |
+| limit          | false    | Integer                                                   | Maximum number of event logs to be returned in one API call (default: `100`)                           |
+| offset         | false    | Integer                                                   | Starting point from where the event logs need to be returned (default: `0`)                            |
+
+## mssql_get_event_invocation_logs {#metadata-mssql-get-event-invocation-logs}
+
+`mssql_get_event_invocation_logs` is used to fetch the invocation logs for a given event trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_get_event_invocation_logs",
+  "args": {
+    "name": "sample_trigger",
+    "source": "default",
+    "limit": 10,
+    "offset": 0
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-get-event-invocation-logs-syntax}
+| Key            | Required | Schema                                                    | Description                                                                                            |
+| -------        | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| name           | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                                                              |
+| source         | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                                        |
+| limit          | false    | Integer                                                   | Maximum number of invocation logs to be returned in one API call (default: `100`)                      |
+| offset         | false    | Integer                                                   | Starting point from where the invocation logs need to be returned (default: `0`)                       |
+
+## mssql_get_event_by_id {#metadata-mssql-get-event-by-id}
+
+`mssql_get_event_by_id` is used to fetch the event and invocation logs for a given `event_id`.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_get_event_by_id",
+  "args": {
+    "source" : "default",
+    "event_id" : "81531A4C-AED7-4EFE-964D-D115A77B05C2",
+    "invocation_log_limit" : 100,
+    "invocation_log_offset" : 0
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-get-event-by-id-syntax}
+| Key                   | Required | Schema                                                    | Description                                                                       |
+| -------               | -------- | --------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| source                | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`)                   |
+| event_id              | true     | String                                                    | UUID of the event                                                                 |
+| invocation_log_limit  | false    | Integer                                                   | Maximum number of invocation logs to be returned in one API call (default: `100`) |
+| invocation_log_offset | false    | Integer                                                   | Starting point from where the invocation logs need to be returned (default: `0`)  |
+
 ## cleanup_event_trigger_logs {#metadata-cleanup-event-trigger-logs}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<ProductBadge free standard pro ee self />
 
 `cleanup_event_trigger_logs` is used to manually delete the event logs for a given Event Trigger.
 
@@ -388,7 +555,7 @@ X-Hasura-Role: admin
 
 ## resume_event_trigger_cleanups {#metadata-resume-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<ProductBadge ee self />
 
 `resume_event_trigger_cleanups` is used to resume the paused log cleaner for Event Triggers.
 
@@ -418,10 +585,10 @@ X-Hasura-Role: admin
 
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition/Cloud</div>
+<ProductBadge ee self />
 
-- `pause_event_trigger_cleanups` is used to pause the log cleaner for event
-  triggers which already have a cleaner installed.
+- `pause_event_trigger_cleanups` is used to pause the log cleaner for event triggers which already have a cleaner
+  installed.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -449,6 +616,7 @@ X-Hasura-Role: admin
 
 :::info Note
 
-The start and pause APIs for Event Trigger cleanup work only for Event Triggers that have a cleanup configuration defined.
+The start and pause APIs for Event Trigger cleanup work only for Event Triggers that have a cleanup configuration
+defined.
 
 :::

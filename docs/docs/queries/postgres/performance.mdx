@@ -22,9 +22,9 @@ import TabItem from '@theme/TabItem';
 Sometimes queries can become slow due to large data volumes or levels of nesting. This page explains how to identify the
 query performance, and how queries can be optimized.
 
-## Analysing query performance {#pg-analysing-query-performance}
+## Analyzing query performance {#pg-analyzing-query-performance}
 
-Let's say we want to analyse the following query:
+Let's say we want to analyze the following query:
 
 ```graphql
 query {
@@ -73,7 +73,7 @@ query {
 }
 ```
 
-We've seen in the [above example](#pg-analysing-query-performance) that by default Postgres conducts a sequential scan
+We've seen in the [above example](#pg-analyzing-query-performance) that by default Postgres conducts a sequential scan
 i.e. going through all the rows. Whenever there is a sequential scan, it can be optimized by adding an index.
 
 The following statement sets an index on `name` in the `authors` table.
@@ -123,7 +123,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-Let's compare the performance analysis to [the one before adding the index](#pg-analysing-query-performance). What was a
+Let's compare the performance analysis to [the one before adding the index](#pg-analyzing-query-performance). What was a
 `sequential scan` in the example earlier is now an `index scan`. `Index scans` are usually more performant than
 `sequential scans`. We can also see that the `cost` of the query is now lower than the one before we added the index.
 

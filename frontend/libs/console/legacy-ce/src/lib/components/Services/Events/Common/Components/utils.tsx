@@ -28,5 +28,5 @@ export const getEventDeliveryIcon = (delivered: boolean) => {
 };
 
 export const getInvocationLogStatus = (status: number) => {
-  return status < 300 ? <CheckIcon /> : <CrossIcon />;
+  return status && status < 300 ? <CheckIcon /> : <CrossIcon />;
 };

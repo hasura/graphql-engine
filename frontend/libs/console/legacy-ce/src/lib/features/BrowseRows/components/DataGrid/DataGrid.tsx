@@ -1,19 +1,22 @@
 import {
   Relationship,
   useListAllDatabaseRelationships,
-} from '@/features/DatabaseRelationships';
+} from '../../../DatabaseRelationships';
 import {
   Feature,
   Operator,
   OrderBy,
   TableRow,
   WhereClause,
-} from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+} from '../../../DataSource';
+import { Table } from '../../../hasura-metadata-types';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { useDeleteRow } from '../../../DeleteRow';
+import { useQueryClient } from 'react-query';
+import { useFireNotification } from '../../../../new-components/Notifications';
 import {
   DEFAULT_ORDER_BY_CLAUSES,
   DEFAULT_PAGE_INDEX,
@@ -28,6 +31,9 @@ import { ReactTableWrapper } from './parts/ReactTableWrapper';
 import { QueryDialog } from './QueryDialog';
 import { useRows, useTableColumns } from '../../hooks';
 import { transformToOrderByClause } from './utils';
+import { useExportRows } from '../../hooks/useExportRows/useExportRows';
+import { adaptSelectedRowIdsToWhereClause } from './DataGrid.utils';
+import { getBrowseRowsQueryKey } from '../../hooks/useRows';
 
 export type DataGridOptions = {
   where?: WhereClause[];
@@ -52,6 +58,7 @@ export interface DataGridProps {
   activeRelationships?: string[];
   disableRunQuery?: boolean;
   updateOptions?: (options: DataGridOptions) => void;
+  primaryKeys: string[];
 }
 
 const getEqualToOperator = (operators: Operator[]) => {
@@ -69,6 +76,7 @@ export const DataGrid = (props: DataGridProps) => {
     activeRelationships,
     onRelationshipClose,
     updateOptions,
+    primaryKeys,
   } = props;
 
   /**
@@ -103,6 +111,19 @@ export const DataGrid = (props: DataGridProps) => {
     setSorting(DEFAULT_SORT_CLAUSES);
     setWhereClauses(DEFAULT_WHERE_CLAUSES);
     setOrderClauses(DEFAULT_ORDER_BY_CLAUSES);
+    updateOptions?.({
+      limit: pageSize,
+      offset: pageIndex * pageSize,
+      where: DEFAULT_WHERE_CLAUSES,
+      order_by: DEFAULT_ORDER_BY_CLAUSES,
+    });
+  };
+
+  const rowOptions = {
+    limit: pageSize,
+    offset: pageIndex * pageSize,
+    order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
+    where: whereClauses,
   };
 
   /**
@@ -116,17 +137,42 @@ export const DataGrid = (props: DataGridProps) => {
   } = useRows({
     table,
     dataSourceName,
-    options: {
-      limit: pageSize,
-      offset: pageIndex * pageSize,
-      order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
-      where: whereClauses,
-    },
+    options: rowOptions,
   });
 
   const { data: tableColumnQueryResult } = useTableColumns({
     table,
     dataSourceName,
+  });
+
+  const queryClient = useQueryClient();
+  const { fireNotification } = useFireNotification();
+
+  const { deleteRow } = useDeleteRow({
+    dataSourceName,
+    table,
+    onSuccess: () => {
+      fireNotification({
+        title: 'Success!',
+        message: 'Successfully deleted row',
+        type: 'success',
+      });
+      queryClient.invalidateQueries(
+        getBrowseRowsQueryKey({
+          dataSourceName,
+          table,
+          columns: undefined,
+          options,
+        })
+      );
+    },
+    onError: (err: Error) => {
+      fireNotification({
+        title: 'Error!',
+        message: err.message,
+        type: 'error',
+      });
+    },
   });
 
   const { data: relationships, isFetching } = useListAllDatabaseRelationships({
@@ -143,6 +189,33 @@ export const DataGrid = (props: DataGridProps) => {
         where: whereClauses,
       });
   }, [pageIndex, pageSize]);
+
+  const columnNames = (tableColumnQueryResult?.columns || []).map(
+    column => column.name
+  );
+  const { onExportRows } = useExportRows({
+    columns: columnNames,
+    dataSourceName,
+    options: {
+      where: whereClauses,
+      order_by: orderByClauses,
+    },
+    table,
+  });
+
+  const [selectedRowsLength, setSelectedRowsLength] = useState(0);
+  const [selectedRowsWhereClause, setSelectedRowsWhereClause] = useState<
+    WhereClause[]
+  >([]);
+  const { onExportRows: onExportSelectedRows } = useExportRows({
+    columns: columnNames,
+    dataSourceName,
+    options: {
+      where: selectedRowsWhereClause,
+      order_by: orderByClauses,
+    },
+    table,
+  });
 
   const handleOnRelationshipClick = ({
     relationship,
@@ -243,6 +316,16 @@ export const DataGrid = (props: DataGridProps) => {
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
 
+  const onRowsSelect = (rowsId: Record<number, boolean>) => {
+    setSelectedRowsLength(Object.keys(rowsId).length);
+    const whereClause = adaptSelectedRowIdsToWhereClause({
+      rowsId,
+      rows,
+      primaryKeys,
+    });
+    setSelectedRowsWhereClause(whereClause);
+  };
+
   return (
     <div>
       <DataTableOptions
@@ -268,11 +351,28 @@ export const DataGrid = (props: DataGridProps) => {
           whereClauses,
           supportedOperators: tableColumnQueryResult?.supportedOperators ?? [],
           removeWhereClause: id => {
+            const newWhereClauses = whereClauses.filter((_, i) => i !== id);
             setWhereClauses(whereClauses.filter((_, i) => i !== id));
+            updateOptions?.({
+              limit: pageSize,
+              offset: pageIndex * pageSize,
+              where: newWhereClauses,
+              order_by: orderByClauses,
+            });
           },
           removeOrderByClause: id => {
-            setOrderClauses(orderByClauses.filter((_, i) => i !== id));
+            const newOrderByClauses = orderByClauses.filter((_, i) => i !== id);
+            setOrderClauses(newOrderByClauses);
+            updateOptions?.({
+              limit: pageSize,
+              offset: pageIndex * pageSize,
+              where: whereClauses,
+              order_by: newOrderByClauses,
+            });
           },
+          onExportRows,
+          onExportSelectedRows,
+          disableExportSelectedRows: selectedRowsLength === 0,
         }}
       />
 
@@ -301,6 +401,10 @@ export const DataGrid = (props: DataGridProps) => {
             },
             onClick: handleOnRelationshipClick,
           }}
+          onRowsSelect={onRowsSelect}
+          onRowDelete={deleteRow}
+          isRowsSelectionEnabled={primaryKeys.length > 0}
+          tableColumns={tableColumnQueryResult?.columns ?? []}
         />
       )}
 

@@ -3,3 +3,7 @@
 /dist
 /coverage
 /docs
+/apps/console-ce/src/assets/
+/apps/console-ee/src/assets/
+/apps/console-ce-e2e/**/snapshots.js
+/snapshots.js

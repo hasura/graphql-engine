@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 
 import {
@@ -12,6 +12,8 @@ import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 import GraphQLCustomizationEdit from './GraphQLCustomization/GraphQLCustomizationEdit';
 
 import { focusYellowRing, inputStyles, subHeading } from '../constants';
+import { FaShieldAlt } from 'react-icons/fa';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 class Common extends React.Component {
   getPlaceHolderText(valType) {
@@ -48,6 +50,7 @@ class Common extends React.Component {
       forwardClientHeaders,
       comment,
       customization,
+      isEnvVarEnabled,
     } = this.props;
 
     const { isModify } = this.props.editState;
@@ -58,8 +61,9 @@ class Common extends React.Component {
     const tooltips = {
       graphqlurl: (
         <IconTooltip
-          message="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql"
+          message="Environment variables and secrets are available using the {{VARIABLE}} tag. Environment variable templating is available for this field. Example: https://{{ENV_VAR}}/endpoint_url"
           side="right"
+          icon={<FaShieldAlt className="h-4 text-muted cursor-pointer" />}
         />
       ),
       clientHeaderForward: (
@@ -113,6 +117,7 @@ class Common extends React.Component {
               data-test="remote-schema-timeout-conf"
               pattern="^\d+$"
               title="Only non negative integers are allowed"
+              name="timeout_sec"
             />
           </label>
         </React.Fragment>
@@ -142,42 +147,59 @@ class Common extends React.Component {
         <hr className="my-md" />
         <div className={`${subHeading} flex items-center`}>
           GraphQL server URL *{tooltips.graphqlurl}
+          <LearnMoreLink href="https://hasura.io/docs/latest/api-reference/syntax-defs/#webhookurl" />
         </div>
-        <div className={'w-80'}>
-          <DropdownButton
-            dropdownOptions={[
-              { display_text: 'URL', value: 'manualUrl' },
-              { display_text: 'From env var', value: 'envName' },
-            ]}
-            title={
-              (manualUrl !== null && 'URL') ||
-              (envName !== null && 'From env var') ||
-              'Value'
-            }
-            dataKey={
-              (manualUrl !== null && 'manualUrl') ||
-              (envName !== null && 'envName')
-            }
-            onButtonChange={this.toggleUrlParam.bind(this)}
-            onInputChange={this.handleInputChange.bind(this)}
-            required={urlRequired}
-            bsClass="w-80"
-            inputVal={manualUrl || envName}
-            disabled={isDisabled}
-            id="graphql-server-url"
-            inputPlaceHolder={
-              (manualUrl !== null &&
-                'https://my-graphql-service.com/graphql') ||
-              (envName !== null && 'MY_GRAPHQL_ENDPOINT')
-            }
-            testId="remote-schema-graphql-url"
-          />
+        <p className="text-sm text-gray-600 mb-sm w-1/2">
+          Note: Provide an URL or use an env var to template the handler URL if
+          you have different URLs for multiple environments.
+        </p>
+        <div className={'w-1/2'}>
+          {isEnvVarEnabled ? (
+            <DropdownButton
+              dropdownOptions={[
+                { display_text: 'URL', value: 'manualUrl' },
+                { display_text: 'From env var', value: 'envName' },
+              ]}
+              title={
+                (manualUrl !== null && 'URL') ||
+                (envName !== null && 'From env var') ||
+                'Value'
+              }
+              dataKey={
+                (manualUrl !== null && 'manualUrl') ||
+                (envName !== null && 'envName')
+              }
+              onButtonChange={this.toggleUrlParam.bind(this)}
+              onInputChange={this.handleInputChange.bind(this)}
+              required={urlRequired}
+              bsClass="w-80"
+              inputVal={envName || manualUrl}
+              disabled={isDisabled}
+              id="graphql-server-url"
+              inputPlaceHolder={
+                (manualUrl !== null &&
+                  'https://my-graphql-service.com/graphql') ||
+                (envName !== null && 'MY_GRAPHQL_ENDPOINT')
+              }
+              testId="remote-schema-graphql-url"
+            />
+          ) : (
+            <input
+              type="text"
+              name="handler"
+              onChange={this.handleInputChange.bind(this)}
+              required={urlRequired}
+              className={`w-3/4 ${inputStyles}`}
+              data-key={'manualUrl'}
+              value={manualUrl}
+              disabled={isDisabled}
+              id="graphql-server-url"
+              placeholder="https://my-graphql-service.com/graphql or {{MY_WEBHOOK_URL}}/graphql"
+              data-test="remote-schema-graphql-url"
+            />
+          )}
         </div>
         <br />
-        <small>
-          Note: Specifying the server URL via an environmental variable is
-          recommended if you have different URLs for multiple environments.
-        </small>
         <div className={`${subHeading} pt-md`}>
           Headers for the remote GraphQL server
         </div>
@@ -226,6 +248,7 @@ class Common extends React.Component {
             placeholder="Comment"
             value={comment}
             data-key="comment"
+            name="comment"
             onChange={this.handleInputChange.bind(this)}
             disabled={isDisabled}
             data-test="remote-schema-comment"

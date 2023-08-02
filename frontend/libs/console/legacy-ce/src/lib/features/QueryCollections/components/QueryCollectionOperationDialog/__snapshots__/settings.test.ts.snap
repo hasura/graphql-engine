@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`AllowedQueries_Utils.ts renameDuplicates should rename duplicate queries 1`] = `
-Array [
-  Object {
+[
+  {
     "name": "getAuthors_1",
     "query": "query getAuthors {
   author {
@@ -11,7 +11,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "getAuthors_2",
     "query": "query getAuthors {
   author {
@@ -21,7 +21,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "getAuthors_3",
     "query": "query getAuthors {
   author {
@@ -31,7 +31,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "unnamed",
     "query": "{
   student {
@@ -41,7 +41,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "unnamed_1",
     "query": "{
   student {
@@ -51,7 +51,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "unnamed_2",
     "query": "{
   student {
@@ -61,7 +61,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "getArticles",
     "query": "query getArticles {
   article {
@@ -70,7 +70,7 @@ Array [
   }
 }",
   },
-  Object {
+  {
     "name": "getArticle",
     "query": "query getArticle {
   article {
@@ -84,7 +84,7 @@ fragment frag on Starship {
   name
 }",
   },
-  Object {
+  {
     "name": "addArticles",
     "query": "mutation addArticles {
   insert_articles {

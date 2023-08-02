@@ -1,46 +1,24 @@
+import { Table } from '../../hasura-metadata-types';
 import {
-  DataSource,
+  useMetadata,
+  MetadataSelectors,
+  areTablesEqual,
+} from '../../hasura-metadata-api';
+import { useSuggestedRelationships } from '../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import {
+  isLegacyRemoteSchemaRelationship,
   isManualArrayRelationship,
   isManualObjectRelationship,
-} from '@/features/DataSource';
-import { Table } from '@/features/hasura-metadata-types';
-import { useHttpClient } from '@/features/Network';
-import { useQuery } from 'react-query';
-import { useMetadata, MetadataSelectors } from '@/features/hasura-metadata-api';
-import { LocalRelationship } from '../types';
+  isRemoteSchemaRelationship,
+} from '../../DataSource';
 import {
-  adaptLocalArrayRelationshipWithFkConstraint,
+  adaptLegacyRemoteSchemaRelationship,
   adaptLocalArrayRelationshipWithManualConfiguration,
-  adaptLocalObjectRelationshipWithFkConstraint,
-  adaptLocalObjectRelationshipWithManualConfigruation,
+  adaptLocalObjectRelationshipWithManualConfiguration,
+  adaptRemoteDatabaseRelationship,
+  adaptRemoteSchemaRelationship,
 } from '../utils/adaptResponse';
-import {
-  DEFAULT_STALE_TIME,
-  generateQueryKeys,
-} from '../utils/queryClientUtils';
-
-const useFkConstraints = ({
-  dataSourceName,
-  table,
-}: {
-  dataSourceName: string;
-  table: Table;
-}) => {
-  const httpClient = useHttpClient();
-
-  return useQuery({
-    queryKey: generateQueryKeys.fkConstraints({ table, dataSourceName }),
-    queryFn: async () => {
-      const result = await DataSource(httpClient).getTableFkRelationships({
-        dataSourceName,
-        table,
-      });
-      return result;
-    },
-    refetchOnWindowFocus: false,
-    staleTime: DEFAULT_STALE_TIME,
-  });
-};
+import { LocalRelationship } from '../types';
 
 export const useListAllDatabaseRelationships = ({
   dataSourceName,
@@ -50,64 +28,96 @@ export const useListAllDatabaseRelationships = ({
   table: Table;
 }) => {
   const {
-    data: metadataTable,
-    isFetching: isMetadataPending,
-    isLoading: isMetadataLoading,
-    error: metadataError,
-  } = useMetadata(MetadataSelectors.findTable(dataSourceName, table));
+    data: { tracked = [] } = {},
+    isLoading: isSuggestedRelationshipsLoading,
+    isFetching: isSuggestedRelationshipsFetching,
+    error: suggestedRelationshipsError,
+  } = useSuggestedRelationships({
+    dataSourceName,
+    which: 'all',
+  });
+
+  const filteredTrackedFkRels: LocalRelationship[] = tracked
+    .filter(rel => areTablesEqual(rel.fromTable, table))
+    .map(rel => ({
+      name: rel.name,
+      fromSource: dataSourceName,
+      fromTable: rel.fromTable,
+      type: 'localRelationship',
+      relationshipType: rel.type === 'object' ? 'Object' : 'Array',
+      definition: {
+        toTable: rel.toTable,
+        mapping: rel.columnMapping,
+      },
+    }));
 
   const {
-    data: fkConstraints,
-    isFetching: isDALIntrospectionPending,
-    isLoading: isDALIntrospectionLoading,
-    error: dalError,
-  } = useFkConstraints({ dataSourceName, table });
+    data: relationshipsWithManualConfigs = [],
+    isLoading: isMetadataLoading,
+    isFetching: isMetadataFetching,
+    error: metadataError,
+  } = useMetadata(m => {
+    const metadataTable = MetadataSelectors.findTable(dataSourceName, table)(m);
 
-  // adapt local array relationships
-  const localArrayRelationships = (
-    metadataTable?.array_relationships ?? []
-  ).map<LocalRelationship>(relationship => {
-    if (isManualArrayRelationship(relationship))
-      return adaptLocalArrayRelationshipWithManualConfiguration({
-        table,
-        dataSourceName,
-        relationship,
-      });
+    const localArrayRelationshipsWithManualConfig = (
+      metadataTable?.array_relationships ?? []
+    )
+      .filter(isManualArrayRelationship)
+      .map(relationship =>
+        adaptLocalArrayRelationshipWithManualConfiguration({
+          table,
+          dataSourceName,
+          relationship,
+        })
+      );
 
-    return adaptLocalArrayRelationshipWithFkConstraint({
-      table,
-      dataSourceName,
-      relationship,
-      fkConstraints: fkConstraints ?? [],
-    });
+    const localObjectRelationshipsWithManualConfig = (
+      metadataTable?.object_relationships ?? []
+    )
+      .filter(isManualObjectRelationship)
+      .map(relationship =>
+        adaptLocalObjectRelationshipWithManualConfiguration({
+          table,
+          dataSourceName,
+          relationship,
+        })
+      );
+
+    const remoteRels = (metadataTable?.remote_relationships ?? []).map(
+      relationship => {
+        if (isRemoteSchemaRelationship(relationship))
+          return adaptRemoteSchemaRelationship({
+            table,
+            dataSourceName,
+            relationship,
+          });
+
+        if (isLegacyRemoteSchemaRelationship(relationship))
+          return adaptLegacyRemoteSchemaRelationship({
+            table,
+            dataSourceName,
+            relationship,
+          });
+
+        return adaptRemoteDatabaseRelationship({
+          table,
+          dataSourceName,
+          relationship,
+        });
+      }
+    );
+
+    return [
+      ...remoteRels,
+      ...localArrayRelationshipsWithManualConfig,
+      ...localObjectRelationshipsWithManualConfig,
+    ];
   });
-
-  // adapt local object relationships
-  const localObjectRelationships = (
-    metadataTable?.object_relationships ?? []
-  ).map<LocalRelationship>(relationship => {
-    if (isManualObjectRelationship(relationship))
-      return adaptLocalObjectRelationshipWithManualConfigruation({
-        table,
-        dataSourceName,
-        relationship,
-      });
-    return adaptLocalObjectRelationshipWithFkConstraint({
-      table,
-      dataSourceName,
-      relationship,
-      fkConstraints: fkConstraints ?? [],
-    });
-  });
-
-  // TODO (post beta release): adapt remote DB relationships
-
-  // TODO (post beta release): adapt remote schema relationships
 
   return {
-    data: [...localArrayRelationships, ...localObjectRelationships],
-    isFetching: isMetadataPending || isDALIntrospectionPending,
-    isLoading: isMetadataLoading || isDALIntrospectionLoading,
-    error: [metadataError, dalError],
+    data: [...filteredTrackedFkRels, ...relationshipsWithManualConfigs],
+    isLoading: isSuggestedRelationshipsLoading || isMetadataLoading,
+    isFetching: isSuggestedRelationshipsFetching || isMetadataFetching,
+    error: [metadataError, suggestedRelationshipsError],
   };
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import { TableFormProps } from '../../../../Common/Table';
 import styles from '../Security.module.scss';
 import { updateIntrospectionOptions } from '../actions';

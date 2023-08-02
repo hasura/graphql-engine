@@ -1,13 +1,15 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import clsx from 'clsx';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import JSONEditor from './JSONEditor';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import 'brace/mode/json';
 import 'brace/theme/github';
-import { LS_KEYS, setLSItem, getLSItem } from '@/utils/localStorage';
-import { Button } from '@/new-components/Button';
+import { LS_KEYS, setLSItem, getLSItem } from '../../../../utils/localStorage';
+import { Button } from '../../../../new-components/Button';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { getPrimaryKeysFromTable } from './utils';
 import { RESET } from '../TableModify/ModifyActions';
 import {
@@ -27,6 +29,7 @@ import {
   permSetApplySamePerm,
   permDelApplySamePerm,
   permToggleBackendOnly,
+  permSetComment,
   applySamePermissionsBulk,
   isQueryTypeBackendOnlyCompatible,
   SET_PRESET_VALUE,
@@ -35,6 +38,7 @@ import {
   PERM_UPDATE_QUERY_ROOT_FIELDS,
   PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
   permToggleSelectField,
+  permValidateInputFields,
 } from './Actions';
 import {
   RootFieldPermissions,
@@ -78,7 +82,7 @@ import {
   dataSource,
   isFeatureSupported,
 } from '../../../../dataSources';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+
 import {
   getFilterQueries,
   replaceLegacyOperators,
@@ -99,6 +103,12 @@ import {
   getPermissionsModalTitle,
   getPermissionsModalDescription,
 } from './RootFieldPermissions/PermissionsConfirmationModal.utils';
+import {
+  MetadataSelectors,
+  useMetadata,
+} from '../../../../features/hasura-metadata-api';
+import { ReduxInputValidation } from './InputValidation/ReduxInputValidation';
+import { CommentInput } from '../../../../features/Permissions/PermissionsForm/components/CommentInput';
 
 const getPermissionModalEnabled = () => {
   const status = getLSItem(LS_KEYS.permissionConfirmationModalStatus);
@@ -132,6 +142,8 @@ class Permissions extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
+
+    dispatch(updateSchemaInfo());
 
     if (!isFeatureSupported('tables.permissions.enabled')) return;
 
@@ -593,7 +605,12 @@ class Permissions extends Component {
         sectionClasses += ' ' + styles.disabled;
       }
 
-      const getSectionHeader = (title, toolTip, sectionStatus, knowMoreRef) => {
+      const getSectionHeader = (
+        title,
+        toolTip,
+        sectionStatus,
+        learnMoreRef
+      ) => {
         let sectionStatusHtml;
         if (sectionStatus) {
           sectionStatusHtml = (
@@ -603,21 +620,28 @@ class Permissions extends Component {
           );
         }
 
-        let knowMoreHtml;
-        if (knowMoreRef) {
-          knowMoreHtml = (
-            <span
-              className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}
-            >
-              <KnowMoreLink href={knowMoreRef} />
-            </span>
+        let learnMoreHtml;
+        if (learnMoreRef) {
+          learnMoreHtml = (
+            <LearnMoreLink href={learnMoreRef} className="font-normal" />
           );
         }
 
         return (
           <div className="flex">
-            {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
+            {addTooltip(title, toolTip)} {learnMoreHtml} {sectionStatusHtml}
           </div>
+        );
+      };
+
+      const getCommentSection = () => {
+        return (
+          <CommentInput
+            comment={permissionsState[query]?.comment}
+            setComment={value => {
+              dispatch(permSetComment(value));
+            }}
+          />
         );
       };
 
@@ -1385,7 +1409,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 value={preset.column}
                 onChange={setPresetColumn}
                 data-preset-column={preset.column}
@@ -1406,7 +1430,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className="input-sm form-control !leading-4"
                 onChange={setPresetType}
                 data-preset-column={preset.column}
                 data-test={'column-presets-type-' + index}
@@ -1905,7 +1929,6 @@ class Permissions extends Component {
       const permissionsModalDescription = getPermissionsModalDescription(
         this.state.permissionsModalScenario
       );
-
       return (
         <div
           id={'permission-edit-section'}
@@ -1928,6 +1951,26 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
+            {getCommentSection()}
+            {permissionsState?.query !== 'select' && (
+              <ReduxInputValidation
+                dispatch={dispatch}
+                permissionsState={permissionsState[query]?.validate_input}
+                updateFunction={values => {
+                  // update redux state for validation form (only if they change)
+                  dispatch(
+                    permValidateInputFields(
+                      values.enabled,
+                      values.definition.url,
+                      'http',
+                      values.definition.headers,
+                      values.definition.forward_client_headers,
+                      values.definition.timeout
+                    )
+                  );
+                }}
+              />
+            )}
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
@@ -1966,12 +2009,25 @@ class Permissions extends Component {
     return (
       <RightContainer>
         <Analytics name="Permissions" {...REDACT_EVERYTHING}>
-          <div className={styles.container}>
+          <div className={clsx(styles.container, 'bootstrap-jail')}>
             {getHeader(currentTableSchema)}
             <br />
             <div className={styles.padd_left_remove}>
               <div className={`${styles.padd_remove} col-xs-12`}>
-                <h4 className={styles.subheading_text}>Permissions</h4>
+                <h4 className={styles.subheading_text}>
+                  Permissions{' '}
+                  {currentTableSchema?.table_type === 'VIEW' ? (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/schema/postgres/views/#pg-create-views"
+                      text="(Learn more about view permissions)"
+                    />
+                  ) : (
+                    <LearnMoreLink
+                      href="https://hasura.io/docs/latest/auth/authorization/permissions/"
+                      text="(Learn more about table permissions)"
+                    />
+                  )}
+                </h4>
                 {getPermissionsTable(
                   currentTableSchema,
                   supportedQueryTypes,
@@ -2033,6 +2089,19 @@ const mapStateToProps = (state, ownProps) => ({
   ...state.tables.modify,
 });
 
-const permissionsConnector = connect => connect(mapStateToProps)(Permissions);
+const PermissionsWrapper = props => {
+  const { data: source, isLoading: isLoadingMetadata } = useMetadata(
+    MetadataSelectors.findSource(props.currentSource)
+  );
+  const isBigQuery = source?.kind === 'bigquery';
+
+  if (isLoadingMetadata) return <div>Loading...</div>;
+
+  return <Permissions {...props} isBigQuery={isBigQuery} />;
+};
+
+const permissionsConnector = connect => {
+  return connect(mapStateToProps)(PermissionsWrapper);
+};
 
 export default permissionsConnector;

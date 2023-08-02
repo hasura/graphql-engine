@@ -4,23 +4,28 @@
 --
 -- NOTE: This module is intended to be imported qualified.
 module Harness.Backend.DataConnector.Chinook.Reference
-  ( agentConfig,
-    sourceConfiguration,
-    backendTypeMetadata,
+  ( backendTypeConfig,
+    mkChinookStaticTestEnvironment,
+    chinookFixture,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Control.Monad.Managed (Managed)
+import Data.Aeson qualified as J
+import Harness.Backend.DataConnector.Chinook (ChinookTestEnv, NameFormatting (..), ScalarTypes (..))
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Fixture (Fixture (..), FixtureName (..))
+import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
-backendTypeMetadata :: BackendType.BackendTypeConfig
-backendTypeMetadata =
+backendTypeConfig :: BackendType.BackendTypeConfig
+backendTypeConfig =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorReference,
       backendSourceName = "chinook_reference",
@@ -30,11 +35,13 @@ backendTypeMetadata =
             data_schema:
               supports_primary_keys: true
               supports_foreign_keys: true
-            queries: {}
+            queries:
+              foreach: {}
             relationships: {}
             comparisons:
               subquery:
                 supports_relations: true
+            user_defined_functions: {}
             scalar_types:
               DateTime:
                 comparison_operators:
@@ -44,35 +51,68 @@ backendTypeMetadata =
                   max: DateTime
                   min: DateTime
                 graphql_type: String
+              number:
+                aggregate_functions:
+                  max: number
+                  min: number
+                  stddev: number
+                  stddev_pop: number
+                  stddev_samp: number
+                  sum: number
+                  var_pop: number
+                  var_samp: number
+                  variance: number
+                update_column_operators:
+                  inc:
+                    argument_type: number
+                graphql_type: Float
               string:
                 aggregate_functions:
                   longest: string
+                  max: string
+                  min: string
                   shortest: string
                 graphql_type: String
         |],
       backendTypeString = "reference",
       backendDisplayNameString = "reference",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = const ""
     }
 
 --------------------------------------------------------------------------------
 
--- | Reference Agent @backend_configs@ field.
-agentConfig :: Aeson.Value
-agentConfig =
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-   in [yaml|
-dataconnector:
-  *backendType:
-    uri: "http://127.0.0.1:65005/"
-|]
+mkChinookStaticTestEnvironment :: TestEnvironment -> Managed ChinookTestEnv
+mkChinookStaticTestEnvironment = Chinook.mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfiguration
+
+nameFormatting :: NameFormatting
+nameFormatting = NameFormatting id id id
+
+scalarTypes :: ScalarTypes
+scalarTypes =
+  ScalarTypes
+    { _stFloatType = "number",
+      _stIntegerType = "number",
+      _stStringType = "string"
+    }
 
 -- | Reference Agent specific @sources@ entry @configuration@ field.
-sourceConfiguration :: Aeson.Value
+sourceConfiguration :: J.Value
 sourceConfiguration =
   [yaml|
-value: {}
-template:
-timeout:
-|]
+    value: {}
+    template:
+    timeout:
+  |]
+
+chinookFixture :: Fixture ChinookTestEnv
+chinookFixture =
+  Fixture
+    { name = Backend backendTypeConfig,
+      mkLocalTestEnvironment = mkChinookStaticTestEnvironment,
+      setupTeardown = \testEnvs ->
+        [Chinook.setupChinookSourceAction testEnvs],
+      customOptions = Nothing
+    }

@@ -1,5 +1,5 @@
 import React, { InputHTMLAttributes } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../new-components/Tooltip';
 import { FaExclamationTriangle } from 'react-icons/fa';
 
 interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {

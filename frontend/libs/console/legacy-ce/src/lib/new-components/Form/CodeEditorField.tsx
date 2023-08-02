@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import AceEditor, {
   IAceOptions,
   IAceEditorProps,
@@ -12,6 +12,7 @@ import 'ace-builds/src-noconflict/theme-eclipse';
 import 'ace-builds/src-noconflict/ext-language_tools';
 import { FieldError, useFormContext, Controller } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
+import { Tooltip } from '../Tooltip';
 
 // Allows to integrate the code editor in a form: by default, tab key adds a
 // tab character to the editor content, here, we want to disable this behavior
@@ -58,6 +59,10 @@ export type CodeEditorFieldProps = FieldWrapperPassThroughProps & {
    */
   editorOptions?: IAceOptions;
   /**
+   * The code editor placeholder
+   */
+  placeholder?: string;
+  /**
    * The theme of code editor
    */
   theme?: 'github' | 'eclipse';
@@ -82,6 +87,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   name,
   editorProps,
   editorOptions = DEFAULT_EDITOR_OPTIONS,
+  placeholder = '',
   theme = 'github',
   mode = 'json',
   disabled,
@@ -123,6 +129,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                   value={
                     typeof value === 'string' ? value : JSON.stringify(value)
                   }
+                  placeholder={placeholder}
                   theme={theme}
                   mode={mode}
                   readOnly={disabled}
@@ -186,23 +193,35 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
             );
           }}
         />
-        {tipState === 'ESC' && (
-          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
-            Tip:{' '}
-            <strong>
-              Press <em>Esc</em> key
-            </strong>{' '}
-            then navigate with <em>Tab</em>
-          </div>
-        )}
-        {tipState === 'TAB' && (
-          <div className="absolute bg-legacybg top-full pl-1 text-gray-600 text-sm mt-1">
-            Tip: Press <em>Esc</em> key then{' '}
-            <strong>
-              navigate with <em>Tab</em>
-            </strong>
-          </div>
-        )}
+        <Tooltip
+          className="absolute bottom-0 right-0 left-0 h-0 -z-1"
+          side="bottom"
+          options={{
+            root: {
+              open: tipState !== 'ANY',
+            },
+          }}
+          tooltipContentChildren={
+            tipState === 'ESC' ? (
+              <div>
+                Tip:{' '}
+                <strong>
+                  Press <em>Esc</em> key
+                </strong>{' '}
+                then navigate with <em>Tab</em>
+              </div>
+            ) : tipState === 'TAB' ? (
+              <div>
+                Tip: Press <em>Esc</em> key then{' '}
+                <strong>
+                  navigate with <em>Tab</em>
+                </strong>
+              </div>
+            ) : null
+          }
+        >
+          <div>&nbsp;</div>
+        </Tooltip>
       </div>
     </FieldWrapper>
   );

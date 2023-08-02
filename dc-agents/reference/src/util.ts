@@ -68,9 +68,9 @@ export const reduceOrIterable = (iterable: Iterable<boolean>): boolean => {
   return false;
 }
 
-export const tableNameEquals = (tableName1: TableName) => (tableName2: TableName): boolean => {
-  if (tableName1.length !== tableName2.length)
+export const nameEquals = (name1: TableName) => (name2: TableName): boolean => {
+  if (name1.length !== name2.length)
     return false;
 
-  return zip(tableName1, tableName2).every(([n1, n2]) => n1 === n2);
+  return zip(name1, name2).every(([n1, n2]) => n1 === n2);
 }

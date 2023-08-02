@@ -1,6 +1,6 @@
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { APIError } from '@/hooks/error';
+import { useMetadataMigration } from '../../../../MetadataAPI';
+import { useFireNotification } from '../../../../../new-components/Notifications';
+import { APIError } from '../../../../../hooks/error';
 
 interface Props {
   onSuccess?: () => void;

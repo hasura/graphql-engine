@@ -1,4 +1,4 @@
-import type { TableORSchemaArg } from '@/dataSources/types';
+import type { TableORSchemaArg } from '../../../dataSources/types';
 import type { DatasourceSqlQueries } from '.';
 import { postgresSqlQueries } from './postgres';
 import { getSchemasWhereClause, getTablesWhereClause } from './common';

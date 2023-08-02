@@ -1,0 +1,78 @@
+# my global config
+global:
+  scrape_interval: 15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: "my-project"
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+  - "alert.rules"
+  # - "first.rules"
+  # - "second.rules"
+
+# alert
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets:
+            - "alertmanager:9093"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+  - job_name: "node"
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets:
+          - localhost:9090
+          - node-exporter:9100
+          - blackbox_exporter:9115
+
+  - job_name: "hasura"
+    metrics_path: "/v1/metrics"
+    ## Uncomment the authorization credentials if the HASURA_GRAPHQL_METRICS_SECRET env variable is set
+    # authorization:
+    #   credentials: hasura
+    static_configs:
+      - targets: ["graphql-engine:8080"]
+
+  # - job_name: "hasura-cloud"
+  #   metrics_path: "/v1/metrics"
+  #   scheme: https
+  #   ## Uncomment the authorization credentials if the HASURA_GRAPHQL_METRICS_SECRET env variable is set
+  #   authorization:
+  #     credentials: hasura
+  #   static_configs:
+  #     - targets: ["some-cloud-project.hasura.app"]
+
+  - job_name: "blackbox"
+    metrics_path: /probe
+    params:
+      module: [http_2xx] # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+          - http://prometheus:9090/-/healthy
+          - http://graphql-engine:8080/healthz
+          - http://mongo-data-connector:3000/health
+          - http://data-connector-agent:8081/api/v1/mariadb/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115

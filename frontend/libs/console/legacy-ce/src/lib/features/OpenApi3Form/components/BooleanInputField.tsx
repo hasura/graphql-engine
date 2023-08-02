@@ -1,9 +1,9 @@
-import { FieldWrapper } from '@/new-components/Form';
-import { Switch } from '@/new-components/Switch';
+import { FieldWrapper } from '../../../new-components/Form';
+import { Switch } from '../../../new-components/Switch';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useEffect } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { getInputAttributes } from '../utils';
 
 export const isBooleanInputField = (configSchema: OpenApiSchema) =>

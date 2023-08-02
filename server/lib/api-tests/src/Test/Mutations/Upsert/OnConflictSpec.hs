@@ -13,9 +13,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -99,15 +99,15 @@ schema =
         tablePrimaryKey = ["id"],
         tableConstraints = [Schema.UniqueConstraintColumns ["title"]],
         tableReferences =
-          [ Schema.Reference "author_id" "author" "id"
+          [ Schema.reference "author_id" "author" "id"
           ]
       }
   ]
 
 serialInt :: Schema.ScalarType
 serialInt =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
       { Schema.bstCitus = Just "INT",
         Schema.bstPostgres = Just "INT",
         Schema.bstCockroach = Just "INT4"
@@ -116,11 +116,8 @@ serialInt =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Update selected columns on conflict" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
@@ -167,7 +164,7 @@ tests opts = do
                   published_on: '2018-06-15'
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Update selected columns on conflict using a filter" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -220,7 +217,7 @@ tests opts = do
                   author_id: 2
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Ignore request on conflict" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -254,7 +251,7 @@ tests opts = do
                 affected_rows: 0
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Upsert in nested mutations" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -301,4 +298,4 @@ tests opts = do
                 affected_rows: 2
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

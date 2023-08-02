@@ -1,5 +1,8 @@
 import { Action as ReduxAction } from 'redux';
-import { getEventRequestSampleInput } from '@/components/Services/Events/EventTriggers/utils';
+import {
+  getCronTriggerRequestSampleInput,
+  getEventRequestSampleInput,
+} from '../../Services/Events/EventTriggers/utils';
 import { getActionRequestSampleInput } from '../../Services/Actions/Add/utils';
 import {
   defaultActionDefSdl,
@@ -11,6 +14,7 @@ import {
   RequestTransformTemplateEngine,
   RequestTransformBody,
   ResponseTransformBody,
+  QueryParams,
 } from '../../../metadata/types';
 import { Nullable } from '../utils/tsUtils';
 
@@ -79,7 +83,7 @@ export interface SetRequestUrlPreview extends ReduxAction {
 
 export interface SetRequestQueryParams extends ReduxAction {
   type: typeof SET_REQUEST_QUERY_PARAMS;
-  requestQueryParams: KeyValuePair[];
+  requestQueryParams: QueryParams;
 }
 
 export interface SetRequestAddHeaders extends ReduxAction {
@@ -173,7 +177,7 @@ export type RequestTransformState = {
   requestUrl: string;
   requestUrlError: string;
   requestUrlPreview: string;
-  requestQueryParams: KeyValuePair[];
+  requestQueryParams: QueryParams;
   requestAddHeaders: KeyValuePair[];
   requestBody: RequestTransformStateBody;
   requestBodyError: string;
@@ -224,6 +228,8 @@ export const defaultActionRequestSampleInput = getActionRequestSampleInput(
 
 export const defaultEventRequestSampleInput = getEventRequestSampleInput();
 
+export const defaultCronTriggerSampleInput = getCronTriggerRequestSampleInput();
+
 export const defaultActionRequestBody = `{
   "users": {
     "name": {{$body.input.arg1.username}},
@@ -240,6 +246,10 @@ export const defaultEventRequestBody = `{
     "name": {{$body.table.name}},
     "schema": {{$body.table.schema}}
   }
+}`;
+
+export const defaultCronTriggerRequestBody = `{
+  "payload": {{$body.payload}}
 }`;
 
 const defaultActionRequestJsonPayload = `{

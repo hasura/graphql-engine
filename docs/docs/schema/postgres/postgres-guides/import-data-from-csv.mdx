@@ -20,7 +20,7 @@ guide will show how to do so.
 
 Let's assume we have the following CSV file, which is named `profile.csv`:
 
-<Thumbnail src='/img/guides/sample-data-csv-file.png' alt='.csv data file' width='500px' />
+<Thumbnail src="/img/guides/sample-data-csv-file.png" alt=".csv data file" width="500px" />
 
 ## Step 1: Add a corresponding table to your PG database
 
@@ -57,3 +57,14 @@ Once connected to the database, use the following command from inside `psql` to 
 ```
 
 Your data would have been successfully copied into the Postgres database.
+
+:::info Values not explicitly provided in the CSV file
+
+If a column's value is auto-generated, you can exclude it from the CSV file and allow the database to populate it
+automatically. However, you must make sure that the auto-generated column is defined as such in the table schema.
+
+If a column is not present in the CSV file, you can either set a default value for it in the table schema or exclude it
+from the INSERT statement. If the column is not nullable and has no default value, you must provide a value for it in
+the INSERT statement.
+
+:::

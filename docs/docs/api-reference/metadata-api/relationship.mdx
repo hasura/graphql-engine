@@ -1,6 +1,6 @@
 ---
 sidebar_label: Relationships
-sidebar_position: 4
+sidebar_position: 7
 description: Use relationships with the Hasura Metadata API
 keywords:
   - hasura
@@ -408,6 +408,44 @@ X-Hasura-Role: admin
 | new_name | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | New relationship name                                         |
 | source   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
 
+## pg_suggest_relationships {#pg-suggest-relationships}
+
+`pg_suggest_relationships` is used to suggest relationships that can be tracked by the `pg_create_*_relationship` API.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_suggest_relationships",
+  "version": 1,
+  "args": {
+    "omit_tracked": true,
+    "source": "chinook",
+    "tables": [["Artist"]]
+  }
+}
+```
+
+### Args syntax {#pg-suggest-relationship-syntax}
+
+| Key          | Required | Default    | Schema                                                              | Description                                                   |
+| --------     | -------- | --------   | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| source       | false    | `default`  | [SourceName](/api-reference/syntax-defs.mdx#sourcename)            | The source to suggest relationships for                       |
+| tables       | false    | All Tables | [ [TableName](/api-reference/syntax-defs.mdx#tablename) ]          | List of tables to consider for suggestions                    |
+| omit_tracked | false    | `false`    | `Boolean`                                                           | Don't re-suggest tracked relationships                        |
+
+
+:::info Note
+
+All other source kinds are also supported by using the type `{KIND}_suggest_relationships`.
+For example, Snowflake would be: `snowflake_suggest_relationships`, etc.
+
+:::
+
 ## mssql_create_object_relationship {#mssql-create-object-relationship}
 
 `create_object_relationship` is used to create an object relationship on
@@ -768,3 +806,34 @@ X-Hasura-Role: admin
 | name     | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | The relationship                                              |
 | new_name | true     | [RelationshipName](/api-reference/syntax-defs.mdx#relationshipname) | New relationship name                                         |
 | source   | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)             | Name of the source database of the table (default: `default`) |
+
+
+## mssql_suggest_relationships {#mssql-suggest-relationships}
+
+`mssql_suggest_relationships` is used to suggest relationships that can be tracked by the `mssql_create_*_relationship` API.
+
+An example:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mssql_suggest_relationships",
+  "version": 1,
+  "args": {
+    "omit_tracked": true,
+    "source": "chinook",
+    "tables": [["Artist"]]
+  }
+}
+```
+
+### Args syntax {#mssql-suggest-relationship-syntax}
+
+| Key          | Required | Default    | Schema                                                              | Description                                                   |
+| --------     | -------- | --------   | ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| source       | false    | `default`  | [SourceName](/api-reference/syntax-defs.mdx#sourcename)            | The source to suggest relationships for                       |
+| tables       | false    | All Tables | [ [TableName](/api-reference/syntax-defs.mdx#tablename) ]          | List of tables to consider for suggestions                    |
+| omit_tracked | false    | `false`    | `Boolean`                                                           | Don't re-suggest tracked relationships                        |

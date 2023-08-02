@@ -4,7 +4,7 @@
 -- who tests the test framework?
 module Test.Harness.Quoter.YamlSpec (spec) where
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import GHC.Generics
 import Harness.Quoter.Yaml (interpolateYaml, yaml)
@@ -22,7 +22,7 @@ data MakeSomeYaml = MakeSomeYaml
     msyArray :: [MakeSomeYaml]
   }
   deriving stock (Generic)
-  deriving anyclass (Aeson.ToJSON)
+  deriving anyclass (J.ToJSON)
 
 -- ** Preamble
 
@@ -54,10 +54,10 @@ spec = describe "Yaml quasiquoters" $ do
                 msyArray = []
               }
       let expected =
-            Aeson.Object
+            J.Object
               ( KM.fromList
-                  [ ("type", Aeson.String "thing"),
-                    ("complex", Aeson.toJSON complexValue)
+                  [ ("type", J.String "thing"),
+                    ("complex", J.toJSON complexValue)
                   ]
               )
 
@@ -110,14 +110,14 @@ spec = describe "Yaml quasiquoters" $ do
 
     it "Interpolates a Haskell value as expected" $ const do
       let interpolatedValue = (100 :: Int)
-      let input :: Aeson.Value
+      let input :: J.Value
           input =
             [interpolateYaml|
               type: pg_create_select_permission
               args:
                 limit: #{interpolatedValue}
             |]
-      let expected :: Aeson.Value
+      let expected :: J.Value
           expected =
             [yaml|
               type: pg_create_select_permission
@@ -127,14 +127,14 @@ spec = describe "Yaml quasiquoters" $ do
       input `shouldBe` expected
 
     it "Interpolates a Haskell expression as expected" $ const do
-      let input :: Aeson.Value
+      let input :: J.Value
           input =
             [interpolateYaml|
               type: pg_create_select_permission
               args:
                 limit: #{ (1 + 2 + 3 :: Int) }
             |]
-      let expected :: Aeson.Value
+      let expected :: J.Value
           expected =
             [yaml|
               type: pg_create_select_permission
@@ -144,7 +144,7 @@ spec = describe "Yaml quasiquoters" $ do
       input `shouldBe` expected
 
     it "Interpolation does not fail when parsing a '*'" $ const do
-      let input :: Aeson.Value
+      let input :: J.Value
           input =
             [interpolateYaml|
               "*"

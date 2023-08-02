@@ -7,6 +7,7 @@ module Hasura.Backends.DataConnector.API.V0.Name (nameCodec) where
 import Autodocodec
 import Data.Text qualified as Text
 import Language.GraphQL.Draft.Syntax qualified as GQL
+import Prelude
 
 nameCodec :: JSONCodec GQL.Name
 nameCodec =

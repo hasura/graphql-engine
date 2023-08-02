@@ -15,6 +15,11 @@
   }
 }
 
+// Footer
+.custom_doc_item_footer-x-wide {
+  max-width: 100%;
+}
+
 // Card gallery
 .gallery {
   display: grid;
@@ -33,6 +38,7 @@
   h4 {
     text-transform: uppercase;
     font-size: 1.1rem;
+    margin: 0;
   }
 
   a {
@@ -49,6 +55,12 @@
   }
 }
 
+.card-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
 
 /* Dark Mode Styles */
 

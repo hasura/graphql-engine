@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react';
 import { FaCopy, FaTrash } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import Header from './Header';
 import styles from './PermissionsSummary.module.scss';
 

@@ -112,7 +112,7 @@ export const etInvocationLogsTable: BaseTable = {
   columns: [
     { column_name: 'id', data_type: 'uuid' },
     { column_name: 'event_id', data_type: 'uuid' },
-    { column_name: 'status', data_type: 'int' },
+    { column_name: 'http_status', data_type: 'int' },
     { column_name: 'request', data_type: 'text' },
     { column_name: 'response', data_type: 'text' },
     { column_name: 'created_at', data_type: 'timestamptz' },
@@ -232,6 +232,19 @@ export const getEventRequestSampleInput = (
       schema: schemaName ?? 'schemaName',
       name: tableName ?? 'tableName',
     },
+  };
+
+  const value = JSON.stringify(obj, null, 2);
+  return value;
+};
+
+export const getCronTriggerRequestSampleInput = () => {
+  const obj = {
+    comment: 'comment',
+    id: '06af0430-e4d8-4335-8659-c27225e8edfd',
+    name: 'name',
+    payload: {},
+    scheduled_time: new Date().toISOString(),
   };
 
   const value = JSON.stringify(obj, null, 2);

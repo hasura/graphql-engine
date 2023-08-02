@@ -11,9 +11,9 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -21,33 +21,26 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
-  Fixture.run
-    ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Postgres.setupTablesAction schema testEnvironment
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests =
-                        Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions"
-                    }
-            },
-          (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Cockroach.setupTablesAction schema testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests =
-                        Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions"
-                    }
-            }
-        ]
-    )
-    tests
+  Fixture.hgeWithEnv
+    [ ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
+        "hide_update_many_fields"
+      )
+    ]
+    $ Fixture.run
+      ( NE.fromList
+          [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnvironment, _) ->
+                  [ Postgres.setupTablesAction schema testEnvironment
+                  ]
+              },
+            (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
+              { Fixture.setupTeardown = \(testEnv, _) ->
+                  [ Cockroach.setupTablesAction schema testEnv
+                  ]
+              }
+          ]
+      )
+      tests
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -81,11 +74,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Conflicting author and author_updates tables are OK when flag is off" do
     it "Can still query `author_updates`" \testEnvironment -> do
       let expected :: Value
@@ -110,4 +100,4 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

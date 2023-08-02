@@ -1,58 +1,58 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@features/Datasources/useTableRelationships hook should return success when all the correct parameters are passed for a mssql table 1`] = `
-Array [
-  Object {
-    "from": Object {
-      "column": Array [
+[
+  {
+    "from": {
+      "column": [
         "category_id",
       ],
       "table": "products",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "category_id",
       ],
       "table": "categories",
     },
   },
-  Object {
-    "from": Object {
-      "column": Array [
+  {
+    "from": {
+      "column": [
         "brand_id",
       ],
       "table": "products",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "brand_id",
       ],
       "table": "brands",
     },
   },
-  Object {
-    "from": Object {
-      "column": Array [
+  {
+    "from": {
+      "column": [
         "product_id",
       ],
       "table": "order_items",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "product_id",
       ],
       "table": "products",
     },
   },
-  Object {
-    "from": Object {
-      "column": Array [
+  {
+    "from": {
+      "column": [
         "product_id",
       ],
       "table": "stocks",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "product_id",
       ],
       "table": "products",
@@ -62,30 +62,30 @@ Array [
 `;
 
 exports[`@features/Datasources/useTableRelationships hook should return success when all the correct parameters are passed for a postgres table 1`] = `
-Array [
-  Object {
-    "from": Object {
-      "column": Array [
+[
+  {
+    "from": {
+      "column": [
         "AlbumId",
       ],
       "table": "Track",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "AlbumId",
       ],
       "table": "Album",
     },
   },
-  Object {
-    "from": Object {
-      "column": Array [
+  {
+    "from": {
+      "column": [
         "ArtistId",
       ],
       "table": "Album",
     },
-    "to": Object {
-      "column": Array [
+    "to": {
+      "column": [
         "ArtistId",
       ],
       "table": "Artist",

@@ -10,16 +10,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
-
-	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore"
+	"github.com/hasura/graphql-engine/cli/v2/internal/statestore/settings"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 
 	"github.com/mitchellh/mapstructure"
-
-	"github.com/hasura/graphql-engine/cli/v2/migrate/database"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,6 +39,8 @@ var (
 		"select", "insert", "update", "delete", "count", "run_sql", "bulk",
 		"mssql_select", "mssql_insert", "mssql_update", "mssql_delete", "mssql_count", "mssql_run_sql",
 		"citus_select", "citus_insert", "citus_update", "citus_delete", "citus_count", "citus_run_sql",
+		"bigquery_select", "bigquery_insert", "bigquery_update", "bigquery_delete", "bigquery_count", "bigquery_run_sql",
+		"cockroach_run_sql",
 	}
 	queryTypesMap = func() map[string]bool {
 		var m = map[string]bool{}
@@ -80,6 +79,8 @@ type HasuraDB struct {
 	pgSourceOps          hasura.PGSourceOps
 	mssqlSourceOps       hasura.MSSQLSourceOps
 	citusSourceOps       hasura.CitusSourceOps
+	bigquerySourceOps    hasura.BigQuerySourceOps
+	cockroachSourceOps   hasura.CockroachSourceOps
 	genericQueryRequest  hasura.GenericSend
 	hasuraClient         *hasura.Client
 	migrationsStateStore statestore.MigrationsStateStore
@@ -105,6 +106,7 @@ func WithInstance(config *Config, logger *log.Logger, hasuraOpts *database.Hasur
 		pgSourceOps:         hasuraOpts.PGSourceOps,
 		mssqlSourceOps:      hasuraOpts.MSSQLSourceOps,
 		citusSourceOps:      hasuraOpts.CitusSourceOps,
+		bigquerySourceOps:   hasuraOpts.BigQuerySourceOps,
 		genericQueryRequest: hasuraOpts.GenericQueryRequest,
 		pgDumpClient:        hasuraOpts.PGDumpClient,
 
@@ -264,6 +266,16 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 			if err != nil {
 				return errors.E(op, err)
 			}
+		case hasura.SourceKindCockroach:
+			_, err := h.cockroachSourceOps.CockroachRunSQL(hasura.CockroachRunSQLInput(sqlInput))
+			if err != nil {
+				return errors.E(op, err)
+			}
+		case hasura.SourceKindBigQuery:
+			_, err := h.bigquerySourceOps.BigQueryRunSQL(hasura.BigQueryRunSQLInput(sqlInput))
+			if err != nil {
+				return err
+			}
 
 		default:
 			return errors.E(op, fmt.Errorf("unsupported source kind, source name: %v kind: %v", h.hasuraOpts.SourceName, h.hasuraOpts.SourceKind))
@@ -284,6 +296,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 	return nil
 }
 
+// responsible for deciding which request to send to v1/metadata and which to send to v2/query
 func sendMetadataMigrations(hasuradb *HasuraDB, requests []interface{}) error {
 	var op errors.Op = "hasuradb.sendMetadataMigrations"
 	var metadataRequests []interface{}

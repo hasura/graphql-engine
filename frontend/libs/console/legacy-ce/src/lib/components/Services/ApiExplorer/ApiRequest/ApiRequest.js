@@ -8,9 +8,8 @@ import {
   FaUserSecret,
 } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-import jwt from 'jsonwebtoken';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -88,6 +87,7 @@ class ApiRequest extends Component {
         error: null,
         serverResp: {},
       },
+      jwt: null,
     };
 
     if (this.props.numberOfTables !== 0) {
@@ -99,6 +99,13 @@ class ApiRequest extends Component {
 
     this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
     this.onAnalyzeBearerClose = this.onAnalyzeBearerClose.bind(this);
+
+    // Dynamically load jsonwebtoken library to prevent storybook stories crash
+    if (!global.window.preventJsonWebTokenLoad) {
+      import('jsonwebtoken').then(jwt => {
+        this.setState({ ...this.state, jwt });
+      });
+    }
   }
 
   componentDidMount() {
@@ -190,7 +197,7 @@ class ApiRequest extends Component {
     });
 
     const decodeAndSetState = serverResp => {
-      const decoded = jwt.decode(token, { complete: true });
+      const decoded = this.jwt.decode(token, { complete: true });
 
       if (decoded) {
         this.setState({
@@ -391,12 +398,14 @@ class ApiRequest extends Component {
                   disabled={header.isDisabled === true}
                   data-header-id={i}
                   placeholder="Enter Key"
+                  name="key"
                   data-element-name="key"
                   onChange={onHeaderValueChanged}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   type="text"
                   data-test={`header-key-${i}`}
+                  autoComplete="off"
                 />
               </td>
             );
@@ -421,12 +430,14 @@ class ApiRequest extends Component {
                   disabled={header.isDisabled === true}
                   data-header-id={i}
                   placeholder="Enter Value"
+                  name="value"
                   data-element-name="value"
                   onChange={onHeaderValueChanged}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   data-test={`header-value-${i}`}
                   type={type}
+                  autoComplete="off"
                 />
               </td>
             );

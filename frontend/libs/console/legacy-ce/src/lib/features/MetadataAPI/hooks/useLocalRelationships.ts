@@ -2,8 +2,8 @@ import {
   DataTarget,
   useTableRelationships,
   TableRelationshipsType,
-} from '@/features/Datasources';
-import { ArrayRelationship, ObjectRelationship } from '@/metadata/types';
+} from '../../Datasources';
+import { ArrayRelationship, ObjectRelationship } from '../../../metadata/types';
 import { DbToDbRelationship, DbToRemoteSchemaRelationship } from '../types';
 import { useArrayRelationships } from './useArrayRelationships';
 import { useObjectRelationships } from './useObjectRelationships';

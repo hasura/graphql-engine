@@ -1,5 +1,5 @@
-import { APIError } from '@/hooks/error';
-import { MetadataDataSource } from '@/metadata/types';
+import { APIError } from '../../hooks/error';
+import { MetadataDataSource } from '../../metadata/types';
 import { UseQueryResult } from 'react-query';
 import bigquery, { BigQueryDataTarget } from './bigquery';
 import citus, { CitusDataTarget } from './citus';

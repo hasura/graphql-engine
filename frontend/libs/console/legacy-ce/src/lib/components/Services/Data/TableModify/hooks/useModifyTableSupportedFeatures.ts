@@ -1,4 +1,4 @@
-import { isFeatureSupported } from '@/dataSources';
+import { isFeatureSupported } from '../../../../../dataSources';
 
 export const useModifyTableSupportedFeatures = () => {
   const isUntrackSupported = isFeatureSupported('tables.modify.untrack');

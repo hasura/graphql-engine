@@ -9,10 +9,8 @@ module Harness.Constants
     postgresHost,
     postgresPort,
     postgresqlMetadataConnectionString,
-    postgresMetadataDb,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
-    defaultPostgresPort,
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
     sqlserverConnectInfo,
@@ -21,8 +19,6 @@ module Harness.Constants
     bigqueryServiceKeyVar,
     bigqueryProjectIdVar,
     bigqueryDataset,
-    httpHealthCheckAttempts,
-    httpHealthCheckIntervalSeconds,
     citusConnectionString,
     citusDb,
     defaultCitusConnectionString,
@@ -40,27 +36,26 @@ where
 -------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
-import Data.Text qualified as T
 import Data.Word (Word16)
 import Database.PG.Query qualified as PG
-import Harness.TestEnvironment (UniqueTestId)
+import Harness.UniqueTestId (UniqueTestId)
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
     OptionalInterval (..),
-    ResponseInternalErrorsConfig (..),
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
-  ( EventingMode (EventingEnabled),
+  ( ApolloFederationStatus (ApolloFederationDisabled),
+    EventingMode (EventingEnabled),
     ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
@@ -93,29 +88,29 @@ postgresMetadataPort = 65002
 
 postgresqlMetadataConnectionString :: String
 postgresqlMetadataConnectionString =
-  "postgres://"
-    ++ postgresMetadataUser
-    ++ ":"
-    ++ postgresMetadataPassword
-    ++ "@"
-    ++ postgresMetadataHost
-    ++ ":"
-    ++ show postgresMetadataPort
-    ++ "/"
-    ++ postgresMetadataDb
+  "postgresql://"
+    <> postgresMetadataUser
+    <> ":"
+    <> postgresMetadataPassword
+    <> "@"
+    <> postgresMetadataHost
+    <> ":"
+    <> show postgresMetadataPort
+    <> "/"
+    <> postgresMetadataDb
 
 -- * Postgres
 
-postgresPassword :: String
+postgresPassword :: Text
 postgresPassword = "hasura"
 
-postgresUser :: String
+postgresUser :: Text
 postgresUser = "hasura"
 
-postgresDb :: String
+postgresDb :: Text
 postgresDb = "hasura"
 
-postgresHost :: String
+postgresHost :: Text
 postgresHost = "127.0.0.1"
 
 postgresPort :: Word16
@@ -125,89 +120,89 @@ defaultPostgresPort :: Word16
 defaultPostgresPort = 5432
 
 -- | return a unique database name from our TestEnvironment's uniqueTestId
-uniqueDbName :: UniqueTestId -> String
-uniqueDbName uniqueTestId = "test" <> show uniqueTestId
+uniqueDbName :: UniqueTestId -> Text
+uniqueDbName uniqueTestId = "test" <> tshow uniqueTestId
 
 -- * Citus
 
-citusPassword :: String
+citusPassword :: Text
 citusPassword = "hasura"
 
-citusUser :: String
+citusUser :: Text
 citusUser = "hasura"
 
-citusDb :: String
+citusDb :: Text
 citusDb = "hasura"
 
-citusHost :: String
+citusHost :: Text
 citusHost = "127.0.0.1"
 
 citusPort :: Word16
 citusPort = 65004
 
-citusConnectionString :: UniqueTestId -> String
+citusConnectionString :: UniqueTestId -> Text
 citusConnectionString uniqueTestId =
-  "postgres://"
-    ++ citusUser
-    ++ ":"
-    ++ citusPassword
-    ++ "@"
-    ++ citusHost
-    ++ ":"
-    ++ show citusPort
-    ++ "/"
-    ++ uniqueDbName uniqueTestId
+  "postgresql://"
+    <> citusUser
+    <> ":"
+    <> citusPassword
+    <> "@"
+    <> citusHost
+    <> ":"
+    <> tshow citusPort
+    <> "/"
+    <> uniqueDbName uniqueTestId
 
-defaultCitusConnectionString :: String
+defaultCitusConnectionString :: Text
 defaultCitusConnectionString =
-  "postgres://"
-    ++ citusUser
-    ++ ":"
-    ++ citusPassword
-    ++ "@"
-    ++ citusHost
-    ++ ":"
-    ++ show citusPort
-    ++ "/"
-    ++ citusDb
+  "postgresql://"
+    <> citusUser
+    <> ":"
+    <> citusPassword
+    <> "@"
+    <> citusHost
+    <> ":"
+    <> tshow citusPort
+    <> "/"
+    <> citusDb
 
 -- * Cockroach
 
-cockroachUser :: String
-cockroachUser = "root"
+cockroachUser :: Text
+cockroachUser = "hasura"
 
-cockroachDb :: String
+cockroachDb :: Text
 cockroachDb = "hasura"
 
-cockroachHost :: String
+cockroachHost :: Text
 cockroachHost = "127.0.0.1"
 
 cockroachPort :: Word16
 cockroachPort = 65008
 
-cockroachConnectionString :: UniqueTestId -> String
+cockroachConnectionString :: UniqueTestId -> Text
 cockroachConnectionString uniqueTestId =
   "postgresql://"
-    ++ cockroachUser
-    ++ "@"
-    ++ cockroachHost
-    ++ ":"
-    ++ show cockroachPort
-    ++ "/"
-    ++ uniqueDbName uniqueTestId
-    ++ "?sslmode=disable"
+    <> cockroachUser
+    <> "@"
+    <> cockroachHost
+    <> ":"
+    <> tshow cockroachPort
+    <> "/"
+    <> uniqueDbName uniqueTestId
+    <> "?sslmode=disable"
 
-defaultCockroachConnectionString :: String
+defaultCockroachConnectionString :: Text
 defaultCockroachConnectionString =
   "postgresql://"
-    ++ cockroachUser
-    ++ "@"
-    ++ cockroachHost
-    ++ ":"
-    ++ show cockroachPort
-    ++ "/"
-    ++ cockroachDb
-    ++ "?sslmode=disable"
+    <> cockroachUser
+    <> "@"
+    <> cockroachHost
+    <> ":"
+    <> tshow cockroachPort
+    <> "/"
+    <> cockroachDb
+    <> "?sslmode=disable"
 
 -- * DataConnector
 
@@ -241,7 +236,7 @@ sqlserverAdminConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0
 -- simply @hasura@ like the others.
 sqlserverConnectInfo :: UniqueTestId -> Text
 sqlserverConnectInfo uniqueTestId =
-  let dbName = T.pack (uniqueDbName uniqueTestId)
+  let dbName = uniqueDbName uniqueTestId
    in "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=sa;Pwd=Password!;Database="
         <> dbName
         <> ";Encrypt=optional"
@@ -257,14 +252,6 @@ bigqueryProjectIdVar = "HASURA_BIGQUERY_PROJECT_ID"
 
 bigqueryDataset :: String
 bigqueryDataset = "hasura"
-
--- * HTTP health checks
-
-httpHealthCheckAttempts :: Int
-httpHealthCheckAttempts = 5
-
-httpHealthCheckIntervalSeconds :: DiffTime
-httpHealthCheckIntervalSeconds = 1
 
 -- * Server configuration
 
@@ -287,19 +274,19 @@ serveOptions =
       soJwtSecret = mempty,
       soUnAuthRole = Nothing,
       soCorsConfig = CCAllowAll,
-      soEnableConsole = True,
-      soConsoleAssetsDir = Just "../../../console/static/dist",
+      soConsoleStatus = Init.ConsoleEnabled,
+      soConsoleAssetsDir = Just "frontend/dist/apps/server-assets-console-ce",
       soConsoleSentryDsn = Nothing,
-      soEnableTelemetry = False,
+      soEnableTelemetry = Init.TelemetryDisabled,
       soStringifyNum = Options.Don'tStringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soRemoteNullForwardingPolicy = Options.RemoteForwardAccurately,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
       soStreamingQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
-      soEnableAllowlist = False,
+      soEnableAllowList = Init.AllowListDisabled,
       soEnabledLogTypes = Set.fromList L.userAllowedLogTypes,
       soLogLevel = fromMaybe (L.LevelOther "test-suite") engineLogLevel,
-      soResponseInternalErrorsConfig = InternalErrorsAllRequests,
       soEventsHttpPoolSize = Init._default Init.graphqlEventsHttpPoolSizeOption,
       soEventsFetchInterval = Init._default Init.graphqlEventsFetchIntervalOption,
       soAsyncActionsFetchInterval = Skip,
@@ -312,15 +299,19 @@ serveOptions =
       soSchemaPollInterval = Interval $$(refineTH 10),
       soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
-      soDevMode = True,
+      soDevMode = Init.DevModeEnabled,
+      soAdminInternalErrors = Init.AdminInternalErrorsEnabled,
       soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
-      soDefaultNamingConvention = Nothing,
+      soDefaultNamingConvention = Init._default Init.defaultNamingConventionOption,
       soExtensionsSchema = ExtensionsSchema "public",
-      soMetadataDefaults = emptyMetadataDefaults
+      soMetadataDefaults = emptyMetadataDefaults,
+      soApolloFederationStatus = ApolloFederationDisabled,
+      soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption,
+      soMaxTotalHeaderLength = Init._default Init.maxTotalHeaderLengthOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

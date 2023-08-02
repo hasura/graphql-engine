@@ -8,6 +8,9 @@ module Hasura.Server.Telemetry.Types
     RelationshipMetric (..),
     PermissionMetric (..),
     ActionMetric (..),
+    NativeQueriesMetrics (..),
+    StoredProceduresMetrics (..),
+    LogicalModelsMetrics (..),
     Metrics (..),
     SourceMetadata (..),
     HasuraTelemetry (..),
@@ -34,11 +37,11 @@ module Hasura.Server.Telemetry.Types
 where
 
 import CI qualified
-import Data.Aeson qualified as A
-import Data.Aeson.TH qualified as A
+import Data.Aeson qualified as J
+import Data.Monoid (Sum (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.BackendType (BackendType)
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.SQL.Backend (BackendType)
 import Hasura.Server.Telemetry.Counters
 import Hasura.Server.Types
 import Hasura.Server.Version
@@ -47,9 +50,11 @@ data RelationshipMetric = RelationshipMetric
   { _rmManual :: Int,
     _rmAuto :: Int
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(A.deriveToJSON hasuraJSON ''RelationshipMetric)
+instance J.ToJSON RelationshipMetric where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data PermissionMetric = PermissionMetric
   { _pmSelect :: Int,
@@ -58,9 +63,11 @@ data PermissionMetric = PermissionMetric
     _pmDelete :: Int,
     _pmRoles :: Int
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(A.deriveToJSON hasuraJSON ''PermissionMetric)
+instance J.ToJSON PermissionMetric where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data ActionMetric = ActionMetric
   { _amSynchronous :: Int,
@@ -69,9 +76,59 @@ data ActionMetric = ActionMetric
     _amTypeRelationships :: Int,
     _amCustomTypes :: Int
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(A.deriveToJSON hasuraJSON ''ActionMetric)
+instance J.ToJSON ActionMetric where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
+
+data NativeQueriesMetrics = NativeQueriesMetrics
+  { _nqmWithParameters :: Int,
+    _nqmWithoutParameters :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+instance Semigroup NativeQueriesMetrics where
+  a <> b =
+    NativeQueriesMetrics
+      (_nqmWithParameters a + _nqmWithParameters b)
+      (_nqmWithoutParameters a + _nqmWithoutParameters b)
+
+instance Monoid NativeQueriesMetrics where
+  mempty = NativeQueriesMetrics 0 0
+
+instance J.ToJSON NativeQueriesMetrics where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
+
+data StoredProceduresMetrics = StoredProceduresMetrics
+  { _spmWithParameters :: Int,
+    _spmWithoutParameters :: Int
+  }
+  deriving (Show, Eq, Generic)
+
+instance Semigroup StoredProceduresMetrics where
+  a <> b =
+    StoredProceduresMetrics
+      (_spmWithParameters a + _spmWithParameters b)
+      (_spmWithoutParameters a + _spmWithoutParameters b)
+
+instance Monoid StoredProceduresMetrics where
+  mempty = StoredProceduresMetrics 0 0
+
+instance J.ToJSON StoredProceduresMetrics where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
+
+newtype LogicalModelsMetrics = LogicalModelsMetrics
+  { _lmmCount :: Int
+  }
+  deriving (Show, Eq, Generic)
+  deriving (Semigroup, Monoid) via Sum Int
+
+instance J.ToJSON LogicalModelsMetrics where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data Metrics = Metrics
   { _mtTables :: Int,
@@ -83,20 +140,28 @@ data Metrics = Metrics
     _mtFunctions :: Int,
     _mtRemoteSchemas :: Maybe Int,
     _mtServiceTimings :: Maybe ServiceTimingMetrics,
-    _mtActions :: Maybe ActionMetric
+    _mtActions :: Maybe ActionMetric,
+    _mtNativeQueries :: NativeQueriesMetrics,
+    _mtStoredProcedures :: StoredProceduresMetrics,
+    _mtLogicalModels :: LogicalModelsMetrics
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(A.deriveToJSON hasuraJSON ''Metrics)
+instance J.ToJSON Metrics where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data SourceMetadata = SourceMetadata
   { _smDbUid :: Maybe DbUid,
-    _smDbKind :: BackendType,
+    _smBackendType :: BackendType,
+    _smDbKind :: Text,
     _smDbVersion :: Maybe DbVersion
   }
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
 
-$(A.deriveToJSON hasuraJSON ''SourceMetadata)
+instance J.ToJSON SourceMetadata where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data HasuraTelemetry = HasuraTelemetry
   { _htMetadataDbUid :: MetadataDbId,
@@ -107,18 +172,22 @@ data HasuraTelemetry = HasuraTelemetry
     _htMetrics :: Metrics,
     _htExperimentalFeatures :: HashSet ExperimentalFeature
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(A.deriveToJSON hasuraJSON ''HasuraTelemetry)
+instance J.ToJSON HasuraTelemetry where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 -- | The telemetry table to which we'll add telemetry.
 newtype Topic = Topic {getTopic :: Text}
-  deriving (Show, Eq, A.ToJSON, A.FromJSON)
+  deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
 data TelemetryPayload = TelemetryPayload
   { _tpTopic :: Topic,
     _tpData :: HasuraTelemetry
   }
-  deriving (Show)
+  deriving (Show, Generic)
 
-$(A.deriveToJSON hasuraJSON ''TelemetryPayload)
+instance J.ToJSON TelemetryPayload where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON

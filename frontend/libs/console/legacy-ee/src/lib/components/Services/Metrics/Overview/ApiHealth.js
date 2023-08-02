@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useQuery } from 'react-apollo';
 import { Col, Row } from 'react-bootstrap';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import ApiHealthChart from './ApiHealthChart';
 import styles from '../MetricsV1.module.scss';
 import {
@@ -227,7 +227,7 @@ const ApiHealth = ({
       )}
       {!error && (
         <div
-          className={`${styles.animated} ${styles.row} ${styles.fadeIn} ${styles.inline} ${styles.wd100Percent}`}
+          className={`${styles.animated} ${styles.row} ${styles.fadeIn} ${styles.inline} ${styles.wd100Percent} bootstrap-jail`}
           ref={chartDiv}
         >
           <Col md={4}>

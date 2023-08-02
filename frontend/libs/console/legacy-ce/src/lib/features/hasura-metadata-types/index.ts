@@ -12,3 +12,4 @@ export * from './apiLimits';
 export * from './graphqlSchemaIntrospection';
 export * from './permissions';
 export * from './metadata';
+export * from './openTelemetry';

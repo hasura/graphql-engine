@@ -201,8 +201,9 @@ func renameOrCopy(from, to string) error {
 func copyTree(from, to string) (err error) {
 	var op errors.Op = "plugins.copyTree"
 	err = filepath.Walk(from, func(path string, info os.FileInfo, err error) error {
+		var op errors.Op = "plugins.copyTree.Walk"
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		newPath, _ := ReplaceBase(path, from, to)
 		if info.IsDir() {
@@ -210,7 +211,7 @@ func copyTree(from, to string) (err error) {
 		} else {
 			err = copyFile(path, newPath, info.Mode())
 		}
-		return err
+		return errors.E(op, err)
 	})
 	if err != nil {
 		return errors.E(op, err)

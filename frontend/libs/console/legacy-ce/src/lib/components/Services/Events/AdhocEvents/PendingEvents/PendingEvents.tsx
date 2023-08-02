@@ -37,29 +37,29 @@ const PendingEvents: React.FC<Props> = props => {
 
   const renderRows: FilterRenderProp = (
     rows,
-    count,
     filterState,
     setFilterState,
     runQuery
   ) => (
-    <EventsTable
-      rows={rows}
-      count={count}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={[
-        'actions',
-        'id',
-        'status',
-        'scheduled_time',
-        'created_at',
-        'tries',
-      ]}
-      identifier="adhoc-events-processed"
-      onCancelEvent={onCancelOneOffScheduledEvent}
-      triggerType="one_off"
-    />
+    <div className="bootstrap-jail">
+      <EventsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={[
+          'actions',
+          'id',
+          'status',
+          'scheduled_time',
+          'created_at',
+          'tries',
+        ]}
+        identifier="adhoc-events-processed"
+        onCancelEvent={onCancelOneOffScheduledEvent}
+        triggerType="one_off"
+      />
+    </div>
   );
 
   return (

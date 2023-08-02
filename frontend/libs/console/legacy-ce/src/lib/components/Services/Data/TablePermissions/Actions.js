@@ -49,6 +49,9 @@ export const PERM_RESET_APPLY_SAME = 'ModifyTable/PERM_RESET_APPLY_SAME';
 export const PERM_SET_APPLY_SAME_PERM = 'ModifyTable/PERM_SET_APPLY_SAME_PERM';
 export const PERM_DEL_APPLY_SAME_PERM = 'ModifyTable/PERM_DEL_APPLY_SAME_PERM';
 export const PERM_TOGGLE_BACKEND_ONLY = 'ModifyTable/PERM_TOGGLE_BACKEND_ONLY';
+export const PERM_SET_COMMENT = 'ModifyTable/PERM_SET_COMMENT';
+export const PERM_VALIDATE_INPUT_FIELD =
+  'ModifyTable/PERM_VALIDATE_INPUT_FIELD';
 
 export const PERM_UPDATE_QUERY_ROOT_FIELDS =
   'ModifyTable/PERM_UPDATE_QUERY_ROOT_FIELDS';
@@ -68,6 +71,28 @@ const permChangeTypes = {
   save: 'update',
   delete: 'delete',
 };
+
+export const permValidateInputFields = (
+  enabled,
+  url,
+  type,
+  headers,
+  forward_client_headers,
+  timeout
+) => ({
+  type: PERM_VALIDATE_INPUT_FIELD,
+  payload: enabled
+    ? {
+        type,
+        definition: {
+          url,
+          headers,
+          forward_client_headers,
+          timeout: parseInt(timeout),
+        },
+      }
+    : undefined,
+});
 
 const permOpenEdit = (tableSchema, role, query) => ({
   type: PERM_OPEN_EDIT,
@@ -115,6 +140,10 @@ const permToggleAllowAggregation = checked => ({
   type: PERM_TOGGLE_ALLOW_AGGREGATION,
   data: checked,
 });
+const permSetComment = comment => ({
+  type: PERM_SET_COMMENT,
+  comment,
+});
 export const permToggleBackendOnly = () => ({
   type: PERM_TOGGLE_BACKEND_ONLY,
 });
@@ -149,7 +178,6 @@ const permCustomChecked = filterType => ({
 
 const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
-
   _permissions.table = tableSchema.table_name;
   _permissions.role = role;
   _permissions.query = query;
@@ -177,7 +205,6 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   if (isNewRole) {
     _permissions.newRole = role;
   }
-
   return _permissions;
 };
 
@@ -209,10 +236,12 @@ const updatePermissionsState = (permissions, key, value) => {
   const _permissions = JSON.parse(JSON.stringify(permissions));
   const query = permissions.query;
 
-  _permissions[query] =
-    _permissions[query] ||
-    JSON.parse(JSON.stringify(defaultQueryPermissions[query]));
-  _permissions[query][key] = value;
+  if (query) {
+    _permissions[query] =
+      _permissions[query] ||
+      JSON.parse(JSON.stringify(defaultQueryPermissions[query]));
+    _permissions[query][key] = value;
+  }
 
   return _permissions;
 };
@@ -776,6 +805,7 @@ const permChangePermissions = changeType => {
     const prevPermissionsState = {
       ...getState().tables.modify.prevPermissionState,
     };
+
     const limitEnabled = permissionsState.limitEnabled;
 
     const table = permissionsState.table;
@@ -899,6 +929,7 @@ export {
   permCustomChecked,
   permRemoveRole,
   permSetBulkSelect,
+  permSetComment,
   toggleField,
   toggleAllFields,
   getBasePermissionsState,

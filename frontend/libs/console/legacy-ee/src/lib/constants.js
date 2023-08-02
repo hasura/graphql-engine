@@ -1,4 +1,4 @@
-import * as constants from '@hasura/console-oss/lib/constants';
+import * as constants from '@hasura/console-legacy-ce';
 
 export const {
   SERVER_CONSOLE_MODE,

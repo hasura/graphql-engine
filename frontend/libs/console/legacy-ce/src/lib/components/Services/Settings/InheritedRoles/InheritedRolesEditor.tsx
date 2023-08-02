@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import TextInput from '../../../Common/TextInput/TextInput';
 import { InheritedRole } from '../../../../metadata/types';
 import { focusYellowRing, inputStyles } from '../constants';
@@ -35,7 +35,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(props.isCollapsed);
 
   type Option = {
-    value: typeof allRoles[number];
+    value: (typeof allRoles)[number];
     isChecked: true | false;
   };
 

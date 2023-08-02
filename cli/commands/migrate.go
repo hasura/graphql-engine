@@ -25,8 +25,13 @@ import (
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	migrateCmd := &cobra.Command{
-		Use:          "migrate",
-		Short:        "Manage migrations on the database",
+		Use:   "migrate",
+		Short: "Manage migrations on the database",
+		Long: `This command, when used with a collection of subcommands, allows you to manage migrations on the database.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")
@@ -46,9 +51,9 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateCmd.PersistentFlags()
 	f.StringVar(&ec.Source.Name, "database-name", "", "database on which operation should be applied")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}
@@ -142,7 +147,7 @@ func validateConfigV3Flags(cmd *cobra.Command, ec *cli.ExecutionContext) error {
 
 	// check if migration ops are supported for the database
 	if !migrate.IsMigrationsSupported(ec.Source.Kind) {
-		return errors.E(op, fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind))
+		return errors.E(op, fmt.Errorf("migrations on database '%s' of kind '%s' is not supported", ec.Source.Name, ec.Source.Kind))
 	}
 	return nil
 }
@@ -173,7 +178,7 @@ func validateConfigV3FlagsWithAll(cmd *cobra.Command, ec *cli.ExecutionContext) 
 
 	// check if migration ops are supported for the database
 	if !migrate.IsMigrationsSupported(ec.Source.Kind) {
-		return errors.E(op, fmt.Errorf("migrations on source %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind))
+		return errors.E(op, fmt.Errorf("migrations on database '%s' of kind '%s' is not supported", ec.Source.Name, ec.Source.Kind))
 	}
 
 	return nil
@@ -205,10 +210,10 @@ func validateSourceInfo(ec *cli.ExecutionContext) error {
 	// and update ec to include the database name and kind
 	sourceKind, err := metadatautil.GetSourceKind(ec.APIClient.V1Metadata.ExportMetadata, ec.Source.Name)
 	if err != nil {
-		return errors.E(op, fmt.Errorf("determining database kind of %s: %w", ec.Source.Name, err))
+		return errors.E(op, fmt.Errorf("determining database kind of '%s': %w", ec.Source.Name, err))
 	}
 	if sourceKind == nil {
-		return errors.E(op, fmt.Errorf("%w: error determining database kind for %s, check if database exists on hasura", errDatabaseNotFound, ec.Source.Name))
+		return errors.E(op, fmt.Errorf("%w: error determining database kind for '%s', check if database exists on hasura", errDatabaseNotFound, ec.Source.Name))
 	}
 	ec.Source.Kind = *sourceKind
 	return nil

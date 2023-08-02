@@ -1,5 +1,6 @@
-import { MetadataTable } from '@/features/hasura-metadata-types';
-import { OrderBy, WhereClause } from './types';
+import { MetadataTable } from '../hasura-metadata-types';
+import { WhereClause } from '../DataSource/types';
+import { OrderBy } from './types';
 
 export const getFields = ({
   columns,
@@ -40,7 +41,7 @@ export const getWhereClauses = ({
   whereClause,
   tableCustomization,
 }: {
-  whereClause?: WhereClause;
+  whereClause?: WhereClause[];
   tableCustomization?: MetadataTable['configuration'];
 }): string => {
   if (!whereClause) return '';
@@ -55,7 +56,7 @@ export const getWhereClauses = ({
     );
 
     return `${graphQLCompatibleColumnName}: { ${operator}: ${
-      typeof value === 'string' ? `"${value}"` : value
+      typeof value === 'string' ? `"${value}"` : JSON.stringify(value)
     }}`;
   });
 

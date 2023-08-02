@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 
 import {
   FeatureFlagToast,
   useFeatureFlags,
   availableFeatureFlagIds,
-} from '@/features/FeatureFlags';
-import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
-import { Button } from '@/new-components/Button';
+} from '../../../../features/FeatureFlags';
+import { DatabaseRelationshipsTab } from '../../../../features/DatabaseRelationships';
+import { Button } from '../../../../new-components/Button';
+import { areTablesEqual } from '../../../../features/hasura-metadata-api';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -26,7 +28,6 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
@@ -39,11 +40,13 @@ import {
   findAllFromRel,
   isFeatureSupported,
 } from '../../../../dataSources';
-import { getRemoteSchemasSelector } from '../../../../metadata/selector';
+import {
+  getCurrentSourceNamingConvention,
+  getRemoteSchemasSelector,
+} from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
-import { areTablesEqual } from '@/features/RelationshipsTable/utils';
 
 const addRelationshipCellView = (
   dispatch,
@@ -51,13 +54,16 @@ const addRelationshipCellView = (
   selectedRelationship,
   selectedRelationshipName,
   relMetaData,
-  tableSchema
+  tableSchema,
+  namingConvention
 ) => {
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
     dispatch(
-      relNameChanged(formRelName(rel, getExistingFieldsMap(tableSchema)))
+      relNameChanged(
+        formRelName(rel, getExistingFieldsMap(tableSchema), namingConvention)
+      )
     );
   };
 
@@ -142,6 +148,7 @@ const AddRelationship = ({
   allSchemas,
   cachedRelationshipData,
   dispatch,
+  namingConvention,
 }) => {
   const cTable = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
@@ -223,7 +230,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           ['object', i],
-          cTable
+          cTable,
+          namingConvention
         )
       ) : (
         <td />
@@ -242,7 +250,8 @@ const AddRelationship = ({
           selectedRelationship,
           relName,
           ['array', i],
-          cTable
+          cTable,
+          namingConvention
         )
       )
     );
@@ -325,6 +334,7 @@ const Relationships = ({
   readOnlyMode,
   currentSource,
   source,
+  namingConvention,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
@@ -340,7 +350,7 @@ const Relationships = ({
    * Metadata table object - this is the "table" that needs to be passed for all our new components
    * The existing `NormalizedTable` stuff has to be phased out slowly
    * */
-  const table = source.tables.find(t => {
+  const normalizedTableObject = source.tables.find(t => {
     return areTablesEqual(t.table, {
       table_schema: tableSchema.table_schema,
       table_name: tableSchema.table_name,
@@ -378,7 +388,7 @@ const Relationships = ({
     return (
       <DatabaseRelationshipsTab
         table={tableSchema}
-        metadataTable={table.table}
+        metadataTable={normalizedTableObject.table}
         driver={currentDriver}
         currentSource={currentSource}
         migrationMode={migrationMode}
@@ -481,6 +491,7 @@ const Relationships = ({
               allSchemas={allSchemas}
               cachedRelationshipData={relAdd}
               dispatch={dispatch}
+              namingConvention={namingConvention}
             />
           )}
           <AddManualRelationship
@@ -520,7 +531,7 @@ const Relationships = ({
     <>
       <RightContainer>
         <Analytics name="Relationships" {...REDACT_EVERYTHING}>
-          <div className={`${styles.container} container-fluid`}>
+          <div className={`${styles.container} container-fluid bootstrap-jail`}>
             <TableHeader
               dispatch={dispatch}
               table={tableSchema}
@@ -536,8 +547,10 @@ const Relationships = ({
                 <h4 className={styles.subheading_text}>
                   Table Relationships
                   <ToolTip message={'Relationships to tables / views'} />
-                  &nbsp;
-                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                  <LearnMoreLink
+                    href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html"
+                    className="font-normal"
+                  />
                 </h4>
                 {addedRelationshipsView}
                 {getAddRelSection()}
@@ -622,6 +635,7 @@ const mapStateToProps = (state, ownProps) => {
       s => s.name === state.tables.currentDataSource
     ),
     ...state.tables.modify,
+    namingConvention: getCurrentSourceNamingConvention(state),
   };
 };
 

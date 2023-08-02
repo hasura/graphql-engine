@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
+import { useDebouncedEffect } from '../../../hooks/useDebounceEffect';
 import { KeyValuePair, TransformationType } from './stateDefaults';
 import KeyValueInput from './CustomEditors/KeyValueInput';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
@@ -62,7 +62,7 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
               _BASE_URL
             </span>
           }
-          number="1"
+          number={transformationType === 'event' ? '' : '1'}
         />
         <div className="grid gap-3 grid-cols-3">
           <div>
@@ -87,40 +87,42 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
         </div>
       </div>
 
-      <div className="mb-md">
-        <NumberedSidebar
-          title="Sample Session Variables"
-          description={
-            <span>
-              Enter a sample input for your provided session variables.
-              <br />
-              e.g. the sample value for x-hasura-user-id
-            </span>
-          }
-          number="2"
-        />
-        <div className="grid gap-3 grid-cols-3">
-          <div>
-            <label className="block text-gray-600 font-medium mb-xs">
-              Session Variables
-            </label>
-          </div>
-          <div>
-            <label className="block text-gray-600 font-medium mb-xs">
-              Value
-            </label>
-          </div>
-        </div>
-        <div className="grid gap-3 grid-cols-3 mb-sm">
-          <KeyValueInput
-            pairs={localSessionVars}
-            setPairs={sv => {
-              setLocalSessionVars(sv);
-            }}
-            testId="session-vars"
+      {transformationType !== 'event' && (
+        <div className="mb-md">
+          <NumberedSidebar
+            title="Sample Session Variables"
+            description={
+              <span>
+                Enter a sample input for your provided session variables.
+                <br />
+                e.g. the sample value for x-hasura-user-id
+              </span>
+            }
+            number="2"
           />
+          <div className="grid gap-3 grid-cols-3">
+            <div>
+              <label className="block text-gray-600 font-medium mb-xs">
+                Session Variables
+              </label>
+            </div>
+            <div>
+              <label className="block text-gray-600 font-medium mb-xs">
+                Value
+              </label>
+            </div>
+          </div>
+          <div className="grid gap-3 grid-cols-3 mb-sm">
+            <KeyValueInput
+              pairs={localSessionVars}
+              setPairs={sv => {
+                setLocalSessionVars(sv);
+              }}
+              testId="session-vars"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

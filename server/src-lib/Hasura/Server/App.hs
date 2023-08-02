@@ -1,16 +1,19 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Server.App
   ( APIResp (JSONResp, RawResp),
+    CEConsoleType (..),
     ConsoleRenderer (..),
     MonadVersionAPIWithExtraData (..),
     Handler,
-    HandlerCtx (hcReqHeaders, hcServerCtx, hcUser),
+    HandlerCtx (hcReqHeaders, hcAppContext, hcSchemaCache, hcUser),
     HasuraApp (HasuraApp),
     MonadConfigApiHandler (..),
     MonadMetadataApiAuthorization (..),
-    ServerCtx (scManager, scLoggingSettings, scEnabledAPIs),
+    AppContext (..),
     boolToText,
+    ceConsoleTypeIdentifier,
     configApiGetHandler,
     isAdminSecretSet,
     mkGetHandler,
@@ -18,25 +21,30 @@ module Hasura.Server.App
     mkWaiApp,
     onlyAdmin,
     renderHtmlTemplate,
+    onlyWhenApiEnabled,
   )
 where
 
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
-import Control.Exception (IOException, try)
+import Control.Exception (IOException, throwIO, try)
+import Control.Exception.Lifted (ErrorCall (..), catch)
+import Control.Monad.Morph (hoist)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad.Trans.Control qualified as MTC
 import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
+import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
+import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
-import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as S
+import Data.Kind (Type)
 import Data.String (fromString)
 import Data.Text qualified as T
 import Data.Text.Conversions (convertText)
@@ -44,69 +52,68 @@ import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
+import Hasura.App.State
 import Hasura.Backends.DataConnector.API (openApiSchema)
+import Hasura.Backends.DataConnector.Agent.Client (AgentLicenseKey)
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
+import Hasura.CredentialCache
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute qualified as E
-import Hasura.GraphQL.Execute.Backend qualified as EB
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
-import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
-import Hasura.GraphQL.Logging (MonadQueryLog)
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Logging (MonadExecutionLog, MonadQueryLog)
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
+import Hasura.GraphQL.Transport.WebSocket qualified as WS
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
+import Hasura.GraphQL.Transport.WebSocket.Types qualified as WS
 import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
+import Hasura.QueryTags
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
-import Hasura.RQL.Types.Common
+import Hasura.RQL.DDL.Schema.Cache.Config
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Endpoint as EP
-import Hasura.RQL.Types.Metadata (MetadataDefaults)
+import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.SQL.Backend
 import Hasura.Server.API.Config (runGetConfig)
 import Hasura.Server.API.Metadata
 import Hasura.Server.API.PGDump qualified as PGD
 import Hasura.Server.API.Query
 import Hasura.Server.API.V2Query qualified as V2Q
+import Hasura.Server.AppStateRef
+  ( AppStateRef,
+    getAppContext,
+    getRebuildableSchemaCacheWithVersion,
+    getSchemaCache,
+    withSchemaCacheReadUpdate,
+  )
 import Hasura.Server.Auth (AuthMode (..), UserAuthentication (..))
 import Hasura.Server.Compression
-import Hasura.Server.Cors
 import Hasura.Server.Init
 import Hasura.Server.Limits
 import Hasura.Server.Logging
-import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
 import Hasura.Server.OpenAPI (buildOpenAPI)
-import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Rest
-import Hasura.Server.SchemaCacheRef
-  ( SchemaCacheRef,
-    getSchemaCache,
-    readSchemaCacheRef,
-    withSchemaCacheUpdate,
-  )
 import Hasura.Server.Types
 import Hasura.Server.Utils
 import Hasura.Server.Version
-import Hasura.Session
+import Hasura.Services
+import Hasura.Session (ExtraUserInfo (..), UserInfo (..), UserInfoM, askUserInfo)
+import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
-import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Mime (defaultMimeLookup)
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.WebSockets.Custom qualified as WSC
-import Network.WebSockets qualified as WS
-import System.FilePath (joinPath, takeFileName)
+import System.FilePath (isRelative, joinPath, splitExtension, takeFileName)
 import System.Mem (performMajorGC)
 import System.Metrics qualified as EKG
 import System.Metrics.Json qualified as EKG
@@ -114,41 +121,60 @@ import Text.Mustache qualified as M
 import Web.Spock.Core ((<//>))
 import Web.Spock.Core qualified as Spock
 
-data ServerCtx = ServerCtx
-  { scLogger :: !(L.Logger L.Hasura),
-    scCacheRef :: !SchemaCacheRef,
-    scAuthMode :: !AuthMode,
-    scManager :: !HTTP.Manager,
-    scSQLGenCtx :: !SQLGenCtx,
-    scEnabledAPIs :: !(S.HashSet API),
-    scInstanceId :: !InstanceId,
-    scSubscriptionState :: !ES.SubscriptionsState,
-    scEnableAllowlist :: !Bool,
-    scEkgStore :: !(EKG.Store EKG.EmptyMetrics),
-    scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
-    scEnvironment :: !Env.Environment,
-    scRemoteSchemaPermsCtx :: !Options.RemoteSchemaPermissions,
-    scFunctionPermsCtx :: !Options.InferFunctionPermissions,
-    scEnableMaintenanceMode :: !(MaintenanceMode ()),
-    scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
-    scLoggingSettings :: !LoggingSettings,
-    scEventingMode :: !EventingMode,
-    scEnableReadOnlyMode :: !ReadOnlyMode,
-    scDefaultNamingConvention :: !(Maybe NamingCase),
-    scPrometheusMetrics :: !PrometheusMetrics,
-    scMetadataDefaults :: !MetadataDefaults,
-    scTraceSamplingPolicy :: !Tracing.SamplingPolicy
-  }
-
 data HandlerCtx = HandlerCtx
-  { hcServerCtx :: !ServerCtx,
-    hcUser :: !UserInfo,
-    hcReqHeaders :: ![HTTP.Header],
-    hcRequestId :: !RequestId,
-    hcSourceIpAddress :: !Wai.IpAddress
+  { hcAppContext :: AppContext,
+    hcSchemaCache :: RebuildableSchemaCache,
+    hcUser :: UserInfo,
+    hcReqHeaders :: [HTTP.Header],
+    hcRequestId :: RequestId,
+    hcSourceIpAddress :: Wai.IpAddress,
+    hcLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey)
   }
 
-type Handler m = ReaderT HandlerCtx (MetadataStorageT m)
+newtype Handler m a = Handler (ReaderT HandlerCtx (ExceptT QErr m) a)
+  deriving
+    ( Functor,
+      Applicative,
+      Monad,
+      MonadIO,
+      MonadFix,
+      MonadBase b,
+      MonadBaseControl b,
+      MonadReader HandlerCtx,
+      MonadError QErr,
+      MonadTrace,
+      HasAppEnv,
+      HasCacheStaticConfig,
+      HasFeatureFlagChecker,
+      HasResourceLimits,
+      MonadResolveSource,
+      E.MonadGQLExecutionCheck,
+      MonadEventLogCleanup,
+      MonadQueryLog,
+      MonadExecutionLog,
+      MonadQueryTags,
+      GH.MonadExecuteQuery,
+      MonadMetadataApiAuthorization,
+      MonadMetadataStorage,
+      ProvidesNetwork,
+      MonadGetPolicies
+    )
+
+instance MonadTrans Handler where
+  lift = Handler . lift . lift
+
+instance (Monad m) => UserInfoM (Handler m) where
+  askUserInfo = asks hcUser
+
+runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
+runHandler logger ctx (Handler r) = do
+  handlerLimit <- askHTTPHandlerLimit
+  runExceptT (runReaderT (runResourceLimits handlerLimit r) ctx)
+    `catch` \errorCallWithLoc@(ErrorCallWithLocation txt _) -> do
+      liftBase $ L.unLogger logger $ L.UnhandledInternalErrorLog errorCallWithLoc
+      pure
+        $ throw500WithDetail "Internal Server Error"
+        $ object [("error", fromString txt)]
 
 data APIResp
   = JSONResp !(HttpResponse EncJSON)
@@ -190,20 +216,20 @@ mkGQLAPIRespHandler ::
   (a -> Handler m (b, APIResp))
 mkGQLAPIRespHandler = (fmap . fmap . fmap) JSONResp
 
-isMetadataEnabled :: ServerCtx -> Bool
-isMetadataEnabled sc = S.member METADATA $ scEnabledAPIs sc
+isMetadataEnabled :: AppContext -> Bool
+isMetadataEnabled ac = S.member METADATA $ acEnabledAPIs ac
 
-isGraphQLEnabled :: ServerCtx -> Bool
-isGraphQLEnabled sc = S.member GRAPHQL $ scEnabledAPIs sc
+isGraphQLEnabled :: AppContext -> Bool
+isGraphQLEnabled ac = S.member GRAPHQL $ acEnabledAPIs ac
 
-isPGDumpEnabled :: ServerCtx -> Bool
-isPGDumpEnabled sc = S.member PGDUMP $ scEnabledAPIs sc
+isPGDumpEnabled :: AppContext -> Bool
+isPGDumpEnabled ac = S.member PGDUMP $ acEnabledAPIs ac
 
-isConfigEnabled :: ServerCtx -> Bool
-isConfigEnabled sc = S.member CONFIG $ scEnabledAPIs sc
+isConfigEnabled :: AppContext -> Bool
+isConfigEnabled ac = S.member CONFIG $ acEnabledAPIs ac
 
-isDeveloperAPIEnabled :: ServerCtx -> Bool
-isDeveloperAPIEnabled sc = S.member DEVELOPER $ scEnabledAPIs sc
+isDeveloperAPIEnabled :: AppContext -> Bool
+isDeveloperAPIEnabled ac = S.member DEVELOPER $ acEnabledAPIs ac
 
 -- {-# SCC parseBody #-}
 parseBody :: (FromJSON a, MonadError QErr m) => BL.ByteString -> m (Value, a)
@@ -215,10 +241,10 @@ parseBody reqBody =
 onlyAdmin :: (MonadError QErr m, MonadReader HandlerCtx m) => m ()
 onlyAdmin = do
   uRole <- asks (_uiRole . hcUser)
-  unless (uRole == adminRoleName) $
-    throw400 AccessDenied "You have to be an admin to access this endpoint"
+  unless (uRole == adminRoleName)
+    $ throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-setHeader :: MonadIO m => HTTP.Header -> Spock.ActionT m ()
+setHeader :: (MonadIO m) => HTTP.Header -> Spock.ActionCtxT ctx m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
 
@@ -233,57 +259,48 @@ class (Monad m) => MonadMetadataApiAuthorization m where
   authorizeV2QueryApi ::
     V2Q.RQLQuery -> HandlerCtx -> m (Either QErr ())
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (ReaderT r m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (ReaderT r m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (MetadataStorageT m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (ExceptT e m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
-instance MonadMetadataApiAuthorization m => MonadMetadataApiAuthorization (Tracing.TraceT m) where
+instance (MonadMetadataApiAuthorization m) => MonadMetadataApiAuthorization (Tracing.TraceT m) where
   authorizeV1QueryApi q hc = lift $ authorizeV1QueryApi q hc
   authorizeV1MetadataApi q hc = lift $ authorizeV1MetadataApi q hc
   authorizeV2QueryApi q hc = lift $ authorizeV2QueryApi q hc
 
 -- | The config API (/v1alpha1/config) handler
-class Monad m => MonadConfigApiHandler m where
+class (Monad m) => MonadConfigApiHandler m where
   runConfigApiHandler ::
-    ServerCtx ->
-    -- | console assets directory
-    Maybe Text ->
+    AppStateRef impl ->
     Spock.SpockCtxT () m ()
 
--- instance (MonadIO m, UserAuthentication m, HttpLog m, Tracing.HasReporter m) => MonadConfigApiHandler (Tracing.TraceT m) where
---   runConfigApiHandler = configApiGetHandler
-
-mapActionT ::
-  (Monad m, Monad n) =>
-  (m (MTC.StT (Spock.ActionCtxT ()) a) -> n (MTC.StT (Spock.ActionCtxT ()) a)) ->
-  Spock.ActionT m a ->
-  Spock.ActionT n a
-mapActionT f tma = MTC.restoreT . pure =<< MTC.liftWith (\run -> f (run tma))
-
 mkSpockAction ::
-  forall m a.
+  forall m a impl.
   ( MonadIO m,
     MonadBaseControl IO m,
+    HasAppEnv m,
     FromJSON a,
-    UserAuthentication (Tracing.TraceT m),
+    UserAuthentication m,
     HttpLog m,
-    Tracing.HasReporter m,
-    HasResourceLimits m
+    HasResourceLimits m,
+    MonadTrace m
   ) =>
-  ServerCtx ->
+  AppStateRef impl ->
   -- | `QErr` JSON encoder function
-  (Bool -> QErr -> Value) ->
+  (Bool -> QErr -> Encoding) ->
   -- | `QErr` modifier
   (QErr -> QErr) ->
-  APIHandler (Tracing.TraceT m) a ->
+  APIHandler m a ->
   Spock.ActionT m ()
-mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
+mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
+  AppEnv {..} <- lift askAppEnv
+  AppContext {..} <- liftIO $ getAppContext appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
@@ -293,40 +310,55 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
-  handlerLimit <- lift askHTTPHandlerLimit
+  tracingCtx <- liftIO do
+    -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
+    -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
+    -- make them 128 bits long.
+    let traceIdMaybe =
+          lookup "X-B3-TraceId" headers >>= \rawTraceId ->
+            if
+              | Char8.length rawTraceId == 32 ->
+                  Tracing.traceIdFromHex rawTraceId
+              | Char8.length rawTraceId == 16 ->
+                  Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
+              | otherwise ->
+                  Nothing
 
-  let runTraceT ::
+    case traceIdMaybe of
+      Just traceId -> do
+        freshSpanId <- Tracing.randomSpanId
+        let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
+            samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
+        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+      Nothing -> do
+        freshTraceId <- Tracing.randomTraceId
+        freshSpanId <- Tracing.randomSpanId
+        let samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
+        pure $ Tracing.TraceContext freshTraceId freshSpanId Nothing samplingState
+
+  let runTrace ::
         forall m1 a1.
-        (MonadIO m1, Tracing.HasReporter m1) =>
-        Tracing.TraceT m1 a1 ->
+        (MonadTrace m1) =>
+        m1 a1 ->
         m1 a1
-      runTraceT = do
-        (maybe Tracing.runTraceT Tracing.runTraceTInContext tracingCtx)
-          scTraceSamplingPolicy
-          (fromString (B8.unpack pathInfo))
+      runTrace =
+        Tracing.newTraceWith tracingCtx appEnvTraceSamplingPolicy (fromString (B8.unpack pathInfo))
 
-      runHandler ::
-        MonadBaseControl IO m2 =>
-        HandlerCtx ->
-        ReaderT HandlerCtx (MetadataStorageT m2) a2 ->
-        m2 (Either QErr a2)
-      runHandler handlerCtx handler =
-        runMetadataStorageT $ flip runReaderT handlerCtx $ runResourceLimits handlerLimit $ handler
-
-      getInfo parsedRequest = do
-        authenticationResp <- lift (resolveUserInfo scLogger scManager headers scAuthMode parsedRequest)
+  let getInfo parsedRequest = do
+        authenticationResp <- lift (resolveUserInfo (_lsLogger appEnvLoggers) appEnvManager headers acAuthMode parsedRequest)
         authInfo <- onLeft authenticationResp (logErrorAndResp Nothing requestId req (reqBody, Nothing) False origHeaders (ExtraUserInfo Nothing) . qErrModifier)
         let (userInfo, _, authHeaders, extraUserInfo) = authInfo
+        appContext <- liftIO $ getAppContext appStateRef
+        schemaCache <- liftIO $ getRebuildableSchemaCacheWithVersion appStateRef
         pure
           ( userInfo,
             authHeaders,
-            HandlerCtx serverCtx userInfo headers requestId ipAddress,
-            shouldIncludeInternal (_uiRole userInfo) scResponseInternalErrorsConfig,
+            HandlerCtx appContext schemaCache userInfo headers requestId ipAddress appEnvLicenseKeyCache,
+            shouldIncludeInternal (_uiRole userInfo) acResponseInternalErrorsConfig,
             extraUserInfo
           )
 
-  mapActionT runTraceT $ do
+  hoist runTrace do
     -- Add the request ID to the tracing metadata so that we
     -- can correlate requests and traces
     lift $ Tracing.attachMetadata [("request_id", unRequestId requestId)]
@@ -335,14 +367,14 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       -- in the case of a simple get/post we don't have to send the webhook anything
       AHGet handler -> do
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
-        res <- lift $ runHandler handlerState handler
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState handler
         pure (res, userInfo, authHeaders, includeInternal, Nothing, extraUserInfo)
       AHPost handler -> do
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo Nothing
         (queryJSON, parsedReq) <-
           runExcept (parseBody reqBody) `onLeft` \e -> do
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) includeInternal origHeaders extraUserInfo (qErrModifier e)
-        res <- lift $ runHandler handlerState $ handler parsedReq
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
       -- in this case we parse the request _first_ and then send the request to the webhook for auth
       AHGraphQLRequest handler -> do
@@ -354,8 +386,11 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
             logErrorAndResp (Just userInfo) requestId req (reqBody, Nothing) False origHeaders extraUserInfo (qErrModifier e)
         (userInfo, authHeaders, handlerState, includeInternal, extraUserInfo) <- getInfo (Just parsedReq)
 
-        res <- lift $ runHandler handlerState $ handler parsedReq
+        res <- lift $ runHandler (_lsLogger appEnvLoggers) handlerState $ handler parsedReq
         pure (res, userInfo, authHeaders, includeInternal, Just queryJSON, extraUserInfo)
+
+    -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/span-general/#general-identity-attributes
+    lift $ Tracing.attachMetadata [("enduser.role", roleNameToTxt $ _uiRole userInfo)]
 
     -- apply the error modifier
     let modResult = fmapL qErrModifier result
@@ -369,8 +404,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
         logSuccessAndResp (Just userInfo) requestId req (reqBody, queryJSON) res (Just (ioWaitTime, serviceTime)) origHeaders authHeaders httpLogMetadata
   where
     logErrorAndResp ::
-      forall m3 a3 ctx.
-      (MonadIO m3, HttpLog m3) =>
+      forall any ctx.
       Maybe UserInfo ->
       RequestId ->
       Wai.Request ->
@@ -379,239 +413,181 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
       [HTTP.Header] ->
       ExtraUserInfo ->
       QErr ->
-      Spock.ActionCtxT ctx m3 a3
+      Spock.ActionCtxT ctx m any
     logErrorAndResp userInfo reqId waiReq req includeInternal headers extraUserInfo qErr = do
-      let httpLogMetadata = buildHttpLogMetadata @m3 emptyHttpLogGraphQLInfo extraUserInfo
-      lift $ logHttpError scLogger scLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
+      AppEnv {..} <- lift askAppEnv
+      let httpLogMetadata = buildHttpLogMetadata @m emptyHttpLogGraphQLInfo extraUserInfo
+          jsonResponse = J.encodingToLazyByteString $ qErrEncoder includeInternal qErr
+          contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length jsonResponse)
+          allHeaders = [contentLength, jsonHeader]
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
+      lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
+      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
+      mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
-      Spock.json $ qErrEncoder includeInternal qErr
+      Spock.lazyBytes jsonResponse
 
     logSuccessAndResp userInfo reqId waiReq req result qTime reqHeaders authHdrs httpLoggingMetadata = do
+      AppEnv {..} <- lift askAppEnv
       let (respBytes, respHeaders) = case result of
             JSONResp (HttpResponse encJson h) -> (encJToLBS encJson, pure jsonHeader <> h)
             RawResp (HttpResponse rawBytes h) -> (rawBytes, h)
           (compressedResp, encodingType) = compressResponse (Wai.requestHeaders waiReq) respBytes
           encodingHeader = maybeToList (contentEncodingHeader <$> encodingType)
           reqIdHeader = (requestIdHeader, txtToBs $ unRequestId reqId)
-          allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders <> authHdrs
-      lift $ logHttpSuccess scLogger scLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
+          contentLength = ("Content-Length", B8.toStrict $ BB.toLazyByteString $ BB.int64Dec $ BL.length compressedResp)
+          allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
+      -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
+      lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
+      lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
 v1QueryHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    HasAppEnv m,
+    HasCacheStaticConfig m,
+    MonadQueryTags m,
+    MonadEventLogCleanup m,
+    ProvidesNetwork m,
+    MonadGetPolicies m,
+    UserInfoM m
   ) =>
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   RQLQuery ->
   m (HttpResponse EncJSON)
-v1QueryHandler query = do
+v1QueryHandler schemaCacheRefUpdater query = do
   (liftEitherM . authorizeV1QueryApi query) =<< ask
-  scRef <- asks (scCacheRef . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
-  res <- bool (fst <$> (action logger)) (withSchemaCacheUpdate scRef logger Nothing (action logger)) $ queryModifiesSchemaCache query
+  schemaCache <- asks hcSchemaCache
+  res <- bool (fst <$> action schemaCache) (schemaCacheRefUpdater action) $ queryModifiesSchemaCache query
   return $ HttpResponse res []
   where
-    action logger = do
-      userInfo <- asks hcUser
-      scRef <- asks (scCacheRef . hcServerCtx)
-      metadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
-      schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
-      httpMgr <- asks (scManager . hcServerCtx)
-      sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-      instanceId <- asks (scInstanceId . hcServerCtx)
-      env <- asks (scEnvironment . hcServerCtx)
-      remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-      functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
-      maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-      experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-      eventingMode <- asks (scEventingMode . hcServerCtx)
-      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-      defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
-      let serverConfigCtx =
-            ServerConfigCtx
-              functionPermsCtx
-              remoteSchemaPermsCtx
-              sqlGenCtx
-              maintenanceMode
-              experimentalFeatures
-              eventingMode
-              readOnlyMode
-              defaultNamingCase
-              metadataDefaults
+    action schemaCache = do
+      appContext <- asks hcAppContext
       runQuery
-        env
-        logger
-        instanceId
-        userInfo
+        appContext
         schemaCache
-        httpMgr
-        serverConfigCtx
         query
 
+-- | See Note [Explicitly passing AppStateRef]
 v1MetadataHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadReader HandlerCtx m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
     MonadMetadataApiAuthorization m,
-    MonadEventLogCleanup m
+    MonadEventLogCleanup m,
+    HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
+    ProvidesNetwork m,
+    MonadGetPolicies m,
+    UserInfoM m
   ) =>
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
+  WS.WebsocketCloseOnMetadataChangeAction ->
   RQLMetadata ->
   m (HttpResponse EncJSON)
-v1MetadataHandler query = Tracing.trace "Metadata" $ do
+v1MetadataHandler schemaCacheRefUpdater closeWebsocketsOnMetadataChangeAction query = Tracing.newSpan "Metadata" $ do
   (liftEitherM . authorizeV1MetadataApi query) =<< ask
-  userInfo <- asks hcUser
-  scRef <- asks (scCacheRef . hcServerCtx)
-  schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
-  httpMgr <- asks (scManager . hcServerCtx)
-  _sccSQLGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  env <- asks (scEnvironment . hcServerCtx)
-  instanceId <- asks (scInstanceId . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
-  _sccRemoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-  _sccFunctionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
-  _sccExperimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-  _sccMaintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-  _sccEventingMode <- asks (scEventingMode . hcServerCtx)
-  _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-  _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
-  _sccMetadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
-  let serverConfigCtx = ServerConfigCtx {..}
+  appContext <- asks hcAppContext
   r <-
-    withSchemaCacheUpdate
-      scRef
-      logger
-      Nothing
-      $ runMetadataQuery
-        env
-        logger
-        instanceId
-        userInfo
-        httpMgr
-        serverConfigCtx
+    schemaCacheRefUpdater $ \schemaCache ->
+      runMetadataQuery
+        appContext
         schemaCache
+        closeWebsocketsOnMetadataChangeAction
         query
   pure $ HttpResponse r []
 
 v2QueryHandler ::
   ( MonadIO m,
+    MonadError QErr m,
     MonadBaseControl IO m,
     MonadMetadataApiAuthorization m,
-    Tracing.MonadTrace m,
+    MonadTrace m,
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    HasAppEnv m,
+    HasCacheStaticConfig m,
+    MonadQueryTags m,
+    ProvidesNetwork m,
+    UserInfoM m
   ) =>
+  ((RebuildableSchemaCache -> m (EncJSON, RebuildableSchemaCache)) -> m EncJSON) ->
   V2Q.RQLQuery ->
   m (HttpResponse EncJSON)
-v2QueryHandler query = Tracing.trace "v2 Query" $ do
+v2QueryHandler schemaCacheRefUpdater query = Tracing.newSpan "v2 Query" $ do
+  schemaCache <- asks hcSchemaCache
   (liftEitherM . authorizeV2QueryApi query) =<< ask
-  scRef <- asks (scCacheRef . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
   res <-
-    bool (fst <$> dbAction) (withSchemaCacheUpdate scRef logger Nothing dbAction) $
-      V2Q.queryModifiesSchema query
+    bool (fst <$> dbAction schemaCache) (schemaCacheRefUpdater dbAction)
+      $ V2Q.queryModifiesSchema query
   return $ HttpResponse res []
   where
     -- Hit postgres
-    dbAction = do
-      userInfo <- asks hcUser
-      scRef <- asks (scCacheRef . hcServerCtx)
-      schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
-      httpMgr <- asks (scManager . hcServerCtx)
-      sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-      instanceId <- asks (scInstanceId . hcServerCtx)
-      env <- asks (scEnvironment . hcServerCtx)
-      remoteSchemaPermsCtx <- asks (scRemoteSchemaPermsCtx . hcServerCtx)
-      experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
-      functionPermsCtx <- asks (scFunctionPermsCtx . hcServerCtx)
-      maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
-      eventingMode <- asks (scEventingMode . hcServerCtx)
-      readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-      defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
-      defaultMetadata <- asks (scMetadataDefaults . hcServerCtx)
-      let serverConfigCtx =
-            ServerConfigCtx
-              functionPermsCtx
-              remoteSchemaPermsCtx
-              sqlGenCtx
-              maintenanceMode
-              experimentalFeatures
-              eventingMode
-              readOnlyMode
-              defaultNamingCase
-              defaultMetadata
-
-      V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
+    dbAction schemaCache = do
+      appContext <- asks hcAppContext
+      V2Q.runQuery
+        appContext
+        schemaCache
+        query
 
 v1Alpha1GQHandler ::
   ( MonadIO m,
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadExecutionLog m,
+    MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m,
-    HasResourceLimits m
+    MonadMetadataStorage m,
+    MonadQueryTags m,
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   E.GraphQLQueryType ->
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
 v1Alpha1GQHandler queryType query = do
+  AppEnv {..} <- askAppEnv
+  AppContext {..} <- asks hcAppContext
   userInfo <- asks hcUser
+  schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
   reqHeaders <- asks hcReqHeaders
   ipAddress <- asks hcSourceIpAddress
   requestId <- asks hcRequestId
-  logger <- asks (scLogger . hcServerCtx)
-  responseErrorsConfig <- asks (scResponseInternalErrorsConfig . hcServerCtx)
-  env <- asks (scEnvironment . hcServerCtx)
-
-  execCtx <- mkExecutionContext
-
-  flip runReaderT execCtx $
-    GH.runGQBatched env logger requestId responseErrorsConfig userInfo ipAddress reqHeaders queryType query
-
-mkExecutionContext ::
-  ( MonadIO m,
-    MonadReader HandlerCtx m
-  ) =>
-  m E.ExecutionCtx
-mkExecutionContext = do
-  manager <- asks (scManager . hcServerCtx)
-  scRef <- asks (scCacheRef . hcServerCtx)
-  (sc, scVer) <- liftIO $ readSchemaCacheRef scRef
-  sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
-  enableAL <- asks (scEnableAllowlist . hcServerCtx)
-  logger <- asks (scLogger . hcServerCtx)
-  readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-  prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode prometheusMetrics
+  GH.runGQBatched acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId acResponseInternalErrorsConfig userInfo ipAddress reqHeaders queryType query
 
 v1GQHandler ::
   ( MonadIO m,
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadExecutionLog m,
+    MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m,
-    HasResourceLimits m
+    MonadMetadataStorage m,
+    MonadQueryTags m,
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -622,13 +598,16 @@ v1GQRelayHandler ::
     MonadBaseControl IO m,
     E.MonadGQLExecutionCheck m,
     MonadQueryLog m,
-    Tracing.MonadTrace m,
+    MonadExecutionLog m,
+    MonadTrace m,
+    HasAppEnv m,
     GH.MonadExecuteQuery m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m,
-    HasResourceLimits m
+    MonadMetadataStorage m,
+    MonadQueryTags m,
+    HasResourceLimits m,
+    ProvidesNetwork m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -640,26 +619,27 @@ gqlExplainHandler ::
     MonadBaseControl IO m,
     MonadError QErr m,
     MonadReader HandlerCtx m,
-    MonadMetadataStorage (MetadataStorageT m),
-    EB.MonadQueryTags m
+    MonadMetadataStorage m,
+    MonadQueryTags m,
+    MonadTrace m
   ) =>
   GE.GQLExplain ->
   m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
-  scRef <- asks (scCacheRef . hcServerCtx)
-  sc <- liftIO $ getSchemaCache scRef
-  res <- GE.explainGQLQuery sc query
+  schemaCache <- asks hcSchemaCache
+  reqHeaders <- asks hcReqHeaders
+  licenseKeyCache <- asks hcLicenseKeyCache
+  res <- GE.explainGQLQuery (lastBuiltSchemaCache schemaCache) licenseKeyCache reqHeaders query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGD.PGDumpReqBody -> m APIResp
 v1Alpha1PGDumpHandler b = do
   onlyAdmin
-  scRef <- asks (scCacheRef . hcServerCtx)
-  sc <- liftIO $ getSchemaCache scRef
-  let sources = scSources sc
+  schemaCache <- asks hcSchemaCache
+  let sources = scSources (lastBuiltSchemaCache schemaCache)
       sourceName = PGD.prbSource b
-      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< M.lookup sourceName sources
+      sourceConfig = unsafeSourceConfiguration @('Postgres 'Vanilla) =<< HashMap.lookup sourceName sources
   ci <-
     fmap _pscConnInfo sourceConfig
       `onNothing` throw400 NotFound ("source " <> sourceName <<> " not found")
@@ -671,7 +651,7 @@ consoleAssetsHandler ::
   L.Logger L.Hasura ->
   LoggingSettings ->
   Text ->
-  FilePath ->
+  Text ->
   Spock.ActionT m ()
 consoleAssetsHandler logger loggingSettings dir path = do
   req <- Spock.request
@@ -679,30 +659,51 @@ consoleAssetsHandler logger loggingSettings dir path = do
   -- '..' in paths need not be handed as it is resolved in the url by
   -- spock's routing. we get the expanded path.
   eFileContents <-
-    liftIO $
-      try $
-        BL.readFile $
-          joinPath [T.unpack dir, path]
+    liftIO
+      $ try @IOException do
+        unless validFilename $ throwIO $ userError "invalid asset filename"
+        BL.readFile
+          $ joinPath [T.unpack dir, pathStr]
   either (onError reqHeaders) onSuccess eFileContents
   where
+    pathStr = T.unpack path
+    validFilename = isRelative pathStr && not (".." `T.isInfixOf` path)
     onSuccess c = do
       mapM_ setHeader headers
       Spock.lazyBytes c
-    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> IOException -> Spock.ActionT m ()
-    onError hdrs = raiseGenericApiError logger loggingSettings hdrs . err404 NotFound . tshow
-    fn = T.pack $ takeFileName path
+    onError :: (MonadIO m, HttpLog m) => [HTTP.Header] -> a -> Spock.ActionT m ()
+    onError hdrs _ = raiseGenericApiError logger loggingSettings hdrs $ err404 NotFound $ "Couldn't find console asset " <> path
     -- set gzip header if the filename ends with .gz
-    (fileName, encHeader) = case T.stripSuffix ".gz" fn of
-      Just v -> (v, [gzipHeader])
-      Nothing -> (fn, [])
+    (fileName, encHeader) = case splitExtension (takeFileName pathStr) of
+      (v, ".gz") -> (T.pack v, [gzipHeader])
+      _ -> (path, [])
     mimeType = defaultMimeLookup fileName
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
+  type ConsoleType m :: Type
+  renderConsole ::
+    Text ->
+    AuthMode ->
+    TelemetryStatus ->
+    Maybe Text ->
+    Maybe Text ->
+    ConsoleType m ->
+    m (Either String Text)
 
-instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
-  renderConsole a b c d e = lift $ renderConsole a b c d e
+-- TODO(awjchen): This is a kludge that will be removed when the entitlement service is fully implemented.
+data CEConsoleType
+  = OSSConsole
+  | ProLiteConsole
+
+ceConsoleTypeIdentifier :: CEConsoleType -> String
+ceConsoleTypeIdentifier = \case
+  OSSConsole -> "oss"
+  ProLiteConsole -> "pro-lite"
+
+instance (ConsoleRenderer m) => ConsoleRenderer (Tracing.TraceT m) where
+  type ConsoleType (Tracing.TraceT m) = ConsoleType m
+  renderConsole a b c d e f = lift $ renderConsole a b c d e f
 
 -- Type class to get any extra [Pair] for the version API
 class (Monad m) => MonadVersionAPIWithExtraData m where
@@ -717,41 +718,54 @@ renderHtmlTemplate template jVal =
 
 -- | Default implementation of the 'MonadConfigApiHandler'
 configApiGetHandler ::
-  forall m.
-  (MonadIO m, MonadBaseControl IO m, UserAuthentication (Tracing.TraceT m), HttpLog m, Tracing.HasReporter m, HasResourceLimits m) =>
-  ServerCtx ->
-  Maybe Text ->
+  forall m impl.
+  ( MonadIO m,
+    MonadBaseControl IO m,
+    HasAppEnv m,
+    UserAuthentication m,
+    HttpLog m,
+    HasResourceLimits m,
+    MonadTrace m
+  ) =>
+  AppStateRef impl ->
   Spock.SpockCtxT () m ()
-configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
-  Spock.get "v1alpha1/config" $
-    mkSpockAction serverCtx encodeQErr id $
-      mkGetHandler $ do
-        onlyAdmin
-        let res =
-              runGetConfig
-                scFunctionPermsCtx
-                scRemoteSchemaPermsCtx
-                scAuthMode
-                scEnableAllowlist
-                (ES._ssLiveQueryOptions $ scSubscriptionState)
-                (ES._ssStreamQueryOptions $ scSubscriptionState)
-                consoleAssetsDir
-                scExperimentalFeatures
-                scEnabledAPIs
-                scDefaultNamingConvention
-        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
+configApiGetHandler appStateRef = do
+  Spock.get "v1alpha1/config"
+    $ onlyWhenApiEnabled isConfigEnabled appStateRef
+    $ do
+      AppEnv {..} <- lift askAppEnv
+      AppContext {..} <- liftIO $ getAppContext appStateRef
+      featureFlagSettings <-
+        traverse
+          (\(ff, desc) -> (ff,desc,) <$> liftIO (runCheckFeatureFlag appEnvCheckFeatureFlag ff))
+          (listKnownFeatureFlags appEnvCheckFeatureFlag)
+      mkSpockAction appStateRef encodeQErr id
+        $ mkGetHandler
+        $ do
+          onlyAdmin
+          let res =
+                runGetConfig
+                  acFunctionPermsCtx
+                  acRemoteSchemaPermsCtx
+                  acAuthMode
+                  acEnableAllowlist
+                  acLiveQueryOptions
+                  acStreamQueryOptions
+                  appEnvConsoleAssetsDir
+                  acExperimentalFeatures
+                  acEnabledAPIs
+                  acDefaultNamingConvention
+                  featureFlagSettings
+          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
   { _hapApplication :: !Wai.Application,
-    _hapSchemaRef :: !SchemaCacheRef,
     _hapAsyncActionSubscriptionState :: !ES.AsyncActionSubscriptionState,
     _hapShutdownWsServer :: !(IO ())
   }
 
--- TODO: Put Env into ServerCtx?
-
 mkWaiApp ::
-  forall m.
+  forall m impl.
   ( MonadIO m,
     MonadFix m,
     MonadStateless IO m,
@@ -759,230 +773,129 @@ mkWaiApp ::
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
-    UserAuthentication (Tracing.TraceT m),
+    HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
+    UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
+    MonadExecutionLog m,
     WS.MonadWSLog m,
-    Tracing.HasReporter m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
     HasResourceLimits m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadQueryTags m,
+    MonadEventLogCleanup m,
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
-  (ServerCtx -> Spock.SpockT m ()) ->
-  -- | Set of environment variables for reference in UIs
-  Env.Environment ->
-  -- | a 'L.Hasura' specific logger
-  L.Logger L.Hasura ->
-  SQLGenCtx ->
-  -- | is AllowList enabled - TODO: change this boolean to sumtype
-  Bool ->
-  -- | HTTP manager so that we can re-use sessions
-  HTTP.Manager ->
-  -- | 'AuthMode' in which the application should operate in
-  AuthMode ->
-  CorsConfig ->
-  -- | is console enabled - TODO: better type
-  Bool ->
-  -- | filepath to the console static assets directory - TODO: better type
-  Maybe Text ->
-  -- | DSN for console sentry integration
-  Maybe Text ->
-  -- | is telemetry enabled
-  Bool ->
-  -- | each application, when run, gets an 'InstanceId'. this is used at various places including
-  -- schema syncing and telemetry
-  InstanceId ->
-  -- | set of the enabled 'API's
-  S.HashSet API ->
-  ES.LiveQueriesOptions ->
-  ES.StreamQueriesOptions ->
-  ResponseInternalErrorsConfig ->
-  Maybe ES.SubscriptionPostPollHook ->
-  SchemaCacheRef ->
+  (AppStateRef impl -> Spock.SpockT m ()) ->
+  AppStateRef impl ->
+  ConsoleType m ->
   EKG.Store EKG.EmptyMetrics ->
-  ServerMetrics ->
-  PrometheusMetrics ->
-  Options.RemoteSchemaPermissions ->
-  Options.InferFunctionPermissions ->
-  WS.ConnectionOptions ->
-  KeepAliveDelay ->
-  MaintenanceMode () ->
-  EventingMode ->
-  ReadOnlyMode ->
-  -- | Set of the enabled experimental features
-  S.HashSet ExperimentalFeature ->
-  S.HashSet (L.EngineLogType L.Hasura) ->
-  WSConnectionInitTimeout ->
-  -- | is metadata query logging in http-log enabled
-  MetadataQueryLoggingMode ->
-  -- | default naming convention
-  Maybe NamingCase ->
-  -- | default metadata entries
-  MetadataDefaults ->
-  Tracing.SamplingPolicy ->
+  WS.WSServerEnv impl ->
   m HasuraApp
-mkWaiApp
-  setupHook
-  env
-  logger
-  sqlGenCtx
-  enableAL
-  httpManager
-  mode
-  corsCfg
-  enableConsole
-  consoleAssetsDir
-  consoleSentryDsn
-  enableTelemetry
-  instanceId
-  apis
-  lqOpts
-  streamQOpts
-  responseErrorsConfig
-  liveQueryHook
-  schemaCacheRef
-  ekgStore
-  serverMetrics
-  prometheusMetrics
-  enableRSPermsCtx
-  functionPermsCtx
-  connectionOptions
-  keepAliveDelay
-  maintenanceMode
-  eventingMode
-  readOnlyMode
-  experimentalFeatures
-  enabledLogTypes
-  wsConnInitTimeout
-  enableMetadataQueryLogging
-  defaultNC
-  metadataDefaults
-  traceSamplingPolicy = do
-    let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
+mkWaiApp setupHook appStateRef consoleType ekgStore wsServerEnv = do
+  appEnv@AppEnv {..} <- askAppEnv
+  spockApp <- liftWithStateless $ \lowerIO ->
+    Spock.spockAsApp
+      $ Spock.spockT lowerIO
+      $ httpApp setupHook appStateRef appEnv consoleType ekgStore
+      $ WS.mkCloseWebsocketsOnMetadataChangeAction (WS._wseServer wsServerEnv)
 
-    let corsPolicy = mkDefaultCorsPolicy corsCfg
-        postPollHook = fromMaybe (ES.defaultSubscriptionPostPollHook logger) liveQueryHook
+  let wsServerApp = WS.createWSServerApp (_lsEnabledLogTypes appEnvLoggingSettings) wsServerEnv appEnvWebSocketConnectionInitTimeout appEnvLicenseKeyCache
+      stopWSServer = WS.stopWSServerApp wsServerEnv
 
-    subscriptionsState <- liftIO $ ES.initSubscriptionsState lqOpts streamQOpts postPollHook
+  waiApp <- liftWithStateless $ \lowerIO ->
+    pure $ WSC.websocketsOr appEnvConnectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
 
-    wsServerEnv <-
-      WS.createWSServerEnv
-        logger
-        subscriptionsState
-        getSchemaCache'
-        httpManager
-        corsPolicy
-        sqlGenCtx
-        readOnlyMode
-        enableAL
-        keepAliveDelay
-        serverMetrics
-        prometheusMetrics
-        traceSamplingPolicy
-
-    let serverCtx =
-          ServerCtx
-            { scLogger = logger,
-              scCacheRef = schemaCacheRef,
-              scAuthMode = mode,
-              scManager = httpManager,
-              scSQLGenCtx = sqlGenCtx,
-              scEnabledAPIs = apis,
-              scInstanceId = instanceId,
-              scSubscriptionState = subscriptionsState,
-              scEnableAllowlist = enableAL,
-              scEkgStore = ekgStore,
-              scEnvironment = env,
-              scResponseInternalErrorsConfig = responseErrorsConfig,
-              scRemoteSchemaPermsCtx = enableRSPermsCtx,
-              scFunctionPermsCtx = functionPermsCtx,
-              scEnableMaintenanceMode = maintenanceMode,
-              scExperimentalFeatures = experimentalFeatures,
-              scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
-              scEventingMode = eventingMode,
-              scEnableReadOnlyMode = readOnlyMode,
-              scDefaultNamingConvention = defaultNC,
-              scPrometheusMetrics = prometheusMetrics,
-              scMetadataDefaults = metadataDefaults,
-              scTraceSamplingPolicy = traceSamplingPolicy
-            }
-
-    spockApp <- liftWithStateless $ \lowerIO ->
-      Spock.spockAsApp $
-        Spock.spockT lowerIO $
-          httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry
-
-    let wsServerApp = WS.createWSServerApp env enabledLogTypes mode wsServerEnv wsConnInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
-        stopWSServer = WS.stopWSServerApp wsServerEnv
-
-    waiApp <- liftWithStateless $ \lowerIO ->
-      pure $ WSC.websocketsOr connectionOptions (\ip conn -> lowerIO $ wsServerApp ip conn) spockApp
-
-    return $ HasuraApp waiApp schemaCacheRef (ES._ssAsyncActions subscriptionsState) stopWSServer
+  pure $ HasuraApp waiApp (ES._ssAsyncActions appEnvSubscriptionState) stopWSServer
 
 httpApp ::
-  forall m.
+  forall m impl.
   ( MonadIO m,
     MonadFix m,
     MonadBaseControl IO m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     HttpLog m,
-    UserAuthentication (Tracing.TraceT m),
+    HasAppEnv m,
+    HasCacheStaticConfig m,
+    HasFeatureFlagChecker m,
+    UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
     MonadConfigApiHandler m,
     MonadQueryLog m,
-    Tracing.HasReporter m,
+    MonadExecutionLog m,
+    MonadTrace m,
     GH.MonadExecuteQuery m,
-    MonadMetadataStorage (MetadataStorageT m),
+    MonadMetadataStorage m,
     HasResourceLimits m,
     MonadResolveSource m,
-    EB.MonadQueryTags m,
-    MonadEventLogCleanup m
+    MonadQueryTags m,
+    MonadEventLogCleanup m,
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
-  (ServerCtx -> Spock.SpockT m ()) ->
-  CorsConfig ->
-  ServerCtx ->
-  Bool ->
-  Maybe Text ->
-  Maybe Text ->
-  Bool ->
+  (AppStateRef impl -> Spock.SpockT m ()) ->
+  AppStateRef impl ->
+  AppEnv ->
+  ConsoleType m ->
+  EKG.Store EKG.EmptyMetrics ->
+  WS.WebsocketCloseOnMetadataChangeAction ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry = do
+httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOnMetadataChangeAction = do
   -- Additional spock action to run
-  setupHook serverCtx
+  setupHook appStateRef
 
   -- cors middleware
-  unless (isCorsDisabled corsCfg) $
-    Spock.middleware $
-      corsMiddleware (mkDefaultCorsPolicy corsCfg)
+  Spock.middleware
+    $ corsMiddleware (acCorsPolicy <$> getAppContext appStateRef)
 
   -- API Console and Root Dir
-  when (enableConsole && enableMetadata) serveApiConsole
+  serveApiConsole
+
+  -- Local console assets for server and CLI consoles
+  serveApiConsoleAssets
 
   -- Health check endpoint with logs
   let healthzAction = do
         let errorMsg = "ERROR"
-        runMetadataStorageT checkMetadataStorageHealth >>= \case
+        isStrict <- fromMaybe False <$> Spock.param "strict"
+        lift checkMetadataStorageHealth >>= \case
           Left err -> do
             -- error running the health check
             logError err
             Spock.setStatus HTTP.status500 >> Spock.text errorMsg
           Right _ -> do
-            -- healthy
-            sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
-            let responseText =
-                  if null (scInconsistentObjs sc)
-                    then "OK"
-                    else "WARN: inconsistent objects in schema"
-            logSuccess responseText
-            Spock.setStatus HTTP.status200 >> Spock.text (LT.toStrict responseText)
+            -- metadata storage is healthy
+            sc <- liftIO $ getSchemaCache appStateRef
+            let isInconsistent = not $ null $ scInconsistentObjs sc
+                inconsistenciesMessage = "inconsistent objects in schema"
+            (status, responseText) <-
+              if
+                | (isInconsistent && isStrict) -> do
+                    -- Inconsistencies exist and strict mode enabled. Report inconsistencies as ERROR with status 500.
+                    let message = "ERROR: " <> inconsistenciesMessage
+                    logError $ err500 InvalidConfiguration message
+                    pure (HTTP.status500, message)
+                | (isInconsistent && not isStrict) -> do
+                    -- Inconsistencies exist and strict mode disabled. Warn inconsistencies with status 200.
+                    let message = "WARN: " <> inconsistenciesMessage
+                    logSuccess $ LT.fromStrict message
+                    pure (HTTP.status200, message)
+                | otherwise -> do
+                    -- No inconsistencies in schema cache, report OK
+                    let message = "OK"
+                    logSuccess $ LT.fromStrict message
+                    pure (HTTP.status200, message)
+
+            Spock.setStatus status >> Spock.text responseText
 
   Spock.get "healthz" healthzAction
 
@@ -996,23 +909,12 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
     Spock.lazyBytes $ encode $ object $ ["version" .= currentVersion] <> extraData
 
   let customEndpointHandler ::
-        forall n.
-        ( MonadIO n,
-          MonadBaseControl IO n,
-          E.MonadGQLExecutionCheck n,
-          MonadQueryLog n,
-          GH.MonadExecuteQuery n,
-          MonadMetadataStorage (MetadataStorageT n),
-          EB.MonadQueryTags n,
-          HasResourceLimits n
-        ) =>
         RestRequest Spock.SpockMethod ->
-        Handler (Tracing.TraceT n) (HttpLogGraphQLInfo, APIResp)
+        Handler m (HttpLogGraphQLInfo, APIResp)
       customEndpointHandler restReq = do
-        scRef <- asks (scCacheRef . hcServerCtx)
-        endpoints <- liftIO $ scEndpoints <$> getSchemaCache scRef
-        execCtx <- mkExecutionContext
-        env <- asks (scEnvironment . hcServerCtx)
+        AppContext {..} <- liftIO $ getAppContext appStateRef
+        endpoints <- liftIO $ scEndpoints <$> getSchemaCache appStateRef
+        schemaCache <- lastBuiltSchemaCache <$> asks hcSchemaCache
         requestId <- asks hcRequestId
         userInfo <- asks hcUser
         reqHeaders <- asks hcReqHeaders
@@ -1028,7 +930,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
               Spock.PATCH -> pure EP.PATCH
               other -> throw400 BadRequest $ "Method " <> tshow other <> " not supported."
             _ -> throw400 BadRequest $ "Nonstandard method not allowed for REST endpoints"
-        fmap JSONResp <$> runCustomEndpoint env execCtx requestId userInfo reqHeaders ipAddress req endpoints
+        fmap JSONResp <$> runCustomEndpoint acEnvironment acSQLGenCtx schemaCache acEnableAllowlist appEnvEnableReadOnlyMode appEnvPrometheusMetrics (_lsLogger appEnvLoggers) appEnvLicenseKeyCache requestId userInfo reqHeaders ipAddress req endpoints
 
   -- See Issue #291 for discussion around restified feature
   Spock.hookRouteAll ("api" <//> "rest" <//> Spock.wildcard) $ \wildcard -> do
@@ -1048,50 +950,65 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       -- TODO: Are we actually able to use mkGetHandler in this situation? POST handler seems to do some work that we might want to avoid.
       mkGetHandler $ customEndpointHandler (RestRequest wildcard method allParams)
 
-  when enableMetadata $ do
-    Spock.post "v1/graphql/explain" gqlExplainAction
+  -- Note: we create a schema cache updater function, to restrict the access
+  -- to 'AppStateRef' inside the request handlers
+  let schemaCacheUpdater = withSchemaCacheReadUpdate appStateRef logger Nothing
 
-    Spock.post "v1alpha1/graphql/explain" gqlExplainAction
+  Spock.post "v1/graphql/explain" $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef gqlExplainAction
 
-    Spock.post "v1/query" $
-      spockAction encodeQErr id $ do
-        mkPostHandler $ fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler v1QueryHandler
+  Spock.post "v1alpha1/graphql/explain" $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef gqlExplainAction
 
-    Spock.post "v1/metadata" $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler v1MetadataHandler
+  Spock.post "v1/query" $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ do
+        mkPostHandler $ fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler (v1QueryHandler schemaCacheUpdater)
 
-    Spock.post "v2/query" $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler v2QueryHandler
+  Spock.post "v1/metadata" $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> mkAPIRespHandler (v1MetadataHandler schemaCacheUpdater closeWebsocketsOnMetadataChangeAction)
 
-  when enablePGDump $
-    Spock.post "v1alpha1/pg_dump" $
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> v1Alpha1PGDumpHandler
+  Spock.post "v2/query" $ do
+    onlyWhenApiEnabled isMetadataEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> mkAPIRespHandler (v2QueryHandler schemaCacheUpdater)
 
-  when enableConfig $ runConfigApiHandler serverCtx consoleAssetsDir
+  Spock.post "v1alpha1/pg_dump" $ do
+    onlyWhenApiEnabled isPGDumpEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkPostHandler
+      $ fmap (emptyHttpLogGraphQLInfo,)
+      <$> v1Alpha1PGDumpHandler
 
-  when enableGraphQL $ do
-    Spock.post "v1alpha1/graphql" $
-      spockAction GH.encodeGQErr id $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler $
-            v1Alpha1GQHandler E.QueryHasura
+  runConfigApiHandler appStateRef
 
-    Spock.post "v1/graphql" $
-      spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler v1GQHandler
+  Spock.post "v1alpha1/graphql" $ do
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr id
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1Alpha1GQHandler E.QueryHasura
 
-    Spock.post "v1beta1/relay" $
-      spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $
-          mkGQLAPIRespHandler $
-            v1GQRelayHandler
+  Spock.post "v1/graphql" $ do
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr allMod200
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1GQHandler
+
+  Spock.post "v1beta1/relay" $ do
+    onlyWhenApiEnabled isGraphQLEnabled appStateRef
+      $ spockAction GH.encodeGQErr allMod200
+      $ mkGQLRequestHandler
+      $ mkGQLAPIRespHandler
+      $ v1GQRelayHandler
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to
@@ -1105,52 +1022,69 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       stats <- liftIO RTS.getRTSStats
       Spock.json stats
 
-  when (isDeveloperAPIEnabled serverCtx) $ do
-    Spock.get "dev/ekg" $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) [])
-    -- This deprecated endpoint used to show the query plan cache pre-PDV.
-    -- Eventually this endpoint can be removed.
-    Spock.get "dev/plan_cache" $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue J.Null) [])
-    Spock.get "dev/subscriptions" $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          respJ <- liftIO $ ES.dumpSubscriptionsState False $ scSubscriptionState serverCtx
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
-    Spock.get "dev/subscriptions/extended" $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          respJ <- liftIO $ ES.dumpSubscriptionsState True $ scSubscriptionState serverCtx
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
-    Spock.get "dev/dataconnector/schema" $
-      spockAction encodeQErr id $
-        mkGetHandler $ do
-          onlyAdmin
-          return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
-  Spock.get "api/swagger/json" $
-    spockAction encodeQErr id $
-      mkGetHandler $ do
+  Spock.get "dev/ekg" $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
         onlyAdmin
-        sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
-        json <- buildOpenAPI sc
-        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue json) [])
+        respJ <- liftIO $ EKG.sampleAll ekgStore
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) [])
+
+  -- This deprecated endpoint used to show the query plan cache pre-PDV.
+  -- Eventually this endpoint can be removed.
+  Spock.get "dev/plan_cache" $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue J.Null) [])
+
+  Spock.get "dev/subscriptions" $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        appCtx <- liftIO $ getAppContext appStateRef
+        respJ <- liftIO $ ES.dumpSubscriptionsState False (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+
+  Spock.get "dev/subscriptions/extended" $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        appCtx <- liftIO $ getAppContext appStateRef
+        respJ <- liftIO $ ES.dumpSubscriptionsState True (acLiveQueryOptions appCtx) (acStreamQueryOptions appCtx) appEnvSubscriptionState
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue respJ) [])
+
+  Spock.get "dev/dataconnector/schema" $ do
+    onlyWhenApiEnabled isDeveloperAPIEnabled appStateRef
+      $ spockAction encodeQErr id
+      $ mkGetHandler
+      $ do
+        onlyAdmin
+        return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
+
+  Spock.get "api/swagger/json"
+    $ spockAction encodeQErr id
+    $ mkGetHandler
+    $ do
+      onlyAdmin
+      sc <- liftIO $ getSchemaCache appStateRef
+      json <- buildOpenAPI sc
+      return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue json) [])
 
   forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do
     req <- Spock.request
     let headers = Wai.requestHeaders req
         qErr = err404 NotFound "resource does not exist"
-    raiseGenericApiError logger (scLoggingSettings serverCtx) headers qErr
+    raiseGenericApiError logger appEnvLoggingSettings headers qErr
   where
-    logger = scLogger serverCtx
+    logger = _lsLogger appEnvLoggers
 
     logSuccess msg = do
       req <- Spock.request
@@ -1158,53 +1092,70 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       let headers = Wai.requestHeaders req
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
-      lift $
-        logHttpSuccess logger (scLoggingSettings serverCtx) Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
 
     logError err = do
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
-      lift $
-        logHttpError logger (scLoggingSettings serverCtx) Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
 
     spockAction ::
-      forall a n.
-      (FromJSON a, MonadIO n, MonadBaseControl IO n, UserAuthentication (Tracing.TraceT n), HttpLog n, Tracing.HasReporter n, HasResourceLimits n) =>
-      (Bool -> QErr -> Value) ->
+      forall a.
+      (FromJSON a) =>
+      (Bool -> QErr -> Encoding) ->
       (QErr -> QErr) ->
-      APIHandler (Tracing.TraceT n) a ->
-      Spock.ActionT n ()
-    spockAction qErrEncoder qErrModifier apiHandler = mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler
+      APIHandler m a ->
+      Spock.ActionT m ()
+    spockAction qErrEncoder qErrModifier apiHandler = mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler
 
     -- all graphql errors should be of type 200
     allMod200 qe = qe {qeStatus = HTTP.status200}
     gqlExplainAction = do
-      spockAction encodeQErr id $
-        mkPostHandler $
-          fmap (emptyHttpLogGraphQLInfo,) <$> mkAPIRespHandler gqlExplainHandler
-    enableGraphQL = isGraphQLEnabled serverCtx
-    enableMetadata = isMetadataEnabled serverCtx
-    enablePGDump = isPGDumpEnabled serverCtx
-    enableConfig = isConfigEnabled serverCtx
+      spockAction encodeQErr id
+        $ mkPostHandler
+        $ fmap (emptyHttpLogGraphQLInfo,)
+        <$> mkAPIRespHandler gqlExplainHandler
 
     serveApiConsole = do
       -- redirect / to /console
-      Spock.get Spock.root $ Spock.redirect "console"
-
-      -- serve static files if consoleAssetsDir is set
-      for_ consoleAssetsDir $ \dir ->
-        Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
-          consoleAssetsHandler logger (scLoggingSettings serverCtx) dir (T.unpack path)
+      Spock.get Spock.root $ do
+        onlyWhenApiEnabled (\appCtx -> isConsoleEnabled (acConsoleStatus appCtx) && isMetadataEnabled appCtx) appStateRef
+          $ Spock.redirect "console"
 
       -- serve console html
       Spock.get ("console" <//> Spock.wildcard) $ \path -> do
-        req <- Spock.request
-        let headers = Wai.requestHeaders req
-            authMode = scAuthMode serverCtx
-        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
-        either (raiseGenericApiError logger (scLoggingSettings serverCtx) headers . internalError . T.pack) Spock.html consoleHtml
+        onlyWhenApiEnabled (\appCtx -> isConsoleEnabled (acConsoleStatus appCtx) && isMetadataEnabled appCtx) appStateRef $ do
+          AppContext {..} <- liftIO $ getAppContext appStateRef
+          req <- Spock.request
+          let headers = Wai.requestHeaders req
+          consoleHtml <- lift $ renderConsole path acAuthMode acEnableTelemetry appEnvConsoleAssetsDir appEnvConsoleSentryDsn consoleType
+          either (raiseGenericApiError logger appEnvLoggingSettings headers . internalError . T.pack) Spock.html consoleHtml
+
+    serveApiConsoleAssets = do
+      -- serve static files if consoleAssetsDir is set
+      for_ appEnvConsoleAssetsDir $ \dir ->
+        Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
+          consoleAssetsHandler logger appEnvLoggingSettings dir path
+
+-- an endpoint can be switched ON/OFF dynamically, hence serve the endpoint only
+-- when it is enabled else throw HTTP Error 404
+onlyWhenApiEnabled ::
+  (MonadIO m) =>
+  (AppContext -> Bool) ->
+  AppStateRef impl ->
+  Spock.ActionCtxT ctx m b ->
+  Spock.ActionCtxT ctx m b
+onlyWhenApiEnabled isEnabled appStateRef endpointAction = do
+  appContext <- liftIO $ getAppContext appStateRef
+  if (isEnabled appContext)
+    then do endpointAction
+    else do
+      let qErr = err404 NotFound "resource does not exist"
+      Spock.setStatus $ qeStatus qErr
+      setHeader jsonHeader
+      Spock.lazyBytes . J.encodingToLazyByteString $ encodeQErr False qErr
 
 raiseGenericApiError ::
   forall m.

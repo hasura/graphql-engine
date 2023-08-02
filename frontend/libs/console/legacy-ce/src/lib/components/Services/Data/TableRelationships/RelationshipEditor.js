@@ -1,6 +1,6 @@
 import React from 'react';
 import { getRelDef } from './utils';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';

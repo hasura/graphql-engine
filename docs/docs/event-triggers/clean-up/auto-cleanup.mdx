@@ -17,10 +17,11 @@ sidebar_class_name: cloud-and-enterprise-icon
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Auto Cleanup of Event Trigger Logs
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<ProductBadge ee self />
 
 :::note Supported from
 
@@ -50,7 +51,8 @@ provided config.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-For an existing Event Trigger, head to the `Modify` tab of the Event Trigger and scroll down to the `Auto-cleanup Event Logs` section.
+For an existing Event Trigger, head to the `Modify` tab of the Event Trigger and scroll down to the
+`Auto-cleanup Event Logs` section.
 
 <Thumbnail src="/img/event-triggers/auto-cleanup.png" alt="Auto cleanup" max-width="543px" />
 
@@ -127,8 +129,8 @@ X-Hasura-Role: admin
 
 :::caution Warning
 
-If you initially choose not to delete `invocation_logs`, but later they need to be deleted, you will need to delete
-the retained logs manually.
+If you initially choose not to delete `invocation_logs`, but later they need to be deleted, you will need to delete the
+retained logs manually.
 
 :::
 
@@ -171,8 +173,7 @@ X-Hasura-Role: admin
 }
 ```
 
-- Activate the cleaners on all the triggers defined on the sources: `source_1`,
-  `source_2`
+- Activate the cleaners on all the triggers defined on the sources: `source_1`, `source_2`
 
 ```json
 POST /v1/metadata HTTP/1.1
@@ -189,8 +190,7 @@ X-Hasura-Role: admin
 }
 ```
 
-- Activate the cleaners on triggers: `sample_trigger_1`, `sample_trigger_2`
-  defined on source `default`
+- Activate the cleaners on triggers: `sample_trigger_1`, `sample_trigger_2` defined on source `default`
 
 ```json
 POST /v1/metadata HTTP/1.1

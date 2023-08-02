@@ -1,7 +1,7 @@
-import { SchemaResponse, ScalarType, ColumnInfo, TableInfo, Constraint } from "@hasura/dc-api-types"
+import { SchemaResponse, ColumnInfo, TableInfo, Constraint, ColumnValueGenerationStrategy } from "@hasura/dc-api-types"
 import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
-import { connect, SqlLogger } from './db';
+import { defaultMode, SqlLogger, withConnection } from './db';
 import { MUTATIONS } from "./environment";
 
 var sqliteParser = require('sqlite-parser');
@@ -38,16 +38,17 @@ function determineScalarType(datatype: Datatype): ScalarTypeKey {
   }
 }
 
-function getColumns(ast: any[], primaryKeys: string[]) : ColumnInfo[] {
-  return ast.map(c => {
-    const isPrimaryKey = primaryKeys.includes(c.name);
+function getColumns(ast: any[]) : ColumnInfo[] {
+  return ast.map(column => {
+    const isAutoIncrement = column.definition.some((def: any) => def.type === "constraint" && def.autoIncrement === true);
 
     return {
-      name: c.name,
-      type: determineScalarType(c.datatype),
-      nullable: nullableCast(c.definition),
+      name: column.name,
+      type: determineScalarType(column.datatype),
+      nullable: nullableCast(column.definition),
       insertable: MUTATIONS,
-      updatable: MUTATIONS && !isPrimaryKey,
+      updatable: MUTATIONS,
+      ...(isAutoIncrement ? { value_generated: { type: "auto_increment" } } : {})
     };
   })
 }
@@ -62,13 +63,13 @@ function nullableCast(ds: any[]): boolean {
 }
 
 const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
+  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
   const ast = sqliteParser(info.sql);
   const columnsDdl = getColumnsDdl(ast);
-  const primaryKeys = ddlPKs(ast);
-  const foreignKeys = ddlFKs(config, ast);
+  const primaryKeys = getPrimaryKeyNames(ast);
+  const foreignKeys = ddlFKs(config, tableName, ast);
   const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
-  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
   return {
     name: tableName,
@@ -76,7 +77,7 @@ const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
-    columns: getColumns(columnsDdl, primaryKeys),
+    columns: getColumns(columnsDdl),
     insertable: MUTATIONS,
     updatable: MUTATIONS,
     deletable: MUTATIONS,
@@ -88,7 +89,7 @@ const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo
  * @returns true if the table is an SQLite meta table such as a sequence, index, etc.
  */
 function isMeta(table : TableInfoInternal) {
-  return table.type != 'table';
+  return table.type != 'table' || table.name === 'sqlite_sequence';
 }
 
 function includeTable(config: Config, table: TableInfoInternal): boolean {
@@ -146,7 +147,7 @@ function getColumnsDdl(ddl: any): any[] {
  * @param ddl
  * @returns [name, FK constraint definition][]
  */
-function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
+function ddlFKs(config: Config, tableName: Array<string>, ddl: any): [string, Constraint][]  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
@@ -177,7 +178,7 @@ function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
       const destinationColumn = definition.references.columns[0];
       const foreignTable = config.explicit_main_schema ? ["main", definition.references.name] : [definition.references.name];
       return [[
-        `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
+        `${tableName.join('.')}.${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
         { foreign_table: foreignTable,
           column_mapping: {
             [sourceColumn.name]: destinationColumn.name
@@ -188,38 +189,53 @@ function ddlFKs(config: Config, ddl: any): [string, Constraint][]  {
   })
 }
 
-function ddlPKs(ddl: any): string[] {
+function getPrimaryKeyNames(ddl: any): string[] {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
-  return ddl.statement.flatMap((t: any) => {
-    if(t.type !=  'statement' || t.variant != 'create' || t.format != 'table') {
-      return [];
-    }
-    return t.definition.flatMap((c: any) => {
-      if(c.type != 'definition' || c.variant != 'constraint'
-          || c.definition.length != 1 || c.definition[0].type != 'constraint' || c.definition[0].variant != 'primary key') {
-        return [];
-      }
-      return c.columns.flatMap((x:any) => {
-        if(x.type == 'identifier' && x.variant == 'column') {
-          return [x.name];
-        } else {
-          return [];
-        }
-      });
-    });
-  })
+
+  return ddl.statement
+    .filter((ddlStatement: any) => ddlStatement.type === 'statement' && ddlStatement.variant === 'create' && ddlStatement.format === 'table')
+    .flatMap((createTableDef: any) => {
+      // Try to discover PKs defined on the column
+      // (eg 'Id INTEGER PRIMARY KEY NOT NULL')
+      const pkColumns =
+        createTableDef.definition
+          .filter((def: any) => def.type === 'definition' && def.variant === 'column')
+          .flatMap((columnDef: any) =>
+            columnDef.definition.some((def: any) => def.type === 'constraint' && def.variant === 'primary key')
+              ? [columnDef.name]
+              : []
+          );
+      if (pkColumns.length > 0)
+        return pkColumns;
+
+      // Try to discover explicit PK constraint defined inside create table DDL
+      // (eg 'CONSTRAINT [PK_Test] PRIMARY KEY ([Id])')
+      const pkConstraintColumns =
+        createTableDef.definition
+          .filter((def: any) => def.type === 'definition' && def.variant === 'constraint' && def.definition.length === 1 && def.definition[0].type === 'constraint' && def.definition[0].variant === 'primary key')
+          .flatMap((pkConstraintDef: any) =>
+            pkConstraintDef.columns.flatMap((def: any) =>
+              def.type === 'identifier' && def.variant === 'column'
+                ? [def.name]
+                : []
+            )
+          );
+
+      return pkConstraintColumns;
+    })
 }
 
 export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
-  const db                            = connect(config, sqlLogger);
-  const [results, metadata]           = await db.query("SELECT * from sqlite_schema");
-  const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
-  const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
-  const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
+  return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const results = await db.query("SELECT * from sqlite_schema");
+    const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
+    const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
+    const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
 
-  return {
-    tables: result
-  };
+    return {
+      tables: result
+    };
+  });
 };

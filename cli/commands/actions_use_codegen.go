@@ -24,7 +24,12 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsUseCodegenCmd := &cobra.Command{
 		Use:   "use-codegen",
-		Short: "Use the codegen to generate code for Hasura actions",
+		Short: "Use the codegen to generate code for Hasura Actions",
+		Long: `This command generates code for Hasura Actions using the codegen framework of your choice. While not required, you can pass the ` + "``--framework``" + ` flag to select a framework. If you do not pass the ` + "``--framework``" + ` flag, you will be prompted to select a framework from a list of available options.
+
+Further Reading:
+- https://hasura.io/docs/latest/actions/codegen/index/#codegen-for-your-framework
+`,
 		Example: `  # Use codegen by providing framework
   hasura actions use-codegen --framework nodejs-express
 

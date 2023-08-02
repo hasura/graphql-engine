@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { FaDatabase, FaTrash } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
+import { Button } from '../../../new-components/Button';
 import { Dispatch, ReduxState } from '../../../types';
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
 import styles from '../../Common/Common.module.scss';
@@ -18,7 +18,7 @@ import { isFeatureSupported } from '../../../dataSources';
 import { isTemplateGalleryEnabled } from './Schema/TemplateGallery/templateGalleryConfig';
 import BreadCrumb from '../../Common/Layout/BreadCrumb/BreadCrumb';
 import TemplateGallery from './Schema/TemplateGallery/TemplateGallery';
-import { useAppDispatch, useAppSelector } from '../../../store';
+import { useAppDispatch, useAppSelector } from '../../../storeHooks';
 
 interface Props {
   dispatch: Dispatch;
@@ -120,7 +120,10 @@ const SourceView: React.FC<Props> = props => {
 
   return (
     <Analytics name="SourceView" {...REDACT_EVERYTHING}>
-      <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
+      <div
+        style={{ paddingTop: '20px', paddingLeft: '15px' }}
+        className="bootstrap-jail"
+      >
         <Helmet title="Source - Data | Hasura" />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import clsx from 'clsx';
 
 /* calls the onChange configured when enter is pressed
  * and clears the current input
@@ -25,7 +26,7 @@ const FilterCheckboxComponent = props => {
         className="legacy-input-fix"
       />
       <label
-        className={styles.fontWeightBold}
+        className={clsx(styles.fontWeightBold, 'before:!mr-0')}
         data-field-value={id}
         onClick={customOnChange}
         htmlFor={id}

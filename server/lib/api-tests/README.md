@@ -9,17 +9,30 @@ RFC](../../../rfcs/hspec-test-suite.md).
 
 Most of the required setup concerns (and is documented in the README for)
 [../test-harness/README.md](the test harness), so please follow that link for
-more information. In short, assuming you have a BigQuery account set up (again,
-see [../test-harness/README.md](the test harness README) for instructions), set
-the following environment variables:
+more information.
+
+The tests need to know the location of the `graphql-engine` executable:
+
+```bash
+$ export GRAPHQL_ENGINE=$(cabal list-bin exe:graphql-engine)
+```
+
+To be able to run tests against the BigQuery backend, in short, set the
+following environment variables (assuming you have a BigQuery account set up,
+see [../test-harness/README.md](the test harness README) for instructions):
 
 ```bash
 $ export HASURA_BIGQUERY_PROJECT_ID=??? # The project ID
 $ export HASURA_BIGQUERY_SERVICE_KEY=??? # The service account key
 ```
 
-After that, BigQuery will be ready to test. For everything else, run
-`docker-compose up` in the root of `graphql-engine`.
+After that, BigQuery will be ready to test.
+
+For everything else, run the following in this directory:
+
+```bash
+$ docker-compose up
+```
 
 _Note to Hasura team: a service account is already setup for internal use,
 please check the wiki for further details._
@@ -29,29 +42,29 @@ please check the wiki for further details._
 To run all the tests, execute the following command:
 
 ```bash
-$ cabal run api-tests
+$ cabal run api-tests:exe:api-tests
 ```
 
 To run only tests whose name contains a certain string, use the `-m` or
 `--match=` flag:
 
 ```sh
-$ cabal run api-tests -- -m "SQLServer" # SQLServer tests only
-$ cabal run api-tests -- --match="Views" # All tests concerning views
+$ cabal run api-tests:exe:api-tests -- -m "SQLServer" # SQLServer tests only
+$ cabal run api-tests:exe:api-tests -- --match="Views" # All tests concerning views
 ```
 
 The opposite flag is `-s` or `--skip=`, which will ignore tests containing the
 given string:
 
 ```sh
-$ cabal run api-tests -- -s "BigQuery" # Skip BigQuery tests
-$ cabal run api-tests -- --skip="Mutations" # Skip tests around mutations
+$ cabal run api-tests:exe:api-tests -- -s "BigQuery" # Skip BigQuery tests
+$ cabal run api-tests:exe:api-tests -- --skip="Mutations" # Skip tests around mutations
 ```
 
 For additional information, consult the help section:
 
 ```bash
-cabal run api-tests -- --help
+cabal run api-tests:exe:api-tests -- --help
 ```
 
 The local databases persist even after shutting down the containers. If this is
@@ -289,6 +302,14 @@ compose down --volumes` to delete the DBs and restart the containers.
 The DataConnector agent might be out of date. If you are getting a lot of test
 failures, first try rebuilding the containers with `docker compose build` to
 make sure you are using the latest version of the agent.
+
+### `make test-sqlserver` fails with `Inconsistent object: mssql connection error`
+
+Try updating the `mssql-tools` symlink:
+```sh
+brew install microsoft/mssql-release/mssql-tools@18
+brew unlink mssql-tools18 && brew link mssql-tools18
+```
 
 ### Microsoft SQL Server failures on Apple aarch64 chips
 

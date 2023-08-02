@@ -1,0 +1,43 @@
+cabal-version: 3.6
+name: arrows-extra
+version: 1.0.0
+build-type: Simple
+copyright: Hasura Inc.
+extra-source-files: README.md
+
+library
+  hs-source-dirs: src
+  default-language: GHC2021
+
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+
+  build-depends:
+    , base
+    , mtl
+    , transformers
+
+  exposed-modules:
+    Control.Arrow.Extended
+    Control.Arrow.Interpret
+    Control.Arrow.Trans
+
+  default-extensions:
+    BlockArguments
+    FunctionalDependencies
+    LambdaCase
+    NoImplicitPrelude

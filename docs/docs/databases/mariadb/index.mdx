@@ -1,0 +1,57 @@
+---
+description: Hasura MariaDB database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - MariaDB
+slug: index
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# MariaDB
+
+<ProductBadge free standard pro ee self />
+
+## Introduction
+
+Hasura enables you to connect to MariaDB databases to automatically build a rich GraphQL API based on your database
+schema.
+
+At present, our MariaDB integration is available for testing in Hasura Cloud and Docker environments, where you can run
+Hasura GraphQL Engine and connect the MariaDB GraphQL Data Connector to it. For more information on GraphQL Data
+Connectors check out [our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
+
+To get started with MariaDB:
+
+- In Hasura Cloud, check out our [Getting Started with MariaDB in Hasura Cloud](/databases/mariadb/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/mariadb/docker.mdx) guide
+
+:::tip Supported versions:
+
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **MariaDB 10.5 and higher** including: Amazon RDS,
+    Amazon Aurora, Digital Ocean and SkySQL.
+
+:::
+
+:::tip Supported features
+
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on MariaDB.
+
+Note that Hasura doesn't yet support the ability to modify the database schema for MariaDB, so the database you connect
+to should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
+
+:::
+
+## Coming soon for MariaDB
+
+- [Subscriptions](/subscriptions/overview.mdx)
+- [Event triggers](/event-triggers/overview.mdx)
+
+## Resources
+
+- Check out the [Getting Started with Docker](/databases/mariadb/docker.mdx) guide.

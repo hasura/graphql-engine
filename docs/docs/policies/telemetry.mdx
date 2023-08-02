@@ -5,7 +5,7 @@ keywords:
   - docs
   - guide
   - telemetry
-sidebar_position: 2
+sidebar_position: 4
 sidebar_label: Telemetry
 ---
 
@@ -32,7 +32,8 @@ The server periodically sends the number of tables, views, relationships, permis
 triggers and Remote Schemas tracked by the GraphQL Engine, along with randomly generated UUIDs per database and per
 instance. The name of the current continuous integration environment (if any) and the server version is also sent.
 
-Here is a sample row from the telemetry database:
+<details>
+<summary>Server telemetry data sample</summary>
 
 ```json
 {
@@ -62,6 +63,133 @@ Here is a sample row from the telemetry database:
   }
 }
 ```
+</details>
+
+### Enterprise Edition server
+
+The Enterprise Edition server collects and sends additional types of telemetry.
+
+Here are samples of all the types of telemetry sent by the Enterprise Edition server:
+
+<details>
+<summary>Server telemetry data sample</summary>
+
+```json
+{
+  "license_jti": "e86e5a54-ad3b-49e6-98ca-ab34b0a50f8f",
+  "client_id": null,
+  "metadata_db_uid": "4492082b-a2d6-4d4c-81e5-f481b2aea669",
+  "instance_uid": "f6d67a85-4a4f-4897-a767-89a86253b59c",
+  "sample_uid": "2a18421a-baff-466b-bf34-b7fd6a5c76c8",
+  "hasura_version": "v2.23.0",
+  "metrics": {
+    "api_limits_enabled": true,
+    "api_limits_roles_with_limits": 0,
+    "api_limits_rate_limits": 0,
+    "api_limits_depth_limits": 0,
+    "api_limits_node_limits": 0,
+    "api_limits_time_limits": 0,
+    "api_limits_batch_limits": 0,
+    "prometheus_endpoint_enabled": false,
+    "prometheus_secret_enabled": false,
+    "otel_enabled": false,
+    "otel_traces_enabled": false,
+    "allow_list_roles": 0,
+    "logs_http_response_log_enabled": false,
+    "logs_api_limit_log_enabled": false,
+    "logs_live_query_poller_log_enabled": false,
+    "logs_caching_log_enabled": false,
+    "logs_tracing_log_enabled": true,
+    "logs_metrics_log_enabled": false,
+    "logs_health_check_log_enabled": false,
+    "rate_limiting_enabled": false,
+    "caching_enabled": false,
+    "remote_schemas": 0,
+    "actions_synchronous": 0,
+    "actions_asynchronous": 0,
+    "actions_query": 0,
+    "actions_type_relationships": 0,
+    "actions_custom_types": 0,
+    "resource_cpu": 2048,
+    "resource_memory": 0,
+    "resource_checker_error_code": "CPU_MEMORY_INCONCLUSIVE",
+    "jwt_secrets_configured": 2,
+    "admin_secrets_configured": 2
+  }
+}
+```
+</details>
+
+<details>
+<summary>Data source telemetry data sample</summary>
+
+```json
+{
+  "license_jti": "e86e5a54-ad3b-49e6-98ca-ab34b0a50f8f",
+  "client_id": null,
+  "metadata_db_uid": "4492082b-a2d6-4d4c-81e5-f481b2aea669",
+  "instance_uid": "f6d67a85-4a4f-4897-a767-89a86253b59c",
+  "sample_uid": "2a18421a-baff-466b-bf34-b7fd6a5c76c8",
+  "hasura_version": "12345",
+  "metrics": {
+    "backend_type": "postgres",
+    "read_replicas": 0,
+    "health_check_enabled": false,
+    "tables": 0,
+    "views": 0,
+    "enum_tables": 0,
+    "relationships_manual": 0,
+    "relationships_auto": 0,
+    "permissions_select": 0,
+    "permissions_insert": 0,
+    "permissions_update": 0,
+    "permissions_delete": 0,
+    "permissions_roles": 0,
+    "event_triggers": 0,
+    "functions": 0,
+    "native_queries": 0,
+    "query_tags_enabled": false,
+    "connection_templates_enabled": false
+  }
+}
+```
+</details>
+
+<details>
+<summary>Hasura usage metrics telemetry data sample</summary>
+
+```json
+{  "license_jti": "e86e5a54-ad3b-49e6-98ca-ab34b0a50f8f",
+  "client_id": null,
+  "metadata_db_uid": "4492082b-a2d6-4d4c-81e5-f481b2aea669",
+  "instance_uid": "f6d67a85-4a4f-4897-a767-89a86253b59c",
+  "sample_uid": "2a18421a-baff-466b-bf34-b7fd6a5c76c8",
+  "hasura_version": "12345",
+  "metrics": {
+    "hasura_action_request_bytes_total": [ { "value": 0 } ],
+    "hasura_action_response_bytes_total": [ { "value": 0 } ],
+    "hasura_active_subscriptions": [ { "value": 0 } ],
+    "hasura_cron_events_invocation_total": [{"status": "success","value": 0}],
+    "hasura_event_invocations_total": [{"status": "success","value": 0}],
+    "hasura_event_trigger_http_workers": [ { "value": 0 } ],
+    "hasura_events_fetched_per_batch": [ { "value": 0 } ],
+    "hasura_event_trigger_request_bytes_total": [ { "value": 0 } ],
+    "hasura_event_trigger_response_bytes_total": [ { "value": 0 } ],
+    "hasura_graphql_requests_total": [{"operation_type": "query","response_status": "failed","value": 0}]
+    "hasura_http_connections": [ { "value": 0 } ],
+    "hasura_http_request_bytes_total": [ { "value": 0 } ],
+    "hasura_http_response_bytes_total": [ { "value": 0 } ],
+    "hasura_metadata_resource_version": [ { "value": 1 } ],
+    "hasura_postgres_connections": [{"role": "primary","source_name": "default","value": 1}],
+    "hasura_scheduled_trigger_request_bytes_total": [ { "value": 0 } ],
+    "hasura_scheduled_trigger_response_bytes_total": [ { "value": 0 } ],
+    "hasura_websocket_connections": [ { "value": 0 } ],
+    "hasura_websocket_messages_received_bytes_total": [ { "value": 0 } ],
+    "hasura_websocket_messages_sent_bytes_total": [ { "value": 0 } ]
+  }
+}
+```
+</details>
 
 ### Console
 
@@ -121,6 +249,10 @@ The data is sent to Hasura's servers addressed by `telemetry.hasura.io`.
 
 You can turn off telemetry on **the server and on the Console hosted by the server** by setting the env variable
 `HASURA_GRAPHQL_ENABLE_TELEMETRY=false` or the flag `--enable-telemetry=false` on the server.
+
+### Disable Enterprise Edition server telemetry
+
+Enterprise Edition server telemetry cannot be disabled.
 
 ### Disable CLI telemetry
 

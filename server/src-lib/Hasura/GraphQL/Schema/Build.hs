@@ -48,7 +48,7 @@ module Hasura.GraphQL.Schema.Build
     buildTableInsertMutationFields,
     buildTableQueryAndSubscriptionFields,
     buildTableStreamingSubscriptionFields,
-    buildTableUpdateMutationFields,
+    buildSingleBatchTableUpdateMutationFields,
     setFieldNameCase,
     buildFieldDescription,
   )
@@ -58,45 +58,28 @@ import Data.Has (getter)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.ApolloFederation
-import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
+import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), BackendUpdateOperatorsSchema (..), MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp (AggregationPredicatesSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
-import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
 import Hasura.GraphQL.Schema.Table (getTableIdentifierName, tableSelectPermissions)
 import Hasura.GraphQL.Schema.Typename
-import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
+import Hasura.GraphQL.Schema.Update.Batch (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
+import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Permission
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
-
--- | Builds field name with proper case. Please note that this is a pure
---   function as all the validation has already been done while preparing
---   @GQLNameIdentifier@.
-setFieldNameCase ::
-  NamingCase ->
-  TableInfo b ->
-  CustomRootField ->
-  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
-  C.GQLNameIdentifier ->
-  G.Name
-setFieldNameCase tCase tInfo crf getFieldName tableName =
-  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
-  where
-    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
-    crfName = fmap C.fromCustomName (_crfName crf)
-    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
 
 -- | buildTableQueryAndSubscriptionFields builds the field parsers of a table.
 --   It returns a tuple with array of field parsers that correspond to the field
@@ -176,10 +159,9 @@ buildTableQueryAndSubscriptionFields mkRootFieldName tableName tableInfo gqlName
         selectPerm <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
-        let tableSelPerm = tablePermissionsInfo selectPerm
         tableGQLName <- getTableIdentifierName tableInfo
         let objectTypename = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableTypeName $ tableGQLName
-        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
+        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo selectPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
 
       pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)
   where
@@ -225,8 +207,8 @@ buildTableStreamingSubscriptionFields mkRootFieldName tableName tableInfo tableI
           customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
           selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
           selectStreamName =
-            runMkRootFieldName mkRootFieldName $
-              setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
+            runMkRootFieldName mkRootFieldName
+              $ setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
       catMaybes
         <$> sequenceA
           [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable tableInfo selectStreamName selectDesc
@@ -266,71 +248,33 @@ buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario tabl
     defaultInsertOneDesc = "insert a single row into the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
--- | This function is the basic building block for update mutations. It
+-- | This function implements the parsers for the basic, single batch, update mutations. It
 -- implements the mutation schema in the general shape described in
 -- @https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html@.
+-- (ie. update_<table> and update_<table>_by_pk root fields)
 --
--- Something that varies between backends is the @update operators@ that they
--- support (i.e. the schema fields @_set@, @_inc@, etc., see
--- <src/Hasura.Backends.Postgres.Instances.Schema.html#updateOperators Hasura.Backends.Postgres.Instances.Schema.updateOperators> for an example
--- implementation). Therefore, this function is parameterised over a monadic
--- action that produces the operators that the backend supports in the context
--- of some table and associated update permissions.
---
--- Apart from this detail, the rest of the arguments are the same as those
--- of @BackendSchema.@'Hasura.GraphQL.Schema.Backend.buildTableUpdateMutationFields'.
---
--- The suggested way to use this is like:
---
--- > instance BackendSchema MyBackend where
--- >   ...
--- >   buildTableUpdateMutationFields = GSB.buildTableUpdateMutationFields myBackendUpdateOperators
--- >   ...
-buildTableUpdateMutationFields ::
+-- Different backends can have different update types (single batch, multiple batches, etc),
+-- and so the parsed UpdateBatch needs to be embedded in the custom UpdateVariant defined
+-- by the backend, which is done by passing a function to this function.
+buildSingleBatchTableUpdateMutationFields ::
   forall b r m n.
   ( MonadBuildSchema b r m n,
     AggregationPredicatesSchema b,
-    BackendTableSelectSchema b
+    BackendTableSelectSchema b,
+    BackendUpdateOperatorsSchema b
   ) =>
-  -- | an action that builds @BackendUpdate@ with the
-  -- backend-specific data needed to perform an update mutation
-  ( TableInfo b ->
-    SchemaT
-      r
-      m
-      (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
-  ) ->
-  MkRootFieldName ->
+  -- | Embed the UpdateBack in the backend-specific UpdateVariant
+  (UpdateBatch b (UpdateOperators b) (UnpreparedValue b) -> UpdateVariant b (UnpreparedValue b)) ->
   Scenario ->
-  -- | The name of the table being acted on
-  TableName b ->
   -- | table info
   TableInfo b ->
   -- | field display name
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableUpdateMutationFields mkBackendUpdate mkRootFieldName scenario tableName tableInfo gqlName = do
-  sourceInfo :: SourceInfo b <- asks getter
-  let customization = _siCustomization sourceInfo
-      tCase = _rscNamingConvention customization
-      -- update table
-      updateName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdate mkUpdateField gqlName
-      -- update table by pk
-      updatePKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField gqlName
-
-  backendUpdate <- mkBackendUpdate tableInfo
-  update <- updateTable backendUpdate scenario tableInfo updateName updateDesc
-  -- Primary keys can only be tested in the `where` clause if a primary key
-  -- exists on the table and if the user has select permissions on all columns
-  -- that make up the key.
-  updateByPk <- updateTableByPk backendUpdate scenario tableInfo updatePKName updatePKDesc
+buildSingleBatchTableUpdateMutationFields mkSingleBatchUpdateVariant scenario tableInfo gqlName = do
+  update <- updateTable mkSingleBatchUpdateVariant scenario tableInfo gqlName
+  updateByPk <- updateTableByPk mkSingleBatchUpdateVariant scenario tableInfo gqlName
   pure $ catMaybes [update, updateByPk]
-  where
-    updateDesc = buildFieldDescription defaultUpdateDesc $ _crfComment _tcrfUpdate
-    updatePKDesc = buildFieldDescription defaultUpdatePKDesc $ _crfComment _tcrfUpdateByPk
-    defaultUpdateDesc = "update data of the table: " <>> tableName
-    defaultUpdatePKDesc = "update single row of the table: " <>> tableName
-    TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
 buildTableDeleteMutationFields ::
   forall b r m n.

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import styles from './ModifyCustomFunction.module.scss';
 import EditorInput from './EditorInput';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
 type ConfigurationType = {
   session_argument: string;
@@ -50,7 +50,10 @@ const SessionVarSection: React.FC<SessionVarSectionProps> = ({
       <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
         Session Argument
         <IconTooltip message="the function argument into which hasura session variables will be passed" />
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions" />
+        <LearnMoreLink
+          href="https://hasura.io/docs/latest/graphql/core/schema/custom-functions.html#accessing-hasura-session-variables-in-custom-functions"
+          className="font-normal"
+        />
       </h4>
       <div
         className={

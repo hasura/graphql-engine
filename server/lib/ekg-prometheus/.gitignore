@@ -1,0 +1,17 @@
+*.hi
+*.o
+*.p_hi
+*.prof
+*.tix
+.DS_Store
+.cabal-sandbox/
+.hpc/
+/dist/*
+cabal.config
+cabal.sandbox.config
+dist-newstyle
+examples/Group
+*.sublime-*
+
+# This is ignored so that everyone can have their own hie options
+hie.yaml

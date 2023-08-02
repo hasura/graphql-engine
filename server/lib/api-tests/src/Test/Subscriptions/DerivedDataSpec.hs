@@ -13,10 +13,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Subscriptions (getNextResponse, withSubscriptions)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -106,11 +106,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = withSubscriptions $ do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = withSubscriptions $ do
   describe "Subscriptions involving derived data" do
     it "Fetches derived data correctly" \(mkSubscription, testEnvironment) -> do
       let schemaName :: Schema.SchemaName
@@ -145,7 +142,7 @@ tests opts = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- add some data
       do
@@ -169,7 +166,7 @@ tests opts = withSubscriptions $ do
                     }
                   }
                 |]
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
       -- fetch the next response
       do
@@ -188,12 +185,12 @@ tests opts = withSubscriptions $ do
             actual :: IO Value
             actual = getNextResponse query
 
-        actual `shouldBe` expected
+        shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- SQL
 
-setupViewSQL :: String
+setupViewSQL :: Text
 setupViewSQL =
   [sql|
     CREATE OR REPLACE VIEW hasura.poll_results AS
@@ -215,7 +212,7 @@ setupViewSQL =
         GROUP BY poll.question, o.option_id, poll.id;
   |]
 
-teardownViewSQL :: String
+teardownViewSQL :: Text
 teardownViewSQL =
   [sql|
     DROP VIEW IF EXISTS hasura.poll_results

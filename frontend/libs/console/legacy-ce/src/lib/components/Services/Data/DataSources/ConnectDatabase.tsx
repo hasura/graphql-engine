@@ -7,8 +7,9 @@ import React, {
   useEffect,
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { canAccessReadReplica } from '@/utils/permissions';
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { isPostgres } from '../../../../metadata/dataSource.utils';
+import { useEELiteAccess } from '../../../../features/EETrial';
+import globals from '../../../../Globals';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
@@ -36,8 +37,12 @@ import ReadReplicaForm from './ReadReplicaForm';
 import EditDataSource from './EditDataSource';
 import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
+import { Tabs } from '../../../../new-components/Tabs';
+import { DynamicDBRouting } from '../../../../features/ConnectDBRedesign/components/ConnectPostgresWidget/parts/DynamicDBRouting';
+import { isDynamicDBRoutingEnabled } from '../../../../utils/proConsole';
+import { canAccessReadReplica as isReadReplicaAccessible } from '../../../../utils';
 
-interface ConnectDatabaseProps extends InjectedProps {}
+type ConnectDatabaseProps = InjectedProps;
 
 const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   const { dispatch } = props;
@@ -46,6 +51,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     connectDBReducer,
     getDefaultState(props)
   );
+
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
+
+  // the first case is only for pro/cloud console. the second expression is for pro-lite
+  const canAccessReadReplica =
+    isReadReplicaAccessible(connectDBInputState.dbType) ||
+    (eeLiteAccess !== 'forbidden' && connectDBInputState.dbType !== 'bigquery');
 
   const [connectionType, changeConnectionType] = useState(
     props.dbConnection.envVar
@@ -385,37 +397,62 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
   };
 
   if (isEditState) {
+    const connectionDetails = (
+      <DataSourceFormWrapper
+        connectionDBState={connectDBInputState}
+        connectionDBStateDispatch={connectDBDispatch}
+        connectionTypeState={connectionType}
+        updateConnectionTypeRadio={onChangeConnectionType}
+        changeConnectionType={changeConnectionType}
+        isEditState={isEditState}
+        loading={loading}
+        onSubmit={onSubmit}
+        title="Edit Data Source"
+      >
+        {/* Should be rendered only on Pro and Cloud Console */}
+        {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
+          connectDBInputState.dbType
+        ) &&
+          canAccessReadReplica && (
+            <ReadReplicaForm
+              readReplicaState={readReplicasState}
+              readReplicaDispatch={readReplicaDispatch}
+              connectDBState={connectDBStateForReadReplica}
+              connectDBStateDispatch={connectDBReadReplicaDispatch}
+              readReplicaConnectionType={readReplicaConnectionType}
+              updateReadReplicaConnectionType={updateRadioForReadReplica}
+              onClickAddReadReplicaCb={onClickAddReadReplica}
+              onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
+              onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
+            />
+          )}
+      </DataSourceFormWrapper>
+    );
     return (
       <EditDataSource>
-        <DataSourceFormWrapper
-          connectionDBState={connectDBInputState}
-          connectionDBStateDispatch={connectDBDispatch}
-          connectionTypeState={connectionType}
-          updateConnectionTypeRadio={onChangeConnectionType}
-          changeConnectionType={changeConnectionType}
-          isEditState={isEditState}
-          loading={loading}
-          onSubmit={onSubmit}
-          title="Edit Data Source"
-        >
-          {/* Should be rendered only on Pro and Cloud Console */}
-          {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
-            connectDBInputState.dbType
-          ) &&
-            canAccessReadReplica() && (
-              <ReadReplicaForm
-                readReplicaState={readReplicasState}
-                readReplicaDispatch={readReplicaDispatch}
-                connectDBState={connectDBStateForReadReplica}
-                connectDBStateDispatch={connectDBReadReplicaDispatch}
-                readReplicaConnectionType={readReplicaConnectionType}
-                updateReadReplicaConnectionType={updateRadioForReadReplica}
-                onClickAddReadReplicaCb={onClickAddReadReplica}
-                onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
-                onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
-              />
-            )}
-        </DataSourceFormWrapper>
+        {currentSourceInfo?.kind === 'postgres' &&
+        isDynamicDBRoutingEnabled(window.__env) ? (
+          <Tabs
+            items={[
+              {
+                value: 'connection-details',
+                label: 'Connection Details',
+                content: <div className="pt-8">{connectionDetails}</div>,
+              },
+              {
+                value: 'dynamic-db-routing',
+                label: 'Dynamic Routing',
+                content: (
+                  <div className="px-4 pt-8">
+                    <DynamicDBRouting sourceName={editSourceName} />
+                  </div>
+                ),
+              },
+            ]}
+          />
+        ) : (
+          connectionDetails
+        )}
       </EditDataSource>
     );
   }
@@ -436,7 +473,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
-          canAccessReadReplica() && (
+          canAccessReadReplica && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}

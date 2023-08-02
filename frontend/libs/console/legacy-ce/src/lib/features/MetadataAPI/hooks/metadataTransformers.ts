@@ -1,4 +1,4 @@
-import { DataTarget } from '@/features/Datasources';
+import { DataTarget } from '../../Datasources';
 import {
   ArrayRelationship,
   DeletePermissionEntry,
@@ -9,7 +9,7 @@ import {
   TableEntry,
   ToRemoteSchema,
   UpdatePermissionEntry,
-} from '@/metadata/types';
+} from '../../../metadata/types';
 import {
   TableRelationship,
   DbToDbRelationship,

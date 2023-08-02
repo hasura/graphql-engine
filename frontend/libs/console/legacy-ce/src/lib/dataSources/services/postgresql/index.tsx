@@ -1,11 +1,7 @@
 import React from 'react';
-import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '../../../utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
-import {
-  ColumnsInfoResult,
-  currentDriver,
-  DataSourcesAPI,
-} from '@/dataSources';
+import type { ColumnsInfoResult, DataSourcesAPI } from '../../';
 
 import {
   Table,
@@ -81,8 +77,7 @@ import {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
-  getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 } from './sqlUtils';
 import globals from '../../../Globals';
 
@@ -334,10 +329,6 @@ type ColumnsInfoPayload = {
 };
 
 const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
-  if (currentDriver === 'cockroach') {
-    return isGenerated === 'YES';
-  }
-
   return isGenerated === 'ALWAYS';
 };
 
@@ -388,21 +379,23 @@ const parseColumnsInfoResult = (data: string[][]) => {
 };
 
 const columnDataTypes = {
-  INTEGER: 'integer',
-  SERIAL: 'serial',
+  ARRAY: 'ARRAY',
   BIGINT: 'bigint',
   BIGSERIAL: 'bigserial',
-  UUID: 'uuid',
-  JSONDTYPE: 'json',
-  JSONB: 'jsonb',
-  TIMESTAMP: 'timestamp with time zone',
-  TIME: 'time with time zone',
-  NUMERIC: 'numeric',
-  DATE: 'date',
-  TIMETZ: 'timetz',
   BOOLEAN: 'boolean',
+  BOOL: 'bool',
+  DATE: 'date',
+  DATETIME: 'datetime',
+  INTEGER: 'integer',
+  JSONB: 'jsonb',
+  JSONDTYPE: 'json',
+  NUMERIC: 'numeric',
+  SERIAL: 'serial',
   TEXT: 'text',
-  ARRAY: 'ARRAY',
+  TIME: 'time with time zone',
+  TIMESTAMP: 'timestamp with time zone',
+  TIMETZ: 'timetz',
+  UUID: 'uuid',
 };
 
 const commonDataTypes = [
@@ -410,6 +403,11 @@ const commonDataTypes = [
     name: 'Integer',
     value: 'integer',
     description: 'signed four-byte integer',
+  },
+  {
+    name: 'Integer Array',
+    value: 'integer[]',
+    description: 'signed four-byte integer array',
   },
   {
     name: 'Integer (auto-increment)',
@@ -422,6 +420,11 @@ const commonDataTypes = [
     description: 'variable-length character string',
   },
   {
+    name: 'Text Array',
+    value: 'text[]',
+    description: 'variable-length character strings array',
+  },
+  {
     name: 'Boolean',
     value: 'boolean',
     description: 'logical Boolean (true/false)',
@@ -430,6 +433,11 @@ const commonDataTypes = [
     name: 'Numeric',
     value: 'numeric',
     description: 'exact numeric of selected precision',
+  },
+  {
+    name: 'Numeric Array',
+    value: 'numeric[]',
+    description: 'exact numeric of selected precision array',
   },
   {
     name: 'Timestamp',
@@ -460,6 +468,11 @@ const commonDataTypes = [
     name: 'Big Integer',
     value: 'bigint',
     description: 'signed eight-byte integer',
+  },
+  {
+    name: 'Big Integer Array',
+    value: 'bigint[]',
+    description: 'signed eight-byte integer array',
   },
   {
     name: 'Big Integer (auto-increment)',
@@ -524,6 +537,8 @@ const operators = [
 export const isColTypeString = (colType: string) =>
   ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
+export const isColTypeArray = (colType: string) => colType.includes('[]');
+
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
 const createSQLRegex =
@@ -575,7 +590,7 @@ const getReferenceOption = (opt: string) => {
 };
 
 const permissionColumnDataTypes = {
-  boolean: ['boolean'],
+  boolean: ['boolean', 'bool'],
   character: ['character', 'character varying', 'text', 'citext'],
   dateTime: [
     'timestamp',
@@ -771,7 +786,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     ssl_certificates:
       globals.consoleType === 'cloud' ||
       globals.consoleType === 'pro' ||
-      globals.consoleType === 'pro-lite',
+      globals.consoleType === 'pro-lite', // TODO: should be enabled only when license is active
   },
 };
 
@@ -895,6 +910,5 @@ export const postgres: DataSourcesAPI = {
   getAlterViewCommentSql,
   getAlterFunctionCommentSql,
   getDataTriggerInvocations,
-  getDataTriggerLogsCountQuery,
-  getDataTriggerLogsQuery,
+  getDatabaseTableNames,
 };

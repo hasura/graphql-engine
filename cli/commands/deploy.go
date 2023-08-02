@@ -19,12 +19,19 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	deployCmd := &cobra.Command{
 		Use:   "deploy",
-		Short: "(PREVIEW) Utility command to apply metadata & database migrations to graphql-engine",
+		Short: "(PREVIEW) Utility command to apply Hasura Metadata & database migrations to graphql-engine",
+		Long: `When working with a Hasura instance, you'll apply Hasura Metadata and database migrations to the graphql-engine server. This command reduces the number of steps by completing the same tasks (` + " ``hasura metadata apply``" + " and ``hasura migrate apply``" + `) in one command.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/index/#migrations-in-graphql-engine
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-metadata/
+`,
 		Example: `  
-  # Apply metadata and migrations on Hasura GraphQL engine
+  # Apply metadata and migrations on Hasura GraphQL Engine
   hasura deploy
 
-  # Apply metadata, migrations and seeds on Hasura GraphQL engine
+  # Apply metadata, migrations and seeds on Hasura GraphQL Engine
   hasura deploy --with-seeds
 
   # Use with admin secret:
@@ -59,9 +66,9 @@ func NewDeployCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.BoolVar(&opts.WithSeeds, "with-seeds", false, "apply available seeds data to databases")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

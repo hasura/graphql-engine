@@ -1,6 +1,6 @@
 import { GraphQLType, isScalarType } from 'graphql';
 import React, { ReactText } from 'react';
-import { isJsonString } from '@/components/Common/utils/jsUtils';
+import { isJsonString } from '../../../../../../components/Common/utils/jsUtils';
 import { ArgValue } from '../../../types';
 
 const fieldStyle =

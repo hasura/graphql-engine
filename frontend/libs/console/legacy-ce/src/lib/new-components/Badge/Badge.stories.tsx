@@ -1,7 +1,7 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryObj, Meta } from '@storybook/react';
 
-import { Badge } from '@/new-components/Badge';
+import { Badge } from '.';
 
 export default {
   title: 'components/Badge ⚛️',
@@ -19,79 +19,94 @@ export default {
     ),
   ],
   component: Badge,
-} as ComponentMeta<typeof Badge>;
+} as Meta<typeof Badge>;
 
-export const ApiPlayground: ComponentStory<typeof Badge> = args => (
-  <Badge {...args}>
-    <span>The Badge children</span>
-  </Badge>
-);
-ApiPlayground.storyName = '⚙️ API';
+export const ApiPlayground: StoryObj<typeof Badge> = {
+  render: args => (
+    <Badge {...args}>
+      <span>The Badge children</span>
+    </Badge>
+  ),
 
-export const Basic: ComponentStory<typeof Badge> = () => (
-  <Badge>
-    <span>The Badge children</span>
-  </Badge>
-);
-Basic.storyName = '🧰 Basic';
-Basic.parameters = {
-  docs: {
-    source: { state: 'open' },
+  name: '⚙️ API',
+};
+
+export const Basic: StoryObj<typeof Badge> = {
+  render: () => (
+    <Badge>
+      <span>The Badge children</span>
+    </Badge>
+  ),
+
+  name: '🧰 Basic',
+
+  parameters: {
+    docs: {
+      source: { state: 'open' },
+    },
   },
 };
 
-export const VariantColor: ComponentStory<typeof Badge> = () => (
-  <>
-    <Badge color="green">
-      <span>Green</span>
-    </Badge>
-    <Badge color="red">
-      <span>Red</span>
-    </Badge>
-    <Badge color="indigo">
-      <span>Indigo</span>
-    </Badge>
-    <Badge color="gray">
-      <span>Gray</span>
-    </Badge>
-    <Badge color="yellow">
-      <span>Yellow</span>
-    </Badge>
-  </>
-);
-VariantColor.storyName = '🎭 Variant - Mode';
-VariantColor.parameters = {
-  docs: {
-    description: {
-      story: `#### 🚦 Usage
-- The default Badge should be used in the vast majority of circumstances
-- The primary Badge style should only be used once per page for create / persistent actions, we also shouldn't have
-  any other sizes for the primary Badge
-- Use destructive variant for destructive actions only`,
+export const VariantColor: StoryObj<typeof Badge> = {
+  render: () => (
+    <>
+      <Badge color="green">
+        <span>Green</span>
+      </Badge>
+      <Badge color="red">
+        <span>Red</span>
+      </Badge>
+      <Badge color="indigo">
+        <span>Indigo</span>
+      </Badge>
+      <Badge color="gray">
+        <span>Gray</span>
+      </Badge>
+      <Badge color="yellow">
+        <span>Yellow</span>
+      </Badge>
+    </>
+  ),
+
+  name: '🎭 Variant - Mode',
+
+  parameters: {
+    docs: {
+      description: {
+        story: `#### 🚦 Usage
+  - The default Badge should be used in the vast majority of circumstances
+  - The primary Badge style should only be used once per page for create / persistent actions, we also shouldn't have
+    any other sizes for the primary Badge
+  - Use destructive variant for destructive actions only`,
+      },
+      source: { state: 'open' },
     },
-    source: { state: 'open' },
   },
 };
 
-export const TestingScalability: ComponentStory<typeof Badge> = () => (
-  <Badge>
-    <div className="max-w-full text-ellipsis overflow-hidden">
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-      est laborum.
-    </div>
-  </Badge>
-);
-TestingScalability.storyName = '🧪 Testing - Scalability';
-TestingScalability.parameters = {
-  docs: {
-    description: {
-      story: `⚠️ Please add some defensive checks in the component children to prevent them to overflow.`,
+export const TestingScalability: StoryObj<typeof Badge> = {
+  render: () => (
+    <Badge>
+      <div className="max-w-full text-ellipsis overflow-hidden">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </div>
+    </Badge>
+  ),
+
+  name: '🧪 Testing - Scalability',
+
+  parameters: {
+    docs: {
+      description: {
+        story: `⚠️ Please add some defensive checks in the component children to prevent them to overflow.`,
+      },
+      source: { state: 'open' },
     },
-    source: { state: 'open' },
   },
 };

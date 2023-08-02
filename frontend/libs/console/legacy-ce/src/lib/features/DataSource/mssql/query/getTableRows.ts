@@ -1,5 +1,5 @@
-import { generateGraphQLSelectQuery } from '@/features/GraphQLUtils';
-import get from 'lodash.get';
+import { generateGraphQLSelectQuery } from '../../../GraphQLUtils';
+import get from 'lodash/get';
 import { MssqlTable } from '..';
 import { exportMetadata, runGraphQL } from '../../api';
 import { transformGraphqlResponse } from '../../common/utils';

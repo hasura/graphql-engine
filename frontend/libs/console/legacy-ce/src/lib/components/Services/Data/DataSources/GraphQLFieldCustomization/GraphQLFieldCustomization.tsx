@@ -1,5 +1,5 @@
-import { Collapse } from '@/new-components/deprecated';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { Collapse } from '../../../../../new-components/deprecated';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
 import React from 'react';
 import { FormRow } from './FormRow';
 import { NamingConvention } from './NamingConvention';

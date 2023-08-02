@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { initiateOAuthRequest } from './utils';
 import { clearAdminSecretState } from '../AppState';

@@ -1,0 +1,191 @@
+---
+sidebar_label: Azure Active Directory
+description: Azure Active Directory SSO tutorial for Hasura Enterprise Edition
+title: 'EE: Azure AD SSO'
+keywords:
+  - hasura
+  - console
+  - docs
+  - enterprise
+  - single sign on
+  - SSO
+  - SAML
+  - Azure
+sidebar_position: 5
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Console SSO with Azure Active Directory
+
+<div className="badge badge--primary heading-badge">Available on: Self-hosted Enterprise</div>
+
+## Prerequisites
+
+This tutorial will help you set up Single Sign-on (SSO) for the Hasura Console with Azure Active Directory. We assume
+that the following prerequisites have been met:
+
+- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not
+  already have one.
+- An Azure account and your Azure user has the required permissions to register an Azure AD application.
+- You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
+  working on your machine.
+- Hasura EE service is exposed at `http://localhost:8080`
+- Dex service is exposed at `http://localhost:5556`
+
+## Get started
+
+If you are new to Hasura GraphQL Engine, let's go through the [Quickstart](/getting-started/docker-simple.mdx) to help
+you get up and running quickly with the Hasura GraphQL Engine and a Postgres database running as Docker containers using
+Docker Compose. You also need to [configure the EE license key](/enterprise/upgrade-ce-to-ee.mdx) to enable Enterprise
+features.
+
+## Configuring Azure AD application
+
+Register an application for both OAuth and SAML SSO login, then add a single-page application with the following
+callback URLs:
+
+- `http://localhost:8080/console/oauth2/callback`
+- `http://localhost:5556/dex/callback`
+
+:::info Implicit and hybrid flows
+
+The ID tokens (used for implicit and hybrid flows) option must be checked.
+
+:::
+
+<Thumbnail src="/img/enterprise/sso-azure-register-app.jpg" alt="Register Azure AD application" />
+
+The authorized user must have the `admin` role in claims. To do this you need to create the role in `App roles` tab.
+Head back to `Enterprise applications` -> `<Your app>` -> `Users and groups` and assign the app role to the user.
+
+<Thumbnail src="/img/enterprise/sso-azure-create-admin-role.jpg" alt="Create admin role" />
+
+<Thumbnail src="/img/enterprise/sso-azure-assign-role.jpg" alt="Azure AD assign role" />
+
+Finally, go to `App registrations` -> `<Your app>` -> `Overview` -> `Endpoints` to get the required configuration
+endpoints.
+
+<Thumbnail src="/img/enterprise/sso-azure-endpoints.jpg" alt="Azure AD endpoints" />
+
+## OAuth 2.0 configuration
+
+Hasura EE can handle the OAuth authorization flow directly. You only need to configure via
+[--sso-providers](/deployment/graphql-engine-flags/reference.mdx#single-sign-on-providers) argument
+(`HASURA_GRAPHQL_SSO_PROVIDERS`).
+
+```json
+[
+  {
+    "client_id": "<Application (client) ID>",
+    "name": "Azure OAuth2 Login",
+    // OAuth 2.0 authorization endpoint (v2)
+    "authorization_url": "https://login.microsoftonline.com/<client-id>/oauth2/v2.0/authorize",
+    // OAuth 2.0 token endpoint (v2)
+    "request_token_url": "https://login.microsoftonline.com/<client-id>/oauth2/v2.0/token",
+    "scope": "openid offline_access",
+    "admin_roles": ["admin"],
+    "jwt_secret": {
+      "type": "RS256",
+      // you can get jwt secret information in the OpenID Connect metadata document endpoint
+      // https://login.microsoftonline.com/<client-id>/v2.0/.well-known/openid-configuration
+      "jwk_url": "https://login.microsoftonline.com/<Directory (tenant) ID>/discovery/v2.0/keys",
+      "issuer": "https://login.microsoftonline.com/<Directory (tenant) ID>/v2.0",
+      "claims_map": {
+        "x-hasura-allowed-roles": { "path": "$.roles" },
+        "x-hasura-default-role": { "path": "$.roles[0]" }
+      }
+    }
+  }
+]
+```
+
+After configuring the variable, reload the Hasura GraphQL Engine service and browse the Console page to verify.
+
+## SAML configuration
+
+You need to add the [Dex](https://github.com/dexidp/dex) service to docker-compose with
+[SAML 2.0](https://dexidp.io/docs/connectors/saml/) connector configuration to proxy the Azure SAML login connector.
+
+```yaml
+# docker-compose.yaml
+services:
+  dex:
+    image: dexidp/dex
+    volumes:
+      - ./dex/config.docker.yaml:/etc/dex/config.docker.yaml
+      - ./dex/saml-ca.pem:/etc/dex/saml-ca.pem:ro
+    ports:
+      - '5556:5556'
+```
+
+```yaml
+# ./dex/config.docker.yaml
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+  allowedOrigins: ['*']
+
+staticClients:
+  - id: hasura-app
+    redirectURIs:
+      - 'http://localhost:8080/console/oauth2/callback'
+    name: 'Hasura App'
+    public: true
+
+connectors:
+  - type: saml
+    id: saml
+    name: SAML
+    config:
+      # SAML-P sign-on endpoint
+      ssoURL: https://login.microsoftonline.com/<Directory (tenant) ID>/saml2
+      ca: /path/to/saml-ca.pem
+      redirectURI: http://localhost:5556/dex/callback
+      usernameAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+      emailAttr: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+      groupsAttr: http://schemas.microsoft.com/ws/2008/06/identity/claims/role
+      entityIssuer: spn:<client-id>
+```
+
+The `saml-ca.pem` file can be downloaded on the Azure portal UI if you create the SAML enterprise application directly.
+However, if you create the application through App registrations, you can copy the certificate in the
+`Federation metadata document` into the `saml-ca.pem` file.
+
+<Thumbnail src="/img/enterprise/sso-azure-saml-ca.jpg" alt="Azure AD SAML Certificate" />
+
+```
+-----BEGIN PRIVATE KEY-----
+<paste here>
+-----END PRIVATE KEY-----
+```
+
+Finally, add the provider config to the `HASURA_GRAPHQL_SSO_PROVIDERS` variables.
+
+```json
+[
+  {
+    "client_id": "example-app",
+    "name": "Dex SAML Login",
+    "authorization_url": "http://127.0.0.1:5556/dex/auth",
+    "request_token_url": "http://localhost:5556/dex/token",
+    "scope": "openid offline_access groups",
+    "admin_roles": ["admin"],
+    "jwt_secret": {
+      "type": "RS256",
+      // use the internal docker service alias of dex
+      // because hge fetches the secret inside the docker network
+      "jwk_url": "http://dex:5556/dex/keys",
+      "issuer": "http://localhost:5556/dex",
+      "claims_map": {
+        "x-hasura-allowed-roles": { "path": "$.groups" },
+        "x-hasura-default-role": { "path": "$.groups[0]" }
+      }
+    }
+  }
+]
+```

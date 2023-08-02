@@ -1,4 +1,4 @@
-import { SelectInputSplitField } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
+import { SelectInputSplitField } from '../../../../Common/SelectInputSplitField/SelectInputSplitField';
 import React, { ChangeEvent, useCallback } from 'react';
 
 export type CommentProps = {

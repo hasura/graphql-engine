@@ -16,20 +16,25 @@ module Hasura.Backends.Postgres.Translate.Select
     module Aggregate,
     module Connection,
     module Streaming,
-    PostgresAnnotatedFieldJSON,
+    PostgresTranslateSelect,
   )
 where
 
 import Hasura.Backends.Postgres.Translate.Select.Aggregate as Aggregate
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select.Connection as Connection
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect)
 import Hasura.Backends.Postgres.Translate.Select.Simple as Simple
 import Hasura.Backends.Postgres.Translate.Select.Streaming as Streaming
+
+-- This constraint alias makes it easier to add and remove internal SQL translation constraints without
+-- updating every single place this constraint is used upstream of the SQL translation logic.
+type PostgresTranslateSelect pgKind = (PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind)
 
 {- Note: [SQL generation for inherited roles]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When a query is executed by an inherited role, each column may contain a predicate
-(AnnColumnCaseBoolExp ('Postgres pgKind) SQLExp) along with it. The predicate is then
+(AnnRedactionExp ('Postgres pgKind) SQLExp) along with it. The predicate is then
 converted to a BoolExp, which will be used to check if the said column should
 be nullified. For example,
 

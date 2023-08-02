@@ -1,7 +1,6 @@
-import React, { useState, Fragment } from 'react';
-import BootstrapModal from 'react-bootstrap/lib/Modal';
+import { useState, Fragment } from 'react';
 // import { useMutation } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button, Dialog } from '@hasura/console-legacy-ce';
 
 import { BrowseRunTests } from './BrowseRunTests';
 import { BrowseRunTestsPreview } from './BrowseTestRunPreview';
@@ -14,6 +13,7 @@ import { SERVER_CONSOLE_MODE } from '../../../../constants';
 import { loadAdminSecretState } from '../../../AppState';
 
 import { getSchemeLuxUrl } from './utils';
+import clsx from 'clsx';
 
 /* function which instantiates relevant wasm code and sends them
  * as props to the component
@@ -23,7 +23,10 @@ const withWasm = Component => {
   return props => {
     const go = new window.Go();
     const initWasmInstance = async () => {
-      const wasmURL = process.env.NODE_ENV !== 'production' ? '/rstatic/test-runner.wasm' : `${Globals.versionedAssetsPath}/test-runner.wasm.gz`;
+      const wasmURL =
+        process.env.NODE_ENV !== 'production'
+          ? '/rstatic/test-runner.wasm'
+          : `${Globals.versionedAssetsPath}/test-runner.wasm.gz`;
       const { instance, module } = await WebAssembly.instantiateStreaming(
         /* TODO: use versioned assets path to make sure console pulls the correct wasm file */
         fetch(wasmURL),
@@ -55,7 +58,7 @@ const RunTests = props => {
     initWasmInstance,
     goInstance,
     metricsUrl,
-    testProjectId
+    testProjectId,
   } = props;
 
   // const [testsRunning, setTestsRunning] = useState(false);
@@ -98,13 +101,12 @@ const RunTests = props => {
       return adminSecret;
     };
 
-    window.onSuccess = () => {
-    };
+    window.onSuccess = () => {};
     window.onError = err => {
       setWasmExecutionState({ running: false, err });
     };
-    window.getIDTokenFn = () => (idToken || '');
-    window.getAccessTokenFn = () => (accessToken || '');
+    window.getIDTokenFn = () => idToken || '';
+    window.getAccessTokenFn = () => accessToken || '';
     window.onCreated = d => {
       setWasmExecutionState({ running: false, success: d });
       // Set the data
@@ -163,37 +165,34 @@ const RunTests = props => {
           Run tests on CLI
         </Button>
       </div>
-      <BootstrapModal
-        id="operationInspect"
-        onHide={onHide}
-        show={showModal}
-        size="modal-lg"
-        className={styles.modalWrapper}
-      >
-        <BootstrapModal.Header className={styles.modalHeader} closeButton>
-          <BootstrapModal.Title className={styles.title}>
-            Run tests from CLI
-          </BootstrapModal.Title>
-        </BootstrapModal.Header>
-        <BootstrapModal.Body
-          className={`${styles.modalContainer} ${styles.padding20}`}
+      {showModal && (
+        <Dialog
+          id="operationInspect"
+          onClose={onHide}
+          hasBackdrop
+          size="xxl"
+          title="Run tests from CLI"
         >
-          <div>
-            You can run tests from the CLI also. See{' '}
-            <a
-              href="https://docs.pro.hasura.io/cli/regression-tests/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              docs
-            </a>{' '}
-            for more info.
+          <div className={`p-sm ${styles.modalWrapper}`}>
+            <div className={clsx(styles.modalContainer, 'flex flex-col')}>
+              <div className={clsx(' bg-slate-50 px-2 pb-4 pt-0')}>
+                You can run tests from the CLI also. See{' '}
+                <a
+                  href="https://docs.pro.hasura.io/cli/regression-tests/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  docs
+                </a>{' '}
+                for more info.
+              </div>
+              <code>
+                {`hasura pro regression-tests run --testsuite-id ${testSuiteId} --project-id ${currentProjectId}`}
+              </code>
+            </div>
           </div>
-          <code>
-            {`hasura pro regression-tests run --testsuite-id ${testSuiteId} --project-id ${currentProjectId}`}
-          </code>
-        </BootstrapModal.Body>
-      </BootstrapModal>
+        </Dialog>
+      )}
       {testRunId ? (
         <BrowseRunTests
           testSuiteId={testSuiteId}

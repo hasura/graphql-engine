@@ -11,21 +11,25 @@ import {
   loadPATState,
   loadAdminSecretState,
 } from '../AppState';
-import { ADMIN_SECRET_ERROR, UPDATE_DATA_HEADERS } from '@hasura/console-oss';
+import {
+  ADMIN_SECRET_ERROR,
+  clearAdminSecretState,
+  UPDATE_DATA_HEADERS,
+} from '@hasura/console-legacy-ce';
 import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 import {
   changeRequestHeader,
   removeRequestHeader,
   showErrorNotification,
   mainState,
-} from '@hasura/console-oss';
+} from '@hasura/console-legacy-ce';
 import {
   CONSTANT_HEADERS,
   SERVER_CONSOLE_MODE,
   CLIENT_NAME_HEADER,
   CLIENT_NAME_HEADER_VALUE,
 } from '../../constants';
-import { mainReducer } from '@hasura/console-oss/lib/hoc';
+import { mainReducer, isCloudConsole } from '@hasura/console-legacy-ce';
 import { getKeyFromLS, initLS } from '../Login/localStorage';
 import { parseQueryParams } from '../Login/utils';
 import upsertToLS, { removeHeaderFromLS } from '../../utils/upsertToLS';
@@ -58,6 +62,12 @@ const UPDATE_PROJECT_NAME = 'Main/UPDATE_PROJECT_NAME';
 const FETCHING_LUX_PROJECT_INFO = 'Main/FETCHING_LUX_PROJECT_INFO';
 const FETCHED_LUX_PROJECT_INFO = 'Main/FETCHED_LUX_PROJECT_INFO';
 const ERROR_FETCHING_LUX_PROJECT_INFO = 'Main/ERROR_FETCHING_LUX_PROJECT_INFO';
+const FETCHING_LUX_PROJECT_ENTITLEMENTS =
+  'Main/FETCHING_LUX_PROJECT_ENTITLEMENTS';
+const FETCHED_LUX_PROJECT_ENTITLEMENTS =
+  'Main/FETCHED_LUX_PROJECT_ENTITLEMENTS';
+const ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS =
+  'Main/ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS';
 
 export const SET_METADATA = 'Main/SET_METADATA';
 export const SET_METADATA_LOADING = 'Main/SET_METADATA_LOADING';
@@ -140,21 +150,22 @@ export const getMetricConfigPayload = ({
   return payload;
 };
 
-export const setMetricConfigAction = (
-  analyze_query_variables,
-  analyze_response_body
-) => (dispatch, getState) => {
-  const url = Endpoints.metadata;
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: getState().tables.dataHeaders,
-    body: JSON.stringify(
-      getMetricConfigPayload({ analyze_query_variables, analyze_response_body })
-    ),
+export const setMetricConfigAction =
+  (analyze_query_variables, analyze_response_body) => (dispatch, getState) => {
+    const url = Endpoints.metadata;
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: getState().tables.dataHeaders,
+      body: JSON.stringify(
+        getMetricConfigPayload({
+          analyze_query_variables,
+          analyze_response_body,
+        })
+      ),
+    };
+    return dispatch(requestAction(url, options));
   };
-  return dispatch(requestAction(url, options));
-};
 
 const setApiLimits = payload => (dispatch, getState) => {
   const url = Endpoints.metadata;
@@ -251,7 +262,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
 };
 
 const getHeaders = (header, token, defaultValue = null) => {
-  let headers = {}
+  let headers = {};
   switch (header) {
     case 'pat':
       const personalAccessToken = loadPATState();
@@ -283,6 +294,12 @@ const getHeaders = (header, token, defaultValue = null) => {
       headers = {
         ...CONSTANT_HEADERS,
         [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
+      };
+      return headers;
+    case 'ssoToken':
+      headers = {
+        ...CONSTANT_HEADERS,
+        [globals.ssoLabel]: token,
       };
       return headers;
     default:
@@ -325,6 +342,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
         type: SET_METADATA,
         data: { ...data, loading: false },
       });
+      return true;
     },
     error => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
@@ -335,9 +353,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
           error
         )}`
       );
-      if (error.code !== 'access-denied') {
-        alert(JSON.stringify(error));
-      }
+      return false;
     }
   );
 };
@@ -392,11 +408,17 @@ const clearCollaboratorSignInState = () => {
         const patIndex = headers.findIndex(
           element => element.key === globals.patLabel
         );
+        const ssoIndex = headers.findIndex(
+          element => element.key === globals.ssoLabel
+        );
         if (headerIndex !== -1) {
           dispatcherChains.push(dispatch(removeRequestHeader(headerIndex)));
         }
         if (patIndex !== -1) {
           dispatcherChains.push(dispatch(removeRequestHeader(patIndex)));
+        }
+        if (ssoIndex !== -1) {
+          dispatcherChains.push(dispatch(removeRequestHeader(ssoIndex)));
         }
       }
       dispatcherChains.push(
@@ -413,7 +435,9 @@ const clearCollaboratorSignInState = () => {
         .then(() => {
           removeHeaderFromLS(globals.collabLabel);
           removeHeaderFromLS(globals.patLabel);
+          removeHeaderFromLS(globals.ssoLabel);
           clearPATState();
+          clearAdminSecretState();
           initLS();
           dispatch(push(`${globals.urlPrefix}/login`));
         })
@@ -426,105 +450,239 @@ const clearCollaboratorSignInState = () => {
   };
 };
 
-const idTokenReceived = (data, shouldRedirect = true) => (
-  dispatch,
-  getState
-) => {
-  // set localstorage
-  const { id_token: idToken } = data;
-  const bearerToken = `IDToken ${idToken}`;
-  const updatedDataHeaders = getHeaders('collabToken', bearerToken);
-  /* Remove admin-secret if applicable and add new data headers into the LS */
-  /* Implement some sort of a timeout which refetches the token
-   * from refresh token
-   * */
-  const { expires_in: expiresIn } = data;
-  if (expiresIn > 0) {
-    const timeDiff = getTimeDifference(expiresIn);
-    const expiryDate = getExpiryDate(timeDiff);
-    console.info('Token will be refreshed at', expiryDate);
-    const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
-    setTimeout(() => {
-      // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
-      // Clear the interval before invoking the function again
-      clearInterval(pollId);
-      dispatch(retrieveByRefreshToken(data.refresh_token))
-        .then(resp => {
-          dispatch(idTokenReceived(resp, false));
-        })
-        .catch(err => {
-          console.error(err);
-          const { routing } = getState();
-          const { locationBeforeTransitions } = routing;
-          const { pathname, search } = locationBeforeTransitions;
-          const redirectUrl = constructRedirectUrl(pathname, search);
-          if (redirectUrl) {
-            dispatch(
-              push({
-                pathname: '/login',
-                search: `?redirect_url=${window.encodeURIComponent(
-                  redirectUrl
-                )}`,
-              })
-            );
+const idTokenReceived =
+  (idp, data, shouldRedirect = true) =>
+  (dispatch, getState) => {
+    // set localstorage
+    const { id_token: idToken } = data;
+    const bearerToken = `IDToken ${idToken}`;
+    const updatedDataHeaders = getHeaders('collabToken', bearerToken);
+    /* Remove admin-secret if applicable and add new data headers into the LS */
+    /* Implement some sort of a timeout which refetches the token
+     * from refresh token
+     * */
+    const { expires_in: expiresIn } = data;
+    if (expiresIn > 0) {
+      const timeDiff = getTimeDifference(expiresIn);
+      const expiryDate = getExpiryDate(timeDiff);
+      console.info('Token will be refreshed at', expiryDate);
+      const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
+      setTimeout(() => {
+        // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
+        // Clear the interval before invoking the function again
+        clearInterval(pollId);
+        dispatch(retrieveByRefreshToken(idp, data.refresh_token))
+          .then(resp => {
+            dispatch(idTokenReceived(resp, false));
+          })
+          .catch(err => {
+            console.error(err);
+            const { routing } = getState();
+            const { locationBeforeTransitions } = routing;
+            const { pathname, search } = locationBeforeTransitions;
+            const redirectUrl = constructRedirectUrl(pathname, search);
+            if (redirectUrl) {
+              dispatch(
+                push({
+                  pathname: '/login',
+                  search: `?redirect_url=${window.encodeURIComponent(
+                    redirectUrl
+                  )}`,
+                })
+              );
+              return;
+            }
+            dispatch(push(`${globals.urlPrefix}/login`));
             return;
-          }
-          dispatch(push(`${globals.urlPrefix}/login`));
-          return;
-        });
-    }, timeDiff);
-  } else {
-    console.error('Unexpected error');
-    dispatch(push('/'));
-  }
-
-  const decodedToken = decodeToken(idToken) || {};
-  const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
-  let collabIndex = 1;
-  if (currentHeaders) {
-    const index = currentHeaders.findIndex(f => f.key === globals.collabLabel);
-    if (index !== -1) {
-      collabIndex = index;
+          });
+      }, timeDiff);
+    } else {
+      console.error('Unexpected error');
+      dispatch(push('/'));
     }
-  }
 
-  Promise.all([
-    dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
-    ...(globals.isAdminSecretSet
-      ? [
-        dispatch(
-          changeRequestHeader(collabIndex, 'key', globals.collabLabel, true)
-        ),
-        dispatch(
-          changeRequestHeader(collabIndex, 'value', bearerToken, true)
-        ),
-      ]
-      : []),
-    dispatch({
-      type: UPDATE_HASURA_DOT_COM_ACCESS,
-      data: { ...data, tokenInfo: { ...decodedToken } },
-    }),
-    // dispatch(push('/'))
-  ]).then(() => {
-    const project = decodedToken.payload?.project;
-    dispatch({
-      type: FETCHED_LUX_PROJECT_INFO,
-      data: {
-        id: project.id,
-        name: project.name,
-        privileges: decodedToken.payload.collaborator_privileges || [],
-        metricsFQDN: decodedToken.payload.metrics_fqdn,
-      },
+    const decodedToken = decodeToken(idToken) || {};
+    const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
+    let collabIndex = 1;
+    if (currentHeaders) {
+      const index = currentHeaders.findIndex(
+        f => f.key === globals.collabLabel
+      );
+      if (index !== -1) {
+        collabIndex = index;
+      }
+    }
+
+    Promise.all([
+      dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
+      ...(globals.isAdminSecretSet
+        ? [
+            dispatch(
+              changeRequestHeader(collabIndex, 'key', globals.collabLabel, true)
+            ),
+            dispatch(
+              changeRequestHeader(collabIndex, 'value', bearerToken, true)
+            ),
+          ]
+        : []),
+      dispatch({
+        type: UPDATE_HASURA_DOT_COM_ACCESS,
+        data: { ...data, tokenInfo: { ...decodedToken } },
+      }),
+      // dispatch(push('/'))
+    ]).then(() => {
+      const project = decodedToken.payload?.project;
+      dispatch({
+        type: FETCHED_LUX_PROJECT_INFO,
+        data: {
+          id: project.id,
+          name: project.name,
+          privileges: decodedToken.payload.collaborator_privileges || [],
+          metricsFQDN: decodedToken.payload.metrics_fqdn,
+          plan_name: project?.plan_name,
+          is_enterprise_user: project?.owner?.enterprise_user?.is_active,
+          entitlements: project?.entitlements,
+        },
+      });
+      /* Flush to the local storage */
+      if (globals.isAdminSecretSet) {
+        upsertToLS(globals.collabLabel, bearerToken);
+      } else {
+        // Set the client name header if doesn't exist
+        upsertToLS(CLIENT_NAME_HEADER, CLIENT_NAME_HEADER_VALUE);
+        // Remove collaborator token header if exists
+        removeHeaderFromLS(globals.collabLabel);
+      }
+      let redirectFromLS = '';
+      if (shouldRedirect) {
+        try {
+          redirectFromLS = getKeyFromLS('redirectUrl');
+        } catch (e) {
+          redirectFromLS = '';
+        }
+        if (redirectFromLS) {
+          dispatch(push(`${globals.urlPrefix}${redirectFromLS}`));
+        } else {
+          dispatch(push(globals.urlPrefix));
+        }
+        // Not required as the OAUTH key received is assumed to be valid
+        // dispatch(validateLogin(false));
+      }
     });
+  };
+
+// the sso access token is received from OAuth or SAML Idp of the EE customer
+// because it doesn't have permission to request resources from lux
+// we only store the token into graphiql headers and the local storage
+const ssoIdTokenReceived =
+  (idp, data, shouldRedirect = true) =>
+  async (dispatch, getState) => {
+    const {
+      access_token: accessToken,
+      expires_in: expiresIn,
+      refresh_token: refreshToken,
+      id_token: idToken,
+    } = data;
+
+    // prefer jwt id_token
+    const token = idToken || accessToken;
+    const bearerToken = `IDToken ${token}`;
+    const updatedDataHeaders = getHeaders('ssoToken', bearerToken);
+
+    /* Remove admin-secret if applicable and add new data headers into the LS */
+    /* Implement some sort of a timeout which refetches the token
+     * from refresh token
+     * */
+    if (expiresIn > 0) {
+      const timeDiff = getTimeDifference(expiresIn);
+      const expiryDate = getExpiryDate(timeDiff);
+      console.info('Token will be refreshed at', expiryDate);
+      const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
+
+      const onFailure = () => {
+        const { routing } = getState();
+        const { locationBeforeTransitions } = routing;
+        const { pathname, search } = locationBeforeTransitions;
+        const redirectUrl = constructRedirectUrl(pathname, search);
+        if (redirectUrl) {
+          dispatch(
+            push({
+              pathname: '/login',
+              search: `?redirect_url=${window.encodeURIComponent(redirectUrl)}`,
+            })
+          );
+          return;
+        }
+        dispatch(push(`${globals.urlPrefix}/login`));
+      };
+
+      setTimeout(() => {
+        // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
+        // Clear the interval before invoking the function again
+        clearInterval(pollId);
+
+        if (!refreshToken) {
+          return onFailure();
+        }
+
+        dispatch(retrieveByRefreshToken(idp, refreshToken))
+          .then(resp => {
+            dispatch(idTokenReceived(resp, false));
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      }, timeDiff);
+    } else {
+      console.error('Unexpected error');
+      dispatch(push('/'));
+    }
+
+    const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
+    let authHeaderIndex = 1;
+    if (currentHeaders) {
+      const index = currentHeaders.findIndex(f => f.key === globals.ssoLabel);
+      if (index !== -1) {
+        authHeaderIndex = index;
+      }
+    }
+
+    await Promise.all([
+      dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
+      ...(globals.isAdminSecretSet
+        ? [
+            dispatch(
+              changeRequestHeader(
+                authHeaderIndex,
+                'key',
+                globals.ssoLabel,
+                true
+              )
+            ),
+            dispatch(
+              changeRequestHeader(authHeaderIndex, 'value', bearerToken, true)
+            ),
+          ]
+        : []),
+    ]);
+
     /* Flush to the local storage */
     if (globals.isAdminSecretSet) {
-      upsertToLS(globals.collabLabel, bearerToken);
+      upsertToLS(globals.ssoLabel, bearerToken);
     } else {
       // Set the client name header if doesn't exist
       upsertToLS(CLIENT_NAME_HEADER, CLIENT_NAME_HEADER_VALUE);
-      // Remove collaborator token header if exists
-      removeHeaderFromLS(globals.collabLabel);
+      // Remove sso token header if exists
+      removeHeaderFromLS(globals.ssoLabel);
     }
+
+    // fetch server config to check if the current token has admin role
+    const isAdmin = await dispatch(validateLogin(false)).catch(() => false);
+
+    if (!isAdmin) {
+      return dispatch(clearCollaboratorSignInState());
+    }
+
     let redirectFromLS = '';
     if (shouldRedirect) {
       try {
@@ -537,11 +695,8 @@ const idTokenReceived = (data, shouldRedirect = true) => (
       } else {
         dispatch(push(globals.urlPrefix));
       }
-      // Not required as the OAUTH key received is assumed to be valid
-      // dispatch(validateLogin(false));
     }
-  });
-};
+  };
 
 const loginClicked = () => (dispatch, getState) => {
   // set localstorage
@@ -583,11 +738,11 @@ const patLoginClicked = () => (dispatch, getState) => {
     dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
     ...(globals.isAdminSecretSet
       ? [
-        dispatch(changeRequestHeader(1, 'key', globals.patLabel, true)),
-        dispatch(
-          changeRequestHeader(1, 'value', `pat ${personalAccessToken}`, true)
-        ),
-      ]
+          dispatch(changeRequestHeader(1, 'key', globals.patLabel, true)),
+          dispatch(
+            changeRequestHeader(1, 'value', `pat ${personalAccessToken}`, true)
+          ),
+        ]
       : []),
     // dispatch(push('/'))
   ]).then(() => {
@@ -625,6 +780,9 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
             owner {
               id
               email
+              enterprise_user {
+                is_active
+              }
             }
             name
             collaborators {
@@ -642,8 +800,9 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
                 metrics_fqdn
               }
             }
+            plan_name
           }
-        } 
+        }
       `,
       variables: {
         id: globals.hasuraCloudProjectId,
@@ -682,8 +841,11 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
           : (
               project.collaborators.find(c => c.collaborator.id === user.id)
                 ?.project_collaborator_privileges || []
-          ).map(p => p.privilege_slug),
+            ).map(p => p.privilege_slug),
         metricsFQDN: project.tenant?.region_info?.metrics_fqdn || '',
+        plan_name: project?.plan_name,
+        is_enterprise_user: project?.owner?.enterprise_user?.is_active,
+        entitlements: project?.entitlements,
       };
 
       dispatch({
@@ -695,6 +857,77 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
       console.error(e);
       dispatch({
         type: ERROR_FETCHING_LUX_PROJECT_INFO,
+        error: e,
+      });
+    });
+};
+
+export const loadLuxProjectEntitlements = () => (dispatch, getState) => {
+  if (!isCloudConsole(globals)) {
+    return Promise.resolve();
+  }
+
+  const url = Endpoints.luxDataGraphql;
+  const reqOptions = {
+    method: 'POST',
+    credentials: 'include',
+    body: JSON.stringify({
+      query: `
+        query getLuxProjectEntitlements($id: uuid!) {
+          projects_by_pk(id: $id) {
+            entitlements {
+              id
+              entitlement {
+                type
+                config_is_enabled
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        id: globals.hasuraCloudProjectId,
+      },
+    }),
+  };
+
+  if (globals.consoleMode === 'cli') {
+    reqOptions.headers = {
+      ...getState().tables.dataHeaders,
+    };
+  }
+
+  dispatch({
+    type: FETCHING_LUX_PROJECT_ENTITLEMENTS,
+    data: true,
+  });
+
+  dispatch(requestAction(url, reqOptions))
+    .then(resp => {
+      dispatch({
+        type: FETCHING_LUX_PROJECT_ENTITLEMENTS,
+        data: false,
+      });
+      if (!resp.data || !resp.data.projects_by_pk) {
+        console.error(
+          'getLuxProjectEntitlements error',
+          resp.errors[0]?.message
+        );
+      }
+
+      const projectEntitlements = {
+        entitlements: resp?.data?.projects_by_pk?.entitlements,
+      };
+
+      dispatch({
+        type: FETCHED_LUX_PROJECT_ENTITLEMENTS,
+        data: projectEntitlements,
+      });
+    })
+    .catch(e => {
+      console.error(e);
+      dispatch({
+        type: ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS,
         error: e,
       });
     });
@@ -793,6 +1026,31 @@ const proMainReducer = (state = { ...mainState, ...defaultState }, action) => {
           loading: false,
         },
       };
+    case FETCHING_LUX_PROJECT_ENTITLEMENTS:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: action.data,
+        },
+      };
+    case FETCHED_LUX_PROJECT_ENTITLEMENTS:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: false,
+        },
+        projectEntitlements: action?.data?.entitlements,
+      };
+    case ERROR_FETCHING_LUX_PROJECT_ENTITLEMENTS:
+      return {
+        ...state,
+        project: {
+          ...state.project,
+          loading: false,
+        },
+      };
     default:
       const nextMainState = mainReducer(state, action);
       /*
@@ -830,4 +1088,5 @@ export {
   getHeaders,
   refetchMetadata,
   setApiLimits,
+  ssoIdTokenReceived,
 };

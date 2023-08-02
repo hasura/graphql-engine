@@ -1,8 +1,8 @@
+import { RequestTransform } from '../../../../../metadata/types';
 import { Schema } from '../schema';
 import {
   emptyDefaultValues,
   serverHeadersToKeyValueArray,
-  serverQueryParamsToKeyValueArray,
   stringifyNumberValue,
 } from './utils';
 import { useGetAllCronTriggers } from './useGetAllCronTriggers';
@@ -32,7 +32,9 @@ export const useDefaultValues = (props: Props) => {
       return { data: emptyDefaultValues, isLoading, isError: true };
     }
 
-    const existingCronTriggerValues: Schema = {
+    const existingCronTriggerValues: Schema & {
+      requestTransform?: RequestTransform;
+    } = {
       name: currentTrigger.name,
       webhook: currentTrigger.webhook,
       schedule: currentTrigger.schedule,
@@ -50,17 +52,25 @@ export const useDefaultValues = (props: Props) => {
         currentTrigger.retry_conf?.timeout_seconds,
         '60'
       ),
+      tolerance_seconds: stringifyNumberValue(
+        currentTrigger.retry_conf?.tolerance_seconds,
+        '21600'
+      ),
       include_in_metadata: currentTrigger.include_in_metadata,
       comment: currentTrigger.comment ?? '',
-      url_template: currentTrigger.request_transform?.url ?? '',
-      request_method: currentTrigger.request_transform?.method ?? null,
-      query_params: serverQueryParamsToKeyValueArray(
-        currentTrigger.request_transform?.query_params
-      ),
     };
-    return { data: existingCronTriggerValues, isLoading, isError };
+    return {
+      data: existingCronTriggerValues,
+      isLoading,
+      isError,
+      requestTransform: currentTrigger?.request_transform,
+    };
   }
 
   // return error and loading states with empty default values
-  return { data: emptyDefaultValues, isLoading, isError };
+  return {
+    data: emptyDefaultValues,
+    isLoading,
+    isError,
+  };
 };

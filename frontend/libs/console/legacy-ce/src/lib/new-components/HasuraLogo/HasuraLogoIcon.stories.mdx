@@ -1,7 +1,7 @@
 import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
 
-import { TemplateStoriesFactory } from '@/utils/StoryUtils';
-import { HasuraLogoIcon } from '@/new-components/HasuraLogo';
+import { TemplateStoriesFactory } from '../../utils/StoryUtils';
+import { HasuraLogoIcon } from '.';
 
 <Meta
   title="components/Hasura Logo/Hasura Logo Icon ⚛️"
@@ -58,6 +58,9 @@ export const stories = {
   'Variant - Mode primary': {
     mode: 'primary',
   },
+  'Variant - Mode secondary': {
+    mode: 'secondary',
+  },
   'Variant - Size sm': {
     size: 'sm',
   },
@@ -79,6 +82,7 @@ export const stories = {
     args={{
       'Variant - Mode default': stories['Variant - Mode default'],
       'Variant - Mode primary': stories['Variant - Mode primary'],
+      'Variant - Mode secondary': stories['Variant - Mode secondary'],
     }}
   >
     {TemplateStoriesFactory(Template).bind({})}

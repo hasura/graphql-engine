@@ -1,7 +1,8 @@
-import { getTableDisplayName } from '@/features/DatabaseRelationships';
-import { Table } from '@/features/hasura-metadata-types';
+import { getTableDisplayName } from '../DatabaseRelationships';
+import { Table } from '../hasura-metadata-types';
 import produce from 'immer';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { setWhereAndSortToUrl } from './BrowseRows.utils';
 import {
   DataGrid,
   DataGridOptions,
@@ -9,11 +10,13 @@ import {
 } from './components/DataGrid/DataGrid';
 import { TableTabView } from './components/DataGrid/parts/TableTabView';
 
-interface BrowseRowsProps {
+type BrowseRowsProps = {
   dataSourceName: string;
   table: Table;
   options?: DataGridOptions;
-}
+  primaryKeys: string[];
+  onUpdateOptions: (options: DataGridOptions) => void;
+};
 
 type TabState = { name: string; details: DataGridProps; parentValue: string };
 type OpenNewRelationshipTabProps = {
@@ -93,12 +96,16 @@ const onTabClose = (
   }
 };
 
-export const BrowseRows = (props: BrowseRowsProps) => {
-  const { dataSourceName, table, options } = props;
-
+export const BrowseRows = ({
+  dataSourceName,
+  table,
+  options,
+  primaryKeys,
+  onUpdateOptions,
+}: BrowseRowsProps) => {
   const defaultTabState = {
     name: getTableDisplayName(table),
-    details: { dataSourceName, table, options },
+    details: { dataSourceName, table, options, primaryKeys: [] as string[] },
     parentValue: '',
   };
   const [originalTableOptions, setOriginalTableOptions] =
@@ -115,6 +122,21 @@ export const BrowseRows = (props: BrowseRowsProps) => {
    */
   const defaultActiveTab = getTableDisplayName(table);
   const [activeTab, setActiveTab] = useState(defaultActiveTab);
+
+  useEffect(() => {
+    setOriginalTableOptions(options);
+    const currentTab = openTabs[0];
+
+    setOpenTabs([
+      {
+        ...currentTab,
+        details: {
+          ...currentTab.details,
+          options,
+        },
+      },
+    ]);
+  }, [options]);
 
   /**
    * when relationships are open, disable sorting and searching through all the views
@@ -139,49 +161,61 @@ export const BrowseRows = (props: BrowseRowsProps) => {
       }),
       {
         name: `${openTab.name}.${relationshipName}`,
-        details,
+        details: {
+          ...details,
+          primaryKeys: [],
+        },
         parentValue: openTab.name,
       },
     ]);
     setActiveTab(`${openTab.name}.${relationshipName}`);
   };
 
+  const onUpdateOptionsGenerator =
+    (index: number) =>
+    (_options: DataGridOptions): void => {
+      setWhereAndSortToUrl(_options);
+
+      setOriginalTableOptions(_options);
+
+      setOpenTabs(_openTabs =>
+        produce(_openTabs, draft => {
+          draft[index].details.options = _options;
+        })
+      );
+
+      onUpdateOptions(_options);
+    };
+
+  const tableTabItems = openTabs.map((openTab, index) => {
+    const innerOnUpdateOptions = onUpdateOptionsGenerator(index);
+    return {
+      value: openTab.name,
+      label: openTab.name,
+      parentValue: openTab.parentValue,
+      content: (
+        <DataGrid
+          key={JSON.stringify(openTab)}
+          table={openTab.details.table}
+          dataSourceName={openTab.details.dataSourceName}
+          options={openTab.details.options}
+          activeRelationships={openTab.details.activeRelationships}
+          onRelationshipOpen={data => openNewRelationshipTab({ data, openTab })}
+          onRelationshipClose={relationshipName =>
+            setActiveTab(`${openTab.name}.${relationshipName}`)
+          }
+          disableRunQuery={disableRunQuery}
+          updateOptions={innerOnUpdateOptions}
+          primaryKeys={primaryKeys}
+        />
+      ),
+    };
+  });
+
   return (
     <div>
       <TableTabView
-        items={openTabs.map((openTab, index) => ({
-          value: openTab.name,
-          label: openTab.name,
-          parentValue: openTab.parentValue,
-          content: (
-            <DataGrid
-              key={JSON.stringify(openTab)}
-              table={openTab.details.table}
-              dataSourceName={openTab.details.dataSourceName}
-              options={openTab.details.options}
-              activeRelationships={openTab.details.activeRelationships}
-              onRelationshipOpen={data =>
-                openNewRelationshipTab({ data, openTab })
-              }
-              onRelationshipClose={relationshipName =>
-                setActiveTab(`${openTab.name}.${relationshipName}`)
-              }
-              disableRunQuery={disableRunQuery}
-              updateOptions={_options => {
-                if (index === 0) {
-                  // Save a copy of the parent filters before opening
-                  setOriginalTableOptions(_options);
-                }
-
-                setOpenTabs(_openTabs =>
-                  produce(_openTabs, draft => {
-                    draft[index].details.options = _options;
-                  })
-                );
-              }}
-            />
-          ),
-        }))}
+        items={tableTabItems}
         activeTab={activeTab}
         onTabClick={value => {
           setActiveTab(value);

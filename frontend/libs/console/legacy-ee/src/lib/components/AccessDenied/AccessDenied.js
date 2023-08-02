@@ -5,7 +5,10 @@ const AccessDenied = ({ alignCenter = true }) => {
   return (
     <div
       className={styles.display_flex}
-      style={{ ...(alignCenter && { justifyContent: 'center' }), marginTop: '50px' }}
+      style={{
+        ...(alignCenter && { justifyContent: 'center' }),
+        marginTop: '50px',
+      }}
     >
       <h4>
         You don't have enough permissions to view this section. Ask the project

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
-import { useMetadata, useMetadataMigration } from '@/features/MetadataAPI';
-import { QueryCollection } from '@/metadata/types';
+import { useMetadata, useMetadataMigration } from '../../../MetadataAPI';
+import { QueryCollection } from '../../../../metadata/types';
 import { createAllowedQueriesIfNeeded } from '../useCreateQueryCollection';
 
 export const useMoveOperationsToQueryCollection = () => {

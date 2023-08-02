@@ -9,11 +9,13 @@ where
 
 import Data.Aeson (object, (.=))
 import Data.Aeson.Types (Pair)
+import Data.Environment qualified as Env
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Connect (withPostgresDB)
 import Hasura.Base.Error
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName)
 import Text.Parsec qualified as P
 import Text.Parsec.Text qualified as P
 
@@ -30,11 +32,11 @@ data CockroachDbVersion = CockroachDbVersion
   deriving (Eq, Show)
 
 -- | Check cockroachdb version compatability.
-runCockroachVersionCheck :: PG.PostgresConnConfiguration -> IO (Either QErr ())
-runCockroachVersionCheck connConf = do
+runCockroachVersionCheck :: Env.Environment -> SourceName -> PG.PostgresConnConfiguration -> IO (Either QErr ())
+runCockroachVersionCheck env sourceName connConf = do
   result <-
-    withPostgresDB connConf $
-      PG.rawQE PG.dmlTxErrorHandler (PG.fromText "select version();") [] False
+    withPostgresDB env sourceName connConf
+      $ PG.rawQE PG.dmlTxErrorHandler (PG.fromText "select version();") [] False
   pure case result of
     -- running the query failed
     Left err ->
@@ -44,8 +46,8 @@ runCockroachVersionCheck connConf = do
       case parseCrdbVersion versionString of
         -- parsing the query output failed
         Left err ->
-          Left $
-            crdbVersionCheckErr500
+          Left
+            $ crdbVersionCheckErr500
               [ "version-parse-error" .= show err,
                 "version-string" .= versionString
               ]
@@ -56,8 +58,8 @@ runCockroachVersionCheck connConf = do
               Right ()
             else -- the crdb version is not supported
 
-              Left $
-                crdbVersionCheckErr500
+              Left
+                $ crdbVersionCheckErr500
                   [ "version-string" .= versionString
                   ]
 

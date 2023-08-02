@@ -1,0 +1,27 @@
+---
+description: High-availability configuration on Hasura Cloud
+keywords:
+  - hasura
+  - high-availability
+  - cloud configuration
+sidebar_label: High-availability configuration
+sidebar_position: 60
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# High-Availability Configuration
+
+<ProductBadge standard pro ee />
+
+## Overview
+
+Hasura Cloud supports high-availability (HA) configurations for Cloud Enterprise projects.
+
+We configure each Cloud Enterprise project across different Availability Zones (AZs). In the event of an incident, our
+global gateway will ensure traffic is not routed to the affected compute instances while the systems are
+auto-recovering.
+
+This redundancy and ability to identify problematic instances provides you with protection against data center power
+outages, natural disasters, and other incidents while ensuring your project is performant, handles scaling, and, most
+importantly, is available.

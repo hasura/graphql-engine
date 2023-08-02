@@ -1,12 +1,8 @@
 import React, { FormEvent } from 'react';
-import { LabeledInput } from '@/components/Common/LabeledInput';
-import { Connect, useAvailableDrivers } from '@/features/ConnectDB';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '@/features/FeatureFlags';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { LabeledInput } from '../../../Common/LabeledInput';
+import { Connect, useAvailableDrivers } from '../../../../features/ConnectDB';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { Button } from '../../../../new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
 import { Driver } from '../../../../dataSources';
@@ -62,10 +58,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
   const { isLoading, data: drivers } = useAvailableDrivers();
 
-  const { enabled: isGDCFeatureFlagEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.gdcId
-  );
-
   const handleDBChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as Driver;
     const isSupported = isDBSupported(value, connectionTypeState);
@@ -77,8 +69,8 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
     /**
      * Early return for gdc drivers when feature flag is enabled
      */
-    const driver = drivers?.find(d => d.name === value);
-    if (isGDCFeatureFlagEnabled && !driver?.native) return;
+    // const driver = drivers?.find(d => d.name === value);
+    // if (!driver?.native) return;
 
     if (!isSupported && changeConnectionType) {
       changeConnectionType(driverToLabel[value].defaultConnection);
@@ -95,8 +87,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
   return (
     <>
-      {isGDCFeatureFlagEnabled &&
-      !nativeDrivers.includes(connectionDBState.dbType) ? (
+      {!nativeDrivers.includes(connectionDBState.dbType) ? (
         <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <div className="max-w-xl">
             <Connect.CreateConnection
@@ -119,7 +110,7 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
         <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <form
             onSubmit={onSubmit}
-            className={`${styles.connect_db_content} ${styles.connect_form_width}`}
+            className={`${styles.connect_db_content} max-w-screen-md`}
           >
             <div className="max-w-xl">
               {!isReadReplica && (
@@ -150,21 +141,12 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
                     disabled={isEditState}
                     data-test="database-type"
                   >
-                    {(drivers ?? [])
-                      /**
-                       * Why this filter? if GDC feature flag is not enabled, then I want to see only native sources
-                       */
-                      .filter(
-                        driver => driver.native || isGDCFeatureFlagEnabled
-                      )
-                      .map(driver => (
-                        <option key={driver.name} value={driver.name}>
-                          {driver.displayName}{' '}
-                          {driver.release === 'GA'
-                            ? null
-                            : `(${driver.release})`}
-                        </option>
-                      ))}
+                    {(drivers ?? []).map(driver => (
+                      <option key={driver.name} value={driver.name}>
+                        {driver.displayName}{' '}
+                        {driver.release === 'GA' ? null : `(${driver.release})`}
+                      </option>
+                    ))}
                   </select>
                 </>
               )}
@@ -172,12 +154,13 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
 
             <ConnectDatabaseForm isEditState={isEditState} {...props} />
             {children}
-            <div className={styles.add_button_layout}>
+            <div>
               <Analytics
                 name="data-tab-connect-db-button"
                 passHtmlAttributesToChildren
               >
                 <Button
+                  className="mt-sm"
                   size="lg"
                   mode="primary"
                   type="submit"

@@ -10,7 +10,7 @@ module Hasura.RQL.Types.ResultCustomization
 where
 
 import Data.Aeson.Ordered qualified as JO
-import Data.HashMap.Strict as Map
+import Data.HashMap.Strict as HashMap
 import Data.Monoid (Endo (..))
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -34,6 +34,9 @@ singletonAliasMapping fieldName alias = AliasMapping $ \fieldName' ->
 -- where no customizations are needed.
 newtype ResultCustomizer = ResultCustomizer {unResultCustomizer :: AliasMapping -> JO.Value -> JO.Value}
   deriving (Semigroup, Monoid) via (AliasMapping -> Endo JO.Value)
+
+instance Show ResultCustomizer where
+  show _ = "(ResultCustomizer <function>)"
 
 -- | Apply a ResultCustomizer to a JSON value
 applyResultCustomizer :: ResultCustomizer -> JO.Value -> JO.Value
@@ -60,15 +63,16 @@ modifyFieldByName fieldName ResultCustomizer {..} =
 -- | Create a RemoteResultCustomizer that applies the typeNameMap
 -- to a JSON string value, e.g. for use in customizing a __typename field value.
 customizeTypeNameString :: HashMap G.Name G.Name -> ResultCustomizer
-customizeTypeNameString typeNameMap | Map.null typeNameMap = mempty
+customizeTypeNameString typeNameMap | HashMap.null typeNameMap = mempty
 customizeTypeNameString typeNameMap =
   ResultCustomizer $ \_aliasMapping -> \case
-    JO.String t -> JO.String $
-      fromMaybe t $ do
+    JO.String t -> JO.String
+      $ fromMaybe t
+      $ do
         -- This function is only meant to be applied on type names, and creating a
         -- GraphQL name out of the string should never fail. If it nonetheless
         -- fails, we assume there will not be customization information and we
         -- return it unmodified.
         typeName <- G.mkName t
-        G.unName <$> Map.lookup typeName typeNameMap
+        G.unName <$> HashMap.lookup typeName typeNameMap
     v -> v

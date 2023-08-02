@@ -1,3 +1,4 @@
+import { DevTool } from '@hookform/devtools';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as React from 'react';
 import {
@@ -13,6 +14,13 @@ import {
   UseConsoleFormProps,
 } from './form.types';
 
+export type UseConsoleFormReturn = {
+  methods: ReturnType<typeof useReactHookForm>;
+  Form: <TFieldValues extends FieldValues>(
+    props: FormProps<TFieldValues>
+  ) => JSX.Element;
+};
+
 // available as a standlone if needed for advanced usage
 const ConsoleFormWrapper = <
   TFieldValues extends FieldValues,
@@ -22,7 +30,7 @@ const ConsoleFormWrapper = <
 >(
   props: FormWrapperProps<TFieldValues, TSchema, TContext>
 ) => {
-  const { id, className, onSubmit, children, ...methods } = props;
+  const { id, className, onSubmit, children, debug, ...methods } = props;
   return (
     <FormProvider {...methods}>
       <form
@@ -31,6 +39,10 @@ const ConsoleFormWrapper = <
         onSubmit={methods.handleSubmit(onSubmit)}
         data-non-regression="new-form-pattern"
       >
+        {debug && (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <DevTool control={methods.control as any} />
+        )}
         {children}
       </form>
     </FormProvider>
@@ -39,7 +51,7 @@ const ConsoleFormWrapper = <
 
 export const useConsoleForm = <FormSchema extends Schema>(
   hookProps: UseConsoleFormProps<zodInfer<FormSchema>, FormSchema>
-) => {
+): UseConsoleFormReturn => {
   const { options = {}, schema } = hookProps;
 
   const methods = useReactHookForm<zodInfer<FormSchema>>({

@@ -42,6 +42,7 @@
 
 .codeBlockCustom .formattedCode {
   padding: 0px 0px !important;
+  white-space: break-spaces;
 }
 
 .schemaPreWrapper {
@@ -57,22 +58,25 @@
   z-index: 100;
 }
 
-.copyGenerated img, .copyExecution img {
+.copyGenerated img,
+.copyExecution img {
   width: 20px;
-  opacity: .6;
+  opacity: 0.6;
 }
 
-.copyGenerated img:hover, .copyExecution img:hover {
+.copyGenerated img:hover,
+.copyExecution img:hover {
   opacity: 1;
 }
 
-.copyGenerated:focus, .copyExecution:focus {
+.copyGenerated:focus,
+.copyExecution:focus {
   outline: none;
 }
 
 .copyTooltip {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
 }
 
 .copyTooltip i {
@@ -80,36 +84,36 @@
 }
 
 .copyTooltip .tooltiptext {
-	background-color: #555;
-	color: #fff;
-	text-align: center;
-	border-radius: 6px;
-	padding: 4px 0px;
-	font-size: 14px;
-	position: absolute;
-	z-index: 1000000000;
-	right: -21px;
-	bottom: 30px;
-	opacity: 0;
-	-webkit-transition: opacity 0.3s;
-	transition: opacity 0.3s;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 4px 0px;
+  font-size: 14px;
+  position: absolute;
+  z-index: 1000000000;
+  right: -21px;
+  bottom: 30px;
+  opacity: 0;
+  -webkit-transition: opacity 0.3s;
+  transition: opacity 0.3s;
   display: none;
   width: 57px;
 }
 
 .copyTooltip .tooltiptext::after {
-	content: "";
-	position: absolute;
-	top: 26px;
-	right: 22px;
-	margin-left: -5px;
-	border-width: 5px;
-	border-style: solid;
-	border-color: #555 transparent transparent transparent;
+  content: '';
+  position: absolute;
+  top: 26px;
+  right: 22px;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
 }
 
 .copyTooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-    display: block;
+  visibility: visible;
+  opacity: 1;
+  display: block;
 }

@@ -1,11 +1,11 @@
 import React from 'react';
 import { CgSpinner } from 'react-icons/cg';
 
-import { Button } from '@/new-components/Button';
-import { Switch } from '@/new-components/Switch';
-import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Button } from '../../../../new-components/Button';
+import { Switch } from '../../../../new-components/Switch';
+import { MetadataSelector, useMetadata } from '../../../MetadataAPI';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 
 import { FaCheck, FaPlusCircle } from 'react-icons/fa';
 import { useSetRoleToAllowListPermission } from '../../hooks/AllowListPermissions/useSetRoleToAllowListPermissions';
@@ -22,7 +22,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
   const { allAvailableRoles, newRoles, setNewRoles, enabledRoles } =
     useEnabledRolesFromAllowListState(collectionName);
 
-  const { data: isCollectionInAllowlist } = useMetadata(
+  const { data: isCollectionInAllowlist, isLoading } = useMetadata(
     MetadataSelector.isCollectionInAllowlist(collectionName)
   );
 
@@ -35,6 +35,10 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
   const { fireNotification } = useFireNotification();
 
   const [updatingRoles, setUpdatingRoles] = React.useState<string[]>([]);
+
+  if (isLoading) {
+    return null;
+  }
 
   const handleToggle = (roleName: string) => {
     setUpdatingRoles([...updatingRoles, roleName]);
@@ -162,6 +166,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                     <Switch
                       checked={enabledRoles.includes(roleName)}
                       onCheckedChange={() => handleToggle(roleName)}
+                      data-testid={roleName}
                     />
                   )}
                 </td>
@@ -188,6 +193,7 @@ export const AllowListPermissions: React.FC<AllowListPermissionsTabProps> = ({
                       onCheckedChange={
                         newRole !== '' ? () => handleToggle(newRole) : () => {}
                       }
+                      data-testid={newRole}
                     />
                   )}
                 </td>

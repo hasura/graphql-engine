@@ -1,7 +1,7 @@
 import { useQueries } from 'react-query';
 import { z } from 'zod';
-import { useHttpClient } from '@/features/Network';
-import { DataSource } from '@/features/DataSource';
+import { useHttpClient } from '../../Network';
+import { DataSource } from '../../DataSource';
 import { useDefaultValues } from './useDefaultValues';
 
 interface Args {

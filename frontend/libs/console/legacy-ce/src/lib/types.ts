@@ -91,3 +91,92 @@ export type NullableProps<T> = { [K in keyof T]: T[K] | null };
 export type DeepNullableProps<T> = {
   [K in keyof T]: DeepNullableProps<T[K]> | null;
 };
+
+/**
+ * Set all keys in an object to Never. Useful for writing custom types.
+ * To grasp it:
+ * Given { a: string; b: number }
+ * called like this MakeNever<MyType>
+ * It will output { a: never; b: never }
+ */
+export type MakeNever<T> = {
+  [P in keyof T]: never;
+};
+
+/**
+ * Makes a discriminated union
+ * Useful if you have part of the object where you need
+ *
+ * To grasp it:
+ * Given { buttonLabel: string, buttonIcon?: string; onClick: () => void }
+ * Called like this DiscriminatedTypes<MyType, 'buttonLabel'>
+ * It will output { buttonLabel?: string; buttonIcon?: never; onClick?: never } | { buttonLabel: string; buttonIcon?: string: onClick: () => void; }
+ * This way :
+ *   If buttonLabel is not set, buttonIcon and onClick cannot be set
+ *   If buttonLabel is set, buttonIcon can be set and onClick is mandatory
+ *
+ * @example <caption>Here you prevent `labelIcon` and `labelColor` to be passed without `label`,
+ * but you can pass just `label` if you want.</caption>
+ * type FieldWrapperProps =
+ *  | {
+ *      id: string;
+ *    } & DiscriminatedTypes<
+ *      {
+ *        label: string;
+ *        labelColor: string;
+ *        labelIcon?: React.ReactElement;
+ *      },
+ *      'label'
+ *    >;
+ */
+export type DiscriminatedTypes<T, K extends keyof T> =
+  | MakeNever<Partial<Pick<T, K>> & Partial<Omit<T, K>>>
+  | (Required<Pick<T, K>> & Omit<T, K>);
+
+/**
+ *
+ * Pass in a `Record` type, and this will create a string union of all dot notations into the type
+ *
+ * For example:
+ *
+ * ```
+ * type SomeObject = { foo: string; bar: { baz: string; bing: string } };
+ * type AllPaths = PathInto<x>;
+ * ```
+ *
+ * And `AllPaths` would be equivalent to this:
+ *
+ * ```
+ * type AllPaths = "foo" | "bar.baz" | "bar.bing"
+ * ```
+ *
+ */
+export type PathInto<ObjectType extends Record<string, unknown>> = keyof {
+  [Key in keyof ObjectType as ObjectType[Key] extends string
+    ? Key
+    : ObjectType[Key] extends Record<string, unknown>
+    ? `${Key & string}.${PathInto<ObjectType[Key]> & string}`
+    : never]: unknown;
+};
+/**
+ *
+ * This allows you to pass in a `Record` type and the 2nd argument is dot notation to extract a type.
+ *
+ * For example:
+ *
+ * ```
+ * type SomeObject = { foo: { bar: { baz: SomeType } } };
+ * type TypeOfBaz = Choose<SomeObject, 'foo.bar.baz'>;
+ * ```
+ *
+ * `TypeOfBaz` would be equal to `SomeType`
+ *
+ */
+export type Choose<
+  T extends Record<string, unknown>,
+  K extends PathInto<T>
+> = K extends `${infer U}.${infer Rest}`
+  ? T[U] extends Record<string, unknown>
+    ? Choose<T[U], Rest extends PathInto<T[U]> ? Rest : never>
+    : T[K]
+  : T[K];

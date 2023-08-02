@@ -40,6 +40,13 @@ graphql-engine --database-url=<database-url> serve --admin-secret=averylongpassw
 
 More details can be found at [Securing the GraphQL endpoint](/deployment/securing-graphql-endpoint.mdx).
 
+## Move secrets to environment variables
+
+It is recommended to move all secrets to environment variables. On Hasura Cloud, environment variables are stored in a
+[Hashicorp Vault](https://www.vaultproject.io/) instance as secrets which are not directly accessible to Hasura staff.
+The Hasura Engine also does not store any copies of your data, except for
+[cached query responses](/caching/overview.mdx) which have a TTL expiry.
+
 ## Verify permissions
 
 <TOCInline toc={toc} filterTOC={'verify-permissions'} />
@@ -58,9 +65,16 @@ get a bird's eye view on all the permissions set across all tables and roles. Pa
 
 ### Limit number of rows returned
 
-You should [limit the number of rows](/auth/authorization/permission-rules.mdx#limit-rows-permissions) that can be
-accessed in one request, by setting the number in the select permission. This will prevent someone from accidentally or
-otherwise querying the entire table in one shot, thus adding load on Postgres.
+You should [limit the number of rows](/auth/authorization/permissions/row-fetch-limit.mdx) that can be accessed in one
+request, by setting the number in the select permission. This will prevent someone from accidentally or otherwise
+querying the entire table in one shot, thus adding load on Postgres.
+
+## Configure max connections
+
+Hasura utilizes [connection pooling](https://hasura.io/docs/latest/databases/database-config/cloud-connection-pooling/)
+for Postgres and MS SQL Server databases. You should set an appropriate
+[`total_max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Cloud) or
+[`max_connections`](/api-reference/syntax-defs.mdx#pgpoolsettings) (on Self-hosted) to use the database efficiently.
 
 ## Disable APIs
 
@@ -80,7 +94,7 @@ graphql-engine --database-url=<database-url> serve --enabled-apis=graphql
 By setting the above flag or env var, we are disabling the `metadata`, `pgdump` and `config` APIs. `health` and
 `version` APIs are public and cannot be disabled.
 
-Read more about all the API types at the [API reference](/api-reference/index.mdx).
+Read more about all the API types at the [API reference](/api-reference/overview.mdx).
 
 :::info Note
 
@@ -156,6 +170,19 @@ Production APIs should be served over HTTPS to be secure over the network.
 
 See [Enable HTTPS](/deployment/enable-https.mdx) for details on achieving this.
 
+## Configure a load balancer
+
+If you're setting up a load-balancer in front of Hasura, ensure that it's configured appropriately.
+
+- Configure the load balancer health checks to use [Hasura's health endpoint](/api-reference/health.mdx).
+- Idle timeout will depend on the `max time` you want to allow an operation to run in Hasura. It should be configured to
+  a slightly higher number than the maximum time set in Hasura's API Limits.
+- Hasura doesn't require sticky sessions.
+- The default load-balancing method is usually round-robin and this works well with Hasura. However, you may choose a
+  different vendor specific algorithm if you find benefits with those. For example, if you have implemented many
+  subscriptions in your app, the `Least Outstanding Requests` algorithm offered by AWS could be useful in certain
+  scenarios.
+
 ## Configure logging
 
 The [logs guide](/deployment/logging.mdx) describes different log types and log levels Hasura GraphQL Engine uses. You
@@ -173,3 +200,8 @@ HASURA_GRAPHQL_ENABLED_LOG_TYPES=startup,http-log,query-log,websocket-log,webhoo
 graphql-engine --database-url=<database-url>
 serve --enabled-log-types="startup,http-log,query-log,websocket-log,webhook-log"
 ```
+
+## Security Announcements
+
+Join the [Hasura Security Announcements](https://groups.google.com/forum/#!forum/hasura-security-announce) group for
+emails about security announcements.

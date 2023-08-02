@@ -1,23 +1,25 @@
 ---
 sidebar_label: API Limits
-sidebar_position: 20
+sidebar_position: 23
 description: Manage API limits configuration with the Hasura metadata API
 keywords:
-   - hasura
-   - docs
-   - metadata API
-   - API reference
-   - security options
-   - API limits
-   - Rate limits
-   - limits
-   - enterprise
-   - ee
+  - hasura
+  - docs
+  - metadata API
+  - API reference
+  - security options
+  - API limits
+  - Rate limits
+  - limits
+  - enterprise
+  - ee
 ---
+
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Metadata API Reference: API Limits
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+<ProductBadge free standard pro ee self />
 
 ## Introduction
 
@@ -78,14 +80,14 @@ X-Hasura-Role: admin
 
 ### Args syntax {#set-api-limits-syntax}
 
-| Key         | Required | Schema                                                            | Description                                                                                             |
-|-------------|----------|-------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
-| disabled    | false    | boolean                                                           | Default value is false (Limits are enabled by default)                                                  |
-| depth_limit | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restriction based on its depth, preventing deeply nested queries                                        |
-| node_limit  | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restriction based on the number of nodes in GraphQL operation response                                  |
-| time_limit  | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restricts the time that a GraphQL operation is allowed to take. The duration is specified in seconds    |
-| batch_limit | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restricts the number of GraphQL operations in a batched request                                         |
-| rate_limit  | false    | [RateLimitOption](/api-reference/syntax-defs.mdx#ratelimitoption) | Restricts number of GraphQL operations per minute                                                       |
+| Key         | Required | Schema                                                            | Description                                                                                          |
+| ----------- | -------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| disabled    | false    | boolean                                                           | Default value is false (Limits are enabled by default)                                               |
+| depth_limit | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restriction based on its depth, preventing deeply nested queries                                     |
+| node_limit  | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restriction based on the number of nodes in GraphQL operation response                               |
+| time_limit  | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restricts the time that a GraphQL operation is allowed to take. The duration is specified in seconds |
+| batch_limit | false    | [APILimitOption](/api-reference/syntax-defs.mdx#apilimitoption)   | Restricts the number of GraphQL operations in a batched request                                      |
+| rate_limit  | false    | [RateLimitOption](/api-reference/syntax-defs.mdx#ratelimitoption) | Restricts number of GraphQL operations per minute                                                    |
 
 In the above metadata spec:
 
@@ -97,6 +99,13 @@ In the above metadata spec:
 5.  For `rate_limit` if no `unique_params` are provided then, the requests will be rate-limited on the `role_name` i.e
     the `X-HASURA-ROLE` that is used to issue the request
 
+:::info Note
+
+The API will throw a warning if the configured `time_limit` is greater than the Cloud time limit. The Cloud time limit
+will be used in such cases.
+
+:::
+
 ## remove_api_limits {#metadata-remove-api-limits}
 
 You can remove **all** the api limits that have been set using `remove_api_limit` API.
@@ -107,6 +116,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-    "type": "remove_api_limit"
+    "type": "remove_api_limits"
+    "args": {}
 }
 ```

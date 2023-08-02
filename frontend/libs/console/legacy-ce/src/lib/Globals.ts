@@ -1,5 +1,5 @@
-import type { GlobalWindowHeap } from '@/features/Analytics';
-import { parseSentryDsn } from '@/features/Analytics';
+import type { GlobalWindowHeap } from './features/Analytics';
+import { parseSentryDsn } from './features/Analytics';
 
 /* eslint no-underscore-dangle: 0 */
 import { getFeaturesCompatibility } from './helpers/versionUtils';
@@ -8,7 +8,7 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
 import { SERVER_CONSOLE_MODE } from './constants';
-import { parseConsoleType, ConsoleType } from './utils/envUtils';
+import { ConsoleType, parseConsoleType } from './utils/envUtils';
 
 export type LuxFeature =
   | 'DatadogIntegration'
@@ -74,17 +74,22 @@ type CloudServerEnv = {
   consoleId: string; // e.g. "40d778e7-1324-4500-bf69-5f9e58f70803_console"
   consolePath: string;
   dataApiUrl: string; // e.g. "https://rich-jackass-37.hasura.app"
+  enableTelemetry: boolean;
   eeMode: string;
   herokuOAuthClientId: UUID;
   isAdminSecretSet: boolean;
   luxDataHost: string; // e.g. "data.pro.hasura.io"
+  schemaRegistryHost: string;
   projectID: UUID;
+  projectName: string;
   serverVersion: string;
   tenantID: UUID;
   urlPrefix: string;
   userRole: CloudUserRole;
   neonOAuthClientId?: string;
   neonRootDomain?: string;
+  slackOAuthClientId?: string;
+  slackRootDomain?: string;
   allowedLuxFeatures?: LuxFeature[];
   userId?: string;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
@@ -131,9 +136,6 @@ export type CloudCliEnv = {
 type ProCliEnv = CloudCliEnv;
 type ProLiteCliEnv = CloudCliEnv;
 
-// Until this non-discriminated-union-based `EnvVars` exist, please keep the following spreadsheet
-// https://docs.google.com/spreadsheets/d/10feBESWKCfFuh7g9436Orp4i4fNoQxjnt5xxhrrdtJo/edit#gid=0
-// updated with all the env vars that the Console receives and their possible values. The spreadsheet acts as the source of truth for the environment variables, at the moment
 export type EnvVars = {
   nodeEnv?: string;
   apiHost?: string;
@@ -144,9 +146,11 @@ export type EnvVars = {
   cliUUID?: string;
   tenantID?: UUID;
   projectID?: UUID;
+  projectName?: string;
   cloudRootDomain?: string;
   herokuOAuthClientId?: string;
   luxDataHost?: string;
+  schemaRegistryHost: string;
   isAdminSecretSet?: boolean;
   enableTelemetry?: boolean;
   consoleType?: ConsoleType;
@@ -155,10 +159,14 @@ export type EnvVars = {
   userRole?: string;
   neonOAuthClientId?: string;
   neonRootDomain?: string;
+  slackOAuthClientId?: string;
+  slackRootDomain?: string;
   allowedLuxFeatures?: LuxFeature[];
   userId?: string;
+  userEmail?: string;
   cdnAssets?: boolean;
   consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
+  launchDarklyClientId?: string;
 } & (
   | OSSServerEnv
   | CloudServerEnv
@@ -180,7 +188,6 @@ declare global {
 /* initialize globals */
 
 const isProduction = window.__env?.nodeEnv !== 'development';
-
 const globals = {
   apiHost: window.__env?.apiHost,
   apiPort: window.__env?.apiPort,
@@ -194,7 +201,7 @@ const globals = {
     false,
   consoleMode: window.__env?.consoleMode || SERVER_CONSOLE_MODE,
   enableTelemetry: window.__env?.enableTelemetry,
-  telemetryTopic: isProduction ? 'console' : 'console_test',
+  telemetryTopic: isProduction ? 'console-v2' : 'console-test-v2', // updated to v2 to ignore legacy redux based events from earlier console versions
   assetsPath: window.__env?.assetsPath,
   serverVersion: window.__env?.serverVersion || '',
   consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
@@ -203,24 +210,31 @@ const globals = {
     : null,
   cliUUID: window.__env?.cliUUID || '',
   hasuraUUID: '',
-  telemetryNotificationShown: false,
   isProduction,
   herokuOAuthClientId: window.__env?.herokuOAuthClientId,
   hasuraCloudTenantId: window.__env?.tenantID,
   hasuraCloudProjectId: window.__env?.projectID,
+  hasuraCloudProjectName: window.__env?.projectName,
   neonOAuthClientId: window.__env?.neonOAuthClientId,
   neonRootDomain: window.__env?.neonRootDomain,
+  slackOAuthClientId: window.__env?.slackOAuthClientId,
+  slackRootDomain: window.__env?.slackRootDomain,
   allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],
   luxDataHost: window.__env?.luxDataHost
     ? stripTrailingSlash(window.__env.luxDataHost)
     : // stripTrailingSlash is used to ensure correctness in Endpoints because we append /v1/graphql to luxDataHost in endpoints.
       undefined,
+  schemaRegistryHost: window.__env?.schemaRegistryHost
+    ? stripTrailingSlash(window.__env.schemaRegistryHost)
+    : '',
   userRole: window.__env?.userRole || undefined,
   userId: window.__env?.userId || undefined,
+  userEmail: window.__env?.userEmail || undefined,
   consoleType: window.__env?.consoleType // FIXME : this check can be removed when the all CLI environments are set with the console type, some CLI environments could have empty consoleType
     ? parseConsoleType(window.__env?.consoleType)
     : ('' as ConsoleType),
   eeMode: window.__env?.eeMode === 'true',
+  launchDarklyClientId: window.__env?.launchDarklyClientId, // launchDarkly client ID
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   if (!window.__env?.dataApiUrl) {

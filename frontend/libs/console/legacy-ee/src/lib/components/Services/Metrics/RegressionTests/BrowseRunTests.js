@@ -1,7 +1,7 @@
 import React, { Fragment } from 'react';
 import { useSubscription } from '@apollo/react-hooks';
 
-import { tableScss } from '@hasura/console-oss';
+import { tableScss } from '@hasura/console-legacy-ce';
 import { subscribeTestRunDetails } from './graphql.queries';
 import styles from '../Metrics.module.scss';
 import { ActionsPanel } from '../Common/ActionsPanel';

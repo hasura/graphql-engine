@@ -1,7 +1,7 @@
-version: '3.6'
+version: "3.6"
 services:
   postgres:
-    image: postgres:14
+    image: postgres:15
     restart: always
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -23,20 +23,20 @@ services:
       - yugabyte-data:/var/lib/postgresql/data
 
   graphql-engine:
-    image: hasura/graphql-engine:v2.15.0-beta.1-ce
+    image: hasura/graphql-engine:v2.31.0
     ports:
-      - '8080:8080'
+      - "8080:8080"
     depends_on:
-      - 'postgres'
-      - 'yugabyte'
+      - "postgres"
+      - "yugabyte"
     restart: always
     environment:
       ## postgres database to store Hasura metadata
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       ## enable the console served by server
-      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
-      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
       # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets

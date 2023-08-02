@@ -1,0 +1,71 @@
+---
+title: Caching Metrics
+keywords:
+  - docs
+  - caching
+  - metrics
+  - prometheus
+  - grafana
+sidebar_position: 6
+sidebar_class_name: enterprise-icon
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Caching Metrics
+
+<ProductBadge self />
+
+## Introduction
+
+Hasura Enterprise Edition exports Prometheus metrics related to caching which
+can provide valuable insights into the efficiency and performance of the caching system.
+This can help towards monitoring and further optimization of the cache utilization.
+
+## Exposed metrics
+
+The graphql engine exposes the [hasura_cache_request_count](/observability/enterprise-edition/prometheus/metrics.mdx/#hasura-cache-request-count)
+Prometheus metric. It represents a `counter` and is incremented every time a request with `@cached` directive is served.
+
+
+It has one label `status`, which can have values of either `hit` or `miss`.
+
+| status | description                                         |
+|--------|-----------------------------------------------------|
+| `hit`  | request served from the cache                       |
+| `miss` | request served from the source (not found in cache) |
+
+
+## Get insights from metrics
+
+The `hasura_cache_request_count` metric can be used to get insights into the cache utilization by calculating the hit-miss ratio.
+The hit-miss ratio is the ratio of the number of requests served from the cache to the total number of requests.
+
+```
+hit-miss ratio = hit count / (hit count + miss count)
+```
+
+What does the hit-miss ratio tells us?
+
+- **Cache Efficiency**: The hit-miss ratio reflects how well the caching system can serve requests from its cache. A higher hit ratio indicates more efficient cache usage, as more requests are being served from the cache rather than requiring fetching data from the upstream data source.
+
+- **Cache Performance**: The hit-miss ratio is a measure of cache performance. A higher hit ratio generally indicates better cache performance as it reduces latency and improves overall system performance.
+
+## Visualize metrics
+
+The metrics can be visualized using a tool like Grafana.
+
+<Thumbnail
+  src="/img/metrics/cache-metrics-grafana.png"
+  alt="Cache Metrics Grafana Dashboard"
+/>
+
+:::tip Sample PromQL Queries
+
+- Total requests per minute with `@cached` directive: `sum(increase(hasura_cache_request_count[1m]))`
+- `hit` requests per minute: `increase(hasura_cache_request_count{status="hit"}[1m])`
+- `miss` requests per minute: `increase(hasura_cache_request_count{status="miss"}[1m])`
+- Hit-Miss ratio over lifetime: `sum(hasura_cache_request_count{status="hit"})/sum(hasura_cache_request_count)`
+
+:::

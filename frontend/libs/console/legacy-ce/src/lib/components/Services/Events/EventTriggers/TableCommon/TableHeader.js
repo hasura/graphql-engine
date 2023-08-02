@@ -1,11 +1,12 @@
 import React from 'react';
+import clsx from 'clsx';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../../features/Analytics';
 import { getReactHelmetTitle } from '../../../../Common/utils/reactUtils';
 import BreadCrumb from '../../../../Common/Layout/BreadCrumb/BreadCrumb';
 import {
@@ -70,7 +71,7 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
       </Helmet>
 
       <Analytics name="EventsTableHeader" {...REDACT_EVERYTHING}>
-        <div className={styles.subHeader}>
+        <div className={clsx(styles.subHeader, 'bootstrap-jail')}>
           <BreadCrumb breadCrumbs={getBreadCrumbs()} />
           <h2 className={styles.heading_text}>{triggerName}</h2>
           <div className={styles.nav}>

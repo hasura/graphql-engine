@@ -3,7 +3,7 @@ import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
 import 'graphql-voyager/dist/voyager.css';
 
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 
 import Endpoints from '../../../Endpoints';
 import './voyagerView.css';

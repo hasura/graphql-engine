@@ -1,8 +1,12 @@
+{-# LANGUAGE OverloadedLists #-}
+
 module Hasura.RQL.Types.AllowlistSpec (spec) where
 
-import Data.Aeson qualified as Aeson
-import Data.Aeson.Types qualified as Aeson
-import Data.HashMap.Strict.InsOrd.Extended qualified as OM
+import Autodocodec (parseJSONViaCodec, toJSONViaCodec)
+import Data.Aeson qualified as J
+import Data.Aeson.Types (parseEither)
+import Data.Aeson.Types qualified as J
+import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.HashSet qualified as S
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromJust)
@@ -11,7 +15,7 @@ import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Hasura.Prelude
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.QueryCollection
-import Hasura.Session (mkRoleName)
+import Hasura.RQL.Types.Roles (mkRoleName)
 import Test.Hspec
 
 spec :: Spec
@@ -26,7 +30,7 @@ spec = do
         mkQuery name body =
           ListedQuery
             (QueryName (mkNonEmptyTextUnsafe name))
-            (GQLQueryWithText ("", mustJSON (Aeson.String body)))
+            (GQLQueryWithText ("", mustJSON (J.String body)))
         lquery1 = mkQuery "query_1" "query { query_1 }"
         lquery1b = mkQuery "query_1b" "query { query_1 }"
         lquery2 = mkQuery "query_2" "query { query_2 }"
@@ -44,7 +48,7 @@ spec = do
         mkCollection collName queries =
           (collName, CreateCollection collName (CollectionDef queries) Nothing)
         collections =
-          OM.fromList
+          InsOrdHashMap.fromList
             [ mkCollection coll1 [lquery1],
               mkCollection coll2 [lquery2],
               mkCollection coll3 [lquery3, lquery1b],
@@ -57,7 +61,7 @@ spec = do
           (collName, AllowlistEntry collName (AllowlistScopeRoles roles))
         emptyAllowlist = mempty
         complexAllowlist =
-          OM.fromList
+          InsOrdHashMap.fromList
             [ mkAllowGlobal coll2,
               mkAllowRoles coll1 (role1 NE.:| [role4]),
               mkAllowRoles coll3 (role2 NE.:| [role3]),
@@ -110,7 +114,16 @@ spec = do
             ("role_4", "query_2")
           ]
 
-mustJSON :: Aeson.FromJSON a => Aeson.Value -> a
-mustJSON v = case Aeson.parseEither Aeson.parseJSON v of
+    it "round-trips roles when serializing via codecs" do
+      let expected =
+            maybeToEither "nonempty"
+              $ AllowlistScopeRoles
+              <$> traverse mkRoleName ["viewer", "admin"]
+      let json = toJSONViaCodec <$> expected
+      let actual = parseEither parseJSONViaCodec =<< json
+      actual `shouldBe` expected
+
+mustJSON :: (J.FromJSON a) => J.Value -> a
+mustJSON v = case J.parseEither J.parseJSON v of
   Left err -> error err
   Right x -> x

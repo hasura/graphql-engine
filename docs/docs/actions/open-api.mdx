@@ -12,10 +12,12 @@ sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+import Player from '@site/src/components/Player';
 
 # Import Action from OpenAPI Spec
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<ProductBadge ce free standard pro ee self />
 
 ## Overview
 
@@ -25,38 +27,29 @@ standard for describing REST APIs, and many APIs already have an OpenAPI spec av
 upload an OpenAPI spec, select the operation you want to expose as an Action, and Hasura will automatically prepopulate
 the Action definition for you.
 
-:::caution Import Action from OpenAPI Spec availability
-
-The Import Action from OpenAPI Spec feature is currently available in `alpha` for all Hasura Cloud offerings and for
-Hasura Enterprise Edition (EE) customers. Once it is generally available (GA), it will be available only for Hasura
-Cloud Enterprise and EE customers.
-
-:::
-
-## Enabling the feature
-
-While the Import Action from OpenAPI Spec is in alpha, the feature can only be enabled by turning on the _Import from
-OpenAPI_ under the _Feature Flags_ section of the Console configuration page.
-
-Click the gear icon (1) in the top-right corner of your Cloud project; in the side navigation, click "Feature Flags"
-(2); finally, toggle the "Import Action from OpenAPI" switch to enable (3).
-
-<Thumbnail src="/img/actions/openapi-feature-flag.png" alt="Turning on experimental features." width="1000px" />
 
 ## Importing an Action from an OpenAPI spec
 
-After enabling the feature, you can import an Action from an OpenAPI spec by clicking the "Create" button from the
-Actions page of the Console. You should see a new option to `Import from OpenAPI`, click this to start the import:
+You can import an Action from an OpenAPI spec by clicking the "Import from OpenAPI" button from the Actions page of the
+Console, or "Import OpenAPI" in the "Create" dropdown on the left sidebar.
 
-<Thumbnail src="/img/actions/import-openapi.png" alt="Turning on experimental features." width="1000px" />
+<Thumbnail src="/img/actions/import-openapi.png" alt="Import from OpenAPI buttons" width="1000px" />
 
-Either select a file (YAML or JSON) or paste the contents of an OpenAPI spec into the text box. Then, select an endpoint
-and click `Generate Action`:
+You will be redirected to the OpenAPI spec import page.
 
-<Thumbnail src="/img/actions/generate-openapi.png" alt="Turning on experimental features." width="600px" />
+Either select a file (YAML or JSON) or paste the contents of an OpenAPI spec into the text box:
 
-From the Actions page, you can further customize the Action definition, and then click "Create" to create the Action:
+<Player src="/img/actions/actions_import_openapi_spec.webm" />
 
-<Thumbnail src="/img/actions/create-openapi.png" alt="Turning on experimental features." width="1000px" />
+The specification is then parsed, the operations are listed and the `Base URL` field is automatically populated from the
+`servers` field.
+
+For each operation, you will either see a "Modify" and "Delete", or "Create" button, depending on whether the operation
+is already imported as an Action or not.
+
+Clicking "Modify" will bring you to the Action definition page, where you can further customize the Action definition.
+Clicking "Delete" will delete the Action.
+
+Clicking "Create" will create an Action with the operation's details prepopulated.
 
 You can now use this imported Action in your GraphQL API!

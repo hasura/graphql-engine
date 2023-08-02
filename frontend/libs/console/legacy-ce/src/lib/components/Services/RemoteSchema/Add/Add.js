@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 
 import { RESET } from './addRemoteSchemaReducer';
-import { RemoteSchema } from '@/features/RemoteSchema';
+import { RemoteSchema } from '../../../../features/RemoteSchema';
 import { appPrefix } from '../constants';
-import { exportMetadata } from '@/metadata/actions';
+import { exportMetadata } from '../../../../metadata/actions';
 import _push from '../../Data/push';
 
 const Add = ({ isRequesting, dispatch, ...props }) => {

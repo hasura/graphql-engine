@@ -1,6 +1,9 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { useDataSourceCheckConstraints, useTableCheckConstraints } from '..';
+import {
+  useDataSourceCheckConstraints,
+  useTableCheckConstraints,
+} from '../useCheckConstraints';
 import { networkStubs } from './common/networkStubs';
 import { APIError } from '../error';
 import { wrapper } from './common/decorator';

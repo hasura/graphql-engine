@@ -1,15 +1,15 @@
 import React from 'react';
-import { useReadOnlyMode } from '@/hooks';
+import { useReadOnlyMode } from '../../../../hooks';
 import {
   MetadataSelector,
   useMetadata,
   useMetadataMigration,
   useInconsistentObject,
-} from '@/features/MetadataAPI';
-import { Button } from '@/new-components/Button';
-import { useFireNotification } from '@/new-components/Notifications';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { InconsistentBadge } from '@/components/Services/RemoteSchema/Common/GraphQLCustomization/InconsistentBadge';
+} from '../../../MetadataAPI';
+import { Button } from '../../../../new-components/Button';
+import { useFireNotification } from '../../../../new-components/Notifications';
+import { Analytics, REDACT_EVERYTHING } from '../../../Analytics';
+import { InconsistentBadge } from '../../../../components/Services/RemoteSchema/Common/GraphQLCustomization/InconsistentBadge';
 
 import { RemoteSchemaDetailsHeaders } from './RemoteSchemaDetailsHeaders';
 import { RemoteSchemaDetailsNavigation } from './RemoteSchemaDetailsNavigation';

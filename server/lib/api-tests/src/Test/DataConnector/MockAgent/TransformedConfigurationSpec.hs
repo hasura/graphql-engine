@@ -5,19 +5,21 @@ module Test.DataConnector.MockAgent.TransformedConfigurationSpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
-import Data.HashMap.Strict qualified as HashMap
+import Control.Lens ((?~))
+import Data.Aeson qualified as J
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock (AgentRequest (..), MockRequestResults (..), mockAgentGraphqlTest, mockQueryResponse)
 import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
+import Harness.Yaml (shouldBeYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.DataConnector.MockAgent.TestHelpers
+import Test.Hspec (SpecWith, describe, shouldBe)
 
 --------------------------------------------------------------------------------
 
@@ -40,7 +42,7 @@ spec =
 
 --------------------------------------------------------------------------------
 
-sourceMetadata :: Aeson.Value
+sourceMetadata :: J.Value
 sourceMetadata =
   let source = BackendType.backendSourceName Mock.backendTypeMetadata
       backendType = BackendType.backendTypeString Mock.backendTypeMetadata
@@ -98,73 +100,57 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
-tests opts = do
-  describe "Basic Tests" $ do
-    it "works with configuration transformation Kriti template" $
-      Mock.runTest opts $
-        let required =
-              Mock.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
-                            ]
-                          ]
-                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
-                  _whenRequestRequired =
-                    [graphql|
-                      query getAlbum {
-                        albums(limit: 1) {
-                          id
-                          title
-                        }
-                      }
-                    |],
-                  _thenRequired =
-                    [yaml|
-                      data:
-                        albums:
-                          - id: 1
-                            title: For Those About To Rock We Salute You
-                    |]
-                }
-         in (Mock.defaultTestCase required)
-              { _whenQuery =
-                  Just
-                    ( API.QueryRequest
-                        { _qrTable = API.TableName ("Album" :| []),
-                          _qrTableRelationships = [],
-                          _qrQuery =
-                            API.Query
-                              { _qFields =
-                                  Just $
-                                    HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
-                                      ],
-                                _qAggregates = Nothing,
-                                _qLimit = Just 1,
-                                _qOffset = Nothing,
-                                _qWhere = Nothing,
-                                _qOrderBy = Nothing
-                              }
-                        }
-                    ),
-                _whenConfig =
-                  -- TODO: Create a QQ for this purpose.
-                  let conf =
-                        Aeson.fromJSON
-                          [yaml|
-                            DEBUG:
-                              config: "baz config default"
-                              env: "bar env default"
-                              session: "foo session default"
-                          |]
-                   in case conf of
-                        Aeson.Success r -> Just r
-                        _ -> error "Should parse."
+tests :: SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
+tests = describe "Transformed Configuration Tests" $ do
+  mockAgentGraphqlTest "works with configuration transformation Kriti template" $ \_testEnv performGraphqlRequest -> do
+    let headers = []
+    let graphqlRequest =
+          [graphql|
+            query getAlbum {
+              albums(limit: 1) {
+                id
+                title
               }
+            }
+          |]
+    let queryResponse =
+          mkRowsQueryResponse
+            [ [ ("id", API.mkColumnFieldValue $ J.Number 1),
+                ("title", API.mkColumnFieldValue $ J.String "For Those About To Rock We Salute You")
+              ]
+            ]
+    let mockConfig = mockQueryResponse queryResponse
 
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing
+    MockRequestResults {..} <- performGraphqlRequest mockConfig headers graphqlRequest
+
+    _mrrResponse
+      `shouldBeYaml` [yaml|
+        data:
+          albums:
+            - id: 1
+              title: For Those About To Rock We Salute You
+      |]
+
+    _mrrRecordedRequest
+      `shouldBe` Just
+        ( Query
+            $ mkTableRequest
+              (mkTableName "Album")
+              ( emptyQuery
+                  & API.qFields
+                  ?~ mkFieldsMap
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
+                      ("title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    ]
+                    & API.qLimit
+                  ?~ 1
+              )
+        )
+
+    J.toJSON _mrrRecordedRequestConfig
+      `shouldBeYaml` [yaml|
+          DEBUG:
+            config: "baz config default"
+            env: "bar env default"
+            session: "foo session default"
+        |]

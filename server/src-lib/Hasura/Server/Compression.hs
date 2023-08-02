@@ -118,17 +118,19 @@ getAcceptedEncodings :: NH.RequestHeaders -> Set.Set EncodingType
 getAcceptedEncodings reqHeaders = Set.fromList acceptedEncodingTypes
   where
     rawHeaderVals =
-      concatMap (splitHeaderVal . snd) $
-        filter (\h -> fst h == NH.hAcceptEncoding) reqHeaders
+      concatMap (splitHeaderVal . snd)
+        $ filter (\h -> fst h == NH.hAcceptEncoding) reqHeaders
     splitHeaderVal bs = map T.strip $ T.splitOn "," $ bsToTxt bs
     -- we'll ignore qvalues, except (crucially) to determine if 'identity' is rejected:
     identityRejected =
       -- ...if we're explicitly rejecting identity, or...
-      "identity;q=0" `elem` rawHeaderVals
+      "identity;q=0"
+        `elem` rawHeaderVals
         ||
         -- ...rejecting anything not listed and identity is not listed
-        ( "*;q=0" `elem` rawHeaderVals
-            && (not $ any ("identity" `T.isPrefixOf`) rawHeaderVals)
+        ( "*;q=0"
+            `elem` rawHeaderVals
+            && not (any ("identity" `T.isPrefixOf`) rawHeaderVals)
         )
     gzipAccepted =
       any ("gzip" `T.isPrefixOf`) rawHeaderVals

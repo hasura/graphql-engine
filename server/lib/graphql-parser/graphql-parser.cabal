@@ -1,0 +1,129 @@
+cabal-version: 3.6
+name:          graphql-parser
+version:       0.2.0.0
+synopsis:      A native Haskell GraphQL parser.
+homepage:      https://github.com/hasura/graphql-engine
+bug-reports:   https://github.com/hasura/graphql-engine/issues
+author:        Vamshi Surabhi
+maintainer:    vamshi@hasura.io
+copyright:     2018–2022 Hasura Inc., 2015 J. Daniel Navarro
+license:       BSD-3-Clause
+license-file:  LICENSE
+build-type:    Simple
+tested-with:   GHC ==8.10.7 || ==9.0.2 || ==9.2.2
+
+source-repository head
+  type:     git
+  location: https://github.com/hasura/graphql-engine
+
+common common-all
+  ghc-options:
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+
+  if impl(ghc >=9.2)
+    ghc-options: -Wno-implicit-lift
+
+  default-language:   Haskell2010
+  default-extensions:
+    NoImplicitPrelude
+    BlockArguments
+    ConstraintKinds
+    DeriveAnyClass
+    DeriveFunctor
+    DeriveGeneric
+    DeriveLift
+    DeriveTraversable
+    DerivingStrategies
+    EmptyCase
+    EmptyDataDeriving
+    FlexibleContexts
+    FlexibleInstances
+    FunctionalDependencies
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    NamedFieldPuns
+    OverloadedStrings
+    RankNTypes
+    RecordWildCards
+    RoleAnnotations
+    StrictData
+    TupleSections
+
+library
+  import:          common-all
+  hs-source-dirs:  src
+  build-depends:
+    , aeson                 >=1.5
+    , attoparsec            >=0.14
+    , autodocodec
+    , base                  >=4.7
+    , bytestring            >=0.10
+    , deepseq               >=1.4
+    , hashable              >=1.3
+    , hedgehog              >=1.1
+    , prettyprinter         >=1.7
+    , scientific            >=0.3
+    , template-haskell      >=2.16
+    , text                  >=1.2
+    , text-builder          >=0.6
+    , th-compat             >=0.1
+    , th-lift-instances     >=0.1
+    , unordered-containers  >=0.2
+
+  exposed-modules:
+    Language.GraphQL.Draft.Generator
+    Language.GraphQL.Draft.Parser
+    Language.GraphQL.Draft.Printer
+    Language.GraphQL.Draft.Syntax
+    Language.GraphQL.Draft.Syntax.Internal
+    Language.GraphQL.Draft.Syntax.QQ
+
+  other-modules:
+    Language.GraphQL.Draft.Syntax.Name
+
+test-suite graphql-parser-tests
+  import:         common-all
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: test
+  main-is:        Spec.hs
+  other-modules:
+    BlockStrings
+    Keywords
+
+  build-depends:
+    , base
+    , bytestring
+    , graphql-parser
+    , hedgehog
+    , prettyprinter
+    , text
+    , text-builder
+
+benchmark graphql-parser-bench
+  import:         common-all
+  type:           exitcode-stdio-1.0
+  hs-source-dirs: bench
+  main-is:        Benchmark.hs
+  build-depends:
+    , base
+    , bytestring
+    , graphql-parser
+    , prettyprinter
+    , tasty-bench
+    , text
+    , text-builder

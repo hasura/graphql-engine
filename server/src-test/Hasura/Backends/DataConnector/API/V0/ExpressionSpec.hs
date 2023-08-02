@@ -16,7 +16,7 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
-import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumTextExcluding)
 import Hasura.Prelude
@@ -28,81 +28,88 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "BinaryComparisonOperator" $ do
-    describe "LessThan" $
-      testToFromJSONToSchema LessThan [aesonQQ|"less_than"|]
+    describe "LessThan"
+      $ testToFromJSONToSchema LessThan [aesonQQ|"less_than"|]
 
-    describe "LessThanOrEqual" $
-      testToFromJSONToSchema LessThanOrEqual [aesonQQ|"less_than_or_equal"|]
+    describe "LessThanOrEqual"
+      $ testToFromJSONToSchema LessThanOrEqual [aesonQQ|"less_than_or_equal"|]
 
-    describe "GreaterThan" $
-      testToFromJSONToSchema GreaterThan [aesonQQ|"greater_than"|]
+    describe "GreaterThan"
+      $ testToFromJSONToSchema GreaterThan [aesonQQ|"greater_than"|]
 
-    describe "GreaterThanOrEqual" $
-      testToFromJSONToSchema GreaterThanOrEqual [aesonQQ|"greater_than_or_equal"|]
+    describe "GreaterThanOrEqual"
+      $ testToFromJSONToSchema GreaterThanOrEqual [aesonQQ|"greater_than_or_equal"|]
 
-    describe "Equal" $
-      testToFromJSONToSchema Equal [aesonQQ|"equal"|]
+    describe "Equal"
+      $ testToFromJSONToSchema Equal [aesonQQ|"equal"|]
 
-    describe "CustomBinaryComparisonOperator" $
-      testToFromJSONToSchema (CustomBinaryComparisonOperator "foo") [aesonQQ|"foo"|]
+    describe "CustomBinaryComparisonOperator"
+      $ testToFromJSONToSchema (CustomBinaryComparisonOperator "foo") [aesonQQ|"foo"|]
 
     jsonOpenApiProperties genBinaryComparisonOperator
 
   describe "BinaryArrayComparisonOperator" $ do
-    describe "In" $
-      testToFromJSONToSchema In [aesonQQ|"in"|]
+    describe "In"
+      $ testToFromJSONToSchema In [aesonQQ|"in"|]
 
-    describe "CustomBinaryArrayComparisonOperator" $
-      testToFromJSONToSchema (CustomBinaryArrayComparisonOperator "foo") [aesonQQ|"foo"|]
+    describe "CustomBinaryArrayComparisonOperator"
+      $ testToFromJSONToSchema (CustomBinaryArrayComparisonOperator "foo") [aesonQQ|"foo"|]
 
     jsonOpenApiProperties genBinaryArrayComparisonOperator
 
   describe "UnaryComparisonOperator" $ do
-    describe "IsNull" $
-      testToFromJSONToSchema IsNull [aesonQQ|"is_null"|]
+    describe "IsNull"
+      $ testToFromJSONToSchema IsNull [aesonQQ|"is_null"|]
 
-    describe "CustomUnaryComparisonOperator" $
-      testToFromJSONToSchema (CustomUnaryComparisonOperator "foo") [aesonQQ|"foo"|]
+    describe "CustomUnaryComparisonOperator"
+      $ testToFromJSONToSchema (CustomUnaryComparisonOperator "foo") [aesonQQ|"foo"|]
 
     jsonOpenApiProperties genUnaryComparisonOperator
 
   describe "ComparisonColumn" $ do
     testToFromJSONToSchema
-      (ComparisonColumn QueryTable (ColumnName "column_name") StringTy)
+      (ComparisonColumn QueryTable (mkColumnSelector $ ColumnName "column_name") (ScalarType "string"))
       [aesonQQ|{"path": ["$"], "name": "column_name", "column_type": "string"}|]
 
     jsonOpenApiProperties genComparisonColumn
 
   describe "ColumnPath" $ do
-    describe "QueryTable" $
-      testToFromJSONToSchema QueryTable [aesonQQ|["$"]|]
-    describe "CurrentTable" $
-      testToFromJSONToSchema CurrentTable [aesonQQ|[]|]
+    describe "QueryTable"
+      $ testToFromJSONToSchema QueryTable [aesonQQ|["$"]|]
+    describe "CurrentTable"
+      $ testToFromJSONToSchema CurrentTable [aesonQQ|[]|]
     jsonOpenApiProperties genColumnPath
 
+  describe "ColumnSelector" $ do
+    describe "single column selector"
+      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo"]) [aesonQQ|"foo"|]
+    describe "nested path selector"
+      $ testToFromJSONToSchema (ColumnSelector [ColumnName "foo", ColumnName "bar"]) [aesonQQ|["foo","bar"]|]
+    jsonOpenApiProperties genColumnSelector
+
   describe "ComparisonValue" $ do
-    describe "AnotherColumn" $
-      testToFromJSONToSchema
-        (AnotherColumn $ ComparisonColumn CurrentTable (ColumnName "my_column_name") StringTy)
+    describe "AnotherColumnComparison"
+      $ testToFromJSONToSchema
+        (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string"))
         [aesonQQ|{"type": "column", "column": {"name": "my_column_name", "column_type": "string"}}|]
-    describe "ScalarValue" $
-      testToFromJSONToSchema
-        (ScalarValue (String "scalar value") StringTy)
+    describe "ScalarValueComparison"
+      $ testToFromJSONToSchema
+        (ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string"))
         [aesonQQ|{"type": "scalar", "value": "scalar value", "value_type": "string"}|]
 
     jsonOpenApiProperties genComparisonValue
 
   describe "ExistsInTable" $ do
-    describe "RelatedTable" $
-      testToFromJSONToSchema
+    describe "RelatedTable"
+      $ testToFromJSONToSchema
         (RelatedTable (RelationshipName "my_relation"))
         [aesonQQ|
           { "type": "related",
             "relationship": "my_relation"
           }
         |]
-    describe "UnrelatedTable" $
-      testToFromJSONToSchema
+    describe "UnrelatedTable"
+      $ testToFromJSONToSchema
         (UnrelatedTable (TableName ["my_table_name"]))
         [aesonQQ|
           { "type": "unrelated",
@@ -112,8 +119,8 @@ spec = do
     jsonOpenApiProperties genExistsInTable
 
   describe "Expression" $ do
-    let comparisonColumn = ComparisonColumn CurrentTable (ColumnName "my_column_name") StringTy
-    let scalarValue = ScalarValue (String "scalar value") StringTy
+    let comparisonColumn = ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string")
+    let scalarValue = ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string")
     let scalarValues = [String "scalar value"]
     let unaryComparisonExpression = ApplyUnaryComparisonOperator IsNull comparisonColumn
 
@@ -195,7 +202,7 @@ spec = do
 
     describe "BinaryArrayComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryArrayComparisonOperator In comparisonColumn scalarValues StringTy)
+        (ApplyBinaryArrayComparisonOperator In comparisonColumn scalarValues (ScalarType "string"))
         [aesonQQ|
           {
             "type": "binary_arr_op",
@@ -247,21 +254,25 @@ genComparisonColumn :: (MonadGen m, GenBase m ~ Identity) => m ComparisonColumn
 genComparisonColumn =
   ComparisonColumn
     <$> genColumnPath
-    <*> genColumnName
+    <*> genColumnSelector
     <*> genScalarType
 
-genColumnPath :: MonadGen m => m ColumnPath
+genColumnPath :: (MonadGen m) => m ColumnPath
 genColumnPath =
   Gen.element [CurrentTable, QueryTable]
+
+genColumnSelector :: (MonadGen m) => m ColumnSelector
+genColumnSelector =
+  ColumnSelector <$> Gen.nonEmpty defaultRange genColumnName
 
 genComparisonValue :: (MonadGen m, GenBase m ~ Identity) => m ComparisonValue
 genComparisonValue =
   Gen.choice
-    [ AnotherColumn <$> genComparisonColumn,
-      ScalarValue <$> genValue <*> genScalarType
+    [ AnotherColumnComparison <$> genComparisonColumn,
+      ScalarValueComparison <$> genScalarValue
     ]
 
-genExistsInTable :: MonadGen m => m ExistsInTable
+genExistsInTable :: (MonadGen m) => m ExistsInTable
 genExistsInTable =
   Gen.choice
     [ RelatedTable <$> genRelationshipName,
@@ -282,4 +293,4 @@ genExpression =
       Exists <$> genExistsInTable <*> genExpression
     ]
   where
-    genExpressions = Gen.list defaultRange genExpression
+    genExpressions = Gen.set defaultRange genExpression

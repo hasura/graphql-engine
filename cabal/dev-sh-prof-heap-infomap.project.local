@@ -1,0 +1,35 @@
+-- This configuration is used by `dev.sh graphql-engine --prof-heap-infomap`
+-- and `--prof-ghc-debug`.
+--
+-- TODO COMING UP: We would like to turn on these flags always. But for now the
+--   resulting binary size increase is too large. This will improve in GHC 9.4, but
+--   also we may need to wait until further work on compressing IPE info lands.
+--   (Likewise we might want to always link with -eventlog)
+
+-- Formerly we had:
+-- import: cabal/dev-sh-optimized.project.local
+-- ...but cabal 3.10 broke it. See: TODO
+-- ...so now we need to copy-paste that configuration here to avoid import chains
+-- -------------------------- START dev-sh-optimized.project.local ------------------------------------
+import: dev-sh.project.local
+
+---- (reminder: top-level means apply these to all local packages)
+flags: +optimize-hasura
+-- be faster:
+documentation: false
+
+-- coverage inhibits performance. NOTE: we can't just put this at the top level
+-- to override, since it seems package-specific configuration takes precedence...
+package graphql-engine
+  coverage: false
+package graphql-engine-pro
+  coverage: false
+-- -------------------------- END dev-sh-optimized.project.local   ------------------------------------
+
+-- apply these to all LOCAL packages
+-- TODO would be nice to refactor other dev-sh.project.local to use program-options' as well (and force cabal 3.8)
+program-options
+    ghc-options: -fdistinct-constructor-tables -finfo-table-map
+    -- For each module, STG will be dumped to:
+    --     dist-newstyle/**/*.dump-stg-final
+    ghc-options: -ddump-stg-final -ddump-to-file

@@ -1,7 +1,7 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import React from 'react';
-import { screen } from '@testing-library/dom';
+import { screen } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
 import { RenderOpenApi3Form } from './common/RenderOpenApi3Form';
@@ -21,9 +21,9 @@ export default {
     ReactQueryDecorator(),
     Story => <div className="p-4 w-full">{Story()}</div>,
   ],
-} as ComponentMeta<typeof RenderOpenApi3Form>;
+} as Meta<typeof RenderOpenApi3Form>;
 
-export const EnumInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
+export const EnumInput: StoryFn<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
       name="enumInput"
@@ -40,7 +40,7 @@ export const EnumInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
   );
 };
 
-export const EnumInputWithNullableAsOption: ComponentStory<
+export const EnumInputWithNullableAsOption: StoryFn<
   typeof RenderOpenApi3Form
 > = () => {
   return (
@@ -59,7 +59,7 @@ export const EnumInputWithNullableAsOption: ComponentStory<
   );
 };
 
-export const EnumInputWithExistingValues: ComponentStory<
+export const EnumInputWithExistingValues: StoryFn<
   typeof RenderOpenApi3Form
 > = () => {
   return (
@@ -80,38 +80,40 @@ export const EnumInputWithExistingValues: ComponentStory<
   );
 };
 
-export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
-  <RenderOpenApi3Form
-    name="enumInput"
-    getSchema={() => [
-      {
-        title: 'Enum Input',
-        type: 'string',
-        enum: ['option1', 'option2', null],
-      },
-      {},
-    ]}
-    defaultValues={{}}
-    rawOutput
-  />
-);
+export const Test: StoryObj<typeof RenderOpenApi3Form> = {
+  render: () => (
+    <RenderOpenApi3Form
+      name="enumInput"
+      getSchema={() => [
+        {
+          title: 'Enum Input',
+          type: 'string',
+          enum: ['option1', 'option2', null],
+        },
+        {},
+      ]}
+      defaultValues={{}}
+      rawOutput
+    />
+  ),
 
-Test.storyName = '🧪 Testing - input interaction';
+  name: '🧪 Testing - input interaction',
 
-Test.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  await waitFor(async () => {
-    await userEvent.selectOptions(canvas.getByTestId('enumInput'), 'option1');
-  });
+    await waitFor(async () => {
+      await userEvent.selectOptions(canvas.getByTestId('enumInput'), 'option1');
+    });
 
-  await waitFor(async () => {
-    await userEvent.click(canvas.getByTestId('submit-form-btn'));
-  });
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByTestId('submit-form-btn'));
+    });
 
-  await waitFor(async () => {
-    await expect(screen.getByTestId('output').textContent).toBe(
-      '{"enumInput":"option1"}'
-    );
-  });
+    await waitFor(async () => {
+      await expect(screen.getByTestId('output').textContent).toBe(
+        '{"enumInput":"option1"}'
+      );
+    });
+  },
 };

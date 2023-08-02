@@ -12,10 +12,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (SchemaName (..), Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (SchemaName (..), Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment (..), getBackendTypeConfig)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -68,7 +68,16 @@ authorTable =
 
 -- * SQL
 
-authorFullNameSQL :: SchemaName -> String
+authorFullNameOptionalSQL :: SchemaName -> Text
+authorFullNameOptionalSQL schemaName =
+  [i|
+    CREATE FUNCTION #{ unSchemaName schemaName }.author_full_name_optional(author_row author, title text = 'Dr')
+      RETURNS TEXT AS $$
+      SELECT title || ' ' || author_row.first_name || ' ' || author_row.last_name
+      $$ LANGUAGE sql STABLE;
+  |]
+
+authorFullNameSQL :: SchemaName -> Text
 authorFullNameSQL schemaName =
   [i|
       CREATE FUNCTION #{ unSchemaName schemaName }.author_full_name(author_row author)
@@ -84,7 +93,8 @@ setupFunction testEnv =
   let schemaName = Schema.getSchemaName testEnv
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              Postgres.run_ testEnv (authorFullNameSQL schemaName),
+              Postgres.run_ testEnv (authorFullNameSQL schemaName)
+                >> Postgres.run_ testEnv (authorFullNameOptionalSQL schemaName),
             Fixture.teardownAction = \_ -> pure ()
           }
       ]
@@ -102,7 +112,7 @@ setupMetadata testEnvironment =
       backendPrefix :: String
       backendPrefix = BackendType.backendTypeString backendTypeMetadata
    in [ Fixture.SetupAction
-          { Fixture.setupAction =
+          { Fixture.setupAction = do
               GraphqlEngine.postMetadata_
                 testEnvironment
                 [interpolateYaml|
@@ -117,6 +127,21 @@ setupMetadata testEnvironment =
                   function:
                     schema: #{ schemaName }
                     name: author_full_name
+              |]
+              GraphqlEngine.postMetadata_
+                testEnvironment
+                [interpolateYaml|
+              type: #{ backendPrefix }_add_computed_field
+              args:
+                source: #{ source }
+                name: full_name_optional
+                table:
+                  schema: #{ schemaName }
+                  name: author
+                definition:
+                  function:
+                    schema: #{ schemaName }
+                    name: author_full_name_optional
               |],
             Fixture.teardownAction = \_ -> pure ()
           }
@@ -124,13 +149,13 @@ setupMetadata testEnvironment =
 
 -- * Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
+tests :: SpecWith TestEnvironment
+tests = do
   it "Query data from the authors table" $ \testEnv -> do
     let schemaName = Schema.getSchemaName testEnv
 
     shouldReturnYaml
-      opts
+      testEnv
       ( GraphqlEngine.postGraphql
           testEnv
           [graphql|
@@ -149,4 +174,29 @@ tests opts = do
               full_name: Author 1
             - id: 2
               full_name: Author 2
+      |]
+
+  it "Query data from the authors table using default value" $ \testEnv -> do
+    let schemaName = Schema.getSchemaName testEnv
+
+    shouldReturnYaml
+      testEnv
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+            query {
+              #{schemaName}_author {
+                id
+                full_name_optional
+              }
+            }
+          |]
+      )
+      [interpolateYaml|
+        data:
+          #{schemaName}_author:
+            - id: 1
+              full_name_optional: Dr Author 1
+            - id: 2
+              full_name_optional: Dr Author 2
       |]

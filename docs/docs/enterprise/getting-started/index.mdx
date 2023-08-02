@@ -1,7 +1,7 @@
 ---
 sidebar_label: Get started
 description: Gett started for the Hasura Enterprise Edition
-title: 'EE: Get started'
+title: 'Enterprise Edition: Get started'
 keywords:
   - hasura
   - docs
@@ -9,34 +9,41 @@ keywords:
 slug: index
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # Get Started
 
-<div className="badge badge--primary heading-badge">Available on: Enterprise Edition</div>
+<ProductBadge self />
 
 ## Prerequisites
 
-1. Hasura EE can be deployed as a single Docker container and so to install and use this product, you will need a
-   container platform (e.g. Docker, Kubernetes, AWS ECS, Google CloudRun, Azure Containers).
+1. Hasura Enterprise Edition can be deployed as a single Docker container and so to install and use this product, you
+   will need a container platform (e.g. Docker, Kubernetes, AWS ECS, Google CloudRun, Azure Containers).
 
-2. Hasura EE depends on the following software for its features. We highly recommend using managed instances from your
-   cloud or infrastructure provider.
+2. Hasura Enterprise Edition depends on the following software for its features. We highly recommend using managed
+   instances from your cloud or infrastructure provider.
 
-   - **PostgreSQL database (v10 and above)** to store your Metadata (just like Hasura CE).
-   - **Redis database (v5 and above)**.
+   - **PostgreSQL database (v10 or above)** to store your Metadata (just like Hasura CE).
+   - **(Optional) Redis database (v5 or above) for setting up query response caching**.
 
 ## Installation instructions
 
-### License key
-
-To run Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not
-already have one.
-
 ### Installation in a container platform
 
-Please refer to the quickstart sections which describe how to install Hasura EE in various container platforms. **Each
-of the below guides requires HGE versions `v2.12.0` and above.**
+Please refer to the quickstart sections which describe how to install Hasura Enterprise Edition in various container
+platforms. **Each of the below guides requires HGE versions `v2.12.0` and above.**
 
 - [Quickstart with Docker](/enterprise/getting-started/quickstart-docker.mdx)
 - [Quickstart with AWS ECS](/enterprise/getting-started/quickstart-aws-ecs.mdx)
 - [Quickstart with Kubernetes](/enterprise/getting-started/quickstart-kubernetes.mdx)
 - [Quickstart with Google Cloud Run](/enterprise/getting-started/quickstart-google-cloud-run.mdx)
+
+### Enable Enterprise Edition features
+You can register for a 30 days free [Enterprise Edition Trials](/enterprise/try-hasura-enterprise-edition.mdx) and
+enable Enterprise Edition features right away.
+
+If you already have an Enterprise Edition license key provided by Hasura Sales, please follow
+[these steps](/enterprise/upgrade-ce-to-ee.mdx) to apply the license to your Hasura container.
+
+If you already have an EE license key provided by Hasura Sales, please follow
+[these steps](/enterprise/upgrade-ce-to-ee.mdx) to apply the license to your Hasura container.

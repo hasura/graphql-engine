@@ -1,15 +1,15 @@
 import React from 'react';
 
 import z from 'zod';
-import { Dialog } from '@/new-components/Dialog';
+import { Dialog } from '../../../../new-components/Dialog';
 import {
   CodeEditorField,
   InputField,
   useConsoleForm,
-} from '@/new-components/Form';
+} from '../../../../new-components/Form';
 import { SubmitHandler } from 'react-hook-form';
-import { QueryCollection } from '@/metadata/types';
-import { Tabs } from '@/new-components/Tabs';
+import { QueryCollection } from '../../../../metadata/types';
+import { Tabs } from '../../../../new-components/Tabs';
 import { QuickAdd } from './QuickAdd';
 import { parseQueryString, readFileAsync } from './utils';
 
@@ -85,17 +85,18 @@ export const QueryCollectionOperationDialog = (
     },
   });
 
-  const handleOnSubmit: SubmitHandler<QueryCollectionOperation> =
-    async values => {
-      const data = { ...values };
-      if ((values as UploadedQueryPayload).gqlFile) {
-        const gqlFileValue = (values as UploadedQueryPayload).gqlFile;
-        (data as UploadedQueryPayload).gqlFile = parseQueryString(
-          await readFileAsync(gqlFileValue[0])
-        );
-      }
-      onSubmit(data);
-    };
+  const handleOnSubmit: SubmitHandler<
+    QueryCollectionOperation
+  > = async values => {
+    const data = { ...values };
+    if ((values as UploadedQueryPayload).gqlFile) {
+      const gqlFileValue = (values as UploadedQueryPayload).gqlFile;
+      (data as UploadedQueryPayload).gqlFile = parseQueryString(
+        await readFileAsync(gqlFileValue[0])
+      );
+    }
+    onSubmit(data);
+  };
 
   return (
     <Form onSubmit={handleOnSubmit}>

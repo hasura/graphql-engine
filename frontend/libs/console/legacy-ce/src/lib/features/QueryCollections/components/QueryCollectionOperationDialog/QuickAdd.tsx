@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { Button } from '@/new-components/Button';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
+import { Button } from '../../../../new-components/Button';
+import { DropdownMenu } from '../../../../new-components/DropdownMenu';
 import { FaChevronDown } from 'react-icons/fa';
 import { parseQueryString } from './utils';
+import { getLSItem, LS_KEYS } from '../../../../utils/localStorage';
 
 interface Operation {
   name: string;
@@ -29,7 +30,7 @@ const quickOperations: Operation[] = [
           }
         }
       }
-  
+
       fragment FullType on __Type {
         kind
         name
@@ -62,14 +63,14 @@ const quickOperations: Operation[] = [
           ...TypeRef
         }
       }
-  
+
       fragment InputValue on __InputValue {
         name
         description
         type { ...TypeRef }
         defaultValue
       }
-  
+
       fragment TypeRef on __Type {
         kind
         name
@@ -115,7 +116,7 @@ export const QuickAdd = (props: QuickAddProps) => {
   const [graphiqlQueries, setGraphiqlQueries] = React.useState<Operation[]>([]);
 
   useEffect(() => {
-    const graphiQlLocalStorage = localStorage.getItem('graphiql:query');
+    const graphiQlLocalStorage = getLSItem(LS_KEYS.graphiqlQuery);
     if (graphiQlLocalStorage) {
       try {
         setGraphiqlQueries(parseQueryString(graphiQlLocalStorage));
@@ -133,6 +134,7 @@ export const QuickAdd = (props: QuickAddProps) => {
             className: 'z-[101]',
           },
         }}
+        zIndex="z-[102]"
         items={[
           [...quickOperations, ...graphiqlQueries].map(operation => (
             <div

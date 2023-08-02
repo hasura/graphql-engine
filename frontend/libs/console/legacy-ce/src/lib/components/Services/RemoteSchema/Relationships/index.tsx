@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
 import { RemoteSchemaRelationRenderer } from './RemoteSchemaRelationRenderer';

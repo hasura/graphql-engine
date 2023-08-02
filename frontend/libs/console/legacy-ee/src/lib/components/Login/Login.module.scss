@@ -1,4 +1,4 @@
-@import "../../components/Common/Common.module";
+@import '../../components/Common/Common.module';
 
 .container {
   display: flex;
@@ -11,7 +11,6 @@
   text-transform: uppercase;
   text-align: center;
 }
-
 
 .formContainer {
   margin-top: -200px;
@@ -32,7 +31,7 @@
 }
 
 .mainWrapper {
-  background-color: #F8FAFB;
+  background-color: #f8fafb;
 }
 .input_addon_group {
   margin-bottom: 10px;
@@ -40,12 +39,12 @@
   min-width: 50px;
   .input_group {
     width: 100%;
+    position: relative;
     .loginLoader {
       cursor: pointer;
       font-size: 20px;
     }
-    .loginIcon
-    {
+    .loginIcon {
       width: 20px;
       cursor: pointer;
     }
@@ -58,9 +57,13 @@
       border: 0;
       cursor: pointer;
     }
-    .input_addon_group
-    {
+    .input_addon_group {
       cursor: pointer;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      display: flex;
     }
     input:focus {
       border: 1px solid #999;
@@ -78,57 +81,57 @@
 }
 
 .signin_btn {
-   padding: 0 15px;
-   padding-bottom: 15px;
-   padding-top: 10px;
+  padding: 0 15px;
+  padding-bottom: 15px;
+  padding-top: 10px;
 
-   button {
-      width: 100%;
-      padding: 0 0;
-      background-color: #3D4C7E;
-      border: 0 solid #3D4C7E;
-      color: #fff;
+  button {
+    width: 100%;
+    padding: 0 0;
+    background-color: #3d4c7e;
+    border: 0 solid #3d4c7e;
+    color: #fff;
+    height: 44px;
+    position: relative;
+    border-radius: 5px;
+    font-size: 14px;
+    font-family: 'Gudea';
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    .signin_btn_img {
+      background-color: rgba(0, 0, 0, 0.3);
+      width: 50px;
       height: 44px;
-      position: relative;
-      border-radius: 5px;
-      font-size: 14px;
-      font-family: 'Gudea';
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      display: flex;
+      display: inline-block;
+      // position: absolute;
+      // left: 0;
+      // top: 0;
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
       align-items: center;
-      .signin_btn_img {
-        background-color: rgba(0,0,0,.3);
-        width: 50px;
-        height: 44px;
+      justify-content: center;
+      display: flex;
+      img {
+        width: 20px;
         display: inline-block;
-        // position: absolute;
-        // left: 0;
-        // top: 0;
-        border-top-left-radius: 4px;
-        border-bottom-left-radius: 4px;
-        align-items: center;
-        justify-content: center;
-        display: flex;
-        img
-        {
-          width: 20px;
-          display: inline-block;
-        }
       }
-      .signin_btn_content {
-        display: inline-block;
-        font-size: 14px;
-        color: #fff;
-        width: calc(100% - 50px);
-      }
-   }
-   button:hover {
-     background-color: #2C3965;
-   }
-   button:focus, button:active {
-     background-color: #2C3965 !important;
-   }
+    }
+    .signin_btn_content {
+      display: inline-block;
+      font-size: 14px;
+      color: #fff;
+      width: calc(100% - 50px);
+    }
+  }
+  button:hover {
+    background-color: #2c3965;
+  }
+  button:focus,
+  button:active {
+    background-color: #2c3965 !important;
+  }
 }
 
 .loginHeading {

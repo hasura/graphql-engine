@@ -1,13 +1,14 @@
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { useListAllTableColumns } from '../hooks';
+import { useListAllTableColumns } from '../..';
+import { TableColumn } from '../../../DataSource';
 import { ModifyTableColumn } from '../types';
 import { EditTableColumnDialog } from './EditTableColumnDialog/EditTableColumnDialog';
 import { TableColumnDescription } from './TableColumnDescription';
 import { ModifyTableProps } from '../ModifyTable';
 
-interface TableColumnProps extends ModifyTableProps {}
+type TableColumnProps = ModifyTableProps;
 export const TableColumns: React.VFC<TableColumnProps> = props => {
   const { dataSourceName, table } = props;
   const { columns, isLoading, isError } = useListAllTableColumns(
@@ -34,7 +35,7 @@ export const TableColumns: React.VFC<TableColumnProps> = props => {
 
   return (
     <>
-      {(columns ?? []).map(c => (
+      {(columns ?? []).map((c: TableColumn) => (
         <TableColumnDescription
           column={c}
           key={c.name}

@@ -1,28 +1,32 @@
 module Test.Specs.ErrorSpec (spec) where
 
 import Control.Lens ((&), (?~))
+import Data.Aeson (Value (..))
 import Hasura.Backends.DataConnector.API
-import Test.AgentClient (queryExpectError)
+import Test.AgentAPI (queryExpectError)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Sandwich (describe, shouldBe)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
+import Prelude
 
-spec :: TestData -> SourceName -> Config -> a -> AgentTestSpec
-spec TestData {..} sourceName config _capabilities = describe "Error Protocol" do
+spec :: TestData -> AgentDatasetTestSpec
+spec TestData {..} = describe "Error Protocol" do
   it "returns a structured error when sending an invalid query" do
-    receivedArtistsError <- queryExpectError sourceName config brokenQueryRequest
+    receivedArtistsError <- queryExpectError brokenQueryRequest
     _crType receivedArtistsError `shouldBe` UncaughtError
   where
     brokenQueryRequest :: QueryRequest
     brokenQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query =
             Data.emptyQuery
               & qFields ?~ fields
               & qWhere
                 ?~ ApplyBinaryComparisonOperator
                   (CustomBinaryComparisonOperator "FOOBAR")
-                  (ComparisonColumn CurrentTable (ColumnName "ArtistId") NumberTy)
-                  (ScalarValue "1" StringTy)
-       in QueryRequest _tdArtistsTableName [] query
+                  (_tdCurrentComparisonColumn "ArtistId" artistIdScalarType)
+                  (Data.scalarValueComparison (Number 1) $ artistIdScalarType)
+       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+
+    artistIdScalarType = _tdFindColumnScalarType _tdArtistsTableName "ArtistId"

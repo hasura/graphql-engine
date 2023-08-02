@@ -20,33 +20,6 @@ from validate import authorize_for_webhook, check_query_f
 
 @pytest.mark.usefixtures('webhook_server', 'per_class_tests_db_state')
 @pytest.mark.admin_secret
-class AbstractTestWebhookV1Query(object):
-    @classmethod
-    def dir(cls):
-        return 'queries/graphql_query/basic'
-
-    def test_v1_query(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/select_query_user_postgres.yaml')
-
-@pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'GET')
-@pytest.mark.no_tls_webhook_server
-class TestWebhookV1QueryInGETModeWithoutTLS(AbstractTestWebhookV1Query): pass
-
-@pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'GET')
-@pytest.mark.tls_webhook_server
-class TestWebhookV1QueryInGETModeWithTLS(AbstractTestWebhookV1Query): pass
-
-@pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'POST')
-@pytest.mark.no_tls_webhook_server
-class TestWebhookV1QueryInPOSTModeWithoutTLS(AbstractTestWebhookV1Query): pass
-
-@pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'POST')
-@pytest.mark.tls_webhook_server
-class TestWebhookV1QueryInPOSTModeWithTLS(AbstractTestWebhookV1Query): pass
-
-
-@pytest.mark.usefixtures('webhook_server', 'per_class_tests_db_state')
-@pytest.mark.admin_secret
 class AbstractTestWebhookV2Query(object):
     @classmethod
     def dir(cls):

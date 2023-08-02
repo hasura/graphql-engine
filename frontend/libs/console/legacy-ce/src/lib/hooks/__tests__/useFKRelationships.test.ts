@@ -1,6 +1,9 @@
 import { setupServer } from 'msw/node';
 import { renderHook } from '@testing-library/react-hooks';
-import { useDataSourceFKRelationships, useTableFKRelationships } from '..';
+import {
+  useDataSourceFKRelationships,
+  useTableFKRelationships,
+} from '../useFKRelationships';
 import { networkStubs } from './common/networkStubs';
 import { wrapper } from './common/decorator';
 import { APIError } from '../error';

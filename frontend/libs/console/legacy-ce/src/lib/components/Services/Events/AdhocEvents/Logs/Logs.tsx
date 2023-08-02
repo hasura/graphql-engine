@@ -15,21 +15,21 @@ const InvocationLogs: React.FC<Props> = props => {
 
   const renderRows: FilterRenderProp = (
     rows,
-    count,
     filterState,
     setFilterState,
     runQuery
   ) => (
-    <InvocationLogsTable
-      rows={rows}
-      filterState={filterState}
-      count={count}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={['id', 'status', 'event_id', 'created_at']}
-      identifier="adhoc-events-logs"
-      dispatch={dispatch}
-    />
+    <div className="bootstrap-jail">
+      <InvocationLogsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={['id', 'status', 'event_id', 'created_at']}
+        identifier="adhoc-events-logs"
+        dispatch={dispatch}
+      />
+    </div>
   );
 
   return (

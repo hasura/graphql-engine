@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
+import { Button } from '../../../../new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -277,19 +277,15 @@ const ModifyView = props => {
           {getViewColumnsSection()}
 
           {isFeatureSupported('tables.modify.computedFields') && (
-            <>
-              <div className="w-full sm:w-6/12 mb-md">
-                <ComputedFields tableSchema={tableSchema} />
-              </div>
-            </>
+            <div className="w-full sm:w-6/12 mb-md">
+              <ComputedFields tableSchema={tableSchema} />
+            </div>
           )}
 
           {isFeatureSupported('tables.modify.customGqlRoot') && (
-            <>
-              <div className="w-full sm:w-6/12 mb-md">
-                <RootFields tableSchema={tableSchema} />
-              </div>
-            </>
+            <div className="w-full sm:w-6/12 mb-md">
+              <RootFields tableSchema={tableSchema} />
+            </div>
           )}
 
           {untrackBtn}

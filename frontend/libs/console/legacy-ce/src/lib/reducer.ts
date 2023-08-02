@@ -1,5 +1,4 @@
 import { combineReducers } from 'redux';
-import { reducer as notifications } from 'react-notification-system-redux';
 import { routerReducer } from 'react-router-redux';
 
 import dataReducer from './components/Services/Data/DataReducer';
@@ -14,6 +13,7 @@ import progressBarReducer from './components/App/Actions';
 import telemetryReducer from './telemetry/Actions';
 import { metadataReducer } from './metadata/reducer';
 import { modalReducer } from './store/modal/modal.reducer';
+import notifications from './components/Services/Common/notifications.reducer';
 
 const reducer = combineReducers({
   ...dataReducer,

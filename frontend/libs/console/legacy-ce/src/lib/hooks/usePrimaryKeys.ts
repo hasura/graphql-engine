@@ -1,8 +1,8 @@
-import type { MSSqlConstraint } from '@/components/Services/Data/mergeData';
-import { Driver } from '@/dataSources';
-import type { PrimaryKey } from '@/dataSources/types';
-import { dataSourceSqlQueries } from '@/features/SqlQueries';
-import type { QualifiedTable } from '@/metadata/types';
+import type { MSSqlConstraint } from '../components/Services/Data/mergeData';
+import { Driver } from '../dataSources';
+import type { PrimaryKey } from '../dataSources/types';
+import { dataSourceSqlQueries } from '../features/SqlQueries';
+import type { QualifiedTable } from '../metadata/types';
 import {
   RunSQLQueryOptions,
   transformMssqlConstraint,

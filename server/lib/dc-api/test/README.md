@@ -9,20 +9,22 @@ The executable also has the ability to export the OpenAPI spec of the Data Conne
 ### Running Tests
 First, start your Data Connector agent and ensure it is populated with the [Chinook data set](https://github.com/lerocha/chinook-database/). For example, you could start the Reference Agent by following the instructions in [its README](../../dc-agents/reference/README.md).
 
-To run the tests against the agent (for example), you must specify the agent's URL on the command line (`-u`), as well as the agent's configuration JSON (`-s`, sent in the `X-Hasura-DataConnector-Config` header):
+To run the tests against the agent (for example), you must specify the agent's URL on the command line (`--agent-base-url`), as well as the agent's configuration JSON (`--agent-config`, sent in the `X-Hasura-DataConnector-Config` header):
 
 ```
-cabal run test:tests-dc-api -- test -u "http://localhost:8100" -s '{}'
+cabal run test:tests-dc-api -- test --agent-base-url "http://localhost:8100" --agent-config '{}'
 ```
 
 The test suite will discover what capabilities the agent has by querying it. It will then tailor the tests that it will run to match only those capabilities that the agent has said it supports.
+
+If your agent supports the datasets capability, you can omit the `--agent-config` argument and the test suite will clone the Chinook dataset template on the agent to run its test against. If you need to specify some additional configuration to be added to the cloned dataset's configuration, you can specify it using `--merge-agent-config`.
 
 The test suite is implemented using the [Sandwich](https://codedownio.github.io/sandwich/) test framework. The standard Sandwich command line arguments can be passed by suffixing your command line with `sandwich` and then all following args will be passed to Sandwich.
 
 For example, to run the Terminal UI mode of Sandwich, you could run:
 
 ```
-cabal run test:tests-dc-api -- test -u "http://localhost:8100" -s '{}' sandwich --tui
+cabal run test:tests-dc-api -- test --agent-base-url "http://localhost:8100" --agent-config '{}' sandwich --tui
 ```
 
 By default Sandwich will write test results into a `test_runs` folder. Every test has a folder that will contain debug information, for example:

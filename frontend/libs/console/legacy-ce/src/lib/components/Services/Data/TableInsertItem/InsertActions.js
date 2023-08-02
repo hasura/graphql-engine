@@ -19,9 +19,12 @@ import {
   getInsertDownQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { makeMigrationCall } from '../DataActions';
-import { removeAll } from 'react-notification-system-redux';
+import toast from 'react-hot-toast/headless';
 import { getNotificationDetails } from '../../Common/Notification';
-import { getTableConfiguration } from '../TableBrowseRows/utils';
+import {
+  getTableConfiguration,
+  getTableCustomization,
+} from '../TableBrowseRows/utils';
 
 const I_RESET = 'InsertItem/I_RESET';
 const I_ONGOING_REQ = 'InsertItem/I_ONGOING_REQ';
@@ -92,6 +95,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
     const tableDef = { name: tableName, schema: currentSchema };
     const sources = metadata.metadataObject?.sources;
     const tableConfiguration = getTableConfiguration(tables, sources);
+    const tableCustomization = getTableCustomization(tables, sources);
     const currentTableInfo = findTable(allSchemas, tableDef);
     if (!currentTableInfo) return;
     const columns = currentTableInfo.columns;
@@ -157,6 +161,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       source: currentDataSource,
       tableDef,
       tableConfiguration,
+      dataSourceCustomization: tableCustomization,
       insertObject,
       returning,
     });
@@ -206,6 +211,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
         const { affectedRows, returnedFields } = processInsertData(
           data,
           tableConfiguration,
+          tableCustomization,
           {
             currentSchema,
             currentTable: tableName,
@@ -232,7 +238,7 @@ const insertItem = (tableName, colValues, isMigration = false) => {
       },
 
       err => {
-        dispatch(removeAll());
+        toast.remove();
         dispatch(showErrorNotification('Insert failed!', err.error, err));
       }
     );

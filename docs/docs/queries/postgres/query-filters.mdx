@@ -15,38 +15,38 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # Postgres: Filter Query Results / Search Queries
 
+## Overview
+
+Hasura provides a powerful yet simple syntax to filter query results on Postgres. This is useful for building search
+queries or filtering data based on some criteria. You can utilize arguments and operators to filter results based on
+equality, comparison, pattern matching, etc.
+
 ## The **where** argument
 
-You can use the `where` argument in your queries to filter results based
-on some field’s values (even nested objects' fields). You can even use
-multiple filters in the same `where` clause using the `_and` or the
-`_or` operators.
+You can use the `where` argument in your queries to filter results based on some field’s values (even nested objects'
+fields). You can even use multiple filters in the same `where` clause using the `_and` or the `_or` operators.
 
 For example, to fetch data for an author whose name is "Sidney":
 
 ```graphql {3}
 query {
-  authors(
-    where: {name: {_eq: "Sidney"}}
-  ) {
+  authors(where: { name: { _eq: "Sidney" } }) {
     id
     name
   }
 }
 ```
 
-You can also use nested objects\` fields to filter rows from a table and
-also filter the nested objects as well.
+You can also use nested objects' fields to filter rows from a table and also filter the nested objects as well.
 
-For example, to fetch a list of authors who have articles with a rating
-greater than 4 along with those articles:
+For example, to fetch a list of authors who have articles with a rating greater than 4 along with those articles:
 
 ```graphql {2,5}
 query {
-  authors (where: {articles: {rating: {_gt: 4}}}) {
+  authors(where: { articles: { rating: { _gt: 4 } } }) {
     id
     name
-    articles (where: {rating: {_gt: 4}}) {
+    articles(where: { rating: { _gt: 4 } }) {
       id
       title
       rating
@@ -55,34 +55,30 @@ query {
 }
 ```
 
-Here `_eq` and `_gt` are examples of comparison operators that can be
-used in the `where` argument to filter on equality.
+Here `_eq` and `_gt` are examples of comparison operators that can be used in the `where` argument to filter on
+equality.
 
 You can see the complete specification of the `where` argument in the
 [API reference](/api-reference/graphql-api/query.mdx#whereexp).
 
 ## Comparison operators
 
-Let’s take a look at different comparison operators that can be used to
-filter results.
+Comparison operators are used to compare values of the same type. For example, to compare two numbers, two strings, two
+dates, etc.
 
 ### Equality operators (\_eq, \_neq)
 
-The `_eq` (equal to) or the `_neq` (not equal to) operators are
-compatible with any Postgres type other than `json` or `jsonB` (like
-`Integer`, `Float`, `Double`, `Text`, `Boolean`,
-`Date`/`Time`/`Timestamp`, etc.).
+The `_eq` (equal to) or the `_neq` (not equal to) operators are compatible with any Postgres type other than `json` or
+`jsonB` (like `Integer`, `Float`, `Double`, `Text`, `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
 
-For more details on equality operators and Postgres equivalents, refer
-to the [API reference](/api-reference/graphql-api/query.mdx#generic-operators).
+For more details on equality operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#generic-operators).
 
-The following are examples of using the equality operators on different
-types.
+The following are examples of using the equality operators on different types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
 
-Fetch data about an author whose `id` *(an integer field)* is equal to
-3:
+Fetch data about an author whose `id` _(an integer field)_ is equal to 3:
 
 <GraphiQLIDE
   query={`query {
@@ -93,7 +89,7 @@ Fetch data about an author whose `id` *(an integer field)* is equal to
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -107,7 +103,7 @@ response={`{
 
 **Example: String or Text**
 
-Fetch a list of authors with `name` *(a text field)* as "Sidney":
+Fetch a list of authors with `name` _(a text field)_ as "Sidney":
 
 <GraphiQLIDE
   query={`query {
@@ -118,7 +114,7 @@ Fetch a list of authors with `name` *(a text field)* as "Sidney":
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -132,8 +128,7 @@ response={`{
 
 **Example: Boolean**
 
-Fetch a list of articles that have not been published (`is_published` is
-a boolean field):
+Fetch a list of articles that have not been published (`is_published` is a boolean field):
 
 <GraphiQLIDE
   query={`query {
@@ -145,7 +140,7 @@ a boolean field):
     is_published
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -175,8 +170,7 @@ response={`{
 
 **Example: Date (works with Time, Timezone, etc.)**
 
-Fetch a list of articles that were published on a certain date
-(`published_on` is a Date field):
+Fetch a list of articles that were published on a certain date (`published_on` is a Date field):
 
 <GraphiQLIDE
   query={`query {
@@ -188,7 +182,7 @@ Fetch a list of articles that were published on a certain date
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -201,16 +195,48 @@ response={`{
 }`}
 />
 
+**Example: Integer (works with Integer, Float, Double, etc.)**
+
+Fetch a list of users whose age is _not_ 30 (`age` is an Integer field):
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { age: { _neq: 30 } }) {
+    id
+    name
+    age
+  }
+}`}
+  response={`{
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John",
+        "age": 20
+      },
+      {
+        "id": 2,
+        "name": "Jane",
+        "age": 25
+      },
+      {
+        "id": 4,
+        "name": "Bob",
+        "age": 40
+      }
+    ]
+  }`}
+/>
+
 :::info Caveat for "null" values
 
-By design, the `_eq` or `_neq` operators will not return rows with
-`null` values.
+By design, the `_eq` or `_neq` operators will not return rows with `null` values.
 
-To also return rows with `null` values, the `_is_null` operator needs to
-be used along with these joined by the `_or` operator.
+To also return rows with `null` values, the `_is_null` operator needs to be used along with these joined by the `_or`
+operator.
 
-For example, to fetch a list of articles where the `is_published` column
-is either `false` or `null`:
+For example, to fetch a list of articles where the `is_published` column is either `false` or `null`:
 
 <GraphiQLIDE
   query={`query {
@@ -228,7 +254,7 @@ is either `false` or `null`:
     is_published
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -255,15 +281,106 @@ response={`{
 
 ### Greater than or less than operators (\_gt, \_lt, \_gte, \_lte)
 
-The `_gt` (greater than), `_lt` (less than), `_gte` (greater than or
-equal to), `_lte` (less than or equal to) operators are compatible with
-any Postgres type other than `json` or `jsonB` (like `Integer`, `Float`,
-`Double`, `Text`, `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
+The `_gt` (greater than), `_lt` (less than), `_gte` (greater than or equal to), `_lte` (less than or equal to) operators
+are compatible with any Postgres type other than `json` or `jsonB` (like `Integer`, `Float`, `Double`, `Text`,
+`Boolean`, `Date`/`Time`/`Timestamp`, etc.).
 
-For more details on greater than or less than operators and Postgres
-equivalents, refer to the [API reference](/api-reference/graphql-api/query.mdx#generic-operators).
+For more details on greater than or less than operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#generic-operators).
 
 The following are examples of using these operators on different types:
+
+**Example: Integer (works with Double, Float, Numeric, etc.)**
+
+This query retrieves all users whose age is less than 30. The `_lt` operator is a comparison operator that means "less
+than". It is used to filter records based on a specified value.
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { age: { _lt: 30 }}) {
+    id
+    name
+    age
+  }
+}`}
+  response={`{
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John",
+        "age": 25
+      },
+      {
+        "id": 2,
+        "name": "Jane",
+        "age": 28
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: String or Text**
+
+Fetch a list of authors whose names begin with M or any letter that follows M _(essentially, a filter based on a
+dictionary sort)_:
+
+<GraphiQLIDE
+  query={`query {
+  authors(
+    where: {name: {_gt: "M"}}
+  ) {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 3,
+        "name": "Sidney"
+      },
+      {
+        "id": 9,
+        "name": "Ninnetta"
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: Integer (works with Double, Float, etc.)**
+
+Fetch a list of all products with a price less than or equal to 10.
+
+<GraphiQLIDE
+  query={`query {
+  products(where: { price: { _lte: 10 } }) {
+    name
+    price
+  }
+}`}
+  response={`{
+  "data": {
+    "products": [
+      {
+        "name": "Bread",
+        "price": 2.5
+      },
+      {
+        "name": "Milk",
+        "price": 3.5
+      },
+      {
+        "name": "Eggs",
+        "price": 4.5
+      }
+    ]
+  }
+}`}
+/>
 
 **Example: Integer (works with Double, Float, etc.)**
 
@@ -279,7 +396,7 @@ Fetch a list of articles rated 4 or more (`rating` is an integer field):
     rating
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -302,40 +419,9 @@ response={`{
 }`}
 />
 
-**Example: String or Text**
-
-Fetch a list of authors whose names begin with M or any letter that
-follows M *(essentially, a filter based on a dictionary sort)*:
-
-<GraphiQLIDE
-  query={`query {
-  authors(
-    where: {name: {_gt: "M"}}
-  ) {
-    id
-    name
-  }
-}`}
-response={`{
-  "data": {
-    "authors": [
-      {
-        "id": 3,
-        "name": "Sidney"
-      },
-      {
-        "id": 9,
-        "name": "Ninnetta"
-      }
-    ]
-  }
-}`}
-/>
-
 **Example: Date (works with Time, Timezone, etc.)**
 
-Fetch a list of articles that were published on or after date
-"01/01/2018":
+Fetch a list of articles that were published on or after date "01/01/2018":
 
 <GraphiQLIDE
   query={`query {
@@ -347,7 +433,7 @@ Fetch a list of articles that were published on or after date
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -377,13 +463,12 @@ response={`{
 
 ### List based search operators (\_in, \_nin)
 
-The `_in` (in a list) and `_nin` (not in list) operators are used to
-compare field values to a list of values. They are compatible with any
-Postgres type other than `json` or `jsonB` (like `Integer`, `Float`,
-`Double`, `Text`, `Boolean`, `Date`/`Time`/`Timestamp`, etc.).
+The `_in` (in a list) and `_nin` (not in list) operators are used to compare field values to a list of values. They are
+compatible with any Postgres type other than `json` or `jsonB` (like `Integer`, `Float`, `Double`, `Text`, `Boolean`,
+`Date`/`Time`/`Timestamp`, etc.).
 
-For more details on list based search operators and Postgres
-equivalents, refer to the [API reference](/api-reference/graphql-api/query.mdx#generic-operators).
+For more details on list based search operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#generic-operators).
 
 The following are examples of using these operators on different types:
 
@@ -401,7 +486,7 @@ Fetch a list of articles rated 1, 3 or 5:
     rating
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -442,7 +527,7 @@ Fetch a list of those authors whose names are NOT part of a list:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -468,12 +553,11 @@ response={`{
 
 ### Text search or pattern matching operators (\_like, \_similar, \_regex, etc.)
 
-The `_like`, `_nlike`, `_ilike`, `_nilike`, `_similar`, `_nsimilar`,
-`_regex`, `_nregex`, `_iregex`, `_niregex` operators are used for
-pattern matching on string/text fields.
+The `_like`, `_nlike`, `_ilike`, `_nilike`, `_similar`, `_nsimilar`, `_regex`, `_nregex`, `_iregex`, `_niregex`
+operators are used for pattern matching on string/text fields.
 
-For more details on text search operators and Postgres equivalents,
-refer to the [API reference](/api-reference/graphql-api/query.mdx#text-operators).
+For more details on text search operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#text-operators).
 
 **Example: \_like**
 
@@ -488,7 +572,7 @@ Fetch a list of articles whose titles contain the word “amet”:
     title
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -506,6 +590,61 @@ response={`{
     ]
   }
 }`}
+/>
+
+**Example: \_ilike**
+
+This query will return all users whose name contains the string "john", regardless of case.
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _ilike: "%john%" } }) {
+    id
+    name
+  }
+}
+`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "id": 1,
+          "name": "John Doe"
+        },
+        {
+          "id": 2,
+          "name": "John Smith"
+        }
+      ]
+  }
+  `}
+/>
+
+**Example: \_nilike**
+
+This query would return all users whose name does not contain the string "John".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _nilike: "%John%" } }) {
+    name
+  }
+}
+`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "name": "Jane Doe"
+        },
+        {
+          "name": "Jane Smith"
+        }
+      ]
+  }
+  `}
 />
 
 :::info Note
@@ -527,7 +666,7 @@ Fetch a list of authors whose names begin with A or C:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -551,15 +690,54 @@ response={`{
 }`}
 />
 
+**Example: \_nsimilar**
+
+Fetch a list of authors whose names do not begin with A or C:
+
+<GraphiQLIDE
+  query={`query {
+  authors(
+    where: {name: {_nsimilar: "(A|C)%"}}
+  ) {
+    id
+    name
+  }
+}
+  `}
+  response={`
+  {
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin"
+      },
+      {
+        "id": 2,
+        "name": "Beltran"
+      },
+      {
+        "id": 3,
+        "name": "Sidney"
+      },
+      {
+        "id": 7,
+        "name": "Dorothy"
+      }
+    ]
+  }
+  `}
+/>
+
 :::info Note
 
-`_similar` is case-sensitive
+`_similar` and `_nsimilar` are case-sensitive.
 
 :::
 
 **Example: \_regex**
 
-Fetch a list of articles whose titles match the regex “\[ae\]met”:
+Fetch a list of articles whose titles match the regex `[ae]met`:
 
 <GraphiQLIDE
   query={`query {
@@ -570,7 +748,7 @@ Fetch a list of articles whose titles match the regex “\[ae\]met”:
     title
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -590,6 +768,61 @@ response={`{
 }`}
 />
 
+**Example: \_iregex**
+
+This query will return all users whose name matches the regular expression `/^joh?n$/i`, which matches "John" and "Jon".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _iregex: "/^joh?n$/i" } }) {
+    id
+    name
+  }
+}`}
+  response={`{
+    "data": {
+    "users": [
+      {
+        "id": 1,
+        "name": "John Doe"
+      },
+      {
+        "id": 2,
+        "name": "Jon Smith"
+      }
+    ]
+  }`}
+/>
+
+**Example: \_nregex**
+
+The \_nregex operator in this GraphQL query is a negated regular expression filter that matches all users whose names do
+not start with the letter "J".
+
+<GraphiQLIDE
+  query={`query {
+  users(where: { name: { _nregex: "/^J/" } }) {
+    id
+    name
+  }
+}`}
+  response={`
+  {
+    "data": {
+      "users": [
+        {
+          "id": 3,
+          "name": "Tom Smith"
+        },
+        {
+          "id": 4,
+          "name": "Alan Doe"
+        }
+      ]
+  }
+  `}
+/>
+
 :::info Note
 
 `_regex` is case-sensitive. Use `_iregex` for case-insensitive search.
@@ -604,11 +837,11 @@ response={`{
 
 ### JSONB operators (\_contains, \_has_key, etc.)
 
-The `_contains`, `_contained_in`, `_has_key`, `_has_keys_any` and
-`_has_keys_all` operators are used to filter based on `JSONB` columns.
+The `_contains`, `_contained_in`, `_has_key`, `_has_keys_any` and `_has_keys_all` operators are used to filter based on
+`JSONB` columns.
 
-For more details on JSONB operators and Postgres equivalents, refer to
-the [API reference](/api-reference/graphql-api/query.mdx#jsonb-operators).
+For more details on JSONB operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#jsonb-operators).
 
 **Example: \_contains**
 
@@ -626,7 +859,7 @@ Fetch all authors living within a particular pincode (present in `address` JSONB
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -643,17 +876,52 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "jsonFilter": {
     "pincode": 560095
   }
 }`}
 />
 
+**Example: \_contained_in**
+
+This example fetches all items where the "Tags" property contains the value "tag1" and is also contained in the list
+`["tag1", "tag2"]`.
+
+<GraphiQLIDE
+  query={`query get_items_with_tags{
+  items(
+    where: {
+      tags: {
+        _contained_in: {
+          value: ["tag1", "tag2"]
+        }
+      }
+    }
+  ) {
+    id
+    name
+    tags
+  }
+}
+`}
+  response={`{
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "name": "Item 1",
+        "tags": ["tag1", "tag2"]
+      }
+    ]
+  }
+}
+  `}
+/>
+
 **Example: \_has_key**
 
-Fetch authors if the `phone` key is present in their JSONB `address`
-column:
+Fetch authors if the `phone` key is present in their JSONB `address` column:
 
 <GraphiQLIDE
   query={`query get_authors_if_phone {
@@ -667,7 +935,7 @@ column:
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -686,72 +954,310 @@ response={`{
 }`}
 />
 
-### PostGIS spatial relationship operators (\_st_contains, \_st_crosses, etc.)
+**Example: \_has_keys_any**
 
-The `_st_contains`, `_st_crosses`, `_st_equals`, `_st_intersects`,
-`_st_3d_intersects`, `_st_overlaps`, `_st_touches`, `_st_within`,
-`_st_d_within`, and `_st_3d_d_within` operators are used to filter based
-on `geometry` like columns.
-
-`_st_d_within` and `_st_intersects` can be used on `geography` columns
-also (but their 3D variations are for `geometry` only).
-
-For more details on spatial relationship operators and Postgres
-equivalents, refer to the [API reference](/api-reference/graphql-api/query.mdx#geometry-operators).
-
-Use JSON representation (see [GeoJSON](https://tools.ietf.org/html/rfc7946)) of `geometry` and
-`geography` values in `variables` as shown in the following examples:
-
-**Example: \_st_within**
-
-Fetch a list of geometry values which are within the given `polygon`
-value:
+Fetch users who have either "admin" or "editor" permissions:
 
 <GraphiQLIDE
-  query={`query geom_table($polygon: geometry){
-  geom_table(
-    where: {geom_col: {_st_within: $polygon}}
-  ){
+  query={`query {
+  user {
     id
-    geom_col
+    name
+    permissions(where: {_has_keys_any: ["admin", "editor"]}) {
+      id
+      name
+    }
   }
 }`}
-response={`{
+  response={`{
   "data": {
-    "geom_table": [
+    "user": {
+      "id": 1,
+      "name": "Ash",
+      "permissions": [
+        {
+          "id": 1,
+          "name": "admin"
+        },
+        {
+          "id": 2,
+          "name": "editor"
+        }
+      ]
+    }
+  }`}
+/>
+
+**Example: \_has_keys_all**
+
+Fetch user, where their id is "123", and check if the address has all the fields "street", "city", "state", "zip":
+
+<GraphiQLIDE
+  query={`query {
+  user(id: "123") {
+    name
+    address {
+      street
+      city
+      state
+      zip
+      phone
+    }
+    hasAllAddressFields: address _has_keys_all(keys: ["street", "city", "state", "zip"])
+  }
+}`}
+  response={`{
+    "data": {
+      "user": {
+        "name": "John Doe",
+        "address": {
+          "street": "123 Main St.",
+          "city": "Anytown",
+          "state": "CA",
+          "zip": "12345",
+          "phone": "555-555-5555"
+        },
+        "hasAllAddressFields": true
+      }
+    } 
+  }`}
+/>
+
+### PostGIS spatial relationship operators (\_st_contains, \_st_crosses, etc.)
+
+The `_st_contains`, `_st_crosses`, `_st_equals`, `_st_intersects`, `_st_3d_intersects`, `_st_overlaps`, `_st_touches`,
+`_st_within`, `_st_d_within`, and `_st_3d_d_within` operators are used to filter based on `geometry` like columns.
+
+`_st_d_within` and `_st_intersects` can be used on `geography` columns also (but their 3D variations are for `geometry`
+only).
+
+For more details on spatial relationship operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#geometry-operators).
+
+Use JSON representation (see [GeoJSON](https://tools.ietf.org/html/rfc7946)) of `geometry` and `geography` values in
+`variables` as shown in the following examples:
+
+**Example: \_st_contains**
+
+`_st_contains` is a spatial operator that checks whether one geometry contains another. It returns values if the first
+geometry completely contains the second geometry.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_contains: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+    "data": {
+    "locations": [
       {
         "id": 1,
-        "geom_col": {
+        "name": "Times Square",
+        "geometry": {
           "type": "Point",
           "coordinates": [
-            1,
-            2
+            -73.9857,
+            40.7484
+          ]
+        }
+      }
+    ]
+  }`}
+/>
+
+**Example: \_st_crosses**
+
+`_st_crosses` is a spatial operator that checks whether two geometries cross each other. It returns values if the two
+geometries cross one another.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {river: {_st_crosses: {interstate: {name: "I-95"}}}}) {
+    id
+    name
+    river {
+      name
+      geometry
+    }
+    interstate {
+      name
+      geometry
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "river": {
+          "name": "River 1",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "river": {
+          "name": "River 2",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-74.0064, 40.7142], [-73.9874, 40.7397]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: \_st_equals**
+
+`_st_equals` is a spatial operator that checks whether two geometries are equal. It returns values if the two geometries
+have the same shape and size.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_equals: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
           ]
         }
       }
     ]
   }
 }`}
-variables={`{
-  "polygon": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [ 0, 0 ],
-        [ 0, 2 ],
-        [ 2, 2 ],
-        [ 2, 0 ],
-        [ 0, 0 ]
-      ]
+/>
+
+**Example: \_st_intersects**
+
+In this example, the `getPointsWithinPolygon` query takes in a polygon argument that defines a rectangular area on a
+map. The location field returns the latitude and longitude of points that intersect with the given polygon using the
+`_st_intersects` operator.
+
+<GraphiQLIDE
+  query={`query {
+  getPointsWithinPolygon(polygon: "POLYGON((-122.431297 37.773972,-122.431297 37.771547,-122.434282 37.771547,-122.434282 37.773972,-122.431297 37.773972))") {
+    id
+    name
+    location {
+      latitude
+      longitude
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "getPointsWithinPolygon": [
+      {
+        "id": 1,
+        "name": "Point 1",
+        "location": {
+          "latitude": 37.773972,
+          "longitude": -122.431297
+        }
+      }
     ]
   }
 }`}
 />
 
-**Example: \_st_d\_within**
+**Example: \_st_within**
 
-Fetch a list of `geometry` values which are 3 units from a given `point`
-value:
+`_st_within` is a spatial operator that checks whether one geometry is completely contained within another geometry. It
+returns values if the first geometry is completely contained within the second geometry.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_within: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.981, 40.748],
+              [-73.981, 40.749],
+              [-73.98, 40.749],
+              [-73.98, 40.748],
+              [-73.981, 40.748]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: \_st_d_within**
+
+Fetch a list of `geometry` values which are within a 3-unit buffer from a given `point` value:
 
 <GraphiQLIDE
   query={`query geom_table($point: geometry){
@@ -762,7 +1268,7 @@ value:
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -788,7 +1294,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [ 0, 0 ]
@@ -796,11 +1302,10 @@ variables={`{
 }`}
 />
 
-**Example: \_st_3d_d\_within**
+**Example: \_st_3d_d_within**
 
-This is completely analogous to the `_st_d_within` example above, the
-only difference being that our coordinates now have three components
-instead of two.
+This is completely analogous to the `_st_d_within` example above, the only difference being that our coordinates now
+contain a z-value.
 
 <GraphiQLIDE
   query={`query geom_table($point: geometry){
@@ -811,7 +1316,7 @@ instead of two.
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -839,7 +1344,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [ 0, 0, 0 ]
@@ -849,8 +1354,7 @@ variables={`{
 
 **Example: \_st_3d_intersects**
 
-Fetch a list of (3D) `geometry` values which intersect a given `polygon`
-value:
+Fetch a list of (3D) `geometry` values which intersect a given `polygon` value:
 
 <GraphiQLIDE
   query={`query geom_table($point: geometry){
@@ -861,7 +1365,7 @@ value:
     geom_col
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "geom_table": [
       {
@@ -878,7 +1382,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "polygon": {
     "type": "Polygon",
     "coordinates": [
@@ -894,12 +1398,122 @@ variables={`{
 }`}
 />
 
+**Example: \_st_overlaps**
+
+`_st_overlaps` is a spatial operator that checks whether two geometries overlap each other and that their two compared
+geometries are of the same dimension. It returns values if the two geometries share some, but not all, points.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_overlaps: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "river": {
+          "name": "River 1",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "river": {
+          "name": "River 2",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-74.0064, 40.7142], [-73.9874, 40.7397]]
+          }
+        },
+        "interstate": {
+          "name": "I-95",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.9857, 40.7484], [-73.9684, 40.759]]
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: \_st_touches**
+
+`_st_touches` is a spatial operator that checks whether two geometries share a boundary, but do not overlap. It returns
+values if the two geometries share one or more points on their boundaries.
+
+<GraphiQLIDE
+  query={`query {
+  locations(where: {geometry: {_st_touches: {polygon: {type: "Polygon", coordinates: [[[-73.9857, 40.7484], [-73.9857, 40.759], [-73.9684, 40.759], [-73.9684, 40.7484], [-73.9857, 40.7484]]]}}}}) {
+    id
+    name
+    geometry
+  }
+}`}
+  response={`{
+  "data": {
+    "locations": [
+      {
+        "id": "1",
+        "name": "Location A",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.982, 40.748],
+              [-73.982, 40.749],
+              [-73.981, 40.749],
+              [-73.981, 40.748],
+              [-73.982, 40.748]
+            ]
+          ]
+        }
+      },
+      {
+        "id": "2",
+        "name": "Location B",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-73.981, 40.748],
+              [-73.981, 40.749],
+              [-73.98, 40.749],
+              [-73.98, 40.748],
+              [-73.981, 40.748]
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}`}
+/>
+
 ### Filter or check for null values (\_is_null)
 
 Checking for null values can be achieved using the `_is_null` operator.
 
-For more details on the `_is_null` operator and Postgres equivalent,
-refer to the [API reference](/api-reference/graphql-api/query.mdx#null-expression).
+For more details on the `_is_null` operator and Postgres equivalent, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#null-expression).
 
 **Example: Filter null values in a field**
 
@@ -915,7 +1529,7 @@ Fetch a list of articles that have a value in the `published_on` field:
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -945,12 +1559,11 @@ response={`{
 
 ### Intersect operators on RASTER columns (\_st_intersects_rast, etc)
 
-Intersect operators on columns with `raster` type are supported. Please
-submit a feature request via [GitHub](https://github.com/hasura/graphql-engine) if you want support
-for more functions.
+Intersect operators on columns with `raster` type are supported. Please submit a feature request via
+[GitHub](https://github.com/hasura/graphql-engine) if you want support for more functions.
 
-For more details on intersect operators on raster columns and Postgres
-equivalents, refer to the [API reference](/api-reference/graphql-api/query.mdx#intersect-operators).
+For more details on intersect operators on raster columns and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#intersect-operators).
 
 **Example: \_st_intersects_rast**
 
@@ -969,7 +1582,7 @@ boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
     rast
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "dummy_rast": [
       {
@@ -983,15 +1596,14 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
 }`}
 />
 
 **Example: \_st_intersects_geom_nband**
 
-Filter the raster values which intersect the input geometry value and
-optional band number.
+Filter the raster values which intersect the input geometry value and optional band number.
 
 Executes the following SQL function:
 
@@ -1006,7 +1618,7 @@ boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NU
     rast
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "dummy_rast": [
      {
@@ -1020,7 +1632,7 @@ response={`{
    ]
  }
 }`}
-variables={`{
+  variables={`{
  "point": {
    "type": "Point",
    "coordinates": [
@@ -1039,8 +1651,7 @@ variables={`{
 
 **Example: \_st_intersects_nband_geom**
 
-Filter the raster values (with specified band number) which intersect
-the input geometry value.
+Filter the raster values (with specified band number) which intersect the input geometry value.
 
 Executes the following SQL function:
 
@@ -1055,7 +1666,7 @@ boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
     rast
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "dummy_rast": [
      {
@@ -1069,7 +1680,7 @@ response={`{
    ]
  }
 }`}
-variables={`{
+  variables={`{
  "point": {
    "type": "Point",
    "coordinates": [
@@ -1088,14 +1699,13 @@ variables={`{
 
 ### ltree operators (\_ancestor, \_matches, etc.)
 
-Comparison operators on columns with `ltree`, `lquery` or `ltxtquery`
-types are supported.
+Comparison operators on columns with `ltree`, `lquery` or `ltxtquery` types are supported.
 
-Please submit a feature request via [GitHub](https://github.com/hasura/graphql-engine) if you want support
-for more functions.
+Please submit a feature request via [GitHub](https://github.com/hasura/graphql-engine) if you want support for more
+functions.
 
-For more details on `ltree` operators and Postgres equivalents, refer to
-the [API reference](/api-reference/graphql-api/query.mdx#ltree-operators).
+For more details on `ltree` operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#ltree-operators).
 
 **Example: \_ancestor**
 
@@ -1109,7 +1719,7 @@ Select ancestors of an <em>ltree</em> argument
     path
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "tree": [
       {
@@ -1132,6 +1742,89 @@ response={`{
 }`}
 />
 
+**Example: \_ancestor_any**
+
+<GraphiQLIDE
+  query={`query {
+  test(
+    where: {
+      path: {
+        _ancestor_any: [
+          "Top.Collections.Pictures.Astronomy"
+          "Top.Science.Astronomy"
+        ]
+      }
+    }
+  ) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top"
+      },
+      {
+        "path": "Top.Science"
+      },
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Collections"
+      },
+      {
+        "path": "Top.Collections.Pictures"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      }
+    ]
+  }
+}
+`}
+/>
+
+**Example: \_matches**
+
+Match any label path containing the node `Astronomy`.
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _matches: "*.Astronomy.*" } }) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}`}
+/>
+
 **Example: \_matches_any**
 
 Select <em>ltree</em> paths matching any <em>lquery</em> regex in an array
@@ -1144,7 +1837,7 @@ Select <em>ltree</em> paths matching any <em>lquery</em> regex in an array
     path
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "tree": [
       {
@@ -1173,11 +1866,119 @@ response={`{
 }`}
 />
 
+**Example: \_descendant**
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _descendant: "Top.Collections.Pictures.Astronomy" } }) {
+    path
+  }
+}
+`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}
+`}
+/>
+
+**Example: \_descendant_any**
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _descendant_any: ["Top.Collections.Pictures.Astronomy", "Top.Science.Astronomy"] } }) {
+    path
+  }
+  `}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }`}
+/>
+
+**Example: \_matches_fulltext**
+
+Match any label path containing a node containing the substring `Astro`.
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _matches_fulltext: "Astro*%" } }) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Hobbies.Amateurs_Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}
+`}
+/>
+
 ## Filter based on failure of some criteria (\_not)
 
-The `_not` operator can be used to fetch results for which some
-condition does not hold true. i.e. to invert the filter set for a
-condition.
+The `_not` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the filter
+set for a condition.
 
 **Example: \_not**
 
@@ -1199,7 +2000,7 @@ Fetch all authors who don't have any published articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1234,22 +2035,19 @@ response={`{
 
 ## Using multiple filters in the same query (\_and, \_or)
 
-You can group multiple parameters in the same `where` argument using the
-`_and` or the `_or` operators to filter results based on more than one
-criteria.
+You can group multiple parameters in the same `where` argument using the `_and` or the `_or` operators to filter results
+based on more than one criteria.
 
 :::info Note
 
-You can use the `_or` and `_and` operators along with the `_not`
-operator to create arbitrarily complex boolean expressions involving
-multiple filtering criteria.
+You can use the `_or` and `_and` operators along with the `_not` operator to create arbitrarily complex boolean
+expressions involving multiple filtering criteria.
 
 :::
 
 **Example: \_and**
 
-Fetch a list of articles published in a specific time-frame (for
-example: in year 2017):
+Fetch a list of articles published in a specific time-frame (for example: in year 2017):
 
 <GraphiQLIDE
   query={`query {
@@ -1267,7 +2065,7 @@ example: in year 2017):
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1297,15 +2095,14 @@ response={`{
 
 :::info Note
 
-Certain `_and` expressions can be expressed in a simpler format using
-some syntactic sugar. See the [API reference](/api-reference/graphql-api/query.mdx#andexp) for more details.
+Certain `_and` expressions can be expressed in a simpler format using some syntactic sugar. See the
+[API reference](/api-reference/graphql-api/query.mdx#andexp) for more details.
 
 :::
 
 **Example: \_or**
 
-Fetch a list of articles rated more than 4 or published after
-"01/01/2018":
+Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 <GraphiQLIDE
   query={`query {
@@ -1324,7 +2121,7 @@ Fetch a list of articles rated more than 4 or published after
     published_on
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1358,17 +2155,15 @@ response={`{
 
 :::info Note
 
-The `_or` operator expects an array of expressions as input. If an
-object is passed as input it will behave like the `_and` operator as
-explained in the [API reference](/api-reference/graphql-api/query.mdx#orexp)
+The `_or` operator expects an array of expressions as input. If an object is passed as input it will behave like the
+`_and` operator as explained in the [API reference](/api-reference/graphql-api/query.mdx#orexp)
 
 :::
 
 ## Filter nested objects {#pg-nested-filter}
 
-The `where` argument can be used in **array relationships** as well to
-filter the nested objects. **Object relationships** have only one nested
-object and hence they do not expose the `where` argument.
+The `where` argument can be used in **array relationships** as well to filter the nested objects. **Object
+relationships** have only one nested object and hence they do not expose the `where` argument.
 
 **Example:**
 
@@ -1385,7 +2180,7 @@ Fetch all authors with only their 5 rated articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1420,34 +2215,31 @@ response={`{
 
 ## Filter based on nested objects' fields
 
-You can use the fields of nested objects as well to filter your query
-results.
+You can use the fields of nested objects as well to filter your query results.
 
 For example:
 
 ```graphql {2}
 query {
-  articles (where: {author: {name: {_eq: "Sidney"}}}) {
+  articles(where: { author: { name: { _eq: "Sidney" } } }) {
     id
     title
   }
 }
 ```
 
-The behaviour of the comparison operators depends on whether the nested
-objects are a single object related via an object relationship or an
-array of objects related via an array relationship.
+The behavior of the comparison operators depends on whether the nested objects are a single object related via an object
+relationship or an array of objects related via an array relationship.
 
--   In case of an **object relationship**, a row will be returned if the
-    single nested object satisfies the defined condition.
--   In case of an **array relationship**, a row will be returned if
-    **any of the nested objects** satisfy the defined condition.
+- In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
+  condition.
+- In case of an **array relationship**, a row will be returned if **any of the nested objects** satisfy the defined
+  condition.
 
 :::caution Limitations
 
-**This is only supported for local relationships**, such as relationships between two local database tables. 
-	
-**This is not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
+**This is only supported for local relationships**, such as relationships between two local database tables. **This is
+not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
 
 :::
 
@@ -1475,7 +2267,7 @@ Fetch all articles whose author's name starts with "A":
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "articles": [
       {
@@ -1522,8 +2314,7 @@ response={`{
 
 **Example:**
 
-Fetch all authors which have written at least one article which is rated
-1:
+Fetch all authors which have written at least one article which is rated 1:
 
 <GraphiQLIDE
   query={`{
@@ -1540,7 +2331,7 @@ Fetch all authors which have written at least one article which is rated
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1596,23 +2387,20 @@ response={`{
 
 ### Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
 
-By default a row is returned if any of the nested objects satisfy a
-condition. To achieve the above, we need to frame the `where` expression
-as `{_not: {inverse-of-condition}}`. This reads as: fetch if not (any of
-the nested objects satisfy the inverted condition) i.e. all of the
-nested objects satisfy the condition.
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+the `where` expression as `{_not: {inverse-of-condition}}`. This reads as: fetch if not (any of the nested objects
+satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
 
 For example:
 
 | condition                           | where expression                            |
-|-------------------------------------|---------------------------------------------|
+| ----------------------------------- | ------------------------------------------- |
 | `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_neq: "value"}}}` |
 | `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_lte: "value"}}}` |
 
 **Example:**
 
-Fetch all authors which have all of their articles published i.e. have
-`{is_published {_eq: true}`.
+Fetch all authors which have all of their articles published i.e. have `{is_published {_eq: true}`.
 
 <GraphiQLIDE
   query={`{
@@ -1631,7 +2419,7 @@ Fetch all authors which have all of their articles published i.e. have
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1693,23 +2481,20 @@ response={`{
 
 ### Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
 
-By default a row is returned if any of the nested objects satisfy a
-condition. To achieve the above, we need to frame the `where` expression
-as `{_not: {condition}}`. This reads as: fetch if not (any of the nested
-objects satisfy the condition) i.e. none of the nested objects satisy
-the condition.
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+the `where` expression as `{_not: {condition}}`. This reads as: fetch if not (any of the nested objects satisfy the
+condition) i.e. none of the nested objects satisfy the condition.
 
 For example,
 
 | condition                           | where expression                           |
-|-------------------------------------|--------------------------------------------|
+| ----------------------------------- | ------------------------------------------ |
 | `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_eq: "value"}}}` |
 | `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_gt: "value"}}}` |
 
 **Example:**
 
-Fetch all authors which have none of their articles published i.e. have
-`{is_published {_eq: true}`:
+Fetch all authors which have none of their articles published i.e. have `{is_published {_eq: true}`:
 
 <GraphiQLIDE
   query={`{
@@ -1728,7 +2513,7 @@ Fetch all authors which have none of their articles published i.e. have
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1758,9 +2543,8 @@ response={`{
 
 ### Fetch if nested object(s) exist/do not exist
 
-You can filter results based on if they have nested objects by checking
-if any nested objects exist. This can be achieved by using the
-expression `{}` which evaluates to `true` if any object exists.
+You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
+achieved by using the expression `{}` which evaluates to `true` if any object exists.
 
 **Example where nested object(s) exist:**
 
@@ -1782,7 +2566,7 @@ Fetch all authors which have at least one article written by them:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1830,7 +2614,7 @@ Fetch all authors which have not written any articles:
     }
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -1864,7 +2648,7 @@ For example:
 
 ```graphql {2}
 query {
-  author (where: {full_name: {_ilike: "%bob%"}}){
+  author(where: { full_name: { _ilike: "%bob%" } }) {
     id
     first_name
     last_name
@@ -1872,13 +2656,12 @@ query {
 }
 ```
 
-The behaviour of the comparison operators depends on whether the
-computed fields return scalar type values or set of table rows.
+The behavior of the comparison operators depends on whether the computed fields return scalar type values or set of
+table rows.
 
--   In case of scalar type, a row will be returned if the computed field
-    returned scalar value satisfied the defined condition.
--   In case of table row type, a row will be returned if **any of the
-    returned rows** sastisfy the defined condition.
+- In case of scalar type, a row will be returned if the computed field returned scalar value satisfied the defined
+  condition.
+- In case of table row type, a row will be returned if **any of the returned rows** sastisfy the defined condition.
 
 Let's look at a few use cases based on the above:
 
@@ -1886,9 +2669,8 @@ Let's look at a few use cases based on the above:
 
 **Example:**
 
-A computed field `total_marks` defined to a `student` table which
-computes the total sum of marks obtained from each subject. Fetch all
-students whose total marks is above "80":
+A computed field `total_marks` defined to a `student` table which computes the total sum of marks obtained from each
+subject. Fetch all students whose total marks is above "80":
 
 <GraphiQLIDE
   query={`query {
@@ -1897,7 +2679,7 @@ students whose total marks is above "80":
     name
   }
 }`}
-response={`{
+  response={`{
    "data": {
      "student": [
        {
@@ -1917,9 +2699,8 @@ response={`{
 
 **Example:**
 
-A computed field `get_published_articles` defined to a `author` table
-which returns set of `article` rows published. Fetch all authors who
-have atleast a published article in medicine field:
+A computed field `get_published_articles` defined to a `author` table which returns set of `article` rows published.
+Fetch all authors who have atleast a published article in medicine field:
 
 <GraphiQLIDE
   query={`query {
@@ -1928,7 +2709,7 @@ have atleast a published article in medicine field:
     name
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "author": [
      {
@@ -1948,9 +2729,8 @@ response={`{
 
 **Example:**
 
-A computed field `get_published_articles` defined to a `author` table
-which returns set of `article` rows published. Fetch all authors whose
-count of published articles is more than 10:
+A computed field `get_published_articles` defined to a `author` table which returns set of `article` rows published.
+Fetch all authors whose count of published articles is more than 10:
 
 <GraphiQLIDE
   query={`query {
@@ -1959,7 +2739,7 @@ count of published articles is more than 10:
     name
   }
 }`}
-response={`{
+  response={`{
  "data": {
    "author": [
      {
@@ -1981,28 +2761,30 @@ You can filter based on _aggregations_ over the elements of an array relationshi
 
 The aggregation functions supported are:
 
-* `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
-* `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
-* `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
-* `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
-* `max(number)`: Computes the maximum of the non-null input values.
-* `min(number)`: Computes the minimum of the non-null input values.
-* `sum(number)`: Computes the sum of the non-null input values.
-* `corr(Y number, X number)`: Computes the correlation coefficient.
-* `covar_samp(Y number, X number)`: Computes the sample covariance.
-* `stddev_samp(number)`: Computes the sample standard deviation of the input values.
-* `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
+- `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
+- `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
+- `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
+- `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
+- `max(number)`: Computes the maximum of the non-null input values.
+- `min(number)`: Computes the minimum of the non-null input values.
+- `sum(number)`: Computes the sum of the non-null input values.
+- `corr(Y number, X number)`: Computes the correlation coefficient.
+- `covar_samp(Y number, X number)`: Computes the sample covariance.
+- `stddev_samp(number)`: Computes the sample standard deviation of the input values.
+- `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
 
-The semantics of the above functions is documented in the [PostgreSQL documentation](https://www.postgresql.org/docs/14/functions-aggregate.html).
+The semantics of the above functions is documented in the
+[PostgreSQL documentation](https://www.postgresql.org/docs/14/functions-aggregate.html).
 
-For the complete specification of the schema of aggregation predicates, see the [API reference: AggregationExp](/api-reference/graphql-api/query.mdx#aggregationexp).
-
+For the complete specification of the schema of aggregation predicates, see the
+[API reference: AggregationExp](/api-reference/graphql-api/query.mdx#aggregationexp).
 
 **Example:**
 
 Assume we have a dataset of restaurants with user-submitted reviews that contain a rating.
 
-Suppose we want to query only the best restaurants. In that case, we can filter by the average over the ratings a restaurant has received and only include restaurants that have at least some number of reviews from distinct users.
+Suppose we want to query only the best restaurants. In that case, we can filter by the average over the ratings a
+restaurant has received and only include restaurants that have at least some number of reviews from distinct users.
 
 <GraphiQLIDE
   query={`query {
@@ -2034,7 +2816,7 @@ Suppose we want to query only the best restaurants. In that case, we can filter 
     name
   }
 }`}
-response={`{
+  response={`{
    "data": {
      "restaurant": [
        {
@@ -2051,27 +2833,26 @@ response={`{
 }`}
 />
 
-
 ## Cast a field to a different type before filtering (\_cast)
 
-The `_cast` operator can be used to cast a field to a different type, which allows type-specific
-operators to be used on fields that otherwise would not support them.
+The `_cast` operator can be used to cast a field to a different type, which allows type-specific operators to be used on
+fields that otherwise would not support them.
 
 Currently, only the following type casts are supported:
 
 - between PostGIS `geometry` and `geography` types
 - from Postgres `jsonb` type to `string` type.
 
-Casting using `_cast` corresponds directly to [SQL type casts](https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS).
-
+Casting using `_cast` corresponds directly to
+[SQL type casts](https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS).
 
 **Example: cast jsonb to string**
 
-Columns of type `jsonb` can be cast to `String` to use [text operators](/api-reference/graphql-api/query.mdx#text-operators) on a
-`jsonb` field:
+Columns of type `jsonb` can be cast to `String` to use
+[text operators](/api-reference/graphql-api/query.mdx#text-operators) on a `jsonb` field:
 
 <GraphiQLIDE
-query={`query get_authors_in_bengaluru {
+  query={`query get_authors_in_bengaluru {
   authors(
     where: {
       address: {_cast: {String: {_ilike: "%bengaluru%"}}}
@@ -2082,7 +2863,7 @@ query={`query get_authors_in_bengaluru {
     address
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "authors": [
       {
@@ -2103,9 +2884,8 @@ response={`{
 
 **Example: cast geometry to geography**
 
-Filtering using `_st_d_within` over large distances can be inaccurate
-for location data stored in `geometry` columns. For accurate queries,
-cast the field to `geography` before comparing:
+Filtering using `_st_d_within` over large distances can be inaccurate for location data stored in `geometry` columns.
+For accurate queries, cast the field to `geography` before comparing:
 
 <GraphiQLIDE
   query={`query cities_near($point: geography!, $distance: Float!) {
@@ -2119,7 +2899,7 @@ cast the field to `geography` before comparing:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "cities": [
       {
@@ -2131,7 +2911,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "point": {
     "type": "Point",
     "coordinates": [1, 50]
@@ -2142,9 +2922,8 @@ variables={`{
 
 **Example: cast geography to geometry**
 
-Columns of type `geography` are more accurate, but they don’t support as
-many operations as `geometry`. Cast to `geometry` to use those
-operations in a filter:
+Columns of type `geography` are more accurate, but they don’t support as many operations as `geometry`. Cast to
+`geometry` to use those operations in a filter:
 
 <GraphiQLIDE
   query={`query cities_inside($polygon: geometry) {
@@ -2158,7 +2937,7 @@ operations in a filter:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "cities": [
       {
@@ -2167,7 +2946,7 @@ response={`{
     ]
   }
 }`}
-variables={`{
+  variables={`{
   "polygon": {
     "type": "Polygon",
     "crs": {
@@ -2190,10 +2969,9 @@ variables={`{
 :::info Note
 
 For performant queries that filter on casted fields, create an
-[expression index](https://www.postgresql.org/docs/current/indexes-expressional.html)
-on the casted column. For example, if you frequently perform queries on
-a field `location` of type `geometry` casted to type `geography`, you
-should create an index like the following:
+[expression index](https://www.postgresql.org/docs/current/indexes-expressional.html) on the casted column. For example,
+if you frequently perform queries on a field `location` of type `geometry` casted to type `geography`, you should create
+an index like the following:
 
 ```sql
 CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
@@ -2203,31 +2981,26 @@ CREATE INDEX cities_location_geography ON cities USING GIST ((location::geograph
 
 ## The TRUE expression ( **{ }** ) {#pg-true-expression}
 
-The expression `{}` evaluates to `true` if an object exists (even if
-it's `null`).
+The expression `{}` evaluates to `true` if an object exists (even if it's `null`).
 
 **For example**:
 
--   any query with the condition `{ where: {} }` will return all objects
-    without applying any filter.
--   any query with the condition `{ where: { nested_object: {} } }` will
-    return all objects for which atleast one `nested_object` exists.
+- any query with the condition `{ where: {} }` will return all objects without applying any filter.
+- any query with the condition `{ where: { nested_object: {} } }` will return all objects for which atleast one
+  `nested_object` exists.
 
 ## Evaluation of **null** values in comparison expressions {#pg-null-value-evaluation}
 
-In **versions v2.0.0 and above**, if in any comparison expression a
-`null` value is passed, a type mismatch error will be thrown.
+In **versions v2.0.0 and above**, if in any comparison expression a `null` value is passed, a type mismatch error will
+be thrown.
 
-For example, the expression `{ where: {id: { _eq: null }}}` will throw
-an error.
+For example, the expression `{ where: {id: { _eq: null }}}` will throw an error.
 
-In **versions v1.3.3 and below**, if in any comparison expression a
-`null` value is passed, the expression gets reduced to `{}`, the
-[TRUE expression](#pg-true-expression).
+In **versions v1.3.3 and below**, if in any comparison expression a `null` value is passed, the expression gets reduced
+to `{}`, the [TRUE expression](#pg-true-expression).
 
-For example, the expression `{ where: { id: {_eq: null }}}` will be
-reduced to `{ where: {id: {}} }` which will return all objects for which
-an `id` is set, i.e. all objects will be returned.
+For example, the expression `{ where: { id: {_eq: null }}}` will be reduced to `{ where: {id: {}} }` which will return
+all objects for which an `id` is set, i.e. all objects will be returned.
 
-This behaviour can be preserved in versions v2.0.0 and above by setting
-the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true`.
+This behavior can be preserved in versions v2.0.0 and above by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env
+var to `true`.

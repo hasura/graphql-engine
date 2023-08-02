@@ -4,7 +4,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../features/Analytics';
 import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,

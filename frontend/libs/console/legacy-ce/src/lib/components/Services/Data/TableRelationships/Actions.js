@@ -1,4 +1,5 @@
 import inflection from 'inflection';
+import camelCase from 'lodash/camelCase';
 
 import { makeMigrationCall, updateSchemaInfo } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
@@ -774,7 +775,7 @@ const fallBackRelName = (relMeta, existingFields, iterNumber = 0) => {
     : relName;
 };
 
-const formRelName = (relMeta, existingFields) => {
+const formRelName = (relMeta, existingFields, namingConvention) => {
   try {
     let finalRelName;
     const targetTable = sanitizeRelName(relMeta.rTable);
@@ -789,6 +790,9 @@ const formRelName = (relMeta, existingFields) => {
       finalRelName = fallBackRelName(relMeta, existingFields);
     }
 
+    if (namingConvention === 'graphql-default') {
+      return camelCase(finalRelName);
+    }
     return finalRelName;
   } catch (e) {
     return '';
@@ -809,7 +813,12 @@ const getExistingFieldsMap = tableSchema => {
   return fieldMap;
 };
 
-const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
+const getAllUnTrackedRelations = (
+  allSchemas,
+  currentSchema,
+  currentSource,
+  namingConvention
+) => {
   const trackedTables = allSchemas.filter(
     table => table.is_table_tracked && table.table_schema === currentSchema
   );
@@ -832,7 +841,8 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
       table.relations.objectRel.forEach(indivObjectRel => {
         indivObjectRel.relName = formRelName(
           indivObjectRel,
-          table.existingFields
+          table.existingFields,
+          namingConvention
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivObjectRel.relName] = true;
@@ -855,7 +865,8 @@ const getAllUnTrackedRelations = (allSchemas, currentSchema, currentSource) => {
       table.relations.arrayRel.forEach(indivArrayRel => {
         indivArrayRel.relName = formRelName(
           indivArrayRel,
-          table.existingFields
+          table.existingFields,
+          namingConvention
         );
         /* Added to ensure that fallback relationship name is created in case of tracking all relationship at once */
         table.existingFields[indivArrayRel.relName] = true;

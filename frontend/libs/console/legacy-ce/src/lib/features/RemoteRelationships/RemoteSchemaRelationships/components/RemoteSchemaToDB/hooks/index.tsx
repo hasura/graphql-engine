@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { useGetRemoteSchemaRelationship } from '@/features/MetadataAPI';
-import { rsToDbRelDef } from '@/metadata/types';
+import { useGetRemoteSchemaRelationship } from '../../../../../MetadataAPI';
+import { rsToDbRelDef } from '../../../../../../metadata/types';
 
 import { Schema } from '../schema';
 

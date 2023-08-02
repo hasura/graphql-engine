@@ -1,4 +1,4 @@
-import { TableEntry } from '@/metadata/types';
+import { TableEntry } from '../../../metadata/types';
 import { MetadataSelector } from './metadataSelectors';
 import { useMetadata } from './useMetadata';
 

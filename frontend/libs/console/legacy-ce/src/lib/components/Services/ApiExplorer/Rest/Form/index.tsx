@@ -1,19 +1,30 @@
 import React from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { AllowedRESTMethods, RestEndpointEntry } from '@/metadata/types';
-import { useIsUnmounted } from '@/components/Services/Data';
-import { Dispatch, ReduxState } from '@/types';
-import { addRESTEndpoint, editRESTEndpoint } from '@/metadata/actions';
-import { allowedQueriesCollection } from '@/metadata/utils';
-import { showErrorNotification } from '@/components/Services/Common/Notification';
+import queryString from 'query-string';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
+import { parse, print } from 'graphql';
+import {
+  AllowedRESTMethods,
+  RestEndpointEntry,
+} from '../../../../../metadata/types';
+import { useIsUnmounted } from '../../../Data/Common/tsUtils';
+import { Dispatch, ReduxState } from '../../../../../types';
+import {
+  addRESTEndpoint,
+  editRESTEndpoint,
+} from '../../../../../metadata/actions';
+import { allowedQueriesCollection } from '../../../../../metadata/utils';
+import { showErrorNotification } from '../../../Common/Notification';
 import {
   RestEndpointForm,
   RestEndpointFormState,
   RestEndpointFormData,
-} from '@/components/Services/ApiExplorer/Rest/Form/RestEndpointForm';
-import { getLSItem, LS_KEYS } from '@/utils/localStorage';
+} from './RestEndpointForm';
+import { getLSItem, LS_KEYS } from '../../../../../utils/localStorage';
 import _push from '../../../Data/push';
 
 const forgeFormEndpointObject = (
@@ -75,8 +86,14 @@ const useRestEndpointFormStateForCreation: RestEndpointFormStateHook = (
   formSubmitHandler: RestEndpointFormSubmitHandler;
 } => {
   const formState: RestEndpointFormState = {};
-  formState.request = getLSItem(LS_KEYS.graphiqlQuery) ?? undefined;
-
+  try {
+    const parsedQuery = queryString.parseUrl(window.location.href);
+    if (parsedQuery.query?.from === 'graphiql') {
+      formState.request = print(parse(getLSItem(LS_KEYS.graphiqlQuery) ?? ''));
+    }
+  } catch (e) {
+    // ignore
+  }
   return { formState, formSubmitHandler: createEndpoint };
 };
 
@@ -149,7 +166,11 @@ const FormEndpoint: React.FC<FormEndpointProps> = ({
     setLoading(true);
     const state: RestEndpointFormData = {
       name: (data.name as string).trim(),
-      comment: (data.comment as string).trim(),
+      // null is respected considering the old Hasura versions <2.10
+      comment:
+        (data.comment as string) === null
+          ? ''
+          : (data.comment as string).trim(),
       url: (data.url as string).trim(),
       methods: data.methods as AllowedRESTMethods[],
       request: (data.request as string).trim(),

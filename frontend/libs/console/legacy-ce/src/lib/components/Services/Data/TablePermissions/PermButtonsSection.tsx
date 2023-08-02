@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { isJsonString, getConfirmation } from '../../../Common/utils/jsUtils';
 import { FilterState } from './utils';
 import { showErrorNotification } from '../../Common/Notification';

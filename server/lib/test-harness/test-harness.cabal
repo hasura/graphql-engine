@@ -7,44 +7,57 @@ library
     , Spock-core
     , aeson
     , aeson-pretty
+    , aeson-qq
     , async
+    , attoparsec
     , base
     , bytestring
+    , case-insensitive
     , conduit
     , containers
+    , data-has
     , dc-api
+    , directory
     , ekg-core
     , fast-logger
     , graphql-engine
+    , graphql-parser
     , haskell-src-meta
+    , hasura-base
+    , hasura-extras
     , hasura-prelude
     , hedgehog
     , hspec
     , hspec-core
+    , http-client
     , http-conduit
     , http-types
     , insert-ordered-containers
-    , libyaml
     , lens
     , lens-aeson
+    , libyaml
+    , lifted-base
     , managed
     , morpheus-graphql
+    , morpheus-graphql-server
     , mtl
-    , mysql-simple
     , network
     , odbc
     , openapi3
     , parsec
     , pg-client
-    , postgresql-simple
     , postgres-options
-    , pretty-simple
+    , postgresql-simple
     , pretty-show
+    , pretty-simple
+    , process
     , refined
+    , resource-pool
     , resourcet
+    , safe
     , safe-exceptions
     , servant-server
-    , scientific
+    , servant-client
     , sop-core
     , stm
     , string-interpolate
@@ -52,6 +65,7 @@ library
     , text
     , th-lift
     , th-lift-instances
+    , these
     , time
     , typed-process
     , unordered-containers
@@ -60,6 +74,7 @@ library
     , warp
     , websockets
     , yaml
+    , regex-tdfa
 
   hs-source-dirs: src
   default-language: Haskell2010
@@ -75,6 +90,7 @@ library
     GeneralisedNewtypeDeriving
     ImportQualifiedPost
     LambdaCase
+    MultiParamTypeClasses
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
@@ -86,7 +102,24 @@ library
     TypeApplications
     TypeSynonymInstances
 
-  ghc-options: -Wall -Werror
+  ghc-options:
+    -Werror
+    -- Taken from https://medium.com/mercury-bank/enable-all-the-warnings-a0517bc081c3
+    -Weverything
+    -Wno-missing-exported-signatures
+    -Wno-missing-import-lists
+    -Wno-missed-specialisations
+    -Wno-all-missed-specialisations
+    -Wno-unsafe
+    -Wno-safe
+    -Wno-missing-local-signatures
+    -Wno-monomorphism-restriction
+    -Wno-missing-kind-signatures
+    -Wno-missing-safe-haskell-mode
+    -- We want these warnings, but the code doesn't satisfy them yet:
+    -Wno-missing-deriving-strategies
+    -Wno-unused-packages
+    -Wno-redundant-constraints
 
   exposed-modules:
     Harness.Backend.BigQuery
@@ -101,28 +134,52 @@ library
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
     Harness.Constants
+    Harness.DataConnectorAgent
     Harness.Env
     Harness.Exceptions
+    Harness.GlobalTestEnvironment
     Harness.GraphqlEngine
     Harness.Http
     Harness.Logging
     Harness.Logging.Messages
+    Harness.Permissions
     Harness.PytestPortedCompat
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
+    Harness.Schema
+    Harness.Schema.LogicalModel
+    Harness.Schema.Name
+    Harness.Schema.NativeQuery
+    Harness.Schema.StoredProcedure
+    Harness.Schema.Table
+    Harness.Services.Composed
+    Harness.Services.Database.Postgres
+    Harness.Services.ExternalProcess.GraphqlEngine
+    Harness.Services.GraphqlEngine
+    Harness.Services.GraphqlEngine.API
+    Harness.Services.Permissions.Table.Metadata
+    Harness.Services.Permissions.Table.Types
+    Harness.Services.Permissions.Table.Postgres
+    Harness.Services.Schema
+    Harness.Services.Source.Postgres
     Harness.Subscriptions
     Harness.Test.BackendType
     Harness.Test.CustomOptions
     Harness.Test.Fixture
     Harness.Test.FixtureName
     Harness.Test.Introspection
-    Harness.Test.Permissions
-    Harness.Test.Schema
-    Harness.Test.SchemaName
+    Harness.Test.Protocol
+    Harness.Test.ScalarType
     Harness.Test.SetupAction
     Harness.Test.TestResource
     Harness.TestEnvironment
+    Harness.UniqueTestId
+    Harness.WebSockets
     Harness.Webhook
     Harness.Yaml
+
+  other-modules:
+    Harness.Permissions.Metadata
+    Harness.Permissions.Types

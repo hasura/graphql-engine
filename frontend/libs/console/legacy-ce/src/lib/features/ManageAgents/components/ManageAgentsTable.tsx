@@ -1,4 +1,4 @@
-import { CardedTable } from '@/new-components/CardedTable';
+import { CardedTable } from '../../../new-components/CardedTable';
 import React from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { useListAvailableAgentsFromMetadata } from '../hooks';
@@ -42,7 +42,7 @@ export const ManageAgentsTable = () => {
                   {agent.url}
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell>
-                  <div className="flex items-center justify-end whitespace-nowrap text-right opacity-0 group-hover:opacity-100">
+                  <div className="flex items-center justify-end whitespace-nowrap text-right opacity-0 transition-all duration-200 group-hover:opacity-100">
                     <button
                       onClick={() => {
                         removeAgent({ name: agent.name });

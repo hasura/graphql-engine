@@ -22,7 +22,7 @@ export function logMetadataRequests() {
 
     const requestBody = req.body as MetadataRequest;
 
-    if (requestBody.type === 'bulk') {
+    if (requestBody.type === 'bulk' || requestBody.type === 'concurrent_bulk') {
       const request = requestBody as BulkMetadataRequest;
       Cypress.log({ message: '*--- Bulk request*' });
 

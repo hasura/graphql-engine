@@ -11,9 +11,9 @@ pytestmark = [
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def graphql_service(hge_fixture_env: dict[str, str]):
+def graphql_service(worker_id: str, hge_fixture_env: dict[str, str]):
     (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
-    server = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"], port=port)
+    server = NodeGraphQL(worker_id, 'remote_schemas/nodejs/remote_schema_perms.js', port=port)
     server.start()
     print(f'{graphql_service.__name__} server started on {server.url}')
     hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url

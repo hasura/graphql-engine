@@ -40,3 +40,19 @@ type CitusSourceOps interface {
 type CitusRunSQLInput PGRunSQLInput
 
 type CitusRunSQLOutput PGRunSQLOutput
+
+type BigQuerySourceOps interface {
+	BigQueryRunSQL(input BigQueryRunSQLInput) (response *BigQueryRunSQLOutput, err error)
+}
+
+type BigQueryRunSQLInput PGRunSQLInput
+
+type BigQueryRunSQLOutput PGRunSQLOutput
+
+type CockroachSourceOps interface {
+	CockroachRunSQL(input CockroachRunSQLInput) (response *CockroachRunSQLOutput, err error)
+}
+
+type CockroachRunSQLInput PGRunSQLInput
+
+type CockroachRunSQLOutput PGRunSQLOutput

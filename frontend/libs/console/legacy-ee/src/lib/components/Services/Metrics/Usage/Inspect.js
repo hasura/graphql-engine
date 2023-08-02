@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import LoadInspector from './LoadInspector';
-import { Tooltip } from '@hasura/console-oss';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import LoadingSpinner from '../Common/LoadingSpinner';
 
 import styles from '../Metrics.module.scss';

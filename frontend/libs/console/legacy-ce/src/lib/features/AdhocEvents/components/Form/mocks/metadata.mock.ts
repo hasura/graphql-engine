@@ -1,5 +1,5 @@
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { MetadataReducer } from '@/mocks/actions';
+import { allowedMetadataTypes } from '../../../../MetadataAPI';
+import { MetadataReducer } from '../../../../../mocks/actions';
 
 // scheduled events doesn't modify the metadata
 export const metadataHandlers: Partial<

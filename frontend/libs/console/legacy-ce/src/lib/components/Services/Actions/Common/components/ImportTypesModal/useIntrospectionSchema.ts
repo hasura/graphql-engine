@@ -1,7 +1,7 @@
-import { getGraphQLQueryPayload } from '@/components/Common/utils/graphqlUtils';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
+import { getGraphQLQueryPayload } from '../../../../../Common/utils/graphqlUtils';
+import Endpoints from '../../../../../../Endpoints';
+import { Api } from '../../../../../../hooks/apiUtils';
+import { useAppSelector } from '../../../../../../storeHooks';
 import { getIntrospectionQuery, IntrospectionQuery } from 'graphql';
 import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 
@@ -21,7 +21,12 @@ export function useIntrospectionSchema(
   select = (d: IntrospectionQueryResp) => d,
   transformFn = (d: unknown) => d,
   queryOptions?: Omit<
-    UseQueryOptions<IntrospectionQueryResp, Error, unknown, 'metadata'>,
+    UseQueryOptions<
+      IntrospectionQueryResp,
+      Error,
+      unknown,
+      'introspectionSchema'
+    >,
     'queryKey' | 'queryFn'
   >
 ) {
@@ -35,7 +40,7 @@ export function useIntrospectionSchema(
   };
 
   return useQuery({
-    queryKey: 'metadata',
+    queryKey: 'introspectionSchema',
     queryFn,
     ...queryOptions,
     select: d => transformFn(select(d)),

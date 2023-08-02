@@ -1,0 +1,77 @@
+exports[`Create a insert type table permission with input validation > When the users create, modify and delete a insert type table permission everything should work #0`] =
+[
+  {
+    "comment": "",
+    "permission": {
+      "check": {},
+      "columns": [],
+      "validate_input": {
+        "definition": {
+          "forward_client_headers": true,
+          "headers": [
+            {
+              "name": "x-hasura-user-id",
+              "value": "1234"
+            }
+          ],
+          "timeout": 40,
+          "url": "http://host.docker.internal"
+        },
+        "type": "http"
+      }
+    },
+    "role": "new_role"
+  }
+];
+
+exports[`Create a update type table permission with input validation > When the users create, modify and delete a update type table permission everything should work #0`] =
+[
+  {
+    "comment": "",
+    "permission": {
+      "check": null,
+      "columns": [],
+      "filter": {},
+      "validate_input": {
+        "definition": {
+          "forward_client_headers": true,
+          "headers": [
+            {
+              "name": "x-hasura-user-id",
+              "value": "1234"
+            }
+          ],
+          "timeout": 40,
+          "url": "http://host.docker.internal"
+        },
+        "type": "http"
+      }
+    },
+    "role": "new_role"
+  }
+];
+
+exports[`Create a delete type table permission with input validation > When the users create, modify and delete a delete type table permission everything should work #0`] =
+[
+  {
+    "comment": "",
+    "permission": {
+      "filter": {},
+      "validate_input": {
+        "definition": {
+          "forward_client_headers": true,
+          "headers": [
+            {
+              "name": "x-hasura-user-id",
+              "value": "1234"
+            }
+          ],
+          "timeout": 40,
+          "url": "http://host.docker.internal"
+        },
+        "type": "http"
+      }
+    },
+    "role": "new_role"
+  }
+];

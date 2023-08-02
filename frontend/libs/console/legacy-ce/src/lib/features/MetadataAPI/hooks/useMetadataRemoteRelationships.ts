@@ -1,4 +1,4 @@
-import { DataTarget } from '@/features/Datasources';
+import { DataTarget } from '../../Datasources';
 import { MetadataSelector } from './metadataSelectors';
 import { MetadataTransformer } from './metadataTransformers';
 import { useMetadata } from './useMetadata';

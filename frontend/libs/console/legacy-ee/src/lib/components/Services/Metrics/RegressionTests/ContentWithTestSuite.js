@@ -55,7 +55,10 @@ export const ContentWithTestSuite = ({
       return <Spanned isError>* No test suite found on this project!</Spanned>;
     }
 
-    return children({ testSuiteId: data.test_suites[0].id, testProjectId: projectId });
+    return children({
+      testSuiteId: data.test_suites[0].id,
+      testProjectId: projectId,
+    });
   };
   return renderBody();
 };

@@ -1,5 +1,5 @@
 ---
-description: Hasura Cloud Standard and Hasura Enterprise API limits
+description: Hasura Cloud Standard, Professional, and Hasura Enterprise API limits
 keywords:
   - hasura
   - docs
@@ -7,18 +7,19 @@ keywords:
   - enterprise
   - security
   - limits
-sidebar_position: 2
+sidebar_position: 5
 sidebar_label: API limits
 sidebar_class_name: cloud-and-enterprise-icon
-title: 'Cloud Standard & EE: API Limits'
+title: 'Cloud & Enterprise Edition: API Limits'
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # API Limits
 
-<div className="badge badge--primary heading-badge">Available on: Cloud, Enterprise Edition</div>
+<ProductBadge standard pro ee self />
 
 ## Introduction
 
@@ -48,10 +49,19 @@ You can choose any one of the above parameters to rate limit the requests.
 **Note**: If you set a `Unique Parameter` then the combination of both the `role_name` and the `Unique Parameter` will
 be used to rate-limit requests.
 
+:::info Note
+
+To enable rate limiting on Hasura Enterprise, you must set the
+[`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) environment
+variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server flag
+with the appropriate Redis connection string.
+
+:::
+
 Example:
 
 If you rate-limit using the `role_name` and set the unique parameter for the rate-limit as `IP Address`, then rate-limit
-will be applied depending on both those parameteres. i.e If the requests come from a different role but same IP address
+will be applied depending on both those parameters. i.e If the requests come from a different role but same IP address
 will **NOT** be rate limited
 
 ### Depth limits
@@ -189,8 +199,8 @@ query query3 {
 API limits can have a _global_ or _per role_ configuration. If an incoming request does not contain a valid role then
 the global limit is applied.
 
-<Thumbnail src='/img/security/pro-tab-apilimits.png' alt='Hasura Cloud Console api limit tab' />
-<Thumbnail src='/img/security/security-apilimits-details.png' alt='Hasura Cloud Console api limit tab details' />
+<Thumbnail src="/img/security/pro-tab-apilimits.png" alt="Hasura Cloud Console api limit tab" />
+<Thumbnail src="/img/security/security-apilimits-details.png" alt="Hasura Cloud Console api limit tab details" />
 
 :::info Admin & IntrospectionQuery exemptions
 
@@ -200,5 +210,5 @@ All API limits are **not** applied for the admin role, and depth limits are **NO
 
 ## Metadata specification
 
-This [API Reference Documentation](/api-reference/metadata-api/api-limits.mdx) describes the metadata API structure to manage API limits.
-
+This [API Reference Documentation](/api-reference/metadata-api/api-limits.mdx) describes the metadata API structure to
+manage API limits.

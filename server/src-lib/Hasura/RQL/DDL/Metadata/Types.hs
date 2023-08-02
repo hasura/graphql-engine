@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Types related to metadata management API
 module Hasura.RQL.DDL.Metadata.Types
   ( -- * Export Metadata
@@ -40,13 +38,13 @@ where
 import Control.Lens (Lens')
 import Control.Lens qualified as Lens
 import Data.Aeson (FromJSON, ToJSON, (.!=), (.:), (.:?), (.=))
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.TH qualified as Aeson.TH
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Prelude
+import Hasura.RQL.DDL.Warnings (AllowWarnings (..))
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata (Metadata, MetadataNoSources)
@@ -64,9 +62,11 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-clear-metadata
 data ClearMetadata
   = ClearMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''ClearMetadata)
+instance J.ToJSON ClearMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
@@ -78,7 +78,7 @@ instance FromJSON ClearMetadata where
 data ExportMetadata = ExportMetadata deriving (Show, Eq)
 
 instance ToJSON ExportMetadata where
-  toJSON ExportMetadata = Aeson.object []
+  toJSON ExportMetadata = J.object []
 
 instance FromJSON ExportMetadata where
   parseJSON _ = pure ExportMetadata
@@ -90,12 +90,12 @@ data ReloadSpec a
 
 instance (ToJSON a) => ToJSON (ReloadSpec a) where
   toJSON = \case
-    RSReloadAll -> Aeson.Bool True
-    RSReloadList l -> Aeson.toJSON l
+    RSReloadAll -> J.Bool True
+    RSReloadList l -> J.toJSON l
 
 instance (FromJSON a, Hashable a) => FromJSON (ReloadSpec a) where
-  parseJSON (Aeson.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
-  parseJSON v = RSReloadList <$> Aeson.parseJSON v
+  parseJSON (J.Bool b) = pure $ if b then RSReloadAll else RSReloadList mempty
+  parseJSON v = RSReloadList <$> J.parseJSON v
 
 type ReloadRemoteSchemas = ReloadSpec RemoteSchemaName
 
@@ -129,25 +129,37 @@ data ReloadMetadata = ReloadMetadata
     _rmRecreateEventTriggers :: ReloadSources,
     _rmReloadDataConnectors :: ReloadDataConnectors
   }
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(Aeson.TH.deriveToJSON hasuraJSON ''ReloadMetadata)
+instance J.ToJSON ReloadMetadata where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 instance FromJSON ReloadMetadata where
-  parseJSON = Aeson.withObject "ReloadMetadata" $ \o ->
+  parseJSON = J.withObject "ReloadMetadata" $ \o ->
     ReloadMetadata
-      <$> o .:? "reload_remote_schemas" .!= reloadAllRemoteSchemas
-      <*> o .:? "reload_sources" .!= reloadAllSources
-      <*> o .:? "recreate_event_triggers" .!= RSReloadList mempty
-      <*> o .:? "reload_data_connectors" .!= reloadAllDataConnectors
+      <$> o
+      .:? "reload_remote_schemas"
+      .!= reloadAllRemoteSchemas
+      <*> o
+      .:? "reload_sources"
+      .!= reloadAllSources
+      <*> o
+      .:? "recreate_event_triggers"
+      .!= RSReloadList mempty
+      <*> o
+      .:? "reload_data_connectors"
+      .!= reloadAllDataConnectors
 
 -- | Undocumented Metadata API action which serializes the entire
 -- 'SchemaCache'.
 data DumpInternalState
   = DumpInternalState
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''DumpInternalState)
+instance J.ToJSON DumpInternalState where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DumpInternalState where
   parseJSON _ = return DumpInternalState
@@ -157,9 +169,11 @@ instance FromJSON DumpInternalState where
 -- https://hasura.io/docs/latest/api-reference/schema-metadata-api/manage-metadata/#schema-metadata-get-inconsistent-metadata
 data GetInconsistentMetadata
   = GetInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''GetInconsistentMetadata)
+instance J.ToJSON GetInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON GetInconsistentMetadata where
   parseJSON _ = return GetInconsistentMetadata
@@ -170,9 +184,11 @@ instance FromJSON GetInconsistentMetadata where
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-drop-inconsistent-metadata
 data DropInconsistentMetadata
   = DropInconsistentMetadata
-  deriving (Show, Eq)
+  deriving (Show, Generic, Eq)
 
-$(Aeson.TH.deriveToJSON Aeson.TH.defaultOptions ''DropInconsistentMetadata)
+instance J.ToJSON DropInconsistentMetadata where
+  toJSON = J.genericToJSON J.defaultOptions
+  toEncoding = J.genericToEncoding J.defaultOptions
 
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
@@ -184,11 +200,12 @@ data AllowInconsistentMetadata
 
 instance FromJSON AllowInconsistentMetadata where
   parseJSON =
-    Aeson.withBool "AllowInconsistentMetadata" $
-      pure . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
+    J.withBool "AllowInconsistentMetadata"
+      $ pure
+      . bool NoAllowInconsistentMetadata AllowInconsistentMetadata
 
 instance ToJSON AllowInconsistentMetadata where
-  toJSON = Aeson.toJSON . toBool
+  toJSON = J.toJSON . toBool
     where
       toBool AllowInconsistentMetadata = True
       toBool NoAllowInconsistentMetadata = False
@@ -200,36 +217,44 @@ data ReplaceMetadataV1
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV1 where
-  parseJSON = Aeson.withObject "ReplaceMetadataV1" $ \o -> do
+  parseJSON = J.withObject "ReplaceMetadataV1" $ \o -> do
     version <- o .:? "version" .!= Metadata.MVVersion1
     case version of
-      Metadata.MVVersion3 -> RMWithSources <$> Aeson.parseJSON (Aeson.Object o)
-      _ -> RMWithoutSources <$> Aeson.parseJSON (Aeson.Object o)
+      Metadata.MVVersion3 -> RMWithSources <$> J.parseJSON (J.Object o)
+      _ -> RMWithoutSources <$> J.parseJSON (J.Object o)
 
 instance ToJSON ReplaceMetadataV1 where
   toJSON = \case
-    RMWithSources v -> Aeson.toJSON v
-    RMWithoutSources v -> Aeson.toJSON v
+    RMWithSources v -> J.toJSON v
+    RMWithoutSources v -> J.toJSON v
 
 -- | Replace metadata while allowing for inconsitency in the metadata object.
 --
 -- https://hasura.io/docs/latest/api-reference/metadata-api/manage-metadata/#metadata-replace-metadata-syntax
 data ReplaceMetadataV2 = ReplaceMetadataV2
   { _rmv2AllowInconsistentMetadata :: AllowInconsistentMetadata,
+    _rmv2AllowWarningss :: AllowWarnings,
     _rmv2Metadata :: ReplaceMetadataV1
   }
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV2 where
-  parseJSON = Aeson.withObject "ReplaceMetadataV2" $ \o ->
+  parseJSON = J.withObject "ReplaceMetadataV2" $ \o ->
     ReplaceMetadataV2
-      <$> o .:? "allow_inconsistent_metadata" .!= NoAllowInconsistentMetadata
-      <*> o .: "metadata"
+      <$> o
+      .:? "allow_inconsistent_metadata"
+      .!= NoAllowInconsistentMetadata
+      <*> o
+      .:? "allow_warnings"
+      .!= AllowWarnings
+      <*> o
+      .: "metadata"
 
 instance ToJSON ReplaceMetadataV2 where
   toJSON ReplaceMetadataV2 {..} =
-    Aeson.object
+    J.object
       [ "allow_inconsistent_metadata" .= _rmv2AllowInconsistentMetadata,
+        "allow_warnings" .= _rmv2AllowWarningss,
         "metadata" .= _rmv2Metadata
       ]
 
@@ -246,29 +271,29 @@ data ReplaceMetadata
   deriving (Eq)
 
 instance FromJSON ReplaceMetadata where
-  parseJSON = Aeson.withObject "ReplaceMetadata" $ \o -> do
+  parseJSON = J.withObject "ReplaceMetadata" $ \o -> do
     if KeyMap.member "metadata" o
-      then RMReplaceMetadataV2 <$> Aeson.parseJSON (Aeson.Object o)
-      else RMReplaceMetadataV1 <$> Aeson.parseJSON (Aeson.Object o)
+      then RMReplaceMetadataV2 <$> J.parseJSON (J.Object o)
+      else RMReplaceMetadataV1 <$> J.parseJSON (J.Object o)
 
 instance ToJSON ReplaceMetadata where
   toJSON = \case
-    RMReplaceMetadataV1 v1 -> Aeson.toJSON v1
-    RMReplaceMetadataV2 v2 -> Aeson.toJSON v2
+    RMReplaceMetadataV1 v1 -> J.toJSON v1
+    RMReplaceMetadataV2 v2 -> J.toJSON v2
 
 data WebHookUrl = EnvVar String | URL Text
   deriving (Eq)
 
 instance FromJSON WebHookUrl where
-  parseJSON (Aeson.Object o) = do
+  parseJSON (J.Object o) = do
     var <- o .: "from_env"
     pure $ EnvVar var
-  parseJSON (Aeson.String str) = pure $ URL str
+  parseJSON (J.String str) = pure $ URL str
   parseJSON _ = empty
 
 instance ToJSON WebHookUrl where
-  toJSON (EnvVar var) = Aeson.object ["from_env" .= var]
-  toJSON (URL url) = Aeson.toJSON url
+  toJSON (EnvVar var) = J.object ["from_env" .= var]
+  toJSON (URL url) = J.toJSON url
 
 -- | 'TestWebhookTransform' can be used to test out request
 -- transformations using mock data.
@@ -278,7 +303,7 @@ data TestWebhookTransform = TestWebhookTransform
   { _twtEnv :: Env.Environment,
     _twtHeaders :: [HTTP.Header],
     _twtWebhookUrl :: WebHookUrl,
-    _twtPayload :: Aeson.Value,
+    _twtPayload :: J.Value,
     _twtTransformer :: RequestTransform,
     _twtResponseTransformer :: Maybe MetadataResponseTransform,
     _twtSessionVariables :: Maybe SessionVariables
@@ -292,7 +317,7 @@ twtResponseTransformer :: Lens' TestWebhookTransform (Maybe MetadataResponseTran
 twtResponseTransformer = Lens.lens _twtResponseTransformer \twt a -> twt {_twtResponseTransformer = a}
 
 instance FromJSON TestWebhookTransform where
-  parseJSON = Aeson.withObject "TestWebhookTransform" $ \o -> do
+  parseJSON = J.withObject "TestWebhookTransform" $ \o -> do
     env <- fmap (fromMaybe mempty) $ o .:? "env"
     headers <- fmap (fmap (first (CI.mk))) $ o .:? "request_headers" .!= []
     url <- o .: "webhook_url"
@@ -304,7 +329,7 @@ instance FromJSON TestWebhookTransform where
 
 instance ToJSON TestWebhookTransform where
   toJSON (TestWebhookTransform env headers url payload mt mrt sv) =
-    Aeson.object
+    J.object
       [ "env" .= env,
         "request_headers" .= fmap (first CI.original) headers,
         "webhook_url" .= url,

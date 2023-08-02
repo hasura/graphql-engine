@@ -1,25 +1,28 @@
 import { useQueryClient } from 'react-query';
+import { useDispatch } from 'react-redux';
 import { push } from 'react-router-redux';
-import { SupportedDrivers } from '@/features/hasura-metadata-types';
-import {
-  allowedMetadataTypes,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
-import { APIError } from '@/hooks/error';
-import { useFireNotification } from '@/new-components/Notifications';
-import { getDriverPrefix } from '@/features/DataSource';
-import { useAppDispatch } from '@/store';
-import { exportMetadata } from '@/metadata/actions';
+import { APIError } from '../../../hooks/error';
+import { exportMetadata } from '../../../metadata/actions';
+import { useFireNotification } from '../../../new-components/Notifications';
+import { getDriverPrefix } from '../../DataSource';
+import { allowedMetadataTypes, useMetadataMigration } from '../../MetadataAPI';
+import { SupportedDrivers } from '../../hasura-metadata-types';
 import { useAvailableDrivers } from './useAvailableDrivers';
 
+type UseRedirectArgs = {
+  redirectWithLatencyCheck: boolean;
+};
+
 // TODO this is temporary while we are still using the redux based manage page
-const useRedirect = () => {
-  const dispatch = useAppDispatch();
+const useRedirect = ({ redirectWithLatencyCheck = false }: UseRedirectArgs) => {
+  const dispatch = useDispatch();
   const redirect = async () => {
     await dispatch(exportMetadata());
     dispatch(
       push({
-        pathname: '/data/manage',
+        pathname: redirectWithLatencyCheck
+          ? '/data/manage?trigger_db_latency_check=true'
+          : '/data/manage',
       })
     );
   };
@@ -44,8 +47,7 @@ export const getEditSourceQueryType = (
 export const useSubmit = () => {
   const drivers = useAvailableDrivers();
   const { fireNotification } = useFireNotification();
-  const redirect = useRedirect();
-  const queryClient = useQueryClient();
+  const redirect = useRedirect({ redirectWithLatencyCheck: false });
 
   const { mutate, ...rest } = useMetadataMigration({
     onError: (error: APIError) => {
@@ -56,8 +58,6 @@ export const useSubmit = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['export_metadata']);
-
       fireNotification({
         type: 'success',
         title: 'Success',
@@ -102,7 +102,7 @@ export const useSubmit = () => {
 
 export const useEditDataSourceConnection = () => {
   const { fireNotification } = useFireNotification();
-  const redirect = useRedirect();
+  const redirect = useRedirect({ redirectWithLatencyCheck: false });
   const queryClient = useQueryClient();
 
   const { mutate, ...rest } = useMetadataMigration({

@@ -6,11 +6,11 @@ import {
   currentDriver,
   getTableCustomColumnNames,
   Table,
-} from '@/dataSources';
-import { AppDispatch } from '@/store';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { NotSupportedNote } from '@/components/Common/NotSupportedNote';
-import { Button } from '@/new-components/Button';
+} from '../../../../dataSources';
+import type { AppDispatch } from '../../../../store';
+import { IconTooltip } from '../../../../new-components/Tooltip';
+import { NotSupportedNote } from '../../../Common/NotSupportedNote';
+import { Button } from '../../../../new-components/Button';
 import {
   primaryKeyDescription,
   foreignKeyDescription,
@@ -136,7 +136,7 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
 
   return (
     <RightContainer>
-      <div>
+      <div className="bootstrap-jail">
         <TableHeader
           dispatch={dispatch}
           table={table}
@@ -163,22 +163,20 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
               </div>
             )}
             {isCommentsViewSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-lg">
-                  <EnumTableModifyWarning isEnum={table.is_enum} />
+              <div className="w-full sm:w-6/12 mb-lg">
+                <EnumTableModifyWarning isEnum={table.is_enum} />
 
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Table Comments
-                  </h4>
-                  <TableCommentEditor
-                    tableComment={table.comment}
-                    tableCommentEdit={tableCommentEdit}
-                    tableType="TABLE"
-                    dispatch={dispatch}
-                    readOnly={!isCommentsEditSupported}
-                  />
-                </div>
-              </>
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Table Comments
+                </h4>
+                <TableCommentEditor
+                  tableComment={table.comment}
+                  tableCommentEdit={tableCommentEdit}
+                  tableType="TABLE"
+                  dispatch={dispatch}
+                  readOnly={!isCommentsEditSupported}
+                />
+              </div>
             )}
 
             <div className="w-full sm:w-full">
@@ -208,16 +206,14 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
 
             <div className="w-full mb-lg">
               {isColumnsEditSupported && (
-                <>
-                  <ColumnCreator
-                    dispatch={dispatch}
-                    tableName={tableName || ''}
-                    dataTypes={dataTypes}
-                    validTypeCasts={validTypeCasts}
-                    columnDefaultFunctions={columnDefaultFunctions}
-                    postgresVersion={postgresVersion}
-                  />
-                </>
+                <ColumnCreator
+                  dispatch={dispatch}
+                  tableName={tableName || ''}
+                  dataTypes={dataTypes}
+                  validTypeCasts={validTypeCasts}
+                  columnDefaultFunctions={columnDefaultFunctions}
+                  postgresVersion={postgresVersion}
+                />
               )}
             </div>
 
@@ -226,88 +222,78 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
             </h3>
 
             {isPrimaryKeysViewSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Primary Key
-                    <IconTooltip message={primaryKeyDescription} />
-                  </h4>
-                  <PrimaryKeyEditor
-                    tableSchema={table}
-                    readOnlyMode={!isPrimaryKeysEditSupported}
-                    pkModify={pkModify}
-                    dispatch={dispatch}
-                    currentSchema={currentSchema}
-                  />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-md">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Primary Key
+                  <IconTooltip message={primaryKeyDescription} />
+                </h4>
+                <PrimaryKeyEditor
+                  tableSchema={table}
+                  readOnlyMode={!isPrimaryKeysEditSupported}
+                  pkModify={pkModify}
+                  dispatch={dispatch}
+                  currentSchema={currentSchema}
+                />
+              </div>
             )}
 
             {isFeatureSupported('tables.modify.foreignKeys.view') && (
-              <>
-                <div className="w-full sm:w-8/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Foreign Keys
-                    <IconTooltip message={foreignKeyDescription} />
-                  </h4>
-                  <ForeignKeyEditor
-                    tableSchema={table}
-                    allSchemas={allTables}
-                    dispatch={dispatch}
-                    schemaList={schemaList}
-                    fkModify={fkModify}
-                    orderedColumns={orderedColumns}
-                    existingForeignKeys={existingForeignKeys}
-                    readOnlyMode={!isForeignKeysEditSupported}
-                  />
-                </div>
-              </>
+              <div className="w-full sm:w-8/12 mb-md">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Foreign Keys
+                  <IconTooltip message={foreignKeyDescription} />
+                </h4>
+                <ForeignKeyEditor
+                  tableSchema={table}
+                  allSchemas={allTables}
+                  dispatch={dispatch}
+                  schemaList={schemaList}
+                  fkModify={fkModify}
+                  orderedColumns={orderedColumns}
+                  existingForeignKeys={existingForeignKeys}
+                  readOnlyMode={!isForeignKeysEditSupported}
+                />
+              </div>
             )}
 
             {isFeatureSupported('tables.modify.uniqueKeys.view') && (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Unique Keys
-                    <IconTooltip message={uniqueKeyDescription} />
-                  </h4>
-                  <UniqueKeyEditor
-                    tableSchema={table}
-                    dispatch={dispatch}
-                    uniqueKeys={uniqueKeyModify}
-                    setUniqueKeys={setUniqueKeys}
-                    readOnlyMode={!isUniqueKeysEditSupported}
-                  />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-md">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Unique Keys
+                  <IconTooltip message={uniqueKeyDescription} />
+                </h4>
+                <UniqueKeyEditor
+                  tableSchema={table}
+                  dispatch={dispatch}
+                  uniqueKeys={uniqueKeyModify}
+                  setUniqueKeys={setUniqueKeys}
+                  readOnlyMode={!isUniqueKeysEditSupported}
+                />
+              </div>
             )}
             {isCheckConstraintsViewSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Check Constraints
-                    <IconTooltip message={checkConstraintsDescription} />
-                  </h4>
-                  <NotSupportedNote unsupported={['mysql']} />
-                  <CheckConstraints
-                    constraints={table.check_constraints}
-                    checkConstraintsModify={checkConstraintsModify}
-                    dispatch={dispatch}
-                    readOnlyMode={!isCheckConstraintsEditSupported}
-                  />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-md">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Check Constraints
+                  <IconTooltip message={checkConstraintsDescription} />
+                </h4>
+                <NotSupportedNote unsupported={['mysql']} />
+                <CheckConstraints
+                  constraints={table.check_constraints}
+                  checkConstraintsModify={checkConstraintsModify}
+                  dispatch={dispatch}
+                  readOnlyMode={!isCheckConstraintsEditSupported}
+                />
+              </div>
             )}
             {isIndexViewSupported ? (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Indexes
-                    <IconTooltip message={indexFieldsDescription} />
-                  </h4>
-                  <IndexFields tableSchema={table} />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-md">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Indexes
+                  <IconTooltip message={indexFieldsDescription} />
+                </h4>
+                <IndexFields tableSchema={table} />
+              </div>
             ) : null}
 
             {table.table_type === 'PARTITIONED TABLE' && (
@@ -315,15 +301,13 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
             )}
 
             {areTriggersSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-lg">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Triggers
-                  </h4>
-                  <NotSupportedNote unsupported={['mysql']} />
-                  <TriggerEditorList tableSchema={table} dispatch={dispatch} />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-lg">
+                <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                  Triggers
+                </h4>
+                <NotSupportedNote unsupported={['mysql']} />
+                <TriggerEditorList tableSchema={table} dispatch={dispatch} />
+              </div>
             )}
 
             <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
@@ -331,18 +315,14 @@ export const ModifyTable: React.VFC<ModifyTableProps> = ({
             </h3>
 
             {areComputedFieldSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <ConnectedComputedFields tableSchema={table} />
-                </div>
-              </>
+              <div className="w-full sm:w-6/12 mb-md">
+                <ConnectedComputedFields tableSchema={table} />
+              </div>
             )}
             {isCustomGqlRootSupported && (
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <RootFields tableSchema={table} />
-                </div>
-              </>
+              <div className="w-full sm:w-8/12 mb-md">
+                <RootFields tableSchema={table} />
+              </div>
             )}
             {isSetAsEnumSupported && (
               <EnumsSection

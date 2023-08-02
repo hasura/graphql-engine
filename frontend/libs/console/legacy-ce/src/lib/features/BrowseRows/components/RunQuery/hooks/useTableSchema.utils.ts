@@ -1,5 +1,5 @@
-import { Table } from '@/features/hasura-metadata-types';
-import { BigQueryTable, PostgresTable } from '@/features/DataSource';
+import { Table } from '../../../../hasura-metadata-types';
+import { BigQueryTable, PostgresTable } from '../../../../DataSource';
 
 export const getTableSchemaName = (table: Table) => {
   const isObject =

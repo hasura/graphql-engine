@@ -1,20 +1,22 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation, ExistsInTable, ExistsExpression } from "@hasura/dc-api-types";
-import { coerceUndefinedToNull, filterIterable, mapIterable, reduceAndIterable, reduceOrIterable, skipIterable, tableNameEquals, takeIterable, unreachable } from "./util";
+﻿﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, Aggregate, SingleColumnAggregate, ColumnCountAggregate, TableName, OrderByElement, OrderByRelation, ExistsInTable, ExistsExpression, ScalarValue, FunctionName, FunctionRelationships } from "@hasura/dc-api-types";
+import { coerceUndefinedToNull, filterIterable, mapIterable, nameEquals, reduceAndIterable, reduceOrIterable, skipIterable, takeIterable, unreachable } from "./util";
 import * as math from "mathjs";
+import { respondToFunction } from "./functions";
+import { getConfig } from "./config";
 
 type RelationshipName = string
 
-type ScalarValue = (string | number | boolean | null)
+type RawScalarValue = (string | number | boolean | null)
 
 // This is a more constrained type for response rows that knows that the reference
 // agent never returns custom scalars that are JSON objects
 type ProjectedRow = {
-  [fieldName: string]: ScalarValue | QueryResponse
+  [fieldName: string]: RawScalarValue | QueryResponse
 }
 
 // We need a more constrained version of QueryResponse that uses ProjectedRow for rows
 type QueryResponse = {
-  aggregates?: Record<string, ScalarValue> | null,
+  aggregates?: Record<string, RawScalarValue> | null,
   rows?: ProjectedRow[] | null
 }
 
@@ -45,7 +47,7 @@ const prettyPrintUnaryComparisonOperator = (operator: UnaryComparisonOperator): 
   };
 };
 
-const dateTimeSameDayAs = (a: ScalarValue, b: ScalarValue): boolean => {
+const dateTimeSameDayAs = (a: RawScalarValue, b: RawScalarValue): boolean => {
   if (typeof a !== "string")
     return expectedString(typeof a);
 
@@ -55,7 +57,7 @@ const dateTimeSameDayAs = (a: ScalarValue, b: ScalarValue): boolean => {
   return a.substring(0, 10) === b.substring(0, 10);
 }
 
-const dateTimeInYear = (a: ScalarValue, b: ScalarValue): boolean => {
+const dateTimeInYear = (a: RawScalarValue, b: RawScalarValue): boolean => {
   if (typeof a !== "string")
     return expectedString(typeof a);
 
@@ -66,7 +68,7 @@ const dateTimeInYear = (a: ScalarValue, b: ScalarValue): boolean => {
   return bString.length === 4 && a.startsWith(bString);
 }
 
-const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator): ((left: ScalarValue, right: ScalarValue) => boolean) => {
+const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator): ((left: RawScalarValue, right: RawScalarValue) => boolean) => {
   switch (operator) {
     case "greater_than": return (a, b) => a !== null && b !== null && a > b;
     case "greater_than_or_equal": return (a, b) => a !== null && b !== null && a >= b;
@@ -79,7 +81,7 @@ const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator
   };
 };
 
-const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparisonOperator): ((left: ScalarValue, right: ScalarValue[]) => boolean) => {
+const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparisonOperator): ((left: RawScalarValue, right: RawScalarValue[]) => boolean) => {
   switch (operator) {
     case "in": return (a, bs) => a !== null && bs.includes(a);
     default: return unknownOperator(operator);
@@ -87,12 +89,18 @@ const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparis
 };
 
 
-const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator): ((value: ScalarValue) => boolean) => {
+const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator): ((value: RawScalarValue) => boolean) => {
   switch (operator) {
     case "is_null": return (v) => v === null;
     default: return unknownOperator(operator);
   };
 };
+
+const getComparisonColumnSelector = (comparisonColumn: ComparisonColumn): string => {
+  if (typeof comparisonColumn.name === "string")
+    return comparisonColumn.name;
+  return comparisonColumn.name[0];
+}
 
 const prettyPrintComparisonColumn = (comparisonColumn: ComparisonColumn): string => {
   return (comparisonColumn.path ?? []).concat(comparisonColumn.name).map(p => `[${p}]`).join(".");
@@ -109,7 +117,7 @@ const prettyPrintComparisonValue = (comparisonValue: ComparisonValue): string =>
   }
 };
 
-const prettyPrintTableName = (tableName: TableName): string => {
+export const prettyPrintTableName = (tableName: TableName): string => {
   return tableName.map(t => `[${t}]`).join(".");
 };
 
@@ -149,11 +157,11 @@ export const prettyPrintExpression = (e: Expression): string => {
 
 const makeFilterPredicate = (
     expression: Expression | null,
-    getComparisonColumnValue: (comparisonColumn: ComparisonColumn, row: Record<string, ScalarValue>) => ScalarValue,
-    performExistsSubquery: (exists: ExistsExpression, row: Record<string, ScalarValue>) => boolean
-  ) => (row: Record<string, ScalarValue>) => {
+    getComparisonColumnValue: (comparisonColumn: ComparisonColumn, row: Record<string, RawScalarValue>) => RawScalarValue,
+    performExistsSubquery: (exists: ExistsExpression, row: Record<string, RawScalarValue>) => boolean
+  ) => (row: Record<string, RawScalarValue>) => {
 
-  const extractComparisonValueScalar = (comparisonValue: ComparisonValue): ScalarValue => {
+  const extractComparisonValueScalar = (comparisonValue: ComparisonValue): RawScalarValue => {
     switch (comparisonValue.type) {
       case "column":
         return getComparisonColumnValue(comparisonValue.column, row);
@@ -193,10 +201,10 @@ const makeFilterPredicate = (
 
 const makePerformExistsSubquery = (
     findRelationship: (relationshipName: RelationshipName) => Relationship,
-    performSubquery: (sourceRow: Record<string, ScalarValue>, tableName: TableName, query: Query) => QueryResponse
+    performSubquery: (sourceRow: Record<string, RawScalarValue>, tableName: TableName, query: Query) => QueryResponse
   ) => (
     exists: ExistsExpression,
-    row: Record<string, ScalarValue>
+    row: Record<string, RawScalarValue>
   ): boolean => {
 
   const [targetTable, joinExpression] = (() => {
@@ -226,7 +234,13 @@ const makePerformExistsSubquery = (
   };
 
   const results = performSubquery(row, targetTable, subquery);
-  return (results.aggregates?.count ?? 0) > 0;
+  const count = results.aggregates?.count ?? 0;
+
+  if(typeof count != 'number') {
+    throw new Error(`Unexpected type of results.aggregates.count (${count}) expecting number.`);
+  }
+
+  return count > 0;
 }
 
 const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, orderByRelations: Record<RelationshipName, OrderByRelation>): Query => {
@@ -242,7 +256,7 @@ const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, order
       case "single_column_aggregate":
         return {
           aggregates: {
-            [orderByElement.target.column]: { type: "single_column", column: orderByElement.target.column, function: orderByElement.target.function }
+            [orderByElement.target.column]: { type: "single_column", column: orderByElement.target.column, function: orderByElement.target.function, result_type: orderByElement.target.result_type }
           }
         };
       case "star_count_aggregate":
@@ -269,7 +283,7 @@ const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, order
   }
 };
 
-const extractResultFromOrderByElementQueryResponse = (orderByElement: OrderByElement, response: QueryResponse): ScalarValue => {
+const extractResultFromOrderByElementQueryResponse = (orderByElement: OrderByElement, response: QueryResponse): RawScalarValue => {
   const [relationshipName, ...remainingPath] = orderByElement.target_path;
   const rows = response.rows ?? [];
   const aggregates = response.aggregates ?? {};
@@ -308,7 +322,7 @@ const extractResultFromOrderByElementQueryResponse = (orderByElement: OrderByEle
   }
 };
 
-const makeGetOrderByElementValue = (findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (orderByElement: OrderByElement, row: Record<string, ScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>): ScalarValue => {
+const makeGetOrderByElementValue = (findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (orderByElement: OrderByElement, row: Record<string, RawScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>): RawScalarValue => {
   const [relationshipName, ...remainingPath] = orderByElement.target_path;
   if (relationshipName === undefined) {
     if (orderByElement.target.type !== "column")
@@ -333,19 +347,19 @@ const makeGetOrderByElementValue = (findRelationship: (relationshipName: Relatio
   }
 };
 
-const sortRows = (rows: Record<string, ScalarValue>[], orderBy: OrderBy, getOrderByElementValue: (orderByElement: OrderByElement, row: Record<string, ScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>) => ScalarValue): Record<string, ScalarValue>[] =>
+const sortRows = (rows: Record<string, RawScalarValue>[], orderBy: OrderBy, getOrderByElementValue: (orderByElement: OrderByElement, row: Record<string, RawScalarValue>, orderByRelations: Record<RelationshipName, OrderByRelation>) => RawScalarValue): Record<string, RawScalarValue>[] =>
   rows
-    .map<[Record<string, ScalarValue>, ScalarValue[]]>(row => [row, []])
+    .map<[Record<string, RawScalarValue>, RawScalarValue[]]>(row => [row, []])
     .sort(([lhs, lhsValueCache], [rhs, rhsValueCache]) => {
       return orderBy.elements.reduce((accum, orderByElement, orderByElementIndex) => {
         if (accum !== 0) {
           return accum;
         }
-        const leftVal: ScalarValue =
+        const leftVal: RawScalarValue =
           lhsValueCache[orderByElementIndex] !== undefined
             ? lhsValueCache[orderByElementIndex]
             : lhsValueCache[orderByElementIndex] = getOrderByElementValue(orderByElement, lhs, orderBy.relations);
-        const rightVal: ScalarValue =
+        const rightVal: RawScalarValue =
           rhsValueCache[orderByElementIndex] !== undefined
           ? rhsValueCache[orderByElementIndex]
           : rhsValueCache[orderByElementIndex] = getOrderByElementValue(orderByElement, rhs, orderBy.relations);
@@ -365,24 +379,50 @@ const sortRows = (rows: Record<string, ScalarValue>[], orderBy: OrderBy, getOrde
     })
     .map(([row, _valueCache]) => row);
 
-const paginateRows = (rows: Iterable<Record<string, ScalarValue>>, offset: number | null, limit: number | null): Iterable<Record<string, ScalarValue>> => {
+const paginateRows = (rows: Iterable<Record<string, RawScalarValue>>, offset: number | null, limit: number | null): Iterable<Record<string, RawScalarValue>> => {
   const skipped = offset !== null ? skipIterable(rows, offset) : rows;
   return limit !== null ? takeIterable(skipped, limit) : skipped;
 };
 
-const makeFindRelationship = (allTableRelationships: TableRelationships[], tableName: TableName) => (relationshipName: RelationshipName): Relationship => {
-  const relationship = allTableRelationships.find(r => tableNameEquals(r.source_table)(tableName))?.relationships?.[relationshipName];
-  if (relationship === undefined)
-    throw `No relationship named ${relationshipName} found for table ${tableName}`;
-  else
-    return relationship;
+const makeFindRelationship = (type: 'table' | 'function', request: QueryRequest, name: TableName) => (relationshipName: RelationshipName): Relationship => {
+  const relationships = (() => {
+    switch(request.type) {
+      case 'table':
+        return request.table_relationships;
+      case 'function':
+        return request.relationships;
+  }})();
+
+  for(var r of relationships) {
+    switch(type) {
+      case 'table':
+        if(r.type === 'table') {
+          if(nameEquals(r.source_table)(name)) {
+            const relationship = r.relationships[relationshipName];
+            if(relationship) {
+              return relationship;
+            }
+          }
+        }
+      case 'function':
+        if(r.type === 'function') {
+          if(nameEquals(r.source_function)(name)) {
+            const relationship = r.relationships[relationshipName];
+            if(relationship) {
+              return relationship;
+            }
+          }
+        }
+    }
+  }
+  throw `No relationship named ${relationshipName} found for ${type} ${name}`;
 };
 
-const createFilterExpressionForRelationshipJoin = (row: Record<string, ScalarValue>, relationship: Relationship): Expression | null => {
+const createFilterExpressionForRelationshipJoin = (row: Record<string, RawScalarValue>, relationship: Relationship): Expression | null => {
   const columnMappings = Object.entries(relationship.column_mapping);
   const filterConditions: Expression[] = columnMappings
-    .map(([outerColumnName, innerColumnName]): [ScalarValue, string] => [row[outerColumnName], innerColumnName])
-    .filter((x): x is [ScalarValue, string] => {
+    .map(([outerColumnName, innerColumnName]): [RawScalarValue, string] => [row[outerColumnName], innerColumnName])
+    .filter((x): x is [RawScalarValue, string] => {
       const [outerValue, _] = x;
       return outerValue !== null;
     })
@@ -407,7 +447,7 @@ const createFilterExpressionForRelationshipJoin = (row: Record<string, ScalarVal
   }
 };
 
-const addRelationshipFilterToQuery = (row: Record<string, ScalarValue>, relationship: Relationship, subquery: Query): Query | null => {
+const addRelationshipFilterToQuery = (row: Record<string, RawScalarValue>, relationship: Relationship, subquery: Query): Query | null => {
   const filterExpression = createFilterExpressionForRelationshipJoin(row, relationship);
 
   // If we have no columns to join on, or if some of the FK columns in the row contained null, then we can't join
@@ -423,21 +463,21 @@ const addRelationshipFilterToQuery = (row: Record<string, ScalarValue>, relation
   }
 };
 
-const makeGetComparisonColumnValue = (parentQueryRowChain: Record<string, ScalarValue>[]) => (comparisonColumn: ComparisonColumn, row: Record<string, ScalarValue>): ScalarValue => {
+const makeGetComparisonColumnValue = (parentQueryRowChain: Record<string, RawScalarValue>[]) => (comparisonColumn: ComparisonColumn, row: Record<string, RawScalarValue>): RawScalarValue => {
   const path = comparisonColumn.path ?? [];
   if (path.length === 0) {
-    return coerceUndefinedToNull(row[comparisonColumn.name]);
+    return coerceUndefinedToNull(row[getComparisonColumnSelector(comparisonColumn)]);
   } else if (path.length === 1 && path[0] === "$") {
     const queryRow = parentQueryRowChain.length === 0
       ? row
       : parentQueryRowChain[0];
-    return coerceUndefinedToNull(queryRow[comparisonColumn.name]);
+    return coerceUndefinedToNull(queryRow[getComparisonColumnSelector(comparisonColumn)]);
   } else {
     throw new Error(`Unsupported path on ComparisonColumn: ${prettyPrintComparisonColumn(comparisonColumn)}`);
   }
 };
 
-const projectRow = (fields: Record<string, Field>, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (row: Record<string, ScalarValue>): ProjectedRow => {
+const projectRow = (fields: Record<string, Field>, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (row: Record<string, RawScalarValue>): ProjectedRow => {
   const projectedRow: ProjectedRow = {};
   for (const [fieldName, field] of Object.entries(fields)) {
 
@@ -452,6 +492,12 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
         projectedRow[fieldName] = subquery ? performQuery(relationship.target_table, subquery) : { aggregates: null, rows: null };
         break;
 
+      case "object":
+        throw new Error('Unsupported field type "object"');
+
+      case "array":
+        throw new Error('Unsupported field type "array"');
+
       default:
         return unreachable(field["type"]);
     }
@@ -459,11 +505,11 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
   return projectedRow;
 };
 
-const starCountAggregateFunction = (rows: Record<string, ScalarValue>[]): ScalarValue => {
+const starCountAggregateFunction = (rows: Record<string, RawScalarValue>[]): RawScalarValue => {
   return rows.length;
 };
 
-const columnCountAggregateFunction = (aggregate: ColumnCountAggregate) => (rows: Record<string, ScalarValue>[]): ScalarValue => {
+const columnCountAggregateFunction = (aggregate: ColumnCountAggregate) => (rows: Record<string, RawScalarValue>[]): RawScalarValue => {
   const nonNullValues = rows.map(row => row[aggregate.column]).filter(v => v !== null);
 
   return aggregate.distinct
@@ -471,20 +517,20 @@ const columnCountAggregateFunction = (aggregate: ColumnCountAggregate) => (rows:
     : nonNullValues.length;
 };
 
-const isNumberArray = (values: ScalarValue[]): values is number[] => {
+const isNumberArray = (values: RawScalarValue[]): values is number[] => {
   return values.every(v => typeof v === "number");
 };
 
-const isComparableArray = (values: ScalarValue[]): values is (number | string)[] => {
+const isComparableArray = (values: RawScalarValue[]): values is (number | string)[] => {
   return values.every(v => typeof v === "number" || typeof v === "string");
 };
 
-const isStringArray = (values: ScalarValue[]): values is string[] => {
+const isStringArray = (values: RawScalarValue[]): values is string[] => {
   return values.every(v => typeof v === "string");
 };
 
-const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (rows: Record<string, ScalarValue>[]): ScalarValue => {
-  const values = rows.map(row => row[aggregate.column]).filter((v): v is Exclude<ScalarValue, null> => v !== null);
+const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (rows: Record<string, RawScalarValue>[]): RawScalarValue => {
+  const values = rows.map(row => row[aggregate.column]).filter((v): v is Exclude<RawScalarValue, null> => v !== null);
   if (values.length === 0)
     return null;
 
@@ -521,7 +567,7 @@ const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (row
   }
 };
 
-const getAggregateFunction = (aggregate: Aggregate): ((rows: Record<string, ScalarValue>[]) => ScalarValue) => {
+const getAggregateFunction = (aggregate: Aggregate): ((rows: Record<string, RawScalarValue>[]) => RawScalarValue) => {
   switch (aggregate.type) {
     case "star_count":
       return starCountAggregateFunction;
@@ -532,44 +578,108 @@ const getAggregateFunction = (aggregate: Aggregate): ((rows: Record<string, Scal
   }
 };
 
-const calculateAggregates = (rows: Record<string, ScalarValue>[], aggregateRequest: Record<string, Aggregate>): Record<string, ScalarValue> => {
+const calculateAggregates = (rows: Record<string, RawScalarValue>[], aggregateRequest: Record<string, Aggregate>): Record<string, RawScalarValue> => {
   return Object.fromEntries(Object.entries(aggregateRequest).map(([fieldName, aggregate]) => {
     const aggregateValue = getAggregateFunction(aggregate)(rows);
     return [fieldName, aggregateValue];
   }));
 };
 
-export const queryData = (getTable: (tableName: TableName) => Record<string, ScalarValue>[] | undefined, queryRequest: QueryRequest) => {
-  const performQuery = (parentQueryRowChain: Record<string, ScalarValue>[], tableName: TableName, query: Query): QueryResponse => {
-    const rows = getTable(tableName);
+const makeForeachFilterExpression = (foreachFilterIds: Record<string, ScalarValue>): Expression => {
+  const expressions: Expression[] = Object.entries(foreachFilterIds)
+    .map(([columnName, columnScalarValue]) => (
+      {
+        type: "binary_op",
+        operator: "equal",
+        column: {
+          name: columnName,
+          column_type: columnScalarValue.value_type
+        },
+        value: {
+          type: "scalar",
+          value: columnScalarValue.value,
+          value_type: columnScalarValue.value_type,
+        }
+      }
+    ));
+
+  return expressions.length === 1
+    ? expressions[0]
+    : { type: "and", expressions };
+}
+
+export type Rows = Record<string, RawScalarValue>[]; // Record<string, ScalarValue>[];
+
+export const queryData = (getTable: (tableName: TableName) => Record<string, RawScalarValue>[] | undefined, queryRequest: QueryRequest): QueryResponse => {
+  const performQuery = (parentQueryRowChain: Record<string, RawScalarValue>[], tableName: TableName, query: Query, previousResults: Rows | null): QueryResponse => {
+    const rows = previousResults ?? getTable(tableName);
     if (rows === undefined) {
       throw `${tableName} is not a valid table`;
     }
-    const performSubquery = (sourceRow: Record<string, ScalarValue>, tableName: TableName, query: Query): QueryResponse => {
-      return performQuery([...parentQueryRowChain, sourceRow], tableName, query);
+    const performSubquery = (sourceRow: Record<string, RawScalarValue>, tableName: TableName, query: Query): QueryResponse => {
+      return performQuery([...parentQueryRowChain, sourceRow], tableName, query, null);
     };
-    const findRelationship = makeFindRelationship(queryRequest.table_relationships, tableName);
+    const findRelationship = makeFindRelationship(previousResults ? 'function' : 'table', queryRequest, tableName);
     const getComparisonColumnValue = makeGetComparisonColumnValue(parentQueryRowChain);
     const performExistsSubquery = makePerformExistsSubquery(findRelationship, performSubquery);
     const getOrderByElementValue = makeGetOrderByElementValue(findRelationship, performNewQuery);
 
     const filteredRows = filterIterable(rows, makeFilterPredicate(query.where ?? null, getComparisonColumnValue, performExistsSubquery));
     const sortedRows = query.order_by ? sortRows(Array.from(filteredRows), query.order_by, getOrderByElementValue) : filteredRows;
-    const paginatedRows = Array.from(paginateRows(sortedRows, query.offset ?? null, query.limit ?? null));
+
+    // Get the smallest set of rows required _for both_ row results and aggregation result
+    const aggregatesLimit = query.aggregates_limit ?? null;
+    const rowLimit = query.limit ?? null;
+    const largestLimit = aggregatesLimit !== null && rowLimit !== null ? Math.max(aggregatesLimit, rowLimit) : null;
+    const largestPageOfRows = Array.from(paginateRows(sortedRows, query.offset ?? null, largestLimit));
+
+    // Limit the set of input rows to appropriate size for row results and aggregation results
+    const paginatedRows = rowLimit != null ? largestPageOfRows.slice(0, rowLimit) : largestPageOfRows;
+    const paginatedRowsForAggregation = aggregatesLimit != null ? largestPageOfRows.slice(0, aggregatesLimit) : largestPageOfRows;
+
     const projectedRows = query.fields
       ? paginatedRows.map(projectRow(query.fields, findRelationship, performNewQuery))
       : null;
     const calculatedAggregates = query.aggregates
-      ? calculateAggregates(paginatedRows, query.aggregates)
+      ? calculateAggregates(paginatedRowsForAggregation, query.aggregates)
       : null;
     return {
       aggregates: calculatedAggregates,
       rows: projectedRows,
     }
   }
-  const performNewQuery = (tableName: TableName, query: Query): QueryResponse => performQuery([], tableName, query);
 
-  return performNewQuery(queryRequest.table, queryRequest.query);
+  const performNewQuery = (tableName: TableName, query: Query, previousResults: Rows|null = null): QueryResponse => performQuery([], tableName, query, previousResults);
+
+  switch(queryRequest.type) {
+    case 'function':
+      const rows = respondToFunction(queryRequest, queryRequest.function, getTable);
+      const result = performNewQuery(queryRequest.function, queryRequest.query, rows);
+      return result;
+
+    case 'table':
+      if (queryRequest.foreach) {
+        return {
+          rows: queryRequest.foreach.map(foreachFilterIds => {
+            const foreachFilter = makeForeachFilterExpression(foreachFilterIds);
+            const where: Expression = queryRequest.query.where
+                ? { type: "and", expressions: [foreachFilter, queryRequest.query.where] }
+                : foreachFilter;
+
+            const filteredQuery = {
+              ... queryRequest.query,
+              where
+            }
+            const queryResponse = performNewQuery(queryRequest.table, filteredQuery);
+            return {
+              "query": queryResponse,
+            };
+          })
+        };
+      } else {
+        return performNewQuery(queryRequest.table, queryRequest.query);
+      }
+  }
 };
 
 const unknownOperator = (x: string): never => { throw new Error(`Unknown operator: ${x}`) };

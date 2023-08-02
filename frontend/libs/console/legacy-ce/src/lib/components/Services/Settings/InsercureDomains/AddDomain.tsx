@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import { addInsecureDomain } from '../../../../metadata/actions';
 
 import { inputStyles } from '../constants';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 type Props = { setToggle: any; dispatch: any };
 
@@ -15,7 +17,10 @@ const AddDomain: React.FC<Props> = props => {
   };
 
   const saveWithToggle = () => {
-    dispatch(addInsecureDomain(domainName, setToggle));
+    const url = domainName.split(':');
+    const host = url[0];
+    const port = url[1];
+    dispatch(addInsecureDomain(host, port, setToggle));
   };
 
   return (
@@ -24,9 +29,10 @@ const AddDomain: React.FC<Props> = props => {
         <b>Add Domain to Insecure TLS Allow List</b>
       </div>
       <div>
-        <label className="bg-color=[#4B5563]">
+        <label className="bg-color=[#4B5563] flex items-center">
           <b>Domain Name</b>
-          <span className="text-red-700"> * </span>
+          <IconTooltip message="The domain to be added to the allow list. The format is hostname:port, where port is optional." />
+          <LearnMoreLink href="https://hasura.io/docs/latest/deployment/tls-allow-list/" />
         </label>
         <div className="flex pb-md">
           <span className="bg-[#f8fafc] flex items-center px-xs h-10 border border-gray-300 rounded-tl-sm rounded-bl-sm">
@@ -35,7 +41,7 @@ const AddDomain: React.FC<Props> = props => {
           <input
             type="text"
             className={`${inputStyles} rounded-bl-none rounded-tl-none`}
-            placeholder="www.google.com"
+            placeholder="mydomain.com:8080"
             data-test="domain-name"
             value={domainName}
             onChange={handleNameChange}

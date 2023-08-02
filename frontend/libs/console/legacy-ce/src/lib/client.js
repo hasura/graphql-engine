@@ -15,7 +15,6 @@ import { ReactQueryProvider } from './lib/reactQuery';
 import globals from './Globals';
 import { store } from './store';
 import getRoutes from './routes';
-
 startTracing(globals, window.__env);
 
 const hashLinkScroll = () => {

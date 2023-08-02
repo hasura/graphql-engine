@@ -1,25 +1,22 @@
-import React from 'react';
-import { ComponentMeta } from '@storybook/react';
-import { ComponentStory } from '@storybook/react/dist/ts3.9/client/preview/types-6-3';
+import { StoryObj, Meta } from '@storybook/react';
 import { GraphQLFieldCustomization } from './GraphQLFieldCustomization';
 
 export default {
   title: 'data/components/DataSources/GraphQLFieldCustomization',
   component: GraphQLFieldCustomization,
   argTypes: { onChange: { action: 'change' } },
-} as ComponentMeta<typeof GraphQLFieldCustomization>;
+} as Meta<typeof GraphQLFieldCustomization>;
 
-export const Playground: ComponentStory<typeof GraphQLFieldCustomization> =
-  args => <GraphQLFieldCustomization {...args} />;
-
-Playground.args = {
-  rootFields: {
-    namespace: '',
-    prefix: '',
-    suffix: '',
-  },
-  typeNames: {
-    prefix: '',
-    suffix: '',
+export const Playground: StoryObj<typeof GraphQLFieldCustomization> = {
+  args: {
+    rootFields: {
+      namespace: '',
+      prefix: '',
+      suffix: '',
+    },
+    typeNames: {
+      prefix: '',
+      suffix: '',
+    },
   },
 };

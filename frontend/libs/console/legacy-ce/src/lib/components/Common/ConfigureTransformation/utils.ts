@@ -1,10 +1,11 @@
 import {
+  QueryParams,
   RequestTransform,
   RequestTransformBody,
   RequestTransformMethod,
   ResponseTranform,
-} from '@/metadata/types';
-import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
+} from '../../../metadata/types';
+import { getLSItem, setLSItem, LS_KEYS } from '../../../utils/localStorage';
 import {
   defaultRequestContentType,
   GraphiQlHeader,
@@ -23,16 +24,14 @@ import {
 
 export const getPairsObjFromArray = (
   pairs: KeyValuePair[]
-): Record<string, string> => {
-  let obj = {};
-
+): Record<string, string> | string => {
+  let obj: Record<string, string> = {};
   pairs.forEach(({ name, value }) => {
     if (!!name && !!value) {
       const pair = { [name]: value };
       obj = { ...obj, ...pair };
     }
   });
-
   return obj;
 };
 
@@ -91,15 +90,15 @@ export const setEnvVarsToLS = (envVars: KeyValuePair[]) => {
   const validEnvVars = envVars.filter(
     e => !isEmpty(e.name) && !isEmpty(e.value)
   );
-  setLSItem(`${LS_KEYS.webhookTransformEnvVars}`, JSON.stringify(validEnvVars));
+  setLSItem(LS_KEYS.webhookTransformEnvVars, JSON.stringify(validEnvVars));
 };
 
 export const getArrayFromServerPairObject = (
-  pairs: Nullable<Record<string, string>>
+  pairs: Nullable<Record<string, string>> | string
 ): KeyValuePair[] => {
   const transformArray: KeyValuePair[] = [];
-  if (pairs && Object.keys(pairs).length !== 0) {
-    Object.entries(pairs).forEach(([key, value]) => {
+  if (pairs && Object.keys(pairs as KeyValuePair).length !== 0) {
+    Object.entries(pairs as KeyValuePair).forEach(([key, value]) => {
       transformArray.push({ name: key, value });
     });
   }
@@ -144,7 +143,10 @@ export const getRequestTransformObject = (
       ...obj,
       method: transformState.requestMethod,
       url: getUrlWithBasePrefix(transformState.requestUrl),
-      query_params: getPairsObjFromArray(transformState.requestQueryParams),
+      query_params:
+        typeof transformState.requestQueryParams !== 'string'
+          ? getPairsObjFromArray(transformState.requestQueryParams)
+          : transformState.requestQueryParams,
     };
     if (transformState.requestMethod === 'GET') {
       obj = {
@@ -245,7 +247,7 @@ export const parseValidateApiData = (
 type RequestTransformerFields = {
   url?: string;
   method?: Nullable<RequestTransformMethod>;
-  query_params?: Record<string, string>;
+  query_params?: Record<string, string> | string;
   template_engine?: string;
 };
 
@@ -266,7 +268,7 @@ const getTransformer = (
   transformerBody?: RequestTransformStateBody,
   transformerUrl?: string,
   requestMethod?: Nullable<RequestTransformMethod>,
-  queryParams?: KeyValuePair[]
+  queryParams?: QueryParams
 ): RequestTransformer => {
   return version === 1
     ? {
@@ -275,7 +277,9 @@ const getTransformer = (
         url: checkEmptyString(transformerUrl),
         method: requestMethod,
         query_params: queryParams
-          ? getPairsObjFromArray(queryParams)
+          ? typeof queryParams !== 'string'
+            ? getPairsObjFromArray(queryParams)
+            : queryParams
           : undefined,
         template_engine: 'Kriti',
       }
@@ -287,7 +291,9 @@ const getTransformer = (
         url: checkEmptyString(transformerUrl),
         method: requestMethod,
         query_params: queryParams
-          ? getPairsObjFromArray(queryParams)
+          ? typeof queryParams !== 'string'
+            ? getPairsObjFromArray(queryParams)
+            : queryParams
           : undefined,
         template_engine: 'Kriti',
       };
@@ -323,7 +329,7 @@ type ValidateTransformOptionsArgsType = {
   sessionVarsFromContext?: KeyValuePair[];
   transformerBody?: RequestTransformStateBody;
   requestUrl?: string;
-  queryParams?: KeyValuePair[];
+  queryParams?: QueryParams;
   isEnvVar?: boolean;
   requestMethod?: Nullable<RequestTransformMethod>;
 };
@@ -472,9 +478,10 @@ export const getTransformState = (
   requestUrl: transform?.url ? getTrimmedRequestUrl(transform?.url) : '',
   requestUrlError: '',
   requestUrlPreview: '',
-  requestQueryParams: getArrayFromServerPairObject(transform?.query_params) ?? [
-    { name: '', value: '' },
-  ],
+  requestQueryParams:
+    typeof transform?.query_params === 'string'
+      ? transform.query_params
+      : getArrayFromServerPairObject(transform?.query_params),
   requestAddHeaders: getArrayFromServerPairObject(
     transform?.request_headers?.add_headers
   ) ?? [{ name: '', value: '' }],

@@ -21,6 +21,7 @@ func newMigrateDeleteCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateDeleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "(PREVIEW) clear migrations from local project and server",
+		Long:  "This command deletes migrations from the local project and the server. You can delete all migrations or a specific migration version by passing in the appropriate flags and values.",
 		Example: `
   # Usage to delete a version:
   hasura migrate delete --version <version_delete> --database-name <database-name>
@@ -104,7 +105,7 @@ func (o *MigrateDeleteOptions) Run() error {
 			o.Source = cli.Source(source)
 			err := o.RunOnSource()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error while deleting status for database %s: %v", o.Source.Name, err))
+				return errors.E(op, fmt.Errorf("error while deleting status for database '%s': %v", o.Source.Name, err))
 			}
 		}
 		return nil

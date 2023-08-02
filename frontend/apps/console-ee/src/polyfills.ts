@@ -7,5 +7,8 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 // Needed for action codegen
 import 'browser-hrtime';
+import { Buffer } from 'buffer/';
+process.cwd = () => '';
 
 (window as any).global = window;
+(window as any).Buffer = Buffer;

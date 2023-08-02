@@ -16,8 +16,8 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -73,16 +73,15 @@ schema =
             Schema.column "time_id" Schema.TInt
           ],
         Schema.tablePrimaryKey = ["nickname"],
-        Schema.tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
+        Schema.tableReferences = [Schema.reference "time_id" "alldefaults" "id"]
       }
   ]
 
 defaultDateTimeType :: Schema.ScalarType
 defaultDateTimeType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
-      { Schema.bstMysql = Nothing,
-        Schema.bstMssql = Just "DATETIME DEFAULT GETDATE()",
+  Schema.TCustomType
+    $ Schema.defaultBackendScalarType
+      { Schema.bstMssql = Just "DATETIME DEFAULT GETDATE()",
         Schema.bstCitus = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstPostgres = Just "TIMESTAMP DEFAULT NOW()",
         Schema.bstCockroach = Just "TIMESTAMP DEFAULT NOW()",
@@ -92,11 +91,8 @@ defaultDateTimeType =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Default values tests" do
     it "Upsert simple object with default values - check empty constraints" \testEnvironment -> do
       let expected :: Value
@@ -130,7 +126,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Upsert simple object with default values - check conflict doesn't update" \testEnvironment -> do
       let expected :: Value
@@ -163,7 +159,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
     it "Nested insert with empty object" \testEnvironment -> do
       let expected :: Value
@@ -204,4 +200,4 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected

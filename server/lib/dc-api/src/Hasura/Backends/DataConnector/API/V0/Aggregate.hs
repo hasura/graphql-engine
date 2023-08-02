@@ -17,12 +17,14 @@ import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Name (nameCodec)
+import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Prelude
 
 data SingleColumnAggregate = SingleColumnAggregate
   { _scaFunction :: SingleColumnAggregateFunction,
-    _scaColumn :: API.V0.ColumnName
+    _scaColumn :: API.V0.ColumnName,
+    _scaResultType :: API.V0.ScalarType
   }
   deriving stock (Eq, Ord, Show, Generic)
 
@@ -31,6 +33,7 @@ singleColumnAggregateObjectCodec =
   SingleColumnAggregate
     <$> requiredField "function" "The aggregation function" .= _scaFunction
     <*> requiredField "column" "The column to apply the aggregation function to" .= _scaColumn
+    <*> requiredField "result_type" "The scalar type of the result of the aggregate operation" .= _scaResultType
 
 newtype SingleColumnAggregateFunction = SingleColumnAggregateFunction {unSingleColumnAggregateFunction :: GQL.Name}
   deriving stock (Eq, Ord, Show, Generic)

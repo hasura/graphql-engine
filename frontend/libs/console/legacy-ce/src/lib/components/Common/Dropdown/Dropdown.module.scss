@@ -1,4 +1,4 @@
-@import "../Common.module";
+@import '../Common.module';
 
 .data_dropdown_wrapper {
   display: inline-block;
@@ -31,7 +31,7 @@
           text-align: left;
           margin-right: 5px;
         }
-        
+
         // &:hover {
         //   background-color: #eee;
         // }
@@ -54,9 +54,9 @@
 
     .dropdownRight:before,
     .dropdownBottom:before {
-    	content: "";
-    	position: absolute;
-    	border: solid 5px transparent;
+      content: '';
+      position: absolute;
+      border: solid 5px transparent;
       z-index: 10000;
     }
 

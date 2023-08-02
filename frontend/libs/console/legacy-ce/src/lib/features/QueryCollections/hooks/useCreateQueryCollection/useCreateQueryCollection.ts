@@ -2,7 +2,7 @@ import {
   MetadataResponse,
   useMetadata,
   useMetadataMigration,
-} from '@/features/MetadataAPI';
+} from '../../../MetadataAPI';
 
 export const useCreateQueryCollection = () => {
   const { mutate, isSuccess, isLoading, error } = useMetadataMigration();

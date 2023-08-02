@@ -1,14 +1,15 @@
 ﻿import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
-import { filterAvailableTables, getSchema, getTable, loadStaticData } from './data';
+import { filterAvailableTables, getSchema, getTable, loadStaticData, StaticData } from './data';
 import { queryData } from './query';
 import { getConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse } from '@hasura/dc-api-types';
+import { CapabilitiesResponse, SchemaResponse, QueryRequest, QueryResponse, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
+import { cloneDataset, defaultDbStoreName, deleteDataset, getDataset, getDbStoreName } from './datasets';
 
 const port = Number(process.env.PORT) || 8100;
-const server = Fastify({ logger: { prettyPrint: true } });
-let staticData = {};
+const server = Fastify({ logger: { transport: { target: 'pino-pretty' } }});
+let staticData : Record<string, StaticData> = {};
 
 server.register(FastifyCors, {
   // Accept all origins of requests. This must be modified in
@@ -27,14 +28,48 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
 server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(config);
+  return getSchema(staticData, config);
 });
 
 server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
+
   const config = getConfig(request);
-  const data = filterAvailableTables(staticData, config);
+  const dbStoreName = config.db ? getDbStoreName(config.db) : defaultDbStoreName;
+
+  if (!(dbStoreName in staticData))
+    throw new Error(`Cannot find database ${config.db}`);
+
+  const data = filterAvailableTables(staticData[dbStoreName], config);
   return queryData(getTable(data, config), request.body);
+});
+
+// Methods on dataset resources.
+//
+// Examples:
+//
+// > curl -H 'content-type: application/json' -XGET localhost:8100/datasets/templates/Chinook
+// {"exists": true}
+//
+server.get<{ Params: { name: string, }, Reply: DatasetGetTemplateResponse }>("/datasets/templates/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.templates.get");
+  return getDataset(request.params.name);
+});
+
+// > curl -H 'content-type: application/json' -XPOST localhost:8100/datasets/clones/foo -d '{"from": "Chinook"}'
+// {"config":{"db":"$foo"}}
+//
+server.post<{ Params: { name: string, }, Body: DatasetCreateCloneRequest, Reply: DatasetCreateCloneResponse }>("/datasets/clones/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.post");
+  return cloneDataset(staticData, request.params.name, request.body);
+});
+
+// > curl -H 'content-type: application/json' -XDELETE 'localhost:8100/datasets/clones/foo'
+// {"message":"success"}
+//
+server.delete<{ Params: { name: string, }, Reply: DatasetDeleteCloneResponse }>("/datasets/clones/:name", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "datasets.clones.delete");
+  return deleteDataset(staticData, request.params.name);
 });
 
 server.get("/health", async (request, response) => {
@@ -49,8 +84,8 @@ process.on('SIGINT', () => {
 
 const start = async () => {
   try {
-    staticData = await loadStaticData();
-    await server.listen(port, "0.0.0.0");
+    staticData = {[defaultDbStoreName]: await loadStaticData("Chinook")};
+    await server.listen({port: port, host: "0.0.0.0"});
   }
   catch (err) {
     server.log.fatal(err);

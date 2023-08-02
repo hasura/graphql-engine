@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import { addToOperationGroup } from '../Operations/graphql.queries';
 
@@ -106,8 +106,8 @@ const AddOperationToAllowList = ({
   const onCompleted = data => {
     if (data.insert_operation_groups_operations.returning.length >= 1) {
       /* Call the metadata insert api */
-      const bulkAllowListInserts = data.insert_operation_groups_operations.returning.map(
-        i => {
+      const bulkAllowListInserts =
+        data.insert_operation_groups_operations.returning.map(i => {
           return {
             type: 'add_query_to_collection',
             args: {
@@ -116,8 +116,7 @@ const AddOperationToAllowList = ({
               query: i.query,
             },
           };
-        }
-      );
+        });
       const bulkQuery = getBulkQuery(bulkAllowListInserts);
       runQuery(bulkQuery);
       return;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-legacy-ce';
 
 import { fetchFiltersData } from '../Error/graphql.queries';
 import {

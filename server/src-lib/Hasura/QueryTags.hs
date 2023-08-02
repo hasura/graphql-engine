@@ -10,16 +10,19 @@ module Hasura.QueryTags
     QueryTagsComment (..),
     emptyQueryTagsComment,
     encodeQueryTags,
+    MonadQueryTags (..),
 
     -- * Exposed for testing
     emptyQueryTagsAttributes,
   )
 where
 
+import Data.Tagged
 import Data.Text.Extended
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.Prelude
+import Hasura.QueryTags.Types
 import Hasura.Server.Types (RequestId (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -56,24 +59,24 @@ emptyQueryTagsComment :: QueryTagsComment
 emptyQueryTagsComment = QueryTagsComment mempty
 
 data QueryMetadata = QueryMetadata
-  { qmRequestId :: !RequestId,
-    qmOperationName :: !(Maybe GQL.Name),
-    qmFieldName :: !RootFieldAlias,
-    qmParameterizedQueryHash :: !ParameterizedQueryHash
+  { qmRequestId :: Maybe RequestId,
+    qmOperationName :: Maybe GQL.Name,
+    qmFieldName :: RootFieldAlias,
+    qmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
 data MutationMetadata = MutationMetadata
-  { mmRequestId :: !RequestId,
-    mmOperationName :: !(Maybe GQL.Name),
-    mmFieldName :: !RootFieldAlias,
-    mmParameterizedQueryHash :: !ParameterizedQueryHash
+  { mmRequestId :: Maybe RequestId,
+    mmOperationName :: Maybe GQL.Name,
+    mmFieldName :: RootFieldAlias,
+    mmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
 data LivequeryMetadata = LivequeryMetadata
-  { lqmFieldName :: !RootFieldAlias,
-    lqmParameterizedQueryHash :: !ParameterizedQueryHash
+  { lqmFieldName :: RootFieldAlias,
+    lqmParameterizedQueryHash :: ParameterizedQueryHash
   }
   deriving (Show)
 
@@ -86,17 +89,17 @@ encodeQueryTags = \case
     -- TODO: how do we want to encode RootFieldAlias?
     -- Currently uses ToTxt instance, which produces "namespace.fieldname"
     encodeQueryMetadata QueryMetadata {..} =
-      [ ("request_id", unRequestId qmRequestId),
-        ("field_name", toTxt qmFieldName),
-        ("parameterized_query_hash", bsToTxt $ unParamQueryHash qmParameterizedQueryHash)
-      ]
+      maybeToList ((,) "request_id" . unRequestId <$> qmRequestId)
+        <> [ ("field_name", toTxt qmFieldName),
+             ("parameterized_query_hash", bsToTxt $ unParamQueryHash qmParameterizedQueryHash)
+           ]
         <> operationNameAttributes qmOperationName
 
     encodeMutationMetadata MutationMetadata {..} =
-      [ ("request_id", unRequestId mmRequestId),
-        ("field_name", toTxt mmFieldName),
-        ("parameterized_query_hash", bsToTxt $ unParamQueryHash mmParameterizedQueryHash)
-      ]
+      maybeToList ((,) "request_id" . unRequestId <$> mmRequestId)
+        <> [ ("field_name", toTxt mmFieldName),
+             ("parameterized_query_hash", bsToTxt $ unParamQueryHash mmParameterizedQueryHash)
+           ]
         <> operationNameAttributes mmOperationName
 
     encodeLivequeryMetadata LivequeryMetadata {..} =
@@ -106,3 +109,15 @@ encodeQueryTags = \case
 
 operationNameAttributes :: Maybe GQL.Name -> [(Text, Text)]
 operationNameAttributes = maybe [] (\opName -> [("operation_name", GQL.unName opName)])
+
+class (Monad m) => MonadQueryTags m where
+  -- | Creates Query Tags. These are appended to the Generated SQL.
+  -- Helps users to use native database monitoring tools to get some 'application-context'.
+  createQueryTags ::
+    QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
+  default createQueryTags :: forall t n. (m ~ t n, MonadQueryTags n) => QueryTagsAttributes -> Maybe QueryTagsConfig -> Tagged m QueryTagsComment
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @n qtSourceConfig attr) :: Tagged (t n) QueryTagsComment
+
+instance (MonadQueryTags m) => MonadQueryTags (ReaderT r m)
+
+instance (MonadQueryTags m) => MonadQueryTags (ExceptT e m)

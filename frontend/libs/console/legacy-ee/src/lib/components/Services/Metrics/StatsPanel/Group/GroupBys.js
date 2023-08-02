@@ -1,6 +1,6 @@
 import React from 'react';
 import GenerateGroupBys from './GenerateGroupBys';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import styles from '../../Metrics.module.scss';
 

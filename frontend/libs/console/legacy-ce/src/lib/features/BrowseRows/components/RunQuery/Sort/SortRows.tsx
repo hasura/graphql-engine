@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { TableColumn } from '@/features/DataSource';
-import { Button } from '@/new-components/Button';
+import { TableColumn } from '../../../../DataSource';
+import { Button } from '../../../../../new-components/Button';
 import { RiAddBoxLine } from 'react-icons/ri';
-import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
+import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
 import { useFieldArray } from 'react-hook-form';
 import { SortRow } from './SortRow';
 import { FiltersAndSortFormValues } from '../types';
@@ -11,7 +11,7 @@ export type SortRowsProps = {
   columns: TableColumn[];
   name: string;
   initialSorts?: FiltersAndSortFormValues['sorts'];
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const SortRows = ({
@@ -33,10 +33,9 @@ export const SortRows = ({
   }, [initialSorts?.length]);
 
   const columnOptions: SelectItem[] = columns.map(column => {
-    const value = column.graphQLProperties?.name ?? column.name;
     return {
       label: column.name,
-      value,
+      value: column.name,
     };
   });
 
@@ -53,7 +52,7 @@ export const SortRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
-    setTimeout(() => onRemove(), 100);
+    onRemove?.();
   };
 
   return (
@@ -64,7 +63,7 @@ export const SortRows = ({
         <div className="mb-sm italic">No sort conditions present.</div>
       )}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-2">
         {fields.map((_, index) => (
           <SortRow
             key={index}

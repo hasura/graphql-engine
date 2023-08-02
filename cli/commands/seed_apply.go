@@ -3,13 +3,14 @@ package commands
 import (
 	stderrors "errors"
 	"fmt"
+	"io/fs"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/seed"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"io/fs"
 )
 
 type SeedApplyOptions struct {
@@ -28,6 +29,11 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply seed data",
+		Long: `Run this command by passing the seed files you want to apply as arguments. If no arguments are passed, all the seed files in the seeds directory will be applied.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-seeds/
+`,
 		Example: `  # Apply all seeds on the database:
   hasura seed apply
 
@@ -53,7 +59,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			// check if seed ops are supported for the database
 			if !seed.IsSeedsSupported(ec.Source.Kind) {
-				return errors.E(op, fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind))
+				return errors.E(op, fmt.Errorf("seed operations on database '%s' of kind '%s' is not supported", ec.Source.Name, ec.Source.Kind))
 			}
 			return nil
 		},

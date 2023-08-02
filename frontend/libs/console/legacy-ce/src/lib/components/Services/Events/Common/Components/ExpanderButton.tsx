@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaCompress, FaExpand } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 
 interface Props extends React.ComponentProps<React.FC> {
   isExpanded: boolean;

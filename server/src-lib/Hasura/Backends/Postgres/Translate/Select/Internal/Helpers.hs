@@ -13,14 +13,24 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
-    selectFromToFromItem,
     functionToIdentifier,
     withJsonBuildObj,
     withForceAggregation,
+    selectToSelectWith,
+    customSQLToTopLevelCTEs,
+    customSQLToInnerCTEs,
+    nativeQueryNameToAlias,
+    toQuery,
   )
 where
 
+import Control.Monad.Writer (Writer, runWriter)
+import Data.Bifunctor (bimap)
+import Data.HashMap.Strict qualified as HashMap
+import Data.Text.Extended (toTxt)
+import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers
 import Hasura.Backends.Postgres.SQL.Types
   ( Identifier (..),
     QualifiedFunction,
@@ -29,12 +39,13 @@ import Hasura.Backends.Postgres.SQL.Types
     tableIdentifierToIdentifier,
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
+import Hasura.Backends.Postgres.Translate.Types (CustomSQLCTEs (..))
 import Hasura.Backends.Postgres.Types.Function
+import Hasura.Function.Cache
+import Hasura.NativeQuery.Metadata (NativeQueryName (..))
 import Hasura.Prelude
-import Hasura.RQL.IR
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.RQL.Types.Function
-import Hasura.SQL.Backend
+import Hasura.SQL.Types (ToSQL (toSQL))
 
 -- | First element extractor expression from given record set
 -- For example:- To get first "id" column from given row set,
@@ -50,8 +61,8 @@ mkFirstElementExp expIdentifier =
 mkLastElementExp :: S.SQLExp -> S.SQLExp
 mkLastElementExp expIdentifier =
   let arrayExp = S.SEFnApp "array_agg" [expIdentifier] Nothing
-   in S.SEArrayIndex arrayExp $
-        S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
+   in S.SEArrayIndex arrayExp
+        $ S.SEFnApp "array_length" [arrayExp, S.intToSQLExp 1] Nothing
 
 cursorIdentifier :: Identifier
 cursorIdentifier = Identifier "__cursor"
@@ -103,17 +114,9 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
         (S.mkQIdenExp baseTableIdentifier . Identifier)
     baseTableIdentifier = mkBaseTableIdentifier prefix
 
-selectFromToFromItem :: TableIdentifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
-selectFromToFromItem prefix = \case
-  FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
-  FromFunction qf args defListM ->
-    S.FIFunc $
-      S.FunctionExp qf (fromTableRowArgs prefix args) $
-        Just $
-          S.mkFunctionAlias
-            qf
-            (fmap (fmap (first S.toColumnAlias)) defListM)
+-- | Given a @NativeQueryName@, what should we call the CTE generated for it?
+nativeQueryNameToAlias :: NativeQueryName -> Int -> S.TableAlias
+nativeQueryNameToAlias nqName freshId = S.mkTableAlias ("cte_" <> toTxt (getNativeQueryName nqName) <> "_" <> tshow freshId)
 
 -- | Converts a function name to an 'Identifier'.
 --
@@ -135,3 +138,23 @@ withForceAggregation :: S.TypeAnn -> S.SQLExp -> S.SQLExp
 withForceAggregation tyAnn e =
   -- bool_or to force aggregation
   S.SEFnApp "coalesce" [e, S.SETyAnn (S.SEUnsafe "bool_or('true')") tyAnn] Nothing
+
+-- | unwrap any emitted TopLevelCTEs for custom sql from the Writer and combine
+-- them with a @Select@ to create a @SelectWith@
+selectToSelectWith :: Writer CustomSQLCTEs S.Select -> S.SelectWith
+selectToSelectWith action =
+  let (selectSQL, customSQLCTEs) = runWriter action
+   in S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) selectSQL
+
+-- | convert map of CustomSQL CTEs into named TopLevelCTEs
+customSQLToTopLevelCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.TopLevelCTE)]
+customSQLToTopLevelCTEs =
+  fmap (bimap S.toTableAlias S.CTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
+
+-- | convert map of CustomSQL CTEs into named InnerCTEs
+customSQLToInnerCTEs :: CustomSQLCTEs -> [(S.TableAlias, S.InnerCTE)]
+customSQLToInnerCTEs =
+  fmap (bimap S.toTableAlias S.ICTEUnsafeRawSQL) . HashMap.toList . getCustomSQLCTEs
+
+toQuery :: S.SelectWithG S.TopLevelCTE -> Query
+toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE

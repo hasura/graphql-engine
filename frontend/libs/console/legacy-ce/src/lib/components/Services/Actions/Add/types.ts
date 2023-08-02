@@ -4,7 +4,7 @@ import { Header, Definition, ActionExecution } from '../Common/stateDefaults';
 export const SET_DEFAULTS = 'Actions/Add/SET_DEFAULTS';
 export const SET_ACTION_TIMEOUT = 'Actions/Add/SET_ACTION_TIMEOUT';
 export const SET_ACTION_HANDLER = 'Actions/Add/SET_ACTION_HANDLER';
-export const SET_ACTION_EXECUTION = 'Actions/Add/SET_ACTION_EXECUTION';
+export const SET_ACTION_KIND = 'Actions/Add/SET_ACTION_KIND';
 export const SET_ACTION_COMMENT = 'Actions/Add/SET_ACTION_COMMENT';
 export const SET_ACTION_DEFINITION = 'Actions/Add/SET_ACTION_DEFINITION';
 export const SET_TYPE_DEFINITION = 'Actions/Add/SET_TYPE_DEFINITION';
@@ -32,8 +32,8 @@ export interface SetActionHandler extends ReduxAction {
   handler: string;
 }
 export interface SetActionExecution extends ReduxAction {
-  type: typeof SET_ACTION_EXECUTION;
-  execution: ActionExecution;
+  type: typeof SET_ACTION_KIND;
+  kind: ActionExecution;
 }
 
 export interface SetActionComment extends ReduxAction {
@@ -97,7 +97,7 @@ export type DefaultState = {
   typeDefinition: Definition;
   headers: Header[];
   forwardClientHeaders: boolean;
-  execution: 'synchronous' | 'asynchronous';
+  kind: 'synchronous' | 'asynchronous';
   isFetching: boolean;
   derive: { operation: string };
   timeout: string;

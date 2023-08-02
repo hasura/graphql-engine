@@ -38,6 +38,5 @@ export const checkAccess = privileges => {
     hasMetricAccess:
       isIn(privileges, PRIVILEGES.Admin) ||
       isIn(privileges, PRIVILEGES.ViewMetrics),
-
   };
 };

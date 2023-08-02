@@ -5,7 +5,7 @@ import ReactTable, {
 } from 'react-table';
 import 'react-table/react-table.css';
 import { FaTimes } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
 import EventsSubTable from './EventsSubTable';
@@ -125,8 +125,8 @@ const EventsTable: React.FC<Props> = props => {
       });
     }
   });
-  const invocationColumns = ['status', 'id', 'created_at'];
-  const invocationDataTriggerColumns = ['status', 'id', 'created_at'];
+  const invocationColumns = ['http_status', 'id', 'created_at'];
+  const invocationDataTriggerColumns = ['http_status', 'id', 'created_at'];
   const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
   const addToGridHeadings = (headAccArr: string[]) => {
     headAccArr.forEach(column => {

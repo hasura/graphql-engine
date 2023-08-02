@@ -4,9 +4,10 @@ import {
   UserQuery,
   adaptFormValuesToQuery,
   convertUserQueryToFiltersAndSortFormValues,
-} from '@/features/BrowseRows';
-import { setLSItem, getLSItem } from '@/utils';
-import { Table } from '@/dataSources';
+} from '../../../../../features/BrowseRows';
+import { setLSItem, getLSItem } from '../../../../../utils';
+import { Table } from '../../../../../dataSources';
+import { TableColumn } from '../../../../../features/DataSource';
 
 type Props = {
   sourceName: string;
@@ -75,7 +76,8 @@ export const useFiltersAndSortFormValues = ({
         filtersAndSort,
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
-          dataType: column.data_type,
+          dataType: column.data_type as TableColumn['dataType'],
+          consoleDataType: 'string',
         }))
       ),
     // NOTE: this processing is needed only when the component is loaded for the first time — do not change the dependency array

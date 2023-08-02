@@ -1,60 +1,18 @@
-import { isEmpty, isJsonString } from '@/components/Common/utils/jsUtils';
-import { CronTrigger, RequestTransform } from '@/metadata/types';
+import { isJsonString } from '../../../../components/Common/utils/jsUtils';
+import { CronTrigger, RequestTransform } from '../../../../metadata/types';
 import { Schema } from './schema';
-
-type RequestTransformBlockProps = {
-  url_template: Schema['url_template'];
-  request_method: Schema['request_method'];
-  query_params: Schema['query_params'];
-};
-
-/**
- * Get request transform / rest connectors field of the cron trigger object, this field is added optionally
- * if at least one of the transform fields are present
- */
-const getRequestTransformBlock = (
-  props: RequestTransformBlockProps
-): RequestTransform | undefined => {
-  const { url_template, request_method, query_params } = props;
-
-  // add transform block if atleast one of the field is present
-  if (isEmpty(url_template) && isEmpty(query_params) && isEmpty(request_method))
-    return;
-
-  return {
-    version: 2,
-    template_engine: 'Kriti',
-    method: request_method,
-    url: url_template,
-    query_params: query_params.reduce(
-      (allParams, param) => ({
-        ...allParams,
-        [param.name]: param.value,
-      }),
-      {}
-    ),
-    // in case of GET requests, do not send request body or content-type header to the webhook
-    // https://github.com/hasura/graphql-engine/issues/7937
-    ...(request_method === 'GET' && {
-      request_headers: {
-        remove_headers: ['content-type'],
-      },
-      body: {
-        action: 'remove',
-      },
-    }),
-  };
-};
 
 /**
  * Transforms form data to `create_cron_trigger` api payload
  * @param values React hook form schema containing all form fields
  * @returns api payload for `create_cron_trigger`
  */
-const transformFormData = (values: Schema) => {
-  const { url_template, request_method, query_params } = values;
-
-  const apiPayload: CronTrigger = {
+const transformFormData = (
+  values: Schema,
+  replace: boolean,
+  requestTransform?: RequestTransform
+) => {
+  const apiPayload: CronTrigger & { replace?: true } = {
     name: values.name,
     webhook: values.webhook,
     schedule: values.schedule,
@@ -70,21 +28,23 @@ const transformFormData = (values: Schema) => {
       num_retries: Number(values.num_retries),
       retry_interval_seconds: Number(values.retry_interval_seconds),
       timeout_seconds: Number(values.timeout_seconds),
+      tolerance_seconds: Number(values.tolerance_seconds),
     },
     include_in_metadata: values.include_in_metadata,
     comment: values.comment,
-    request_transform: getRequestTransformBlock({
-      url_template,
-      request_method,
-      query_params,
-    }),
+    request_transform: requestTransform,
+    ...(replace && { replace: true }),
   };
 
   return apiPayload;
 };
 
-export const getCronTriggerCreateQuery = (values: Schema) => {
-  const args = transformFormData(values);
+export const getCronTriggerCreateQuery = (
+  values: Schema,
+  requestTransform?: RequestTransform,
+  replace = false
+) => {
+  const args = transformFormData(values, replace, requestTransform);
   return {
     type: 'create_cron_trigger' as const,
     args,
@@ -98,10 +58,17 @@ export const getCronTriggerDeleteQuery = (name: string) => ({
   },
 });
 
-export const getCronTriggerUpdateQuery = (values: Schema) => ({
+export const getCronTriggerUpdateQuery = (
+  name: string,
+  values: Schema,
+  requestTransform?: RequestTransform
+) => ({
   type: 'bulk' as const,
-  args: [
-    getCronTriggerDeleteQuery(values.name),
-    getCronTriggerCreateQuery(values),
-  ],
+  args:
+    name === values.name
+      ? [getCronTriggerCreateQuery(values, requestTransform, true)]
+      : [
+          getCronTriggerDeleteQuery(name),
+          getCronTriggerCreateQuery(values, requestTransform),
+        ],
 });

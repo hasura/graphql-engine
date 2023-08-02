@@ -1,6 +1,6 @@
-import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
-import { Button } from '@/new-components/Button';
-import { Select } from '@/new-components/Form';
+import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
+import { Button } from '../../../../../new-components/Button';
+import { Select } from '../../../../../new-components/Form';
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
 

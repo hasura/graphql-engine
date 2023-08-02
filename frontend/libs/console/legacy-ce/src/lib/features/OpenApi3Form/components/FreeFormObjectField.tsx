@@ -1,4 +1,4 @@
-import { CodeEditorField } from '@/new-components/Form';
+import { CodeEditorField } from '../../../new-components/Form';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import React from 'react';
 import { getInputAttributes } from '../utils';

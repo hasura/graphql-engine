@@ -103,9 +103,6 @@ __BigQuery_comparison_exp = [G.name|_BigQuery_comparison_exp|]
 __MSSQL_comparison_exp :: G.Name
 __MSSQL_comparison_exp = [G.name|_MSSQL_comparison_exp|]
 
-__MySQL_comparison_exp :: G.Name
-__MySQL_comparison_exp = [G.name|_MySQL_comparison_exp|]
-
 __cast :: G.Name
 __cast = [G.name|_cast|]
 
@@ -242,6 +239,17 @@ __aggregate_fields = [G.name|_aggregate_fields|]
 
 __fields :: G.Name
 __fields = [G.name|_fields|]
+
+-- ** Group By
+
+_group_by :: G.Name
+_group_by = [G.name|group_by|]
+
+_keys :: G.Name
+_keys = [G.name|keys|]
+
+_group_key :: G.Name
+_group_key = [G.name|group_key|]
 
 -- * JSON
 
@@ -620,3 +628,8 @@ _predicate = [G.name|predicate|]
 
 _filter :: G.Name
 _filter = [G.name|filter|]
+
+-- * Arrays
+
+__array :: G.Name
+__array = [G.name|_array|]

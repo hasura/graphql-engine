@@ -4,7 +4,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import AdhocEventsContainer from '../Container';
 import Logs from './Logs';
 
-interface LogsProps extends InjectedProps {}
+type LogsProps = InjectedProps;
 
 const LogsContainer = ({ dispatch }: LogsProps) => {
   return (

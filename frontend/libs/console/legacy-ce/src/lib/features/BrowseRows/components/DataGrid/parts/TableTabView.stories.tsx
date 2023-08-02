@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import { TableTabView } from './TableTabView';
 
 export default {
   component: TableTabView,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof TableTabView>;
+} as Meta<typeof TableTabView>;
 
 const Component = () => {
   const [tabs, setTabs] = useState<{ value: string; label: string }[]>([
@@ -43,28 +43,29 @@ const Component = () => {
   );
 };
 
-export const Primary: ComponentStory<typeof TableTabView> = () => <Component />;
+export const Primary: StoryFn<typeof TableTabView> = () => <Component />;
 
-export const Testing: ComponentStory<typeof TableTabView> = () => <Component />;
+export const Testing: StoryObj<typeof TableTabView> = {
+  render: () => <Component />,
+  name: '🧪 Test - Basic user interaction',
 
-Testing.storyName = '🧪 Test - Basic user interaction';
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-Testing.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+    const firstTab = await canvas.findByTestId('@tab-Tab-1');
+    expect(firstTab).toBeVisible();
 
-  const firstTab = await canvas.findByTestId('@tab-Tab-1');
-  expect(firstTab).toBeVisible();
+    const secondTab = await canvas.findByTestId('@tab-Tab-2');
+    expect(secondTab).toBeVisible();
 
-  const secondTab = await canvas.findByTestId('@tab-Tab-2');
-  expect(secondTab).toBeVisible();
+    expect(await canvas.findByTestId('@display-value')).toHaveTextContent(
+      'Tab-1-value'
+    );
 
-  expect(await canvas.findByTestId('@display-value')).toHaveTextContent(
-    'Tab-1-value'
-  );
+    userEvent.click(secondTab);
 
-  userEvent.click(secondTab);
-
-  expect(await canvas.findByTestId('@display-value')).toHaveTextContent(
-    'Tab-2-value'
-  );
+    expect(await canvas.findByTestId('@display-value')).toHaveTextContent(
+      'Tab-2-value'
+    );
+  },
 };

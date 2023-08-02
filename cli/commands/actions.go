@@ -17,8 +17,15 @@ import (
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	actionsCmd := &cobra.Command{
-		Use:          "actions",
-		Short:        "Manage Hasura actions",
+		Use:   "actions",
+		Short: "Manage Hasura Actions",
+		Long: `Running this command enables the use of additional sub-commands to create, modify, and export code related to a project's Actions.
+
+Further Reading:
+- https://hasura.io/docs/latest/actions/index/
+- https://hasura.io/docs/latest/actions/create/
+- https://hasura.io/docs/latest/actions/derive/
+`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PersistentPreRunE")
@@ -51,9 +58,9 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCmd.PersistentFlags()
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

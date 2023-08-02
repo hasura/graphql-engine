@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import styles from '../../Common/TableCommon/Table.module.scss';
@@ -15,7 +15,7 @@ class RemoteSchemaPageContainer extends React.Component {
 
     const sidebarContent = (
       <Analytics name="RemoteSchemaPageContainer" {...REDACT_EVERYTHING}>
-        <ul>
+        <ul className="bootstrap-jail">
           <li
             role="presentation"
             className={
@@ -38,11 +38,9 @@ class RemoteSchemaPageContainer extends React.Component {
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
-      <>
-        <PageContainer helmet={helmet} leftContainer={leftContainer}>
-          {children}
-        </PageContainer>
-      </>
+      <PageContainer helmet={helmet} leftContainer={leftContainer}>
+        {children}
+      </PageContainer>
     );
   }
 }

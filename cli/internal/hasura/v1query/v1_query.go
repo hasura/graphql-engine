@@ -61,7 +61,7 @@ func (c *Client) Bulk(args []hasura.RequestBody) (io.Reader, error) {
 	responseBody := new(bytes.Buffer)
 	resp, err := c.LockAndDo(context.Background(), req, responseBody)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	} else if resp.StatusCode != http.StatusOK {
 		return nil, errors.E(op, errors.KindHasuraAPI, fmt.Errorf("bulk request failed: %v %v", resp.StatusCode, responseBody.String()))
 	}

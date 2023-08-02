@@ -13,6 +13,7 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:          "version",
 		Short:        "Print the CLI version",
+		Long:         "If unsure which version of the CLI you are using, you can use this command to print the version of the CLI. This command can also be used to check if a new version of the CLI is available.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "PreRunE")

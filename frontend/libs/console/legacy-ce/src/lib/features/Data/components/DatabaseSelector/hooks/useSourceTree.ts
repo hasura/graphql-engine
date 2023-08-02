@@ -1,4 +1,4 @@
-import { useSources } from '@/features/MetadataAPI';
+import { useSources } from '../../../../MetadataAPI';
 import { useMemo } from 'react';
 
 export const useSourcesTree = () => {

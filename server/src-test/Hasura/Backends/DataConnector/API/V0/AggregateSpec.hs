@@ -11,6 +11,7 @@ where
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -24,11 +25,12 @@ spec = do
   describe "Aggregate" $ do
     describe "SingleColumn" $ do
       testToFromJSONToSchema
-        (SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|avg|]) (ColumnName "my_column_name"))
+        (SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|avg|]) (ColumnName "my_column_name") (ScalarType "number"))
         [aesonQQ|
           { "type": "single_column",
             "function": "avg",
-            "column": "my_column_name"
+            "column": "my_column_name",
+            "result_type": "number"
           }
         |]
     describe "ColumnCount" $ do
@@ -66,6 +68,7 @@ genSingleColumnAggregate =
   SingleColumnAggregate
     <$> genSingleColumnAggregateFunction
     <*> genColumnName
+    <*> genScalarType
 
 genColumnCountAggregate :: Gen ColumnCountAggregate
 genColumnCountAggregate =

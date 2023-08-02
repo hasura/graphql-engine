@@ -1,0 +1,104 @@
+---
+sidebar_label: TLS Allow List
+sidebar_position: 85
+description: Add hosts the insecure TLS allow list
+keywords:
+  - hasura
+  - docs
+  - network options
+  - TLS
+  - allow list
+  - TLS allow list
+---
+
+import Thumbnail from "../../src/components/Thumbnail";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Insecure TLS Allow List
+
+## Introduction
+
+Transport Layer Security (TLS) is the successor to and improved protocol of SSL. It works in much the same way as
+SSL, using encryption to protect the transfer of data and information and secure HTTP traffic.
+
+The TLS Allow List represents a set of services in Hasura GraphQL Engine that are permitted to use self-signed CA
+certificates - primarily intended for use in development and staging environments. These services can be whitelisted
+by a host domain, and optionally a (service id) port.
+
+## Add and remove hosts from the TLS allow list
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+To add a host to the insecure TLS allow list in the Console go to the `Settings` tab (⚙) tab and click on
+`Insecure TLS Allow List` in the left sidebar. Click on _Add Domain_ and enter the host domain and port (if
+applicable). Click on _Add to Allow List_ to add the host to the allow list.
+
+<Thumbnail src="/img/deployment/settings_insecure-tls-allow-list_2-17-0.png" alt="Add a host to the TLS allow list" />
+
+To remove the host, click the _Delete_ button.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+To add a host to the insecure TLS allow list using metadata, go to the `metadata -> network.yaml` file, add the host
+domain and port (if applicable) to the `tls_allowlist` section.
+
+```yaml
+tls_allowlist:
+  - host: localhost
+    permissions:
+      - self-signed
+    suffix: "4183"
+```
+
+Apply the Metadata by running:
+
+```yaml
+hasura metadata apply
+```
+
+To remove a host from the list, delete the entry and reapply the metadata.
+
+</TabItem>
+<TabItem value="api" label="API">
+
+To add a host to the TLS allow list using the API execute the following request with your defined host domain and
+port (if applicable):
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "add_host_to_tls_allowlist",
+  "args": {
+    "host": "localhost",
+    "suffix": "4183",
+    "permissions": ["self-signed"]
+  }
+}
+```
+
+To remove a host from the list, execute the following request with the domain you want to remove:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "drop_host_from_tls_allowlist",
+  "args": {
+    "host": "localhost",
+    "suffix": "4183"
+  }
+}
+```
+
+For more information see the [API reference](/api-reference/metadata-api/network.mdx#tls-allowlist).
+
+</TabItem>
+</Tabs>

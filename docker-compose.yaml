@@ -29,16 +29,9 @@
 
 version: "3.6"
 
-services:
-  mariadb:
-    extends:
-      file: docker-compose/databases.yaml
-      service: mariadb
-    ports:
-      - "65001:3306"
-    volumes:
-      - mariadb-data:/var/lib/mysql
+name: hge-manual-tests
 
+services:
   postgres:
     extends:
       file: docker-compose/databases.yaml
@@ -109,6 +102,5 @@ services:
 volumes:
   citus-data:
   cockroach-data:
-  mariadb-data:
   mssql-data:
   postgres-data:

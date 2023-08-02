@@ -2,6 +2,7 @@ import { compose, createStore, applyMiddleware } from 'redux';
 import { routerMiddleware } from 'react-router-redux';
 import { browserHistory } from 'react-router';
 import thunk from 'redux-thunk';
+import { reduxStoreListener } from '@hasura/console-legacy-ce';
 
 import reducer from './reducer';
 
@@ -25,5 +26,7 @@ if (__DEVELOPMENT__) {
 }
 
 const store = _finalCreateStore(reducer);
+
+reduxStoreListener(store);
 
 export default store;

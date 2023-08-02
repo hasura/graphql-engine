@@ -1,4 +1,4 @@
-import { NamingConventionOptions } from '@/metadata/types';
+import { NamingConventionOptions } from '../../../../../metadata/types';
 import { ConnectDBState } from '../state';
 
 export type TypeNamesField = {

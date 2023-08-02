@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from 'react-query';
-import { FeatureFlagId, useFeatureFlags } from '@/features/FeatureFlags';
+import { FeatureFlagId, useFeatureFlags } from '..';
 import { saveFeatureFlagsStateToLocalStorage } from '../utils';
 
 export function useFeatureFlagDismiss() {

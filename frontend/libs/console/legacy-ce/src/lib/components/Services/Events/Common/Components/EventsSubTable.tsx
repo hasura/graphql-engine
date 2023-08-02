@@ -1,19 +1,19 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import ReactTable from 'react-table';
-import { currentDriver, dataSource } from '@/dataSources';
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
 import InvocationLogDetails from './InvocationLogDetails';
 import { Event } from '../../types';
 import {
   SupportedEvents,
   getEventInvocationsLogByID,
+  getEventTriggerInvocationByID,
 } from '../../../../../metadata/queryUtils';
-import { parseEventsSQLResp, sanitiseRow } from '../../utils';
+import { sanitiseRow } from '../../utils';
 import { Dispatch, ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
 import Spinner from '../../../../Common/Spinner/Spinner';
+import { currentDriver } from '../../../../../dataSources';
 
 interface Props extends InjectedReduxProps {
   rows: any[];
@@ -32,7 +32,7 @@ type RenderSubTableProps = Omit<
   'makeAPICall' | 'triggerType' | 'getEventInvocationData'
 >;
 
-const invocationColumns = ['status', 'id', 'created_at'];
+const invocationColumns = ['http_status', 'id', 'created_at'];
 
 const RenderEventSubTable: React.FC<RenderSubTableProps> = ({
   event,
@@ -113,13 +113,12 @@ const EventsSubTable: React.FC<Props> = ({
       return;
     }
     if (triggerType === 'data' && props.event.id) {
-      const url = Endpoints.query;
-      const payload = getRunSqlQuery(
-        dataSource.getDataTriggerInvocations?.(props.event.id) ?? '',
-        props.source,
-        undefined,
-        undefined,
-        currentDriver
+      const url = Endpoints.metadata;
+      const source_prefix = currentDriver === 'postgres' ? 'pg' : currentDriver;
+      const payload = getEventTriggerInvocationByID(
+        source_prefix,
+        props.event.id,
+        props.source
       );
       const options = {
         method: 'POST',
@@ -131,8 +130,6 @@ const EventsSubTable: React.FC<Props> = ({
         .getEventInvocationData(url, options)
         .then(data => {
           setLoading(false);
-          const parsed = parseEventsSQLResp(data?.result);
-          if (parsed) setInvocations(parsed);
           if (data && data?.invocations && !data.error) {
             setInvocations(data.invocations);
             return;
@@ -140,8 +137,8 @@ const EventsSubTable: React.FC<Props> = ({
           setErrInfo(data.error);
         })
         .catch(err => {
-          setErrInfo(err);
           setLoading(false);
+          setErrInfo(err);
         });
       return;
     }

@@ -1,15 +1,16 @@
-import { InheritedRole } from './inheritedRoles';
-import { AllowList } from './allowList';
-import { QueryCollection } from './queryCollections';
-import { Source } from './source';
-import { BackendConfigs } from './backendConfigs';
-import { RemoteSchema } from './remoteSchemas';
-import { Action, CustomTypes } from './actions';
-import { CronTrigger } from './cronTriggers';
-import { Network } from './network';
-import { RestEndpoint } from './restEndpoints';
-import { ApiLimits } from './apiLimits';
-import { GraphQLSchemaIntrospection } from './graphqlSchemaIntrospection';
+import type { InheritedRole } from './inheritedRoles';
+import type { AllowList } from './allowList';
+import type { QueryCollection } from './queryCollections';
+import type { Source } from './source';
+import type { BackendConfigs } from './backendConfigs';
+import type { RemoteSchema } from './remoteSchemas';
+import type { Action, CustomTypes } from './actions';
+import type { CronTrigger } from './cronTriggers';
+import type { Network } from './network';
+import type { RestEndpoint } from './restEndpoints';
+import type { ApiLimits } from './apiLimits';
+import type { GraphQLSchemaIntrospection } from './graphqlSchemaIntrospection';
+import type { OpenTelemetry } from './openTelemetry';
 
 export type Metadata = {
   resource_version: number;
@@ -28,5 +29,13 @@ export type Metadata = {
     rest_endpoints?: RestEndpoint[];
     api_limits?: ApiLimits;
     graphql_schema_introspection?: GraphQLSchemaIntrospection;
+
+    /**
+     * The EE Lite OpenTelemetry settings.
+     *
+     * ATTENTION: Both Lux and the EE Lite server allow configuring OpenTelemetry. Anyway, this only
+     * represents the EE Lite one since Lux stores the OpenTelemetry settings by itself.
+     */
+    opentelemetry?: OpenTelemetry;
   };
 };

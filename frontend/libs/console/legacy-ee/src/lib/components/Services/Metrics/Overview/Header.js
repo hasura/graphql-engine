@@ -2,7 +2,7 @@ import moment from 'moment';
 import React, { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 
 import styles from '../MetricsV1.module.scss';
 

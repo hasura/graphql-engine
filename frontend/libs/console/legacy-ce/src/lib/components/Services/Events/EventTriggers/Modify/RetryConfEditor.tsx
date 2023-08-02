@@ -66,6 +66,7 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
         saveFunc={save}
         service="modify-trigger"
         expandCallback={reset}
+        dataTest="edit-retry-config"
       />
     </div>
   );

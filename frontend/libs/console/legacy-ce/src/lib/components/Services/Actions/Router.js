@@ -12,6 +12,7 @@ import AddAction from './Add/Add';
 import TypesManage from './Types/Manage';
 import TypesRelationships from './Types/Relationships';
 import { exportMetadata } from '../../../metadata/actions';
+import { OASGeneratorPage } from '../../../features/Actions';
 
 const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -40,6 +41,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
         <IndexRedirect to="actions" />
         <Route path="actions" component={ActionsLandingPage(connect)} />
         <Route path="add" component={AddAction} />
+        <Route path="add-oas" component={OASGeneratorPage} />
         <Route path=":actionName/modify" component={ModifyAction} />
         <Route
           path=":actionName/relationships"

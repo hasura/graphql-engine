@@ -13,7 +13,7 @@
        assetsVersion: "{{assetsVersion}}",
        cdnAssets: {{cdnAssets}},
        serverVersion: "{{serverVersion}}",
-       consoleType: "oss",
+       consoleType: "{{consoleType}}",
        consoleSentryDsn: "{{consoleSentryDsn}}"
      };
      window.__env.versionedAssetsPath = window.__env.assetsPath;
@@ -54,35 +54,33 @@
     </div>
     <div id="content" class="mainContent"></div>
 
-    <script>
+    <script type="module">
      // helper functions
      const loadIcon = (url) => {
-       linkElem = document.createElement('link');
+       const linkElem = document.createElement('link');
        linkElem.rel = 'icon';
        linkElem.type = 'image/png';
        linkElem.href = url;
        document.head.append(linkElem);
      };
      const loadCSS = (url) => {
-       linkElem = document.createElement('link');
+       const linkElem = document.createElement('link');
        linkElem.rel = 'stylesheet';
        linkElem.charset = 'UTF-8';
        linkElem.href = url;
        document.body.append(linkElem);
      };
      const loadScript = (url) => {
-       scriptElem = document.createElement('script');
+       const scriptElem = document.createElement('script');
        scriptElem.charset = 'UTF-8';
        scriptElem.src = url;
        document.body.append(scriptElem);
      };
      const prependSlash = (str) => str === '' ? '' : '/' + str;
-     const loadAssets = () => {
-       loadCSS(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
+     const loadAssets = async () => {
        loadIcon(window.__env.assetsPath + '/common/img/favicon_green.png');
-       loadCSS(window.__env.versionedAssetsPath + '/main.css.gz');
-       loadScript(window.__env.versionedAssetsPath + '/main.js.gz');
-       loadScript(window.__env.versionedAssetsPath + '/vendor.js.gz');
+       await import(window.__env.versionedAssetsPath + '/assetLoader.js.gz');
+       window.__loadConsoleAssetsFromBasePath(window.__env.versionedAssetsPath + '/');
      };
 
      // if cdnAssets is set to false, load assets from server instead of cdn

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
-import { Button } from '@/new-components/Button';
+import { IconTooltip } from '../../../../../new-components/Tooltip';
+import { Button } from '../../../../../new-components/Button';
 import TypeMapping from './TypeMapping';
 import { inputStyles } from '../../constants';
 
@@ -45,9 +45,10 @@ const SelectOne = ({
     onChange={onChange}
     className={inputStyles}
     data-test={label}
+    name={label}
   >
     <option value="">Select Type ...</option>
-    {options.map((op, i) => (
+    {[...options].sort().map((op, i) => (
       <option value={op} key={i}>
         {op}
       </option>
@@ -93,7 +94,7 @@ const FieldNames = ({
                 parentType: e.target.value,
               });
             }}
-            label={`remote-schema-customization-${label}-parent-type-input`}
+            label={label}
           />
         </div>
       </div>
@@ -113,6 +114,7 @@ const FieldNames = ({
               })
             }
             data-test={`remote-schema-customization-${label}-field-prefix-input`}
+            name={`${label}-prefix`}
           />
         </div>
       </div>
@@ -132,6 +134,7 @@ const FieldNames = ({
               })
             }
             data-test={`remote-schema-customization-${label}-field-suffix-input`}
+            name={`${label}-suffix`}
           />
         </div>
       </div>

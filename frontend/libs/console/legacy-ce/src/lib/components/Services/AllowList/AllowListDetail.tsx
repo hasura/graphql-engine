@@ -1,18 +1,23 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { browserHistory } from 'react-router';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 
-import { Tabs } from '@/new-components/Tabs';
+import { Tabs } from '../../../new-components/Tabs';
 import {
   useQueryCollections,
   QueryCollectionsOperations,
   QueryCollectionHeader,
-} from '@/features/QueryCollections';
-import { AllowListSidebar, AllowListPermissions } from '@/features/AllowLists';
+} from '../../../features/QueryCollections';
+import {
+  AllowListSidebar,
+  AllowListPermissions,
+} from '../../../features/AllowLists';
+import { EETrialCard, useEELiteAccess } from '../../../features/EETrial';
 
-import PageContainer from '@/components/Common/Layout/PageContainer/PageContainer';
-import { isProConsole } from '@/utils/proConsole';
+import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
+import { isProConsole } from '../../../utils/proConsole';
+import globals from '../../../Globals';
 
 interface AllowListDetailProps {
   params: {
@@ -30,7 +35,7 @@ export const pushUrl = (name: string, section: string) => {
 
 export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
   const { name, section } = props.params;
-
+  const { access: eeLiteAccess } = useEELiteAccess(globals);
   const {
     data: queryCollections,
     isLoading,
@@ -50,6 +55,11 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
     // Redirect to first collection if no collection is selected or if the selected collection is not found
     pushUrl(queryCollections[0].name, section ?? 'operations');
   }
+
+  const isFeatureActive = isProConsole(globals) || eeLiteAccess === 'active';
+  const isFeatureSupported =
+    isProConsole(globals) || eeLiteAccess !== 'forbidden';
+  const isEELiteContext = eeLiteAccess !== 'forbidden';
 
   return (
     <Analytics name="AllowList" {...REDACT_EVERYTHING}>
@@ -87,7 +97,7 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
                 />
               </div>
             )}
-            {isProConsole(window.__env) ? (
+            {isFeatureSupported ? (
               <Tabs
                 value={section}
                 onValueChange={value => {
@@ -108,7 +118,22 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
                     label: 'Permissions',
                     content: (
                       <div className="p-4">
-                        <AllowListPermissions collectionName={name} />
+                        {isFeatureActive ? (
+                          <AllowListPermissions collectionName={name} />
+                        ) : (
+                          isEELiteContext && (
+                            <div className="max-w-3xl">
+                              <EETrialCard
+                                id="allow-list-role-based-permission"
+                                cardTitle="Looking to add role based permissions to your Allow List?"
+                                cardText="Get production-ready today  with a 30-day free trial of Hasura EE, no credit card required."
+                                buttonType="default"
+                                eeAccess={eeLiteAccess}
+                                horizontal
+                              />
+                            </div>
+                          )
+                        )}
                       </div>
                     ),
                   },

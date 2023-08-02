@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { childrenAreKnownToAcceptHTMLAttributes } from './childrenAreKnownToAcceptHTMLAttributes';
 
 function Component() {

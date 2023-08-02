@@ -3,51 +3,115 @@
 -- | Chinook Based Agent Fixtures used in DataConnector specific
 -- Specs.
 module Harness.Backend.DataConnector.Chinook
-  ( setupAction,
-    referenceSourceConfig,
-    sqliteSourceConfig,
+  ( ChinookTestEnv (..),
+    NameFormatting (..),
+    ScalarTypes (..),
+    mkChinookCloneTestEnvironment,
+    mkChinookStaticTestEnvironment,
+    setupChinookSourceAction,
+    setupCustomSourceAction,
     testRoleName,
-    ChinookTestEnv (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Control.Monad.Managed (Managed)
+import Data.Aeson qualified as J
 import Data.ByteString (ByteString)
-import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
-import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
+import Harness.DataConnectorAgent (createManagedClone)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment, getBackendTypeConfig)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 
 data ChinookTestEnv = ChinookTestEnv
   { -- | Default configuration JSON for the backend source.
-    backendSourceConfig :: Aeson.Value,
-    -- | Can be used to apply custom formatting to table names. Eg.,
-    -- adjusting the casing.
-    formatTableName :: [Text] -> [Text],
-    -- | Can be used to apply custom formatting to column names. Eg.,
-    -- adjusting the casing.
-    formatColumnName :: Text -> Text,
-    formatForeignKeyName :: Text -> Text
+    backendSourceConfig :: J.Value,
+    -- | Default configuration for the backend config that sets the agent configuration
+    backendAgentConfig :: J.Value,
+    -- | Name formatting functions to correct for backend-specific naming rules
+    nameFormatting :: NameFormatting,
+    -- | Backend-specific expected scalar types
+    scalarTypes :: ScalarTypes
   }
 
-setupAction :: Aeson.Value -> Aeson.Value -> TestEnvironment -> Fixture.SetupAction
-setupAction sourceMetadata backendConfig' testEnv =
+data NameFormatting = NameFormatting
+  { -- | Can be used to apply custom formatting to table names. Eg.,
+    -- adjusting the casing.
+    _nfFormatTableName :: [Text] -> [Text],
+    -- | Can be used to apply custom formatting to column names. Eg.,
+    -- adjusting the casing.
+    _nfFormatColumnName :: Text -> Text,
+    _nfFormatForeignKeyName :: Text -> Text
+  }
+
+data ScalarTypes = ScalarTypes
+  { _stFloatType :: Text,
+    _stIntegerType :: Text,
+    _stStringType :: Text
+  }
+
+--------------------------------------------------------------------------------
+
+-- | Create a test environment that uses agent dataset cloning to clone a copy of the Chinook
+-- DB for the test and use that as the source config configured in HGE.
+-- This should be used with agents that support datasets.
+mkChinookCloneTestEnvironment :: NameFormatting -> ScalarTypes -> TestEnvironment -> Managed ChinookTestEnv
+mkChinookCloneTestEnvironment nameFormatting scalarTypes testEnv = do
+  backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
+  agentUrl <- Fixture.backendServerUrl backendTypeConfig `onNothing` fail ("Backend " <> show (Fixture.backendType backendTypeConfig) <> " does not have a server url")
+  cloneConfig <- API._dccrConfig <$> createManagedClone agentUrl testEnv (API.DatasetTemplateName "Chinook")
+  let agentBackendConfig = mkAgentBackendConfig backendTypeConfig
+  let cloneConfigValue = J.Object $ API.unConfig cloneConfig
+  let sourceConfig =
+        [yaml|
+          value: *cloneConfigValue
+          template:
+          timeout:
+        |]
+  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting scalarTypes
+
+-- | Create a test environment that uses the source config specified to connect to a specific DB on the agent
+-- that contains the Chinook dataset.
+-- This should be used with agents that do not support datasets.
+mkChinookStaticTestEnvironment :: NameFormatting -> ScalarTypes -> J.Value -> TestEnvironment -> Managed ChinookTestEnv
+mkChinookStaticTestEnvironment nameFormatting scalarTypes sourceConfig testEnv = do
+  backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
+  let agentBackendConfig = mkAgentBackendConfig backendTypeConfig
+  pure $ ChinookTestEnv sourceConfig agentBackendConfig nameFormatting scalarTypes
+
+--------------------------------------------------------------------------------
+
+-- | Sets up a source in HGE using the source returned by 'mkSourceMetadata'
+setupCustomSourceAction ::
+  -- | Function that makes a source metadata, taking the 'BackendTypeConfig' and source's configuration as its input parameters
+  (Fixture.BackendTypeConfig -> J.Value -> J.Value) ->
+  (TestEnvironment, ChinookTestEnv) ->
   Fixture.SetupAction
-    (setup sourceMetadata backendConfig' testEnv)
+setupCustomSourceAction mkSourceMetadata testEnvs@(testEnv, _chinookTestEnv) =
+  Fixture.SetupAction
+    (setupCustomSource mkSourceMetadata testEnvs)
     (const $ teardown testEnv)
 
--- | Setup the schema given source metadata and backend config.
-setup :: Aeson.Value -> Aeson.Value -> TestEnvironment -> IO ()
-setup sourceMetadata backendConfig' testEnvironment = do
+-- | Sets up a source in HGE that contains tracked Chinook tables (see 'mkChinookSourceMetadata')
+setupChinookSourceAction :: (TestEnvironment, ChinookTestEnv) -> Fixture.SetupAction
+setupChinookSourceAction = setupCustomSourceAction mkChinookSourceMetadata
+
+setupCustomSource ::
+  -- | Function that makes a source metadata, taking the 'BackendTypeConfig' and source's configuration as its input parameters
+  (Fixture.BackendTypeConfig -> J.Value -> J.Value) ->
+  (TestEnvironment, ChinookTestEnv) ->
+  IO ()
+setupCustomSource mkSourceMetadata (testEnv, ChinookTestEnv {..}) = do
+  backendTypeConfig <- getBackendTypeConfig testEnv `onNothing` fail "Unable to find backend type config in this test environment"
+  let sourceMetadata = mkSourceMetadata backendTypeConfig backendSourceConfig
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig')
+  GraphqlEngine.setSource testEnv sourceMetadata (Just backendAgentConfig)
 
 -- | Teardown the schema and tracking in the most expected way.
 teardown :: TestEnvironment -> IO ()
@@ -56,15 +120,21 @@ teardown testEnvironment = do
 
 --------------------------------------------------------------------------------
 
-referenceSourceConfig :: Aeson.Value
-referenceSourceConfig = mkChinookSourceConfig Reference.backendTypeMetadata Reference.sourceConfiguration
+mkAgentBackendConfig :: Fixture.BackendTypeConfig -> J.Value
+mkAgentBackendConfig backendTypeConfig =
+  let backendType = Fixture.backendTypeString backendTypeConfig
+      uri = Fixture.backendServerUrl backendTypeConfig
+   in [yaml|
+          dataconnector:
+            *backendType:
+              uri: *uri
+          |]
 
-sqliteSourceConfig :: Aeson.Value
-sqliteSourceConfig = mkChinookSourceConfig Sqlite.backendTypeMetadata Sqlite.sourceConfiguration
+--------------------------------------------------------------------------------
 
 -- | Build a standard Chinook Source given an Agent specific @configuration@ field.
-mkChinookSourceConfig :: Fixture.BackendTypeConfig -> Aeson.Value -> Aeson.Value
-mkChinookSourceConfig backendTypeMetadata config =
+mkChinookSourceMetadata :: Fixture.BackendTypeConfig -> J.Value -> J.Value
+mkChinookSourceMetadata backendTypeMetadata config =
   let source = Fixture.backendSourceName backendTypeMetadata
       backendTypeString = Fixture.backendTypeString backendTypeMetadata
    in [yaml|
@@ -126,7 +196,7 @@ tables:
         using:
           manual_configuration:
             remote_table: [Customer]
-            column_mapping: 
+            column_mapping:
               EmployeeId: SupportRepId
     select_permissions:
       - role: test-role
@@ -161,7 +231,22 @@ tables:
             SupportRep:
               Country:
                 _ceq: [ "$", "Country" ]
-      
+  - table: [Invoice]
+    array_relationships:
+      - name: InvoiceLines
+        using:
+          manual_configuration:
+            remote_table: [InvoiceLine]
+            column_mapping:
+              InvoiceId: InvoiceId
+  - table: [InvoiceLine]
+    object_relationships:
+      - name: Invoice
+        using:
+          manual_configuration:
+            remote_table: [Invoice]
+            column_mapping:
+              InvoiceId: InvoiceId
 
 configuration:
   *config

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
-import { Button } from '@/new-components/Button';
-import { Operator, TableColumn, WhereClause } from '@/features/DataSource';
+import { SelectItem } from '../../../../../components/Common/SelectInputSplitField/SelectInputSplitField';
+import { Button } from '../../../../../new-components/Button';
+import { Operator, TableColumn, WhereClause } from '../../../../DataSource';
 import { RiAddBoxLine } from 'react-icons/ri';
 import { useFieldArray } from 'react-hook-form';
 import { FilterRow } from './FilterRow';
@@ -12,7 +12,7 @@ export type FilterRowsProps = {
   operators: Operator[];
   name: string;
   initialFilters?: FiltersAndSortFormValues['filters'];
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const FilterRows = ({
@@ -49,14 +49,13 @@ export const FilterRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
-    onRemove();
+    onRemove?.();
   };
 
   const columnOptions: SelectItem[] = columns.map(column => {
-    const value = column.graphQLProperties?.name ?? column.name;
     return {
       label: column.name,
-      value,
+      value: column.name,
     };
   });
 
@@ -80,7 +79,7 @@ export const FilterRows = ({
 
       {!fields.length && <div className="mb-sm italic">No Filters Present</div>}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-2">
         {fields.map((_, index) => (
           <FilterRow
             key={index}

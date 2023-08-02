@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import moment from 'moment';
-import { DragFoldTable, tableScss } from '@hasura/console-oss';
+import { DragFoldTable, tableScss } from '@hasura/console-legacy-ce';
 
 import FilterCheckboxComponent from '../StatsPanel/Filter/FilterCheckboxComponent';
 import useSelectable from '../AllowLists/useSelectable';
@@ -46,7 +46,6 @@ export const BrowseAllOperations = props => {
   useEffect(() => {
     refetch();
   }, [projectId]);
-
 
   const getCount = () => {
     return data.results_aggregate && data.results_aggregate.aggregate

@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-type CardMode = 'default' | 'neutral' | 'positive' | 'error';
+type CardMode = 'default' | 'neutral' | 'positive' | 'error' | 'warning';
 interface CardProps extends React.ComponentProps<'div'> {
   /**
    * The card mode
@@ -42,6 +42,7 @@ export const Card: React.FC<React.PropsWithChildren<CardProps>> = ({
           neutral: `${decoratedCardClassName} before:border-secondary`,
           positive: `${decoratedCardClassName} before:border-emerald-600`,
           error: `${decoratedCardClassName} before:border-red-600`,
+          warning: `${decoratedCardClassName} before:border-amber-500`,
         }[mode]
       )}
     >

@@ -48,6 +48,9 @@ class ErrorBoundary extends React.Component<
   override componentDidCatch(error: Error) {
     const { dispatch } = this.props;
 
+    // ATTENTION: No need to setup anything for Sentry here, Sentry automatically tracks the error
+    // caught from the error boundaries!
+
     // for invalid path segment errors
     if (error instanceof NotFoundError) {
       this.setState({

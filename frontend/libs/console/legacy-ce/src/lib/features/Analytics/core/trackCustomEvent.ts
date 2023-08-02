@@ -36,7 +36,7 @@ interface CustomEventOptions {
 }
 
 /**
- * Track a custom event both in Heap and Sentry.
+ * Track a custom event in Heap and breadcrumb in Sentry.
  */
 export function trackCustomEvent(
   event: HeapEvent,

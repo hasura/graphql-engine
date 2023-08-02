@@ -1,10 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { getPathRoot } from '@/components/Common/utils/urlUtils';
-import { Tooltip } from '@/new-components/Tooltip';
+import { getPathRoot } from '../Common/utils/urlUtils';
+import { Tooltip } from '../../new-components/Tooltip';
 import { IconType } from 'react-icons';
-import styles from './Main.module.scss';
 import { isBlockActive } from './Main.utils';
+import clsx from 'clsx';
+
+export const linkStyle =
+  'flex items-stretch gap-2 text-white font-bold rounded py-2 px-3 hover:!text-white active:text-primary focus:text-primary bg-transparent hover:bg-slate-900 !no-underline cursor-pointer';
+export const activeLinkStyle =
+  'text-primary hover:!text-primary focus:!text-primary visited:!text-primary bg-slate-900';
+export const itemContainerStyle = 'h-full flex items-center ml-xs';
 
 interface NavItemProps {
   title: string;
@@ -33,22 +39,22 @@ const HeaderNavItem: React.VFC<NavItemProps> = ({
     pathname,
   });
 
-  const className = isCurrentBlockActive ? styles.navSideBarActive : '';
-
   return (
     <li>
-      <Tooltip side="bottom" tooltipContentChildren={tooltipText}>
+      <Tooltip
+        className="h-full"
+        side="bottom"
+        tooltipContentChildren={tooltipText}
+      >
         <Link
-          className={className}
+          className={clsx(linkStyle, isCurrentBlockActive && activeLinkStyle)}
           to={appPrefix + path}
           data-test={`${title.toLowerCase()}-tab-link`}
         >
-          <div className={styles.iconCenter} data-test={block}>
-            {React.createElement(icon, {
-              'aria-hidden': true,
-            })}
-          </div>
-          <p className="uppercase">{title}</p>
+          <span className="text-sm self-baseline" data-test={block}>
+            {icon}
+          </span>
+          <span className="uppercase text-left">{title}</span>
         </Link>
       </Tooltip>
     </li>

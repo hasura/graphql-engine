@@ -711,50 +711,48 @@
   vertical-align: middle;
 }
 .selectBox {
+  background-color: #ffffff;
   font-family: 'Gudea';
   font-size: 15px;
   font-weight: bold;
   color: #505050;
-  padding: 16px 16px;
-  display: inline-block;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: row;
   align-items: center;
+  gap: 12px;
   .selectBoxRow {
     display: inline-block;
   }
   span {
-    min-width: 100px;
-    padding-right: 12px;
+    display: block;
+    flex-shrink: 1;
+    white-space: nowrap;
   }
 }
 .dropDownBtn {
   min-width: 180px;
-  button {
-    width: 100%;
-    border-radius: 2px;
-    border: solid 1px #dddddd;
+  width: 100%;
+  border-radius: 2px;
+  border: solid 1px #dddddd;
+  background-color: #ffffff;
+  font-family: 'Gudea';
+  font-size: 15px;
+  font-weight: bold;
+  color: #505050;
+  padding: 7px 12px;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  &:focus {
+    outline: none;
+    border: solid 1px #f8c533;
+  }
+  &:hover {
+    border: solid 1px #f8c533;
     background-color: #ffffff;
-    font-family: 'Gudea';
-    font-size: 15px;
-    font-weight: bold;
-    color: #505050;
-    padding: 7px 12px;
-    min-width: 140px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    position: relative;
-    img {
-      position: absolute;
-      right: 12px;
-    }
-    &:focus {
-      outline: none;
-      border: solid 1px #f8c533;
-    }
-    &:hover {
-      border: solid 1px #f8c533;
-      background-color: #ffffff;
-    }
   }
   span {
     padding-right: 0;
@@ -836,7 +834,7 @@
       content: '';
       position: absolute;
       left: 7px;
-      top: 3px;
+      top: 5px;
       width: 5px;
       height: 10px;
       border: solid white;
@@ -873,6 +871,7 @@
 }
 .modalWrapper {
   padding: 0;
+  text-align: left;
   .modalHeader {
     background-color: #f8f8f8;
     padding: 19px 32px;
@@ -1070,6 +1069,7 @@
   }
   .datePickerBtnWrapper {
     display: flex;
+    gap: 8px;
     padding: 0 16px;
     .yellowButton {
       margin-right: 15px;
@@ -1485,11 +1485,11 @@
   border-radius: 3px;
   padding: 6px;
   font-size: 1em;
-  color: rgba(0,0,0,0.6);
-  background: rgba(0,0,0,0.1);
-  transition: all .1s ease;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.1);
+  transition: all 0.1s ease;
   cursor: pointer;
-  height: 35px!important;
+  height: 35px !important;
   width: 162px !important;
   min-width: 65px;
   display: inline-block;
@@ -1499,7 +1499,7 @@
 }
 
 .paginationBtnDisabled {
-  opacity: .5;
+  opacity: 0.5;
   cursor: not-allowed !important;
 }
 
@@ -1509,7 +1509,7 @@
   white-space: nowrap;
   text-align: center;
   font-family: 'Gudea';
-  color: #4D4D4D;
+  color: #4d4d4d;
   font-size: 14px;
   line-height: 1.42857;
 }
@@ -1518,7 +1518,7 @@
   display: inline-block;
   width: 70px;
   text-align: center;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px 7px;
   font-size: inherit;
   border-radius: 3px;
@@ -1580,5 +1580,5 @@
 }
 
 .muted {
-  color: #6B7280;
+  color: #6b7280;
 }

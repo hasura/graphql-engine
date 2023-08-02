@@ -91,6 +91,8 @@ Check out the instructions for the following one-click deployment options:
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html) |
 | Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql) | [docs](https://hasura.io/docs/latest/graphql/core/guides/deployment/render-one-click.html) |
 
+> Note: The Hasura GraphQL Engine collects anonymous telemetry to understand usage and provide the best experience. Read more [here](https://hasura.io/docs/latest/policies/telemetry/) on what data is collected and the procedure to opt out.
+
 ### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment
@@ -133,23 +135,23 @@ Transform data in Postgres or run business logic on it to derive another dataset
 
 ## Demos
 
-Check out all the example applications in the [community/sample-apps](community/sample-apps) directory.
+Check out all the example applications in the [hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) repository.
 
 ### Realtime applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
   - [Try it out](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
 
 - Live location tracking app that shows a running vehicle changing the current GPS
   coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
 
 - A real-time dashboard for data aggregations on continuously changing data.
   - [Try it out](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
 
 ### Videos
 

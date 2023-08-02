@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Button } from '@hasura/console-oss';
-import { Tooltip } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
+import { Tooltip } from '@hasura/console-legacy-ce';
 import { useQuery, useMutation } from '@apollo/react-hooks';
-import { tableScss } from '@hasura/console-oss';
+import { tableScss } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
 import { ContentWithTestSuite } from './ContentWithTestSuite';

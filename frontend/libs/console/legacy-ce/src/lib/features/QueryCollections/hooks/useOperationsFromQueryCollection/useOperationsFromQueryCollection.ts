@@ -1,4 +1,4 @@
-import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
+import { MetadataSelector, useMetadata } from '../../../MetadataAPI';
 
 export const useOperationsFromQueryCollection = (queryCollectionName: string) =>
   useMetadata(

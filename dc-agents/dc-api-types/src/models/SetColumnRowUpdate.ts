@@ -11,7 +11,7 @@ export type SetColumnRowUpdate = {
   column: string;
   type: 'set';
   /**
-   * The value to use for the column
+   * The value to use with the column operator
    */
   value: any;
   value_type: ScalarType;

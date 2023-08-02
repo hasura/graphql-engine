@@ -3,10 +3,6 @@ import pytest
 from validate import check_query_f, check_query, get_conf_f
 
 
-# Marking all tests in this module that server upgrade tests can be run
-# Few of them cannot be run, which will be marked skip_server_upgrade_test
-pytestmark = pytest.mark.allow_server_upgrade_test
-
 usefixtures = pytest.mark.usefixtures
 
 use_mutation_fixtures = usefixtures(

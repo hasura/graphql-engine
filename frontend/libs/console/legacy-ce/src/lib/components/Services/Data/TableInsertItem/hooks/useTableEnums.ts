@@ -1,10 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-import Endpoints from '@/Endpoints';
-import { areTablesEqual } from '@/features/RelationshipsTable';
-import { useHttpClient } from '@/features/Network';
+import Endpoints from '../../../../../Endpoints';
+import { useHttpClient } from '../../../../../features/Network';
 import { useQuery, UseQueryResult } from 'react-query';
 import { useTablesForeignKeys } from './useTableForeignKeys';
 import { TableObject, ForeignKeyMapping } from '../types';
+import { areTablesEqual } from '../../../../../features/hasura-metadata-api';
 
 export type UseTableEnumOptionsProps = {
   tables: TableObject[];

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
-import { Button } from '@hasura/console-oss';
-import { Tooltip } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
+import { Tooltip } from '@hasura/console-legacy-ce';
 
 import styles from '../Metrics.module.scss';
-
+/* eslint-disable no-unused-expressions,import/first */
 /** Workaround for https://github.com/ajaxorg/ace/issues/3320 */
 window.ace.require = window.ace.acequire;
-/* eslint-disable no-unused-expressions */
+
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-github';
+
 /* eslint-enable no-unused-expressions */
 
 export const EditData = ({ label, data, onSave, onCancel }) => {

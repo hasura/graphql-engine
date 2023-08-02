@@ -1,0 +1,120 @@
+{
+  "resource_version": 5,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "aBigQuery",
+        "kind": "bigquery",
+        "tables": [],
+        "configuration": {
+          "datasets": ["horses"],
+          "global_select_limit": "1000.0",
+          "project_id": "regency-polecat-beehive",
+          "service_account": {
+            "client_email": "bigquery-testing@regency-polecat-beehive.iam.gserviceaccount.com",
+            "private_key": "",
+            "project_id": "regency-polecat-beehive"
+          }
+        }
+      },
+      {
+        "name": "aMysql",
+        "kind": "mysql8",
+        "tables": [],
+        "configuration": {
+          "template": null,
+          "timeout": null,
+          "value": {
+            "jdbc_url": "jdbc:mysql://mysql:3306/Chinook?allowMultiQueries=true&user=root&password=pass"
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "mysql"
+          },
+          "type_names": {}
+        }
+      },
+      {
+        "name": "aPostgres",
+        "kind": "postgres",
+        "tables": [],
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgres://postgres:pass@postgres:5432/chinook",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "postgres"
+          }
+        }
+      },
+      {
+        "name": "aCockroach",
+        "kind": "cockroach",
+        "tables": [],
+        "configuration": {
+          "connection_info": {
+            "database_url": "postgres://root@cockroachdb:26257/defaultdb",
+            "isolation_level": "read-committed",
+            "use_prepared_statements": false
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "cockroach"
+          }
+        }
+      },
+      {
+        "name": "aSqlite",
+        "kind": "sqlite",
+        "tables": [],
+        "configuration": {
+          "template": null,
+          "timeout": null,
+          "value": {
+            "db": "/sqlite.db",
+            "explicit_main_schema": false,
+            "include_sqlite_meta_tables": false
+          }
+        },
+        "customization": {
+          "root_fields": {
+            "namespace": "sqlite"
+          },
+          "type_names": {}
+        }
+      },
+      {
+        "name": "aMSSql",
+        "kind": "mssql",
+        "tables": [],
+        "configuration": {
+          "connection_info": {
+            "connection_string": "Driver={ODBC Driver 18 for SQL Server};Server=mssql,1433;Database=Chinook;UID=sa;PWD=Password!;Encrypt=yes;TrustServerCertificate=yes;ConnectionTimeout=30;",
+            "pool_settings": {
+              "idle_timeout": 5,
+              "max_connections": null,
+              "total_max_connections": null
+            }
+          }
+        }
+      }
+    ],
+    "backend_configs": {
+      "dataconnector": {
+        "mysql8": {
+          "uri": "http://data-connector-agent:8081/api/v1/mysql"
+        },
+        "sqlite": {
+          "uri": "http://sqlite:8100"
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,11 @@
+import { getWebsocketProtocol } from '../../../helpers/protocol';
+import { getGraphqlSubscriptionsClient } from '../../../utils/graphqlSubscriptions';
 import defaultState from './state';
 import requestAction from '../../../utils/requestAction';
 
 import Endpoints from '../../../Endpoints';
 // import fetch from 'isomorphic-fetch';
 
-import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws';
 import { parse } from 'graphql';
 import { execute } from 'apollo-link';
@@ -14,7 +15,6 @@ import { saveAppState, clearState } from '../../AppState';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
 import requestActionPlain from '../../../utils/requestActionPlain';
 import { showErrorNotification } from '../Common/Notification';
-import { getWebsocketProtocol } from '@/helpers/protocol';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -62,18 +62,6 @@ export const setGraphiQLQuery = data => ({
 });
 
 let websocketSubscriptionClient;
-
-const getSubscriptionInstance = (url, headers) => {
-  return new SubscriptionClient(url, {
-    connectionParams: {
-      headers: {
-        ...headers,
-      },
-      lazy: true,
-    },
-    reconnect: true,
-  });
-};
 
 const SET_LOADING = 'ApiExplorer/SET_LOADING';
 export const setLoading = isLoading => ({
@@ -190,12 +178,19 @@ const changeRequestParams = newParams => {
 };
 
 const createWsClient = (url, headers) => {
-  const websocketProtocol = getWebsocketProtocol(url);
+  let websocketProtocol = getWebsocketProtocol(window.location.protocol);
+  try {
+    const urlVar = new URL(url);
+    websocketProtocol = getWebsocketProtocol(urlVar.protocol);
+  } catch {
+    // ignore error
+  }
+
   const headersFinal = getHeadersAsJSON(headers);
   const graphqlUrl = `${websocketProtocol}//${url.split('//')[1]}`;
 
   if (!websocketSubscriptionClient) {
-    websocketSubscriptionClient = getSubscriptionInstance(
+    websocketSubscriptionClient = getGraphqlSubscriptionsClient(
       graphqlUrl,
       headersFinal
     );
@@ -491,7 +486,14 @@ const getRemoteQueries = (queryUrl, cb, dispatch) => {
 };
 
 const processResponseDetails =
-  (responseTime, responseSize, isResponseCached, responseTrackingId) =>
+  (
+    responseTime,
+    responseSize,
+    isResponseCached,
+    responseTrackingId,
+    cacheWarning,
+    isRequestCachable
+  ) =>
   dispatch => {
     dispatch({
       type: TRACK_RESPONSE_DETAILS,
@@ -500,6 +502,8 @@ const processResponseDetails =
         responseSize,
         isResponseCached,
         responseTrackingId,
+        cacheWarning,
+        isRequestCachable,
       },
     });
   };
@@ -730,6 +734,8 @@ const apiExplorerReducer = (state = defaultState, action) => {
             responseSize: action.data.responseSize,
             isResponseCached: action.data.isResponseCached,
             responseTrackingId: action.data.responseTrackingId,
+            cacheWarning: action.data.cacheWarning,
+            isRequestCachable: action.data.isRequestCachable,
           },
         },
       };

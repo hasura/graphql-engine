@@ -12990,6 +12990,9 @@ sources:
                           _in: X-Hasura-Conference-Ids
                       - subconferenceId:
                           _in: X-Hasura-Subconference-Ids
+    native_queries: null
+    stored_procedures: null
+    logical_models: null
     functions:
       - function:
           schema: collection
@@ -13847,3 +13850,9 @@ cron_triggers:
     headers:
       - name: x-hasura-event-secret
         value_from_env: EVENT_SECRET
+backend_configs:
+  dataconnector:
+    sqlite_a:
+      uri: http://localhost:8100
+    sqlite_b:
+      uri: http://localhost:8101

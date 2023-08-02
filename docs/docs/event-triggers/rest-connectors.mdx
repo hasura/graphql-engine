@@ -154,6 +154,7 @@ The context variables available in transforms are:
 | $base_url          | Original configured webhook URL                           |
 | $session_variables | Session variables                                         |
 | $query_params      | Query parameters and the values to be sent to the webhook |
+| $response.status   | HTTP response staus code from the webhook                 |
 
 #### Console sample context {#event-trigger-transforms-sample-context}
 
@@ -301,9 +302,14 @@ The Request URL template allows you to configure the exact API endpoint to call.
 
 You can use the [context variables](#event-trigger-transform-context-variables) to construct the final URL.
 
-You can also provide query params to add to the URL.
+- [Request URL with Query Parmeters (as key-value pairs)](#request-url-with-query-parmeters-as-key-value-pairs)
+- [Request URL with Query Parmeters (as raw string)](#request-url-with-query-parmeters-as-raw-string)
 
-You can use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
+##### Request URL with Query Parmeters (as key-value pairs)
+
+You can provide `Key-Value` type query params to add to the URL.
+
+You can also use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
@@ -314,7 +320,7 @@ Head to the `Events > [event_trigger_name]` page. Under `Configure REST Connecto
 Enter the `Request URL Template` and `Query Params`.
 
 <Thumbnail
-  src="/img/event-triggers/transform-request-options.png"
+  src="/img/event-triggers/transform-key-value-request-options.png"
   alt="Console Event Trigger request options transformation"
   width="750px"
 />
@@ -407,6 +413,113 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
+
+##### Request URL with Query Parmeters (as raw string)
+
+You can provide `string` type query params to add to the URL.
+
+You can also use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+Head to the `Events > [event_trigger_name]` page. Under `Configure REST Connectors` click on
+`Add Request Options Transform`.
+
+Enter the `Request URL Template` and `Query Params`.
+<Thumbnail
+  src="/img/event-triggers/transform-url-string-request-options.png"
+  alt="Console Event Trigger request options transformation"
+  width="750px"
+/>
+
+The value of the final url should be reflected in the `Preview` section given all required
+[sample context](#event-trigger-transforms-sample-context) is set.
+
+Hit `Save Event Trigger` to apply your changes.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
+[request_transform][requesttransformation] field to the Event Trigger:
+
+```yaml {16-17}
+table:
+  name: users
+  schema: public
+event_triggers:
+  - name: insert_trigger_on_users
+    definition:
+      insert:
+        columns: "*"
+    webhook: https://api.somedomain.com
+  headers:
+    - name: Authorization
+      value: bearer-xxxx
+  request_transform:
+    template_engine: Kriti
+    method: POST
+    url: "{{$base_url}}/api/v3/endpoint"
+    query_params: "{{concat(["userId=", $session_variables["x-hasura-user-id"]])}}"
+    content_type: application/json
+    body: "{\n  \"table\": {\n    \"name\": {{$body.table.name}},\n    \"schema\": {{$body.table.schema}}\n  },\n  \"To\": {\n    \"username\": {{$body.event.data.new.name}},\n    \"email\": {{$body.event.data.new.email}}\n  }\n}"
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can configure REST Connectors for Event Triggers using the
+[pg_create_event_trigger][metadata-pg-create-event-trigger] Metadata API and adding a
+[request_transform][requesttransformation] field to the args:
+
+```http {28-29}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pg_create_event_trigger",
+  "args": {
+    "name": "insert_trigger_on_users",
+    "replace": true,
+    "source": "default",
+    "table": {
+      "name": "users",
+      "schema": "public"
+    },
+    "webhook": "https://api.somedomain.com",
+    "insert": {
+      "columns": "*"
+    },
+    "headers": [
+      {
+        "name": "Authorization",
+        "value": "bearer xxxx"
+      }
+    ],
+    "request_transform": {
+      "template_engine": "Kriti",
+      "method": "POST",
+      "url": "{{$base_url}}/api/v3/endpoint",
+      "query_params": "{{concat(["userId=", $session_variables["x-hasura-user-id"]])}}"
+      "content_type": "application/json",
+      "body": "{\n  \"table\": {\n    \"name\": {{$body.table.name}},\n    \"schema\": {{$body.table.schema}}\n  },\n  \"To\": {\n    \"username\": {{$body.event.data.new.name}},\n    \"email\": {{$body.event.data.new.email}}\n  }\n}"
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
 
 :::info escapeUri
 

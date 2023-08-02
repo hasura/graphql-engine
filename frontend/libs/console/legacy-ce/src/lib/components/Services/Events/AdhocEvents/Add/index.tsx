@@ -1,21 +1,30 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { getAdhocPendingEventsRoute } from '../../../../Common/utils/routesUtils';
+import { Form } from '../../../../../features/AdhocEvents/components/Form';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { MapStateToProps } from '../../../../../types';
 import AdhocEventsContainer from '../Container';
-import Add from './Add';
+import _push from '../../../Data/push';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const AddContainer: React.FC<Props> = ({ dispatch, readOnlyMode }) => {
+  const onSuccess = () => {
+    dispatch(_push(getAdhocPendingEventsRoute('absolute')));
+  };
   return (
-    <AdhocEventsContainer tabName="add" dispatch={dispatch}>
-      {readOnlyMode ? (
-        'Cannot schedule event in read only mode'
-      ) : (
-        <Add dispatch={dispatch} />
-      )}
-    </AdhocEventsContainer>
+    <div className="bootstrap-jail">
+      <AdhocEventsContainer tabName="add" dispatch={dispatch}>
+        {readOnlyMode ? (
+          'Cannot schedule event in read only mode'
+        ) : (
+          <div className="w-1/2">
+            <Form onSuccess={onSuccess} />
+          </div>
+        )}
+      </AdhocEventsContainer>
+    </div>
   );
 };
 

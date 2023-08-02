@@ -1,0 +1,244 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Example API 5",
+    "description": "An API to test converting Open API Specs 3.0 to GraphQL",
+    "version": "1.0.0",
+    "termsOfService": "http://example.com/terms/",
+    "contact": {
+      "name": "Erik Wittern",
+      "url": "http://www.example.com/support"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "externalDocs": {
+    "url": "http://example.com/docs",
+    "description": "Some more natural language description."
+  },
+  "tags": [
+    {
+      "name": "test",
+      "description": "Indicates this API is for testing"
+    }
+  ],
+  "servers": [
+    {
+      "url": "http://localhost:{port}/{basePath}",
+      "description": "The location of the local test server.",
+      "variables": {
+        "port": {
+          "default": "3005"
+        },
+        "basePath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/o_d_d___n_a_m_e": {
+      "get": {
+        "description": "Basic simpleNames option test",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "links": {
+              "w-e-i-r-d___n-a-m-e___l-i-n-k": {
+                "operationRef": "#/paths/~1w-e-i-r-d___n-a-m-e/get",
+                "description": "Basic link"
+              },
+              "w-e-i-r-d___n-a-m-e2___l-i-n-k": {
+                "operationRef": "#/paths/~1w-e-i-r-d___n-a-m-e2~1{f-u-n-k-y___p-a-r-a-m-e-t-e-r}/get",
+                "description": "Hardcoded link parameter",
+                "parameters": {
+                  "f-u-n-k-y___p-a-r-a-m-e-t-e-r": "Charles"
+                }
+              },
+              "w-e-i-r-d___n-a-m-e3___l-i-n-k": {
+                "operationRef": "#/paths/~1w-e-i-r-d___n-a-m-e3~1{f-u-n-k-y___p-a-r-a-m-e-t-e-r}/get",
+                "description": "Exposed link parameter"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/w-e-i-r-d___n-a-m-e": {
+      "get": {
+        "description": "Basic simpleNames option test with GraphQL unsafe values",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/w-e-i-r-d___n-a-m-e2/{f-u-n-k-y___p-a-r-a-m-e-t-e-r}": {
+      "get": {
+        "description": "Basic simpleNames option test with links with hard-coded parameters",
+        "parameters": [
+          {
+            "name": "f-u-n-k-y___p-a-r-a-m-e-t-e-r",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/w-e-i-r-d___n-a-m-e3/{f-u-n-k-y___p-a-r-a-m-e-t-e-r}": {
+      "get": {
+        "description": "Basic simpleNames option test with links with exposed parameters",
+        "parameters": [
+          {
+            "name": "f-u-n-k-y___p-a-r-a-m-e-t-e-r",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getEnum": {
+      "get": {
+        "description": "Basic simpleEnumValues option test",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string",
+                      "enum": ["r-e-d", "a-m-b-e-r", "g-r-e-e-n"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getNumericalEnum": {
+      "get": {
+        "description": "Basic simpleEnumValues option test on numerical enum",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "number",
+                      "enum": [1, 2, 3, 4, 5]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getObjectEnum": {
+      "get": {
+        "description": "Basic simpleEnumValues option test on object enum",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "enum": [
+                        {
+                          "hello": "world"
+                        },
+                        {
+                          "goodbye": "world"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

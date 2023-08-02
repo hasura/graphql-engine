@@ -1,7 +1,7 @@
 import {
   allowedMetadataTypes,
   useMetadataMigration,
-} from '@/features/MetadataAPI';
+} from '../../../MetadataAPI';
 
 export const useSetRoleToAllowListPermission = (collectionName: string) => {
   const { mutate } = useMetadataMigration();

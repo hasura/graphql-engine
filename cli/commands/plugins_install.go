@@ -25,6 +25,7 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsInstallCmd := &cobra.Command{
 		Use:   "install [plugin-name]",
 		Short: "Install a plugin from the index",
+		Long:  "To install plugins that extend the functionality of the Hasura CLI, you can use the install command. This command will install the plugin from the index and add it to your configuration file.",
 		Example: `  # Install a plugin:
   hasura plugins install [plugin-name]`,
 		SilenceUsage: true,

@@ -77,7 +77,7 @@ export const aliasedColumns = {
   query_variables: 'variables',
   worker_id: 'poller_id',
   no_of_subscribers: 'total_subscribers',
-  no_of_postgres_queries: 'execution_batch_size'
+  no_of_postgres_queries: 'execution_batch_size',
 };
 
 export const actualTypeToAlias = {

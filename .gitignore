@@ -1,6 +1,7 @@
 dist
 dist-*
 cabal-dev
+/result
 *.o
 *.hi
 *.chi
@@ -23,6 +24,7 @@ cabal.project.local~
 temp-console-hasura/
 .DS_Store
 .idea
+tags
 
 # tool-agnostic personal ignore files
 .direnv
@@ -31,6 +33,7 @@ temp-console-hasura/
 .vscode
 .vim/
 .history/
+*.swp
 
 # Test artifacts
 *.tix
@@ -52,10 +55,20 @@ hie.yaml
 server/CURRENT_VERSION
 
 # ignored to prevent accidental unzips of the .gz version from being committed
-ChinookData.xml
+Chinook.xml
+chinook.db
 
 # log output from tests-hspec runs
 tests-hspec.log
 
 # Test run results from Sandwich-powered tests
 test_runs/
+
+# dependencies
+node_modules
+
+# ticky profiles, e.g. from dev.sh --prof-ticky
+*.ticky
+*.ticky.modules
+
+yarn-error.log

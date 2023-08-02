@@ -1,6 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import styles from './DataSources.module.scss';

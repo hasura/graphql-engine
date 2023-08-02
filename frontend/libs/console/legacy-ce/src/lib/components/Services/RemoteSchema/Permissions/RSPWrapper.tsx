@@ -1,5 +1,5 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { RemoteSchema } from '../../../../metadata/types';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { Tabs } from '../Common/Tabs';

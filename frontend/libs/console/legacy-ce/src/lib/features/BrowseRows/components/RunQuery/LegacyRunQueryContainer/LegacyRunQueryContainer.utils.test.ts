@@ -42,11 +42,13 @@ describe('adaptFormValuesToQuery', () => {
     const columnDataTypes: TableColumn[] = [
       {
         name: 'id',
-        dataType: 'integer',
+        dataType: 'number',
+        consoleDataType: 'number',
       },
       {
         name: 'text',
-        dataType: 'text',
+        dataType: 'string',
+        consoleDataType: 'string',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -73,7 +75,8 @@ describe('adaptFormValuesToQuery', () => {
     const columnDataTypes: TableColumn[] = [
       {
         name: 'id',
-        dataType: 'integer',
+        dataType: 'number',
+        consoleDataType: 'number',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -100,7 +103,8 @@ describe('adaptFormValuesToQuery', () => {
     const columnDataTypes: TableColumn[] = [
       {
         name: 'idDeleted',
-        dataType: 'boolean',
+        dataType: 'bool',
+        consoleDataType: 'boolean',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -127,7 +131,8 @@ describe('adaptFormValuesToQuery', () => {
     const columnDataTypes: TableColumn[] = [
       {
         name: 'idDeleted',
-        dataType: 'boolean',
+        dataType: 'bool',
+        consoleDataType: 'boolean',
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
@@ -163,11 +168,13 @@ it('does not try to parse non-integer values on integer field types', () => {
   const columnDataTypes: TableColumn[] = [
     {
       name: 'id',
-      dataType: 'integer',
+      dataType: 'number',
+      consoleDataType: 'number',
     },
     {
       name: 'text',
-      dataType: 'integer',
+      dataType: 'string',
+      consoleDataType: 'string',
     },
   ];
   expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);

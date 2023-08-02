@@ -26,11 +26,12 @@ import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Ordered qualified as JO
 import Data.Bifunctor (bimap)
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.IntMap.Strict qualified as IntMap
 import Data.List.NonEmpty qualified as NE
 import Data.Scientific qualified as Scientific
 import Data.Text qualified as T
+import Data.Text.Extended ((<<>), (<>>))
 import Data.Text.Read qualified as TR
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend qualified as EB
@@ -39,18 +40,22 @@ import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Prelude
+import Hasura.QueryTags
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
+import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 -------------------------------------------------------------------------------
 -- Executing a remote join
 
 -- | Construct and execute a call to a source for a remote join.
 makeSourceJoinCall ::
-  (EB.MonadQueryTags m, MonadError QErr m) =>
+  (MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m) =>
   -- | Function to dispatch a request to a source.
   (AB.AnyBackend SourceJoinCall -> m BL.ByteString) ->
   -- | User information.
@@ -61,22 +66,29 @@ makeSourceJoinCall ::
   FieldName ->
   -- | Mapping from 'JoinArgumentId' to its corresponding 'JoinArgument'.
   IntMap.IntMap JoinArgument ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   -- | The resulting join index (see 'buildJoinIndex') if any.
   m (Maybe (IntMap.IntMap AO.Value))
-makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments = do
-  -- step 1: create the SourceJoinCall
-  -- maybeSourceCall <-
-  --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
-  --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
-  maybeSourceCall <-
-    AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin $
-      buildSourceJoinCall userInfo jaFieldName joinArguments
-  -- if there actually is a remote call:
-  for maybeSourceCall \sourceCall -> do
-    -- step 2: send this call over the network
-    sourceResponse <- networkFunction sourceCall
-    -- step 3: build the join index
-    buildJoinIndex sourceResponse
+makeSourceJoinCall networkFunction userInfo remoteSourceJoin jaFieldName joinArguments reqHeaders operationName =
+  Tracing.newSpan ("Remote join to data source " <> sourceName <<> " for field " <>> jaFieldName) do
+    -- step 1: create the SourceJoinCall
+    -- maybeSourceCall <-
+    --   AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin \(sjc :: SourceJoinCall b) ->
+    --     buildSourceJoinCall @b userInfo jaFieldName joinArguments sjc
+    maybeSourceCall <-
+      AB.dispatchAnyBackend @EB.BackendExecute remoteSourceJoin
+        $ buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName
+    -- if there actually is a remote call:
+    for maybeSourceCall \sourceCall -> do
+      -- step 2: send this call over the network
+      sourceResponse <- networkFunction sourceCall
+      -- step 3: build the join index
+      Tracing.newSpan "Build remote join index"
+        $ buildJoinIndex sourceResponse
+  where
+    sourceName :: SourceName
+    sourceName = AB.dispatchAnyBackend @Backend remoteSourceJoin _rsjSource
 
 -------------------------------------------------------------------------------
 -- Internal representation
@@ -93,44 +105,51 @@ data SourceJoinCall b = SourceJoinCall
 -- Step 1: building the source call
 
 buildSourceJoinCall ::
-  (EB.BackendExecute b, EB.MonadQueryTags m, MonadError QErr m) =>
+  forall b m.
+  (EB.BackendExecute b, MonadQueryTags m, MonadError QErr m, MonadTrace m, MonadIO m) =>
   UserInfo ->
   FieldName ->
   IntMap.IntMap JoinArgument ->
+  [HTTP.Header] ->
+  Maybe G.Name ->
   RemoteSourceJoin b ->
   m (Maybe (AB.AnyBackend SourceJoinCall))
-buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
-  let rows =
-        IntMap.toList joinArguments <&> \(argumentId, argument) ->
-          KM.insert "__argument_id__" (J.toJSON argumentId) $
-            KM.fromList $
-              map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered) $
-                Map.toList $
-                  unJoinArgument argument
-      rowSchema = fmap snd (_rsjJoinColumns remoteSourceJoin)
-  for (NE.nonEmpty rows) $ \nonEmptyRows -> do
-    let sourceConfig = _rsjSourceConfig remoteSourceJoin
-    stepInfo <-
-      EB.mkDBRemoteRelationshipPlan
-        userInfo
-        (_rsjSource remoteSourceJoin)
-        sourceConfig
-        nonEmptyRows
-        rowSchema
-        (FieldName "__argument_id__")
-        (FieldName "f", _rsjRelationship remoteSourceJoin)
-        (_rsjStringifyNum remoteSourceJoin)
-    -- This should never fail, as field names in remote relationships are
-    -- validated when building the schema cache.
-    fieldName <-
-      G.mkName (getFieldNameTxt jaFieldName)
-        `onNothing` throw500 ("'" <> getFieldNameTxt jaFieldName <> "' is not a valid GraphQL name")
-    -- NOTE: We're making an assumption that the 'FieldName' propagated upwards
-    -- from 'collectJoinArguments' is reasonable to use for logging.
-    let rootFieldAlias = mkUnNamespacedRootFieldAlias fieldName
-    pure $
-      AB.mkAnyBackend $
-        SourceJoinCall rootFieldAlias sourceConfig stepInfo
+buildSourceJoinCall userInfo jaFieldName joinArguments reqHeaders operationName remoteSourceJoin = do
+  Tracing.newSpan "Resolve execution step for remote join field" do
+    let rows =
+          IntMap.toList joinArguments <&> \(argumentId, argument) ->
+            KM.insert "__argument_id__" (J.toJSON argumentId)
+              $ KM.fromList
+              $ map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered)
+              $ HashMap.toList
+              $ unJoinArgument argument
+        rowSchema = fmap snd (_rsjJoinColumns remoteSourceJoin)
+    for (NE.nonEmpty rows) $ \nonEmptyRows -> do
+      let sourceConfig = _rsjSourceConfig remoteSourceJoin
+      Tracing.attachSourceConfigAttributes @b sourceConfig
+      stepInfo <-
+        EB.mkDBRemoteRelationshipPlan
+          userInfo
+          (_rsjSource remoteSourceJoin)
+          sourceConfig
+          nonEmptyRows
+          rowSchema
+          (FieldName "__argument_id__")
+          (FieldName "f", _rsjRelationship remoteSourceJoin)
+          reqHeaders
+          operationName
+          (_rsjStringifyNum remoteSourceJoin)
+      -- This should never fail, as field names in remote relationships are
+      -- validated when building the schema cache.
+      fieldName <-
+        G.mkName (getFieldNameTxt jaFieldName)
+          `onNothing` throw500 ("'" <> getFieldNameTxt jaFieldName <> "' is not a valid GraphQL name")
+      -- NOTE: We're making an assumption that the 'FieldName' propagated upwards
+      -- from 'collectJoinArguments' is reasonable to use for logging.
+      let rootFieldAlias = mkUnNamespacedRootFieldAlias fieldName
+      pure
+        $ AB.mkAnyBackend
+        $ SourceJoinCall rootFieldAlias sourceConfig stepInfo
 
 -------------------------------------------------------------------------------
 -- Step 3: extracting the join index
@@ -172,22 +191,23 @@ buildJoinIndex response = do
       Right (i, "") -> pure i
       _ -> Nothing
     throwInvalidJsonErr errMsg =
-      throw500 $
-        "failed to decode JSON response from the source: " <> errMsg
+      throw500
+        $ "failed to decode JSON response from the source: "
+        <> errMsg
     throwMissingRelationshipDataErr =
-      throw500 $
-        "cannot find relationship data (aliased as 'f') within the source \
-        \response"
+      throw500
+        $ "cannot find relationship data (aliased as 'f') within the source \
+          \response"
     throwMissingArgumentIdErr =
-      throw500 $
-        "cannot find '__argument_id__' within the source response"
+      throw500
+        $ "cannot find '__argument_id__' within the source response"
     throwInvalidArgumentIdValueErr =
       throw500 $ "expected 'argument_id' to get parsed as backend integer type"
     throwNoNestedObjectErr =
-      throw500 $
-        "expected an object one level deep in the remote schema's response, \
-        \but found an array/scalar value instead"
+      throw500
+        $ "expected an object one level deep in the remote schema's response, \
+          \but found an array/scalar value instead"
     throwNoListOfObjectsErr =
-      throw500 $
-        "expected a list of objects in the remote schema's response, but found \
-        \an object/scalar value instead"
+      throw500
+        $ "expected a list of objects in the remote schema's response, but found \
+          \an object/scalar value instead"

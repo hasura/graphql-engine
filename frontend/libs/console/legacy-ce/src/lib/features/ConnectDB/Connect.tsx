@@ -1,7 +1,7 @@
-import { CustomizationForm } from '@/features/ConnectDB';
-import { Button } from '@/new-components/Button';
-import { useConsoleForm, InputField } from '@/new-components/Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { CustomizationForm } from '.';
+import { Button } from '../../new-components/Button';
+import { useConsoleForm, InputField } from '../../new-components/Form';
+import { IndicatorCard } from '../../new-components/IndicatorCard';
 import React from 'react';
 import { Configuration } from './components/Configuration';
 import { Driver } from './components/Driver';

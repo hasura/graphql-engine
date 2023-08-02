@@ -22,21 +22,22 @@ const ProcessedEvents: React.FC<Props> = props => {
 
   const renderRows: FilterRenderProp = (
     rows,
-    count,
+
     filterState,
     setFilterState,
     runQuery
   ) => (
-    <EventsTable
-      rows={rows}
-      count={count}
-      filterState={filterState}
-      setFilterState={setFilterState}
-      runQuery={runQuery}
-      columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
-      identifier={triggerName}
-      triggerType="cron"
-    />
+    <div className="bootstrap-jail">
+      <EventsTable
+        rows={rows}
+        filterState={filterState}
+        setFilterState={setFilterState}
+        runQuery={runQuery}
+        columns={['id', 'status', 'scheduled_time', 'created_at', 'tries']}
+        identifier={triggerName}
+        triggerType="cron"
+      />
+    </div>
   );
 
   return (

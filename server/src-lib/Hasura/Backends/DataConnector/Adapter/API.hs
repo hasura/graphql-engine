@@ -5,8 +5,8 @@ module Hasura.Backends.DataConnector.Adapter.API () where
 --------------------------------------------------------------------------------
 
 import Hasura.Prelude
-import Hasura.SQL.Backend (BackendType (DataConnector))
-import Hasura.Server.API.Backend (BackendAPI (..), relationshipCommands, sourceCommands, tableCommands, tablePermissionsCommands)
+import Hasura.RQL.Types.BackendType (BackendType (DataConnector))
+import Hasura.Server.API.Backend (BackendAPI (..), functionCommands, functionPermissionsCommands, logicalModelsCommands, relationshipCommands, remoteRelationshipCommands, sourceCommands, tableCommands, tablePermissionsCommands, trackableCommands)
 
 --------------------------------------------------------------------------------
 
@@ -16,5 +16,10 @@ instance BackendAPI 'DataConnector where
       [ sourceCommands @'DataConnector,
         tableCommands @'DataConnector,
         tablePermissionsCommands @'DataConnector,
-        relationshipCommands @'DataConnector
+        trackableCommands @'DataConnector,
+        functionCommands @'DataConnector,
+        functionPermissionsCommands @'DataConnector,
+        relationshipCommands @'DataConnector,
+        remoteRelationshipCommands @'DataConnector,
+        logicalModelsCommands @'DataConnector
       ]

@@ -1,5 +1,5 @@
 ---
-description: Secure the Hasura GraphQL endpoint
+description: Hasura GraphQL engine logs explanation
 keywords:
   - hasura
   - docs
@@ -10,6 +10,9 @@ sidebar_position: 60
 sidebar_label: Server logs
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Hasura GraphQL Engine Logs
 
 ## Accessing logs
@@ -18,14 +21,14 @@ Based on your deployment method, the Hasura GraphQL Engine logs can be accessed 
 
 - [On Docker](/deployment/deployment-guides/docker.mdx#docker-logs)
 - [On Kubernetes](/deployment/deployment-guides/kubernetes.mdx#kubernetes-logs)
-- [On Digital Ocean](/deployment/deployment-guides/digital-ocean-one-click.mdx#do-logs)
+- [On DigitalOcean](/deployment/deployment-guides/digital-ocean-one-click.mdx#do-logs)
 - [On Azure](/deployment/deployment-guides/azure-container-instances-postgres.mdx#azure-logs)
 - [On Google Cloud & Kubernetes](/deployment/deployment-guides/google-kubernetes-engine-cloud-sql.mdx#gc-kubernetes-logs)
 
 :::info Detailed Logging in Hasura Cloud
 
 If you’re looking for more in-depth logging information, along with a Console for browsing logs, please see
-[Observability with Hasura Cloud](/observability/index.mdx).
+[Observability with Hasura Cloud](/observability/overview.mdx).
 
 :::
 
@@ -37,38 +40,69 @@ the `type` field in a log line, which indicates which sub-system the log comes f
 For example, the HTTP webserver logs incoming requests as an access log and is called `http-log`. Similarly logs from
 the websocket layer are called `websocket-log`, logs from the Event Trigger system are called `event-trigger` etc.
 
-You can configure the GraphQL Engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
+You can configure the GraphQL Engine to enable/disable certain log-types using the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
 [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
 
-Default enabled log-types are: `startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
+The default enabled **Community Edition** log-types are:
+`startup, http-log, webhook-log, websocket-log, jwk-refresh-log`
 
-All the log-types that can be enabled/disabled are:
+The default enabled **Enterprise Edition** log-types are: `api-limit-log`
 
-| Log type          | Description                                                                                                                                                                                                                       | Log Level          |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `startup`         | Information that is logged during startup                                                                                                                                                                                         | `info`             |
-| `query-log`       | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), the operation name (if provided in the GraphQL request) | `info`             |
-| `http-log`        | Http access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                        | `info` and `error` |
-| `websocket-log`   | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
-| `webhook-log`     | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
-| `jwk-refresh-log` | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
+### Configurable log-types
 
-Configurable log-types
+The Community Edition log-types that can be enabled/disabled are:
+
+| Log type               | Description                                                                                                                                                                                                                          | Log Level          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ |
+| `startup`              | Information that is logged during startup                                                                                                                                                                                            | `info`             |
+| `query-log`            | Logs the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or Remote Schema and Action queries), and the operation name (if provided in the GraphQL request) | `info`             |
+| `execution-log`        | Logs data-source-specific information generated during the request                                                                                                                                                                   | `info`             |
+| `http-log`             | HTTP access and error logs at the webserver layer (handling GraphQL and Metadata requests)                                                                                                                                           | `info` and `error` |
+| `websocket-log`        | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                            | `info` and `error` |
+| `webhook-log`          | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                                  | `info` and `error` |
+| `livequery-poller-log` | Logs information for active subscriptions (poller-id, generated SQL, polling time, parameterized query hash, subscription kind, etc.)                                                                                                | `info`             |
+| `action-handler-log`   | Logs information and errors about Action webhook handlers                                                                                                                                                                            | `info`             |
+| `data-connector-log`   | Logs debugging information communicated by data connectors                                                                                                                                                                           | `debug`            |
+| `jwk-refresh-log`      | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                         | `info` and `error` |
+
+The Enterprise Edition log-types that can be enabled/disabled are:
+
+| Log type               | Description                                                                                                                   | Log Level                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `http-response-log`    | Logs information about HTTP response                                                                                          | `info`                      |
+| `api-limit-log`        | Logs errors in [API limit](/security/api-limits.mdx)                                                                          | `error`                     |
+| `livequery-poller-log` | Logs information for active subscriptions (poller-id, generated sql, polling time, subscriber count, subscription kind, etc.) | `info`                      |
+| `response-caching-log` | Logs response information and errors from [query caching](/caching/overview.mdx)                                              | `info`, `error` and `debug` |
+| `tracing-log`          | Logs information about [tracing spans](/observability/cloud-monitoring/tracing.mdx)                                           | `info`                      |
+| `metrics`              | Logs tenant metrics information                                                                                               | `info`                      |
+| `health-check-log`     | Logs source Health Check events which includes health status of a data source                                                 | `info` and `warn`           |
+
+:::info Note
+
+Hasura Enterprise Edition supports all Community Edition log-types. However, the Enterprise Edition logs may contain
+more information.
+
+:::
+
+### Internal log-types
 
 Apart from the above, there are other internal log-types which cannot be configured:
 
-| Log type             | Description                                                                                         | Log Level          |
-| -------------------- | --------------------------------------------------------------------------------------------------- | ------------------ |
-| `pg-client`          | Logs from the postgres client library                                                               | `warn`             |
-| `metadata`           | Logs inconsistent Metadata items                                                                    | `warn`             |
-| `telemetry-log`      | Logs error (if any) while sending out telemetry data                                                | `info`             |
-| `event-trigger`      | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
-| `ws-server`          | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |
-| `schema-sync-thread` | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema | `info` and `error` |
-| `health-check-log`   | Logs source Health Check events which includes health status of a data source                       | `info` and `warn`  |
-
-Internal log-types
+| Log type                       | Description                                                                                                    | Log Level                   |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `pg-client`                    | Logs from the postgres client library                                                                          | `warn`                      |
+| `metadata`                     | Logs inconsistent Metadata items                                                                               | `warn`                      |
+| `telemetry-log`                | Logs error (if any) while sending out telemetry data                                                           | `info`                      |
+| `event-trigger`                | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                                      | `info` and `error`          |
+| `ws-server`                    | Debug logs from the websocket server, mostly used internally for debugging                                     | `debug`                     |
+| `schema-sync`                  | Logs internal events, when it detects schema has changed on Postgres and when it reloads the schema            | `info` and `error`          |
+| `event-trigger-process`        | Logs the statistics of events fetched from database for each source                                            | `info` and `warn`           |
+| `scheduled-trigger-process`    | Logs the statistics of scheduled and cron events fetched from metadata storage                                 | `info` and `warn`           |
+| `cron-event-generator-process` | Logs the cron triggers fetched from metadata storage for events generation                                     | `info` and `warn`           |
+| `unstructured`                 | Other important logs from various features in GraphQL Engine like Event Triggers, Subscriptions, Actions, etc. | `info`, `error` and `debug` |
+| `scheduled-trigger`            | Logs HTTP responses from the webhook, HTTP exceptions and internal errors for scheduled and cron events        | `info` and `error`          |
+| `source-catalog-migration`     | Logs the information and errors about the blocking queries in a Postgres source during source migration        | `info` and `error`          |
 
 ## Logging levels
 
@@ -122,6 +156,12 @@ It will also log the generated SQL for GraphQL queries (but not mutations and su
         "prepared_arguments": ["{\"x-hasura-role\":\"admin\"}", "foobar"],
         "query": "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_1_e\"  FROM  (SELECT  \"_0_root.base\".\"username\" AS \"username\"       ) AS \"_1_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"profile\"  WHERE ((\"public\".\"profile\".\"username\") = ($2))     ) AS \"_0_root.base\"      ) AS \"_2_root\"      "
       }
+    },
+    "connection_template": {
+      "result": {
+        "routing_to": "primary",
+        "value": null
+      }
     }
   }
 }
@@ -129,7 +169,7 @@ It will also log the generated SQL for GraphQL queries (but not mutations and su
 
 The `type` of in the log with be `query-log`. All the details are nested under the `detail` key.
 
-This log contains 3 important fields:
+This log contains 4 important fields:
 
 - `kind`: indicates the type or kind of operation. `kind` can be `database`, `action`, `remote-schema`, `cached` or
   `introspection`
@@ -138,8 +178,43 @@ This log contains 3 important fields:
 - `query`: Contains the full GraphQL request including the variables and operation name.
 - `generated_sql`: this contains the generated SQL for GraphQL queries. For mutations and subscriptions this field will
   be `null`.
+- `connection_template`(\*): if there is any connection template associated with the source, this contains the `result`
+  of the connection template resolution.
 
-### **http-log** structure
+(\*) - Supported only in Cloud and Enterprise editions only
+
+### **execution-log** structure
+
+On enabling verbose logging, i.e. enabling `execution-log`, GraphQL Engine may also log statistics about the request
+once it has completed.
+
+```json
+{
+  "detail": {
+    "request_id": "ff8d2809-8afb-4d6e-a6c3-0fb61ac813e7",
+    "statistics": {
+      "job": {
+        "id": "1230123-sd2fsdjs23djj24s57dfj",
+        "location": "europe-west2",
+        "state": "DONE"
+      }
+    }
+  },
+  "level": "info",
+  "timestamp": "2023-03-15T10:29:08.928+0000",
+  "type": "execution-log"
+}
+```
+
+This log contains 2 important fields:
+
+- `request_id`: A unique ID for each request. If the client sends a `x-request-id` header then that is respected,
+  otherwise a UUID is generated for each request. This is useful to correlate between `execution-log` and `query-log`.
+- `statistics`: Statistics about the completed request. These will differ depending on the backend used for the request.
+  For instance, BigQuery returns details about the [job](https://cloud.google.com/bigquery/docs/jobs-overview) it
+  created.
+
+### **http-log** structure {#http-log-structure}
 
 This is how the HTTP access logs look like:
 
@@ -235,7 +310,7 @@ It has two important "keys" under the `detail` section - `operation` and `http_i
   `v1/graphql` endpoint.
 - `query`: _optional_. This will contain the GraphQL query object only when there is an error. On successful response
   this will be `null`.
-- `parametrized_query_hash` (\*): Hash of the incoming GraphQL query after resolving variables with all the leaf nodes
+- `parameterized_query_hash` (\*): Hash of the incoming GraphQL query after resolving variables with all the leaf nodes
   (i.e. scalar values) discarded. This value will only be logged when the request is successful. For example, all the
   queries mentioned in the below snippet will compute the same parametrized query hash.
 
@@ -397,8 +472,8 @@ This is how the Websocket logs look like:
 
 ### **health-check-log** structure
 
-The GraphQL Engine does recurring Health Checks on data sources and logs the status with other
-details. This is how the Health Check log looks like:
+The GraphQL Engine does recurring Health Checks on data sources and logs the status with other details. This is how the
+Health Check log looks like:
 
 - On successful Health Check
 
@@ -487,11 +562,11 @@ The `detail` field value is an object contains the following members.
   | ------------------- | ------------------------------------------------------------------------------------ | --------- |
   | `OK`                | Health Check succeeded with no errors.                                               | `info`    |
   | `FAILED`            | Health Check is failed maybe due to bad connection config.                           | `warn`    |
-  | `TIMEOUT`           | Health Check is timed out. The timeout value is specified in the healch check config | `warn`    |
+  | `TIMEOUT`           | Health Check is timed out. The timeout value is specified in the health check config | `warn`    |
   | `ERROR`             | Health Check results in an exception.                                                | `warn`    |
 
-- **HealthCheckError** contains more information about the Health Check exception when the status is `ERROR`.
-  For other statuses the value will be `null`. The `error` object contains the following fields
+- **HealthCheckError** contains more information about the Health Check exception when the status is `ERROR`. For other
+  statuses the value will be `null`. The `error` object contains the following fields
 
   - `message`: _string_. A very brief description about the error.
   - `extra`: _any json_. Contains extra and detailed information about the error.
@@ -499,7 +574,8 @@ The `detail` field value is an object contains the following members.
 - **Internal** is an object contains the following fields.
   - `interval`: _int_. Health Check interval in seconds.
   - `max_retries`: _int_. Maximum # of retries configured.
-  - `retry_interation`: _int_. The iteration on which the Health Check has succeeded. In case of unsuccessful Health Check, the retry iteration is same as `max_retries`.
+  - `retry_iteration`: _int_. The iteration on which the Health Check has succeeded. In case of unsuccessful Health
+    Check, the retry iteration is same as `max_retries`.
   - `retry_interval`: _int_. The retry interval in seconds.
   - `timeout`: _int_. Health Check time out value in seconds.
 
@@ -512,9 +588,340 @@ The GraphQL Engine logs the Health Check status only when
 
 :::
 
+### **event-trigger-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the count of events fetched from database for each source where event triggers
+are defined. The log also contains the number of fetches occurred within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "num_events_fetched": {
+      "default": 2,
+      "source_1": 1
+    },
+    "num_fetches": 601
+  },
+  "level": "info",
+  "timestamp": "2023-01-24T20:20:45.036+0530",
+  "type": "event-trigger-process"
+}
+```
+
+The `type` in the log will be `event-trigger-process` and details of the event trigger process will be under `detail`
+key.
+
+The `detail` field value is an object contains the following members.
+
+| Name                 | Type                         | Description                                       |
+| -------------------- | ---------------------------- | ------------------------------------------------- |
+| `num_events_fetched` | `FetchedEventsSource` object | The count of total events fetched for each source |
+| `num_fetches`        | int                          | The number of fetches happened within 10 minutes  |
+
+- **FetchedEventsSource** is a map of source name to the count of total events fetched. Contains sources with event
+  triggers defined.
+  ```
+  {
+    "source_1": <events_count_fetched_from_source_1>,
+    "source_2": <events_count_fetched_from_source_2>,
+    .           .
+    .           .
+  }
+  ```
+
+### **scheduled-trigger-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the count of cron and scheduled events fetched from metadata storage. The log
+also contains the number of times new events are fetched within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "num_cron_events_fetched": 0,
+    "num_fetches": 60,
+    "num_one_off_scheduled_events_fetched": 0
+  },
+  "level": "info",
+  "timestamp": "2023-01-24T20:10:44.330+0530",
+  "type": "scheduled-trigger-process"
+}
+```
+
+The `type` in the log will be `scheduled-trigger-process` and details of the scheduled trigger process will be under
+`detail` key.
+
+The `detail` field value is an object contains the following members.
+
+| Name                                   | Type | Description                                         |
+| -------------------------------------- | ---- | --------------------------------------------------- |
+| `num_cron_events_fetched`              | int  | The count of total cron events fetched              |
+| `num_one_off_scheduled_events_fetched` | int  | The count of total one-off scheduled events fetched |
+| `num_fetches`                          | int  | The number of fetches happened within 10 minutes    |
+
+### **cron-event-generator-process** log structure
+
+Every 10 minutes, the Hasura Engine logs the cron triggers fetched from metadata storage for events generation. The log
+also contains the number of times new triggers are fetched within the 10 minute timeframe.
+
+```json
+{
+  "detail": {
+    "cron_triggers": [
+      {
+        "max_scheduled_time": "2023-01-31T13:18:00Z",
+        "name": "every_two_minutes",
+        "upcoming_events_count": 99
+      }
+    ],
+    "num_fetches": 10
+  },
+  "level": "info",
+  "timestamp": "2023-01-31T15:31:55.773+0530",
+  "type": "cron-event-generator-process"
+}
+```
+
+The `type` in the log will be `cron-event-generator-process` and details of the cron event generator process will be
+under the `detail` key.
+
+The `detail` field value is an object containing the following members.
+
+| Name            | Type                               | Description                                      |
+| --------------- | ---------------------------------- | ------------------------------------------------ |
+| `cron_triggers` | List of `CronTriggerStats` objects | The list of cron triggers fetched                |
+| `num_fetches`   | int                                | The number of fetches happened within 10 minutes |
+
+The `CronTriggerStats` object contains the following members.
+
+| Name                    | Type   | Description                                    |
+| ----------------------- | ------ | ---------------------------------------------- |
+| `name`                  | string | The name of the cron trigger                   |
+| `upcoming_events_count` | int    | The number of undelivered upcoming cron events |
+| `max_scheduled_time`    | string | The timestamp of the cron event occurring last |
+
+:::info Note
+
+A new set of cron events will be generated only for triggers with fewer than 100 upcoming events. Thus, the
+`upcoming_events_count` will be always `< 100`.
+
+:::
+
+### **livequery-poller-log** structure {#livequery-poller-log}
+
+The Hasura GraphQL Engine emits `livequery-poller-log` when a live query or streaming subscription is running. A
+subscription is run via a poller internally, which executes a multiplexed query on the database. Various internal
+metrics are emitted to this log.
+
+Below, you can find examples of the `livequery-poller-log` as seen from the Community and Self-hosted Enterprise
+Editions:
+
+<Tabs>
+<TabItem value='ce-log' label='Community Edition'>
+
+```json
+{
+  "detail": {
+    "execution_batches": [
+      {
+        "batch_id": 1,
+        "batch_response_size_bytes": 106,
+        "db_execution_time": 0.001570364,
+        "pg_execution_time": 0.001570364,
+        "push_time": 0.000163488
+      }
+    ],
+    "generated_sql": "SELECT  \"__subs\".\"result_id\" , \"__fld_resp\".\"root\" AS \"result\" FROM UNNEST(($1)::uuid[], ($2)::json[]) AS \"__subs\"(\"result_id\", \"result_vars\") LEFT OUTER JOIN LATERAL (SELECT  json_build_object('test', \"_test\".\"root\" ) AS \"root\" FROM  (SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_e\"  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\", \"_root.base\".\"name\" AS \"name\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"test\"  WHERE ('true')     ) AS \"_root.base\"      ) AS \"_root\"      ) AS \"_test\"      ) AS \"__fld_resp\" ON ('true')      ",
+    "kind": "live-query",
+    "poller_id": "605369b0-69c4-44fb-b3a1-9897bae5007c",
+    "role": "admin",
+    "snapshot_time": 0.000032141,
+    "source": "default",
+    "subscriber_count": 1,
+    "subscription_options": {
+      "batch_size": 100,
+      "refetch_delay": 1
+    },
+    "total_time": 0.001851686
+  },
+  "level": "info",
+  "timestamp": "2023-02-06T14:36:46.194+0530",
+  "type": "livequery-poller-log"
+}
+```
+
+</TabItem>
+<TabItem value='ee-log' label='Self-hosted Enterprise'>
+
+```json
+{
+  "detail": {
+    "cohort_size": 1,
+    "cohorts": [
+      {
+        "batch_id": 1,
+        "cohort_id": "1f5e2cc6-56b9-4215-ab55-fadc725d3737",
+        "cohort_variables": {
+          "cursor": {},
+          "query": {},
+          "session": {},
+          "synthetic": []
+        },
+        "response_size_bytes": 106,
+        "subscribers": [
+          {
+            "operation_id": "2",
+            "operation_name": "testSubs",
+            "request_id": "b928d8f8-96bf-4274-a0a9- da8dce63183f",
+            "subscriber_id": "350402f5-f2d5-4620-9f22-f320ab0da048",
+            "websocket_id": "75dccf63-37d6-4f30-b840-2c56f0fab18e"
+          }
+        ]
+      }
+    ],
+    "execution_batch_size": 1,
+    "execution_batches": [
+      {
+        "batch_id": 1,
+        "batch_response_size_bytes": 106,
+        "batch_size": 1,
+        "db_execution_time": 0.002743811,
+        "pg_execution_time": 0.002743811,
+        "push_cohorts_time": 0.000212959
+      }
+    ],
+    "generated_sql": "SELECT  \"__subs\".\"result_id\" , \"__fld_resp\".\"root\" AS \"result\" FROM UNNEST(($1)::uuid[], ($2):: json[]) AS \"__subs\"(\"result_id\", \"result_vars\") LEFT OUTER JOIN LATERAL (SELECT  json_build_object('test', \"_test\".\"root\" ) AS \"root\" FROM   (SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_e\"  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\",  \"_root.base\".\"name\" AS \"name\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"test\"  WHERE ('true')     ) AS \"_root. base\"      ) AS \"_root\"      ) AS \"_test\"      ) AS \"__fld_resp\" ON ('true')       /* field_name=test, parameterized_query_hash=678ff296b384af45bfa1d52af398de475f509250 */",
+    "kind": "live-query",
+    "parameterized_query_hash": "678ff296b384af45bfa1d52af398de475f509250",
+    "poller_id": "70344ef5-8a52-4a78-b2ad-ef7ff1bd46f8",
+    "role": "admin",
+    "snapshot_time": 0.000108982,
+    "source": "one",
+    "subscriber_count": 1,
+    "subscription_options": {
+      "batch_size": 100,
+      "refetch_delay": 1
+    },
+    "total_time": 0.003222237
+  },
+  "level": "info",
+  "timestamp": "2023-02-06T14:43:34.536+0530",
+  "type": "livequery-poller-log"
+}
+```
+
+</TabItem>
+</Tabs>
+
+The `type` is `livequery-poller-log` and internal details/metrics are nested in the `detail` key.
+
+The `detail` field's value is an object containing the following properties:
+
+| Name                         | Type                                                                           | Description                                                                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`                       | string                                                                         | "live-query" or "streaming"                                                                                                                                   |
+| `poller_id`                  | string                                                                         | UUID that uniquely identifies the poller                                                                                                                      |
+| `subscriber_count`           | number                                                                         | Total number of subscribers in the poller                                                                                                                     |
+| `cohorts`\*                  | [[Cohort]](/deployment/logging.mdx#subscription-log-cohort)                    | List of cohorts                                                                                                                                               |
+| `cohort_size`\*              | number                                                                         | Number of cohorts (length of the above list)                                                                                                                  |
+| `execution_batches`          | [[ExecutionBatch]](/deployment/logging.mdx#subscription-log-execution-batch)   | List of execution batches                                                                                                                                     |
+| `execution_batch_size`\*     | number                                                                         | Number of execution batches (length of the above list)                                                                                                        |
+| `total_time`                 | number                                                                         | Total time (in seconds) spent on running the poller once (which may concurrently process more than one batch) and then pushing the results to each subscriber |
+| `snapshot_time`              | number                                                                         | The time taken (in seconds) to group identical subscribers in cohorts and then split cohorts into different batches                                           |
+| `generated_sql`              | string                                                                         | The multiplexed SQL query to be run against database                                                                                                          |
+| `parameterized_query_hash`\* | string                                                                         | The [parameterized query hash](/deployment/logging.mdx#http-log-structure) of the query                                                                       |
+| `subscription_options`       | [SubscriptionOptions](/deployment/logging.mdx#subscription-log-config-options) | Subscription options configured (like refetch delay, batch size etc.)                                                                                         |
+| `source`                     | string                                                                         | Name of the source on which the query is being run                                                                                                            |
+| `role`                       | string                                                                         | Role associated with the client that is making the subscription                                                                                               |
+
+:::info FIELD AVAILABILITY
+
+Fields marked with an asterisk(\*) are only available on Self-hosted Enterprise
+
+:::
+
+#### Cohort {#subscription-log-cohort}
+
+A cohort is a batched group of subscribers running the same query with identical session and query variables. Each
+result pushed to a cohort is forwarded along to each of its subscribers.
+
+The cohort field is an object with the following properties:
+
+| Name                  | Type                                                                    | Description                                                                         |
+| --------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `batch_id`            | number                                                                  | A monotonically increasing (from 1) batch number assigned to each batch in a cohort |
+| `cohort_id`           | string                                                                  | UUID that uniquely identifies a cohort                                              |
+| `cohort_variables`    | [CohortVariables](/deployment/logging.mdx#subscription-log-cohort-vars) | All the variables of the cohort. This includes query, session and cursor variables  |
+| `response_size_bytes` | number                                                                  | Response size in bytes                                                              |
+| `subscribers`         | [[Subscriber]](/deployment/logging.mdx#subscription-log-subscriber)     | List of subscribers                                                                 |
+
+#### Subscriber {#subscription-log-execution-batch}
+
+A subscriber is a client running a subscription operation.
+
+The subscriber field is an object with the following properties:
+
+| Name             | Type   | Description                                                                |
+| ---------------- | ------ | -------------------------------------------------------------------------- |
+| `operation_id`   | string | Operation ID provided by the client (as per the Apollo websocket protocol) |
+| `operation_name` | string | Name of the GraphQL operation                                              |
+| `request_id`     | string | UUID generated by HGE for each operation request                           |
+| `subscriber_id`  | string | UUID generated by HGE for the subscriber                                   |
+| `websocket_id`   | string | UUID generated by HGE for websocket connection of the client               |
+
+:::info SUBSCRIBER NOTES
+
+- A `request_id` is generated on every operation sent by the client. This can include queries and mutations.
+- A `subscriber_id` is generated on every subscription operation sent by the client. Co-incidentally, a `request_id` is
+  also generated.
+- A `websocket_id` is generated per client, when a client connects over websocket (irrespective of if they ever ran a
+  subscription operation)
+
+:::
+
+#### Execution Batch {#subscription-log-execution-batch}
+
+A cohort is further divided into batches (according to the
+[`HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE` config](/deployment/graphql-engine-flags/reference.mdx#multiplexed-batch-size))
+for concurrent execution.
+
+The execution batch field is an object with the following properties:
+
+| Name                        | Type   | Description                                                                          |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| `batch_id`                  | number | A monotonically increasing (from 1) batch number                                     |
+| `batch_response_size_bytes` | number | Response size of the batch in bytes (which will be `null` in case of errors)         |
+| `batch_size`                | string | Number of cohorts in this batch                                                      |
+| `pg_execution_time`         | number | Database execution time (in seconds) of the batch (present only in vanilla Postgres) |
+| `db_execution_time`         | number | Database execution time (in seconds) of the batch                                    |
+| `push_cohorts_time`         | number | Time taken (in seconds) to push response to all cohorts in this batch                |
+
+#### Cohort Variables {#subscription-log-cohort-vars}
+
+This includes various variables of the cohort. This includes query, session, cursor variables and synthetic variables.
+
+This field is an object with the following properties:
+
+| Name        | Type   | Description                                                                                                                                                                                                                                                          |
+| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `query`     | object | The variables provided along with the GraphQL query by the subscriber                                                                                                                                                                                                |
+| `session`   | object | The session variables (`x-hasura-*`) resolved by Hasura during authentication                                                                                                                                                                                        |
+| `cursor`    | object | The cursor variables in case of a streaming subscription. Empty in live query subscription                                                                                                                                                                           |
+| `synthetic` | object | All SQL literals are converted to what are called synthetic variables. [See this for more details](https://github.com/hasura/graphql-engine-mono/blob/d96d7fa5aaf0c1e71d1c4c0fa8f0162abce39e18/server/src-lib/Hasura/GraphQL/Execute/Subscription/Plan.hs#L186-L205) |
+
+#### Subscription Options {#subscription-log-config-options}
+
+These are all configured options for a live query.
+
+The `subscription_options` field is an object with the following properties:
+
+| Name            | Type   | Description                                                                                    |
+| --------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `batch_size`    | number | The batch size configured via `HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE`             |
+| `refetch_delay` | number | The refetch interval configured via `HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL` |
+
 ## Monitoring frameworks
 
-You can integrate the logs emitted by Hasura GraphQL with external monitoring tools for better visibility as per your
+You can integrate the logs emitted by the Hasura Engine with external monitoring tools for better visibility as per your
 convenience.
 
-For some examples, see [Guides: Integrating with monitoring frameworks](/observability/integrations/index.mdx)
+For some examples, see [Guides: Integrating with monitoring frameworks](/observability/cloud/index.mdx)

@@ -55,8 +55,9 @@ const CustomInputAutoSuggest: React.FC<CustomInputAutoSuggestProps> = ({
     setSuggestions(getSuggestions(value));
   };
 
-  const getSuggestionValue: GetSuggestionValue<AutoSuggestOption> =
-    suggestion => suggestion.value;
+  const getSuggestionValue: GetSuggestionValue<
+    AutoSuggestOption
+  > = suggestion => suggestion.value;
 
   const onSuggestionsClearRequested = () => {
     setSuggestions([]);

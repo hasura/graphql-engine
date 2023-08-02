@@ -1,7 +1,7 @@
 ---
 sidebar_label: Quickstart with Google Cloud Run
 description: Quickstart with Google Cloud Run for Hasura Enterprise Edition
-title: 'EE: Quickstart with Google Cloud Run'
+title: 'Enterprise Edition: Quickstart with Google Cloud Run'
 keywords:
   - hasura
   - docs
@@ -10,10 +10,11 @@ sidebar_position: 4
 ---
 
 import LatestRelease from '@site/src/components/LatestRelease';
+import ProductBadge from '@site/src/components/ProductBadge';
 
 # Quickstart with Google Cloud Run
 
-<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
+<ProductBadge self />
 
 ## Introduction
 
@@ -21,14 +22,12 @@ This tutorial will help you run Hasura Enterprise Edition as a Google Cloud Run 
 
 **This guide requires HGE versions `v2.12.0` and above.** Installation instructions are below.
 
-## Deploying Hasura EE on Cloud Run
+## Deploying Hasura Enterprise Edition on Cloud Run
 
 ### Prerequisites
 
 This tutorial assumes that the following prerequisites have been met:
 
-- To deploy Hasura EE, you will need a license key. [Please contact Hasura Sales](mailto:sales@hasura.io) if you do not already
-  have one.
 - The latest version of the `gcloud` CLI is installed and configured. For more information about installing or upgrading
   your gcloud CLI, see [Installing the gcloud CLI](https://cloud.google.com/sdk/docs/install).
 - Your `gcloud` user has the
@@ -49,12 +48,11 @@ installation manifests required to deploy Hasura anywhere. Get the Cloud Run env
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/google-cloud-run/env.yaml
 ```
 
-### Step 2: Set the license key, Metadata database URL, Redis database URL and the admin secret
+### Step 2: Set the Metadata database URL, Redis database URL and the admin secret
 
 Edit `env.yaml` and set the right values:
 
 ```yaml
-HASURA_GRAPHQL_EE_LICENSE_KEY: '<license key>'
 HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
 HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
 HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
@@ -80,7 +78,7 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
   [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
 
 - The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
-  the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
+  the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/overview.mdx) for
   information on setting up authentication.
 
 - Convert confidential environment variables such as Postgres / Redis URLs, admin / metrics secrets to fetch them from
@@ -88,7 +86,21 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
-### Step 3: Copy the Hasura graphql-engine image to the GCR registry
+### Step 3: Set up a license key
+
+If you don't have a license key, you can skip this step and proceed with this guide to set up Hasura. Once you have Hasura up and running, you can sign up for a [free 30 day Enterprise Edition trial](/enterprise/try-hasura-enterprise-edition.mdx) from the Hasura console.
+
+If you have been provided a license key by the Hasura team, add it as an environment variable to Hasura. Edit `env.yaml` to set the license key as the value for the `HASURA_GRAPHQL_EE_LICENSE_KEY` environment variable.
+
+```yaml {5}
+HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+HASURA_GRAPHQL_REDIS_URL: 'redis://redis:6379'
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: 'redis://redis:6379'
+HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+HASURA_GRAPHQL_EE_LICENSE_KEY: '<license key>'
+```
+
+### Step 4: Copy the Hasura graphql-engine image to the GCR registry
 
 Cloud Run does not allow using images from Dockerhub. Due to this limitation it's necessary to pull the Hasura
 graphql-engine image from Dockerhub and push it to your container registry,

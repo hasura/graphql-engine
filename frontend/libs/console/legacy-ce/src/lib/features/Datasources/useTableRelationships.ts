@@ -1,4 +1,4 @@
-import { useMetadataSource } from '@/features/MetadataAPI';
+import { useMetadataSource } from '../MetadataAPI';
 import { DataTarget, drivers } from './drivers';
 
 export function useTableRelationships({ target }: { target: DataTarget }) {

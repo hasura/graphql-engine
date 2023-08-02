@@ -32,10 +32,10 @@ import {
   vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
-import { LegacyRunQueryContainer } from '@/features/BrowseRows';
-import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
+import { LegacyRunQueryContainer } from '../../../../features/BrowseRows';
+import { PaginationWithOnlyNavContainer } from '../../../../new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
 
 import {
   setOrderCol,
@@ -72,7 +72,7 @@ import {
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
 import { push } from 'react-router-redux';
-import globals from '@/Globals';
+import globals from '../../../../Globals';
 
 const ViewRows = props => {
   const {
@@ -164,7 +164,7 @@ const ViewRows = props => {
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 182,
+      width: 'auto',
     });
 
     _gridHeadings.push({
@@ -1037,6 +1037,8 @@ const ViewRows = props => {
         }
         defaultReorders={columnsOrder}
         showPagination={!shouldHidePagination || useCustomPagination}
+        showPaginationTop
+        showPaginationBottom={false}
         {...paginationProps}
       />
     );
@@ -1070,7 +1072,7 @@ const ViewRows = props => {
           />
         </div>
       )}
-      <div className="w-fit ml-0 mt-md">
+      <div className="w-fit ml-0 pt-sm">
         {getSelectedRowsSection()}
         <div>
           <div>{renderTableBody()}</div>

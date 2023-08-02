@@ -1,4 +1,7 @@
-import type { ArrayRelationship, ObjectRelationship } from '@/metadata/types';
+import type {
+  ArrayRelationship,
+  ObjectRelationship,
+} from '../../../../../metadata/types';
 
 export const dbToLocalDbRelationship = {
   objectRelationships: [

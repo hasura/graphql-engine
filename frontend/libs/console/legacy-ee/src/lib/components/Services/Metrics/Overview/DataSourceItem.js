@@ -33,8 +33,9 @@ const DatasourceItem = ({
   ) : (
     <li>
       <div
-        className={`${styles.dagCard} ${styles.dagCardClickable} ${active &&
-          styles.active}`}
+        className={`${styles.dagCard} ${styles.dagCardClickable} ${
+          active && styles.active
+        }`}
         onClick={() => setSelectedSource(source)}
         onKeyPress={keyHandler}
         role="button"

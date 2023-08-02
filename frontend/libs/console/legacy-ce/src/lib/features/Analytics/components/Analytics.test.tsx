@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../new-components/Button';
 import { REDACT_EVERYTHING } from '../core/heap/getRedactAttributes';
 import { Analytics } from './Analytics';
 

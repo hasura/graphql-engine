@@ -1,9 +1,9 @@
 import React from 'react';
 import * as z from 'zod';
-import { Meta, Story } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { StoryObj, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
 import { action } from '@storybook/addon-actions';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../../new-components/Form';
 import {
   customer_columns,
   handlers,
@@ -46,25 +46,25 @@ export default {
   },
 } as Meta;
 
-export const Primary: Story<RemoteSchemaWidgetProps> = args => (
-  <RemoteSchemaWidget {...args} />
-);
-Primary.args = {
-  schemaName: 'remoteSchema1',
-  fields: customer_columns,
-  rootFields: ['query', 'mutation'],
+export const Primary: StoryObj<RemoteSchemaWidgetProps> = {
+  args: {
+    schemaName: 'remoteSchema1',
+    fields: customer_columns,
+    rootFields: ['query', 'mutation'],
+  },
+
+  parameters: {
+    // Disable chromatic snapshot for playground stories
+    chromatic: { disableSnapshot: true },
+  },
 };
 
-Primary.parameters = {
-  // Disable chromatic snapshot for playground stories
-  chromatic: { disableSnapshot: true },
-};
-
-export const RemoteSchemaWidgetWithExistingRelationship: Story<RemoteSchemaWidgetProps> =
-  args => <RemoteSchemaWidget {...args} />;
-RemoteSchemaWidgetWithExistingRelationship.args = {
-  schemaName: 'remoteSchema1',
-  fields: customer_columns,
-  rootFields: ['query', 'mutation'],
-  serverRelationship: remote_rel_definition as any,
-};
+export const RemoteSchemaWidgetWithExistingRelationship: StoryObj<RemoteSchemaWidgetProps> =
+  {
+    args: {
+      schemaName: 'remoteSchema1',
+      fields: customer_columns,
+      rootFields: ['query', 'mutation'],
+      serverRelationship: remote_rel_definition as any,
+    },
+  };

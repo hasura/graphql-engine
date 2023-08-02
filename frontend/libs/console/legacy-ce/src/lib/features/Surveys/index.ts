@@ -1,6 +1,9 @@
-export {
-  HasuraFamiliaritySurvey,
-  useFamiliaritySurveyData,
-} from './HasuraFamiliaritySurvey';
+export { Survey } from './components';
+export { useSurveysData } from './hooks';
 export { prefetchSurveysData } from './utils';
-export { SurveysResponseData } from './types';
+export type { SurveysResponseData } from './types';
+export {
+  AllowedSurveyNames,
+  AllowedSurveyThemes,
+  SurveyQueryKey,
+} from './types';

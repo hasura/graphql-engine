@@ -10,6 +10,11 @@
 />
 
 <style>
+  /* Fix body min-width */
+  body {
+    min-width: 0 !important;
+  }
+
   /* Add collapsible sections */
   details .mdx-collapsible-section {
     display: flex;
@@ -38,3 +43,7 @@
     padding-left: 0.5rem;
   }
 </style>
+
+<script language="JavaScript">
+  window.preventJsonWebTokenLoad = true;
+</script>

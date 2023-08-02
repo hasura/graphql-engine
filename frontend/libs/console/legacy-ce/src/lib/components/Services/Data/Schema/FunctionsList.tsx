@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { Dispatch, ReduxState } from '../../../../types';
 import { addExistingFunction } from '../Add/AddExistingTableViewActions';

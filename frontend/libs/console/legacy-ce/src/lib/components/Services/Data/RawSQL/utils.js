@@ -1,4 +1,4 @@
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { isPostgres } from '../../../../metadata/dataSource.utils';
 import { currentDriver } from '../../../../dataSources';
 import { services } from '../../../../dataSources/services';
 
@@ -39,8 +39,9 @@ const getDefaultSchema = driver => {
  */
 export const parseCreateSQL = (sql, driver = currentDriver) => {
   const _objects = [];
+  const sanitizedSql = removeCommentsSQL(sql);
   const regExp = services[driver].createSQLRegex;
-  for (const result of sql.matchAll(regExp)) {
+  for (const result of sanitizedSql.matchAll(regExp)) {
     const { type, schema, name, nameWithSchema, partition } =
       result.groups ?? {};
     if (!type || !(name || nameWithSchema)) continue;

@@ -133,9 +133,9 @@ describe('getReadReplicaDBUrlInfo gives the correct result', () => {
       'postgres'
     );
     expect(res).toMatchInlineSnapshot(`
-      Object {
+      {
         "connectionType": "DATABASE_URL",
-        "databaseURLState": Object {
+        "databaseURLState": {
           "datasets": "",
           "dbURL": "postgres://postgres:test@172.17.0.1:6001/chinook",
           "global_select_limit": 1000,
@@ -158,9 +158,9 @@ describe('getReadReplicaDBUrlInfo gives the correct result', () => {
       'mssql'
     );
     expect(res).toMatchInlineSnapshot(`
-      Object {
+      {
         "connectionType": "DATABASE_URL",
-        "databaseURLState": Object {
+        "databaseURLState": {
           "datasets": "",
           "dbURL": "postgres://postgres:test@172.17.0.1:6001/chinook",
           "global_select_limit": 1000,
@@ -185,9 +185,9 @@ describe('getReadReplicaDBUrlInfo gives the correct result', () => {
       'postgres'
     );
     expect(res).toMatchInlineSnapshot(`
-      Object {
+      {
         "connectionType": "ENVIRONMENT_VARIABLES",
-        "envVarState": Object {
+        "envVarState": {
           "envVar": "HASURA_GRAPHQL_DATABASE_URL",
         },
       }
@@ -208,9 +208,9 @@ describe('getReadReplicaDBUrlInfo gives the correct result', () => {
       'mssql'
     );
     expect(res).toMatchInlineSnapshot(`
-      Object {
+      {
         "connectionType": "ENVIRONMENT_VARIABLES",
-        "envVarState": Object {
+        "envVarState": {
           "envVar": "HASURA_GRAPHQL_DATABASE_URL",
         },
       }

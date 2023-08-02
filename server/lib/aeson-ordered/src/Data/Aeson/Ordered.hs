@@ -44,10 +44,10 @@ import Data.Attoparsec.ByteString.Char8 qualified as A8
 import Data.Bifunctor (bimap, second)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
-import Data.Data (Data, Typeable)
+import Data.Data (Data)
 import Data.Functor (($>))
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable (..))
 import Data.List (foldl')
 import Data.Scientific (Scientific)
@@ -83,7 +83,7 @@ import GHC.Generics (Generic)
 -- | A JSON \"object\" (key\/value map). This is where this type
 -- differs to the aeson package.
 newtype Object = Object_ {unObject_ :: InsOrdHashMap Text Value}
-  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+  deriving stock (Data, Eq, Generic, Read, Show)
   deriving newtype (Hashable)
 
 -- | Union the keys, ordered, in two maps, erroring on duplicates.
@@ -93,7 +93,7 @@ safeUnion (Object_ x) (Object_ y) =
     Object_
     ( traverse
         id
-        ( OMap.unionWithKey
+        ( InsOrdHashMap.unionWithKey
             (\k _a _b -> Left ("Duplicate key: " ++ T.unpack k))
             (fmap Right x)
             (fmap Right y)
@@ -113,32 +113,32 @@ fromOrderedHashMap = Object . Object_
 insert :: (Int, Text) -> Value -> Object -> Object
 insert (idx, key) val =
   Object_
-    . OMap.fromList
+    . InsOrdHashMap.fromList
     . uncurry (<>)
     . second ((key, val) :)
     . splitAt idx
-    . OMap.toList
-    . OMap.delete key
+    . InsOrdHashMap.toList
+    . InsOrdHashMap.delete key
     . unObject_
 
 -- | Lookup a key.
 lookup :: Text -> Object -> Maybe Value
-lookup key (Object_ omap) = OMap.lookup key omap
+lookup key (Object_ omap) = InsOrdHashMap.lookup key omap
 
 -- | Delete a key.
 delete :: Text -> Object -> Object
-delete key (Object_ omap) = Object_ (OMap.delete key omap)
+delete key (Object_ omap) = Object_ (InsOrdHashMap.delete key omap)
 
 adjust :: (Value -> Value) -> Text -> Object -> Object
-adjust f key (Object_ omap) = Object_ (OMap.adjust f key omap)
+adjust f key (Object_ omap) = Object_ (InsOrdHashMap.adjust f key omap)
 
 -- | ToList a key.
 toList :: Object -> [(Text, Value)]
-toList (Object_ omap) = OMap.toList omap
+toList (Object_ omap) = InsOrdHashMap.toList omap
 
 -- | FromList a key.
 fromList :: [(Text, Value)] -> Object
-fromList = Object_ . OMap.fromList
+fromList = Object_ . InsOrdHashMap.fromList
 
 -- | A JSON \"array\" (sequence).
 type Array = Vector Value
@@ -152,7 +152,7 @@ data Value
   | Number !Scientific
   | Bool !Bool
   | Null
-  deriving stock (Data, Eq, Generic, Read, Show, Typeable)
+  deriving stock (Data, Eq, Generic, Read, Show)
 
 instance Hashable Value where
   -- Lifted from Aeson's implementation for 'Value'.
@@ -211,7 +211,7 @@ fromOrderedObject obj =
     map (bimap K.fromText fromOrdered) $
       Data.Aeson.Ordered.toList obj
 
-asObject :: IsString s => Value -> Either s Object
+asObject :: (IsString s) => Value -> Either s Object
 asObject = \case
   Object o -> Right o
   _ -> Left "expecting ordered object"
@@ -251,8 +251,8 @@ objectValues = do
   skipSpace
   w <- A.peekWord8'
   if w == CLOSE_CURLY
-    then A.anyWord8 >> return OMap.empty
-    else loop OMap.empty
+    then A.anyWord8 >> return InsOrdHashMap.empty
+    else loop InsOrdHashMap.empty
   where
     -- Why use acc pattern here, you may ask? because 'H.fromList' use 'unsafeInsert'
     -- and it's much faster because it's doing in place update to the 'HashMap'!
@@ -260,7 +260,7 @@ objectValues = do
       k <- (jstring A.<?> "object key") <* skipSpace <* (A8.char ':' A.<?> "':'")
       v <- (value A.<?> "object value") <* skipSpace
       ch <- A.satisfy (\w -> w == COMMA || w == CLOSE_CURLY) A.<?> "',' or '}'"
-      let acc' = OMap.insert k v acc
+      let acc' = InsOrdHashMap.insert k v acc
       if ch == COMMA
         then skipSpace >> loop acc'
         else pure acc'

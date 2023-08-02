@@ -1,0 +1,15 @@
+table:
+  name: Invoice
+  schema: public
+object_relationships:
+  - name: Customer
+    using:
+      foreign_key_constraint_on: CustomerId
+array_relationships:
+  - name: InvoiceLines
+    using:
+      foreign_key_constraint_on:
+        column: InvoiceId
+        table:
+          name: InvoiceLine
+          schema: public

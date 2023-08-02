@@ -136,11 +136,12 @@ You can use context variables in the transforms to achieve dynamic behavior for 
 
 The context variables available in transforms are:
 
-| Context variable   | Value                                   |
-| ------------------ | --------------------------------------- |
-| $body              | Original body of action request         |
-| $base_url          | Original configured webhook handler URL |
-| $session_variables | Session variables                       |
+| Context variable   | Value                                      |
+| ------------------ | ------------------------------------------ |
+| $body              | Original body of action request            |
+| $base_url          | Original configured webhook handler URL    |
+| $session_variables | Session variables                          |
+| $response.status   | HTTP response staus code from the webhook  |
 
 In addition to these variables, the following functions are available in addition to the standard
 [Basic Functions](/api-reference/kriti-templating.mdx#kriti-function-reference):
@@ -283,16 +284,20 @@ The Request URL template allows you to configure the exact API endpoint to call.
 
 You can use the [context variables](#action-transform-context-variables) to construct the final URL.
 
-You can also provide query params to add to the URL.
+- [Request URL with Query Parmeters (as key-value pairs)](#request-url-with-query-parmeters-as-key-value-pairs)
+- [Request URL with Query Parmeters (as raw string)](#request-url-with-query-parmeters-as-raw-string)
 
-You can use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
+##### Request URL with Query Parmeters (as key-value pairs)
+
+You can provide `Key-Value` type query params to add to the URL.
+
+You can also use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
 In the `Configure REST Connectors` section, click on `Add Request Options Transform`:
-
-<Thumbnail src="/img/actions/transform-url.png" alt="Change request URL" width="800px" />
+<Thumbnail src="/img/actions/transform-key-value-url.png" alt="Change request URL" width="800px" />
 
 The value of the final url should be reflected in the `Preview` section given all required
 [sample context](#action-transforms-sample-context) is set.
@@ -377,6 +382,101 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
+
+##### Request URL with Query Parmeters (as raw string)
+
+You can provide `string` type query params to add to the URL.
+
+You can also use the [Kriti templating language](/api-reference/kriti-templating.mdx) to construct any string values here.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+In the `Configure REST Connectors` section, click on `Add Request Options Transform`:
+<Thumbnail src="/img/actions/transform-url-string-url.png" alt="Change request URL" width="800px" />
+
+The value of the final url should be reflected in the `Preview` section given all required
+[sample context](#action-transforms-sample-context) is set.
+
+Hit `Save Action` to apply your changes.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Update the `actions.yaml` file inside the `metadata` directory and add a [request_transform][requesttransformation]
+field to the action:
+
+```yaml {10-11}
+- name: create_user
+  definition:
+    kind: synchronous
+    handler: https://action.my_app.com/create-user
+  timeout: 60
+  request_transform:
+    template_engine: Kriti
+    method: POST
+    content_type: application/json
+    url: '{{$base_url}}/create_user'
+    query_params: "{{concat(["userId=", $session_variables["x-hasura-user-id"]])}}"
+    body: '{"username": {{$body.input.username}}}'
+comment: Custom action to create user
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+REST Connectors can be configured for Actions using the [create_action][metadata-create-action] or
+[update_action][metadata-update-action] Metadata APIs by adding a [request_transform][requesttransformation] field to
+the args:
+
+```HTTP {27-28}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type":"create_action",
+  "args":{
+    "name":"create_user",
+    "definition":{
+      "kind":"synchronous",
+      "arguments":[
+        {
+          "name":"username",
+          "type":"String!"
+        },
+        {
+          "name":"email",
+          "type":"String!"
+        }
+      ],
+      "output_type":"User",
+      "handler":"{{ACTION_BASE_URL}}",
+      "timeout":60,
+      "request_transform": {
+        "template_engine": "Kriti",
+        "method": "POST",
+        "url": "{{$base_url}}/create_user",
+        "query_params": "{{concat(["userId=", $session_variables["x-hasura-user-id"]])}}"
+        "content_type": "application/json",
+        "body": "{\"username\": {{$body.input.username}}}"
+      }
+    },
+    "comment": "Custom action to create user"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
 
 :::info escapeUri
 
@@ -816,6 +916,29 @@ X-Hasura-Role: admin
 
 </TabItem>
 </Tabs>
+
+:::info Note
+You can also apply multiple transforms based on the HTTP response received from the Action webhook in the response transform template. For example:
+
+```
+{{ if $response.status == 200 }}
+  {
+    "users": {
+      "name": {{$body}},
+      "password": {{$body}}
+    }
+  }
+{{ elif $response.status == 400 }}
+  { 
+    "message": {{$body.error}}
+  }
+{{ else }}
+  { 
+    "message" : "internal error"
+  }
+{{ end }}
+```
+:::
 
 ## Example
 

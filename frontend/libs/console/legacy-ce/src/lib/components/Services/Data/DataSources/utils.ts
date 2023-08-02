@@ -1,5 +1,5 @@
-import { Driver, getSupportedDrivers } from '@/dataSources';
-import { isPostgres } from '@/metadata/dataSource.utils';
+import { Driver, getSupportedDrivers } from '../../../../dataSources';
+import { isPostgres } from '../../../../metadata/dataSource.utils';
 import { addSource } from './../../../../metadata/sourcesUtils';
 import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';

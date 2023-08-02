@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Dispatch } from '@/types';
+import React, { useEffect } from 'react';
+import { Dispatch } from '../../../../../../types';
 import { useNeonOAuth } from './useNeonOAuth';
 import { useNeonDatabase } from './useNeonDatabase';
 import { useCreateHasuraCloudDatasource } from './useCreateHasuraCloudDatasource';
@@ -38,7 +38,7 @@ type Error<Status, Payload> = {
   status: Status;
   payload: Payload;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   action: VoidFunction;
 };
 
@@ -262,8 +262,9 @@ export function useNeonIntegration(
                   envVar: hasuraCloudDataSourceConnectionStatus.payload.envVar,
                 },
                 action: createNeonDatabase,
-                title: 'Error creating Hasura datasource',
-                description: 'Unexpected error creating Hasura datasource',
+                title: 'Error connecting database to Hasura',
+                description:
+                  'Unexpected error connecting the database to Hasura',
               };
           }
         }

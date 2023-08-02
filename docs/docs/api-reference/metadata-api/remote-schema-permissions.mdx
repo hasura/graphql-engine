@@ -1,6 +1,6 @@
 ---
 sidebar_label: Remote Schema permissions
-sidebar_position: 7
+sidebar_position: 10
 description: Manage Remote Schema permissions with the Hasura Metadata API
 keywords:
   - hasura
@@ -45,7 +45,7 @@ type User {
   user_id: Int
   name: String
   phone: String
-  userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
+  userMessages(where: MessageWhereInpObj, includes: IncludeInpObj): [Message]
 }
 
 interface Communication {
@@ -190,7 +190,7 @@ fields during execution. This way the field is executed with limited
 input values. Argument presets are of two types:
 
 1.  Static Value
-2.  [Session Variable](/auth/authorization/roles-variables.mdx#dynamic-session-variables)
+2.  [Session Variable](/auth/authorization/roles-variables.mdx#session-variables)
 
 A preset value can be added to an input value via the `@preset`
 directive.
@@ -219,7 +219,7 @@ before querying the Remote Schema.
 :::info Note
 
 By default, if the input value preset contains a
-[session variable value](/auth/authorization/roles-variables.mdx#dynamic-session-variables), then its value
+[session variable value](/auth/authorization/roles-variables.mdx#session-variables), then its value
 will be resolved when the query is executed. To treat the session
 variable value as a literal value (avoiding resolving of the session
 variable value) can be done by specifying `static` as `true` while
@@ -290,7 +290,7 @@ The remote relationship is defined to join the `id` field from the
 `customer` table to the `customer_id` argument of the `transactions`
 field.
 
-We only allow the `user` role to access the `amount` and `time` fiels of
+We only allow the `user` role to access the `amount` and `time` fields of
 the `Transaction` object, and introduce a preset for the `limit`
 argument of the `transaction` field, resulting in the following schema
 being presented.

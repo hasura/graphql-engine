@@ -1,13 +1,13 @@
-import { TableTrackingCustomizationModal } from '@/components/Services/Data/Schema/tableTrackCustomization/TableTrackingCustomizationModal';
-import { MetadataSelectors, useMetadata } from '@/features/hasura-metadata-api';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { CustomFieldNames } from '../..';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { Button } from '../../../../new-components/Button';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { useUpdateTableConfiguration } from '../hooks';
 import { ModifyTableProps } from '../ModifyTable';
 
-const RootField: React.VFC<{ property: string; value: string }> = ({
+export const RootField: React.VFC<{ property: string; value: string }> = ({
   property,
   value,
 }) => (
@@ -69,7 +69,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
           <RootField key={key} property={key} value={value} />
         ))}
       </div>
-      <TableTrackingCustomizationModal
+      <CustomFieldNames.Modal
         tableName={tableName}
         onSubmit={(formValues, config) => {
           updateCustomRootFields(config).then(() => {
@@ -83,6 +83,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
         dialogDescription=""
         show={showCustomModal}
         currentConfiguration={metadataTable?.configuration}
+        source={dataSourceName}
       />
     </div>
   );

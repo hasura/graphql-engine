@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Source
@@ -20,19 +19,20 @@ module Hasura.Backends.BigQuery.Source
 where
 
 import Autodocodec
+import Autodocodec.Extended (fromEnvCodec)
 import Control.Concurrent.MVar
+import Control.Lens (united)
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
+import Data.Has
 import Data.Int qualified as Int
 import Data.Scientific (Scientific)
 import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
 import Data.X509.Memory qualified as X509
-import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 
 newtype BigQueryProjectId = BigQueryProjectId {getBigQueryProjectId :: Text}
@@ -97,8 +97,10 @@ data TokenResp = TokenResp
 instance J.FromJSON TokenResp where
   parseJSON = J.withObject "TokenResp" $ \o ->
     TokenResp
-      <$> o J..: "access_token"
-      <*> o J..: "expires_in"
+      <$> o
+      J..: "access_token"
+      <*> o
+      J..: "expires_in"
 
 data ServiceAccount = ServiceAccount
   { _saClientEmail :: Text,
@@ -109,13 +111,21 @@ data ServiceAccount = ServiceAccount
 
 instance HasCodec ServiceAccount where
   codec =
-    object "BigQueryServiceAccount" $
-      ServiceAccount
-        <$> requiredField' "client_email" .= _saClientEmail
-        <*> requiredField' "private_key" .= _saPrivateKey
-        <*> requiredField' "project_id" .= _saProjectId
+    object "BigQueryServiceAccount"
+      $ ServiceAccount
+      <$> requiredField' "client_email"
+      .= _saClientEmail
+        <*> requiredField' "private_key"
+      .= _saPrivateKey
+        <*> requiredField' "project_id"
+      .= _saProjectId
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False} ''ServiceAccount)
+instance J.FromJSON ServiceAccount where
+  parseJSON = J.genericParseJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
+
+instance J.ToJSON ServiceAccount where
+  toJSON = J.genericToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
+  toEncoding = J.genericToEncoding (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = False}
 
 data ConfigurationJSON a
   = FromEnvJSON Text
@@ -129,7 +139,7 @@ data ConfigurationJSON a
 -- @FromYamlJSON@ case should be attempted last because there is a possibility
 -- that the decoding for @a@ is not disjoint from the other decoding cases. This
 -- presents some asymmetry that is a little tricky to capture in a codec.
-instance HasCodec a => HasCodec (ConfigurationJSON a) where
+instance (HasCodec a) => HasCodec (ConfigurationJSON a) where
   codec = parseAlternative (parseAlternative mainCodec fromEnvEncodedAsNestedJSON) yamlJSONCodec
     where
       -- This is the only codec in this implementation that is used for
@@ -138,8 +148,8 @@ instance HasCodec a => HasCodec (ConfigurationJSON a) where
       -- encoding.
       mainCodec :: JSONCodec (ConfigurationJSON a)
       mainCodec =
-        dimapCodec dec enc $
-          eitherCodec
+        dimapCodec dec enc
+          $ eitherCodec
             fromEnvCodec
             ( bimapCodec
                 -- Fail parsing at this point because @codec \@a@ should only be
@@ -166,12 +176,13 @@ instance HasCodec a => HasCodec (ConfigurationJSON a) where
         bimapCodec
           (eitherDecodeJSONViaCodec . BL.fromStrict . TE.encodeUtf8)
           id
-          $ codec @Text <?> "JSON-encoded string"
+          $ codec @Text
+          <?> "JSON-encoded string"
 
       yamlJSONCodec :: ValueCodec a (ConfigurationJSON a)
       yamlJSONCodec = FromYamlJSON <$> codec @a
 
-instance J.FromJSON a => J.FromJSON (ConfigurationJSON a) where
+instance (J.FromJSON a) => J.FromJSON (ConfigurationJSON a) where
   parseJSON = \case
     J.Object o | Just (J.String text) <- KM.lookup "from_env" o -> pure (FromEnvJSON text)
     J.String s -> case J.eitherDecode . BL.fromStrict . TE.encodeUtf8 $ s of
@@ -179,7 +190,7 @@ instance J.FromJSON a => J.FromJSON (ConfigurationJSON a) where
       Right sa -> pure sa
     j -> fmap FromYamlJSON (J.parseJSON j)
 
-instance J.ToJSON a => J.ToJSON (ConfigurationJSON a) where
+instance (J.ToJSON a) => J.ToJSON (ConfigurationJSON a) where
   toJSON = \case
     FromEnvJSON i -> J.object ["from_env" J..= i]
     FromYamlJSON j -> J.toJSON j
@@ -254,20 +265,31 @@ data BigQueryConnSourceConfig = BigQueryConnSourceConfig
   }
   deriving (Eq, Generic, NFData)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True} ''BigQueryConnSourceConfig)
+instance J.FromJSON BigQueryConnSourceConfig where
+  parseJSON = J.genericParseJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
+
+instance J.ToJSON BigQueryConnSourceConfig where
+  toJSON = J.genericToJSON (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
+  toEncoding = J.genericToEncoding (J.aesonDrop 4 J.snakeCase) {J.omitNothingFields = True}
 
 -- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
 -- instances.
 instance HasCodec BigQueryConnSourceConfig where
   codec =
-    object "BigQueryConnSourceConfig" $
-      BigQueryConnSourceConfig
-        <$> requiredField' "service_account" .= _cscServiceAccount
-        <*> requiredField' "datasets" .= _cscDatasets
-        <*> requiredField' "project_id" .= _cscProjectId
-        <*> optionalFieldOrNull' "global_select_limit" .= _cscGlobalSelectLimit
-        <*> optionalFieldOrNull' "retry_base_delay" .= _cscRetryBaseDelay
-        <*> optionalFieldOrNull' "retry_limit" .= _cscRetryLimit
+    object "BigQueryConnSourceConfig"
+      $ BigQueryConnSourceConfig
+      <$> requiredField' "service_account"
+      .= _cscServiceAccount
+        <*> requiredField' "datasets"
+      .= _cscDatasets
+        <*> requiredField' "project_id"
+      .= _cscProjectId
+        <*> optionalFieldOrNull' "global_select_limit"
+      .= _cscGlobalSelectLimit
+        <*> optionalFieldOrNull' "retry_base_delay"
+      .= _cscRetryBaseDelay
+        <*> optionalFieldOrNull' "retry_limit"
+      .= _cscRetryLimit
 
 deriving stock instance Show BigQueryConnSourceConfig
 
@@ -294,17 +316,24 @@ data BigQuerySourceConfig = BigQuerySourceConfig
   }
   deriving (Eq)
 
+instance Show BigQuerySourceConfig where
+  show _ = "(BigQuerySourceConfig <details>)"
+
 instance J.ToJSON BigQuerySourceConfig where
   toJSON BigQuerySourceConfig {..} =
-    J.object $
-      [ "service_account" J..= _bqServiceAccount _scConnection,
-        "datasets" J..= _scDatasets,
-        "project_id" J..= _bqProjectId _scConnection,
-        "global_select_limit" J..= _scGlobalSelectLimit
-      ]
-        <> case _bqRetryOptions _scConnection of
-          Just RetryOptions {..} ->
-            [ "base_delay" J..= diffTimeToMicroSeconds (microseconds _retryBaseDelay),
-              "retry_limit" J..= _retryNumRetries
-            ]
-          Nothing -> []
+    J.object
+      $ [ "service_account" J..= _bqServiceAccount _scConnection,
+          "datasets" J..= _scDatasets,
+          "project_id" J..= _bqProjectId _scConnection,
+          "global_select_limit" J..= _scGlobalSelectLimit
+        ]
+      <> case _bqRetryOptions _scConnection of
+        Just RetryOptions {..} ->
+          [ "base_delay" J..= diffTimeToMicroSeconds (microseconds _retryBaseDelay),
+            "retry_limit" J..= _retryNumRetries
+          ]
+        Nothing -> []
+
+-- Note: () ~ ScalarTypeParsingContext 'BigQuery but we can't use the type family instance in the Has instance.
+instance Has () BigQuerySourceConfig where
+  hasLens = united

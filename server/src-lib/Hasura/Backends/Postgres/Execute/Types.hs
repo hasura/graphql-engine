@@ -4,64 +4,127 @@
 -- Provides support for things such as read-only transactions and read replicas.
 module Hasura.Backends.Postgres.Execute.Types
   ( PGExecCtx (..),
+    PGExecFrom (..),
+    PGExecCtxInfo (..),
+    PGExecTxType (..),
     mkPGExecCtx,
     mkTxErrorHandler,
     defaultTxErrorHandler,
     dmlTxErrorHandler,
     resizePostgresPool,
+    PostgresResolvedConnectionTemplate (..),
 
     -- * Execution in a Postgres Source
     PGSourceConfig (..),
+    ConnectionTemplateConfig (..),
+    connectionTemplateConfigResolver,
+    ConnectionTemplateResolver (..),
     runPgSourceReadTx,
     runPgSourceWriteTx,
+    applyConnectionTemplateResolverNonAdmin,
+    pgResolveConnectionTemplate,
+    resolvePostgresConnectionTemplate,
+    sourceConfigNumReadReplicas,
+    sourceConfigConnectonTemplateEnabled,
   )
 where
 
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Data.Aeson.Extended qualified as J
+import Data.CaseInsensitive qualified as CI
+import Data.Has
+import Data.HashMap.Internal.Strict qualified as Map
+import Data.List.NonEmpty qualified as List.NonEmpty
 import Database.PG.Query qualified as PG
 import Database.PG.Query.Connection qualified as PG
+import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..), PostgresConnectionSetMemberName)
+import Hasura.Backends.Postgres.Execute.ConnectionTemplate
 import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
+import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
-import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
+import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.SQL.Types (ExtensionsSchema)
+import Hasura.Session (SessionVariables, UserInfo (_uiRole, _uiSession), maybeRoleFromSessionVariables)
+import Kriti.Error qualified as Kriti
+import Network.HTTP.Types qualified as HTTP
 
 -- See Note [Existentially Quantified Types]
 type RunTx =
   forall m a. (MonadIO m, MonadBaseControl IO m) => PG.TxET QErr m a -> ExceptT QErr m a
 
 data PGExecCtx = PGExecCtx
-  { -- | Run a PG.ReadOnly transaction
-    _pecRunReadOnly :: RunTx,
-    -- | Run a read only statement without an explicit transaction block
-    _pecRunReadNoTx :: RunTx,
-    -- | Run a PG.ReadWrite transaction
-    _pecRunReadWrite :: RunTx,
-    -- | Run a PG.ReadWrite transaction in Serializable transaction isolation level
-    --   This is mainly intended to be used to run source catalog migrations.
-    _pecRunSerializableTx :: RunTx,
-    -- | Destroys connection pools
-    _pecDestroyConn :: (IO ()),
-    -- | Resize pools based on number of server instances
-    _pecResizePools :: ServerReplicas -> IO ()
+  { -- | Run a PG transaction using the information provided by PGExecCtxInfo
+    _pecRunTx :: PGExecCtxInfo -> RunTx,
+    -- | Destroy connection pools
+    _pecDestroyConnections :: IO (),
+    -- | Resize pools based on number of server instances and return the summary
+    _pecResizePools :: ServerReplicas -> IO SourceResizePoolSummary
   }
+
+-- | Holds the information required to exceute a PG transaction
+data PGExecCtxInfo = PGExecCtxInfo
+  { -- | The tranasction mode for executing the transaction
+    _peciTxType :: PGExecTxType,
+    -- | The level from where the PG transaction is being executed from
+    _peciFrom :: PGExecFrom
+  }
+
+-- | The tranasction mode (isolation level, transaction access) for executing the
+--   transaction
+data PGExecTxType
+  = -- | a transaction without an explicit tranasction block
+    NoTxRead
+  | -- | a transaction block with custom transaction access and isolation level.
+    --  Choose defaultIsolationLevel defined in 'SourceConnConfiguration' if
+    --  "Nothing" is provided for isolation level.
+    Tx PG.TxAccess (Maybe PG.TxIsolation)
+
+-- | The level from where the transaction is being run
+data PGExecFrom
+  = -- | transaction initated via a GraphQLRequest
+    GraphQLQuery (Maybe PostgresResolvedConnectionTemplate)
+  | -- | transaction initiated during run_sql
+    RunSQLQuery
+  | -- | custom transaction Hasura runs on the database. This is usually used in
+    -- event_trigger and actions
+    InternalRawQuery
+  | -- | transactions initiated via other API's other than 'run_sql' in  /v1/query or
+    -- /v2/query
+    LegacyRQLQuery
 
 -- | Creates a Postgres execution context for a single Postgres master pool
 mkPGExecCtx :: PG.TxIsolation -> PG.PGPool -> ResizePoolStrategy -> PGExecCtx
-mkPGExecCtx isoLevel pool resizeStrategy =
+mkPGExecCtx defaultIsoLevel pool resizeStrategy =
   PGExecCtx
-    { _pecRunReadOnly = (PG.runTx pool (isoLevel, Just PG.ReadOnly)),
-      _pecRunReadNoTx = (PG.runTx' pool),
-      _pecRunReadWrite = (PG.runTx pool (isoLevel, Just PG.ReadWrite)),
-      _pecRunSerializableTx = (PG.runTx pool (PG.Serializable, Just PG.ReadWrite)),
-      _pecDestroyConn = PG.destroyPGPool pool,
-      _pecResizePools =
+    { _pecDestroyConnections =
+        -- \| Destroys connection pools
+        PG.destroyPGPool pool,
+      _pecResizePools = \serverReplicas ->
+        -- \| Resize pools based on number of server instances
         case resizeStrategy of
-          NeverResizePool -> const $ pure ()
-          ResizePool maxConnections -> resizePostgresPool pool maxConnections
+          NeverResizePool -> pure noPoolsResizedSummary
+          ResizePool maxConnections -> resizePostgresPool' maxConnections serverReplicas,
+      _pecRunTx = \case
+        -- \| Run a read only statement without an explicit transaction block
+        (PGExecCtxInfo NoTxRead _) -> PG.runTx' pool
+        -- \| Run a transaction
+        (PGExecCtxInfo (Tx txAccess (Just isolationLevel)) _) -> PG.runTx pool (isolationLevel, Just txAccess)
+        (PGExecCtxInfo (Tx txAccess Nothing) _) -> PG.runTx pool (defaultIsoLevel, Just txAccess)
     }
+  where
+    resizePostgresPool' maxConnections serverReplicas = do
+      -- Resize the pool
+      resizePostgresPool pool maxConnections serverReplicas
+      -- Return the summary. Only the primary pool is resized
+      pure
+        $ SourceResizePoolSummary
+          { _srpsPrimaryResized = True,
+            _srpsReadReplicasResized = False,
+            _srpsConnectionSet = []
+          }
 
 -- | Resize Postgres pool by setting the number of connections equal to
 -- allowed maximum connections across all server instances divided by
@@ -123,35 +186,152 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
               "serialization failure due to concurrent update"
             _ -> message
 
+data ConnectionTemplateConfig
+  = -- | Connection templates are disabled for Hasura CE
+    ConnTemplate_NotApplicable
+  | ConnTemplate_NotConfigured
+  | ConnTemplate_Resolver ConnectionTemplateResolver
+
+connectionTemplateConfigResolver :: ConnectionTemplateConfig -> Maybe ConnectionTemplateResolver
+connectionTemplateConfigResolver = \case
+  ConnTemplate_NotApplicable -> Nothing
+  ConnTemplate_NotConfigured -> Nothing
+  ConnTemplate_Resolver resolver -> Just resolver
+
+-- | A hook to resolve connection template
+newtype ConnectionTemplateResolver = ConnectionTemplateResolver
+  { -- | Runs the connection template resolver.
+    _runResolver ::
+      forall m.
+      (MonadError QErr m) =>
+      SessionVariables ->
+      [HTTP.Header] ->
+      Maybe QueryContext ->
+      m PostgresResolvedConnectionTemplate
+  }
+
 data PGSourceConfig = PGSourceConfig
   { _pscExecCtx :: PGExecCtx,
     _pscConnInfo :: PG.ConnInfo,
     _pscReadReplicaConnInfos :: Maybe (NonEmpty PG.ConnInfo),
     _pscPostDropHook :: IO (),
-    _pscExtensionsSchema :: ExtensionsSchema
+    _pscExtensionsSchema :: ExtensionsSchema,
+    _pscConnectionSet :: HashMap PostgresConnectionSetMemberName PG.ConnInfo,
+    _pscConnectionTemplateConfig :: ConnectionTemplateConfig
   }
   deriving (Generic)
 
+instance Show PGSourceConfig where
+  show _ = "(PGSourceConfig <details>)"
+
 instance Eq PGSourceConfig where
   lconf == rconf =
-    (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf, _pscExtensionsSchema lconf)
-      == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf, _pscExtensionsSchema rconf)
+    (_pscConnInfo lconf, _pscReadReplicaConnInfos lconf, _pscExtensionsSchema lconf, _pscConnectionSet lconf)
+      == (_pscConnInfo rconf, _pscReadReplicaConnInfos rconf, _pscExtensionsSchema rconf, _pscConnectionSet rconf)
 
 instance J.ToJSON PGSourceConfig where
   toJSON = J.toJSON . show . _pscConnInfo
+
+instance Has () PGSourceConfig where
+  hasLens = united
 
 runPgSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>
   PGSourceConfig ->
   PG.TxET QErr m a ->
   m (Either QErr a)
-runPgSourceReadTx psc =
-  runExceptT . _pecRunReadNoTx (_pscExecCtx psc)
+runPgSourceReadTx psc = do
+  let pgRunTx = _pecRunTx (_pscExecCtx psc)
+  runExceptT . pgRunTx (PGExecCtxInfo NoTxRead InternalRawQuery)
 
 runPgSourceWriteTx ::
   (MonadIO m, MonadBaseControl IO m) =>
   PGSourceConfig ->
+  PGExecFrom ->
   PG.TxET QErr m a ->
   m (Either QErr a)
-runPgSourceWriteTx psc =
-  runExceptT . _pecRunReadWrite (_pscExecCtx psc)
+runPgSourceWriteTx psc pgExecFrom = do
+  let pgRunTx = _pecRunTx (_pscExecCtx psc)
+  runExceptT . pgRunTx (PGExecCtxInfo (Tx PG.ReadWrite Nothing) pgExecFrom)
+
+-- | Resolve connection templates only for non-admin roles
+applyConnectionTemplateResolverNonAdmin ::
+  (MonadError QErr m) =>
+  Maybe ConnectionTemplateResolver ->
+  UserInfo ->
+  [HTTP.Header] ->
+  Maybe QueryContext ->
+  m (Maybe PostgresResolvedConnectionTemplate)
+applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo requestHeaders queryContext =
+  if _uiRole userInfo == adminRoleName
+    then pure Nothing
+    else applyConnectionTemplateResolver connectionTemplateResolver (_uiSession userInfo) requestHeaders queryContext
+
+-- | Execute @'ConnectionTemplateResolver' with required parameters
+applyConnectionTemplateResolver ::
+  (MonadError QErr m) =>
+  Maybe ConnectionTemplateResolver ->
+  SessionVariables ->
+  [HTTP.Header] ->
+  Maybe QueryContext ->
+  m (Maybe PostgresResolvedConnectionTemplate)
+applyConnectionTemplateResolver connectionTemplateResolver sessionVariables requestHeaders queryContext =
+  for connectionTemplateResolver $ \resolver ->
+    _runResolver resolver sessionVariables requestHeaders queryContext
+
+pgResolveConnectionTemplate :: (MonadError QErr m) => PGSourceConfig -> RequestContext -> Maybe ConnectionTemplate -> m EncJSON
+pgResolveConnectionTemplate sourceConfig (RequestContext (RequestContextHeaders headersMap) sessionVariables queryContext) connectionTemplateMaybe = do
+  connectionTemplateResolver <-
+    case connectionTemplateMaybe of
+      Nothing ->
+        case _pscConnectionTemplateConfig sourceConfig of
+          ConnTemplate_NotApplicable -> connectionTemplateNotApplicableError
+          ConnTemplate_NotConfigured ->
+            throw400 TemplateResolutionFailed "Connection template not defined for the source"
+          ConnTemplate_Resolver resolver ->
+            pure resolver
+      Just connectionTemplate ->
+        case _pscConnectionTemplateConfig sourceConfig of
+          -- connection template is an enterprise edition only feature. `ConnTemplate_NotApplicable` error is thrown
+          -- when community edition engine is used to test the connection template
+          ConnTemplate_NotApplicable -> connectionTemplateNotApplicableError
+          _ -> pure $ ConnectionTemplateResolver $ \sessionVariables' reqHeaders queryContext' ->
+            resolvePostgresConnectionTemplate connectionTemplate (Map.keys (_pscConnectionSet sourceConfig)) sessionVariables' reqHeaders queryContext'
+  let headers = map (\(hName, hVal) -> (CI.mk (txtToBs hName), txtToBs hVal)) $ Map.toList headersMap
+  case maybeRoleFromSessionVariables sessionVariables of
+    Nothing -> throw400 InvalidParams "No `x-hasura-role` found in session variables. Please try again with non-admin 'x-hasura-role' in the session context."
+    Just roleName ->
+      when (roleName == adminRoleName) $ throw400 InvalidParams "Only requests made with a non-admin context can resolve the connection template. Please try again with non-admin 'x-hasura-role' in the session context."
+  resolvedTemplate <- _runResolver connectionTemplateResolver sessionVariables headers queryContext
+  pure . encJFromJValue $ J.object ["result" J..= resolvedTemplate]
+  where
+    connectionTemplateNotApplicableError = throw400 NotSupported "Connection templating feature is enterprise edition only"
+
+resolvePostgresConnectionTemplate ::
+  (MonadError QErr m) =>
+  ConnectionTemplate ->
+  [PostgresConnectionSetMemberName] ->
+  SessionVariables ->
+  [HTTP.Header] ->
+  Maybe QueryContext ->
+  m (PostgresResolvedConnectionTemplate)
+resolvePostgresConnectionTemplate (ConnectionTemplate _templateSrc connectionTemplate) connectionSetMembers sessionVariables reqHeaders queryContext = do
+  let requestContext = makeRequestContext queryContext reqHeaders sessionVariables
+      connectionTemplateCtx = makeConnectionTemplateContext requestContext connectionSetMembers
+
+  case runKritiEval connectionTemplateCtx connectionTemplate of
+    Left err ->
+      let serializedErr = Kriti.serialize err
+       in throw400WithDetail TemplateResolutionFailed ("Connection template evaluation failed: " <> Kriti._message serializedErr) (J.toJSON $ serializedErr)
+    Right val -> runAesonParser (J.parseJSON @PostgresResolvedConnectionTemplate) val
+
+sourceConfigNumReadReplicas :: PGSourceConfig -> Int
+sourceConfigNumReadReplicas =
+  maybe 0 List.NonEmpty.length . _pscReadReplicaConnInfos
+
+sourceConfigConnectonTemplateEnabled :: PGSourceConfig -> Bool
+sourceConfigConnectonTemplateEnabled pgSourceConfig =
+  case _pscConnectionTemplateConfig pgSourceConfig of
+    ConnTemplate_NotApplicable -> False
+    ConnTemplate_NotConfigured -> False
+    ConnTemplate_Resolver _ -> True

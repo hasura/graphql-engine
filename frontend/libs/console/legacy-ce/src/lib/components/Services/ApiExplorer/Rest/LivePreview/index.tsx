@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useReducer, useCallback, Dispatch } from 'react';
 import { FaPlay, FaPlusCircle } from 'react-icons/fa';
 
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../../new-components/Button';
 import {
   composeEndpoint,
   getCurrentPageHost,
@@ -252,7 +252,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           </Button>
         </CollapsibleToggle>
       </div>
-      <p>here</p>
       <div className="w-full">
         <CollapsibleToggle
           title="Request Variables"

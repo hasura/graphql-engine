@@ -1,6 +1,6 @@
 import React from 'react';
-import { ComponentStory, ComponentMeta } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { StoryFn, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { ManageAgents } from '../components/ManageAgents';
 import { handlers } from '../mocks/handler.mock';
 
@@ -11,8 +11,6 @@ export default {
   parameters: {
     msw: handlers(),
   },
-} as ComponentMeta<typeof ManageAgents>;
+} as Meta<typeof ManageAgents>;
 
-export const Primary: ComponentStory<typeof ManageAgents> = () => (
-  <ManageAgents />
-);
+export const Primary: StoryFn<typeof ManageAgents> = () => <ManageAgents />;

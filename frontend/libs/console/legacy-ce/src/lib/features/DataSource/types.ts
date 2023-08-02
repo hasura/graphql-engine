@@ -1,3 +1,4 @@
+import { GraphQLType } from 'graphql';
 import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
@@ -10,12 +11,13 @@ import {
   SourceToSourceRelationship,
   SupportedDrivers,
   Table,
-} from '@/features/hasura-metadata-types';
+  QualifiedFunction,
+} from '../hasura-metadata-types';
 
-import { NetworkArgs } from './api';
+import type { NetworkArgs } from './api';
 
 export type { BigQueryTable } from './bigquery';
-export { NetworkArgs };
+export type { NetworkArgs };
 
 export type AllowedTableRelationships =
   /**
@@ -55,13 +57,24 @@ export type IntrospectedTable = {
 };
 
 export type TableColumn = {
+  /**
+   * Name of the column as defined in the DB
+   */
   name: string;
+  /**
+   * dataType of the column as defined in the DB
+   */
   dataType: string;
+  /**
+   * console data type: the dataType property is group into one of these types and console uses this internally
+   */
+  consoleDataType: 'string' | 'text' | 'json' | 'number' | 'boolean' | 'float';
   nullable?: boolean;
   isPrimaryKey?: boolean;
   graphQLProperties?: {
     name: string;
     scalarType: string;
+    graphQLType?: GraphQLType | undefined;
   };
 };
 
@@ -94,14 +107,18 @@ export type TableFkRelationships = {
 
 export type GetTablesListAsTreeProps = {
   dataSourceName: string;
+  releaseName?: ReleaseType;
 } & NetworkArgs;
 
-type ReleaseType = 'GA' | 'Beta' | 'disabled';
+export type ReleaseType = 'GA' | 'Beta' | 'Alpha' | 'disabled';
 
-export type DriverInfoResponse = {
+export type DriverInfo = {
   name: SupportedDrivers;
   displayName: string;
   release: ReleaseType;
+  native?: boolean;
+  available?: boolean;
+  enterprise?: boolean;
 };
 
 export type GetTableRowsProps = {
@@ -122,7 +139,10 @@ type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
   columnName,
-  Record<validOperators, string | number | boolean>
+  Record<
+    validOperators,
+    string | number | boolean | string[] | number[] | boolean[]
+  >
 >;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
@@ -138,3 +158,48 @@ export type Operator = {
   defaultValue?: string;
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
+
+export type Version = string;
+export type GetVersionProps = { dataSourceName: string } & NetworkArgs;
+export type InsertRowArgs = {
+  dataSourceName: string;
+  httpClient: NetworkArgs['httpClient'];
+  rowValues: Record<string, unknown>;
+  table: Table;
+};
+
+export type GetDefaultQueryRootProps = {
+  dataSourceName: string;
+  table: Table;
+};
+
+export type GetTrackableFunctionProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type IntrospectedFunction = {
+  name: string;
+  qualifiedFunction: QualifiedFunction;
+  isVolatile: boolean;
+};
+export type GetDatabaseSchemaProps = {
+  dataSourceName: string;
+} & NetworkArgs;
+
+export type ChangeDatabaseSchemaProps = {
+  dataSourceName: string;
+  schemaName: string;
+} & NetworkArgs;
+export type GetIsTableViewProps = {
+  dataSourceName: string;
+  table: Table;
+  httpClient: NetworkArgs['httpClient'];
+};
+export type GetSupportedScalarsProps = {
+  dataSourceKind: string;
+} & NetworkArgs;
+
+export type StoredProcedure = unknown;
+export type GetStoredProceduresProps = {
+  dataSourceName: string;
+} & NetworkArgs;

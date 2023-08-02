@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Common
   ( RelName (..),
@@ -17,14 +16,18 @@ module Hasura.RQL.Types.Common
     isSystemDefined,
     SQLGenCtx (..),
     successMsg,
+    failureMsg,
     InputWebhook (..),
     ResolvedWebhook (..),
+    ResolveWebhookError (..),
     resolveWebhook,
+    resolveWebhookEither,
     Timeout (..),
     defaultActionTimeoutSecs,
     UrlConf (..),
     resolveUrlConf,
     getEnv,
+    getEnvEither,
     SourceName (..),
     defaultSource,
     sourceNameToText,
@@ -53,6 +56,7 @@ import Autodocodec
   ( HasCodec (codec),
     JSONCodec,
     bimapCodec,
+    boundedIntegralCodec,
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
@@ -62,12 +66,12 @@ import Autodocodec
     stringConstCodec,
   )
 import Autodocodec qualified as AC
-import Control.Lens (makeLenses)
+import Autodocodec.Extended (boolConstCodec, fromEnvCodec, typeableName)
+import Control.Lens (Lens)
+import Control.Lens qualified as Lens
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Casing
-import Data.Aeson.TH
-import Data.Aeson.Types (prependFailure, typeMismatch)
+import Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import Data.Bifunctor (bimap)
 import Data.Environment qualified as Env
 import Data.Scientific (toBoundedInteger)
@@ -79,12 +83,11 @@ import Data.URL.Template
 import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.Instances ()
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Metadata.DTO.Utils (boolConstCodec, fromEnvCodec, typeableName)
 import Hasura.Prelude
-import Hasura.RQL.DDL.Headers ()
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax qualified as TH
 import Network.URI
@@ -143,8 +146,9 @@ instance FromJSON RelType where
   parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
 
 instance PG.FromCol RelType where
-  fromCol bs = flip PG.fromColHelper bs $
-    PD.enum $ \case
+  fromCol bs = flip PG.fromColHelper bs
+    $ PD.enum
+    $ \case
       "object" -> Just ObjRel
       "array" -> Just ArrRel
       _ -> Nothing
@@ -166,7 +170,7 @@ instance ToJSON JsonAggSelect where
     JASSingleObject -> "single_row"
 
 data InsertOrder = BeforeParent | AfterParent
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData InsertOrder
 
@@ -230,10 +234,15 @@ data SourceName
   | SNName NonEmptyText
   deriving (Show, Eq, Ord, Generic)
 
+sourceNameParser :: Text -> Parser SourceName
+sourceNameParser = \case
+  "default" -> pure SNDefault
+  t -> SNName <$> parseJSON (String t)
+
 instance FromJSON SourceName where
-  parseJSON = withText "String" $ \case
-    "default" -> pure SNDefault
-    t -> SNName <$> parseJSON (String t)
+  parseJSON = withText "String" sourceNameParser
+
+instance FromJSONKey SourceName
 
 instance HasCodec SourceName where
   codec = dimapCodec dec enc nonEmptyTextCodec
@@ -282,7 +291,7 @@ data InpValInfo = InpValInfo
   deriving (Show, Eq, TH.Lift, Generic)
 
 newtype SystemDefined = SystemDefined {unSystemDefined :: Bool}
-  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.ToPrepArg, NFData, Generic)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
@@ -290,6 +299,7 @@ isSystemDefined = unSystemDefined
 data SQLGenCtx = SQLGenCtx
   { stringifyNum :: Options.StringifyNumbers,
     dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
+    remoteNullForwardingPolicy :: Options.RemoteNullForwardingPolicy,
     optimizePermissionFilters :: Options.OptimizePermissionFilters,
     bigqueryStringNumericInput :: Options.BigQueryStringNumericInput
   }
@@ -298,12 +308,15 @@ data SQLGenCtx = SQLGenCtx
 successMsg :: EncJSON
 successMsg = encJFromBuilder "{\"message\":\"success\"}"
 
+failureMsg :: EncJSON
+failureMsg = encJFromBuilder "{\"message\":\"failure\"}"
+
 newtype ResolvedWebhook = ResolvedWebhook {unResolvedWebhook :: Text}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable, ToTxt, Generic)
 
 instance NFData ResolvedWebhook
 
-newtype InputWebhook = InputWebhook {unInputWebhook :: URLTemplate}
+newtype InputWebhook = InputWebhook {unInputWebhook :: Template}
   deriving (Show, Eq, Generic)
 
 instance NFData InputWebhook
@@ -315,34 +328,49 @@ instance HasCodec InputWebhook where
     where
       urlTemplateCodec =
         bimapCodec
-          (mapLeft ("Parsing URL template failed: " ++) . parseURLTemplate)
-          printURLTemplate
+          (mapLeft ("Parsing URL template failed: " ++) . parseTemplate)
+          printTemplate
           codec
 
 instance ToJSON InputWebhook where
-  toJSON = String . printURLTemplate . unInputWebhook
+  toJSON = String . printTemplate . unInputWebhook
 
 instance FromJSON InputWebhook where
   parseJSON = withText "String" $ \t ->
-    case parseURLTemplate t of
+    case parseTemplate t of
       Left e -> fail $ "Parsing URL template failed: " ++ e
       Right v -> pure $ InputWebhook v
 
 instance PG.FromCol InputWebhook where
   fromCol bs = do
-    urlTemplate <- parseURLTemplate <$> PG.fromCol bs
+    urlTemplate <- parseTemplate <$> PG.fromCol bs
     bimap (\e -> "Parsing URL template failed: " <> T.pack e) InputWebhook urlTemplate
 
-resolveWebhook :: QErrM m => Env.Environment -> InputWebhook -> m ResolvedWebhook
-resolveWebhook env (InputWebhook urlTemplate) = do
-  let eitherRenderedTemplate = renderURLTemplate env urlTemplate
-  either
-    (throw400 Unexpected . T.pack)
-    (pure . ResolvedWebhook)
+-- Consists of the environment variable name with missing/invalid value
+newtype ResolveWebhookError = ResolveWebhookError {unResolveWebhookError :: Text} deriving (Show, ToTxt)
+
+resolveWebhook :: (QErrM m) => Env.Environment -> InputWebhook -> m ResolvedWebhook
+resolveWebhook env inputWebhook = do
+  let eitherRenderedTemplate = resolveWebhookEither env inputWebhook
+  onLeft
     eitherRenderedTemplate
+    (throw400 Unexpected . ("Value for environment variables not found: " <>) . unResolveWebhookError)
+
+-- This is similar to `resolveWebhook` but it doesn't fail when an env var is invalid
+resolveWebhookEither :: Env.Environment -> InputWebhook -> Either ResolveWebhookError ResolvedWebhook
+resolveWebhookEither env (InputWebhook urlTemplate) =
+  bimap ResolveWebhookError ResolvedWebhook (renderTemplate env urlTemplate)
 
 newtype Timeout = Timeout {unTimeout :: Int}
   deriving (Show, Eq, ToJSON, Generic, NFData)
+
+instance HasCodec Timeout where
+  codec = bimapCodec dec enc boundedIntegralCodec
+    where
+      dec timeout = case timeout >= 0 of
+        True -> Right $ Timeout timeout
+        False -> Left "timeout value cannot be negative"
+      enc (Timeout n) = n
 
 instance FromJSON Timeout where
   parseJSON = withScientific "Timeout" $ \t -> do
@@ -371,34 +399,43 @@ instance Hashable PGConnectionParams
 
 instance HasCodec PGConnectionParams where
   codec =
-    AC.object "PGConnectionParams" $
-      PGConnectionParams
-        <$> requiredField' "host"
-          AC..= _pgcpHost
+    AC.object "PGConnectionParams"
+      $ PGConnectionParams
+      <$> requiredField' "host"
+      AC..= _pgcpHost
         <*> requiredField' "username"
-          AC..= _pgcpUsername
+      AC..= _pgcpUsername
         <*> optionalFieldOrNull' "password"
-          AC..= _pgcpPassword
+      AC..= _pgcpPassword
         <*> requiredField' "port"
-          AC..= _pgcpPort
+      AC..= _pgcpPort
         <*> requiredField' "database"
-          AC..= _pgcpDatabase
+      AC..= _pgcpDatabase
 
-$(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
+-- TODO: Use HasCodec to define Aeson instances?
+instance ToJSON PGConnectionParams where
+  toJSON PGConnectionParams {..} =
+    J.object
+      $ [ "host" .= _pgcpHost,
+          "username" .= _pgcpUsername,
+          "port" .= _pgcpPort,
+          "database" .= _pgcpDatabase
+        ]
+      ++ ["password" .= _pgcpPassword | isJust _pgcpPassword]
 
 instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
       <$> o
-        .: "host"
+      .: "host"
       <*> o
-        .: "username"
+      .: "username"
       <*> o
-        .:? "password"
+      .:? "password"
       <*> o
-        .: "port"
+      .: "port"
       <*> o
-        .: "database"
+      .: "database"
 
 data UrlConf
   = -- | the database connection string
@@ -415,9 +452,9 @@ instance Hashable UrlConf
 
 instance HasCodec UrlConf where
   codec =
-    dimapCodec dec enc $
-      disjointEitherCodec valCodec $
-        disjointEitherCodec fromEnvCodec fromParamsCodec
+    dimapCodec dec enc
+      $ disjointEitherCodec valCodec
+      $ disjointEitherCodec fromEnvCodec fromParamsCodec
     where
       valCodec = codec
       fromParamsCodec = AC.object "UrlConfFromParams" $ requiredField' "connection_parameters"
@@ -485,15 +522,15 @@ getConnOptionsFromConnParams PGConnectionParams {..} =
 getPGConnectionStringFromParams :: PGConnectionParams -> String
 getPGConnectionStringFromParams PGConnectionParams {..} =
   let uriAuth =
-        rectifyAuth $
-          URIAuth
+        rectifyAuth
+          $ URIAuth
             { uriUserInfo = getURIAuthUserInfo _pgcpUsername _pgcpPassword,
               uriRegName = unpackEscape _pgcpHost,
               uriPort = show _pgcpPort
             }
       pgConnectionURI =
-        rectify $
-          URI
+        rectify
+          $ URI
             { uriScheme = "postgresql",
               uriAuthority = Just uriAuth,
               uriPath = "/" <> unpackEscape _pgcpDatabase,
@@ -512,19 +549,26 @@ getPGConnectionStringFromParams PGConnectionParams {..} =
       Nothing -> unpackEscape username
       Just password -> unpackEscape username <> ":" <> unpackEscape password
 
-resolveUrlConf :: MonadError QErr m => Env.Environment -> UrlConf -> m Text
+resolveUrlConf :: (MonadError QErr m) => Env.Environment -> UrlConf -> m Text
 resolveUrlConf env = \case
   UrlValue v -> unResolvedWebhook <$> resolveWebhook env v
   UrlFromEnv envVar -> getEnv env envVar
   UrlFromParams connParams ->
     pure . T.pack $ getPGConnectionStringFromParams connParams
 
-getEnv :: QErrM m => Env.Environment -> Text -> m Text
+getEnv :: (QErrM m) => Env.Environment -> Text -> m Text
 getEnv env k = do
-  let mEnv = Env.lookupEnv env (T.unpack k)
-  case mEnv of
-    Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
-    Just envVal -> return (T.pack envVal)
+  let eitherEnv = getEnvEither env k
+  onLeft
+    eitherEnv
+    (\_ -> throw400 NotFound $ "environment variable '" <> k <> "' not set")
+
+-- This is similar to `getEnv` but it doesn't fail when the env var is invalid
+getEnvEither :: Env.Environment -> Text -> Either Text Text
+getEnvEither env k =
+  case Env.lookupEnv env (T.unpack k) of
+    Nothing -> Left k
+    Just envVal -> Right (T.pack envVal)
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig
@@ -535,7 +579,27 @@ data MetricsConfig = MetricsConfig
   }
   deriving (Show, Eq, Generic)
 
-$(deriveJSON (aesonPrefix snakeCase) ''MetricsConfig)
+instance HasCodec MetricsConfig where
+  codec =
+    AC.object "MetricsConfig"
+      $ MetricsConfig
+      <$> requiredField' "analyze_query_variables"
+      AC..= _mcAnalyzeQueryVariables
+        <*> requiredField' "analyze_response_body"
+      AC..= _mcAnalyzeResponseBody
+
+instance FromJSON MetricsConfig where
+  parseJSON = J.withObject "MetricsConfig" $ \o -> do
+    _mcAnalyzeQueryVariables <- o .: "analyze_query_variables"
+    _mcAnalyzeResponseBody <- o .: "analyze_response_body"
+    pure MetricsConfig {..}
+
+instance ToJSON MetricsConfig where
+  toJSON MetricsConfig {..} =
+    J.object
+      [ "analyze_query_variables" .= _mcAnalyzeQueryVariables,
+        "analyze_response_body" .= _mcAnalyzeResponseBody
+      ]
 
 emptyMetricsConfig :: MetricsConfig
 emptyMetricsConfig = MetricsConfig False False
@@ -589,9 +653,9 @@ data EnvRecord a = EnvRecord
   }
   deriving (Show, Eq, Generic)
 
-instance NFData a => NFData (EnvRecord a)
+instance (NFData a) => NFData (EnvRecord a)
 
-instance Hashable a => Hashable (EnvRecord a)
+instance (Hashable a) => Hashable (EnvRecord a)
 
 instance (ToJSON a) => ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
@@ -607,8 +671,8 @@ instance ToJSON ApolloFederationVersion where
   toJSON V1 = J.String "v1"
 
 instance FromJSON ApolloFederationVersion where
-  parseJSON = withText "ApolloFederationVersion" $
-    \case
+  parseJSON = withText "ApolloFederationVersion"
+    $ \case
       "v1" -> pure V1
       _ -> fail "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -621,9 +685,10 @@ data ApolloFederationConfig = ApolloFederationConfig
 
 instance HasCodec ApolloFederationConfig where
   codec =
-    AC.object "ApolloFederationConfig" $
-      ApolloFederationConfig
-        <$> requiredField "enable" enableDoc AC..= enable
+    AC.object "ApolloFederationConfig"
+      $ ApolloFederationConfig
+      <$> requiredField "enable" enableDoc
+      AC..= enable
     where
       enableDoc = "enable takes the version of apollo federation. Supported value is v1 only."
 
@@ -673,16 +738,28 @@ data RemoteRelationshipG definition = RemoteRelationship
   }
   deriving (Show, Eq, Generic)
 
+instance (ToJSON definition) => ToJSON (RemoteRelationshipG definition) where
+  toJSON RemoteRelationship {..} =
+    J.object
+      [ "name" .= _rrName,
+        "definition" .= _rrDefinition
+      ]
+
+rrName :: Lens (RemoteRelationshipG def) (RemoteRelationshipG def) RelName RelName
+rrName = Lens.lens _rrName (\rrg a -> rrg {_rrName = a})
+
+rrDefinition :: Lens (RemoteRelationshipG def) (RemoteRelationshipG def') def def'
+rrDefinition = Lens.lens _rrDefinition (\rrg a -> rrg {_rrDefinition = a})
+
 remoteRelationshipCodec ::
   forall definition.
   (Typeable definition) =>
   JSONCodec definition ->
   JSONCodec (RemoteRelationshipG definition)
 remoteRelationshipCodec definitionCodec =
-  AC.object ("RemoteRelationship_" <> typeableName @definition) $
-    RemoteRelationship
-      <$> requiredField' "name" AC..= _rrName
-      <*> requiredFieldWith' "definition" definitionCodec AC..= _rrDefinition
-
-$(makeLenses ''RemoteRelationshipG)
-$(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)
+  AC.object ("RemoteRelationship_" <> typeableName @definition)
+    $ RemoteRelationship
+    <$> requiredField' "name"
+    AC..= _rrName
+      <*> requiredFieldWith' "definition" definitionCodec
+    AC..= _rrDefinition

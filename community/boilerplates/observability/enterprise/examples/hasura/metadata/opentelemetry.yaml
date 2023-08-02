@@ -1,0 +1,10 @@
+status: enabled
+data_types:
+  - traces
+exporter_otlp:
+  headers: []
+  otlp_traces_endpoint: http://jaeger:4318/v1/traces
+  protocol: http/protobuf
+  resource_attributes: []
+batch_span_processor:
+  max_export_batch_size: 512

@@ -1,9 +1,9 @@
-import { useMetadataVersion } from '@/features/MetadataAPI';
-import { Button } from '@/new-components/Button';
-import HookStatusWrapperWithMetadataVersion from '@/storybook/HookStatusWrapperWithMetadataVersion';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import { useMetadataVersion } from '../../../../MetadataAPI';
+import { Button } from '../../../../../new-components/Button';
+import HookStatusWrapperWithMetadataVersion from '../../../../../storybook/HookStatusWrapperWithMetadataVersion';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../../storybook/decorators/redux-decorator';
+import { StoryObj, Meta } from '@storybook/react';
 import React from 'react';
 import { useUpdateRemoteSchemaRelationship } from '..';
 
@@ -37,27 +37,29 @@ function UpdateRemoteSchemaRelationshipComponent({
   );
 }
 
-export const UpdateRemoteSchemaRelationship: ComponentStory<
+export const UpdateRemoteSchemaRelationship: StoryObj<
   typeof UpdateRemoteSchemaRelationshipComponent
-> = args => {
-  return <UpdateRemoteSchemaRelationshipComponent {...args} />;
-};
+> = {
+  render: args => {
+    return <UpdateRemoteSchemaRelationshipComponent {...args} />;
+  },
 
-UpdateRemoteSchemaRelationship.args = {
-  rel: {
-    source: 'default',
-    table: 'person',
-    name: 'name_of_the_remote_relationship',
-    definition: {
-      to_remote_schema: {
-        remote_schema: 'name_of_the_remote_schema',
-        lhs_fields: ['test_id'],
-        remote_field: {
-          countries: {
-            arguments: {
-              filter: {
-                code: {
-                  eq: '$test_id',
+  args: {
+    rel: {
+      source: 'default',
+      table: 'person',
+      name: 'name_of_the_remote_relationship',
+      definition: {
+        to_remote_schema: {
+          remote_schema: 'name_of_the_remote_schema',
+          lhs_fields: ['test_id'],
+          remote_field: {
+            countries: {
+              arguments: {
+                filter: {
+                  code: {
+                    eq: '$test_id',
+                  },
                 },
               },
             },
@@ -74,4 +76,4 @@ export default {
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
   ],
-} as ComponentMeta<typeof UpdateRemoteSchemaRelationshipComponent>;
+} as Meta<typeof UpdateRemoteSchemaRelationshipComponent>;

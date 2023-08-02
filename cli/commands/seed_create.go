@@ -39,6 +39,11 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create seed_name",
 		Short: "Create a new seed file",
+		Long: `This will create a new seed file with the name provided as an argument. You can export tables from the database and create a seed file from it by using the ` + "``--from-table``" + ` flag.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-seeds/
+`,
 		Example: `  # Create a new seed file and use editor to add SQL:
   hasura seed create new_table_seed
 
@@ -67,7 +72,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			// check if seed ops are supported for the database
 			if !seed.IsSeedsSupported(ec.Source.Kind) {
-				return errors.E(op, fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind))
+				return errors.E(op, fmt.Errorf("seed operations on database '%s' of kind '%s' is not supported", ec.Source.Name, ec.Source.Kind))
 			}
 			return nil
 		},

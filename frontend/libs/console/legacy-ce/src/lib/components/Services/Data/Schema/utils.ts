@@ -1,5 +1,8 @@
 import React from 'react';
-import { CheckDatabaseLatencyResponse, TaskEvent } from '@/features/ConnectDB';
+import {
+  CheckDatabaseLatencyResponse,
+  TaskEvent,
+} from '../../../../features/ConnectDB';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { LS_KEYS, getLSItem, setLSItem } from '../../../../utils/localStorage';
 import globals from '../../../../Globals';

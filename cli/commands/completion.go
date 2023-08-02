@@ -47,9 +47,9 @@ func NewCompletionCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	completionCmd := &cobra.Command{
 		Use:          "completion [shell]",
-		Short:        "Generate auto completion code",
+		Short:        "Generate auto-completion code",
 		Args:         cobra.ExactArgs(1),
-		Long:         "Output shell completion code for the specified shell (bash or zsh)",
+		Long:         "Depending on your shell (bash or zsh), running `hasura completion [shell]` will generate the auto-completion code for the Hasura CLI. You can then add this to your shell config to enable auto-completion, which will allow you to tab through the available commands and options.",
 		SilenceUsage: true,
 		Example:      completionCmdExample,
 		PreRunE: func(cmd *cobra.Command, args []string) error {

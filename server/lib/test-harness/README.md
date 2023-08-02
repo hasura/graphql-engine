@@ -7,6 +7,24 @@ against the GraphQL API.
 
 ## Setup
 
+The test harness supports running tests using an external GraphQL-Engine
+process, as opposed to a server instance running in a thread via library
+linking. For this purpose, tests that use this need to know the path to the
+`graphql-engine` executable via the `GRAPHQL_ENGINE` environment variable.
+
+To point a test suite using the harness to the `graphql-engine` executable
+produced in-tree by cabal, use e.g.:
+
+```bash
+$ export GRAPHQL_ENGINE=$(cabal list-bin exe:graphql-engine)
+```
+
+(Note that at the time of this writing, almost all of the test suite still
+tests the Graphql Engine via library linking rather than via external process.
+However, we expect the external process approach to become gradually more
+prominent because it is more flexible and true to integration testing.)
+
+
 The harness depends on the values in `src/Harness/Constants.hs` being correct.
 Running `docker-compose up` in the root of `graphql-engine` should take care of
 this for everything except BigQuery. Because BigQuery doesn't have a way of

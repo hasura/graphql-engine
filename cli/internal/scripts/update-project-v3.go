@@ -89,7 +89,7 @@ func UpdateProjectV3(opts UpdateProjectV3Opts) error {
 	// if targetDatabase is not set, get list of databases connected from hasura
 	sources, err := metadatautil.GetSources(opts.EC.APIClient.V1Metadata.ExportMetadata)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	if len(targetDatabase) == 0 {
 		if len(sources) == 1 && sources[0] == "default" {

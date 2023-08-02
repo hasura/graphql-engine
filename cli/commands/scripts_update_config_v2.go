@@ -33,8 +33,8 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	scriptsUpdateConfigV2Cmd := &cobra.Command{
 		Use:     "update-project-v2",
 		Aliases: []string{"update-config-v2"},
-		Short:   "Update the Hasura project from config v1 to v2",
-		Long: `Update the Hasura project from config v1 to v2 by executing the following actions:
+		Short:   "Update the Hasura Project from config v1 to v2",
+		Long: `Update the Hasura Project from config v1 to v2 by executing the following actions:
 
 1. Installs a plugin system for CLI
 2. Installs CLI Extensions plugins (primarily for actions)
@@ -45,10 +45,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 `,
 		Example: `  # Read more about v2 configuration for CLI at https://docs.hasura.io
 
-  # Update the Hasura project from config v1 to v2
+  # Update the Hasura Project from config v1 to v2
   hasura scripts update-project-v2
 
-  # Update the Hasura project from config v1 to v2 with a different metadata directory:
+  # Update the Hasura Project from config v1 to v2 with a different metadata directory:
   hasura scripts update-project-v2 --metadata-dir "metadata"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -360,9 +360,9 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := scriptsUpdateConfigV2Cmd.Flags()
 
 	f.StringVar(&metadataDir, "metadata-dir", "metadata", "")
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
-	f.String("access-key", "", "access key for Hasura GraphQL engine")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
 		ec.Logger.WithError(err).Errorf("error while using a dependency library")
 	}

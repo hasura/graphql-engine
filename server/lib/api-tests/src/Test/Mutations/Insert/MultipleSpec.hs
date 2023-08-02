@@ -12,12 +12,13 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
+import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -40,6 +41,11 @@ spec = do
           (Fixture.fixture $ Fixture.Backend Cockroach.backendTypeMetadata)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Sqlserver.backendTypeMetadata)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlserver.setupTablesAction schema testEnv
                 ]
             }
         ]
@@ -81,7 +87,7 @@ schema =
           ],
         tablePrimaryKey = ["id"],
         tableReferences =
-          [ Schema.Reference "author_id" "author" "id"
+          [ Schema.reference "author_id" "author" "id"
           ]
       }
   ]
@@ -89,11 +95,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "Adds a list of articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
         schemaName = Schema.getSchemaName testEnvironment
@@ -107,13 +110,11 @@ tests opts = do
                 insert_#{schemaName}_article(
                   objects: [
                     {
-                      id: 1,
                       title: "Article 1",
                       content: "Sample article content",
                       author_id: 1
                     },
                     {
-                      id: 2,
                       title: "Article 2",
                       content: "Sample article content",
                       author_id: 2
@@ -140,7 +141,7 @@ tests opts = do
                     title: "Article 2"
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected
 
   it "Adds an empty list of authors" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -171,4 +172,4 @@ tests opts = do
                 returning: []
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

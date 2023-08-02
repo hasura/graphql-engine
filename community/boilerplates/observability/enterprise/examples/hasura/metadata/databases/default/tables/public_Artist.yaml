@@ -1,0 +1,11 @@
+table:
+  name: Artist
+  schema: public
+array_relationships:
+  - name: Albums
+    using:
+      foreign_key_constraint_on:
+        column: ArtistId
+        table:
+          name: Album
+          schema: public

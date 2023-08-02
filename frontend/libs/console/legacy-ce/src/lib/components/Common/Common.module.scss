@@ -2,8 +2,19 @@
 
 @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 
+$headerHeight: 54px;
+
+/* container height subtracting top header and bottom scroll bar */
+$mainContainerHeight: calc(100vh - $headerHeight - 6px);
+
+/* Min container width below which horizontal scroll will appear */
+/* Decided based on ensuring proper rendering of GraphiQL in cloud console */
+$minContainerWidth: 1350px;
+
 body {
   background-color: #f8fafb;
+  min-width: $minContainerWidth;
+  overflow-x: auto;
 }
 
 h1,
@@ -80,7 +91,7 @@ table tbody tr th {
 }
 
 .pageSidebar {
-  height: calc(100vh - 54px);
+  height: calc(100vh - $headerHeight);
   overflow: auto;
   // background: #444;
   // color: $navbar-inverse-color;
@@ -1338,10 +1349,6 @@ code {
   font-style: normal;
 }
 
-.fontStyleItalic {
-  font-style: italic;
-}
-
 .fontSizeSm {
   font-size: 13px !important;
 }
@@ -1547,11 +1554,16 @@ code {
 }
 
 .add_button_layout {
-  width: 40%;
+  width: 100%;
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
+  margin-bottom: 2px;
   align-self: flex-end;
+  padding-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background-color: #f8fafb;
 }
 
 .connection_settings_layout {
@@ -1579,11 +1591,5 @@ code {
 }
 
 .connect_form_width {
-  width: 66%;
+  width: 50%;
 }
-
-/* container height subtracting top header and bottom scroll bar */
-$mainContainerHeight: calc(100vh - 60px);
-
-/* Min container width below which horizontal scroll will appear */
-$minContainerWidth: 1200px;

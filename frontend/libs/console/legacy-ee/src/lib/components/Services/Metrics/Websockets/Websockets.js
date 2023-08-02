@@ -5,7 +5,7 @@ import { updateQsHistory, transformToTypeValueArr } from '../utils';
 import { retrieveFilterData, retrieveDefaultDropdownOptions } from './utils';
 import BrowseRows from './BrowseRows';
 import { applyFilterByQueryParam } from '../utils';
-import { Analytics, REDACT_EVERYTHING } from '@hasura/console-oss';
+import { Analytics, REDACT_EVERYTHING } from '@hasura/console-legacy-ce';
 
 import {
   TITLE_MAP,

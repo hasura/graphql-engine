@@ -1,9 +1,9 @@
-import { Button } from '@/new-components/Button';
-import { CardedTable } from '@/new-components/CardedTable';
-import { FieldWrapper } from '@/new-components/Form';
+import { Button } from '../../../new-components/Button';
+import { CardedTable } from '../../../new-components/CardedTable';
+import { FieldWrapper } from '../../../new-components/Form';
 import { OpenApiReference, OpenApiSchema } from '@hasura/dc-api-types';
 import React, { useState } from 'react';
-import get from 'lodash.get';
+import get from 'lodash/get';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 import { useFormContext } from 'react-hook-form';
 import ReactJson from 'react-json-view';

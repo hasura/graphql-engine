@@ -1,7 +1,6 @@
 /* eslint-disable no-underscore-dangle */
-import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
-import { areTablesEqual } from '@/features/RelationshipsTable';
-import { GraphQLType } from 'graphql';
+import { getScalarType, getTypeName } from '../../../GraphQLUtils';
+import { GraphQLType, buildClientSchema, isObjectType } from 'graphql';
 import { GDCTable } from '..';
 import {
   exportMetadata,
@@ -9,24 +8,10 @@ import {
   runMetadataQuery,
 } from '../../api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
-
-/**
- * Refer - https://github.com/hasura/graphql-engine-mono/blob/main/dc-agents/dc-api-types/src/models/TableInfo.ts
- */
-
-export type GetTableInfoResponse = {
-  name: GDCTable;
-  columns: { name: string; type: string; nullable: boolean }[];
-  primary_key?: string[] | null;
-  description?: string;
-  foreign_keys?: Record<
-    string,
-    {
-      foreign_table: GDCTable;
-      column_mapping: Record<string, string>;
-    }
-  >;
-};
+import { adaptAgentDataType } from './utils';
+import { GetTableInfoResponse } from './types';
+import { areTablesEqual } from '../../../hasura-metadata-api';
+import { getTableDisplayName } from '../../../DatabaseRelationships';
 
 export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;
@@ -34,6 +19,8 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
   try {
     const introspectionResult = await runIntrospectionQuery({ httpClient });
     const { metadata } = await exportMetadata({ httpClient });
+
+    if (!metadata) throw Error('Metadata could not be retrieved');
 
     const metadataSource = metadata.sources.find(
       s => s.name === dataSourceName
@@ -56,6 +43,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
       introspectionResult.data.__schema.types.find(
         (t: any) => t.name === queryRoot
       )?.fields ?? [];
+    const schema = buildClientSchema(introspectionResult.data);
 
     const scalarTypes = graphQLFields
       .map(({ name, type }: { name: string; type: GraphQLType }) => {
@@ -79,6 +67,9 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
     });
 
     const primaryKeys = tableInfo?.primary_key ? tableInfo.primary_key : [];
+    const tableName = getTableDisplayName(tableInfo.name);
+    const type = schema.getType(tableName);
+    const fields = isObjectType(type) ? type.getFields() : {};
 
     return tableInfo.columns.map<TableColumn>(column => {
       const graphqlFieldName =
@@ -89,15 +80,20 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
         scalarTypes.find(
           ({ name }: { name: string }) => name === graphqlFieldName
         ) ?? null;
-
+      const field = fields[graphqlFieldName];
       return {
         name: column.name,
-        dataType: column.type,
+        dataType: adaptAgentDataType(column.type),
+        /**
+          Will be updated once GDC supports mutations
+        */
+        consoleDataType: 'string',
         nullable: column.nullable,
         isPrimaryKey: primaryKeys.includes(column.name),
         graphQLProperties: {
           name: graphqlFieldName,
           scalarType: scalarType?.type ?? null,
+          graphQLType: field?.type,
         },
       };
     });

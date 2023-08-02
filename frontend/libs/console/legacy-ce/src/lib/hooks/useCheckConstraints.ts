@@ -1,6 +1,6 @@
-import type { QualifiedTable } from '@/metadata/types';
-import type { CheckConstraint } from '@/dataSources/types';
-import { dataSourceSqlQueries } from '@/features/SqlQueries';
+import type { QualifiedTable } from '../metadata/types';
+import type { CheckConstraint } from '../dataSources/types';
+import { dataSourceSqlQueries } from '../features/SqlQueries';
 import type { QualifiedDataSource, RunSQLResponse } from './types';
 import { RunSQLQueryOptions, useRunSQL } from './common';
 

@@ -16,7 +16,7 @@ CREATE TABLE hdb_catalog.event_log
   delivered BIT NOT NULL DEFAULT 0,
   error BIT NOT NULL DEFAULT 0,
   tries INTEGER NOT NULL DEFAULT 0,
-  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET() AT TIME ZONE 'UTC',
   locked DATETIMEOFFSET(7),
   next_retry_at DATETIMEOFFSET(7),
   archived BIT NOT NULL DEFAULT 0
@@ -39,7 +39,7 @@ CREATE TABLE hdb_catalog.event_invocation_logs (
   status INTEGER,
   request NVARCHAR(MAX),
   response NVARCHAR(MAX),
-  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET()
+  created_at DATETIMEOFFSET(7) NOT NULL DEFAULT SYSDATETIMEOFFSET() AT TIME ZONE 'UTC'
 );
 
 /* This index improves the performance of deletes by event_id, so that if somebody

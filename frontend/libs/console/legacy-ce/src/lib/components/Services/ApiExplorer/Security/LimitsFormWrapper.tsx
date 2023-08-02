@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { TableFormProps } from '../../../Common/Table';
 import { RoleLimits, RoleState } from './utils';
 import styles from './Security.module.scss';

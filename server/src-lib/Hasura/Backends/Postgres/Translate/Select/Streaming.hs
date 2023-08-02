@@ -13,21 +13,24 @@ module Hasura.Backends.Postgres.Translate.Select.Streaming
 where
 
 import Control.Monad.Writer.Strict (runWriter)
-import Database.PG.Query (Query, fromBuilder)
+import Database.PG.Query (Query)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (contextualizeBaseTableColumn)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
-import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect, generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
-  ( MultiRowSelectNode (MultiRowSelectNode),
+  ( CustomSQLCTEs,
+    MultiRowSelectNode (MultiRowSelectNode),
     PermissionLimitSubQuery (PLSQNotRequired),
     SelectNode (SelectNode),
+    SelectWriter (..),
     SourcePrefixes (SourcePrefixes),
+    initialNativeQueryFreshIdStore,
     orderByForJsonAgg,
   )
 import Hasura.Backends.Postgres.Types.Column (unsafePGColumnToBackend)
@@ -41,6 +44,7 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG))
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend (Backend)
+import Hasura.RQL.Types.BackendType (BackendType (Postgres))
 import Hasura.RQL.Types.Column
   ( ColumnInfo (ciColumn, ciName),
     ColumnValue (cvType),
@@ -53,32 +57,34 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Subscription
   ( CursorOrdering (CODescending),
   )
-import Hasura.SQL.Backend (BackendType (Postgres))
 import Hasura.SQL.Types
   ( CollectableType (CollectableTypeArray, CollectableTypeScalar),
-    ToSQL (toSQL),
   )
 import Language.GraphQL.Draft.Syntax qualified as G
 
 selectStreamQuerySQL ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
   Query
-selectStreamQuerySQL sel =
-  fromBuilder $ toSQL $ mkStreamSQLSelect sel
+selectStreamQuerySQL =
+  toQuery
+    . selectToSelectWith
+    . mkStreamSQLSelect
 
 mkStreamSQLSelect ::
-  forall pgKind.
+  forall pgKind m.
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind,
+    MonadWriter CustomSQLCTEs m
   ) =>
   AnnSimpleStreamSelect ('Postgres pgKind) ->
-  S.Select
-mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
+  m S.Select
+mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) = do
   let cursorArg = _ssaCursorArg args
       cursorColInfo = _sciColInfo cursorArg
-      annOrderbyCol = AOCColumn cursorColInfo
+      annOrderbyCol = AOCColumn cursorColInfo (_sciRedactionExpression cursorArg)
       basicOrderType =
         bool S.OTAsc S.OTDesc $ _sciOrdering cursorArg == CODescending
       orderByItems =
@@ -89,8 +95,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
               fromResVars
                 (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
                 ["cursor", G.unName $ ciName cursorColInfo]
-         in BoolField $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
-
+         in BoolField $ AVColumn cursorColInfo (_sciRedactionExpression cursorArg) [(orderByOpExp sqlExp)]
       selectArgs =
         noSelectArgs
           { _saWhere =
@@ -100,14 +105,15 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
           }
       sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired
-      ((selectSource, nodeExtractors), joinTree) =
-        runWriter $
-          flip runReaderT strfyNum $
-            processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
+      ((selectSource, nodeExtractors), SelectWriter {_swJoinTree = joinTree, _swCustomSQLCTEs = customSQLCTEs}) =
+        runWriter
+          $ flip runReaderT strfyNum
+          $ flip evalStateT initialNativeQueryFreshIdStore
+          $ processAnnSimpleSelect sourcePrefixes rootFldName permLimitSubQuery sqlSelect
       selectNode = SelectNode nodeExtractors joinTree
       topExtractor =
-        asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery $
-          orderByForJsonAgg selectSource
+        asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery
+          $ orderByForJsonAgg selectSource
       cursorLatestValueExp :: S.SQLExp =
         let columnAlias = ciName cursorColInfo
             pgColumn = ciColumn cursorColInfo
@@ -120,9 +126,9 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             colExp =
               [ S.SELit (G.unName columnAlias),
                 S.SETyAnn
-                  ( mkMaxOrMinSQLExp maxOrMinTxt $
-                      toIdentifier $
-                        contextualizeBaseTableColumn rootFldIdentifier pgColumn
+                  ( mkMaxOrMinSQLExp maxOrMinTxt
+                      $ toIdentifier
+                      $ contextualizeBaseTableColumn rootFldIdentifier pgColumn
                   )
                   S.textTypeAnn
               ]
@@ -131,9 +137,9 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             S.SEFnApp "json_build_object" colExp Nothing
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.toColumnAlias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
-   in renameIdentifiers $
-        generateSQLSelectFromArrayNode selectSource arrayNode $
-          S.BELit True
+  tell customSQLCTEs
+
+  pure $ generateSQLSelectFromArrayNode @pgKind selectSource arrayNode $ S.BELit True
   where
     rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
     sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)
@@ -142,8 +148,8 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
 
     -- TODO: these functions also exist in `resolveMultiplexedValue`, de-duplicate these!
     fromResVars pgType jPath =
-      addTypeAnnotation pgType $
-        S.SEOpApp
+      addTypeAnnotation pgType
+        $ S.SEOpApp
           (S.SQLOp "#>>")
           [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (TableIdentifier "_subs") Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath

@@ -11,48 +11,48 @@ test('transformDbToRemoteSchema returns new and legacy formats consistently', ()
   );
 
   expect(result).toMatchInlineSnapshot(`
-    Array [
-      Object {
-        "lhs_fields": Array [
+    [
+      {
+        "lhs_fields": [
           "id",
         ],
         "relationshipName": "new_payload",
         "remoteSchemaName": "remoteSchema3",
-        "remote_field": Object {
-          "test": Object {
-            "arguments": Object {
-              "where": Object {
-                "id": Object {
+        "remote_field": {
+          "test": {
+            "arguments": {
+              "where": {
+                "id": {
                   "_eq": "$id",
                 },
               },
             },
           },
         },
-        "target": Object {
+        "target": {
           "database": "default",
           "schema": "public",
           "table": "user",
         },
       },
-      Object {
-        "lhs_fields": Array [
+      {
+        "lhs_fields": [
           "id",
         ],
         "relationshipName": "t",
         "remoteSchemaName": "remoteSchema3",
-        "remote_field": Object {
-          "test": Object {
-            "arguments": Object {
-              "where": Object {
-                "id": Object {
+        "remote_field": {
+          "test": {
+            "arguments": {
+              "where": {
+                "id": {
                   "_eq": "$id",
                 },
               },
             },
           },
         },
-        "target": Object {
+        "target": {
           "database": "default",
           "schema": "public",
           "table": "user",
@@ -73,21 +73,21 @@ test('transformDbToLocal returns object relationships correctly', () => {
   });
 
   expect(result).toMatchInlineSnapshot(`
-    Array [
-      Object {
+    [
+      {
         "comment": undefined,
-        "from": Object {
-          "column": Array [
+        "from": {
+          "column": [
             "fk_user_id",
           ],
           "table": "product",
         },
         "name": "product_user",
-        "to": Object {
-          "column": Array [
+        "to": {
+          "column": [
             "id",
           ],
-          "table": "\\"user\\"",
+          "table": ""user"",
         },
         "type": "object",
       },

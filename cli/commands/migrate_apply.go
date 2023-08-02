@@ -23,6 +23,11 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply migrations on the database",
+		Long: `Migrations represent the modifications needed to reach the desired state of a database schema. Running this command will apply the migrations on the database.
+
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/manage-migrations/
+`,
 		Example: `  # Apply all migrations
   hasura migrate apply
 
@@ -142,10 +147,10 @@ func (o *MigrateApplyOptions) Validate() error {
 				// and update ec to include the database name and kind
 				sourceKind, err := metadatautil.GetSourceKind(o.EC.APIClient.V1Metadata.ExportMetadata, o.Source.Name)
 				if err != nil {
-					return herrors.E(op, fmt.Errorf("determining database kind of %s: %w", o.Source.Name, err))
+					return herrors.E(op, fmt.Errorf("determining database kind of '%s': %w", o.Source.Name, err))
 				}
 				if sourceKind == nil {
-					return herrors.E(op, fmt.Errorf("error determining database kind for %s, check if database exists on hasura", o.Source.Name))
+					return herrors.E(op, fmt.Errorf("error determining database kind for '%s', check if database exists on hasura", o.Source.Name))
 				}
 				o.Source.Kind = *sourceKind
 			}
@@ -178,7 +183,7 @@ func (o *MigrateApplyOptions) Run() error {
 		}
 	}
 	if len(failedSources) != 0 {
-		return herrors.E(op, fmt.Errorf("operation failed on : %s", strings.Join(failedSources, ",")))
+		return herrors.E(op, fmt.Errorf("applying migrations failed on database(s): %s", strings.Join(failedSources, ",")))
 	}
 	return nil
 }
@@ -203,19 +208,19 @@ func (o *MigrateApplyOptions) Apply() (chan MigrateApplyResult, error) {
 
 		switch {
 		case errors.Is(err, migrate.ErrNoChange):
-			return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
+			return fmt.Sprintf("nothing to apply on database: %s", o.Source.Name), nil
 		case errors.As(err, &errPath):
 			// If Op is first, then log No migrations to apply
 			if errPath.Op == "first" {
-				return fmt.Sprintf("nothing to apply on database %s", o.Source.Name), nil
+				return fmt.Sprintf("nothing to apply on database: %s", o.Source.Name), nil
 			}
 		case errors.As(err, &errNotFound):
 			// check if the returned error is a directory not found error
 			// ie might be because  a migrations/<source_name> directory is not found
 			// if so skip this
-			return "", herrors.E(op, fmt.Errorf("skipping applying migrations on database %s, encountered: \n%s", o.Source.Name, errNotFound.Error()))
+			return "", herrors.E(op, fmt.Errorf("skipping applying migrations on database '%s', encountered: \n%s", o.Source.Name, errNotFound.Error()))
 		}
-		return "", herrors.E(op, fmt.Errorf("skipping applying migrations on database %s, encountered: \n%w", o.Source.Name, err))
+		return "", herrors.E(op, fmt.Errorf("skipping applying migrations on database '%s', encountered: \n%w", o.Source.Name, err))
 	}
 
 	if len(o.Source.Name) == 0 && !o.EC.AllDatabases {
@@ -277,7 +282,7 @@ func (o *MigrateApplyOptions) Exec() error {
 		// check if  a migrations directory exists for source in project
 		migrationDirectory := filepath.Join(o.EC.MigrationDir, o.Source.Name)
 		if f, err := os.Stat(migrationDirectory); err != nil || f == nil {
-			return herrors.E(op, &errDatabaseMigrationDirectoryNotFound{fmt.Sprintf("expected to find a migrations directory for database %s in %s, but encountered error: %s", o.Source.Name, o.EC.MigrationDir, err.Error())})
+			return herrors.E(op, &errDatabaseMigrationDirectoryNotFound{fmt.Sprintf("expected to find a migrations directory for database '%s' in %s, but encountered error: %s", o.Source.Name, o.EC.MigrationDir, err.Error())})
 		}
 	}
 	if o.EC.AllDatabases && (len(o.GotoVersion) > 0 || len(o.VersionMigration) > 0) {

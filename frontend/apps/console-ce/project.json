@@ -1,29 +1,23 @@
 {
+  "name": "console-ce",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/console-ce/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["scope:console", "type:app", "meta:legacy"],
   "targets": {
     "build-server-assets": {
-      "executor": "@nrwl/workspace:run-commands",
+      "executor": "@hasura/internal-plugin:build-server-assets",
       "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
-      "outputs": ["dist/apps/server-assets-console-ce"],
-      "dependsOn": ["build"],
-      "options": {
-        "commands": [
-          "rm -rf dist/apps/server-assets-console-ce",
-          "cp -r dist/apps/console-ce dist/apps/server-assets-console-ce",
-          "mkdir -p dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.css dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.js dist/apps/server-assets-console-ce/versioned",
-          "gzip -r -f dist/apps/server-assets-console-ce/versioned",
-          "mv dist/apps/server-assets-console-ce/*.map  dist/apps/server-assets-console-ce/*.txt dist/apps/server-assets-console-ce/versioned"
-        ],
-        "parallel": false
-      }
+      "outputs": ["{workspaceRoot}/dist/apps/server-assets-console-ce"],
+      "dependsOn": ["validate-javascript-bundle-output"]
+    },
+    "validate-javascript-bundle-output": {
+      "executor": "@hasura/internal-plugin:validate-javascript-bundle-output",
+      "inputs": ["{workspaceRoot}/dist/apps/console-ce/**"],
+      "dependsOn": ["build"]
     },
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nrwl/webpack:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -34,6 +28,7 @@
         "main": "apps/console-ce/src/main.tsx",
         "polyfills": "apps/console-ce/src/polyfills.ts",
         "tsConfig": "apps/console-ce/tsconfig.app.json",
+        "buildLibsFromSource": false,
         "assets": [
           {
             "glob": "**",
@@ -41,17 +36,16 @@
             "output": "common"
           }
         ],
-        "styles": [
-          "apps/console-ce/src/css/tailwind.css",
-          "apps/console-ce/src/css/legacy-boostrap.css"
-        ],
+        "styles": ["apps/console-ce/src/css/tailwind.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
-        "postcssConfig": "apps/console-ce/postcss.config.js"
+        "webpackConfig": "custom-webpack.config.js",
+        "postcssConfig": "apps/console-ce/postcss.config.js",
+        "isolatedConfig": true
       },
       "configurations": {
         "development": {
           "extractLicenses": false,
+          "outputHashing": "none",
           "extractCss": false,
           "optimization": false,
           "sourceMap": true,
@@ -65,18 +59,18 @@
             }
           ],
           "optimization": true,
-          "outputHashing": "none",
+          "outputHashing": "bundles",
           "extractCss": false,
           "sourceMap": true,
-          "namedChunks": false,
-          "generateIndexHtml": false,
+          "namedChunks": true,
+          "generateIndexHtml": true,
           "extractLicenses": false,
-          "vendorChunk": false
+          "vendorChunk": true
         }
       }
     },
     "serve": {
-      "executor": "@nrwl/web:dev-server",
+      "executor": "@nrwl/webpack:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "console-ce:build",
@@ -96,12 +90,12 @@
       "executor": "@nrwl/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["apps/console-ce/**/*.{ts,tsx,js,jsx}"]
+        "lintFilePatterns": ["apps/console-ce/**/*.{ts,tsx,js,jsx,json}"]
       }
     },
     "test": {
       "executor": "@nrwl/jest:jest",
-      "outputs": ["coverage/apps/console-ce"],
+      "outputs": ["{workspaceRoot}/coverage/apps/console-ce"],
       "options": {
         "jestConfig": "apps/console-ce/jest.config.ts",
         "passWithNoTests": true

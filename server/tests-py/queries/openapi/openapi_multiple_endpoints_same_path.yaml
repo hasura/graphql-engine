@@ -113,16 +113,16 @@
             name: x-hasura-admin-secret
             schema:
               type: string
-          - description: _"last_name" is required (enter it either in parameters or
-              request body)_
-            in: query
-            name: last_name
-            schema:
-              type: string
           - description: _"first_name" is required (enter it either in parameters
               or request body)_
             in: query
             name: first_name
+            schema:
+              type: string
+          - description: _"last_name" is required (enter it either in parameters or
+              request body)_
+            in: query
+            name: last_name
             schema:
               type: string
           requestBody:
@@ -177,8 +177,6 @@
           pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
           title: uuid
           type: string
-
-
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

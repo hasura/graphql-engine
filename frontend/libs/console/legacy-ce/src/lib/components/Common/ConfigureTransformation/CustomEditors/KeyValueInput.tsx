@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import { inputStyles, addPlaceholderValue } from '../utils';
 import { KeyValuePair } from '../stateDefaults';
 
@@ -44,7 +44,6 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
                 value={name}
                 onChange={setPairKey}
                 type="text"
-                name="table_name"
                 id="table_name"
                 className={`w-full ${inputStyles}`}
                 placeholder="Key..."
@@ -56,7 +55,6 @@ const KeyValueInput: React.FC<KeyValueInputProps> = ({
                 value={value}
                 onChange={setPairValue}
                 type="text"
-                name="table_name"
                 id="table_name"
                 className={`w-full ${inputStyles}`}
                 placeholder="Value..."

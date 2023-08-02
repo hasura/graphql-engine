@@ -1,9 +1,9 @@
 import React from 'react';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 import styles from '../../TableModify/ModifyTable.module.scss';
 import { RemoteRelationshipServer } from './utils';
 import RemoteRelationshipList from './components/RemoteRelationshipList';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { Dispatch } from '../../../../../types';
 import { Table } from '../../../../../dataSources/types';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
@@ -28,8 +28,10 @@ const RemoteRelationships: React.FC<Props> = ({
       <h4 className={styles.subheading_text}>
         Remote Schema Relationships
         <ToolTip message="Relationships to remote schemas" />
-        &nbsp;
-        <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/remote-relationships/remote-schema-relationships.html" />
+        <LearnMoreLink
+          href="https://hasura.io/docs/latest/graphql/core/schema/remote-relationships/remote-schema-relationships.html"
+          className="font-normal"
+        />
       </h4>
       <div className={styles.activeEdit}>
         <RemoteRelationshipList

@@ -1,4 +1,4 @@
-import { Table, TableColumn } from '@/dataSources/types';
+import { Table, TableColumn } from '../../../dataSources/types';
 import moment from 'moment';
 import { capitaliseFirstLetter } from '../ConfigureTransformation/utils';
 

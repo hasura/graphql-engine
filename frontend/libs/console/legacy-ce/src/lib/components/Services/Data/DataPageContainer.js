@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
 import { Link } from 'react-router';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../features/Analytics';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
@@ -8,25 +7,8 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.module.scss';
-import { isFeatureSupported } from '../../../dataSources';
-import { fetchPostgresVersion } from '../../Main/Actions';
 
-const DataPageContainer = ({
-  children,
-  location,
-  dispatch,
-  currentDataSource,
-}) => {
-  useEffect(() => {
-    // TODO: handle for different drivers
-    if (
-      currentDataSource &&
-      isFeatureSupported('driver.fetchVersion.enabled')
-    ) {
-      dispatch(fetchPostgresVersion);
-    }
-  }, [dispatch, currentDataSource]);
-
+const DataPageContainer = ({ children, location, currentDataSource }) => {
   const currentLocation = location.pathname;
 
   let migrationTab = null;
@@ -47,7 +29,7 @@ const DataPageContainer = ({
 
   const sidebarContent = (
     <Analytics name="DataPageContainerSidebar" {...REDACT_EVERYTHING}>
-      <ul>
+      <ul className="bootstrap-jail">
         <li
           role="presentation"
           className={
@@ -58,25 +40,48 @@ const DataPageContainer = ({
               : ''
           }
         >
-          <Link className={styles.linkBorder} to={`/data/manage`}>
+          <Link
+            data-testid="Data Manager"
+            className={styles.linkBorder}
+            to={`/data/manage`}
+          >
             Data Manager
           </Link>
 
           <DataSubSidebar />
         </li>
         {currentDataSource && (
-          <li
-            role="presentation"
-            className={currentLocation.includes('/sql') ? styles.active : ''}
-          >
-            <Link
-              className={styles.linkBorder}
-              to={`/data/sql`}
-              data-test="sql-link"
+          <>
+            <li
+              role="presentation"
+              className={currentLocation.includes('/sql') ? styles.active : ''}
             >
-              SQL
-            </Link>
-          </li>
+              <Link
+                className={styles.linkBorder}
+                to={`/data/sql`}
+                data-test="sql-link"
+              >
+                SQL
+              </Link>
+            </li>
+            <li
+              role="presentation"
+              className={
+                currentLocation.includes('/native-queries') ||
+                currentLocation.includes('/logical-models')
+                  ? styles.active
+                  : ''
+              }
+            >
+              <Link
+                className={styles.linkBorder}
+                to={`/data/native-queries`}
+                data-test="native-queries"
+              >
+                Native Queries
+              </Link>
+            </li>
+          </>
         )}
         {migrationTab}
       </ul>

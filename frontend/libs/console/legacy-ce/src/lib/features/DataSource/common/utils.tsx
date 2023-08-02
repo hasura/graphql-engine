@@ -1,7 +1,7 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
-import { MetadataTable, Source, Table } from '@/features/hasura-metadata-types';
-import { IntrospectedTable, TableColumn, TableRow } from '../types';
+import { MetadataTable, Source, Table } from '../../hasura-metadata-types';
+import { IntrospectedTable, TableFkRelationships, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 
 export const adaptIntrospectedTables = (
@@ -23,17 +23,6 @@ export const adaptIntrospectedTables = (
     }));
 
   return adaptedResponse ?? [];
-};
-
-export const adaptTableColumns = (
-  result: RunSQLResponse['result']
-): TableColumn[] => {
-  if (!result) return [];
-
-  return result.slice(1).map(row => ({
-    name: row[0],
-    dataType: row[1],
-  }));
 };
 
 export const convertToTreeData = (
@@ -112,3 +101,17 @@ export const transformGraphqlResponse = ({
     return transformedRow;
   });
 };
+
+export function generateForeignKeyLabel(foreignKey: TableFkRelationships) {
+  // foreignKey.to.table can be any valid Json value
+  // Handle the case where it is an array of strings, otherwise use it's stringified value
+  const toTableLabel = Array.isArray(foreignKey.to.table)
+    ? foreignKey.to.table.join('.')
+    : foreignKey.to.table;
+  return `${foreignKey.from.column
+    .join(',')
+    // Replace double quotes with empty string
+    .replace(/"/g, '')} → ${toTableLabel}.${foreignKey.to.column
+    .join(',')
+    .replace(/"/g, '')}`;
+}

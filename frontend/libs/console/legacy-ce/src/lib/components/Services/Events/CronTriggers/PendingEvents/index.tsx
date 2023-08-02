@@ -7,7 +7,7 @@ import PendingEvents from './PendingEvents';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const PendingEventsContainer: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();

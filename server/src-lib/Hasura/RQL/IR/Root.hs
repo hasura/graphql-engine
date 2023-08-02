@@ -18,6 +18,7 @@ where
 import Data.Aeson.Ordered qualified as JO
 import Data.Kind (Type)
 import Hasura.Prelude
+import Hasura.QueryTags.Types qualified as RQL
 import Hasura.RQL.IR.Action
 import Hasura.RQL.IR.Delete
 import Hasura.RQL.IR.Insert
@@ -25,11 +26,10 @@ import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend qualified as RQL
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common qualified as RQL
-import Hasura.RQL.Types.QueryTags qualified as RQL
 import Hasura.RemoteSchema.SchemaCache.Types qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.SQL.Backend
 
 data SourceConfigWith (db :: BackendType -> Type) (b :: BackendType)
   = SourceConfigWith (RQL.SourceConfig b) (Maybe RQL.QueryTagsConfig) (db b)
@@ -79,6 +79,8 @@ data RemoteRelationshipField vf
   = RemoteSchemaField (RemoteSchemaSelect (RemoteRelationshipField vf))
   | -- | AnyBackend is used here to capture a relationship to an arbitrary target
     RemoteSourceField (AB.AnyBackend (RemoteSourceSelect (RemoteRelationshipField vf) vf))
+
+deriving instance (AB.SatisfiesForAllBackends vf Show) => Show (RemoteRelationshipField vf)
 
 -- | Represents a query root field to an action
 type QueryActionRoot v =

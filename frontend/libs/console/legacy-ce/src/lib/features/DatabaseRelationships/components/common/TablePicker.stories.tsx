@@ -1,22 +1,21 @@
 import React from 'react';
-import { SimpleForm } from '@/new-components/Form';
+import { SimpleForm } from '../../../../new-components/Form';
 import { z } from 'zod';
 import { action } from '@storybook/addon-actions';
-import { Button } from '@/new-components/Button';
-import { ComponentMeta, ComponentStory } from '@storybook/react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { Button } from '../../../../new-components/Button';
+import { StoryFn, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { TablePicker } from './TablePicker';
 
 export default {
-  title: 'GDC Console/Relationships/components/Table Picker',
   component: TablePicker,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof TablePicker>;
+} as Meta<typeof TablePicker>;
 
-export const Basic: ComponentStory<typeof TablePicker> = () => (
+export const Basic: StoryFn<typeof TablePicker> = () => (
   <SimpleForm
     schema={z.object({
-      from: z.object({
+      fromSource: z.object({
         dataSourceName: z.string(),
         table: z.unknown(),
       }),
@@ -24,7 +23,7 @@ export const Basic: ComponentStory<typeof TablePicker> = () => (
     onSubmit={action('onSubmit')}
     options={{
       defaultValues: {
-        from: {
+        fromSource: {
           dataSourceName: 'bikes',
           table: {
             name: 'orders',
@@ -35,7 +34,7 @@ export const Basic: ComponentStory<typeof TablePicker> = () => (
     }}
   >
     <>
-      <TablePicker name="from" />
+      <TablePicker type="fromSource" />
       <Button type="submit">Submit</Button>
     </>
   </SimpleForm>

@@ -1,4 +1,4 @@
-import { OrderBy } from '@/features/DataSource';
+import { OrderBy } from '../../../DataSource';
 import { ColumnSort } from '@tanstack/react-table';
 
 export const transformToOrderByClause = (sorts: ColumnSort[]): OrderBy[] => {

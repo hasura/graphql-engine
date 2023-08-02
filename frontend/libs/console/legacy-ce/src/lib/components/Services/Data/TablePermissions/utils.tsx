@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 
 import { getPermissionFilterString } from '../PermissionsSummary/utils';
 import { getLegacyOperator, allOperators } from './PermissionBuilder/utils';
@@ -52,7 +52,7 @@ const getOptionsForUpdate = (
   currentQueryType: BaseQueryType
 ) => {
   if (currentQueryType !== 'update') {
-    return ['check', 'filter'];
+    return ['filter', 'check'];
   }
   if (currentFilterType === 'check') return ['filter'];
   return [];

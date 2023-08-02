@@ -11,6 +11,7 @@ interface CardRadioGroupProps<T> {
   value?: T;
   items: Array<CardRadioGroupItem<T>>;
   disabled?: boolean;
+  orientation?: 'horizontal' | 'vertical';
   onChange: (option: T) => void;
 }
 
@@ -18,13 +19,15 @@ export const CardRadioGroup = <T extends string = string>(
   props: CardRadioGroupProps<T>
 ) => {
   const { value, items, disabled = false, onChange } = props;
-  const isCardNumberLessThenThree = items?.length === 1 || items?.length === 2;
 
   return (
     <div
-      className={`grid gap-sm grid-cols-2 ${
-        isCardNumberLessThenThree ? `sm:grid-cols-2` : `sm:grid-cols-3`
-      }`}
+      className={clsx(
+        'grid gap-sm',
+        props.orientation === 'vertical'
+          ? 'grid-cols-1'
+          : 'grid-cols-[repeat(_auto-fit,_minmax(300px,_1fr))]'
+      )}
     >
       {items.map(item => {
         const { value: iValue, title, body } = item;

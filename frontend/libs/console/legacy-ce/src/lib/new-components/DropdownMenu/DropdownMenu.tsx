@@ -44,7 +44,7 @@ export const DropdownMenuItem: React.FC<
 // an implementation of a dropdownmenu.
 // for more flexibility, such as being able to use labels, combine the styled components with other primatives from radix.
 
-interface DropdownMenuProps {
+export interface DropdownMenuProps {
   options?: {
     root?: React.ComponentProps<typeof DropdownMenuPrimitive.Root>;
     trigger?: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>;
@@ -53,18 +53,24 @@ interface DropdownMenuProps {
     portal?: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>;
   };
   items: React.ReactNode[][];
+  zIndex?: string;
 }
 
 export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   children,
   items,
   options,
+  zIndex = 'z-[101]',
 }) => (
   <DropdownMenuPrimitive.Root {...options?.root}>
     <DropdownMenuTrigger {...options?.trigger}>{children}</DropdownMenuTrigger>
     <DropdownMenuPrimitive.Portal {...options?.portal}>
-      <DropdownMenuPrimitive.Content align="start" {...options?.content}>
-        <div className="origin-top-left absolute left-0 z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
+      <DropdownMenuPrimitive.Content
+        align="start"
+        {...options?.content}
+        className={zIndex}
+      >
+        <div className="z-10 mt-xs w-max rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
           {items.map((group, groupIndex) => (
             <div className="py-1" key={groupIndex}>
               {group.map((item, itemIndex) => (

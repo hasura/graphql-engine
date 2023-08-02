@@ -1,7 +1,13 @@
 import { NetworkArgs, runMetadataQuery } from '../../api';
 
 type SourceKindsResponse = {
-  sources: { builtin: boolean; kind: string; display_name: string }[];
+  sources: {
+    builtin: boolean;
+    kind: string;
+    display_name: string;
+    release_name?: string;
+    available: boolean;
+  }[];
 };
 export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
   const result = await runMetadataQuery<SourceKindsResponse>({
@@ -12,6 +18,11 @@ export const getAllSourceKinds = async ({ httpClient }: NetworkArgs) => {
     },
   });
 
-  /** Temp filter to filter of mysql until it gets some resolution from the server */
-  return result.sources.filter(source => source.kind !== 'mysql');
+  // Allow GDC sources and non-MySQL native sources
+  return result.sources.filter(source => {
+    const isGDCSource = source.builtin === false;
+    const nonMySQLNativeSource =
+      source.kind !== 'mysql' && source.builtin === true;
+    return isGDCSource || nonMySQLNativeSource;
+  });
 };

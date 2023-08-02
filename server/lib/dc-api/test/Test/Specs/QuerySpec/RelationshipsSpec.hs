@@ -9,25 +9,41 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, maybeToList)
+import Data.Set qualified as Set
 import Hasura.Backends.DataConnector.API
-import Test.AgentClient (queryGuarded)
+import Hasura.Backends.DataConnector.API.V0.Relationships as API
+import Test.AgentAPI (queryGuarded)
 import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Sandwich (describe)
-import Test.TestHelpers (AgentTestSpec, it)
+import Test.TestHelpers (AgentDatasetTestSpec, it)
 import Prelude
 
-spec :: TestData -> SourceName -> Config -> Maybe SubqueryComparisonCapabilities -> AgentTestSpec
-spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "Relationship Queries" $ do
+spec :: TestData -> Maybe SubqueryComparisonCapabilities -> AgentDatasetTestSpec
+spec TestData {..} subqueryComparisonCapabilities = describe "Relationship Queries" $ do
   it "perform an object relationship query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
     let joinInArtist (album :: HashMap FieldName FieldValue) =
           let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
               artistPropVal = maybeToList artist
-           in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
+    let removeArtistId = Data.deleteField "ArtistId"
+
+    let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
+    Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+
+  it "perform an object relationship query by joining artist to albums but with zero artist fields" $ do
+    let query = albumsWithArtistQuery (qFields ?~ mempty)
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
+
+    let joinInArtist (album :: HashMap FieldName FieldValue) =
+          let artist = (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
+              artistPropVal = Data.filterColumns [] $ maybeToList artist
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
     let removeArtistId = Data.deleteField "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
@@ -36,14 +52,29 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
 
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) =
           let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
               albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               albums' = Data.deleteField "ArtistId" <$> albums
-           in Data.insertField "Albums" (mkSubqueryResponse albums') artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
+
+    let expectedAlbums = joinInAlbums <$> _tdArtistsRows
+    Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
+    _qrAggregates receivedArtists `jsonShouldBe` Nothing
+
+  it "perform an array relationship query by joining albums to artists but with zero album fields" $ do
+    let query = artistsWithAlbumsQuery (qFields ?~ mempty)
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
+
+    let joinInAlbums (artist :: HashMap FieldName FieldValue) =
+          let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+              albumFilter artistId' album = album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId'
+              albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
+              albums' = Data.filterColumns [] albums
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
@@ -52,7 +83,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
   it "perform an array relationship query by joining albums to artists with pagination of albums" $ do
     let albumsOrdering = OrderBy mempty $ NonEmpty.fromList [_tdOrderByColumn [] "AlbumId" Ascending]
     let query = artistsWithAlbumsQuery (qOffset ?~ 1 >>> qLimit ?~ 2 >>> qOrderBy ?~ albumsOrdering)
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) = do
           let artistId = artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -60,16 +91,16 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') _tdAlbumsRows) artistId
               paginatedAlbums = albums & sortOn (^? Data.field "ArtistId") & drop 1 & take 2
               paginatedAlbums' = Data.deleteField "ArtistId" <$> paginatedAlbums
-           in Data.insertField "Albums" (mkSubqueryResponse paginatedAlbums') artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue paginatedAlbums') artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
     _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   it "can filter in object relationships" $ do
-    let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" _tdStringType) (ScalarValue (String "H") _tdStringType)
+    let artistWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Name" artistNameScalarType) (Data.scalarValueComparison (String "H") artistNameScalarType)
     let query = albumsWithArtistQuery (qWhere ?~ artistWhere)
-    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> queryGuarded query
 
     let joinInArtist (album :: HashMap FieldName FieldValue) =
           let artist = do
@@ -77,7 +108,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                 artist' <- _tdArtistsRowsById ^? ix artistId
                 if (artist' ^? Data.field "Name" . Data._ColumnFieldString) >= Just "H" then Just artist' else Nothing
               artistPropVal = maybeToList artist
-           in Data.insertField "Artist" (mkSubqueryResponse artistPropVal) album
+           in Data.insertField "Artist" (Data.mkSubqueryRowsFieldValue artistPropVal) album
     let removeArtistId = Data.deleteField "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> _tdAlbumsRows
@@ -85,9 +116,9 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can filter in array relationships" $ do
-    let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" _tdStringType) (ScalarValue (String "O") _tdStringType)
+    let albumsWhere = ApplyBinaryComparisonOperator GreaterThanOrEqual (_tdCurrentComparisonColumn "Title" albumTitleScalarType) (Data.scalarValueComparison (String "O") albumTitleScalarType)
     let query = artistsWithAlbumsQuery (qWhere ?~ albumsWhere)
-    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> queryGuarded query
 
     let joinInAlbums (artist :: HashMap FieldName FieldValue) =
           let albums = fromMaybe [] $ do
@@ -97,7 +128,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                   & fmap (Data.deleteField "ArtistId")
                   & sortOn (^? Data.field "ArtistId")
                   & pure
-           in Data.insertField "Albums" (mkSubqueryResponse albums) artist
+           in Data.insertField "Albums" (Data.mkSubqueryRowsFieldValue albums) artist
 
     let expectedAlbums = joinInAlbums <$> _tdArtistsRows
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
@@ -114,15 +145,15 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
               Exists (RelatedTable _tdSupportRepRelationshipName) $
                 ApplyBinaryComparisonOperator
                   Equal
-                  (_tdCurrentComparisonColumn "Country" _tdStringType)
-                  (AnotherColumn (_tdQueryComparisonColumn "Country" _tdStringType))
+                  (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
+                  (AnotherColumnComparison (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = customersWithSupportRepQuery id & qrQuery . qWhere ?~ where'
-        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded sourceName config query
+        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
 
         let joinInSupportRep (customer :: HashMap FieldName FieldValue) =
               let supportRep = (customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber) >>= \employeeId -> _tdEmployeesRowsById ^? ix employeeId
                   supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
-               in Data.insertField "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
+               in Data.insertField "SupportRep" (Data.mkSubqueryRowsFieldValue supportRepPropVal) customer
 
         let filterCustomersBySupportRepCountry (customer :: HashMap FieldName FieldValue) =
               let customerCountry = customer ^? Data.field "Country" . Data._ColumnFieldString
@@ -142,17 +173,17 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
               Exists (RelatedTable _tdSupportRepForCustomersRelationshipName) $
                 ApplyBinaryComparisonOperator
                   Equal
-                  (_tdCurrentComparisonColumn "Country" _tdStringType)
-                  (AnotherColumn (_tdQueryComparisonColumn "Country" _tdStringType))
+                  (_tdCurrentComparisonColumn "Country" employeeCountryScalarType)
+                  (AnotherColumnComparison (_tdQueryComparisonColumn "Country" employeeCountryScalarType))
         let query = employeesWithCustomersQuery id & qrQuery . qWhere ?~ where'
-        receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded sourceName config query
+        receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> queryGuarded query
 
         let joinInCustomers (employee :: HashMap FieldName FieldValue) =
               let employeeId = employee ^? Data.field "EmployeeId" . Data._ColumnFieldNumber
                   customerFilter employeeId' customer = customer ^? Data.field "SupportRepId" . Data._ColumnFieldNumber == Just employeeId'
                   customers = maybe [] (\employeeId' -> filter (customerFilter employeeId') _tdCustomersRows) employeeId
                   customers' = Data.filterColumnsByQueryFields customersQuery <$> customers
-               in Data.insertField "SupportRepForCustomers" (mkSubqueryResponse customers') employee
+               in Data.insertField "SupportRepForCustomers" (Data.mkSubqueryRowsFieldValue customers') employee
 
         let filterEmployeesByCustomerCountry (employee :: HashMap FieldName FieldValue) =
               let employeeCountry = employee ^? Data.field "Country" . Data._ColumnFieldString
@@ -170,23 +201,23 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
         -- { FirstName: { _cgt: ["LastName"] } }
         let customersWhere =
               Exists (RelatedTable _tdSupportRepRelationshipName) $
-                And
+                Data.mkAndExpr
                   [ ( ApplyBinaryComparisonOperator
                         GreaterThan
-                        (_tdCurrentComparisonColumn "FirstName" _tdStringType)
-                        (AnotherColumn (_tdCurrentComparisonColumn "LastName" _tdStringType))
+                        (_tdCurrentComparisonColumn "FirstName" employeeFirstNameScalarType)
+                        (AnotherColumnComparison (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
                     ),
-                    (Not (ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "EmployeeId" _tdIntType)))
+                    (Not (ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "EmployeeId" employeeIdScalarType)))
                   ]
 
         let employeesWhere =
               ApplyBinaryComparisonOperator
                 GreaterThan
-                (_tdCurrentComparisonColumn "FirstName" _tdStringType)
-                (AnotherColumn (_tdCurrentComparisonColumn "LastName" _tdStringType))
+                (_tdCurrentComparisonColumn "FirstName" employeeFirstNameScalarType)
+                (AnotherColumnComparison (_tdCurrentComparisonColumn "LastName" employeeLastNameScalarType))
 
         let query = customersWithSupportRepQuery (\q -> q & qWhere ?~ employeesWhere) & qrQuery . qWhere ?~ customersWhere
-        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded sourceName config query
+        receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> queryGuarded query
 
         let joinInSupportRep (customer :: HashMap FieldName FieldValue) =
               let supportRep = do
@@ -196,7 +227,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                     lastName <- employee ^? Data.field "LastName"
                     if firstName > lastName then pure employee else Nothing
                   supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
-               in Data.insertField "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
+               in Data.insertField "SupportRep" (Data.mkSubqueryRowsFieldValue supportRepPropVal) customer
 
         let filterCustomersBySupportRepExistence (customer :: HashMap FieldName FieldValue) =
               let supportRep = customer ^.. Data.field "SupportRep" . subqueryRows
@@ -211,26 +242,26 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
       let artistsSubquery = modifySubquery artistsQuery
           fields =
             Data.mkFieldsMap
-              [ ("AlbumId", _tdColumnField "AlbumId" _tdIntType),
-                ("Title", _tdColumnField "Title" _tdStringType),
+              [ ("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"),
+                ("Title", _tdColumnField _tdAlbumsTableName "Title"),
                 ("Artist", RelField $ RelationshipField _tdArtistRelationshipName artistsSubquery)
               ]
           query = albumsQuery & qFields ?~ fields
-       in QueryRequest _tdAlbumsTableName [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships] query
+       in TableQueryRequest _tdAlbumsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]) query Nothing
 
     artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
     artistsWithAlbumsQuery modifySubquery =
-      let albumFields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId" _tdIntType), ("Title", _tdColumnField "Title" _tdStringType)]
+      let albumFields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
           albumsSort = OrderBy mempty $ _tdOrderByColumn [] "AlbumId" Ascending :| []
           albumsSubquery = albumsQuery & qFields ?~ albumFields & qOrderBy ?~ albumsSort & modifySubquery
           fields =
             Data.mkFieldsMap
-              [ ("ArtistId", _tdColumnField "ArtistId" _tdIntType),
-                ("Name", _tdColumnField "Name" _tdStringType),
+              [ ("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"),
+                ("Name", _tdColumnField _tdArtistsTableName "Name"),
                 ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           query = artistsQuery & qFields ?~ fields
-       in QueryRequest _tdArtistsTableName [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships] query
+       in TableQueryRequest _tdArtistsTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]) query Nothing
 
     employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
     employeesWithCustomersQuery modifySubquery =
@@ -242,7 +273,7 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                 [ ("SupportRepForCustomers", RelField $ RelationshipField _tdSupportRepForCustomersRelationshipName customersSubquery)
                 ]
           query = employeesQuery & qFields ?~ fields
-       in QueryRequest _tdEmployeesTableName [Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships] query
+       in TableQueryRequest _tdEmployeesTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepForCustomersRelationshipName] _tdEmployeesTableRelationships]) query Nothing
 
     customersWithSupportRepQuery :: (Query -> Query) -> QueryRequest
     customersWithSupportRepQuery modifySubquery =
@@ -253,27 +284,27 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
                 [ ("SupportRep", RelField $ RelationshipField _tdSupportRepRelationshipName supportRepSubquery)
                 ]
           query = customersQuery & qFields ?~ fields
-       in QueryRequest _tdCustomersTableName [Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships] query
+       in TableQueryRequest _tdCustomersTableName (Set.fromList [API.RTable $ Data.onlyKeepRelationships [_tdSupportRepRelationshipName] _tdCustomersTableRelationships]) query Nothing
 
     artistsQuery :: Query
     artistsQuery =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
        in Data.emptyQuery & qFields ?~ fields
 
     albumsQuery :: Query
     albumsQuery =
-      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId" _tdIntType), ("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Title", _tdColumnField "Title" _tdStringType)]
+      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField _tdAlbumsTableName "AlbumId"), ("ArtistId", _tdColumnField _tdAlbumsTableName "ArtistId"), ("Title", _tdColumnField _tdAlbumsTableName "Title")]
        in Data.emptyQuery & qFields ?~ fields
 
     customersQuery :: Query
     customersQuery =
       let fields =
             Data.mkFieldsMap
-              [ ("CustomerId", _tdColumnField "CustomerId" _tdIntType),
-                ("FirstName", _tdColumnField "FirstName" _tdStringType),
-                ("LastName", _tdColumnField "LastName" _tdStringType),
-                ("Country", _tdColumnField "Country" _tdStringType),
-                ("SupportRepId", _tdColumnField "SupportRepId" _tdIntType)
+              [ ("CustomerId", _tdColumnField _tdCustomersTableName "CustomerId"),
+                ("FirstName", _tdColumnField _tdCustomersTableName "FirstName"),
+                ("LastName", _tdColumnField _tdCustomersTableName "LastName"),
+                ("Country", _tdColumnField _tdCustomersTableName "Country"),
+                ("SupportRepId", _tdColumnField _tdCustomersTableName "SupportRepId")
               ]
        in Data.emptyQuery & qFields ?~ fields
 
@@ -281,16 +312,19 @@ spec TestData {..} sourceName config subqueryComparisonCapabilities = describe "
     employeesQuery =
       let fields =
             Data.mkFieldsMap
-              [ ("EmployeeId", _tdColumnField "EmployeeId" _tdIntType),
-                ("FirstName", _tdColumnField "FirstName" _tdStringType),
-                ("LastName", _tdColumnField "LastName" _tdStringType),
-                ("Country", _tdColumnField "Country" _tdStringType)
+              [ ("EmployeeId", _tdColumnField _tdEmployeesTableName "EmployeeId"),
+                ("FirstName", _tdColumnField _tdEmployeesTableName "FirstName"),
+                ("LastName", _tdColumnField _tdEmployeesTableName "LastName"),
+                ("Country", _tdColumnField _tdEmployeesTableName "Country")
               ]
        in Data.emptyQuery & qFields ?~ fields
 
-    mkSubqueryResponse :: [HashMap FieldName FieldValue] -> FieldValue
-    mkSubqueryResponse rows =
-      mkRelationshipFieldValue $ QueryResponse (Just rows) Nothing
-
     subqueryRows :: Traversal' FieldValue (HashMap FieldName FieldValue)
     subqueryRows = _RelationshipFieldValue . qrRows . _Just . traverse
+
+    albumTitleScalarType = _tdFindColumnScalarType _tdAlbumsTableName "Title"
+    artistNameScalarType = _tdFindColumnScalarType _tdArtistsTableName "Name"
+    employeeIdScalarType = _tdFindColumnScalarType _tdEmployeesTableName "EmployeeId"
+    employeeCountryScalarType = _tdFindColumnScalarType _tdEmployeesTableName "Country"
+    employeeFirstNameScalarType = _tdFindColumnScalarType _tdEmployeesTableName "FirstName"
+    employeeLastNameScalarType = _tdFindColumnScalarType _tdEmployeesTableName "LastName"

@@ -1,4 +1,4 @@
-import { CardedTable } from '@/new-components/CardedTable';
+import { CardedTable } from '../../new-components/CardedTable';
 import React, { ReactNode } from 'react';
 import { IconType } from 'react-icons';
 import {
@@ -10,8 +10,8 @@ import {
   FaTable,
 } from 'react-icons/fa';
 import { FiType } from 'react-icons/fi';
-import { rsToDbRelDef, rsToRsRelDef } from '@/metadata/types';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { rsToDbRelDef, rsToRsRelDef } from '../../metadata/types';
+import { IndicatorCard } from '../../new-components/IndicatorCard';
 import ModifyActions from './components/ModifyActions';
 import NameColumnCell from './components/NameColumnCell';
 import RelationshipDestinationCell from './components/RelationshipDestinationCell';

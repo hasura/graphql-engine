@@ -3,7 +3,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   getAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../features/Analytics';
 import Common from '../Common/Common';
 
 import {
@@ -17,7 +17,7 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 
 import { appPrefix, pageTitle } from '../constants';
 
@@ -199,6 +199,12 @@ class Edit extends React.Component {
       { redactText: true }
     );
 
+    const isEnvVarEnabled = () => {
+      return this.props.allRemoteSchemas.some(
+        rs => rs.name === remoteSchemaName && rs.definition.url_from_env
+      );
+    };
+
     return (
       <div>
         <Helmet>
@@ -222,12 +228,13 @@ class Edit extends React.Component {
         {isFetching ? null : (
           <Analytics name="EditRemoteSchema" {...REDACT_EVERYTHING}>
             <form
+              className="bootstrap-jail"
               onSubmit={e => {
                 e.preventDefault();
                 this.editClicked();
               }}
             >
-              <Common {...this.props} />
+              <Common {...this.props} isEnvVarEnabled={isEnvVarEnabled()} />
               {generateMigrateBtns()}
             </form>
           </Analytics>

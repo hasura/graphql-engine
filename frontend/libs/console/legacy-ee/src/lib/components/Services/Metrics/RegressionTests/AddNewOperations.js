@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { useMutation } from '@apollo/react-hooks';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import { insertTestSuiteOperations } from './graphql.queries';
 import styles from '../Metrics.module.scss';
 

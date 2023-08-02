@@ -1,15 +1,20 @@
+import { DropdownButton } from '../../../../new-components/DropdownButton';
+import { Analytics } from '../../../../features/Analytics';
 import React, { useMemo } from 'react';
-import { FaBook, FaEdit, FaWrench } from 'react-icons/fa';
-import { Link } from 'react-router';
+import { FaBook, FaEdit, FaFileImport, FaWrench } from 'react-icons/fa';
+import { browserHistory, Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
+import { Badge } from '../../../../new-components/Badge';
+import globals from '../../../../Globals';
 
 const LeftSidebar = ({
   appPrefix,
   common: { currentAction },
   actions,
   readOnlyMode,
+  allowOpenApiImport,
 }) => {
   const [searchText, setSearchText] = React.useState('');
 
@@ -17,13 +22,15 @@ const LeftSidebar = ({
 
   const getSearchInput = () => {
     return (
-      <input
-        type="text"
-        onChange={handleSearch}
-        className="form-control"
-        placeholder="search actions"
-        data-test="search-actions"
-      />
+      <div className="mr-2">
+        <input
+          type="text"
+          onChange={handleSearch}
+          className="form-control"
+          placeholder="search actions"
+          data-test="search-actions"
+        />
+      </div>
     );
   };
 
@@ -101,6 +108,52 @@ const LeftSidebar = ({
       addTrackId="action-tab-button-add-actions-sidebar"
       addTestString={'actions-sidebar-add-table'}
       childListTestString={'actions-table-links'}
+      addBtn={
+        allowOpenApiImport ? (
+          <div
+            className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
+          >
+            <DropdownButton
+              className="relative -left-2"
+              data-testid="dropdown-button"
+              items={[
+                [
+                  <Analytics name="action-tab-button-add-actions-sidebar-with-form">
+                    <div
+                      className="py-1 "
+                      onClick={() => {
+                        browserHistory.push(
+                          `${globals.urlPrefix}${appPrefix}/manage/add`
+                        );
+                      }}
+                    >
+                      <FaEdit className="relative -top-[1px]" /> New Action
+                    </div>
+                  </Analytics>,
+                  <Analytics name="action-tab-button-add-actions-sidebar-openapi">
+                    <div
+                      className="py-1 "
+                      onClick={() => {
+                        browserHistory.push(
+                          `${globals.urlPrefix}${appPrefix}/manage/add-oas`
+                        );
+                      }}
+                    >
+                      <FaFileImport className="relative -left-[2px] -top-[1px]" />{' '}
+                      Import OpenAPI{' '}
+                      <Badge className="ml-1 font-xs" color="purple">
+                        New
+                      </Badge>
+                    </div>
+                  </Analytics>,
+                ],
+              ]}
+            >
+              Create
+            </DropdownButton>
+          </div>
+        ) : undefined
+      }
     >
       {getChildList()}
     </LeftSubSidebar>

@@ -1,11 +1,12 @@
 import React from 'react';
 
 import PropTypes from 'prop-types';
-import { Button } from '@hasura/console-oss';
+import { Button } from '@hasura/console-legacy-ce';
 import { Link } from 'react-router';
 import { FaExclamationCircle } from 'react-icons/fa';
 
-import { idTokenReceived } from '../Main/Actions';
+import { idTokenReceived, ssoIdTokenReceived } from '../Main/Actions';
+import globals from '../../Globals';
 
 import {
   validateOauthResponseState,
@@ -16,6 +17,7 @@ import {
 import { retrieveIdToken } from './Actions';
 import LoadingScreen from './LoadingScreen';
 import styles from './OAuthCallback.module.scss';
+import { getCurrentSsoIdentityProvider } from '../Login/utils';
 
 class OAuthCallback extends React.Component {
   constructor() {
@@ -31,9 +33,19 @@ class OAuthCallback extends React.Component {
     const { location } = this.props;
     const { query } = location;
     const { code, state } = query;
+
     if (code && validateOauthResponseState(state)) {
-      this.props
-        .dispatch(retrieveIdToken(code))
+      const idp = getCurrentSsoIdentityProvider();
+      if (!idp) {
+        return this.verificationError({
+          error: 'Invalid SSO Provider',
+          error_description:
+            'Unexpected error - You could face this issue if the server is not running with a correct `HASURA_GRAPHQL_SSO_PROVIDERS`',
+        });
+      }
+
+      return this.props
+        .dispatch(retrieveIdToken(idp, code))
         .then(data => {
           /* Once the refresh/token is received, keep a state
            * in LS to capture the fact that user has already
@@ -41,7 +53,14 @@ class OAuthCallback extends React.Component {
            * auth until opted out
            * */
           hasOAuthLoggedIn(true);
-          this.props.dispatch(idTokenReceived(data));
+
+          // continue to process the EE lux authorization flow
+          // if the current client_id equals the Hasura OAuth Client ID in the global config
+          // otherwise fallback to the external SSO OAuth flow
+          if (idp.client_id === globals.hasuraClientID) {
+            return this.props.dispatch(idTokenReceived(idp, data));
+          }
+          this.props.dispatch(ssoIdTokenReceived(idp, data));
         })
         .catch(err => {
           this.verificationError(err);

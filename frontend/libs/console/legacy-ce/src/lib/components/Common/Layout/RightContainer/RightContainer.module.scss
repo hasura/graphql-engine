@@ -1,4 +1,4 @@
-@import "../../Common.module";
+@import '../../Common.module';
 
 .container {
 }
@@ -42,7 +42,8 @@
       padding: 7px 0;
       transition: color 0.5s;
 
-      a,a:visited {
+      a,
+      a:visited {
         /* Taken from boostrap navbar-inverse-link-color variables */
         color: lighten(lighten(#000, 46.7%), 15%);
       }
@@ -61,7 +62,7 @@
       transition: color 0.5s;
       pointer: cursor;
     }
-   }
+  }
 }
 
 .main {

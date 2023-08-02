@@ -4,16 +4,15 @@ module Test.Schema.ViewsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
-import Data.Text qualified as T
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
@@ -69,11 +68,8 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe :: IO Value -> Value -> IO ()
-      shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests =
   describe "Queries involving views" do
     it "Queries views correctly" \testEnvironment -> do
       let expected :: Value
@@ -98,23 +94,23 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      shouldReturnYaml testEnvironment actual expected
 
 --------------------------------------------------------------------------------
 -- Shared setup
 
-createSQL :: Schema.SchemaName -> String
+createSQL :: Schema.SchemaName -> Text
 createSQL schemaName =
-  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+  let schemaNameString = Schema.unSchemaName schemaName
    in "CREATE OR REPLACE VIEW "
         <> schemaNameString
         <> ".author_view AS SELECT id, name FROM "
         <> schemaNameString
         <> ".author"
 
-dropSQL :: Schema.SchemaName -> String
+dropSQL :: Schema.SchemaName -> Text
 dropSQL schemaName =
-  let schemaNameString = T.unpack (Schema.unSchemaName schemaName)
+  let schemaNameString = Schema.unSchemaName schemaName
    in "DROP VIEW IF EXISTS " <> schemaNameString <> ".author_view"
 
 --------------------------------------------------------------------------------

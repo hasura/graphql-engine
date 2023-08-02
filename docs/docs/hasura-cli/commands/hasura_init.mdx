@@ -1,7 +1,7 @@
 ---
 sidebar_label: hasura init
 sidebar_position: 11
-description: Initialize a directory for Hasura GraphQL Engine migrations using the Hasura CLI
+description: Initialize a new Hasura GraphQL Engine project using the Hasura CLI
 keywords:
   - hasura
   - docs
@@ -11,11 +11,15 @@ keywords:
 
 # Hasura CLI: hasura init
 
-Initialize a directory for Hasura GraphQL Engine migrations.
+Initialize a new Hasura GraphQL Engine project.
 
 ## Synopsis
 
-Create directories and files required for enabling migrations on the Hasura GraphQL Engine.
+This is generally the first command that you would run in a new project. It creates a directory with the necessary files and directories to configure an instance of the Hasura GraphQL Engine. You can pass various flags to customize the behavior of the command and pre-configure environment variables.
+		
+Further reading:
+- https://hasura.io/docs/latest/migrations-metadata-seeds/migrations-metadata-setup/
+
 
 ```bash
 hasura init [directory-name] [flags]

@@ -6,7 +6,7 @@ import {
   Analytics,
   REDACT_EVERYTHING,
   useGetAnalyticsAttributes,
-} from '@/features/Analytics';
+} from '../../../../../features/Analytics';
 import { push } from 'react-router-redux';
 
 import globals from '../../../../../Globals';
@@ -32,6 +32,7 @@ import PermissionsEditor from './PermissionsEditor';
 import styles from '../Modify/ModifyCustomFunction.module.scss';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 import { getFunctionSelector } from '../../../../../metadata/selector';
+import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
 
 const PermissionServerFlagNote = ({ isEditable = false }) =>
   !isEditable ? (
@@ -41,15 +42,8 @@ const PermissionServerFlagNote = ({ isEditable = false }) =>
         Function will be exposed automatically if there are SELECT permissions
         for the role. To expose query functions to roles explicitly, set{' '}
         <code>HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS=false</code> on the
-        server (
-        <a
-          href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Read More
-        </a>
-        )
+        server.
+        <LearnMoreLink href="https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#api-custom-functions" />
       </p>
     </>
   ) : (
@@ -62,7 +56,7 @@ const PermissionServerFlagNote = ({ isEditable = false }) =>
     </>
   );
 
-interface PermissionsProps extends ReduxProps {}
+type PermissionsProps = ReduxProps;
 const Permissions: React.FC<PermissionsProps> = ({
   currentDataSource,
   currentSchema,

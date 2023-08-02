@@ -33,10 +33,8 @@ spec = do
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith TestEnvironment
-tests opts = do
-  let shouldBe = shouldReturnYaml opts
-
+tests :: SpecWith TestEnvironment
+tests = do
   it "`bigquery_run_sql` with invalid SQL returns an `INVALID_ARGUMENT` error" \testEnvironment -> do
     let actual =
           GraphqlEngine.postV2Query
@@ -68,4 +66,4 @@ tests opts = do
             path: $
           |]
 
-    actual `shouldBe` expected
+    shouldReturnYaml testEnvironment actual expected

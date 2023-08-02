@@ -1,7 +1,7 @@
 import React from 'react';
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../storybook/decorators/react-query';
 
-import { ComponentStory, ComponentMeta } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import { Connect } from './Connect';
 
 import { handlers } from './mocks/handlers.mock';
@@ -13,9 +13,9 @@ export default {
   parameters: {
     msw: handlers(),
   },
-} as ComponentMeta<typeof Connect.CreateConnection>;
+} as Meta<typeof Connect.CreateConnection>;
 
-export const Primary: ComponentStory<typeof Connect.CreateConnection> = () => (
+export const Primary: StoryFn<typeof Connect.CreateConnection> = () => (
   <Connect.CreateConnection
     name="new_connection"
     driver="postgres"
@@ -23,10 +23,7 @@ export const Primary: ComponentStory<typeof Connect.CreateConnection> = () => (
   />
 );
 
-// existing config currently only works with database url
-// we don't know what format the metadata will be returned for gdc yet
-// therefore editing exiting config won't be enabled for gdc on the first iteration anyway
-export const WithExistingConfig: ComponentStory<
+export const WithExistingConfig: StoryFn<
   typeof Connect.CreateConnection
 > = () => (
   <Connect.CreateConnection

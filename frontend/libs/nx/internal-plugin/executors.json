@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "executors": {
+    "build-server-assets": {
+      "implementation": "./src/executors/build-server-assets/executor",
+      "schema": "./src/executors/build-server-assets/schema.json",
+      "description": "Used to build server complient assets from the existing build"
+    },
+    "chromatic": {
+      "implementation": "./src/executors/chromatic/executor",
+      "schema": "./src/executors/chromatic/schema.json",
+      "description": "chromatic executor"
+    },
+    "validate-javascript-bundle-output": {
+      "implementation": "./src/executors/validate-javascript-bundle-output/executor",
+      "schema": "./src/executors/validate-javascript-bundle-output/schema.json",
+      "description": "A list of checks againts final bundles to do non regression testing on them"
+    }
+  }
+}

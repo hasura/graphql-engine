@@ -11,10 +11,10 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Schema (Table (..), table)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Schema (Table (..), table)
-import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (permitTeardownFail)
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.Webhook qualified as Webhook
@@ -34,7 +34,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Postgres.backendTypeMetadata)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.mkLocalTestEnvironment = const Webhook.runEventsWebhook,
               Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ permitTeardownFail (Postgres.setupTablesAction schema testEnvironment),
                   Fixture.SetupAction
@@ -73,15 +73,11 @@ authorsTable tableName =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-tests opts = do
-  checkEventTriggerWhenExtensionInDifferentSchema opts
-
-checkEventTriggerWhenExtensionInDifferentSchema :: Fixture.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-checkEventTriggerWhenExtensionInDifferentSchema opts =
+tests :: SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+tests =
   describe "event triggers should work when extensions are created in different schema using 'extensions_schema'" do
-    it "check: inserting a new row invokes a event trigger" $
-      \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
+    it "check: inserting a new row invokes a event trigger"
+      $ \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let schemaName :: Schema.SchemaName
             schemaName = Schema.getSchemaName testEnvironment
         let insertQuery =
@@ -108,7 +104,7 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
 
         -- Insert a row into the table with event trigger
         shouldReturnYaml
-          opts
+          testEnvironment
           (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
           expectedResponse
 
@@ -165,7 +161,7 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
 
 --     -- Insert a row into the table with event trigger
 --     shouldReturnYaml
---       opts
+--       testEnvironment
 --       (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
 --       expectedResponse
 
@@ -173,7 +169,7 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
 
 -- ** Setup and teardown override
 
-postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup :: (HasCallStack) => TestEnvironment -> GraphqlEngine.Server -> IO ()
 postgresSetup testEnvironment webhookServer = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
@@ -190,8 +186,8 @@ postgresSetup testEnvironment webhookServer = do
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
 
   -- create a new source
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: pg_add_source
       args:
         name: *sourceName
@@ -204,8 +200,8 @@ postgresSetup testEnvironment webhookServer = do
     Schema.trackTable sourceName theTable testEnvironment
 
   -- create the event trigger
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [interpolateYaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [interpolateYaml|
       type: bulk
       args:
       - type: pg_create_event_trigger
@@ -220,10 +216,10 @@ postgresSetup testEnvironment webhookServer = do
             columns: "*"
     |]
 
-postgresTeardown :: HasCallStack => TestEnvironment -> IO ()
+postgresTeardown :: (HasCallStack) => TestEnvironment -> IO ()
 postgresTeardown testEnvironment = do
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_delete_event_trigger
@@ -232,8 +228,8 @@ postgresTeardown testEnvironment = do
           source: hge_test
     |]
 
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  GraphqlEngine.postMetadata_ testEnvironment
+    $ [yaml|
       type: bulk
       args:
       - type: pg_drop_source

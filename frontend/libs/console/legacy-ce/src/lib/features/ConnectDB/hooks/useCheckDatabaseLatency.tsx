@@ -1,12 +1,12 @@
-import { useQuery } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import {
   controlPlaneClient,
   fetchDatabaseLatencyJobId,
   fetchInfoFromJobId,
   insertInfoIntoDBLatencyQuery,
-} from '@/features/ControlPlane';
-import globals from '@/Globals';
-import { getProjectId } from '@/utils/cloudConsole';
+} from '../../ControlPlane';
+import globals from '../../../Globals';
+import { getProjectId } from '../../../utils/cloudConsole';
 
 type LatencyActionResponse = {
   data: {
@@ -49,16 +49,16 @@ type LatencyJobResponse = {
 
 export type CheckDatabaseLatencyResponse = {
   taskEvent: TaskEvent;
-  insertDbLatencyData: {
-    data: {
-      insert_db_latency_one: {
-        id: string;
-      };
-    };
-  };
+  insertDbLatencyData:
+    | {
+        data: {
+          insert_db_latency_one: {
+            id: string;
+          };
+        };
+      }
+    | undefined;
 };
-
-const client = controlPlaneClient();
 
 const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
   return useQuery({
@@ -70,11 +70,38 @@ const useCheckDatabaseLatencyRequest = (isEnabled: boolean) => {
         return undefined;
       }
 
-      return client.query<LatencyActionResponse>(fetchDatabaseLatencyJobId, {
-        project_id: projectId,
-      });
+      return controlPlaneClient.query<LatencyActionResponse>(
+        fetchDatabaseLatencyJobId,
+        {
+          project_id: projectId,
+        }
+      );
     },
     enabled: isEnabled,
+  });
+};
+
+type DbLatencyMutationProps = {
+  dateDiff: number;
+  projectId: string | undefined;
+  jobId: string;
+};
+
+const useInsertIntoDBLatencyTable = () => {
+  return useMutation({
+    mutationFn: async (
+      props: DbLatencyMutationProps
+    ): Promise<CheckDatabaseLatencyResponse['insertDbLatencyData']> => {
+      return controlPlaneClient.query<
+        CheckDatabaseLatencyResponse['insertDbLatencyData']
+      >(insertInfoIntoDBLatencyQuery, {
+        jobId: props.jobId,
+        projectId: props.projectId,
+        isLatencyDisplayed: true,
+        dateDifferenceInMilliseconds: props.dateDiff,
+      });
+    },
+    retry: 1,
   });
 };
 
@@ -82,6 +109,7 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
   const { data: jobIdResponse, isSuccess } =
     useCheckDatabaseLatencyRequest(isEnabled);
   const projectId = getProjectId(globals);
+  const insertDbLatencyMutation = useInsertIntoDBLatencyTable();
 
   return useQuery({
     queryKey: [
@@ -99,10 +127,10 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
         throw Error('Job ID was not found');
       }
 
-      const jobStatusResponse = await client.query<LatencyJobResponse>(
-        fetchInfoFromJobId,
-        { id: jobId }
-      );
+      const jobStatusResponse =
+        await controlPlaneClient.query<LatencyJobResponse>(fetchInfoFromJobId, {
+          id: jobId,
+        });
 
       if (!jobStatusResponse?.data?.jobs_by_pk?.status) {
         throw Error(`status for job ${jobId} not available`);
@@ -131,19 +159,16 @@ export const useCheckDatabaseLatency = (isEnabled: boolean) => {
 
       const dateDiff = new Date().getTime() - dateStartRequest.getTime();
 
-      const insertData = await client.query<
-        CheckDatabaseLatencyResponse['insertDbLatencyData']
-      >(insertInfoIntoDBLatencyQuery, {
-        jobId,
-        projectId,
-        isLatencyDisplayed: true,
-        datasDifferenceInMilliseconds: dateDiff,
-      });
+      insertDbLatencyMutation.mutate({ dateDiff, projectId, jobId });
 
-      return { taskEvent: successTaskEvent, insertDbLatencyData: insertData };
+      return {
+        taskEvent: successTaskEvent,
+        insertDbLatencyData: insertDbLatencyMutation?.data,
+      };
     },
     enabled: isSuccess,
     retryDelay: 125,
     retry: 30,
+    refetchOnMount: false,
   });
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@/new-components/Tooltip';
+import { Tooltip } from '../../../new-components/Tooltip';
 import { FaExclamationTriangle } from 'react-icons/fa';
 
 import styles from './WarningSymbol.module.scss';

@@ -24,13 +24,14 @@ mutation [<mutation-name>] {
 }
 ```
 
-| Key                 | Required | Schema                                | Description                                                     |
-| ------------------- | -------- | ------------------------------------- | --------------------------------------------------------------- |
-| mutation-name       | false    | Value                                 | Name of mutation for observability                              |
-| mutation-field-name | true     | Value                                 | Name of the auto-generated mutation field, e.g. _insert_author_ |
-| input-object        | true     | [InputObjects](#inputobjects)         | Name of the auto-generated mutation field                       |
-| mutation-response   | true     | [MutationResponse](#mutationresponse) | Object to be returned after mutation succeeds                   |
-| on-conflict         | false    | [ConflictClause](#conflictclause)     | Converts _insert_ to _upsert_ by handling conflict              |
+| Key                 | Required | Schema                                    | Description                                                     |
+| ------------------- | -------- | ----------------------------------------- | --------------------------------------------------------------- |
+| mutation-name       | false    | Value                                     | Name of mutation for observability                              |
+| mutation-field-name | true     | Value                                     | Name of the auto-generated mutation field, e.g. _insert_author_ |
+| input-object        | true     | [InputObjects](#inputobjects)             | Name of the auto-generated mutation field                       |
+| mutation-response   | true     | [MutationResponse](#mutationresponse)     | Object to be returned after mutation succeeds                   |
+| on-conflict         | false    | [OnConflictClause](#postgres-on-conflict) | In Postgres, converts _insert_ to _upsert_ by handling conflict |
+| if-matched          | false    | [IfMatchedClause](#sqlserver-if-matched)  | In MS SQL Server, converts _insert_ to _upsert_ using a match   |
 
 **Example: Insert**
 
@@ -76,7 +77,8 @@ mutation [<mutation-name>] {
 | mutation-field-name | true     | Value                                                             | Name of the auto-generated mutation field, e.g. _insert_author_one_ |
 | input-object        | true     | [InputObject](#inputobject)                                       | Name of the auto-generated mutation field                           |
 | mutation-response   | true     | [SimpleObject](/api-reference/graphql-api/query.mdx#simpleobject) | Object to be returned after mutation succeeds                       |
-| on-conflict         | false    | [ConflictClause](#conflictclause)                                 | Converts _insert_ to _upsert_ by handling conflict                  |
+| on-conflict         | false    | [OnConflictClause](#postgres-on-conflict)                         | In Postgres, converts _insert_ to _upsert_ by handling conflict     |
+| if-matched          | false    | [IfMatchedClause](#sqlserver-if-matched)                          | In MS SQL Server, converts _insert_ to _upsert_ using a match       |
 
 **Example: Insert One**
 
@@ -325,11 +327,11 @@ object: {
 }
 ```
 
-### **on_conflict** argument {#conflictclause}
+### **on_conflict** argument for Postgres {#postgres-on-conflict}
 
-The conflict clause is used to convert an _insert_ mutation to an _upsert_ mutation. _Upsert_ respects the table's
-_update_ permissions before editing an existing row in case of a conflict. Hence the conflict clause is permitted only
-if a table has _update_ permissions defined.
+The `on_conflict` clause is used to convert an _insert_ mutation to an _upsert_ mutation. _Upsert_ respects the table's
+_update_ permissions before editing an existing row in case of a conflict. Hence the `on_conflict` clause is permitted
+only if a table has _update_ permissions defined.
 
 ```none
 on_conflict: {
@@ -346,6 +348,30 @@ on_conflict: {
   constraint: author_name_key
   update_columns: [name]
   where: {id: {_lt: 1}}
+}
+```
+
+### **if_matched** argument for MS SQL Server {#sqlserver-if-matched}
+
+The `if_matched` clause is used to convert an _insert_ mutation to an _upsert_ mutation. _Upsert_ respects the table's
+_update_ permissions before editing a matched row. Hence the `if_matched` clause is permitted only if a table has
+_update_ permissions defined.
+
+```none
+if_matched: {
+  match_columns: table_match_column! | [table_match_column!]!
+  update_columns: table_update_column! | [table_update_column!]!
+  where: table_bool_exp
+}
+```
+
+**Example**
+
+```graphql
+if_matched: {
+  match_columns: id
+  update_columns: [name]
+  where: {id: {_eq: 7}}
 }
 ```
 
@@ -376,7 +402,7 @@ pk_columns: {
 <pre>
   <code>
     {`where: `}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
   </code>
 </pre>
 
@@ -396,15 +422,15 @@ where: {
 
 <pre>
   <code>
-    <a href='#andexp'>AndExp</a>
+    <a href="#andexp">AndExp</a>
     {` | `}
-    <a href='#orexp'>OrExp</a>
+    <a href="#orexp">OrExp</a>
     {` | `}
-    <a href='#notexp'>NotExp</a>
+    <a href="#notexp">NotExp</a>
     {` | `}
-    <a href='#trueexp'>TrueExp</a>
+    <a href="#trueexp">TrueExp</a>
     {` | `}
-    <a href='#columnexp'>ColumnExp</a>
+    <a href="#columnexp">ColumnExp</a>
   </code>
 </pre>
 
@@ -418,7 +444,7 @@ where: {
   <code>
     {`{
   _and: [`}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`]
 }`}
   </code>
@@ -443,7 +469,7 @@ _and: [
   <code>
     {`{
   _or: [`}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`]
 }`}
   </code>
@@ -468,7 +494,7 @@ _or: [
   <code>
     {`{
   _not: `}
-    <a href='#boolexp'>BoolExp</a>
+    <a href="#boolexp">BoolExp</a>
     {`
 }`}
   </code>
@@ -510,7 +536,7 @@ author(where: {articles: {}})
   <code>
     {`{
   field-name: { `}
-    <a href='#operator'>Operator</a>
+    <a href="#operator">Operator</a>
     {`: Value }
 }`}
   </code>

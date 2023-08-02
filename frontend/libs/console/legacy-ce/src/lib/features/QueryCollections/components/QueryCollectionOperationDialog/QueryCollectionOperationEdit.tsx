@@ -1,6 +1,6 @@
 import React from 'react';
-import { QueryCollection } from '@/metadata/types';
-import { useFireNotification } from '@/new-components/Notifications';
+import { QueryCollection } from '../../../../metadata/types';
+import { useFireNotification } from '../../../../new-components/Notifications';
 
 import { useEditOperationInQueryCollection } from '../../hooks/useEditOperationInQueryCollection';
 import { QueryCollectionOperationDialog } from './QueryCollectionOperationDialog';

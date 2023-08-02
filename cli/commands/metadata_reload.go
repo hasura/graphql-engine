@@ -17,15 +17,18 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	metadataReloadCmd := &cobra.Command{
 		Use:   "reload",
-		Short: "Reload Hasura GraphQL engine metadata on the database",
+		Short: "Reload Hasura GraphQL Engine schema to pick up changes in any underlying data sources (database or remote schema)",
+		Long:  `hasura metadata reload should be used when there is a change in the underlying data sources (database or remote schema) that Hasura should be aware of.
+Example: 
+  A new column is added to a table and this column should now be added to the GraphQL schema.`,
 		Example: `  # Reload all the metadata information from database:
   hasura metadata reload
 
   # Use with admin secret:
   hasura metadata reload --admin-secret "<admin-secret>"
 
-  # Reload metadata on a different instance:
-  hasura metadata export --endpoint "<endpoint>"`,
+  # Use with a specific endpoint:
+  hasura metadata reload --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			op := genOpName(cmd, "RunE")

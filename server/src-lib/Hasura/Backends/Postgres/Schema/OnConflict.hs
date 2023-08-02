@@ -14,7 +14,7 @@ module Hasura.Backends.Postgres.Schema.OnConflict
 where
 
 import Data.Has (getter)
-import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict qualified as HashMap
 import Data.HashSet qualified as HS
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types (showPGCols)
@@ -35,11 +35,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
+import Hasura.Table.Cache
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Parser for a field name @on_conflict@ of type @tablename_on_conflict@.
@@ -91,20 +91,20 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
       mkTypename = runMkTypename $ _rscTypeNames customization
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints tableInfo
-  whereExpParser <- boolExp tableInfo
+  whereExpParser <- tableBoolExp tableInfo
   tableGQLName <- getTableIdentifierName tableInfo
   let objectName = mkTypename $ applyTypeNameCaseIdentifier tCase $ mkOnConflictTypeName tableGQLName
       objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
-      (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
+      (presetColumns, updateFilter) = fromMaybe (HashMap.empty, IR.gBoolExpTrue) $ do
         UpdPermInfo {..} <- maybeUpdatePerms
         pure
           ( partialSQLExpToUnpreparedValue <$> upiSet,
             fmap partialSQLExpToUnpreparedValue <$> upiFilter
           )
-  pure $
-    P.object objectName (Just objectDesc) do
+  pure
+    $ P.object objectName (Just objectDesc) do
       constraintField <- P.field Name._constraint Nothing constraintParser
-      let updateColumnsField = P.fieldWithDefault Name._update_columns Nothing (G.VList []) (P.list updateColumnsEnum)
+      let updateColumnsField = P.fieldWithDefault (applyFieldNameCaseIdentifier tCase updateColumnsFieldName) Nothing (G.VList []) (P.list updateColumnsEnum)
 
       whereExp <- P.fieldOptional Name._where Nothing whereExpParser
 
@@ -115,16 +115,17 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
             -- this can only happen if the placeholder was used
             (parseError "erroneous column name")
 
-      pure $
-        let UniqueConstraint (Constraint {_cName}) _ = constraintField
-            constraintTarget = IR.CTConstraint _cName
-         in case updateColumns of
-              [] -> IR.OCCDoNothing $ Just constraintTarget
-              _ ->
-                IR.OCCUpdate $
-                  IR.OnConflictClauseData constraintTarget updateColumns presetColumns $
-                    IR.BoolAnd $
-                      updateFilter : maybeToList whereExp
+      pure
+        $ let UniqueConstraint (Constraint {_cName}) _ = constraintField
+              constraintTarget = IR.CTConstraint _cName
+           in case updateColumns of
+                [] -> IR.OCCDoNothing $ Just constraintTarget
+                _ ->
+                  IR.OCCUpdate
+                    $ IR.OnConflictClauseData constraintTarget updateColumns presetColumns
+                    $ IR.BoolAnd
+                    $ updateFilter
+                    : maybeToList whereExp
 
 -- | Constructs a Parser for the name of the constraints on a given table.
 --
@@ -137,7 +138,7 @@ conflictObjectParser tableInfo maybeUpdatePerms constraints = do
 -- to a GraphQL name (see hasura/graphql-engine-mono#1748).
 conflictConstraint ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
   NonEmpty (UniqueConstraint ('Postgres pgKind)) ->
   TableInfo ('Postgres pgKind) ->
   SchemaT r m (Parser 'Both n (UniqueConstraint ('Postgres pgKind)))
@@ -156,7 +157,7 @@ conflictConstraint constraints tableInfo = do
         name <- textToName $ toTxt $ _cName
         pure
           ( P.Definition
-              name
+              (applyFieldNameCaseCust tCase name)
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
               Nothing
               []

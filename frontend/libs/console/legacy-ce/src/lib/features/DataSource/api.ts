@@ -1,49 +1,32 @@
-import { AxiosInstance } from 'axios';
+import { AxiosInstance, AxiosResponseHeaders } from 'axios';
 import {
-  Metadata,
   NativeDrivers,
   Source,
   SupportedDrivers,
-} from '@/features/hasura-metadata-types';
-import { isPostgres } from '@/metadata/dataSource.utils';
-
+} from '../hasura-metadata-types';
+import { isPostgres } from '../../metadata/dataSource.utils';
+export { runMetadataQuery, exportMetadata } from '../hasura-metadata-api';
 export interface NetworkArgs {
   httpClient: AxiosInstance;
 }
 
-export const exportMetadata = async ({
-  httpClient,
-}: NetworkArgs): Promise<Metadata> => {
-  return (
-    await httpClient.post('/v1/metadata', {
-      type: 'export_metadata',
-      version: 2,
-      args: {},
-    })
-  ).data;
-};
-
-export const runMetadataQuery = async <ResponseType>({
-  httpClient,
-  body,
-}: { body: Record<string, any> } & NetworkArgs): Promise<ResponseType> => {
-  return (await httpClient.post('/v1/metadata', body)).data;
-};
-
 type RunSqlArgs = {
   source: Pick<Source, 'kind' | 'name'>;
   sql: string;
+  readOnly?: boolean;
 };
 
-export type RunSQLResponse =
-  | {
-      result: string[][];
-      result_type: 'TuplesOk';
-    }
-  | {
-      result_type: 'CommandOk';
-      result: null;
-    };
+export type RunSQLSelectResponse = {
+  result_type: 'TuplesOk';
+  result: string[][];
+};
+
+export type RunSQLCommandResponse = {
+  result_type: 'CommandOk';
+  result: null;
+};
+
+export type RunSQLResponse = RunSQLSelectResponse | RunSQLCommandResponse;
 
 const getRunSqlType = (driver: NativeDrivers) => {
   if (isPostgres(driver)) {
@@ -53,6 +36,9 @@ const getRunSqlType = (driver: NativeDrivers) => {
   return `${driver}_run_sql`;
 };
 
+// We need to type this better
+export type RunSQLAPIError = Record<string, any>;
+
 export const runQuery = async <ResponseType>({
   body,
   httpClient,
@@ -60,7 +46,10 @@ export const runQuery = async <ResponseType>({
   /**
    * Use v2 query instead of v1 because it supports other <db>_run_sql commands
    */
-  const result = await httpClient.post<ResponseType>('v2/query', body);
+  const result = await httpClient.post<ResponseType, RunSQLAPIError>(
+    'v2/query',
+    body
+  );
   return result.data;
 };
 
@@ -68,12 +57,23 @@ export const runGraphQL = async ({
   operationName,
   query,
   httpClient,
-}: { operationName: string; query: string } & NetworkArgs) => {
+  headers,
+}: {
+  operationName: string;
+  query: string;
+  headers?: AxiosResponseHeaders;
+} & NetworkArgs) => {
   try {
     const result = await httpClient.post('v1/graphql', {
       query,
       operationName,
+      headers,
     });
+    // Throw the first GraphQL Error
+    // We do this because response.status is 200 even if there are errors
+    if (result.data.errors?.length) {
+      throw new Error(result.data.errors[0].message || 'Unexpected');
+    }
     return result.data;
   } catch (err) {
     throw err;
@@ -83,9 +83,14 @@ export const runGraphQL = async ({
 export const runSQL = async ({
   source,
   sql,
+  readOnly,
   httpClient,
 }: RunSqlArgs & NetworkArgs): Promise<RunSQLResponse> => {
   const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const readOnlyArg =
+    readOnly === null || readOnly === undefined ? {} : { read_only: readOnly };
+
   const result = await runQuery<RunSQLResponse>({
     httpClient,
     body: {
@@ -93,6 +98,7 @@ export const runSQL = async ({
       args: {
         sql,
         source: source.name,
+        ...readOnlyArg,
       },
     },
   });
@@ -200,6 +206,33 @@ export const runIntrospectionQuery = async ({ httpClient }: NetworkArgs) => {
     }`,
     httpClient,
   });
+};
+
+export const runReadOnlySQLBulk = async ({
+  source,
+  sqlQueries,
+  httpClient,
+}: {
+  source: Pick<Source, 'kind' | 'name'>;
+  sqlQueries: string[];
+} & NetworkArgs): Promise<RunSQLResponse[]> => {
+  const type = getRunSqlType(source.kind as NativeDrivers);
+
+  const result = await runQuery<RunSQLResponse>({
+    httpClient,
+    body: {
+      type: 'concurrent_bulk',
+      source: source.name,
+      args: sqlQueries.map(sql => ({
+        type,
+        args: {
+          sql,
+          source: source.name,
+        },
+      })),
+    },
+  });
+  return result;
 };
 
 export const getDriverPrefix = (driver: SupportedDrivers) =>

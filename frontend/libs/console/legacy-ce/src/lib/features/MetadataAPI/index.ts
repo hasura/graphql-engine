@@ -5,6 +5,7 @@ export {
   useMetadataTables,
   useRemoteDatabaseRelationships,
   useRemoteSchemaRelationships,
+  useSupportedQueryTypes,
 } from './hooks/useMetadataTables';
 export { useMetadataVersion } from './hooks/useMetadataVersion';
 export { useMetadataTableComputedFields } from './hooks/useMetadataTableComputedFields';
@@ -27,11 +28,14 @@ export { useInconsistentObject } from './hooks/useInconsitentObject';
 
 // we probably need to remove all usages that directly use the useMetadata and use only the exported functions
 export { useMetadata } from './hooks/useMetadata';
-export { useMetadataMigration } from './hooks/useMetadataMigration';
+export {
+  useMetadataMigration,
+  MAX_METADATA_BATCH_SIZE,
+} from './hooks/useMetadataMigration';
 export { useObjectRelationships } from './hooks/useObjectRelationships';
 export { useArrayRelationships } from './hooks/useArrayRelationships';
 export { useLocalRelationships } from './hooks/useLocalRelationships';
 
-export { TMigration } from './hooks/useMetadataMigration';
+export type { TMigration } from './hooks/useMetadataMigration';
 
 export * from './types';

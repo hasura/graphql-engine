@@ -17,8 +17,8 @@ If the table consists of simple text and no complex UI and no column width contr
 
 ```markdown
 | Field             | Description                                                                                                                                                                                                                                                                                                                                                                              |
-|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Region            | The region of the datacentre where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Region            | The region of the datacenter where your New Relic account stores its data. [Read more about regions on New Relic docs.](https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers)                                                                                                                                                      |
 | API Key           | API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from [here](https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you are in New Relic US region and [here](https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher) if you're in New Relic EU region. |
 | Host              | The name of the originating host of the log and metrics.                                                                                                                                                                                                                                                                                                                                 |
 | Custom Attributes | Custom Attributes associated with your logs and metrics. A default source tag `hasura-cloud-metrics` is added to all exported logs and metrics. Attributes `project_id` and `project_name` are added to all exported metrics.                                                                                                                                                            |
@@ -38,7 +38,7 @@ Unfortunately, `markdown` doesn't have straightforward syntax to control the wid
   <tbody>
     <tr>
       <td>Region</td>
-      <td>The region of the datacentre where your New Relic account stores its data. <Link to="https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers">Read more about regions on New Relic docs.</Link></td>
+      <td>The region of the datacenter where your New Relic account stores its data. <Link to="https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers">Read more about regions on New Relic docs.</Link></td>
     </tr>
     <tr>
       <td>API Key</td>
@@ -95,11 +95,29 @@ Which would render like this
   <tbody>
     <tr>
       <td>Region</td>
-      <td>The region of the datacentre where your New Relic account stores its data. <Link to="https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers">Read more about regions on New Relic docs.</Link></td>
+      <td>
+        The region of the datacenter where your New Relic account stores its
+        data.{' '}
+        <Link to="https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers">
+          Read more about regions on New Relic docs.
+        </Link>
+      </td>
     </tr>
     <tr>
       <td>API Key</td>
-      <td>API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from <Link to="https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher">here</Link> if you are in New Relic US region and <Link to="https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher">here</Link> if you're in New Relic EU region.</td>
+      <td>
+        API keys are unique to your organization. An API key is required by the
+        New Relic API to submit metrics and events to New Relic. You can get the
+        API key from{' '}
+        <Link to="https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher">
+          here
+        </Link>{' '}
+        if you are in New Relic US region and{' '}
+        <Link to="https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher">
+          here
+        </Link>{' '}
+        if you're in New Relic EU region.
+      </td>
     </tr>
     <tr>
       <td>Host</td>
@@ -107,7 +125,12 @@ Which would render like this
     </tr>
     <tr>
       <td>Custom Attributes</td>
-      <td>Custom Attributes associated with your logs and metrics. A default source tag <code>hasura-cloud-metrics</code> is added to all exported logs and metrics. Attributes <code>project_id</code> and <code>project_name</code> are added to all exported metrics.</td>
+      <td>
+        Custom Attributes associated with your logs and metrics. A default
+        source tag <code>hasura-cloud-metrics</code> is added to all exported
+        logs and metrics. Attributes <code>project_id</code> and{' '}
+        <code>project_name</code> are added to all exported metrics.
+      </td>
     </tr>
     <tr>
       <td>Service Name</td>
@@ -121,30 +144,22 @@ Which would render like this
 When a table cell is just a codeblock, the normal triple tick syntax works fine. But, please do leave an intentional empty line before and after the code block.
 Also, start the code block and respective cell (`td/th`) at the very beginning of line (no empty tabs/spaces at start).
 
-```html
-    <table>
-      <thead>
-        <tr>
-          <th width="20%">Field</th>
-          <th width="40%">Query</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>query</code></td>
-    <td>
-
-    ```graphql
-      query MyQuery {
-        ...
-      }
-    ```
-
-    </td>
-        </tr>
-      </tbody>
-    </table>
-```
+````html
+<table>
+  <thead>
+    <tr>
+      <th width="20%">Field</th>
+      <th width="40%">Query</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>query</code></td>
+      <td>```graphql query MyQuery { ... } ```</td>
+    </tr>
+  </tbody>
+</table>
+````
 
 Do one better and ignore the indentation altogether for all tags in table. This might be bit of not so eye-friendly to read, but works.
 Please do not that this is required only when there is a cell involving code block.
@@ -172,74 +187,42 @@ Please do not that this is required only when there is a cell involving code blo
   </tbody>
 </table>
 
-
 The `:widths:` can be added as `width` attribute to `html` - `th`. And the `:header-rows:` determines the number of
 header rows to be considered for `<thead>`.
 
-```html {2-8}
-    <table>
-    <thead>
-      <tr>
-        <th width="10%">Status code</th>
-        <th width="10%">Description</th>
-        <th width="30%">Response Structure</th>
-      </tr>
-    </thead>
-    <tbody>
+````html {2-8}
+<table>
+  <thead>
     <tr>
-    <td><code>200</code></td>
-    <td>Success</td>
-    <td>
-
-    ```
-    Request Specific
-    ```
-
-    </td>
+      <th width="10%">Status code</th>
+      <th width="10%">Description</th>
+      <th width="30%">Response Structure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>200</code></td>
+      <td>Success</td>
+      <td>``` Request Specific ```</td>
     </tr>
     <tr>
-    <td><code>400</code></td>
-    <td>Bad Request</td>
-    <td>
-
-    ```haskell
-    {
-        "path"  : String,
-        "error" : String
-    }
-    ```
-
-    </td>
+      <td><code>400</code></td>
+      <td>Bad Request</td>
+      <td>```haskell { "path" : String, "error" : String } ```</td>
     </tr>
     <tr>
-    <td><code>401</code></td>
-    <td>Unauthorized</td>
-    <td>
-
-    ```haskell
-    {
-        "error" : String
-    }
-    ```
-
-    </td>
+      <td><code>401</code></td>
+      <td>Unauthorized</td>
+      <td>```haskell { "error" : String } ```</td>
     </tr>
     <tr>
-    <td><code>500</code></td>
-    <td>Internal server error</td>
-    <td>
-
-    ```haskell
-    {
-        "error" : String
-    }
-    ```
-
-    </td>
+      <td><code>500</code></td>
+      <td>Internal server error</td>
+      <td>```haskell { "error" : String } ```</td>
     </tr>
-    </tbody>
-    </table>
-```
+  </tbody>
+</table>
+````
 
 <table>
 <thead>

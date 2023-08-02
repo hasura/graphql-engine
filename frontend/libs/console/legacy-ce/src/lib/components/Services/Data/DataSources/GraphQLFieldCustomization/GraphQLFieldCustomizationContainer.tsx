@@ -30,33 +30,34 @@ export const getActionType = (
 ): ConnectDBActions['type'] | null =>
   CustomizationFieldNameToActionTypeMap[fieldName] || null;
 
-export const GraphQLFieldCustomizationContainer: React.FC<GraphQLFieldCustomizationContainerProps> =
-  ({
-    rootFields,
-    typeNames,
-    namingConvention,
-    connectionDBStateDispatch,
-    connectionDBState,
-  }) => {
-    const onChange = (
-      fieldName: CustomizationFieldName,
-      fieldValue: string | null | undefined
-    ) => {
-      const actionType = getActionType(fieldName);
-      if (actionType) {
-        connectionDBStateDispatch({
-          type: actionType,
-          data: fieldValue,
-        } as ConnectDBActions);
-      }
-    };
-    return (
-      <GraphQLFieldCustomization
-        rootFields={rootFields}
-        typeNames={typeNames}
-        namingConvention={namingConvention}
-        onChange={onChange}
-        connectionDBState={connectionDBState}
-      />
-    );
+export const GraphQLFieldCustomizationContainer: React.FC<
+  GraphQLFieldCustomizationContainerProps
+> = ({
+  rootFields,
+  typeNames,
+  namingConvention,
+  connectionDBStateDispatch,
+  connectionDBState,
+}) => {
+  const onChange = (
+    fieldName: CustomizationFieldName,
+    fieldValue: string | null | undefined
+  ) => {
+    const actionType = getActionType(fieldName);
+    if (actionType) {
+      connectionDBStateDispatch({
+        type: actionType,
+        data: fieldValue,
+      } as ConnectDBActions);
+    }
   };
+  return (
+    <GraphQLFieldCustomization
+      rootFields={rootFields}
+      typeNames={typeNames}
+      namingConvention={namingConvention}
+      onChange={onChange}
+      connectionDBState={connectionDBState}
+    />
+  );
+};

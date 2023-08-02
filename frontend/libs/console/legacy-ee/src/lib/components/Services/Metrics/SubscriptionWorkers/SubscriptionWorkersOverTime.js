@@ -44,13 +44,13 @@ const SubscriptionWorkersOverTime = props => {
   const timeRangeFilter =
     rowData && rowData.start && rowData.end
       ? [
-        {
-          value: {
-            start: rowData.start,
-            end: moment(rowData.end).add(1, 'minute'), // exclude case start = end
+          {
+            value: {
+              start: rowData.start,
+              end: moment(rowData.end).add(1, 'minute'), // exclude case start = end
+            },
           },
-        },
-      ]
+        ]
       : rawTimeRangeFilter;
 
   timeRangeFilter.forEach(e => {

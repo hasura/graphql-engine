@@ -1,5 +1,5 @@
 import React from 'react';
-import Globals from '@/Globals';
+import Globals from '../../../../Globals';
 import { Tabs } from '../../../Common/Layout/ReusableTabs/ReusableTabs';
 import styles from './DataSources.module.scss';
 

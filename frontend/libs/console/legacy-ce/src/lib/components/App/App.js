@@ -2,18 +2,19 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import ProgressBar from 'react-progress-bar-plus';
-import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
 import { ThemeProvider } from 'styled-components';
+import 'react-loading-skeleton/dist/skeleton.css';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import { telemetryNotificationShown } from '../../telemetry/Actions';
-import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
-import 'react-loading-skeleton/dist/skeleton.css';
+import { ToastsHub } from '../../new-components/Toasts';
+import { AlertProvider } from '../../new-components/Alert/AlertProvider';
 
 import { theme } from '../UIKit/theme';
-import { trackCustomEvent } from '@/features/Analytics';
+import { trackCustomEvent } from '../../features/Analytics';
+import { withLDProvider } from 'launchdarkly-react-client-sdk';
+import { isCloudConsole } from '../../utils';
 
 export const GlobalContext = React.createContext(globals);
 
@@ -22,38 +23,26 @@ const App = ({
   percent,
   intervalTime,
   children,
-  notifications,
   connectionFailed,
   dispatch,
   metadata,
-  telemetry,
 }) => {
   React.useEffect(() => {
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+    try {
+      document.getElementsByClassName('loadingWrapper')[0].style.display =
+        'none';
+    } catch (e) {
+      console.error('Could not find loadingWrapper', e);
+    }
     trackCustomEvent({
       location: 'Console',
       action: 'Load',
       object: 'App',
     });
   }, []);
-  const telemetryShown = React.useRef(false);
-  // should be true only in the case of hasura cloud
-  const isContextCloud = globals.consoleType === 'cloud';
-
-  React.useEffect(() => {
-    if (
-      telemetry.console_opts &&
-      !telemetry.console_opts.telemetryNotificationShown &&
-      !telemetryShown.current &&
-      !isContextCloud
-    ) {
-      telemetryShown.current = true;
-      dispatch(showTelemetryNotification());
-      dispatch(telemetryNotificationShown());
-    }
-  }, [dispatch, telemetry, isContextCloud]);
 
   let connectionFailMsg = null;
   if (connectionFailed) {
@@ -74,19 +63,21 @@ const App = ({
     <GlobalContext.Provider value={globals}>
       <ThemeProvider theme={theme}>
         <ErrorBoundary metadata={metadata} dispatch={dispatch}>
-          <div>
-            {connectionFailMsg}
-            {ongoingRequest && (
-              <ProgressBar
-                percent={percent}
-                autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
-                intervalTime={intervalTime}
-                spinner={false}
-              />
-            )}
-            <div>{children}</div>
-            <Notifications notifications={notifications} />
-          </div>
+          <AlertProvider>
+            <div>
+              {connectionFailMsg}
+              {ongoingRequest && (
+                <ProgressBar
+                  percent={percent}
+                  autoIncrement={true} // eslint-disable-line react/jsx-boolean-value
+                  intervalTime={intervalTime}
+                  spinner={false}
+                />
+              )}
+              <div>{children}</div>
+              <ToastsHub />
+            </div>
+          </AlertProvider>
         </ErrorBoundary>
       </ThemeProvider>
     </GlobalContext.Provider>
@@ -114,9 +105,28 @@ const mapStateToProps = state => {
   return {
     ...state.progressBar,
     notifications: state.notifications,
-    telemetry: state.telemetry,
     metadata: state.metadata,
   };
 };
 
-export default hot(module)(connect(mapStateToProps)(App));
+const LAUNCHDARKLY_CLIENT_ID = globals.launchDarklyClientId;
+
+export default isCloudConsole(globals)
+  ? withLDProvider({
+      // initialize with the dev key if env is not production
+      clientSideID: LAUNCHDARKLY_CLIENT_ID,
+      options: {
+        diagnosticOptOut: true,
+        // allow settting up a streaming connection
+        streaming: true,
+        // information to help track events from this app on LD
+        application: {
+          id: 'hasura-cloud-console',
+        },
+      },
+      reactOptions: {
+        sendEventsOnFlagRead: true,
+        useCamelCaseFlagKeys: false,
+      },
+    })(hot(module)(connect(mapStateToProps)(App)))
+  : hot(module)(connect(mapStateToProps)(App));

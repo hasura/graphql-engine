@@ -1,6 +1,6 @@
 ---
 sidebar_label: Custom functions
-sidebar_position: 3
+sidebar_position: 6
 description: Manage custom functions with the Hasura Metadata API
 keywords:
   - hasura
@@ -231,3 +231,65 @@ X-Hasura-Role: admin
 | function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
 | role     | true     | [RoleName](/api-reference/syntax-defs.mdx#rolename)         | Name of the role                                                 |
 | source   | false    | Text                                                        | Name of the source database of the function (default: `default`) |
+
+## snowflake_track_function {#metadata-snowflake-track-function}
+
+`snowflake_track_function` is used to add a custom SQL function to the GraphQL
+schema. Also refer a note [here](/api-reference/syntax-defs.mdx#function-req-note).
+
+Track an SQL function called `search_articles` with a return table of `articles`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "snowflake_track_function",
+    "args": {
+        "function": ["search_articles"],
+        "source": "default",
+        "configuration": {
+            "response": {
+                "type": "table",
+                "table": ["articles"]
+            }
+        }
+    }
+}
+```
+
+### Args syntax {#metadata-snowflake-track-function-syntax}
+
+| Key           | Required | Schema                                                                          | Description                                                                                                                   |
+| ------------- | -------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| function      | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname)                     | Name of the SQL function                                                                                                      |
+| source        | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                         | Name of the source database of the function                                                                                   |
+| configuration | true     | [Function Configuration](/api-reference/syntax-defs.mdx#function-configuration) | Configuration for the SQL function                                                                                            |
+
+## snowflake_untrack_function {#metadata-snowflake-untrack-function}
+
+`snowflake_untrack_function` is used to remove a SQL function from the GraphQL schema.
+
+Remove an SQL function `search_articles`:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "snowflake_untrack_function",
+    "args": {
+        "function": ["search_articles"],
+        "source": "default"
+    }
+}
+```
+
+### Args syntax {#metadata-snowflake-untrack-function-syntax}
+
+| Key      | Required | Schema                                                      | Description                                                      |
+| -------- | -------- | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| function | true     | [FunctionName](/api-reference/syntax-defs.mdx#functionname) | Name of the SQL function                                         |
+| source   | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)     | Name of the source database of the function                      |

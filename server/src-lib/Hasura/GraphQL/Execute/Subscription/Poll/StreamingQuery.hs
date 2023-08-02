@@ -10,12 +10,12 @@ where
 import Control.Concurrent.Async qualified as A
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
+import Data.Aeson.Ordered qualified as JO
 import Data.ByteString qualified as BS
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashSet qualified as Set
 import Data.List.Split (chunksOf)
-import Data.Monoid (Sum (..))
+import Data.Monoid (Endo (..), Sum (..))
 import Data.Text.Extended
 import GHC.AssertNF.CPP
 import Hasura.Base.Error
@@ -30,14 +30,21 @@ import Hasura.GraphQL.Execute.Subscription.Types
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
+import Hasura.Logging (LogLevel (..))
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.BackendTag (backendTag, reify)
+import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.SQL.Value (TxtEncodedVal (..))
-import Hasura.Session
+import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), recordSubcriptionMetric, streamingSubscriptionLabel)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 import Refined (unrefine)
+import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
+import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
 import Text.Shakespeare.Text (st)
 
 {- Note [Streaming subscriptions rebuilding cohort map]
@@ -165,7 +172,7 @@ mergeOldAndNewCursorValues (CursorVariableValues prevPollCursorValues) (CursorVa
         case currentVal of
           TENull -> previousVal -- When we get a null value from the DB, we retain the previous value
           TELit t -> TELit t
-   in CursorVariableValues $ Map.unionWith combineFn prevPollCursorValues currentPollCursorValues
+   in CursorVariableValues $ HashMap.unionWith combineFn prevPollCursorValues currentPollCursorValues
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -193,8 +200,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
       else -- when the response is unchanged, the response is only sent to the newly added subscribers
         return (newSinks, curSinks)
   pushResultToSubscribers subscribersToPush
-  pure $
-    over
+  pure
+    $ over
       (each . each)
       ( \Subscriber {..} ->
           SubscriberExecutionDetails _sId _sMetadata
@@ -225,16 +232,17 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
     response = result <&> \payload -> SubscriptionResponse payload dTime
 
     pushResultToSubscribers subscribers =
-      unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $
-          \Subscriber {..} -> _sOnChangeCallback response
+      unless isResponseEmpty
+        $ flip A.mapConcurrently_ subscribers
+        $ \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.
 pollStreamingQuery ::
   forall b.
-  BackendTransport b =>
+  (BackendTransport b) =>
   PollerId ->
+  STM.TVar PollerResponseState ->
   SubscriptionsOptions ->
   (SourceName, SourceConfig b) ->
   RoleName ->
@@ -244,9 +252,15 @@ pollStreamingQuery ::
   G.Name ->
   SubscriptionPostPollHook ->
   Maybe (IO ()) -> -- Optional IO action to make this function (pollStreamingQuery) testable
+  PrometheusMetrics ->
+  IO GranularPrometheusMetricsState ->
+  TMap.TMap (Maybe OperationName) Int ->
+  ResolvedConnectionTemplate b ->
+  Maybe (Endo JO.Value) ->
   IO ()
-pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe = do
-  (totalTime, (snapshotTime, batchesDetailsAndProcessedCohorts)) <- withElapsedTime $ do
+pollStreamingQuery pollerId pollerResponseState streamingQueryOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap rootFieldName postPollHook testActionMaybe prometheusMetrics granularPrometheusMetricsState operationNames' resolvedConnectionTemplate modifier = do
+  operationNames <- STM.atomically $ TMap.getMap operationNames'
+  (totalTime, (snapshotTime, (batchesDetails, processedCohorts, maybeErrors))) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
     -- This STM transaction is a read only transaction i.e. it doesn't mutate any state
     (snapshotTime, cohortBatches) <- withElapsedTime $ do
@@ -262,20 +276,51 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     for_ testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
 
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
-    batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
+    batchesDetailsAndProcessedCohortsWithMaybeError <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do
       (queryExecutionTime, mxRes) <-
-        runDBStreamingSubscription @b sourceConfig query $
-          over (each . _2) C._csVariables $
-            fmap (fmap fst) cohorts
-      let lqMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
+        runDBStreamingSubscription @b
+          sourceConfig
+          query
+          (over (each . _2) C._csVariables $ fmap (fmap fst) cohorts)
+          resolvedConnectionTemplate
+      let dbExecTimeMetric = submDBExecTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+      recordSubcriptionMetric
+        granularPrometheusMetricsState
+        True
+        operationNames
+        parameterizedQueryHash
+        streamingSubscriptionLabel
+        (flip (HistogramVector.observe dbExecTimeMetric) (realToFrac queryExecutionTime))
+
+      previousPollerResponseState <- STM.readTVarIO pollerResponseState
+
+      maybeError <- case mxRes of
+        Left err -> do
+          when (previousPollerResponseState == PRSSuccess) $ do
+            Prometheus.Gauge.inc $ submActiveStreamingPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSError
+          let pollDetailsError =
+                PollDetailsError
+                  { _pdeBatchId = batchId,
+                    _pdeErrorDetails = err
+                  }
+          return $ Just pollDetailsError
+        Right _ -> do
+          when (previousPollerResponseState == PRSError) $ do
+            Prometheus.Gauge.dec $ submActiveStreamingPollersInError $ pmSubscriptionMetrics prometheusMetrics
+            STM.atomically $ STM.writeTVar pollerResponseState PRSSuccess
+          return Nothing
+
+      let subscriptionMeta = SubscriptionMetadata $ convertDuration queryExecutionTime
           operations = getCohortOperations cohorts mxRes
           -- batch response size is the sum of the response sizes of the cohorts
           batchResponseSize =
             case mxRes of
               Left _ -> Nothing
               Right resp -> Just $ getSum $ foldMap ((\(_, sqlResp, _) -> Sum . BS.length $ sqlResp)) resp
-      (pushTime, cohortsExecutionDetails) <- withElapsedTime $
-        A.forConcurrently operations $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
+      (pushTime, cohortsExecutionDetails) <- withElapsedTime
+        $ A.forConcurrently operations
+        $ \(res, cohortId, respData, latestCursorValueMaybe, (snapshot, cohort)) -> do
           let latestCursorValue@(CursorVariableValues updatedCursorVarVal) =
                 let prevCursorVariableValue = CursorVariableValues $ C._unValidatedVariables $ C._cvCursorVariables $ C._csVariables snapshot
                  in case latestCursorValueMaybe of
@@ -283,7 +328,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                       Just currentPollCursorValue -> mergeOldAndNewCursorValues prevCursorVariableValue currentPollCursorValue
           (pushedSubscribers, ignoredSubscribers) <-
             -- Push the result to the subscribers present in the cohorts
-            pushResultToCohort res (fst <$> respData) lqMeta latestCursorValue rootFieldName (snapshot, cohort)
+            pushResultToCohort res (fst <$> respData) subscriptionMeta latestCursorValue rootFieldName (snapshot, cohort)
           let currentCohortKey = C._csVariables snapshot
               updatedCohortKey = modifyCursorCohortVariables (mkUnsafeValidateVariables updatedCursorVarVal) $ C._csVariables snapshot
               snapshottedNewSubs = C._csNewSubscribers snapshot
@@ -298,29 +343,49 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                   }
           pure (cohortExecutionDetails, (currentCohortKey, (cohort, updatedCohortKey, snapshottedNewSubs)))
       let processedCohortBatch = snd <$> cohortsExecutionDetails
+
+          -- Note: We want to keep the '_bedPgExecutionTime' field for backwards
+          -- compatibility reason, which will be 'Nothing' for non-PG backends.
+          -- See https://hasurahq.atlassian.net/browse/GS-329
+          pgExecutionTime = case reify (backendTag @b) of
+            Postgres Vanilla -> Just queryExecutionTime
+            _ -> Nothing
+
           batchExecDetails =
             BatchExecutionDetails
+              pgExecutionTime
               queryExecutionTime
               pushTime
               batchId
               (fst <$> cohortsExecutionDetails)
               batchResponseSize
-      pure $ (batchExecDetails, processedCohortBatch)
+      pure $ (batchExecDetails, processedCohortBatch, maybeError)
 
-    pure (snapshotTime, batchesDetailsAndProcessedCohorts)
+    pure (snapshotTime, unzip3 batchesDetailsAndProcessedCohortsWithMaybeError)
 
-  let pollDetails =
+  let initPollDetails =
         PollDetails
           { _pdPollerId = pollerId,
+            _pdKind = Streaming,
             _pdGeneratedSql = toTxt query,
             _pdSnapshotTime = snapshotTime,
-            _pdBatches = fst <$> batchesDetailsAndProcessedCohorts,
-            _pdLiveQueryOptions = lqOpts,
+            _pdBatches = batchesDetails,
+            _pdLiveQueryOptions = streamingQueryOpts,
             _pdTotalTime = totalTime,
             _pdSource = sourceName,
             _pdRole = roleName,
-            _pdParameterizedQueryHash = parameterizedQueryHash
+            _pdParameterizedQueryHash = parameterizedQueryHash,
+            _pdLogLevel = LevelInfo,
+            _pdErrors = Nothing
           }
+      maybePollDetailsErrors = sequenceA maybeErrors
+      pollDetails = case maybePollDetailsErrors of
+        Nothing -> initPollDetails
+        Just pollDetailsError ->
+          initPollDetails
+            { _pdLogLevel = LevelError,
+              _pdErrors = Just pollDetailsError
+            }
 
   STM.atomically $ do
     -- constructing a cohort map for all the cohorts that have been
@@ -328,7 +393,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
 
     -- processed cohorts is an array of tuples of the current poll cohort variables and a tuple
     -- of the cohort and the new cohort key
-    let processedCohortsMap = Map.fromList $ snd =<< batchesDetailsAndProcessedCohorts
+    let processedCohortsMap = HashMap.fromList $ concat processedCohorts
 
     -- rebuilding the cohorts and the cohort map, see [Streaming subscription polling]
     -- and [Streaming subscriptions rebuilding cohort map]
@@ -336,12 +401,12 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
     updatedCohortsMap <-
       foldM
         ( \accCohortMap (currentCohortKey, currentCohort) -> do
-            let processedCohortMaybe = Map.lookup currentCohortKey processedCohortsMap
+            let processedCohortMaybe = HashMap.lookup currentCohortKey processedCohortsMap
             case processedCohortMaybe of
               -- A new cohort has been added in the cohort map whilst the
               -- current poll was happening, in this case we just return it
               -- as it is
-              Nothing -> Map.insertWithM mergeCohorts currentCohortKey currentCohort accCohortMap
+              Nothing -> HashMap.insertWithM mergeCohorts currentCohortKey currentCohort accCohortMap
               Just (processedCohort, updatedCohortKey, snapshottedNewSubs) -> do
                 updateCohortSubscribers currentCohort snapshottedNewSubs
                 currentCohortExistingSubscribers <- TMap.toList $ C._cExistingSubscribers currentCohort
@@ -373,30 +438,38 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
                       newCohort <- do
                         existingSubs <- TMap.new
                         newSubs <- TMap.new
-                        pure $
-                          C.Cohort
+                        pure
+                          $ C.Cohort
                             (C._cCohortId currentCohort)
                             (C._cPreviousResponse currentCohort)
                             existingSubs
                             newSubs
                             (C._cStreamCursorVariables currentCohort)
                       TMap.replace (C._cNewSubscribers newCohort) newlyAddedSubscribers
-                      Map.insertWithM mergeCohorts currentCohortKey newCohort accCohortMap
-                let allCurrentSubscribers = Set.fromList $ fst <$> (Map.toList newlyAddedSubscribers <> currentCohortExistingSubscribers)
+                      HashMap.insertWithM mergeCohorts currentCohortKey newCohort accCohortMap
+                let allCurrentSubscribers = Set.fromList $ fst <$> (HashMap.toList newlyAddedSubscribers <> currentCohortExistingSubscribers)
                 -- retain subscribers only if they still exist in the original cohort's subscriber.
                 -- It may happen that a subscriber has stopped their subscription which means it will
                 -- no longer exist in the cohort map, so we need to accordingly remove such subscribers
                 -- from our processed cohorts.
                 TMap.filterWithKey (\k _ -> k `elem` allCurrentSubscribers) $ C._cExistingSubscribers processedCohort
                 TMap.filterWithKey (\k _ -> k `elem` allCurrentSubscribers) $ C._cNewSubscribers processedCohort
-                Map.insertWithM mergeCohorts updatedCohortKey processedCohort accCohortMapWithCurrentCohort
+                HashMap.insertWithM mergeCohorts updatedCohortKey processedCohort accCohortMapWithCurrentCohort
         )
         mempty
         currentCohorts
     TMap.replace cohortMap updatedCohortsMap
   postPollHook pollDetails
+  let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+  recordSubcriptionMetric
+    granularPrometheusMetricsState
+    True
+    operationNames
+    parameterizedQueryHash
+    streamingSubscriptionLabel
+    (flip (HistogramVector.observe totalTimeMetric) (realToFrac totalTime))
   where
-    SubscriptionsOptions batchSize _ = lqOpts
+    SubscriptionsOptions batchSize _ = streamingQueryOpts
 
     updateCohortSubscribers (C.Cohort _id _respRef curOpsTV newOpsTV _) snapshottedNewSubs = do
       allNewOpsL <- TMap.toList newOpsTV
@@ -425,8 +498,8 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
           oldCohortNewSubscribers = C._cNewSubscribers oldCohort
       mergedExistingSubscribers <- TMap.union newCohortExistingSubscribers oldCohortExistingSubscribers
       mergedNewSubscribers <- TMap.union newCohortNewSubscribers oldCohortNewSubscribers
-      pure $
-        newCohort
+      pure
+        $ newCohort
           { C._cNewSubscribers = mergedNewSubscribers,
             C._cExistingSubscribers = mergedExistingSubscribers
           }
@@ -436,7 +509,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
         let resp = throwError $ GQExecError [encodeGQLErr False e]
          in [(resp, cohortId, Nothing, Nothing, snapshot) | (cohortId, snapshot) <- cohorts]
       Right responses -> do
-        let cohortSnapshotMap = Map.fromList cohorts
+        let cohortSnapshotMap = HashMap.fromList cohorts
         -- every row of the response will contain the cohortId, response of the query and the latest value of the cursor for the cohort
         flip mapMaybe responses $ \(cohortId, respBS, respCursorLatestValue) ->
           let respHash = mkRespHash respBS
@@ -445,5 +518,5 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
               -- Postgres response is not present in the cohort map of this batch
               -- (this shouldn't happen but if it happens it means a logic error and
               -- we should log it)
-              (pure respBS,cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
-                <$> Map.lookup cohortId cohortSnapshotMap
+              (pure (applyModifier modifier respBS),cohortId,Just (respHash, respSize),Just respCursorLatestValue,)
+                <$> HashMap.lookup cohortId cohortSnapshotMap

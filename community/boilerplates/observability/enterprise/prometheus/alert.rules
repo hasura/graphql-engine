@@ -1,0 +1,122 @@
+groups:
+- name: services
+  rules:
+  - alert: service_down
+    expr: up == 0
+    for: 30s
+    labels:
+      severity: page
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 30 seconds."
+
+  - alert: high_load
+    expr: node_load1 > 2
+    for: 30s
+    labels:
+      severity: page
+    annotations:
+      summary: "Instance {{ $labels.instance }} under high load"
+      description: "{{ $labels.instance }} of job {{ $labels.job }} is under high load."
+
+- name: hasura
+  rules:
+  - alert: GraphQLErrorWarning
+    expr: '(increase(hasura_graphql_requests_total{response_status="failed"}[5m]) / increase(hasura_graphql_requests_total[5m])) >= 0.5'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High GraphQL error rate"
+      description: "The error rate of GraphQL requests from your instance {{ $labels.instance }} exceeds {{ $value | humanizePercentage }}"
+  
+  - alert: GraphQLLatencyP95
+    expr: 'histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket[5m])) by (instance, le)) >= 60'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High P95 latency on GraphQL HTTP requests"
+      description: "The P95 latency of GraphQL HTTP requests from your instance {{ $labels.instance }} exceeds {{ $value }}"
+  
+  - alert: SubscriptionWorkerErrorWarning
+    expr: '(increase(hasura_active_subscription_pollers_in_error_state{subscription_kind="live-query"}[5m]) / increase(hasura_active_subscription_pollers{subscription_kind="live-query"}[5m])) >= 0.5'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High subscription worker error rate"
+      description: "The error rate of subscription workers from your instance {{ $labels.instance }} exceeds {{ $value | humanizePercentage }}"
+  
+  - alert: SubscriptionLatencyP95
+    expr: 'histogram_quantile(0.95, sum(rate(hasura_subscription_total_time_seconds_bucket{subscription_kind="live-query"}[5m])) by (instance, le)) >= 30'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High subscription P95 latency"
+      description: "The P95 latency of subscriptions from your instance {{ $labels.instance }} exceeds {{ $value }}"
+  
+  - alert: StreamingErrorWarning
+    expr: '(increase(hasura_active_subscription_pollers_in_error_state{subscription_kind="streaming"}[5m]) / increase(hasura_active_subscription_pollers{subscription_kind="streaming"}[5m])) >= 0.5'
+    for: 1m
+    labels:
+      severity: warning
+      group: hasura-customer
+    annotations:
+      title: "High streaming error rate"
+      description: "The streaming error rate of your instance {{ $labels.instance }} exceeds {{ $value | humanizePercentage }}"
+  
+  - alert: StreamingLatencyP95
+    expr: 'histogram_quantile(0.95, sum(rate(hasura_subscription_total_time_seconds_bucket{subscription_kind="streaming"}[5m])) by (instance, le)) >= 60'
+    for: 1m
+    labels:
+      severity: warning
+      group: hasura-customer
+    annotations:
+      title: "High streaming P95 latency"
+      description: "The P95 latency of streaming requests from your instance {{ $labels.instance }} exceeds {{ $value }}"
+  
+  - alert: EventErrorWarning
+    expr: '(increase(hasura_event_processed_total{response_status="failed"}[5m]) / increase(hasura_event_processed_total[5m])) >= 0.5'
+    for: 1m
+    labels:
+      severity: warning
+      group: hasura-customer
+    annotations:
+      title: "High event trigger error rate"
+      description: "The error rate of event triggers from instance {{ $labels.instance }} exceeds {{ $value | humanizePercentage }}"
+  
+  - alert: CronErrorWarning
+    expr: '(increase(hasura_cron_events_processed_total{response_status="failed"}[5m]) / increase(hasura_cron_events_processed_total[5m])) >= 0.5'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High cron trigger error rate"
+      description: "The error rate of cron triggers from instance {{ $labels.instance }} exceeds {{ $value | humanizePercentage }}"
+  
+  - alert: PostgresConnsWarning
+    expr: '(sum by (role, conn_info) (hasura_postgres_connections)) >= 2'
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: "High concurrent Postgres connections"
+      description: "The connection usage of the {{ $labels.role }} Postgres server {{ $labels.conn_info }} exceeds {{ $value }}"
+
+  - alert: SourceUnhealthy
+    expr: 'hasura_source_health > 0'
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      title: "Unhealthy data source"
+      description: |
+        {{ if eq $value 1.0 }} 
+          Health check requests which are sent to your data source <b>{{ $labels.source_name }}</b> are timed out.
+        {{ else if eq $value 2.0 }}
+          Health check requests which are sent to your data source <b>{{ $labels.source_name }}</b> are failed due to bad configuration.
+        {{ else }}
+          Health check requests which are sent to your data source <b>{{ $labels.source_name }}</b> are failed due to exceptions occurred.
+        {{ end }}

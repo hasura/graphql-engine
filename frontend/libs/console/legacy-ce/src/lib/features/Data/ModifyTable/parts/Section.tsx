@@ -1,4 +1,4 @@
-import { IconTooltip } from '@/new-components/Tooltip';
+import { IconTooltip } from '../../../../new-components/Tooltip';
 import React from 'react';
 import { SectionHeader } from './SectionHeader';
 

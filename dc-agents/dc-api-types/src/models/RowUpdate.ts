@@ -2,8 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { IncrementColumnRowUpdate } from './IncrementColumnRowUpdate';
+import type { CustomUpdateColumnOperatorRowUpdate } from './CustomUpdateColumnOperatorRowUpdate';
 import type { SetColumnRowUpdate } from './SetColumnRowUpdate';
 
-export type RowUpdate = (IncrementColumnRowUpdate | SetColumnRowUpdate);
+export type RowUpdate = (CustomUpdateColumnOperatorRowUpdate | SetColumnRowUpdate);
 

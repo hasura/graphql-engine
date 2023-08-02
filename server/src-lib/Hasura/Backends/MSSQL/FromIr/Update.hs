@@ -12,19 +12,20 @@ import Hasura.Backends.MSSQL.FromIr
 import Hasura.Backends.MSSQL.FromIr.Constants (tempTableNameUpdated)
 import Hasura.Backends.MSSQL.FromIr.Expression (fromGBoolExp)
 import Hasura.Backends.MSSQL.Instances.Types ()
-import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.Backends.MSSQL.Types.Update as TSQL (BackendUpdate (..), Update (..))
+import Hasura.Backends.MSSQL.Types.Internal
+import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.IR.Update.Batch qualified as IR
+import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column qualified as IR
-import Hasura.SQL.Backend
 
 fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
-fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate _ allColumns _tCase) = do
+fromUpdate (IR.AnnotatedUpdateG table updatePermFilter _ (IR.UpdateBatch updateOperations whereClause) _ allColumns _tCase _validateInput) = do
   tableAlias <- generateAlias (TableTemplate (tableName table))
   runReaderT
     ( do
-        permissionsFilter <- fromGBoolExp permFilter
+        permissionsFilter <- fromGBoolExp updatePermFilter
         whereExpression <- fromGBoolExp whereClause
         let columnNames = map IR.ciColumn allColumns
         pure
@@ -34,7 +35,7 @@ fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate 
                   { aliasedAlias = tableAlias,
                     aliasedThing = table
                   },
-              updateSet = updateOperations backendUpdate,
+              updateSet = updateOperations,
               updateOutput = Output Inserted (map OutputColumn columnNames),
               updateTempTable = TempTable tempTableNameUpdated columnNames,
               updateWhere = Where [permissionsFilter, whereExpression]

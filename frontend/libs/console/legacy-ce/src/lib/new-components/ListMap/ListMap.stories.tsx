@@ -1,4 +1,4 @@
-import { ComponentMeta, Story } from '@storybook/react';
+import { StoryObj, StoryFn, Meta } from '@storybook/react';
 import { userEvent, within } from '@storybook/testing-library';
 import React from 'react';
 import { expect } from '@storybook/jest';
@@ -34,9 +34,9 @@ export default {
       );
     },
   ],
-} as ComponentMeta<typeof ListMap>;
+} as Meta<typeof ListMap>;
 
-export const ArrayToArray: Story = () => {
+export const ArrayToArray: StoryFn = () => {
   return (
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
@@ -57,7 +57,7 @@ export const ArrayToArray: Story = () => {
   );
 };
 
-export const ArrayToString: Story = () => {
+export const ArrayToString: StoryFn = () => {
   return (
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
@@ -75,7 +75,7 @@ export const ArrayToString: Story = () => {
   );
 };
 
-export const WithIcons: Story = () => {
+export const WithIcons: StoryFn = () => {
   return (
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
@@ -96,7 +96,7 @@ export const WithIcons: Story = () => {
   );
 };
 
-export const WithMultipleIcons: Story = () => {
+export const WithMultipleIcons: StoryFn = () => {
   return (
     <ListMap
       value={{ apple: 'tomato', cherry: 'chilli' }}
@@ -117,80 +117,82 @@ export const WithMultipleIcons: Story = () => {
   );
 };
 
-export const WithNoLabelsAndNoBackground: Story = ({ className }) => {
-  return (
-    <ListMap
-      value={{ apple: 'tomato', cherry: 'chilli' }}
-      name="type_selector"
-      onChange={e => console.log(e)}
-      from={{
-        options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
-      }}
-      to={{
-        type: 'array',
-        options: ['tomato', 'chilli', 'pumpkin', 'onion', 'carrot'],
-      }}
-      className={className}
-    />
-  );
-};
-
-WithNoLabelsAndNoBackground.args = {
-  className: 'bg-transparent border-none',
-};
-
-const FormElements = () => {
-  return (
-    <>
+export const WithNoLabelsAndNoBackground: StoryObj = {
+  render: ({ className }) => {
+    return (
       <ListMap
+        value={{ apple: 'tomato', cherry: 'chilli' }}
+        name="type_selector"
+        onChange={e => console.log(e)}
         from={{
           options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
-          label: 'Source Column',
-          placeholder: 'Select a fruit',
         }}
         to={{
           type: 'array',
           options: ['tomato', 'chilli', 'pumpkin', 'onion', 'carrot'],
-          label: 'Reference Column',
-          placeholder: 'Select a vegatable',
         }}
-        name="mapping"
+        className={className}
       />
-    </>
-  );
+    );
+  },
+
+  args: {
+    className: 'bg-transparent border-none',
+  },
 };
 
-export const WithReactFormHookNested: Story = () => {
+const FormElements = () => {
   return (
-    <>
-      <FormElements />
-      <Button type="submit" data-testid="submit">
-        Submit
-      </Button>
-    </>
+    <ListMap
+      from={{
+        options: ['apple', 'cherry', 'banana', 'pineapple', 'strawberry'],
+        label: 'Source Column',
+        placeholder: 'Select a fruit',
+      }}
+      to={{
+        type: 'array',
+        options: ['tomato', 'chilli', 'pumpkin', 'onion', 'carrot'],
+        label: 'Reference Column',
+        placeholder: 'Select a vegatable',
+      }}
+      name="mapping"
+    />
   );
 };
 
-WithReactFormHookNested.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
+export const WithReactFormHookNested: StoryObj = {
+  render: () => {
+    return (
+      <>
+        <FormElements />
+        <Button type="submit" data-testid="submit">
+          Submit
+        </Button>
+      </>
+    );
+  },
 
-  const fromLabel = await canvas.findByText('Source Column');
-  const toLabel = await canvas.findByText('Reference Column');
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
 
-  // expect error messages
-  expect(fromLabel).toBeInTheDocument();
-  expect(toLabel).toBeInTheDocument();
+    const fromLabel = await canvas.findByText('Source Column');
+    const toLabel = await canvas.findByText('Reference Column');
 
-  const addNewRowBtn = await canvas.getByTestId('mapping_add_new_row');
-  userEvent.click(addNewRowBtn);
+    // expect error messages
+    expect(fromLabel).toBeInTheDocument();
+    expect(toLabel).toBeInTheDocument();
 
-  // // update fields
-  const fromInput = await canvas.getByTestId('mapping_source_input_2');
-  userEvent.selectOptions(fromInput, 'banana');
+    const addNewRowBtn = await canvas.getByTestId('mapping_add_new_row');
+    userEvent.click(addNewRowBtn);
 
-  const toInput = await canvas.getByTestId('mapping_target_input_2');
-  userEvent.selectOptions(toInput, 'carrot');
+    // // update fields
+    const fromInput = await canvas.getByTestId('mapping_source_input_2');
+    userEvent.selectOptions(fromInput, 'banana');
 
-  const submitButton = await canvas.getByTestId('submit');
-  userEvent.click(submitButton);
+    const toInput = await canvas.getByTestId('mapping_target_input_2');
+    userEvent.selectOptions(toInput, 'carrot');
+
+    const submitButton = await canvas.getByTestId('submit');
+    userEvent.click(submitButton);
+  },
 };

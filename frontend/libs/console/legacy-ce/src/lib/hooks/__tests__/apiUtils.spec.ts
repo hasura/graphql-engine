@@ -172,5 +172,22 @@ describe('API functions', () => {
         });
       });
     });
+
+    describe('errorTransform', () => {
+      it('when errorTransform is passed, should call the errorTransform function with the raw error', async () => {
+        server.use(
+          rest.get(url, (_req, res, context) => {
+            // Make every request failing with { foo: 'bar' }
+            return res(context.json({ foo: 'bar' }), context.status(400));
+          })
+        );
+
+        const errorTransform = jest.fn(error => error);
+        const promise = Api.get({ url, headers }, undefined, errorTransform);
+
+        await expect(promise).rejects.toEqual({ foo: 'bar' });
+        expect(errorTransform).toBeCalledWith({ foo: 'bar' });
+      });
+    });
   });
 });

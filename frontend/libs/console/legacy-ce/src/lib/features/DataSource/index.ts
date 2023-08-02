@@ -1,28 +1,31 @@
-import {
-  Source,
-  SupportedDrivers,
-  Table,
-} from '@/features/hasura-metadata-types';
-import { OpenApiSchema } from '@hasura/dc-api-types';
+import { Capabilities, OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';
+import pickBy from 'lodash/pickBy';
 import { z } from 'zod';
-import pickBy from 'lodash.pickby';
+import { Source, SupportedDrivers, Table } from '../hasura-metadata-types';
+import { AlloyDbTable, alloy } from './alloydb';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
-import { postgres, PostgresTable } from './postgres';
-import { alloy, AlloyDbTable } from './alloydb';
+import { postgres } from './postgres';
 import type {
-  DriverInfoResponse,
+  ChangeDatabaseSchemaProps,
+  DriverInfo,
+  GetDatabaseSchemaProps,
+  GetDefaultQueryRootProps,
   GetFKRelationshipProps,
   GetSupportedOperatorsProps,
   GetTableColumnsProps,
   GetTableRowsProps,
   GetTablesListAsTreeProps,
+  GetTrackableFunctionProps,
   GetTrackableTablesProps,
+  IntrospectedFunction,
+  GetVersionProps,
+  GetIsTableViewProps,
   // Property,
   IntrospectedTable,
   Operator,
@@ -30,20 +33,57 @@ import type {
   TableColumn,
   TableFkRelationships,
   TableRow,
+  Version,
   WhereClause,
+  StoredProcedure,
+  GetStoredProceduresProps,
+  GetSupportedScalarsProps,
 } from './types';
 
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
+import { QueryType } from '../Permissions/types';
 import {
+  NetworkArgs,
+  RunSQLAPIError,
+  RunSQLCommandResponse,
+  RunSQLResponse,
+  RunSQLSelectResponse,
   exportMetadata,
   getDriverPrefix,
-  NetworkArgs,
+  runGraphQL,
   runIntrospectionQuery,
-  RunSQLResponse,
+  runMetadataQuery,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 import { getTableName } from './common/getTableName';
+import { ReleaseType } from './types';
+import {
+  GetTrackableObjectsProps,
+  GetTrackableObjectsResponse,
+} from './gdc/introspection/getTrackableObjects';
+import { isObject } from '../../components/Common/utils/jsUtils';
 
+export * from './common/utils';
+export type { GDCTable } from './gdc';
+export * from './guards';
+export type { PostgresTable } from './postgres';
+export * from './types';
+export {
+  exportMetadata,
+  runGraphQL,
+  getTableName,
+  runMetadataQuery,
+  getDriverPrefix,
+  runIntrospectionQuery,
+};
+export type {
+  RunSQLResponse,
+  RunSQLSelectResponse,
+  RunSQLCommandResponse,
+  NetworkArgs,
+  AlloyDbTable,
+  RunSQLAPIError,
+};
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
@@ -69,7 +109,10 @@ export const getDriver = (dataSource: Source) => {
 
 export type Database = {
   introspection?: {
-    getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
+    getVersion?: (
+      props: GetVersionProps
+    ) => Promise<Version | Feature.NotImplemented>;
+    getDriverInfo: () => Promise<DriverInfo | Feature.NotImplemented>;
     getDatabaseConfiguration: (
       httpClient: AxiosInstance,
       driver?: string
@@ -80,6 +123,10 @@ export type Database = {
         }
       | Feature.NotImplemented
     >;
+    getDriverCapabilities: (
+      httpClient: AxiosInstance,
+      driver?: string
+    ) => Promise<Capabilities | Feature>;
     getTrackableTables: (
       props: GetTrackableTablesProps
     ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
@@ -96,13 +143,50 @@ export type Database = {
     getSupportedOperators: (
       props: GetSupportedOperatorsProps
     ) => Promise<Operator[] | Feature.NotImplemented>;
+    getTrackableFunctions: (
+      props: GetTrackableFunctionProps
+    ) => Promise<IntrospectedFunction[] | Feature.NotImplemented>;
+    getTrackableObjects: (
+      props: GetTrackableObjectsProps
+    ) => Promise<GetTrackableObjectsResponse | Feature.NotImplemented>;
+    getDatabaseSchemas: (
+      props: GetDatabaseSchemaProps
+    ) => Promise<string[] | Feature.NotImplemented>;
+    getIsTableView: (
+      props: GetIsTableViewProps
+    ) => Promise<boolean | Feature.NotImplemented>;
+    getSupportedDataTypes: () => Promise<
+      Record<TableColumn['consoleDataType'], string[]> | Feature.NotImplemented
+    >;
+    getSupportedScalars: (
+      props: GetSupportedScalarsProps
+    ) => Promise<string[] | Feature.NotImplemented>;
+    getStoredProcedures: (
+      props: GetStoredProceduresProps
+    ) => Promise<StoredProcedure[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
       props: GetTableRowsProps
     ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
-  modify?: null;
+  modify?: {
+    defaultQueryRoot: (props: GetDefaultQueryRootProps) => Promise<string>;
+    createDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
+    deleteDatabaseSchema: (
+      props: ChangeDatabaseSchemaProps
+    ) => Promise<RunSQLResponse | Feature.NotImplemented>;
+  };
+  config: {
+    getDefaultQueryRoot: (
+      table: Table
+    ) => Promise<string | Feature.NotImplemented>;
+    getSupportedQueryTypes: (
+      table: Table
+    ) => Promise<QueryType[] | Feature.NotImplemented>;
+  };
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -146,12 +230,25 @@ const getDriverMethods = (driver: SupportedDrivers) => {
 
 export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
-    getAllSourceKinds: async () => {
+    getAllSourceKinds: async (): Promise<DriverInfo[]> => {
       const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
-
+      const knownEnterpriseDrivers = [
+        'athena',
+        'snowflake',
+        'mysql8',
+        'mariadb',
+        'oracle',
+      ];
       const allSupportedDrivers = serverSupportedDrivers
         // NOTE: AlloyDB is added here and not returned by the server because it's not a new data source (it's Postgres)
-        .concat([{ builtin: true, kind: 'alloy', display_name: 'AlloyDB' }])
+        .concat([
+          {
+            builtin: true,
+            kind: 'alloy',
+            display_name: 'AlloyDB',
+            available: true,
+          },
+        ])
         .sort((a, b) => (a.kind > b.kind ? 1 : -1));
 
       const allDrivers = allSupportedDrivers.map(async driver => {
@@ -165,13 +262,17 @@ export const DataSource = (httpClient: AxiosInstance) => ({
             displayName: driverInfo.displayName,
             release: driverInfo.release,
             native: driver.builtin,
+            available: true,
+            enterprise: false,
           };
 
         return {
           name: driver.kind,
           displayName: driver.display_name,
-          release: 'Beta',
+          release: (driver.release_name as ReleaseType) ?? 'GA',
           native: driver.builtin,
+          available: driver.available,
+          enterprise: knownEnterpriseDrivers.includes(driver.kind),
         };
       });
       return Promise.all(allDrivers);
@@ -179,6 +280,15 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getNativeDrivers: async () => {
     return nativeDrivers;
+  },
+  getDatabaseVersion: async (
+    dataSourceName: string
+  ): Promise<string | Feature.NotImplemented> => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getVersion?.({ dataSourceName, httpClient }) ??
+      Feature.NotImplemented
+    );
   },
   connectDB: {
     getConfigSchema: async (driver: string) => {
@@ -243,14 +353,12 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     );
 
     if (!dataSource) {
-      throw Error(
-        'DataSource.introspectTables data source not found in metadata'
-      );
+      throw Error(`${dataSourceName} not found in metadata`);
     }
 
     const kind = getDriver(dataSource);
-    /* 
-      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
+    /*
+      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
 
@@ -343,8 +451,10 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
   getTablesWithHierarchy: async ({
     dataSourceName,
+    releaseName,
   }: {
     dataSourceName: string;
+    releaseName?: ReleaseType;
   }) => {
     const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
@@ -357,6 +467,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     const treeData = await introspection.getTablesListAsTree({
       dataSourceName,
       httpClient,
+      releaseName,
     });
 
     if (treeData === Feature.NotImplemented) return null;
@@ -414,17 +525,159 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     return operators;
   },
-});
+  getDefaultQueryRoot: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
 
-export { GDCTable } from './gdc';
-export * from './guards';
-export * from './types';
-export {
-  PostgresTable,
-  exportMetadata,
-  getTableName,
-  RunSQLResponse,
-  getDriverPrefix,
-  runIntrospectionQuery,
-  AlloyDbTable,
-};
+    return database.config.getDefaultQueryRoot(table);
+  },
+  getSupportedQueryTypes: async ({
+    dataSourceName,
+    table,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    return database.config.getSupportedQueryTypes(table);
+  },
+  getDriverCapabilities: async (driver: string) => {
+    const driverName = (
+      nativeDrivers.includes(driver) ? driver : 'gdc'
+    ) as SupportedDrivers;
+
+    return drivers[driverName].introspection?.getDriverCapabilities(
+      httpClient,
+      driver
+    );
+  },
+  getTrackableFunctions: async (dataSourceName: string) => {
+    const functions: IntrospectedFunction[] = [];
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    const trackableFunctions =
+      (await database.introspection?.getTrackableFunctions({
+        dataSourceName,
+        httpClient,
+      })) ?? [];
+
+    if (Array.isArray(trackableFunctions)) {
+      functions.push(...trackableFunctions);
+    }
+
+    const getTrackableObjectsFn = database.introspection?.getTrackableObjects;
+
+    if (getTrackableObjectsFn) {
+      const trackableObjects = await getTrackableObjectsFn({
+        dataSourceName,
+        httpClient,
+      });
+
+      if (isObject(trackableObjects) && 'functions' in trackableObjects) {
+        functions.push(...trackableObjects.functions);
+      }
+    }
+
+    return functions;
+  },
+  getDatabaseSchemas: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.introspection?.getDatabaseSchemas)
+      throw new Error(`getDatabaseSchema() not callable for ${dataSourceName}`);
+
+    return database.introspection?.getDatabaseSchemas({
+      dataSourceName,
+      httpClient,
+    });
+  },
+  modifyDatabase: async ({ dataSourceName }: { dataSourceName: string }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database.modify)
+      throw new Error(`modify methods are not callable for ${dataSourceName}`);
+
+    return database.modify;
+  },
+  getIsTableView: async ({
+    dataSourceName,
+    table,
+    httpClient,
+  }: {
+    dataSourceName: string;
+    table: Table;
+  } & NetworkArgs) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) return false;
+
+    const introspection = database.introspection;
+
+    if (!introspection) return false;
+
+    const isView = await introspection.getIsTableView({
+      dataSourceName,
+      httpClient,
+      table,
+    });
+
+    if (isView === Feature.NotImplemented) return false;
+
+    return isView;
+  },
+  getSupportedDataTypes: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getSupportedDataTypes() ?? Feature.NotImplemented
+    );
+  },
+  getSupportedScalars: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    const { metadata } = await exportMetadata({ httpClient });
+    const dataSource = metadata.sources.find(
+      source => source.name === dataSourceName
+    );
+
+    if (!dataSource) {
+      throw Error(`Data source ${dataSource} not found in metadata`);
+    }
+
+    return (
+      database.introspection?.getSupportedScalars({
+        dataSourceKind: dataSource.kind,
+        httpClient,
+      }) ?? Feature.NotImplemented
+    );
+  },
+  getStoredProcedures: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+    return (
+      database.introspection?.getStoredProcedures({
+        dataSourceName,
+        httpClient,
+      }) ?? Feature.NotImplemented
+    );
+  },
+});

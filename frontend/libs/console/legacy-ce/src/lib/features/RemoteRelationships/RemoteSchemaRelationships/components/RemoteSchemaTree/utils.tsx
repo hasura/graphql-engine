@@ -17,7 +17,7 @@ import {
   isFloat,
   isJsonString,
   isNumber,
-} from '@/components/Common/utils/jsUtils';
+} from '../../../../../components/Common/utils/jsUtils';
 import {
   AllowedRootFields,
   ArgValue,

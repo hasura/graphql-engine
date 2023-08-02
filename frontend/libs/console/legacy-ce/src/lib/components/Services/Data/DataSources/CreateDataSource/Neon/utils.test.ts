@@ -243,9 +243,12 @@ const transformErrorStatesTestCases: {
     },
     output: {
       status: {
-        status: 'loading',
+        status: 'error',
+        errorTitle: 'Error title',
+        errorDescription: 'Error description',
       },
-      buttonText: 'Connecting to Hasura',
+      icon: 'refresh',
+      buttonText: 'Try again',
       onClickConnect: jest.fn(),
     },
   },

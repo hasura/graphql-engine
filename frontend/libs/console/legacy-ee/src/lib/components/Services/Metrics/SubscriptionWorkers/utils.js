@@ -286,9 +286,7 @@ export const getColWidth = (header, contentRows = []) => {
       let contentString;
       if (header === 'started') {
         contentString = moment(content).fromNow();
-      } else if (
-        header === 'session_variables'
-      ) {
+      } else if (header === 'session_variables') {
         contentString = Object.keys(content);
       } else if (content === null || content === undefined) {
         contentString = 'NULL';
@@ -374,8 +372,8 @@ export const decodeError = resp => {
 /* eslint-disable no-unused-expressions */
 const sortHeaders = (headerRows, defaultHeaders) => {
   return headerRows.sort((a, b) => {
-    (defaultHeaders.findIndex(f => f === a.accessor) || 999)
-    - (defaultHeaders.findIndex(f => f === b.accessor) || 0);
+    (defaultHeaders.findIndex(f => f === a.accessor) || 999) -
+      (defaultHeaders.findIndex(f => f === b.accessor) || 0);
   });
 };
 /* eslint-enable no-unused-expressions */
@@ -396,5 +394,5 @@ export {
   roundToTwo,
   arraysEqual,
   getTimeInterval,
-  sortHeaders
+  sortHeaders,
 };

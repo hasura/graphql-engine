@@ -1,10 +1,16 @@
 import React from 'react';
 import Skeleton from 'react-loading-skeleton';
 import { FieldError, useFieldArray, useFormContext } from 'react-hook-form';
-import { Select } from '@/new-components/Form';
-import { FaArrowRight, FaCircle, FaTrashAlt } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { Select } from '../../../../new-components/Form';
+import {
+  FaArrowAltCircleLeft,
+  FaArrowAltCircleRight,
+  FaArrowRight,
+  FaExclamationCircle,
+  FaTimesCircle,
+} from 'react-icons/fa';
+import { Button } from '../../../../new-components/Button';
+import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { useTableColumns } from '../../hooks/useTableColumns';
 import { Schema } from '../ManualLocalRelationship/schema';
 
@@ -32,8 +38,8 @@ export const MapColumns = () => {
     isLoading: areSourceColumnsLoading,
     error: sourceColumnsFetchError,
   } = useTableColumns({
-    dataSourceName: fromSource?.dataSourceName,
-    table: fromSource?.table,
+    dataSourceName: fromSource?.value?.dataSourceName,
+    table: fromSource?.value?.table,
   });
 
   const {
@@ -41,13 +47,13 @@ export const MapColumns = () => {
     isLoading: areTargetColumnsLoading,
     error: targetColumnsFetchError,
   } = useTableColumns({
-    dataSourceName: toSource?.dataSourceName,
-    table: toSource?.table,
+    dataSourceName: toSource?.value?.dataSourceName,
+    table: toSource?.value?.table,
   });
 
   if (sourceColumnsFetchError || targetColumnsFetchError)
     return (
-      <div className="rounded bg-gray-50 border border-gray-300 p-md mb-md mt-0 h">
+      <div className="px-md pb-md mb-md mt-0 h">
         <div className="items-center mb-sm font-semibold text-gray-600">
           <IndicatorCard
             status="negative"
@@ -74,20 +80,21 @@ export const MapColumns = () => {
     );
 
   return (
-    <div className="rounded bg-gray-50 border border-gray-300 p-md mb-md mt-0 h">
-      <div className="grid grid-cols-12 items-center mb-sm font-semibold text-gray-600">
-        <div className="col-span-6">
-          <FaCircle className="text-green-600" /> Source Column
+    <div className="px-md pb-md mb-md mt-0 h">
+      <div className="grid grid-cols-12 mb-1 items-center font-semibold text-muted">
+        <div className="col-span-6 flex items-center">
+          Source Column{' '}
+          <FaArrowAltCircleRight className="fill-emerald-700 ml-1.5" />
         </div>
-        <div className="col-span-6">
-          <FaCircle className="text-indigo-600" /> Reference Column
+        <div className="col-span-6 flex items-center">
+          Reference Column{' '}
+          <FaArrowAltCircleLeft className="fill-violet-700 ml-1.5" />
         </div>
       </div>
-      <div className="text-red-500">{formErrorMessage}</div>
       {fields.map((field, index) => {
         return (
           <div
-            className="grid grid-cols-12 items-center mb-sm"
+            className="grid grid-cols-12 items-center"
             key={`${index}_column_map_row`}
           >
             <div className="col-span-5">
@@ -108,7 +115,7 @@ export const MapColumns = () => {
             </div>
 
             <div className="flex justify-around">
-              <FaArrowRight />
+              <FaArrowRight className="fill-muted" />
             </div>
             <div className="col-span-5">
               {areTargetColumnsLoading ? (
@@ -129,7 +136,9 @@ export const MapColumns = () => {
             <div className="flex justify-around">
               <Button
                 type="button"
-                icon={<FaTrashAlt />}
+                size="sm"
+                className="h-10"
+                icon={<FaTimesCircle />}
                 onClick={() => {
                   setValue(
                     name,
@@ -141,6 +150,12 @@ export const MapColumns = () => {
           </div>
         );
       })}
+      {formErrorMessage && (
+        <div className="text-red-600 mt-1 flex items-center text-sm">
+          <FaExclamationCircle className="fill-current h-4 w-4 mr-xs shrink-0" />{' '}
+          {formErrorMessage}
+        </div>
+      )}
       <div className="my-4">
         <Button
           type="button"

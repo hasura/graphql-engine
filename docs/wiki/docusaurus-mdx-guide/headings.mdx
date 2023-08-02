@@ -47,7 +47,6 @@ correct hierarchy.
 
 :::
 
-
 ## Heading Ids {#heading-ids}
 
 Docusaurus will by default generate an id for each heading to be able to link to individual sections.
@@ -60,6 +59,7 @@ Ex:
 ## Heading H2 example
 
 <!-- will have a generated id as below -->
+
 heading-h2-example
 ```
 
@@ -83,13 +83,11 @@ section.
 
 :::
 
-
 ## Handling custom ids
 
 Custom Heading Ids are added as `{#kebab-cased-id}`
 
 Prefer `lowercased-kebab-case` for all the ids to maintain consistency.
-
 
 ```markdown {1}
 ## Step 1: Create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
@@ -98,11 +96,10 @@ On the Hasura Cloud dashboard, create a new project:
 ```
 
 They can also be generated when required using the cli command
-[write-heading-ids](https://docusaurus.io/docs/cli#docusaurus-write-heading-ids-sitedir) - Please *DO NOT OVERRIDE*
+[write-heading-ids](https://docusaurus.io/docs/cli#docusaurus-write-heading-ids-sitedir) - Please _DO NOT OVERRIDE_
 existing ones.
 
 Skip for `h1 (#)` as the top level heading is beginining of file the direct link without `#hash-param` would work fine.
-
 
 :::danger Please do not add id in frontmatter
 
@@ -113,7 +110,7 @@ If an `id` is added in frontmatter the slug will by default be the id thus break
 
 This will result in setting up bunch of redirects and will have a impact on SEO and indexed page rankings.
 
-So, Please ignore the id in frontmatter, Let's leave this to docusaurus default behaviour which is great.
+So, Please ignore the id in frontmatter, Let's leave this to docusaurus default behavior which is great.
 
 In case, if you are not sure of what to do in a different situation. Please let us know, we will help figure out
 

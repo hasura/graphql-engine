@@ -8,23 +8,208 @@ keywords:
 slug: index
 ---
 
-# MySQL [Preview]
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# MySQL
+
+<div className="badge-container">
+  <ProductBadge free standard pro ee self />
+</div>
 
 ## Introduction
 
-:::info Deprecation Notice
+Hasura enables you to connect to MySQL databases to automatically build a rich GraphQL API based on your database
+schema.
 
-Our current MySQL implementation is deprecated in favor of a new implementation built using our Data Connectors, to be
-released shortly. Check out this [blog post](https://hasura.io/blog/hasura-graphql-data-connectors/) for more
-information about Hasura GraphQL Engine Data Connectors.
+At present, our MySQL integration is available in Hasura Cloud and Docker environments, where you can run Hasura GraphQL
+Engine and connect the MySQL GraphQL Data Connector to it. For more information on GraphQL Data Connectors check out
+[our blog post on the topic](https://hasura.io/blog/hasura-graphql-data-connectors/).
 
-If you're currently running Hasura in production with MySQL, please [reach out to us](https://hasura.io/help/)!
+To get started with MySQL:
+
+- In Hasura Cloud, check out our [Getting Started with MySQL in Hasura Cloud](/databases/mysql/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/mysql/docker.mdx) guide
+
+:::tip Supported versions:
+
+1.  Hasura GraphQL Engine `v2.24.0` onwards
+2.  Hasura supports most databases with standard implementations of **MySQL 8.0 and higher** including: Amazon RDS,
+    Amazon Aurora, Google Cloud SQL and Digital Ocean.
+3.  PlanetScale and certain other providers are unsupported.
 
 :::
 
+:::tip Supported features
+
+Hasura currently supports queries, mutations (INSERT, UPDATE, DELETE), table relationships, remote relationships and
+permissions on MySQL.
+
+Note that Hasura doesn't yet support the ability to modify the database schema for MySQL, so the database you connect to
+should already contain tables and data. You should also ideally have access to it outside of Hasura to modify the
+schema.
+
+:::
+
+## Feature Support
+
+<div className="feature-matrix-tables">
+
+  <table>
+    <tr>
+      <td>Feature</td>
+      <td>MySQL</td>
+    </tr>
+    <tr>
+      <td>Remote Relationships</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Views</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Default Values</td>
+      <td>✅</td>
+    </tr>
+  </table>
+
+  ### Queries
+
+  <table>
+    <tr>
+      <td>Feature</td>
+      <td>MySQL</td>
+    </tr>
+    <tr>
+      <td>Simple</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Nested Object</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Aggregation</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Filter / Search</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Sort</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Distinct</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Paginate</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Multiple Arguments</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Multiple Queries</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Variables / Aliases / Fragments</td>
+      <td>✅</td>
+    </tr>
+  </table>
+
+  ### Mutations
+
+  <table>
+    <tr>
+      <td>Feature</td>
+      <td>MySQL</td>
+    </tr>
+    <tr>
+      <td>Insert</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Upsert</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Update</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Multiple per Request</td>
+      <td>✅</td>
+    </tr>
+  </table>
+
+  ### Subscriptions
+
+  <table>
+    <tr>
+      <td>Feature</td>
+      <td>MySQL</td>
+    </tr>
+    <tr>
+      <td>Value of Field</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Updates to Rows</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Value of Derived Field</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Streaming Subscriptions</td>
+      <td>❌</td>
+    </tr>
+  </table>
+
+  ### Event Triggers
+
+  <table>
+    <tr>
+      <td>Feature</td>
+      <td>MySQL</td>
+    </tr>
+    <tr>
+      <td>INSERT</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>UPDATE</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>DELETE</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>MANUAL</td>
+      <td>❌</td>
+    </tr>
+  </table>
+
+</div>
+
+## Coming soon for MySQL
+
+- [Subscriptions](/subscriptions/overview.mdx)
+- [Event triggers](/event-triggers/overview.mdx)
+
 ## Resources
 
-- [Check out our get started guide for MySQL](/databases/mysql/getting-started.mdx).
-
+- Check out the [Getting Started with Docker](/databases/mysql/docker.mdx) guide.
 - If you're interested in learning more about MySQL, check out
   [this tutorial](https://hasura.io/learn/database/mysql/introduction/) from our Learn site.

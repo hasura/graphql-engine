@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"runtime"
 
@@ -24,6 +25,10 @@ type Error struct {
 type ErrLocation struct {
 	File string
 	Line int
+}
+
+func (l ErrLocation) String() string {
+	return fmt.Sprintf("file: %v, line: %v", l.File, l.Line)
 }
 
 func (e Error) Unwrap() error {
@@ -107,8 +112,8 @@ func IsKind(want Kind, err error) bool {
 func Ops(err *Error) []Op {
 	ops := []Op{err.Op}
 	for {
-		embeddedErr, ok := err.Err.(*Error)
-		if !ok {
+		var embeddedErr *Error
+		if !errors.As(err.Err, &embeddedErr) {
 			break
 		}
 
@@ -117,6 +122,18 @@ func Ops(err *Error) []Op {
 	}
 
 	return ops
+}
+
+func GetLocation(err error) ErrLocation {
+	var prevErr *Error
+	for {
+		var e *Error
+		if !errors.As(err, &e) {
+			return prevErr.Location
+		}
+		prevErr = e
+		err = e.Err
+	}
 }
 
 func GetKind(err error) Kind {

@@ -1,7 +1,7 @@
-import KnowMoreLink from '@/components/Common/KnowMoreLink/KnowMoreLink';
-import { Badge } from '@/new-components/Badge';
-import { Dialog } from '@/new-components/Dialog';
-import { SimpleForm } from '@/new-components/Form';
+import { Badge } from '../../../../../../new-components/Badge';
+import { Dialog } from '../../../../../../new-components/Dialog';
+import { SimpleForm } from '../../../../../../new-components/Form';
+import { LearnMoreLink } from '../../../../../../new-components/LearnMoreLink';
 import React from 'react';
 import z from 'zod';
 import { ImportTypesForm } from './ImportTypesForm';
@@ -61,10 +61,7 @@ ${values.typeDef}`);
       <div className="px-sm">
         <p className="text-muted mb-6">
           Generate type definition from the current state of a table.
-          <KnowMoreLink
-            href="https://github.com/hasura/graphql-engine/discussions/9273"
-            text="Know More"
-          />
+          <LearnMoreLink href="https://github.com/hasura/graphql-engine/discussions/9273" />
         </p>
         <SimpleForm
           options={{

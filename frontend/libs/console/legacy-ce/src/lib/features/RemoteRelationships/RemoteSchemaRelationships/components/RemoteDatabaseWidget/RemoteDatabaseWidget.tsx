@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
-import { Select } from '@/new-components/Form';
-import { useSources } from '@/features/MetadataAPI';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { MetadataDataSource } from '@/metadata/types';
+import { Select } from '../../../../../new-components/Form';
+import { useSources } from '../../../../MetadataAPI';
+import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
+import { MetadataDataSource } from '../../../../../metadata/types';
 
 const useLoadData = (sources?: MetadataDataSource[]) => {
   const { watch, setValue } = useFormContext();

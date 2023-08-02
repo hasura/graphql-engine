@@ -1,7 +1,7 @@
-import { Table, TableRow, TableHeader } from '@/components/Common/Table';
-import { currentDriver, Driver, setDriver } from '@/dataSources';
-import { QualifiedTable } from '@/metadata/types';
-import { useAppDispatch, useAppSelector } from '@/store';
+import { Table, TableRow, TableHeader } from '../../components/Common/Table';
+import { currentDriver, Driver, setDriver } from '../../dataSources';
+import { QualifiedTable } from '../../metadata/types';
+import { useAppDispatch, useAppSelector } from '../../storeHooks';
 import React from 'react';
 import { useTableCheckConstraints } from '..';
 

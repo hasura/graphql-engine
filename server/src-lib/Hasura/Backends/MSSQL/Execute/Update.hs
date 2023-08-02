@@ -22,16 +22,17 @@ import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
-import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Execute.Backend
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
+import Hasura.RQL.IR.Update.Batch qualified as IR
 import Hasura.RQL.Types.Backend
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
 -- | Executes an Update IR AST and return results as JSON.
@@ -41,14 +42,14 @@ executeUpdate ::
   Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (ExceptT QErr IO EncJSON)
+  m (OnBaseMonad (ExceptT QErr) EncJSON)
 executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
   queryTags <- ask
   let mssqlExecCtx = (_mscExecCtx sourceConfig)
   preparedUpdate <- traverse (prepareValueQuery $ _uiSession userInfo) updateOperation
-  if null $ updateOperations . _auBackend $ updateOperation
-    then pure $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
-    else pure $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
+  if IR.updateBatchIsEmpty $ _auUpdateVariant updateOperation
+    then pure $ OnBaseMonad $ pure $ IR.buildEmptyMutResp $ _auOutput preparedUpdate
+    else pure $ OnBaseMonad $ (mssqlRunReadWrite mssqlExecCtx) (buildUpdateTx preparedUpdate stringifyNum queryTags)
 
 -- | Converts an Update IR AST to a transaction of three update sql statements.
 --
@@ -67,26 +68,29 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
 -- 3. @SELECT@ - constructs the @returning@ query from the temporary table, including
 --   relationships with other tables.
 buildUpdateTx ::
+  (MonadIO m) =>
   AnnotatedUpdate 'MSSQL ->
   Options.StringifyNumbers ->
   QueryTagsComment ->
-  Tx.TxET QErr IO EncJSON
+  Tx.TxET QErr m EncJSON
 buildUpdateTx updateOperation stringifyNum queryTags = do
   let withAlias = "with_alias"
       createInsertedTempTableQuery =
-        toQueryFlat $
-          TQ.fromSelectIntoTempTable $
-            TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
+        toQueryFlat
+          $ TQ.fromSelectIntoTempTable
+          $ TSQL.toSelectIntoTempTable tempTableNameUpdated (_auTable updateOperation) (_auAllCols updateOperation) RemoveConstraints
   -- Create a temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (createInsertedTempTableQuery `withQueryTags` queryTags)
   let updateQuery = TQ.fromUpdate <$> TSQL.fromUpdate updateOperation
-  updateQueryValidated <- toQueryFlat <$> runFromIr updateQuery
+  updateQueryValidated <- toQueryFlat . qwdQuery <$> runFromIrErrorOnCTEs updateQuery
+
   -- Execute UPDATE statement
   Tx.unitQueryE mutationMSSQLTxErrorHandler (updateQueryValidated `withQueryTags` queryTags)
-  mutationOutputSelect <- runFromIr $ mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation
+  mutationOutputSelect <- qwdQuery <$> runFromIrUseCTEs (mkMutationOutputSelect stringifyNum withAlias $ _auOutput updateOperation)
   let checkCondition = _auCheck updateOperation
+
   -- The check constraint is translated to boolean expression
-  checkBoolExp <- runFromIr $ runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias)
+  checkBoolExp <- qwdQuery <$> runFromIrErrorOnCTEs (runReaderT (fromGBoolExp checkCondition) (EntityAlias withAlias))
 
   let withSelect =
         emptySelect
@@ -94,7 +98,7 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
             selectFrom = Just $ FromTempTable $ Aliased tempTableNameUpdated "updated_alias"
           }
       mutationOutputCheckConstraintSelect = selectMutationOutputAndCheckCondition withAlias mutationOutputSelect checkBoolExp
-      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased withSelect withAlias}
+      finalSelect = mutationOutputCheckConstraintSelect {selectWith = Just $ With $ pure $ Aliased (CTESelect withSelect) withAlias}
 
   -- Execute SELECT query to fetch mutation response and check constraint result
   let finalSelectQuery = toQueryFlat $ TQ.fromSelect finalSelect
@@ -102,6 +106,6 @@ buildUpdateTx updateOperation stringifyNum queryTags = do
   -- Drop the temp table
   Tx.unitQueryE defaultMSSQLTxErrorHandler (toQueryFlat (dropTempTableQuery tempTableNameUpdated) `withQueryTags` queryTags)
   -- Raise an exception if the check condition is not met
-  unless (checkConditionInt == (0 :: Int)) $
-    throw400 PermissionError "check constraint of an insert/update permission has failed"
+  unless (checkConditionInt == (0 :: Int))
+    $ throw400 PermissionError "check constraint of an insert/update permission has failed"
   pure $ encJFromText responseText

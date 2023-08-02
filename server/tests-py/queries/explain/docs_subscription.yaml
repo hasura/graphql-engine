@@ -2,17 +2,17 @@ description: The explained Postgres subscription in our documentation
 url: /v1/graphql/explain
 status: 200
 response:
-  sql: "SELECT  \"_subs\".\"result_id\" , \"_fld_resp\".\"root\" AS \"result\" FROM\
-    \ UNNEST(($1)::uuid[], ($2)::json[]) AS \"_subs\"(\"result_id\", \"result_vars\"\
-    ) LEFT OUTER JOIN LATERAL (SELECT  json_build_object('user', \"user\".\"root\"\
+  sql: "SELECT  \"__subs\".\"result_id\" , \"__fld_resp\".\"root\" AS \"result\" FROM\
+    \ UNNEST(($1)::uuid[], ($2)::json[]) AS \"__subs\"(\"result_id\", \"result_vars\"\
+    ) LEFT OUTER JOIN LATERAL (SELECT  json_build_object('user', \"_user\".\"root\"\
     \ ) AS \"root\" FROM  (SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\"\
-    \ FROM  (SELECT  row_to_json((SELECT  \"_e\"  FROM  (SELECT  \"_root.base\".\"\
-    name\" AS \"name\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM\
-    \ \"public\".\"user\"  WHERE ('true')     ) AS \"_root.base\"      ) AS \"_root\"\
-    \      ) AS \"user\"      ) AS \"_fld_resp\" ON ('true')      "
+    \ FROM  (SELECT  row_to_json((SELECT  \"_e\"  FROM  (SELECT  \"_root.base\".\"name\"\
+    \ AS \"name\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM \"\
+    public\".\"user\"  WHERE ('true')     ) AS \"_root.base\"      ) AS \"_root\"  \
+    \    ) AS \"_user\"      ) AS \"__fld_resp\" ON ('true')      "
   plan:
   - Nested Loop Left Join  (cost=40.01..42.28 rows=100 width=48)
-  - '  ->  Function Scan on _subs  (cost=0.01..1.00 rows=100 width=16)'
+  - '  ->  Function Scan on __subs  (cost=0.01..1.00 rows=100 width=16)'
   - '  ->  Materialize  (cost=40.00..40.03 rows=1 width=32)'
   - '        ->  Subquery Scan on \"user\"  (cost=40.00..40.02 rows=1 width=32)'
   - '              ->  Aggregate  (cost=40.00..40.01 rows=1 width=32)'

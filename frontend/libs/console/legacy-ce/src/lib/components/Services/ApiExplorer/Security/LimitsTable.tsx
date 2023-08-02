@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FaGlobe } from 'react-icons/fa';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { HasuraMetadataV3 } from '../../../../metadata/types';
 import { Dispatch } from '../../../../types';
 import {

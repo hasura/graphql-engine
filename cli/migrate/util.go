@@ -157,6 +157,7 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool, sourceName string, sourceK
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.MSSQLSourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.CitusSourceOps = ec.APIClient.V2Query
+		opts.hasuraOpts.BigQuerySourceOps = ec.APIClient.V2Query
 		opts.hasuraOpts.GenericQueryRequest = ec.APIClient.V2Query.Send
 	} else {
 		opts.hasuraOpts.PGSourceOps = ec.APIClient.V1Query
@@ -218,7 +219,11 @@ func GetFilePath(dir string) *nurl.URL {
 
 func IsMigrationsSupported(kind hasura.SourceKind) bool {
 	switch kind {
-	case hasura.SourceKindMSSQL, hasura.SourceKindPG, hasura.SourceKindCitus:
+	case hasura.SourceKindMSSQL,
+		hasura.SourceKindPG,
+		hasura.SourceKindCitus,
+		hasura.SourceKindCockroach,
+		hasura.SourceKindBigQuery:
 		return true
 	}
 	return false

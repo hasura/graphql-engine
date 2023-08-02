@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip, TooltipProps } from '@/new-components/Tooltip';
+import { Tooltip, TooltipProps } from '../../../new-components/Tooltip';
 
 type Props = {
   children: React.ReactElement;

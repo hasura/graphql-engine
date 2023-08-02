@@ -5,7 +5,7 @@ stdenv.mkDerivation rec {
   version = "${versionMajor}.${versionMinor}.${versionAdditional}-1";
 
   versionMajor = "18";
-  versionMinor = "1";
+  versionMinor = "2";
   versionAdditional = "1.1";
 
   src =
@@ -14,13 +14,13 @@ stdenv.mkDerivation rec {
       fetchurl
         {
           url = "https://packages.microsoft.com/debian/11/prod/pool/main/m/${pname}/${pname}_${version}_arm64.deb";
-          sha256 = "0zphnbvkqdbkcv6lvv63p7pyl68h5bs2dy6vv44wm6bi89svms4a";
+          sha256 = "0j8zn0s7289nkygqvyl1jmgpbgax64q6x9646xbhfg0j14pjf737";
         }
     else
       fetchurl
         {
           url = "https://packages.microsoft.com/debian/11/prod/pool/main/m/${pname}/${pname}_${version}_amd64.deb";
-          sha256 = "1f0rmh1aynf1sqmjclbsyh2wz5jby0fixrwz71zp6impxpwvil52";
+          sha256 = "0rl2v1cfj2spykhb7nwq0hqxl8izlbzcrx8z4r0xrb12ajb1lz31";
         };
 
   nativeBuildInputs = [ dpkg patchelf ];

@@ -1,6 +1,6 @@
 import React from 'react';
-import { dataSource, currentDriver } from '@/dataSources';
-import { OrderBy, makeOrderBy, getRunSqlQuery } from '../utils/v1QueryUtils';
+import { currentDriver } from '../../../dataSources';
+import { OrderBy, makeOrderBy } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch } from '../../../types';
 import endpoints from '../../../Endpoints';
@@ -18,10 +18,11 @@ import { QualifiedTable } from '../../../metadata/types';
 import {
   getScheduledEvents,
   getEventInvocations,
+  getScheduledEventTrigger,
+  getEventTriggerInvocation,
 } from '../../../metadata/queryUtils';
 import { EventKind } from '../../Services/Events/types';
 import { isNotDefined } from '../utils/jsUtils';
-import { parseEventsSQLResp } from '../../Services/Events/utils';
 
 const defaultFilter = makeValueFilter('', null, '');
 const defaultSort = makeOrderBy('', 'asc');
@@ -44,7 +45,6 @@ export const useFilterQuery = (
 ) => {
   const [state, setState] = React.useState(defaultState);
   const [rows, setRows] = React.useState<any[]>([]);
-  const [count, setCount] = React.useState<number>();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
 
@@ -58,7 +58,7 @@ export const useFilterQuery = (
     const limitValue = isNotDefined(limit) ? state.limit : limit;
 
     let query = {};
-    let endpoint = endpoints.metadata;
+    const endpoint = endpoints.metadata;
 
     if (triggerType === 'scheduled') {
       if (triggerOp !== 'invocation') {
@@ -93,38 +93,25 @@ export const useFilterQuery = (
         );
       }
     } else if (triggerType === 'data') {
-      endpoint = endpoints.query;
       if (triggerName) {
-        query = {
-          args: [
-            getRunSqlQuery(
-              dataSource?.getDataTriggerLogsCountQuery?.(
-                triggerName,
-                triggerOp
-              ) ?? '',
-              currentSource ?? 'default',
-              false,
-              false,
-              currentDriver
-            ),
-            getRunSqlQuery(
-              dataSource?.getDataTriggerLogsQuery?.(
-                triggerOp,
-                triggerName,
-                limitValue,
-                offsetValue
-              ) ?? '',
-              currentSource ?? 'default',
-              false,
-              false,
-              currentDriver
-            ),
-          ],
-          source: currentSource ?? 'default',
-          type: 'bulk',
-        };
-      } else {
-        return; // fixme: this should just be an error saying that there's no trigger name provided
+        if (triggerOp !== 'invocation') {
+          query = getScheduledEventTrigger(
+            currentDriver,
+            triggerName,
+            triggerOp,
+            currentSource ?? 'default',
+            limitValue,
+            offsetValue
+          );
+        } else {
+          query = getEventTriggerInvocation(
+            currentDriver,
+            triggerName,
+            currentSource ?? 'default',
+            limitValue,
+            offsetValue
+          );
+        }
       }
     }
 
@@ -138,12 +125,7 @@ export const useFilterQuery = (
     ).then(
       (data: any) => {
         if (triggerType === 'data') {
-          setCount(Number(data?.[0].result?.[1]?.[0]));
-          // formatting of the data
-          const formattedData: Record<string, any>[] = parseEventsSQLResp(
-            data?.[1]?.result ?? []
-          );
-          setRows(formattedData);
+          setRows(data ?? []);
         } else if (triggerOp !== 'invocation') {
           setRows(data?.events ?? []);
         } else {
@@ -162,9 +144,6 @@ export const useFilterQuery = (
             ...s,
             sorts: newSorts,
           }));
-        }
-        if (triggerType !== 'data') {
-          setCount(data?.count ?? 10);
         }
       },
       () => {
@@ -223,7 +202,6 @@ export const useFilterQuery = (
     error,
     runQuery,
     state,
-    count,
     setState: setter,
   };
 };

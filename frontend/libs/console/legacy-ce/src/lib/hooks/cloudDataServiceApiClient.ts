@@ -1,5 +1,5 @@
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
+import Endpoints from '../Endpoints';
+import { Api } from './apiUtils';
 
 /**
  * Calls hasura cloud data service with provided query and variables. Uses the common `fetch` api client.

@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store';
-import { getManualEventsTriggers } from '@/metadata/selector';
+import { useAppDispatch, useAppSelector } from '../../../../storeHooks';
+import { getManualEventsTriggers } from '../../../../metadata/selector';
 import {
   adaptFormValuesToQuery,
   getFiltersAndSortFromUrlQueryParams,
   runFilterQuery,
   UserQuery,
-} from '@/features/BrowseRows';
-import useIsFirstRender from '@/hooks/useIsFirstRender';
+} from '../../../../features/BrowseRows';
+import useIsFirstRender from '../../../../hooks/useIsFirstRender';
+import { TableColumn } from '../../../../features/DataSource';
 import { vSetDefaults } from './ViewActions';
-
 import { setTable } from '../DataActions';
 import ViewRows from './ViewRows';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
@@ -107,7 +107,8 @@ export const TableBrowseRowsContainer = (
         filterAndSortFromQueryParams,
         (tableSchema?.columns || []).map(column => ({
           name: column.column_name,
-          dataType: column.data_type,
+          dataType: column.data_type as TableColumn['dataType'],
+          consoleDataType: 'string',
         }))
       );
 
@@ -207,48 +208,50 @@ export const TableBrowseRowsContainer = (
     dispatch(vSetDefaults(newLimit));
 
   return (
-    <RightContainer>
-      <TableHeader
-        count={isCountEstimated ? estimatedCount : count}
-        isCountEstimated={isCountEstimated}
-        dispatch={dispatch}
-        table={table}
-        source={sourceName}
-        tabName="browse"
-        migrationMode={migrationMode}
-        readOnlyMode={readOnlyMode}
-      />
-      <ViewRows
-        activePath={activePath}
-        count={tableCount}
-        curDepth={0}
-        curFilter={curFilter}
-        curQuery={query}
-        currentSchema={schemaName}
-        currentSource={sourceName}
-        curRows={rows}
-        curTableName={tableName}
-        dispatch={dispatch}
-        expandedRow={expandedRow}
-        isProgressing={isProgressing}
-        isView={isTableView}
-        lastError={lastError}
-        lastSuccess={lastSuccess}
-        manualTriggers={manualTriggers}
-        ongoingRequest={ongoingRequest}
-        parentTableName={null}
-        readOnlyMode={readOnlyMode}
-        schemas={schemas}
-        shouldHidePagination={shouldHidePagination}
-        useCustomPagination={shouldUseCustomPagination}
-        filtersAndSort={filtersAndSort}
-        onRunQuery={(newUserQuery: UserQuery) => {
-          onRunQuery(newUserQuery);
-          setPaginationUserQuery(newUserQuery);
-        }}
-        paginationUserQuery={paginationUserQuery}
-        onChangePageSize={onChangePageSize}
-      />
-    </RightContainer>
+    <div className="bootstrap-jail table-browse-rows-container">
+      <RightContainer>
+        <TableHeader
+          count={isCountEstimated ? estimatedCount : count}
+          isCountEstimated={isCountEstimated}
+          dispatch={dispatch}
+          table={table}
+          source={sourceName}
+          tabName="browse"
+          migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
+        />
+        <ViewRows
+          activePath={activePath}
+          count={tableCount}
+          curDepth={0}
+          curFilter={curFilter}
+          curQuery={query}
+          currentSchema={schemaName}
+          currentSource={sourceName}
+          curRows={rows}
+          curTableName={tableName}
+          dispatch={dispatch}
+          expandedRow={expandedRow}
+          isProgressing={isProgressing}
+          isView={isTableView}
+          lastError={lastError}
+          lastSuccess={lastSuccess}
+          manualTriggers={manualTriggers}
+          ongoingRequest={ongoingRequest}
+          parentTableName={null}
+          readOnlyMode={readOnlyMode}
+          schemas={schemas}
+          shouldHidePagination={shouldHidePagination}
+          useCustomPagination={shouldUseCustomPagination}
+          filtersAndSort={filtersAndSort}
+          onRunQuery={(newUserQuery: UserQuery) => {
+            onRunQuery(newUserQuery);
+            setPaginationUserQuery(newUserQuery);
+          }}
+          paginationUserQuery={paginationUserQuery}
+          onChangePageSize={onChangePageSize}
+        />
+      </RightContainer>
+    </div>
   );
 };

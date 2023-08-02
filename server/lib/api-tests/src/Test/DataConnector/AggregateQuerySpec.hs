@@ -6,95 +6,49 @@ module Test.DataConnector.AggregateQuerySpec
   )
 where
 
-import Data.Aeson qualified as Aeson
+--------------------------------------------------------------------------------
+
+import Control.Lens qualified as Lens
+import Data.Aeson qualified as J
+import Data.Aeson.Lens (key, _Array)
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector.Chinook qualified as Chinook
+import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
 import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendTypeConfig)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (GlobalTestEnvironment, TestEnvironment)
 import Harness.TestEnvironment qualified as TE
-import Harness.Yaml (shouldReturnYaml)
+import Harness.Yaml (shouldReturnYaml, shouldReturnYamlF)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
+
+--------------------------------------------------------------------------------
 
 spec :: SpecWith GlobalTestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Reference.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Reference.backendTypeMetadata Reference.sourceConfiguration) Reference.agentConfig testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Sqlite.backendTypeMetadata)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Chinook.setupAction (sourceMetadata Sqlite.backendTypeMetadata Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
-                ]
-            }
+        [ Reference.chinookFixture,
+          Sqlite.chinookFixture
         ]
     )
     tests
 
-sourceMetadata :: BackendTypeConfig -> Aeson.Value -> Aeson.Value
-sourceMetadata backendTypeMetadata config =
-  let source = Fixture.backendSourceName backendTypeMetadata
-      backendTypeString = Fixture.backendTypeString backendTypeMetadata
-   in [yaml|
-        name : *source
-        kind: *backendTypeString
-        tables:
-          - table: [Album]
-            object_relationships:
-              - name: Artist
-                using:
-                  manual_configuration:
-                    remote_table: [Artist]
-                    column_mapping:
-                      ArtistId: ArtistId
-          - table: [Artist]
-            array_relationships:
-              - name: Albums
-                using:
-                  manual_configuration:
-                    remote_table: [Album]
-                    column_mapping:
-                      ArtistId: ArtistId
-          - table: [Invoice]
-            array_relationships:
-              - name: InvoiceLines
-                using:
-                  manual_configuration:
-                    remote_table: [InvoiceLine]
-                    column_mapping:
-                      InvoiceId: InvoiceId
-          - table: [InvoiceLine]
-            object_relationships:
-              - name: Invoice
-                using:
-                  manual_configuration:
-                    remote_table: [Invoice]
-                    column_mapping:
-                      InvoiceId: InvoiceId
-        configuration: *config
-      |]
-
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-tests opts = describe "Aggregate Query Tests" $ do
-  nodeTests opts
-  aggregateTests opts
+tests :: SpecWith (TestEnvironment, a)
+tests = describe "Aggregate Query Tests" $ do
+  nodeTests
+  aggregateTests
 
-nodeTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-nodeTests opts = describe "Nodes Tests" $ do
+nodeTests :: SpecWith (TestEnvironment, a)
+nodeTests = describe "Nodes Tests" $ do
   it "works with simple query" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -120,7 +74,7 @@ nodeTests opts = describe "Nodes Tests" $ do
 
   it "works with multiple nodes fields" $ \(testEnvironment, _) ->
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -150,7 +104,7 @@ nodeTests opts = describe "Nodes Tests" $ do
   it "works with object relations" $ \(testEnvironment, _) -> do
     -- NOTE: Ordering is required due to datasets non-matching orders
     shouldReturnYaml
-      opts
+      testEnvironment
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -179,8 +133,13 @@ nodeTests opts = describe "Nodes Tests" $ do
         |]
 
   it "works with array relations" $ \(testEnvironment, _) -> do
-    shouldReturnYaml
-      opts
+    let sortYamlArray :: J.Value -> IO J.Value
+        sortYamlArray (J.Array a) = pure $ J.Array (Vector.fromList (sort (Vector.toList a)))
+        sortYamlArray _ = fail "Should return Array"
+
+    shouldReturnYamlF
+      testEnvironment
+      (Lens.traverseOf (key "data" . key "Artist_aggregate" . key "nodes" . _Array . traverse . key "Albums" . key "nodes") sortYamlArray)
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
@@ -214,12 +173,12 @@ nodeTests opts = describe "Nodes Tests" $ do
                       - Title: Restless and Wild
         |]
 
-aggregateTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
-aggregateTests opts =
+aggregateTests :: SpecWith (TestEnvironment, a)
+aggregateTests =
   describe "Aggregate Tests" $ do
     it "works with count queries" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -319,7 +278,7 @@ aggregateTests opts =
       if (fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment) == Just Fixture.DataConnectorReference)
         then
           shouldReturnYaml
-            opts
+            testEnvironment
             ( GraphqlEngine.postGraphql
                 testEnvironment
                 referenceQuery
@@ -327,7 +286,7 @@ aggregateTests opts =
             referenceResults
         else
           shouldReturnYaml
-            opts
+            testEnvironment
             ( GraphqlEngine.postGraphql
                 testEnvironment
                 generalQuery
@@ -336,7 +295,7 @@ aggregateTests opts =
 
     it "min and max works on string fields" $ \(testEnvironment, _) ->
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -367,7 +326,7 @@ aggregateTests opts =
     it "works across array relationships from regular queries" $ \(testEnvironment, _) -> do
       -- NOTE: Ordering is added to allow SQLite chinook dataset to return ordered results
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -411,7 +370,7 @@ aggregateTests opts =
     it "works across array relationships from aggregate queries via nodes" $ \(testEnvironment, _) -> do
       -- NOTE: Ordering present so that out-of-order rows are sorted for SQLite
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
@@ -458,7 +417,7 @@ aggregateTests opts =
       when ((fmap Fixture.backendType (TE.getBackendTypeConfig testEnvironment)) /= Just Fixture.DataConnectorReference) do
         pendingWith "Agent does not support 'longest' and 'shortest' custom aggregate functions"
       shouldReturnYaml
-        opts
+        testEnvironment
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|

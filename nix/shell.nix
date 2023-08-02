@@ -1,11 +1,18 @@
-{ pkgs }:
+{ pkgs, system }:
 let
   versions = import ./versions.nix { inherit pkgs; };
+
+  # empty package, for shenanigans
+  empty = builtins.derivation {
+    inherit system;
+    name = "empty";
+    builder = pkgs.writeShellScript "null.sh" "${pkgs.coreutils}/bin/mkdir $out";
+  };
 
   # Unix ODBC Support
   freetdsWithODBC = pkgs.freetds.override {
     odbcSupport = true;
-    inherit (pkgs) unixODBC;
+    inherit unixODBC;
   };
 
   msodbcsql = pkgs.unixODBCDrivers.msodbcsql18;
@@ -14,14 +21,57 @@ let
   # The output should be the headings from the odbcinst.ini file.
   # (You can easily see the generated file by running `cat $ODBCINSTINI`.)
   # If you see any errors, please contact your friendly MSSQL and/or Nix expert.
-  odbcinstFile = pkgs.writeTextFile {
-    name = "odbcinst.ini";
+  odbcConfiguration = pkgs.writeTextFile {
+    name = "odbc-configuration";
     text = ''
       [${msodbcsql.fancyName}]
       Description = ${msodbcsql.meta.description}
       Driver = ${msodbcsql}/${msodbcsql.driver}
     '';
+    destination = "/odbcinst.ini";
   };
+
+  unixODBC = pkgs.unixODBC.overrideAttrs (oldAttrs: {
+    configureFlags = [ "--disable-gui" "--sysconfdir=${odbcConfiguration}" ];
+  });
+
+  # Ensure that GHC and HLS have access to all the dynamic libraries we have kicking around.
+  ghc =
+    let original = pkgs.haskell.compiler.${pkgs.ghcName};
+    in pkgs.stdenv.mkDerivation
+      {
+        name = original.name;
+        src = empty;
+        buildInputs = [ original pkgs.makeWrapper ];
+        installPhase = ''
+          mkdir -p "$out/bin"
+          for bin in ${original}/bin/*; do
+            if [[ -x "$bin" ]]; then
+              makeWrapper "$bin" "$out/bin/$(basename "$bin")" \
+                --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+                --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+            fi
+          done
+        '';
+      };
+
+  hls =
+    let original = pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server;
+    in pkgs.stdenv.mkDerivation
+      {
+        name = original.name;
+        src = empty;
+        buildInputs = [ original pkgs.makeWrapper ];
+        installPhase = ''
+          mkdir -p "$out/bin"
+          makeWrapper ${original}/bin/haskell-language-server "$out/bin/haskell-language-server" \
+            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+          makeWrapper ${original}/bin/haskell-language-server-wrapper "$out/bin/haskell-language-server-wrapper" \
+            --set LD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries} \
+            --set DYLD_LIBRARY_PATH ${pkgs.lib.strings.makeLibraryPath dynamicLibraries}
+        '';
+      };
 
   baseInputs = [
     pkgs.stdenv
@@ -31,6 +81,7 @@ let
   consoleInputs = [
     pkgs.google-cloud-sdk
     pkgs."nodejs-${versions.nodejsVersion}_x"
+    pkgs."nodejs-${versions.nodejsVersion}_x".pkgs.typescript-language-server
   ];
 
   docsInputs = [
@@ -39,30 +90,25 @@ let
 
   integrationTestInputs = [
     pkgs.python3
+    pkgs.pyright # Python type checker
   ];
 
   # The version of GHC in `ghcName` is set in nix/overlays/ghc.nix.
-  #
-  # We list top-level packages before packages scoped to the GHC version, so
-  # that they appear first in the PATH. Otherwise we might end up with older
-  # versions of transitive dependencies (e.g. HLS depending on Ormolu).
   haskellInputs = [
     pkgs.cabal2nix
 
-    # The correct version of GHC.
-    pkgs.haskell.compiler.${pkgs.ghcName}
+    ghc
+    hls
 
     pkgs.haskell.packages.${pkgs.ghcName}.alex
-    pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
-    pkgs.haskell.packages.${pkgs.ghcName}.cabal-install
-    pkgs.haskell.packages.${pkgs.ghcName}.ghcid
+    # pkgs.haskell.packages.${pkgs.ghcName}.apply-refact
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.cabal-install)
+    (pkgs.haskell.lib.dontCheck (pkgs.haskell.packages.${pkgs.ghcName}.ghcid))
     pkgs.haskell.packages.${pkgs.ghcName}.happy
-    pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hpack)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu)
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu_0_7_0_0)
   ];
 
   devInputs = [
@@ -92,7 +138,7 @@ let
     pkgs.libmysqlclient
     pkgs.mariadb
     pkgs.postgresql_15
-    pkgs.unixODBC
+    unixODBC
     msodbcsql
   ]
   # Linux-specific libraries.
@@ -116,15 +162,4 @@ let
 in
 pkgs.mkShell {
   buildInputs = baseInputs ++ consoleInputs ++ docsInputs ++ serverDeps ++ devInputs ++ ciInputs;
-
-  # We set the ODBCINSTINI to the file defined above, which points to the MSSQL ODBC driver.
-  # The path is relative to `ODBCSYSINI`, which we set to empty.
-  ODBCSYSINI = "";
-  ODBCINSTINI = "${odbcinstFile}";
-
-  LD_LIBRARY_PATH = pkgs.lib.strings.makeLibraryPath dynamicLibraries;
-  shellHook = pkgs.lib.strings.optionalString pkgs.stdenv.targetPlatform.isDarwin ''
-    # Without this, GHC will use the system `libcrypto` and `libssl` libraries, which fail.
-    export DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH";
-  '';
 }

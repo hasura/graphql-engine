@@ -1,0 +1,92 @@
+---
+sidebar_label: Stored Procedures
+sidebar_position: 5
+description: Manage Stored Procedures with the Hasura Metadata API
+keywords:
+  - hasura
+  - docs
+  - Metadata API
+  - API reference
+  - logical models
+  - stored procedures
+---
+
+# Metadata API Reference: Stored Procedures
+
+## Introduction
+
+Track/untrack Stored Procedures in the Hasura GraphQL Engine.
+
+:::tip Supported from
+
+Stored Procedures are supported from v2.26.0.
+
+:::
+
+## mssql_track_stored_procedure {#metadata-mssql-track-stored-procedure}
+
+`mssql_track_stored_procedure` is used to add a Stored Procedure to the GraphQL schema.
+
+Track a Stored Procedure as follows:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+
+{
+  "type": "mssql_track_stored_procedure",
+  "args": {
+    "source": <source-name>,
+    "stored_procedure": <name> | { "schema": <schema-name>, "name": <procedure-name> },
+    "configuration": {
+      "exposed_as": "query",
+      "custom_name": <custom-name>
+    },
+    "arguments": {
+      <name>: {
+        "type": "<type>",
+        "nullable": false | true,
+        "description": <string>
+      }
+    },
+    "returns": <logical-model-name>
+  }
+}
+```
+
+### Args syntax {#metadata-mssql-track-stored-procedure-syntax}
+
+| Key              | Required | Schema                                                                                                     | Description                                                 |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| source           | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                    | Name of the source database                                 |
+| stored_procedure | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)                                                      | Name of the stored procedure                                |
+| configuration    | true     | [StoredProcedureConfiguration](/api-reference/syntax-defs.mdx#stored-procedure-configuration)              | Configuration for the Stored Procedure                       |
+| arguments        | false    | Mapping from String to [StoredProcedureArgument](/api-reference/syntax-defs.mdx#stored-procedure-argument) | Configuration for each argument                             |
+| returns          | true     | [LogicalModelName](/api-reference/syntax-defs.mdx#logicalmodelname)                                        | Name of the logical model representing the resulting schema |
+
+## mssql_untrack_stored_procedure {#metadata-mssql-untrack-stored-procedure}
+
+`mssql_untrack_stored_procedure` is used to remove a Stored Procedure from the GraphQL schema.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mssql_untrack_stored_procedure",
+    "args": {
+      "source": "default",
+      "stored_procedure": "<name>"
+    }
+}
+```
+
+### Args syntax {#metadata-pg-untrack-stored-procedure-syntax}
+
+| Key              | Required | Schema                                                  | Description                  |
+| ---------------- | -------- | ------------------------------------------------------- | ---------------------------- |
+| source           | true     | [SourceName](/api-reference/syntax-defs.mdx#sourcename) | Name of the source database  |
+| stored_procedure | true     | [QueryName](/api-reference/syntax-defs.mdx#queryname)   | Name of the stored procedure |

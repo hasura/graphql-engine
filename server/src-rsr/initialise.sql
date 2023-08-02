@@ -21,7 +21,9 @@ CREATE TABLE hdb_catalog.hdb_version (
     version TEXT NOT NULL,
     upgraded_on TIMESTAMPTZ NOT NULL,
     cli_state JSONB NOT NULL DEFAULT '{}'::jsonb,
-    console_state JSONB NOT NULL DEFAULT '{}'::jsonb
+    console_state JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ee_client_id TEXT,
+    ee_client_secret TEXT
 );
 
 CREATE UNIQUE INDEX hdb_version_one_row

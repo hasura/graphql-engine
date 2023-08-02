@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
-import { isJsonString } from '@/components/Common/utils/jsUtils';
+import { requestHeadersSelectorSchema } from '../../../../new-components/RequestHeadersSelector';
+import { isJsonString } from '../../../../components/Common/utils/jsUtils';
 
 export const schema = z.object({
   name: z.string().min(1, 'Cron Trigger name is a required field!'),
@@ -13,11 +13,9 @@ export const schema = z.object({
   num_retries: z.string(),
   retry_interval_seconds: z.string(),
   timeout_seconds: z.string(),
+  tolerance_seconds: z.string(),
   include_in_metadata: z.boolean(),
   comment: z.string(),
-  url_template: z.string(),
-  request_method: z.enum(['POST', 'GET', 'PUT', 'DELETE', 'PATCH']).nullable(),
-  query_params: requestHeadersSelectorSchema,
 });
 
 export type Schema = z.infer<typeof schema>;

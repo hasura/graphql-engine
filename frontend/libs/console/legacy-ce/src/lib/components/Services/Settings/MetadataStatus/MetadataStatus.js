@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from '@/new-components/Button';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '../../../../new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '../../../../features/Analytics';
 import { permissionTypes, getTableNameFromDef } from '../utils';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
@@ -192,8 +192,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   const verifyAndDropAll = () => {
-    const confirmMessage =
-      'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
+    const confirmMessage = `This will drop all the inconsistent objects in your metadata. This includes all inconsistent sources - databases, remote schemas, actions etc. and any Hasura features related to these objects. This action is irreversible.`;
     const isOk = getConfirmation(confirmMessage);
     const callback = () => setIsLoading(false);
     if (isOk) {
@@ -328,7 +327,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
 
   return (
     <Analytics name="MetadataStatus" {...REDACT_EVERYTHING}>
-      <div className="mb-md">
+      <div className="mb-md bootstrap-jail">
         {banner()}
         <div className="clear-both pl-md mt-md mb-md">
           <h2 className="text-xl font-bold">Hasura Metadata Status</h2>

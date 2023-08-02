@@ -1,6 +1,6 @@
-import { Source } from '@/features/hasura-metadata-types';
-import { useMetadataMigration } from '@/features/MetadataAPI';
-import { useFireNotification } from '@/new-components/Notifications';
+import { Source } from '../../../../../features/hasura-metadata-types';
+import { useMetadataMigration } from '../../../../../features/MetadataAPI';
+import { useFireNotification } from '../../../../../new-components/Notifications';
 import { useCallback } from 'react';
 
 type UseReloadSource = {

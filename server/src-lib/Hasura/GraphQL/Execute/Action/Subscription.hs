@@ -42,7 +42,7 @@ We can't support multiple async query fields of different kinds in a single subs
 -- See Note [Async action subscriptions]
 asyncActionSubscriptionsProcessor ::
   ( MonadIO m,
-    MonadMetadataStorage (MetadataStorageT m)
+    MonadMetadataStorage m
   ) =>
   AsyncActionSubscriptionState ->
   m void
@@ -78,8 +78,8 @@ asyncActionSubscriptionsProcessor subsState = forever do
                       -- There's no point in holding the operation in the state.
                       removeAsyncActionLiveQuery subsState opId
                     Just newLqId ->
-                      addAsyncActionLiveQuery subsState opId actionIds onError $
-                        LAAQOnSourceDB $
-                          LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
+                      addAsyncActionLiveQuery subsState opId actionIds onError
+                        $ LAAQOnSourceDB
+                        $ LiveAsyncActionQueryOnSource newLqId actionLogMap lqRestarter
   -- Sleep for a second
   liftIO $ C.sleep $ seconds 1

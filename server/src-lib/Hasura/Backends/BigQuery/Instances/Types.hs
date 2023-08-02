@@ -12,15 +12,13 @@ import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.ResizePool (ServerReplicas)
-import Hasura.SQL.Backend
+import Hasura.RQL.Types.BackendType
+import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary, noPoolsResizedSummary)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
   type BackendConfig 'BigQuery = ()
   type BackendInfo 'BigQuery = ()
-  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
-  type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   type TableName 'BigQuery = BigQuery.TableName
   type FunctionName 'BigQuery = BigQuery.FunctionName
   type RawFunctionInfo 'BigQuery = BigQuery.RestRoutine
@@ -28,7 +26,7 @@ instance Backend 'BigQuery where
   type ConstraintName 'BigQuery = Void
   type BasicOrderType 'BigQuery = BigQuery.Order
   type NullsOrderType 'BigQuery = BigQuery.NullsOrder
-  type CountType 'BigQuery = BigQuery.Countable BigQuery.ColumnName
+  type CountType 'BigQuery = Const (BigQuery.Countable BigQuery.ColumnName) -- TODO(redactionExp): Going to need to replace this Const with a fixed up type here
   type Column 'BigQuery = BigQuery.ColumnName
   type ScalarValue 'BigQuery = BigQuery.Value
   type ScalarType 'BigQuery = BigQuery.ScalarType
@@ -39,6 +37,7 @@ instance Backend 'BigQuery where
   type FunctionArgumentExp 'BigQuery = BigQuery.ArgumentExp
   type ComputedFieldImplicitArguments 'BigQuery = BigQuery.ComputedFieldImplicitArguments
   type ComputedFieldReturn 'BigQuery = BigQuery.ComputedFieldReturn
+  type ExecutionStatistics 'BigQuery = BigQuery.ExecutionStatistics
 
   type XStreamingSubscription 'BigQuery = XDisable
   type XComputedField 'BigQuery = XEnable
@@ -61,8 +60,8 @@ instance Backend 'BigQuery where
   textToScalarValue :: Maybe Text -> ScalarValue 'BigQuery
   textToScalarValue = maybe BigQuery.NullValue BigQuery.StringValue
 
-  parseScalarValue :: ScalarType 'BigQuery -> Value -> Either QErr (ScalarValue 'BigQuery)
-  parseScalarValue = BigQuery.parseScalarValue
+  parseScalarValue :: ScalarTypeParsingContext 'BigQuery -> ScalarType 'BigQuery -> Value -> Either QErr (ScalarValue 'BigQuery)
+  parseScalarValue = const BigQuery.parseScalarValue
 
   scalarValueToJSON :: ScalarValue 'BigQuery -> Value
   scalarValueToJSON = error "scalarValueToJSON"
@@ -109,9 +108,16 @@ instance Backend 'BigQuery where
     -- We don't have to generate arguments expression from implicit arguments.
     []
 
-  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO ()
+  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO SourceResizePoolSummary
   resizeSourcePools _sourceConfig _serverReplicas =
     -- BigQuery does not posses connection pooling
-    pure ()
+    pure noPoolsResizedSummary
 
   defaultTriggerOnReplication = Nothing
+
+instance HasSourceConfiguration 'BigQuery where
+  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
+  type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
+  sourceConfigNumReadReplicas = const 0 -- not supported
+  sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceConfigBackendSourceKind _sourceConfig = BigQueryKind

@@ -1,5 +1,7 @@
 const nxPreset = require('@nrwl/jest/preset').default;
 
+process.env.TZ = 'UTC';
+
 module.exports = {
   ...nxPreset,
   moduleNameMapper: {
@@ -7,9 +9,6 @@ module.exports = {
       'jest-transform-stub',
   },
   globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json',
-    },
     __DEV__: true,
     CONSOLE_ASSET_VERSION: Date.now().toString(),
     'process.hrtime': () => null,

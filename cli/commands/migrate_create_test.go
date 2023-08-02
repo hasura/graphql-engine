@@ -110,7 +110,7 @@ var _ = Describe("hasura migrate create (config v3)", func() {
 			WorkingDirectory: projectDirectory,
 		})
 		wantKeywordList := []string{
-			fmt.Sprintf("database %s is not connected to hasura", sourceName),
+			fmt.Sprintf("database '%s' is not connected to hasura", sourceName),
 			"Migrations files created",
 			migrationName,
 			"version",

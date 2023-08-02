@@ -123,24 +123,24 @@ Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청
 
 ## 데모
 
-모든 예시 어플리케이션 보고싶으시다면 [community/sample-apps](../community/sample-apps) 디렉토리에서 확인하세요.
+모든 예시 어플리케이션 보고싶으시다면 [hasura/sample-apps](https://github.com/hasura/sample-apps/tree/main) 디렉토리에서 확인하세요.
 
 
 ### 리얼타임_어플리케이션
 
 - React 기반으로 만든 그룹챗 어플리케이션, typing indicator를 포함한, 온라인 유저 & 메세지 수신 알람
   - [Try it out](https://realtime-chat.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-chat)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.io/console)
 
 - 달리는 차량 에서 현재 GPS 위치를 지도에 실시간으로 보여주는 위치 트래킹 앱
   - [Try it out](https://realtime-location-tracking.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-location-tracking)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - 지속적으로 변화되는 데이터를 집계하는 리얼타임 대시보드
   - [Try it out](https://realtime-poll.demo.hasura.io/)
-  - [Tutorial](../community/sample-apps/realtime-poll)
+  - [Tutorial](https://github.com/hasura/sample-apps/tree/main/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### 영상

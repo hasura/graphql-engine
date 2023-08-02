@@ -1,8 +1,8 @@
 import produce from 'immer';
 
-import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { Metadata } from '@/features/hasura-metadata-types';
-import { MetadataReducer } from '@/mocks/actions';
+import { allowedMetadataTypes } from '../../MetadataAPI';
+import { Metadata } from '../../hasura-metadata-types';
+import { MetadataReducer } from '../../../mocks/actions';
 
 export const allowListInitialData: Partial<Metadata['metadata']> = {
   allowlist: [

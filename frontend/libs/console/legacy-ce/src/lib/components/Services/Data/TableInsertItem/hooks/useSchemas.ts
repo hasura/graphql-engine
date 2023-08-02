@@ -1,7 +1,7 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import { dataSource } from '@/dataSources';
-import Endpoints from '@/Endpoints';
-import { useHttpClient } from '@/features/Network';
+import { getRunSqlQuery } from '../../../../Common/utils/v1QueryUtils';
+import { dataSource } from '../../../../../dataSources';
+import Endpoints from '../../../../../Endpoints';
+import { useHttpClient } from '../../../../../features/Network';
 import { useQuery } from 'react-query';
 
 export type UseTableRelationsType = {
@@ -16,6 +16,7 @@ export const useSchemas = ({
   const httpClient = useHttpClient();
 
   return useQuery({
+    enabled: !!dataSourceName && !!schemaName,
     queryKey: ['tables-schema', schemaName, dataSourceName],
     queryFn: async () => {
       try {

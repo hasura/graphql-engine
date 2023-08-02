@@ -19,7 +19,7 @@
     };
 
     nixpkgs = {
-      url = github:NixOS/nixpkgs/nixos-22.11;
+      url = github:NixOS/nixpkgs;
     };
   };
 
@@ -33,11 +33,13 @@
       pkgs = import ./nix/nixpkgs.nix { inherit nixpkgs system; };
     in
     {
-      packages.graphql-parser = pkgs.haskell.packages.${pkgs.ghcName}.graphql-parser;
+      packages = {
+        graphql-parser = pkgs.haskell.packages.${pkgs.ghcName}.graphql-parser;
+      };
 
       formatter = pkgs.nixpkgs-fmt;
 
-      devShells.default = import ./nix/shell.nix { inherit pkgs; };
+      devShells.default = import ./nix/shell.nix { inherit pkgs system; };
     }
     );
 }

@@ -8,22 +8,21 @@ where
 --------------------------------------------------------------------------------
 
 import Data.HashSet qualified as Set
-import Data.Monoid (All (..))
 import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
-import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (Hasura)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.NamingCase qualified as NamingCase
+import Hasura.RQL.Types.Roles qualified as Roles
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
 import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
-import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
 import Refined (NonNegative, Positive, refineTH, unrefine)
 import Test.Hspec qualified as Hspec
@@ -54,32 +53,33 @@ emptyServeOptionsRaw =
           },
       rsoTxIso = Nothing,
       rsoAdminSecret = Nothing,
-      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing,
+      rsoAuthHook = UUT.AuthHookRaw Nothing Nothing Nothing,
       rsoJwtSecret = Nothing,
       rsoUnAuthRole = Nothing,
       rsoCorsConfig = Nothing,
-      rsoEnableConsole = False,
+      rsoConsoleStatus = UUT.ConsoleDisabled,
       rsoConsoleAssetsDir = Nothing,
       rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
-      rsoWsReadCookie = False,
+      rsoWsReadCookie = UUT.WsReadCookieDisabled,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
+      rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
       rsoMxBatchSize = Nothing,
       rsoStreamingMxRefetchInt = Nothing,
       rsoStreamingMxBatchSize = Nothing,
-      rsoEnableAllowlist = False,
+      rsoEnableAllowList = UUT.AllowListDisabled,
       rsoEnabledLogTypes = Nothing,
       rsoLogLevel = Nothing,
-      rsoDevMode = False,
+      rsoDevMode = UUT.DevModeDisabled,
       rsoAdminInternalErrors = Nothing,
       rsoEventsHttpPoolSize = Nothing,
       rsoEventsFetchInterval = Nothing,
       rsoAsyncActionsFetchInterval = Nothing,
       rsoEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
-      rsoWebSocketCompression = False,
+      rsoWebSocketCompression = WS.NoCompression,
       rsoWebSocketKeepAlive = Nothing,
       rsoInferFunctionPermissions = Nothing,
       rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
@@ -91,7 +91,10 @@ emptyServeOptionsRaw =
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing,
-      rsoMetadataDefaults = Nothing
+      rsoMetadataDefaults = Nothing,
+      rsoApolloFederationStatus = Nothing,
+      rsoCloseWebsocketsOnMetadataChangeStatus = Nothing,
+      rsoMaxTotalHeaderLength = Nothing
     }
 
 mkServeOptionsSpec :: Hspec.Spec
@@ -309,7 +312,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -322,11 +325,11 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTPost True))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookRaw (Just "http://auth.hook.com") (Just Auth.AHTGet) Nothing}
             -- When
             env =
               [ (UUT._envVar UUT.authHookOption, "http://auth.hook.com"),
@@ -335,7 +338,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet))
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (Auth.AuthHook "http://auth.hook.com" Auth.AHTGet False))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -377,17 +380,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "guest")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "guest")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = Roles.mkRoleName "visitor"}
             -- When
             env = [(UUT._envVar UUT.unAuthRoleOption, "guest")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "visitor")
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (Roles.mkRoleName "visitor")
 
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do
@@ -450,7 +453,7 @@ mkServeOptionsSpec =
 
         fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
-    Hspec.describe "soEnableConsole" $ do
+    Hspec.describe "soConsoleStatus" $ do
       Hspec.it "Default == False" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -459,7 +462,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right (UUT._default UUT.enableConsoleOption)
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right (UUT._default UUT.enableConsoleOption)
 
       -- NOTE: This is a little confusing. We are first simulating
       -- not providing the '--enable-console' flag with the env var set to 'true'.
@@ -473,17 +476,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableConsole = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleStatus = UUT.ConsoleEnabled}
             -- When
             env = [(UUT._envVar UUT.enableConsoleOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
+        fmap UUT.soConsoleStatus result `Hspec.shouldBe` Right UUT.ConsoleEnabled
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do
@@ -546,17 +549,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just UUT.TelemetryDisabled}
             -- When
             env = [(UUT._envVar UUT.enableTelemetryOption, "true")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right UUT.TelemetryDisabled
 
     Hspec.describe "soStringifyNum" $ do
       Hspec.it "Default == Don'tStringifyNumbers" $ do
@@ -769,7 +772,7 @@ mkServeOptionsSpec =
                 }
             )
 
-    Hspec.describe "soEnableAllowlist" $ do
+    Hspec.describe "soEnableAllowList" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -778,17 +781,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
+        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowlist = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowList = UUT.AllowListEnabled}
             -- When
             env = [(UUT._envVar UUT.enableAllowlistOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
+        fmap UUT.soEnableAllowList result `Hspec.shouldBe` Right UUT.AllowListEnabled
 
     Hspec.describe "soEnabledLogTypes" $ do
       Hspec.it "Default == Startup, HttpLog, WebhookLog, WebsocketLog" $ do
@@ -861,10 +864,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
-          Right (soDevMode, soResponseInternalErrorsConfig) ->
-            getAll $ foldMap All [soDevMode == UUT._default UUT.graphqlDevModeOption, soResponseInternalErrorsConfig == UUT.InternalErrorsAdminOnly]
-          Left _err -> False
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right (UUT._default UUT.graphqlDevModeOption)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -874,20 +874,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDevMode &&& UUT.soResponseInternalErrorsConfig) result `Hspec.shouldSatisfy` \case
-          Right (soDevMode, soResponseInternalErrorsConfig) ->
-            getAll $ foldMap All [soDevMode == True, soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests]
-          Left _err -> False
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = UUT.DevModeEnabled}
             -- When
             env = [(UUT._envVar UUT.graphqlDevModeOption, "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldBe` Right True
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right UUT.DevModeEnabled
 
     Hspec.describe "soAdminInternalErrors" $ do
       Hspec.it "Default == InternalErrorsAdminOnly" $ do
@@ -898,7 +895,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAdminOnly
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right (UUT._default UUT.graphqlAdminInternalErrorsOption)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -908,27 +905,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
-
-      Hspec.it "Dev Mode supersedes rsoAdminInternalErrors" $ do
-        let -- Given
-            rawServeOptions = emptyServeOptionsRaw
-            -- When
-            env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "false"), (UUT._envVar UUT.graphqlDevModeOption, "true")]
-            -- Then
-            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
-
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAllRequests
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just UUT.AdminInternalErrorsDisabled}
             -- When
             env = [(UUT._envVar UUT.graphqlAdminInternalErrorsOption, "true")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
+        fmap UUT.soAdminInternalErrors result `Hspec.shouldBe` Right UUT.AdminInternalErrorsDisabled
 
     Hspec.describe "soEventsHttpPoolSize" $ do
       Hspec.it "Default == 100" $ do
@@ -1088,7 +1075,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)}
             -- When
             env = [(UUT._envVar UUT.webSocketCompressionOption, "false")]
             -- Then
@@ -1388,6 +1375,17 @@ mkServeOptionsSpec =
         fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
     Hspec.describe "soDefaultNamingConvention" $ do
+      Hspec.it "Default = HasuraCase" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            -- When
+            env = []
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.HasuraCase
+
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyServeOptionsRaw
@@ -1397,7 +1395,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NamingCase.GraphqlCase)
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1407,7 +1405,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NamingCase.GraphqlCase)
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right NamingCase.GraphqlCase
 
     Hspec.describe "soExtensionsSchema" $ do
       Hspec.it "Default == 'public' " $ do

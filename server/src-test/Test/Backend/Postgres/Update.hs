@@ -15,11 +15,10 @@ where
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Translate.Update qualified as Update
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
+import Hasura.RQL.Types.BackendType (PostgresKind (Vanilla))
 import Hasura.RQL.Types.Column (ColumnInfo)
-import Hasura.SQL.Backend (PostgresKind (Vanilla))
 import Hasura.SQL.Types (toSQLTxt)
 import Test.Backend.Postgres.Misc
 import Test.HUnit.Base (assertFailure)
@@ -37,10 +36,8 @@ data TestBuilder e = TestBuilder
     columns :: [ColumnInfo PG],
     -- | expected output fields
     mutationOutput :: MutationOutputG PG Void (UnpreparedValue PG),
-    -- | where clause for the query (usually empty for /update_many/)
-    where_ :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])],
     -- | update clause
-    update :: Expect.BackendUpdateBuilder (ColumnInfo PG),
+    updateVariant :: Expect.UpdateVariantBuilder (ColumnInfo PG),
     -- | expected result; this is either 'Text' or '[Text]'
     expectedSQL :: e
   }
@@ -56,8 +53,7 @@ runTest TestBuilder {..} =
                 { Expect.aubTable = table,
                   Expect.aubOutput = mutationOutput,
                   Expect.aubColumns = columns,
-                  Expect.aubWhere = where_,
-                  Expect.aubUpdate = update
+                  Expect.aubUpdateVariant = updateVariant
                 }
     case Update.mkUpdateCTE @'Vanilla upd of
       (Update.Update cte) ->
@@ -75,11 +71,13 @@ runMultipleUpdates TestBuilder {..} =
                 { Expect.aubTable = table,
                   Expect.aubOutput = mutationOutput,
                   Expect.aubColumns = columns,
-                  Expect.aubWhere = where_,
-                  Expect.aubUpdate = update
+                  Expect.aubUpdateVariant = updateVariant
                 }
     case Update.mkUpdateCTE @'Vanilla upd of
       (Update.MultiUpdate ctes) ->
-        SI.fromText . toSQLTxt <$> ctes
-          `shouldBe` SI.fromText <$> expectedSQL
-      _ -> assertFailure "expedted update_many, got single update"
+        SI.fromText
+          . toSQLTxt
+          <$> ctes
+          `shouldBe` SI.fromText
+          <$> expectedSQL
+      _ -> assertFailure "expected update_many, got single update"

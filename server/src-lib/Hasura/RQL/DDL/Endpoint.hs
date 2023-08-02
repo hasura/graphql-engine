@@ -5,11 +5,10 @@ module Hasura.RQL.DDL.Endpoint
   )
 where
 
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
@@ -18,47 +17,52 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 
 runCreateEndpoint ::
-  ( CacheRWM m,
-    MetadataM m,
-    MonadMetadataStorageQueryAPI m
+  ( MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
   ) =>
   CreateEndpoint ->
   m EncJSON
 runCreateEndpoint endpoint@EndpointMetadata {..} = do
   endpointsMap <- _metaRestEndpoints <$> getMetadata
 
-  OMap.lookup _ceName endpointsMap `for_` \_ ->
-    throw400 AlreadyExists $
-      "Endpoint with name: " <> toTxt _ceName <> " already exists"
+  InsOrdHashMap.lookup _ceName endpointsMap `for_` \_ ->
+    throw400 AlreadyExists
+      $ "Endpoint with name: "
+      <> toTxt _ceName
+      <> " already exists"
 
-  withNewInconsistentObjsCheck $
-    buildSchemaCacheFor (MOEndpoint _ceName) $
-      MetadataModifier $
-        metaRestEndpoints %~ OMap.insert _ceName endpoint
+  withNewInconsistentObjsCheck
+    $ buildSchemaCacheFor (MOEndpoint _ceName)
+    $ MetadataModifier
+    $ metaRestEndpoints
+    %~ InsOrdHashMap.insert _ceName endpoint
   return successMsg
 
 runDropEndpoint ::
-  ( CacheRWM m,
-    MetadataM m,
-    MonadMetadataStorageQueryAPI m
+  ( MonadError QErr m,
+    CacheRWM m,
+    MetadataM m
   ) =>
   DropEndpoint ->
   m EncJSON
 runDropEndpoint DropEndpoint {..} = do
   checkExists _deName
-  withNewInconsistentObjsCheck $
-    buildSchemaCache $
-      dropEndpointInMetadata _deName
+  withNewInconsistentObjsCheck
+    $ buildSchemaCache
+    $ dropEndpointInMetadata _deName
   return successMsg
 
 dropEndpointInMetadata :: EndpointName -> MetadataModifier
 dropEndpointInMetadata name =
-  MetadataModifier $ metaRestEndpoints %~ OMap.delete name
+  MetadataModifier $ metaRestEndpoints %~ InsOrdHashMap.delete name
 
 checkExists :: (MetadataM m, MonadError QErr m) => EndpointName -> m ()
 checkExists name = do
   endpointsMap <- _metaRestEndpoints <$> getMetadata
-  void $
-    onNothing (OMap.lookup name endpointsMap) $
-      throw400 NotExists $
-        "endpoint with name: " <> toTxt name <> " does not exist"
+  void
+    $ onNothing (InsOrdHashMap.lookup name endpointsMap)
+    $ throw400 NotExists
+    $ "endpoint with name: "
+    <> toTxt name
+    <> " does not exist"

@@ -24,6 +24,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateStatusCmd := &cobra.Command{
 		Use:   "status",
 		Short: "Display current status of migrations on a database",
+		Long:  "When running this command, the CLI will allow you to select which database - or all - to run the status command on. The CLI will return the current status of migrations on the selected database(s), including the version, name, source, database, and status.",
 		Example: `  # Use with admin secret:
   hasura migrate status --admin-secret "<your-admin-secret>"
 
@@ -63,7 +64,7 @@ func (o *MigrateStatusOptions) Run() error {
 			o.Source = cli.Source(source)
 			status, err := o.RunOnSource()
 			if err != nil {
-				return errors.E(op, fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err))
+				return errors.E(op, fmt.Errorf("error getting status for database '%s': %v", o.Source.Name, err))
 			}
 			o.StatusOpts[o.Source] = status
 		}
@@ -72,7 +73,7 @@ func (o *MigrateStatusOptions) Run() error {
 	o.Source = ec.Source
 	status, err := o.RunOnSource()
 	if err != nil {
-		return errors.E(op, fmt.Errorf("error getting status for database %s: %v", o.Source.Name, err))
+		return errors.E(op, fmt.Errorf("error getting status for database '%s': %v", o.Source.Name, err))
 	}
 	o.StatusOpts[o.Source] = status
 	return nil

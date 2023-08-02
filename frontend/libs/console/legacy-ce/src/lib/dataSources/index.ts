@@ -1,7 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
 import { DeepRequired } from 'ts-essentials';
-import { TriggerOperation } from '@/components/Common/FilterQuery/state';
+import { TriggerOperation } from '../components/Common/FilterQuery/state';
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
@@ -29,12 +29,13 @@ import { Operations } from './common';
 import { QualifiedTable } from '../metadata/types';
 
 import { supportedFeatures as PGSupportedFeatures } from './services/postgresql';
+import { supportedFeatures as AlloySupportedFeatures } from './services/alloydb';
 import { supportedFeatures as MssqlSupportedFeatures } from './services/mssql';
 import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigquery';
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 import { supportedFeatures as CockroachQuerySupportedFeatures } from './services/cockroach';
 
-export { Table, TableColumn } from './types';
+export type { Table, TableColumn } from './types';
 
 export const drivers = [
   'postgres',
@@ -45,7 +46,7 @@ export const drivers = [
   'cockroach',
   'alloy',
 ] as const;
-export type Driver = typeof drivers[number];
+export type Driver = (typeof drivers)[number];
 
 export const driverToLabel: Record<Driver, string> = {
   postgres: 'PostgreSQL',
@@ -115,6 +116,7 @@ export interface DataSourcesAPI {
     NUMERIC?: string;
     DATE?: string;
     BOOLEAN?: string;
+    BOOL?: string;
     TEXT?: string;
     ARRAY?: string;
     BIGSERIAL?: string;
@@ -433,10 +435,6 @@ export interface DataSourcesAPI {
   generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
   // New Simple Queries to fetch just what we need at a time
   schemaListQuery: string;
-  getDataTriggerLogsCountQuery?: (
-    triggerName: string,
-    triggerOp: TriggerOperation
-  ) => string;
   getDataTriggerLogsQuery?: (
     triggerOp: TriggerOperation,
     triggerName: string,
@@ -444,9 +442,11 @@ export interface DataSourcesAPI {
     offset?: number
   ) => string;
   getDataTriggerInvocations?: (eventId: string) => string;
+  getDatabaseTableNames?: string;
 }
 
 export let currentDriver: Driver = 'postgres';
+
 export let dataSource: DataSourcesAPI = services[currentDriver || 'postgres'];
 
 export const isFeatureSupported = (
@@ -461,6 +461,7 @@ export const isFeatureSupported = (
 export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
   [
     PGSupportedFeatures,
+    AlloySupportedFeatures,
     MssqlSupportedFeatures,
     BigQuerySupportedFeatures,
     CitusQuerySupportedFeatures,
@@ -479,8 +480,10 @@ export const isFeatureSupportedForDriver = (
 
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';
-  constructor(public driver: Driver) {
+  public driver: Driver;
+  constructor(driver: Driver) {
     super(DataSourceChangedEvent.type);
+    this.driver = driver;
   }
 }
 const eventTarget = new EventTarget();

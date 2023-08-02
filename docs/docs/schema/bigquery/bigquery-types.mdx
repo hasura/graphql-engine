@@ -1,0 +1,270 @@
+---
+sidebar_label: Supported BigQuery types
+sidebar_position: 8
+description: Supported BigQuery types in the Hasura API
+keywords:
+  - hasura
+  - docs
+  - BigQuery types
+---
+
+# BigQuery: Supported Types
+
+## Introduction {#types-table}
+
+List of BigQuery types supported by the Hasura GraphQL Engine with their equivalent Hasura types:
+
+| Name       | Aliases    | Description                                      | Hasura Type                                                       |
+| ---------- | ---------- | ------------------------------------------------ | ----------------------------------------------------------------- |
+| BIGDECIMAL | BIGNUMERIC | exact numeric of selectable precision            | [Decimal](#decimal) or [bigquery_decimal](#large-numerical-types) |
+| BOOL       |            | logical Boolean (true/false)                     | [Bool](#bool)                                                     |
+| BYTES      |            | variable-length bit string                       | [Bytes](#bytes)                                                   |
+| DATE       |            | calendar date (year, month, day)                 | [Date](#date)                                                     |
+| DATETIME   |            | calendar date including time of day              | [Datetime](#datetime)                                             |
+| DECIMAL    | NUMERIC    | exact numeric of selectable precision            | [Decimal](#decimal) or [bigquery_decimal](#large-numerical-types) |
+| FLOAT      | FLOAT64    | double (8 bytes) precision floating-point number | [Float](#float) or [bigquery_float](#large-numerical-types)       |
+| GEOGRAPHY  |            | OpenGIS Geography type                           | [Geography](#geography)                                           |
+| INTEGER    | INT64      | (8-bytes) signed integer                         | [Int](#integer) or [bigquery_int](#large-numerical-types)         |
+| TIME       |            | time of day, excluding time zone                 | [Time](#time)                                                     |
+| TIMESTAMP  |            | date and time, time zone invariant               | [Timestamp](#timestamp)                                           |
+
+:::info Note
+
+You can learn more about BigQuery data types
+[here](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types).
+
+:::
+
+:::info Note
+
+The BigQuery JSON type is not yet supported
+
+:::
+
+### Length constraints
+
+BigQuery supports size-constraining the following types:
+
+- STRING
+- BYTES
+- NUMERIC
+- BIGNUMERIC
+
+For example, `STRING(10)` lets you have a string column that contains, at most, 10 characters.
+
+When mapping parametrized BigQuery types to GraphQL types, the Hasura GraphQL Engine ignores the size constraint
+parameters.
+
+This, for example, means that `STRING` and `STRING(10)` are both mapped to the GraphQL type `String` and treated alike
+in all respects. Mutations that attempt to input data that exceeds the constraints of a column inherit the behavior of
+BigQuery, which is to throw an `OUT_OF_RANGE` error.
+
+Reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#parameterized_data_types
+
+### Large numerical types {#large-numerical-types}
+
+In addition to the [`stringify-numeric-types`
+](/deployment/graphql-engine-flags/reference.mdx#stringify-numeric-types) option,
+the BigQuery backend supports an experimental feature
+[`bigquery_string_numeric_input`](/deployment/graphql-engine-flags/reference.mdx#experimental-features)
+which extends the support for stringified numbers to input values as well.
+
+Enabling this flag will add a `bigquery_` prefix to the names of numeric types
+appearing in the GraphQL schema and use those instead of the builtin scalar
+types. This distinction is necessary, as GraphQL mandates that the builtin
+numeric types be syntactically represented as numbers only.
+
+## Bool {#bool}
+
+GraphQL default Scalar with name **Boolean**. The **Boolean** scalar type represents `true` or `false`.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    is_published: true
+  }
+]
+```
+
+## Bytes {#bytes}
+
+GraphQL custom scalar with name **Bytes**. The **Bytes** scalar type encodes raw binary data, represented as UTF-8
+character sequences.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    bytes: "Raven"
+  }
+]
+```
+
+Reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#bytes_type
+
+## Date {#date}
+
+GraphQL custom scalar with name **Date**. Date (no time of day). Allowed values are yyyy-mm-dd.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    date: "1996-03-15"
+  }
+]
+```
+
+Reference:
+
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#date_type
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#date_literals
+
+## Datetime {#datetime}
+
+GraphQL custom scalar with name **Datetime**, representing date including the time of day. The syntactic format of
+Datetime literals is simply a [Date](#date) literal followed by a [Time](#time) literal, separated by either ` ` (space)
+or `t` or `T`.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    datetime: "1996-03-15 17:30:15.001"
+  }
+]
+```
+
+Reference:
+
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#datetime_type
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#datetime_literals
+
+## Decimal {#decimal}
+
+GraphQL custom scalar type with name **Decimal**.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    decimal_col: 0.8
+  }
+]
+```
+
+Reference:
+
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#numeric_literals
+
+## Float {#float}
+
+GraphQL builtin scalar type with name **Float**.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    float_col: 0.8
+  }
+]
+```
+
+## Geography {#geography}
+
+GraphQL custom scalar type `geography` is generated for a `GEOGRAPHY` column. Geographical data is represented textually
+in the standard OpenGIS format.
+
+```graphql
+objects: [
+  {
+    point: "POINT(32 210)"
+    polygon: "POLYGON((0 0, 2 2, 2 0, 0 0), (2 2, 3 4, 2 4))"
+  }
+]
+```
+
+Reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#geography_type
+
+## Integer {#integer}
+
+GraphQL default scalar with name **Int**.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    int_col: 27
+  }
+]
+```
+
+## String {#string}
+
+GraphQL default scalar with name **String**. The **String** scalar type represents textual data, represented as UTF-8
+character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+
+E.g.
+
+```graphql
+objects: [
+  {
+    name: "Raven"
+  }
+]
+```
+
+## Time {#time}
+
+GraphQL custom scalar type with name **Time**. Time of day only, without time zone. Allowed values should be of format
+`[H]H:[M]M:[S]S[.DDDDDD]`).
+
+E.g.
+
+```graphql
+objects: [
+  {
+    time: "17:30:15.001"
+  }
+]
+```
+
+Reference:
+
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#datetime_literals
+- https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#time_literals
+
+## Timestamp {#timestamp}
+
+GraphQL custom scalar type with name **Timestamp**. Semantically, BigQuery timestamps are timezone-invariant, but may
+for display and input purposes refer to a timezone.
+
+Their format is the same as that of Datetime, optionally including a timezone (defaulting to UTC).
+
+E.g.
+
+```graphql
+objects: [
+  {
+    timestamp: "2016-07-20T17:30:15+05:30"
+  }
+]
+```
+
+```graphql
+objects: [
+  {
+    timestamp: "2016-07-20 17:30:15 Europe/Copenhagen"
+  }
+]
+```
+
+Reference: https://cloud.google.com/bigquery/docs/reference/standard-sql/lexical#timestamp_literals

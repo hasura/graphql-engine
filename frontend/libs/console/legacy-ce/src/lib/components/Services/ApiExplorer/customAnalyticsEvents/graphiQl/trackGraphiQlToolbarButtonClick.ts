@@ -1,4 +1,4 @@
-import { trackCustomEvent } from '@/features/Analytics';
+import { trackCustomEvent } from '../../../../../features/Analytics';
 
 /**
  * Track all the clicks on the buttons at the top of GraphiQL.

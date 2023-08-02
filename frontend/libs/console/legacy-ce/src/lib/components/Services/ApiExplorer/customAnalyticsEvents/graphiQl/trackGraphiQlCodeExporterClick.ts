@@ -1,4 +1,4 @@
-import { trackCustomEvent } from '@/features/Analytics';
+import { trackCustomEvent } from '../../../../../features/Analytics';
 
 /**
  * Track every interaction with the GraphiQL Code Exporter plugin.

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js';
-import { Button } from '@/new-components/Button';
+import { Button } from '../../../../new-components/Button';
 import RootFields from './RootFields';
 import { ImCopy } from 'react-icons/im';
 

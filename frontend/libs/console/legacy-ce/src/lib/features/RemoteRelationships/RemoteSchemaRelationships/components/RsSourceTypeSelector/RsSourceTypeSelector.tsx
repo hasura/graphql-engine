@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { FaPlug } from 'react-icons/fa';
 import { FiType } from 'react-icons/fi';
-import { Select } from '@/new-components/Form';
+import { Select } from '../../../../../new-components/Form';
 import { RsToRsSchema } from '../../types';
 
 export interface RsSourceTypeSelectorProps {

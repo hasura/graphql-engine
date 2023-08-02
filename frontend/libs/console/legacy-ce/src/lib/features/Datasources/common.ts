@@ -1,8 +1,8 @@
-import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
-import Endpoints from '@/Endpoints';
-import { Api } from '@/hooks/apiUtils';
-import { useAppSelector } from '@/store';
+import { getRunSqlQuery } from '../../components/Common/utils/v1QueryUtils';
+import Endpoints from '../../Endpoints';
+import { Api } from '../../hooks/apiUtils';
 import { useQuery } from 'react-query';
+import { useSelector } from 'react-redux';
 import { RunSQLResponse, UseRunSQLArg } from './types';
 
 export function useRunSQL<K extends readonly unknown[], D>({
@@ -13,7 +13,11 @@ export function useRunSQL<K extends readonly unknown[], D>({
   dataSource,
   fallBack,
 }: UseRunSQLArg<K, D>) {
-  const headers = useAppSelector(state => state.tables.dataHeaders);
+  // Needed to avoid circular dependency
+  const headers = useSelector<any>(state => state.tables.dataHeaders) as Record<
+    string,
+    string
+  >;
   const { name, driver } = dataSource;
 
   return useQuery({

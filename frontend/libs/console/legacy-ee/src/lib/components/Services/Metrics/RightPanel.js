@@ -12,13 +12,8 @@ import OperationsHeader from './Operations/OperationsHeader';
 import styles from './Metrics.module.scss';
 
 const RightPanel = props => {
-  const {
-    location,
-    dispatch,
-    projectConfig,
-    metadata,
-    refetchMetadata,
-  } = props;
+  const { location, dispatch, projectConfig, metadata, refetchMetadata } =
+    props;
   const { pathname } = location;
 
   const strippedUrl = strippedCurrUrl(pathname);

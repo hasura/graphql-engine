@@ -1,15 +1,15 @@
 import {
   sanitizeGraphQLFieldNames,
   SanitizeTipsMessages,
-} from '@/utils/sanitizeGraphQLFieldNames';
+} from '../../utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { z } from 'zod';
 import { InputField, InputFieldProps, Schema } from './InputField';
 
-export interface GraphQLSanitizedInputFieldProps<T extends z.infer<Schema>>
-  extends InputFieldProps<T> {
-  hideTips?: boolean;
-}
+export type GraphQLSanitizedInputFieldProps<T extends z.infer<Schema>> =
+  InputFieldProps<T> & {
+    hideTips?: boolean;
+  };
 
 export const GraphQLSanitizedInputField = <T extends z.infer<Schema>>({
   hideTips,

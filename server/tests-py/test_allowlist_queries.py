@@ -301,7 +301,7 @@ class TestAllowlistMetadata:
         fail_drop_collection_from_allowlist(hge_ctx, {
         }, {
             "path": "$.args",
-            "error": "the key 'collection' was not present",
+            "error": "parsing Hasura.RQL.Types.Allowlist.DropCollectionFromAllowlist(DropCollectionFromAllowlist) failed, key \"collection\" not found",
             "code": "parse-failed",
         })
 

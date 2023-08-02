@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
-import { setDriver } from '@/dataSources';
+import { setDriver } from '../../../../dataSources';
 import {
   getDataSources,
   getEventTriggerByName,

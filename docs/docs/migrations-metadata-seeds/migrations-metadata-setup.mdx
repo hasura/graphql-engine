@@ -1,22 +1,23 @@
 ---
-sidebar_label: Setup
+sidebar_label: Quickstart
 description: Migrations & Metadata setup for an existing Hasura Server instance
 sidebar_position: 2
 keywords:
   - hasura
   - migration
   - setup
+  - quickstart
   - existing Hasura
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Migrations & Metadata Setup
+# Quickstart Migrations & Metadata
 
 ## Introduction
 
-[Migrations and Metadata](/migrations-metadata-seeds/index.mdx) allow you to keep track of, update, roll-back or move
-your database and Hasura Server configurations using the [Hasura CLI](/hasura-cli/index.mdx).
+[Migrations and Metadata](/migrations-metadata-seeds/overview.mdx) allow you to keep track of, update, roll-back or move
+your database and Hasura Server configurations using the [Hasura CLI](/hasura-cli/overview.mdx).
 
 ## Get started
 
@@ -35,16 +36,16 @@ Any change made in the Console served by Hasura CLI which modifies your underlyi
 in Migrations.
 
 Let's set up Migrations starting with the following two tables in our schema. For this guide we're assuming you have a
-Hasura Server up and running, either on [Hasura Cloud](/getting-started/index.mdx) or as a
-[standalone installation in Docker](/getting-started/index.mdx) and have connected a database with a table that has some
-columns configured.
+Hasura Server up and running, either on [Hasura Cloud](/getting-started/getting-started-cloud.mdx) or as a
+[standalone installation in Docker](/getting-started/docker-simple.mdx) and have connected a database with a table that
+has some columns configured.
 
 ```sql
 author (id uuid, name text, rating integer)
 article (id uuid, title text, content text, author_id uuid)
 ```
 
-## Step 0: Disable the Console served by the server {#migrations-project-init}
+## Step 1: Disable the Console served by the server {#migrations-project-init}
 
 The Hasura Console can be served directly by the Hasura Server and also by the Hasura CLI. To use Migrations, the
 console served by the server (which is served at `/console`) should be disabled and all changes must go through the
@@ -64,11 +65,11 @@ If you set this in YAML, make sure you use false as a string, i.e. `HASURA_GRAPH
 
 :::
 
-## Step 1: Install the Hasura CLI
+## Step 2: Install the Hasura CLI
 
 Follow the instructions in [Installing the Hasura CLI](/hasura-cli/install-hasura-cli.mdx).
 
-## Step 2: Set up a project directory
+## Step 3: Set up a project directory
 
 Let's set up a project directory by executing the following command:
 
@@ -166,7 +167,7 @@ Our directory structure should now look something like this:
 └─ 📄 config.yaml
 ```
 
-If we had entered `No` at the prompt, the Hasura Migrations and Metadata would not have been initialised, and you would
+If we had entered `No` at the prompt, the Hasura Migrations and Metadata would not have been initialized, and you would
 be able to do it manually [using the CLI later](/hasura-cli/commands/hasura_init.mdx).
 
 As you can see from the structure, the `metadata` folder contains files used to describe the configuration of the Hasura
@@ -174,7 +175,7 @@ server and the `migrations` folder contains a folder for each of our databases. 
 it we have our migration folder consisting of the up.sql file with the SQL commands needed to create our database
 schema.
 
-## Step 3: Add Migrations and Metadata to version control
+## Step 4: Add Migrations and Metadata to version control
 
 The project directory created above can be committed to version control allowing us to keep our codebase and database
 (and metadata) changes in-sync.
@@ -190,7 +191,7 @@ git add .
 git commit -m "hasura project init"
 ```
 
-## Step 4: Use the Console served by the CLI
+## Step 5: Use the Console served by the CLI
 
 From this point onwards, instead of using the Console at `http://docs-demo.hasura.app/console` you should only use the
 console served by the CLI in order to track Migration and Metadata changes. Do this by running:
@@ -200,7 +201,7 @@ console served by the CLI in order to track Migration and Metadata changes. Do t
 hasura console
 ```
 
-## Step 5: Add a new table and see how Migrations and Metadata are updated
+## Step 6: Add a new table and see how Migrations and Metadata are updated
 
 As you use the Hasura Console UI served by the CLI to make changes to your schema, database migration files are
 automatically generated in the `migrations/` directory and the Metadata is exported in the `metadata/` directory of your
@@ -234,7 +235,7 @@ Migrations are only created when using the Console through the CLI.
 
 :::
 
-## Step 6: Squash Migrations and add checkpoints to version control
+## Step 7: Squash Migrations and add checkpoints to version control
 
 Squashing Migrations is the process of merging multiple `sql` files into one. As you keep using the Console via the CLI
 to make changes to the schema, new migration files will keep getting generated and the Metadata files will keep getting
@@ -274,7 +275,7 @@ git add .
 git commit -m "<feature-name>"
 ```
 
-## Step 7: Apply Migrations and Metadata on another instance of the Hasura Server
+## Step 8: Apply Migrations and Metadata on another instance of the Hasura Server
 
 Let's apply all the Migrations present in the `migrations/` directory and the Metadata present in the `metadata/`
 directory on a new, "fresh", instance of the Hasura Server at `http://another-server-instance.hasura.app`:
@@ -305,7 +306,7 @@ If you open the Console of the new instance, you can see that our three tables h
   width="30%"
 />
 
-## Step 8: Check the status of Migrations
+## Step 9: Check the status of Migrations
 
 Let's check the status of our Migrations using the CLI.
 

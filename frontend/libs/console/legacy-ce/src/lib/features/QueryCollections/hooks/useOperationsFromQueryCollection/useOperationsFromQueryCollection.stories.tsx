@@ -1,9 +1,9 @@
-import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { ReduxDecorator } from '@/storybook/decorators/redux-decorator';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReduxDecorator } from '../../../../storybook/decorators/redux-decorator';
 import ReactJson from 'react-json-view';
-import { Meta, Story } from '@storybook/react';
+import { StoryFn, Meta } from '@storybook/react';
 import React from 'react';
-import { handlers } from '@/mocks/metadata.mock';
+import { handlers } from '../../../../mocks/metadata.mock';
 
 import { useOperationsFromQueryCollection } from './useOperationsFromQueryCollection';
 
@@ -25,7 +25,7 @@ function UseOperationsFromQueryCollection() {
   );
 }
 
-export const Primary: Story = () => {
+export const Primary: StoryFn = () => {
   return <UseOperationsFromQueryCollection />;
 };
 

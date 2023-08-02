@@ -2,6 +2,7 @@
 
 module Hasura.Backends.DataConnector.API.V0.ConfigSchema
   ( Config (..),
+    emptyConfig,
     ConfigSchemaResponse (..),
     validateConfigAgainstConfigSchema,
   )
@@ -11,10 +12,12 @@ import Autodocodec qualified
 import Control.DeepSeq (NFData)
 import Control.Lens ((%~), (&), (.~), (^?))
 import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), eitherDecode, encode, object, withObject, (.:), (.=), (<?>))
+import Data.Aeson.KeyMap (empty)
 import Data.Aeson.Lens (AsValue (..), key, members, values)
 import Data.Aeson.Types (JSONPathElement (..))
 import Data.Bifunctor (first)
 import Data.ByteString.Lazy qualified as BSL
+import Data.Data (Data)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
 import Data.Maybe (fromMaybe)
@@ -28,8 +31,16 @@ import Servant.API (FromHttpApiData (..), ToHttpApiData (..))
 import Prelude
 
 newtype Config = Config {unConfig :: Object}
-  deriving stock (Eq, Show, Ord)
+  deriving stock (Eq, Show, Ord, Data)
   deriving newtype (Hashable, NFData, ToJSON, FromJSON)
+
+emptyConfig :: Config
+emptyConfig = Config empty
+
+instance Autodocodec.HasCodec Config where
+  codec =
+    Autodocodec.named "Config" $
+      Autodocodec.dimapCodec Config unConfig Autodocodec.codec
 
 instance FromHttpApiData Config where
   parseUrlPiece = first Text.pack . eitherDecode . BSL.fromStrict . Text.encodeUtf8
@@ -51,7 +62,7 @@ data ConfigSchemaResponse = ConfigSchemaResponse
   { _csrConfigSchema :: Schema,
     _csrOtherSchemas :: Definitions Schema
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 instance FromJSON ConfigSchemaResponse where
   parseJSON = withObject "ConfigSchemaResponse" $ \obj -> do

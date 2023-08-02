@@ -7,25 +7,33 @@
 module Harness.Backend.DataConnector.Sqlite
   ( backendTypeMetadata,
     setupTablesAction,
-    setupPermissionsAction,
+    createUntrackedTablesAction,
+    setupSqliteAgent,
+    createEmptyDatasetCloneSourceConfig,
+    deleteDatasetClone,
+    createTable,
+    insertTable,
+    trackTable,
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
+import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Text qualified as Text
 import Data.Text.Extended qualified as Text (commaSeparated)
 import Data.Time qualified as Time
+import Harness.DataConnectorAgent (createClone, createClone', deleteClone, deleteClone')
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Schema (SchemaName)
+import Harness.Schema qualified as Schema
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
-import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (SchemaName)
-import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 
 --------------------------------------------------------------------------------
@@ -34,7 +42,7 @@ backendTypeMetadata :: BackendType.BackendTypeConfig
 backendTypeMetadata =
   BackendType.BackendTypeConfig
     { backendType = BackendType.DataConnectorSqlite,
-      backendSourceName = "chinook_sqlite",
+      backendSourceName = "sqlite",
       backendCapabilities =
         Just
           [yaml|
@@ -54,25 +62,11 @@ backendTypeMetadata =
     |],
       backendTypeString = "sqlite",
       backendDisplayNameString = "Hasura SQLite (sqlite)",
+      backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65007",
-      backendSchemaKeyword = "schema"
+      backendSchemaKeyword = "schema",
+      backendScalarType = scalarType
     }
-
---------------------------------------------------------------------------------
-
--- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup permissions env
-
--- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown backendTypeMetadata permissions env
-
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> Fixture.SetupAction
-setupPermissionsAction permissions env =
-  Fixture.SetupAction
-    (setupPermissions permissions env)
-    (const $ teardownPermissions permissions env)
 
 --------------------------------------------------------------------------------
 
@@ -82,122 +76,132 @@ setupTablesAction ts env =
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
 
+createUntrackedTablesAction :: [Schema.Table] -> TestEnvironment -> Fixture.SetupAction
+createUntrackedTablesAction ts env =
+  Fixture.SetupAction
+    (createUntrackedTables ts (env, ()))
+    (const $ pure ())
+
 -- | Metadata source information for the default Sqlite instance.
-sourceMetadata :: Aeson.Value
-sourceMetadata =
+sourceMetadata :: API.Config -> J.Value
+sourceMetadata (API.Config config) =
   let source = Fixture.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
    in [yaml|
-name: *source
-kind: *backendType
-tables: []
-configuration:
-  db: "/db.sqlite"
-  explicit_main_schema: true
-|]
+        name: *source
+        kind: *backendType
+        tables: []
+        configuration:
+          value: *config
+      |]
 
-backendConfig :: Aeson.Value
+backendConfig :: J.Value
 backendConfig =
   let backendType = BackendType.backendTypeString backendTypeMetadata
    in [yaml|
 dataconnector:
   *backendType:
-    uri: "http://127.0.0.1:65007/"
+    uri: *sqliteAgentUri
 |]
+
+sqliteAgentUri :: String
+sqliteAgentUri = "http://127.0.0.1:65007/"
+
+createEmptyDatasetCloneSourceConfig :: API.DatasetCloneName -> IO API.Config
+createEmptyDatasetCloneSourceConfig cloneName = do
+  enableExplicitMainSchema . API._dccrConfig <$> createClone' sqliteAgentUri cloneName (API.DatasetTemplateName "Empty")
+
+deleteDatasetClone :: API.DatasetCloneName -> IO API.DatasetDeleteCloneResponse
+deleteDatasetClone cloneName =
+  deleteClone' sqliteAgentUri cloneName
+
+enableExplicitMainSchema :: API.Config -> API.Config
+enableExplicitMainSchema (API.Config config) =
+  API.Config $ KeyMap.insert "explicit_main_schema" (J.Bool True) config
+
+setupSqliteAgent :: TestEnvironment -> IO ()
+setupSqliteAgent testEnvironment =
+  GraphqlEngine.addDataConnectorAgent testEnvironment (BackendType.backendTypeString backendTypeMetadata) sqliteAgentUri
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
+  -- Create the database clone
+  cloneConfig <- enableExplicitMainSchema . API._dccrConfig <$> createClone sqliteAgentUri testEnvironment (API.DatasetTemplateName "Empty")
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig)
+  GraphqlEngine.setSource testEnvironment (sourceMetadata cloneConfig) (Just backendConfig)
   -- Setup and track tables
+  let sourceName = Fixture.backendSourceName backendTypeMetadata
   for_ tables $ \table -> do
-    createTable testEnvironment table
-    insertTable testEnvironment table
-    trackTable testEnvironment table
+    createTable sourceName testEnvironment table
+    insertTable sourceName testEnvironment table
+    trackTable sourceName testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
     Schema.trackObjectRelationships table testEnvironment
     Schema.trackArrayRelationships table testEnvironment
 
+createUntrackedTables :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+createUntrackedTables tables (testEnvironment, _) = do
+  let sourceName = Fixture.backendSourceName backendTypeMetadata
+  for_ tables $ \table -> do
+    createTable sourceName testEnvironment table
+    insertTable sourceName testEnvironment table
+
 -- | Post an http request to start tracking the table
-trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
-trackTable testEnvironment Schema.Table {tableName} = do
+trackTable :: (HasCallStack) => String -> TestEnvironment -> Schema.Table -> IO ()
+trackTable sourceName testEnvironment Schema.Table {tableName} = do
   let backendType = BackendType.backendTypeString backendTypeMetadata
       requestType = backendType <> "_track_table"
-      source = Fixture.backendSourceName backendTypeMetadata
+      schemaName = Schema.getSchemaName testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    - "main"
-    - *tableName
-|]
-
--- | Post an http request to stop tracking the table
-untrackTable :: TestEnvironment -> Schema.Table -> IO ()
-untrackTable testEnvironment Schema.Table {tableName} = do
-  let backendType = BackendType.backendTypeString backendTypeMetadata
-      source = Fixture.backendSourceName backendTypeMetadata
-      requestType = backendType <> "_untrack_table"
-  GraphqlEngine.postMetadata_
-    testEnvironment
-    [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    - "main"
-    - *tableName
-|]
+      type: *requestType
+      args:
+        source: *sourceName
+        table:
+          - *schemaName
+          - *tableName
+    |]
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
+teardown _ (testEnvironment, _) = do
   finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships table testEnvironment
-    )
-    -- Then teardown tables
-    ( forFinally_ tables $ \table ->
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable testEnvironment table)
-    )
+    -- Clear the metadata
+    (GraphqlEngine.setSources testEnvironment mempty Nothing)
+    -- Then, delete the clone
+    (deleteClone sqliteAgentUri testEnvironment)
 
 -- | Call the Metadata API and pass in a Raw SQL statement to the
 -- SQLite Agent.
 runSql :: TestEnvironment -> String -> String -> IO ()
 runSql testEnvironment source sql = do
   Schema.runSQL source sql testEnvironment
-  GraphqlEngine.reloadMetadata testEnvironment
 
 -- | Serialize Table into a SQLite statement, as needed, and execute it on the SQLite backend
-createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
+createTable :: String -> TestEnvironment -> Schema.Table -> IO ()
+createTable sourceName testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
   -- Build a SQL QUERY AND THEN CALL run_sql
   let expr =
-        Text.unpack $
-          Text.unwords
+        Text.unpack
+          $ Text.unwords
             [ "CREATE TABLE",
               wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
               "(",
-              Text.commaSeparated $
-                (mkColumn <$> tableColumns)
-                  <> (bool [mkPrimaryKey pk] [] (null pk))
-                  <> (mkReference schemaName <$> tableReferences)
-                  <> map uniqueConstraint tableConstraints,
+              Text.commaSeparated
+                $ (mkColumn <$> tableColumns)
+                <> (bool [mkPrimaryKey pk] [] (null pk))
+                <> (mkReference schemaName <$> tableReferences)
+                <> map uniqueConstraint tableConstraints,
               ");"
             ]
-  runSql testEnv (Fixture.backendSourceName backendTypeMetadata) expr
+  runSql testEnv sourceName expr
   for_ tableUniqueIndexes (createUniqueIndex testEnv tableName)
 
 indexName :: Text -> [Text] -> Text
@@ -260,6 +264,7 @@ mkReference _schemaName Schema.Reference {referenceLocalColumn, referenceTargetT
 scalarType :: Schema.ScalarType -> Text
 scalarType = \case
   Schema.TInt -> "INTEGER"
+  Schema.TDouble -> "REAL"
   Schema.TStr -> "TEXT"
   Schema.TUTCTime -> "TIMESTAMP"
   Schema.TBool -> "BOOLEAN"
@@ -270,6 +275,7 @@ scalarType = \case
 serialize :: Schema.ScalarValue -> Text
 serialize = \case
   Schema.VInt i -> tshow i
+  Schema.VDouble d -> tshow d
   Schema.VStr s -> "'" <> Text.replace "'" "\'" s <> "'"
   Schema.VUTCTime t -> Text.pack $ Time.formatTime Time.defaultTimeLocale "'%F %T'" t
   Schema.VBool b -> if b then "1" else "0"
@@ -278,23 +284,23 @@ serialize = \case
   Schema.VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv Schema.bsvSqlite
 
 -- | Serialize tableData into a SQLITE-SQL insert statement and execute it.
-insertTable :: TestEnvironment -> Schema.Table -> IO ()
-insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
+insertTable :: String -> TestEnvironment -> Schema.Table -> IO ()
+insertTable sourceName testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
       let schemaName = Schema.getSchemaName testEnv
-      runSql testEnv (Fixture.backendSourceName backendTypeMetadata) $
-        Text.unpack $
-          Text.unwords
-            [ "INSERT INTO",
-              wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
-              "(",
-              Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-              ")",
-              "VALUES",
-              Text.commaSeparated $ mkRow <$> tableData,
-              ";"
-            ]
+      runSql testEnv sourceName
+        $ Text.unpack
+        $ Text.unwords
+          [ "INSERT INTO",
+            wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
+            "(",
+            Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            ")",
+            "VALUES",
+            Text.commaSeparated $ mkRow <$> tableData,
+            ";"
+          ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
@@ -303,19 +309,6 @@ mkRow row =
       Text.commaSeparated $ serialize <$> row,
       ")"
     ]
-
--- | Serialize Table into a PL-SQL DROP statement and execute it
-dropTable :: TestEnvironment -> Schema.Table -> IO ()
-dropTable testEnv Schema.Table {tableName} = do
-  let schemaName = Schema.getSchemaName testEnv
-  runSql testEnv (Fixture.backendSourceName backendTypeMetadata) $
-    Text.unpack $
-      Text.unwords
-        [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
-          wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
-          -- "CASCADE",
-          ";"
-        ]
 
 wrapIdentifier :: Text -> Text
 wrapIdentifier identifier = "\"" <> identifier <> "\""

@@ -162,6 +162,6 @@ input[id*='react-select'][id$='-input']:focus {
 
 /* Fix bug due to the removal of a label style in ApiExplorer.scss which was impacting the whole UI */
 label {
-    font-weight: normal;
-    margin-bottom: 0;
+  font-weight: normal;
+  margin-bottom: 0;
 }

@@ -6,7 +6,7 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { ReduxState } from '../../../../../types';
 import { useGetCronTriggers } from '../Hooks/useGetCronTriggers';
 
-interface Props extends InjectedProps {}
+type Props = InjectedProps;
 
 const ModifyContainer: React.FC<Props> = props => {
   const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
@@ -28,11 +28,7 @@ const ModifyContainer: React.FC<Props> = props => {
       allTriggers={cronTriggers}
       eventsLoading={eventsLoading}
     >
-      {readOnlyMode ? (
-        'Cannot modify in read-only mode'
-      ) : (
-        <Modify dispatch={dispatch} />
-      )}
+      {readOnlyMode ? 'Cannot modify in read-only mode' : <Modify />}
     </STContainer>
   );
 };

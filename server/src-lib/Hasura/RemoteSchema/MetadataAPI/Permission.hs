@@ -1,5 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Hasura.RemoteSchema.MetadataAPI.Permission
   ( AddRemoteSchemaPermission (..),
     DropRemoteSchemaPermissions (..),
@@ -9,22 +7,21 @@ module Hasura.RemoteSchema.MetadataAPI.Permission
 where
 
 import Control.Lens ((^.))
-import Data.Aeson.TH qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.Aeson qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Roles (RoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Permission
-import Hasura.Server.Types
-import Hasura.Session
 
 data AddRemoteSchemaPermission = AddRemoteSchemaPermission
   { _arspRemoteSchema :: RemoteSchemaName,
@@ -36,7 +33,12 @@ data AddRemoteSchemaPermission = AddRemoteSchemaPermission
 
 instance NFData AddRemoteSchemaPermission
 
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
+instance J.FromJSON AddRemoteSchemaPermission where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON AddRemoteSchemaPermission where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
   { _drspRemoteSchema :: RemoteSchemaName,
@@ -46,37 +48,48 @@ data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
 
 instance NFData DropRemoteSchemaPermissions
 
-$(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
+instance J.FromJSON DropRemoteSchemaPermissions where
+  parseJSON = J.genericParseJSON hasuraJSON
+
+instance J.ToJSON DropRemoteSchemaPermissions where
+  toJSON = J.genericToJSON hasuraJSON
+  toEncoding = J.genericToEncoding hasuraJSON
 
 runAddRemoteSchemaPermissions ::
   ( QErrM m,
     CacheRWM m,
-    HasServerConfigCtx m,
     MetadataM m
   ) =>
+  Options.RemoteSchemaPermissions ->
   AddRemoteSchemaPermission ->
   m EncJSON
-runAddRemoteSchemaPermissions q = do
+runAddRemoteSchemaPermissions remoteSchemaPermsCtx q = do
   metadata <- getMetadata
-  remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
   unless (remoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions) $ do
-    throw400 ConstraintViolation $
-      "remote schema permissions can only be added when "
-        <> "remote schema permissions are enabled in the graphql-engine"
+    throw400 ConstraintViolation
+      $ "remote schema permissions can only be added when "
+      <> "remote schema permissions are enabled in the graphql-engine"
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
   remoteSchemaCtx <-
-    onNothing (Map.lookup name remoteSchemaMap) $
-      throw400 NotExists $
-        "remote schema " <> name <<> " doesn't exist"
-  when (doesRemoteSchemaPermissionExist metadata name role) $
-    throw400 AlreadyExists $
-      "permissions for role: "
-        <> role <<> " for remote schema:"
-        <> name <<> " already exists"
+    onNothing (HashMap.lookup name remoteSchemaMap)
+      $ throw400 NotExists
+      $ "remote schema "
+      <> name
+      <<> " doesn't exist"
+  when (doesRemoteSchemaPermissionExist metadata name role)
+    $ throw400 AlreadyExists
+    $ "permissions for role: "
+    <> role
+    <<> " for remote schema:"
+    <> name
+    <<> " already exists"
   void $ resolveRoleBasedRemoteSchema role name (_rscIntroOriginal remoteSchemaCtx) providedSchemaDoc
-  buildSchemaCacheFor (MORemoteSchemaPermissions name role) $
-    MetadataModifier $
-      metaRemoteSchemas . ix name . rsmPermissions %~ (:) remoteSchemaPermMeta
+  buildSchemaCacheFor (MORemoteSchemaPermissions name role)
+    $ MetadataModifier
+    $ metaRemoteSchemas
+    . ix name
+    . rsmPermissions
+    %~ (:) remoteSchemaPermMeta
   pure successMsg
   where
     AddRemoteSchemaPermission name role defn comment = q
@@ -99,15 +112,19 @@ runDropRemoteSchemaPermissions ::
 runDropRemoteSchemaPermissions (DropRemoteSchemaPermissions name roleName) = do
   metadata <- getMetadata
   remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
-  void $
-    onNothing (Map.lookup name remoteSchemaMap) $
-      throw400 NotExists $
-        "remote schema " <> name <<> " doesn't exist"
-  unless (doesRemoteSchemaPermissionExist metadata name roleName) $
-    throw400 NotExists $
-      "permissions for role: "
-        <> roleName <<> " for remote schema:"
-        <> name <<> " doesn't exist"
-  buildSchemaCacheFor (MORemoteSchemaPermissions name roleName) $
-    dropRemoteSchemaPermissionInMetadata name roleName
+  void
+    $ onNothing (HashMap.lookup name remoteSchemaMap)
+    $ throw400 NotExists
+    $ "remote schema "
+    <> name
+    <<> " doesn't exist"
+  unless (doesRemoteSchemaPermissionExist metadata name roleName)
+    $ throw400 NotExists
+    $ "permissions for role: "
+    <> roleName
+    <<> " for remote schema:"
+    <> name
+    <<> " doesn't exist"
+  buildSchemaCacheFor (MORemoteSchemaPermissions name roleName)
+    $ dropRemoteSchemaPermissionInMetadata name roleName
   pure successMsg

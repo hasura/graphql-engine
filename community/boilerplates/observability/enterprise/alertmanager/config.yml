@@ -1,0 +1,7 @@
+route:
+    receiver: 'pager'
+
+receivers:
+    - name: 'pager'
+      webhook_configs:
+      - url: https://ngrok.io # replace with your IRP webhook URL

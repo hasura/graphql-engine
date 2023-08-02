@@ -1,5 +1,8 @@
 import React from 'react';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+} from '../../../../../features/Analytics';
 import {
   Table,
   TableForm,
@@ -63,11 +66,7 @@ const IntrospectionTable: React.FC<Props> = ({ rows }) => {
             index=""
             entries={[{ roleName: '', instrospectionIsDisabled: true }]}
             isSingleColumn
-            renderCol={() => (
-              <>
-                <Legends.Global />
-              </>
-            )}
+            renderCol={() => <Legends.Global />}
           />
 
           <TableForm<{ roleName: string; instrospectionIsDisabled: boolean }>>

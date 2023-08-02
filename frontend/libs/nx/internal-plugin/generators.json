@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "name": "nx-internal-plugin",
+  "version": "0.0.1",
+  "generators": {
+    "migrate-path-to-relative": {
+      "factory": "./src/generators/migrate-path-to-relative/generator",
+      "schema": "./src/generators/migrate-path-to-relative/schema.json",
+      "description": "migrate-path-to-relative generator"
+    },
+    "update-generators-scope-and-type": {
+      "factory": "./src/generators/update-generators-scope-and-type/generator",
+      "schema": "./src/generators/update-generators-scope-and-type/schema.json",
+      "description": "update-generators-scope-and-type generator"
+    }
+  }
+}

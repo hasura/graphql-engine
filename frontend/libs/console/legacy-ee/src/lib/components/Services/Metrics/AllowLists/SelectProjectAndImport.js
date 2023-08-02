@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { SearchableSelectBox } from '@hasura/console-oss';
+import { SearchableSelectBox } from '@hasura/console-legacy-ce';
 
 import AddOperationsToAllowList from './AddOperationsToAllowList';
 

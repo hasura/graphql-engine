@@ -1,11 +1,11 @@
 import React from 'react';
-import { useHttpClient } from '@/features/Network';
+import { useHttpClient } from '../../Network';
 import { useQuery } from 'react-query';
 import { useFormContext } from 'react-hook-form';
-import { SupportedDrivers } from '@/features/hasura-metadata-types';
-import { DataSource, Feature } from '@/features/DataSource';
-import { OpenApi3Form } from '@/features/OpenApi3Form';
-import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { SupportedDrivers } from '../../hasura-metadata-types';
+import { DataSource, Feature } from '../../DataSource';
+import { OpenApi3Form } from '../../OpenApi3Form';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
 
 const useConfigSchema = (driver: SupportedDrivers) => {
   const httpClient = useHttpClient();
@@ -54,12 +54,10 @@ export const Configuration = ({ name }: Props) => {
     );
 
   return (
-    <>
-      <OpenApi3Form
-        name={name}
-        schemaObject={schema.configSchema}
-        references={schema.otherSchemas}
-      />
-    </>
+    <OpenApi3Form
+      name={name}
+      schemaObject={schema.configSchema}
+      references={schema.otherSchemas}
+    />
   );
 };
