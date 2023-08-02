@@ -70,7 +70,7 @@ export const RelationshipMapping = ({
         ) : relationship.type === 'remoteDatabaseRelationship' ? (
           <>
             <FaTable />
-            <div>{getTableDisplayName(relationship.definition.toSource)}</div>
+            <div>{getTableDisplayName(relationship.definition.toTable)}</div>
             /
             <FaColumns />
             <Columns mapping={relationship.definition.mapping} type="to" />

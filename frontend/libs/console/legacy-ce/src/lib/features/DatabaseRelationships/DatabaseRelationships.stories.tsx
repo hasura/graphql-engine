@@ -70,8 +70,8 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
 
       expect(await canvas.findByText('SUGGESTED RELATIONSHIPS')).toBeVisible();
       expect(await canvas.findByText('albumArtist')).toBeVisible();
-      expect(await canvas.findAllByText('Object')).toHaveLength(1);
-      expect(await canvas.findByText('Artist')).toBeVisible();
+      expect(await canvas.findAllByText('Object')).toHaveLength(2);
+      expect(await canvas.findAllByText('Artist')).toHaveLength(2);
 
       expect(await canvas.findByText('Add')).toBeVisible();
     });
