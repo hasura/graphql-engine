@@ -13,46 +13,46 @@
 </span><span id="line-13"></span><span class="hs-comment">-- | A forever running IO loop that performs regular pings for DBs that need it</span><span>
 </span><span id="line-14"></span><span class="hs-comment">-- these are used to send a fingerprint to third parties that wish to attribute</span><span>
 </span><span id="line-15"></span><span class="hs-comment">-- users to Hasura</span><span>
-</span><span id="line-16"></span><span id="local-6989586621687475784"><span class="annot"><a href="Hasura.PingSources.html#runPingSources"><span class="hs-identifier hs-type">runPingSources</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-16"></span><span id="local-6989586621687475783"><span class="annot"><a href="Hasura.PingSources.html#runPingSources"><span class="hs-identifier hs-type">runPingSources</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-17"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-18"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-19"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourcePingCache"><span class="hs-identifier hs-type">SourcePingCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687475784"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621687475783"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-21"></span><span id="runPingSources"><span class="annot"><span class="annottext">runPingSources :: forall a.
 Environment -&gt; (String -&gt; IO ()) -&gt; IO SourcePingCache -&gt; IO a
-</span><a href="Hasura.PingSources.html#runPingSources"><span class="hs-identifier hs-var hs-var">runPingSources</span></a></span></span><span> </span><span id="local-6989586621687475889"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687475889"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687475890"><span class="annot"><span class="annottext">String -&gt; IO ()
-</span><a href="#local-6989586621687475890"><span class="hs-identifier hs-var">pingLog</span></a></span></span><span> </span><span id="local-6989586621687475891"><span class="annot"><span class="annottext">IO SourcePingCache
-</span><a href="#local-6989586621687475891"><span class="hs-identifier hs-var">fetchPingCacheIO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.PingSources.html#runPingSources"><span class="hs-identifier hs-var hs-var">runPingSources</span></a></span></span><span> </span><span id="local-6989586621687475888"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687475888"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621687475889"><span class="annot"><span class="annottext">String -&gt; IO ()
+</span><a href="#local-6989586621687475889"><span class="hs-identifier hs-var">pingLog</span></a></span></span><span> </span><span id="local-6989586621687475890"><span class="annot"><span class="annottext">IO SourcePingCache
+</span><a href="#local-6989586621687475890"><span class="hs-identifier hs-var">fetchPingCacheIO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-22"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; IO a
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO a) -&gt; IO () -&gt; IO a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-23"></span><span>    </span><span id="local-6989586621687475893"><span class="annot"><span class="annottext">SourcePingCache
-</span><a href="#local-6989586621687475893"><span class="hs-identifier hs-var">pingCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SourcePingCache -&gt; IO SourcePingCache
+</span><span id="line-23"></span><span>    </span><span id="local-6989586621687475892"><span class="annot"><span class="annottext">SourcePingCache
+</span><a href="#local-6989586621687475892"><span class="hs-identifier hs-var">pingCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO SourcePingCache -&gt; IO SourcePingCache
 forall a. IO a -&gt; IO a
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO SourcePingCache
-</span><a href="#local-6989586621687475891"><span class="hs-identifier hs-var">fetchPingCacheIO</span></a></span><span>
+</span><a href="#local-6989586621687475890"><span class="hs-identifier hs-var">fetchPingCacheIO</span></a></span><span>
 </span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">SourcePingCache -&gt; (BackendSourcePingInfo -&gt; IO ()) -&gt; IO ()
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="annot"><span class="annottext">SourcePingCache
-</span><a href="#local-6989586621687475893"><span class="hs-identifier hs-var">pingCache</span></a></span><span> </span><span class="annot"><span class="annottext">((BackendSourcePingInfo -&gt; IO ()) -&gt; IO ())
+</span><a href="#local-6989586621687475892"><span class="hs-identifier hs-var">pingCache</span></a></span><span> </span><span class="annot"><span class="annottext">((BackendSourcePingInfo -&gt; IO ()) -&gt; IO ())
 -&gt; (BackendSourcePingInfo -&gt; IO ()) -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687475896"><span class="annot"><span class="annottext">BackendSourcePingInfo
-</span><a href="#local-6989586621687475896"><span class="hs-identifier hs-var">someSourcePingInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687475895"><span class="annot"><span class="annottext">BackendSourcePingInfo
+</span><a href="#local-6989586621687475895"><span class="hs-identifier hs-var">someSourcePingInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-25"></span><span>      </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span>
 </span><span id="line-26"></span><span>        </span><span class="annot"><span class="annottext">BackendSourcePingInfo
-</span><a href="#local-6989586621687475896"><span class="hs-identifier hs-var">someSourcePingInfo</span></a></span><span>
-</span><span id="line-27"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687475900"><span id="local-6989586621687475901"><span class="annot"><span class="annottext">SourcePingInfo b
-</span><a href="#local-6989586621687475901"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourcePingInfo"><span class="hs-identifier hs-type">SourcePingInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687475900"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621687475895"><span class="hs-identifier hs-var">someSourcePingInfo</span></a></span><span>
+</span><span id="line-27"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687475899"><span id="local-6989586621687475900"><span class="annot"><span class="annottext">SourcePingInfo b
+</span><a href="#local-6989586621687475900"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourcePingInfo"><span class="hs-identifier hs-type">SourcePingInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687475899"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-28"></span><span>          </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 Environment
@@ -60,20 +60,20 @@ Environment
 -&gt; SourceName
 -&gt; SourceConnConfiguration b
 -&gt; IO ()
-</span><a href="Hasura.RQL.Types.Backend.html#runPingSource"><span class="hs-identifier hs-var">runPingSource</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687475900"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Backend.html#runPingSource"><span class="hs-identifier hs-var">runPingSource</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687475899"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-29"></span><span>            </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621687475889"><span class="hs-identifier hs-var">env</span></a></span><span>
+</span><a href="#local-6989586621687475888"><span class="hs-identifier hs-var">env</span></a></span><span>
 </span><span id="line-30"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; IO ()
-</span><a href="#local-6989586621687475890"><span class="hs-identifier hs-var">pingLog</span></a></span><span>
+</span><a href="#local-6989586621687475889"><span class="hs-identifier hs-var">pingLog</span></a></span><span>
 </span><span id="line-31"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourcePingInfo b -&gt; SourceName
 forall (b :: BackendType). SourcePingInfo b -&gt; SourceName
 </span><a href="Hasura.RQL.Types.Source.html#_spiName"><span class="hs-identifier hs-var">_spiName</span></a></span><span> </span><span class="annot"><span class="annottext">SourcePingInfo b
-</span><a href="#local-6989586621687475901"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687475900"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourcePingInfo b -&gt; SourceConnConfiguration b
 forall (b :: BackendType).
 SourcePingInfo b -&gt; SourceConnConfiguration b
 </span><a href="Hasura.RQL.Types.Source.html#_spiConnection"><span class="hs-identifier hs-var">_spiConnection</span></a></span><span> </span><span class="annot"><span class="annottext">SourcePingInfo b
-</span><a href="#local-6989586621687475901"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687475900"><span class="hs-identifier hs-var">thisSourcePingInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-comment">-- Sleep the thread for a minute</span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
