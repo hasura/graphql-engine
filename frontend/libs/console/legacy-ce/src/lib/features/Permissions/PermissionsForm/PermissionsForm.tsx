@@ -217,6 +217,7 @@ const Component = (props: ComponentProps) => {
           id="form-buttons-container"
         >
           <Button
+            data-testid="permissions-form-submit"
             type="submit"
             mode="primary"
             title={
