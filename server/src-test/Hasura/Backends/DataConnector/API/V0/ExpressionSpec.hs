@@ -8,6 +8,8 @@ module Hasura.Backends.DataConnector.API.V0.ExpressionSpec
     genUnaryComparisonOperator,
     genComparisonValue,
     genExpression,
+    genRedactionExpressionName,
+    genTargetRedactionExpressions,
   )
 where
 
@@ -18,7 +20,8 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
-import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumTextExcluding)
+import Hasura.Backends.DataConnector.API.V0.TargetSpec (genTargetName)
+import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genArbitraryAlphaNumTextExcluding, genHashMap)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -68,8 +71,8 @@ spec = do
 
   describe "ComparisonColumn" $ do
     testToFromJSONToSchema
-      (ComparisonColumn QueryTable (mkColumnSelector $ ColumnName "column_name") (ScalarType "string"))
-      [aesonQQ|{"path": ["$"], "name": "column_name", "column_type": "string"}|]
+      (ComparisonColumn QueryTable (mkColumnSelector $ ColumnName "column_name") (ScalarType "string") (Just $ RedactionExpressionName "RedactionExp1"))
+      [aesonQQ|{"path": ["$"], "name": "column_name", "column_type": "string", "redaction_expression": "RedactionExp1"}|]
 
     jsonOpenApiProperties genComparisonColumn
 
@@ -90,7 +93,7 @@ spec = do
   describe "ComparisonValue" $ do
     describe "AnotherColumnComparison"
       $ testToFromJSONToSchema
-        (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string"))
+        (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string") Nothing)
         [aesonQQ|{"type": "column", "column": {"name": "my_column_name", "column_type": "string"}}|]
     describe "ScalarValueComparison"
       $ testToFromJSONToSchema
@@ -119,7 +122,7 @@ spec = do
     jsonOpenApiProperties genExistsInTable
 
   describe "Expression" $ do
-    let comparisonColumn = ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string")
+    let comparisonColumn = ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "my_column_name") (ScalarType "string") Nothing
     let scalarValue = ScalarValueComparison $ ScalarValue (String "scalar value") (ScalarType "string")
     let scalarValues = [String "scalar value"]
     let unaryComparisonExpression = ApplyUnaryComparisonOperator IsNull comparisonColumn
@@ -226,6 +229,30 @@ spec = do
 
     jsonOpenApiProperties genExpression
 
+  describe "RedactionExpressionName" $ do
+    testToFromJSONToSchema (RedactionExpressionName "foo") [aesonQQ|"foo"|]
+    jsonOpenApiProperties genRedactionExpressionName
+
+  describe "TargetRedactionExpressions" $ do
+    testToFromJSONToSchema
+      (TargetRedactionExpressions (TNTable $ TableName ["my_table_name"]) mempty)
+      [aesonQQ|
+        { "target": { "type": "table", "table": ["my_table_name"] },
+          "expressions": {}
+        }
+      |]
+    jsonOpenApiProperties genTargetRedactionExpressions
+
+  describe "RedactionExpression" $ do
+    testToFromJSONToSchema
+      (RedactionExpression $ And [])
+      [aesonQQ|
+        { "type": "and",
+          "expressions": []
+        }
+      |]
+    jsonOpenApiProperties genRedactionExpression
+
 genBinaryComparisonOperator :: (MonadGen m, GenBase m ~ Identity) => m BinaryComparisonOperator
 genBinaryComparisonOperator =
   Gen.choice
@@ -256,6 +283,7 @@ genComparisonColumn =
     <$> genColumnPath
     <*> genColumnSelector
     <*> genScalarType
+    <*> Gen.maybe genRedactionExpressionName
 
 genColumnPath :: (MonadGen m) => m ColumnPath
 genColumnPath =
@@ -294,3 +322,15 @@ genExpression =
     ]
   where
     genExpressions = Gen.set defaultRange genExpression
+
+genRedactionExpressionName :: (MonadGen m) => m RedactionExpressionName
+genRedactionExpressionName = RedactionExpressionName <$> genArbitraryAlphaNumText defaultRange
+
+genTargetRedactionExpressions :: (MonadGen m, GenBase m ~ Identity) => m TargetRedactionExpressions
+genTargetRedactionExpressions =
+  TargetRedactionExpressions
+    <$> genTargetName
+    <*> genHashMap genRedactionExpressionName genRedactionExpression defaultRange
+
+genRedactionExpression :: (MonadGen m, GenBase m ~ Identity) => m RedactionExpression
+genRedactionExpression = RedactionExpression <$> genExpression

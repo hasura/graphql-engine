@@ -19,13 +19,13 @@ mkTableName :: Text -> API.TableName
 mkTableName name = API.TableName (name :| [])
 
 mkTableRequest :: API.TableName -> API.Query -> API.QueryRequest
-mkTableRequest tableName query = API.QRTable $ API.TableRequest tableName mempty query Nothing
+mkTableRequest tableName query = API.QRTable $ API.TableRequest tableName mempty mempty query Nothing
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 emptyMutationRequest :: API.MutationRequest
-emptyMutationRequest = API.MutationRequest mempty mempty []
+emptyMutationRequest = API.MutationRequest mempty mempty mempty []
 
 mkRowsQueryResponse :: [[(Text, API.FieldValue)]] -> API.QueryResponse
 mkRowsQueryResponse rows = API.QueryResponse (Just $ mkFieldsMap <$> rows) Nothing

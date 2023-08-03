@@ -32,7 +32,9 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ColumnNullability (..),
     QueryCapabilities (..),
     qcForeach,
+    qcRedaction,
     ForeachCapabilities (..),
+    RedactionCapabilities (..),
     MutationCapabilities (..),
     InsertCapabilities (..),
     UpdateCapabilities (..),
@@ -173,7 +175,8 @@ instance HasCodec ColumnNullability where
         ]
 
 data QueryCapabilities = QueryCapabilities
-  { _qcForeach :: Maybe ForeachCapabilities
+  { _qcForeach :: Maybe ForeachCapabilities,
+    _qcRedaction :: Maybe RedactionCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -184,6 +187,7 @@ instance HasCodec QueryCapabilities where
     object "QueryCapabilities" $
       QueryCapabilities
         <$> optionalField "foreach" "Whether or not the agent supports foreach queries, which are used to enable remote joins to the agent" .= _qcForeach
+        <*> optionalField "redaction" "Whether or not the agent supports redaction expressions in the query" .= _qcRedaction
 
 data ForeachCapabilities = ForeachCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -193,6 +197,15 @@ data ForeachCapabilities = ForeachCapabilities {}
 instance HasCodec ForeachCapabilities where
   codec =
     object "ForeachCapabilities" $ pure ForeachCapabilities
+
+data RedactionCapabilities = RedactionCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RedactionCapabilities
+
+instance HasCodec RedactionCapabilities where
+  codec =
+    object "RedactionCapabilities" $ pure RedactionCapabilities
 
 data MutationCapabilities = MutationCapabilities
   { _mcInsertCapabilities :: Maybe InsertCapabilities,

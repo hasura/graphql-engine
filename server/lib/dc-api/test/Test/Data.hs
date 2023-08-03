@@ -517,8 +517,8 @@ mkTestData schemaResponse testConfig =
       _tdColumnInsertSchema = columnInsertSchema schemaResponse testConfig,
       _tdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
       _tdFindColumnScalarType = \tableName name -> findColumnScalarType schemaResponse tableName (formatColumnName testConfig $ API.ColumnName name),
-      _tdQueryComparisonColumn = API.ComparisonColumn API.QueryTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName,
-      _tdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName,
+      _tdQueryComparisonColumn = \name scalarType -> API.ComparisonColumn API.QueryTable (API.mkColumnSelector . formatColumnName testConfig $ API.ColumnName name) scalarType Nothing,
+      _tdCurrentComparisonColumn = \name scalarType -> API.ComparisonColumn API.CurrentTable (API.mkColumnSelector . formatColumnName testConfig $ API.ColumnName name) scalarType Nothing,
       _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (formatColumnName testConfig $ API.ColumnName name)
     }
   where
@@ -561,7 +561,7 @@ mkEdgeCasesTestData testConfig schemaResponse =
       _ectdColumnField = columnField schemaResponse testConfig,
       _ectdMkDefaultTableInsertSchema = mkDefaultTableInsertSchema schemaResponse testConfig edgeCasesSchemaTables,
       _ectdRowColumnOperatorValue = rowColumnOperatorValue schemaResponse testConfig,
-      _ectdCurrentComparisonColumn = API.ComparisonColumn API.CurrentTable . API.mkColumnSelector . formatColumnName testConfig . API.ColumnName
+      _ectdCurrentComparisonColumn = \name scalarType -> API.ComparisonColumn API.CurrentTable (API.mkColumnSelector . formatColumnName testConfig $ API.ColumnName name) scalarType Nothing
     }
   where
     tableExists :: API.TableName -> Bool
@@ -636,7 +636,7 @@ formatColumnName TestConfig {..} = API.ColumnName . applyNameCasing _tcColumnNam
 
 columnField :: API.SchemaResponse -> TestConfig -> API.TableName -> Text -> API.Field
 columnField schemaResponse testConfig tableName columnName =
-  API.ColumnField columnName' scalarType
+  API.ColumnField columnName' scalarType Nothing
   where
     columnName' = formatColumnName testConfig $ API.ColumnName columnName
     scalarType = findColumnScalarType schemaResponse tableName columnName'
@@ -706,7 +706,7 @@ emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 emptyMutationRequest :: API.MutationRequest
-emptyMutationRequest = API.MutationRequest mempty mempty mempty
+emptyMutationRequest = API.MutationRequest mempty mempty mempty mempty
 
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
@@ -784,7 +784,7 @@ scalarValueComparison value valueType = API.ScalarValueComparison $ API.ScalarVa
 
 orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn columnName) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn columnName Nothing) orderDirection
 
 insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
 insertAutoIncPk pkFieldName startingPkId rows =

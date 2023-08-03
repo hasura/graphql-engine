@@ -11,6 +11,7 @@ where
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genRedactionExpressionName)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Prelude
 import Hedgehog
@@ -25,20 +26,22 @@ spec = do
   describe "Aggregate" $ do
     describe "SingleColumn" $ do
       testToFromJSONToSchema
-        (SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|avg|]) (ColumnName "my_column_name") (ScalarType "number"))
+        (SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|avg|]) (ColumnName "my_column_name") (Just $ RedactionExpressionName "RedactionExp2") (ScalarType "number"))
         [aesonQQ|
           { "type": "single_column",
             "function": "avg",
             "column": "my_column_name",
+            "redaction_expression": "RedactionExp2",
             "result_type": "number"
           }
         |]
     describe "ColumnCount" $ do
       testToFromJSONToSchema
-        (ColumnCount $ ColumnCountAggregate (ColumnName "my_column_name") True)
+        (ColumnCount $ ColumnCountAggregate (ColumnName "my_column_name") (Just $ RedactionExpressionName "RedactionExp2") True)
         [aesonQQ|
           { "type": "column_count",
             "column": "my_column_name",
+            "redaction_expression": "RedactionExp2",
             "distinct": true
           }
         |]
@@ -68,12 +71,14 @@ genSingleColumnAggregate =
   SingleColumnAggregate
     <$> genSingleColumnAggregateFunction
     <*> genColumnName
+    <*> Gen.maybe genRedactionExpressionName
     <*> genScalarType
 
 genColumnCountAggregate :: Gen ColumnCountAggregate
 genColumnCountAggregate =
   ColumnCountAggregate
     <$> genColumnName
+    <*> Gen.maybe genRedactionExpressionName
     <*> Gen.bool
 
 genSingleColumnAggregateFunction :: Gen SingleColumnAggregateFunction

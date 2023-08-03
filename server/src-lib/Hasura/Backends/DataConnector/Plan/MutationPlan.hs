@@ -3,10 +3,9 @@ module Hasura.Backends.DataConnector.Plan.MutationPlan
   )
 where
 
-import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
-import Data.Has (Has, modifier)
+import Data.Has (Has)
 import Data.HashMap.Strict qualified as HashMap
 import Data.Semigroup.Foldable (toNonEmpty)
 import Data.Set (Set)
@@ -62,36 +61,41 @@ instance Semigroup TableInsertSchema where
       }
 
 recordTableInsertSchema ::
-  ( Has TableInsertSchemas writerOutput,
-    Monoid writerOutput,
-    MonadError QErr m
+  ( Has TableInsertSchemas state,
+    MonadState state m
   ) =>
   API.TableName ->
   TableInsertSchema ->
-  CPS.WriterT writerOutput m ()
+  m ()
 recordTableInsertSchema tableName tableInsertSchema =
-  let newTableSchema = TableInsertSchemas $ HashMap.singleton tableName tableInsertSchema
-   in CPS.tell $ modifier (const newTableSchema) mempty
+  writeOutput . TableInsertSchemas $ HashMap.singleton tableName tableInsertSchema
 
 --------------------------------------------------------------------------------
 
 mkMutationPlan ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m (Plan API.MutationRequest API.MutationResponse)
-mkMutationPlan sessionVariables mutationDB = do
-  request <- translateMutationDB sessionVariables mutationDB
+mkMutationPlan mutationDB = do
+  request <- translateMutationDB mutationDB
   pure $ Plan request (reshapeResponseToMutationGqlShape mutationDB)
 
 translateMutationDB ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.MutationRequest
-translateMutationDB sessionVariables = \case
+translateMutationDB = \case
   MDBInsert insert -> do
-    (insertOperation, (tableRelationships, tableInsertSchemas)) <- CPS.runWriterT $ translateInsert sessionVariables insert
+    (insertOperation, (tableRelationships, redactionExpressionState, tableInsertSchemas)) <-
+      flip runStateT (mempty, RedactionExpressionState mempty, mempty) $ translateInsert insert
     let apiTableInsertSchema =
           unTableInsertSchemas tableInsertSchemas
             & HashMap.toList
@@ -100,11 +104,13 @@ translateMutationDB sessionVariables = \case
     pure
       $ API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
+          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
           _mrInsertSchema = Set.fromList apiTableInsertSchema,
           _mrOperations = [API.InsertOperation insertOperation]
         }
   MDBUpdate update -> do
-    (updateOperations, tableRelationships) <- CPS.runWriterT $ translateUpdate sessionVariables update
+    (updateOperations, (tableRelationships, redactionExpressionState)) <-
+      flip runStateT (mempty, RedactionExpressionState mempty) $ translateUpdate update
     let apiTableRelationships =
           Set.fromList
             $ uncurry API.TableRelationships
@@ -112,11 +118,13 @@ translateMutationDB sessionVariables = \case
     pure
       $ API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
+          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
           _mrInsertSchema = mempty,
           _mrOperations = API.UpdateOperation <$> updateOperations
         }
   MDBDelete delete -> do
-    (deleteOperation, tableRelationships) <- CPS.runWriterT $ translateDelete sessionVariables delete
+    (deleteOperation, (tableRelationships, redactionExpressionState)) <-
+      flip runStateT (mempty, RedactionExpressionState mempty) $ translateDelete delete
     let apiTableRelationships =
           Set.fromList
             $ uncurry API.TableRelationships
@@ -124,26 +132,34 @@ translateMutationDB sessionVariables = \case
     pure
       $ API.MutationRequest
         { _mrTableRelationships = apiTableRelationships,
+          _mrRedactionExpressions = translateRedactionExpressions redactionExpressionState,
           _mrInsertSchema = mempty,
           _mrOperations = [API.DeleteOperation deleteOperation]
         }
   MDBFunction _returnsSet _select ->
     throw400 NotSupported "translateMutationDB: function mutations not implemented for the Data Connector backend."
 
-eitherKey :: (TableRelationshipsKey, c) -> Either (API.FunctionName, c) (API.TableName, c)
-eitherKey (FunctionNameKey f, x) = Left (f, x)
-eitherKey (TableNameKey t, x) = Right (t, x)
+eitherKey :: (API.TargetName, c) -> Either (API.FunctionName, c) (API.TableName, c)
+eitherKey (API.TNFunction f, x) = Left (f, x)
+eitherKey (API.TNTable t, x) = Right (t, x)
 
 translateInsert ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    Has TableInsertSchemas state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnotatedInsert 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT (TableRelationships, TableInsertSchemas) m API.InsertMutationOperation
-translateInsert sessionVariables AnnotatedInsert {_aiData = AnnotatedInsertData {..}, ..} = do
+  m API.InsertMutationOperation
+translateInsert AnnotatedInsert {_aiData = AnnotatedInsertData {..}, ..} = do
   captureTableInsertSchema tableName _aiTableColumns _aiPrimaryKey _aiExtraTableMetadata
-  rows <- lift $ traverse (translateInsertRow sessionVariables tableName _aiTableColumns _aiPresetValues) _aiInsertObject
-  postInsertCheck <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) insertCheckCondition
-  returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _aiOutput
+  rows <- traverse (translateInsertRow tableName _aiTableColumns _aiPresetValues) _aiInsertObject
+  postInsertCheck <- translateBoolExpToExpression (API.TNTable tableName) insertCheckCondition
+  returningFields <- translateMutationOutputToReturningFields tableName _aiOutput
   pure
     $ API.InsertMutationOperation
       { API._imoTable = tableName,
@@ -157,15 +173,14 @@ translateInsert sessionVariables AnnotatedInsert {_aiData = AnnotatedInsertData 
     (insertCheckCondition, _updateCheckCondition) = _aiCheckCondition
 
 captureTableInsertSchema ::
-  ( Has TableInsertSchemas writerOutput,
-    Monoid writerOutput,
-    MonadError QErr m
+  ( MonadState state m,
+    Has TableInsertSchemas state
   ) =>
   API.TableName ->
   [ColumnInfo 'DataConnector] ->
   Maybe (NESeq ColumnName) ->
   ExtraTableMetadata ->
-  CPS.WriterT writerOutput m ()
+  m ()
 captureTableInsertSchema tableName tableColumns primaryKey ExtraTableMetadata {..} = do
   let fieldSchemas =
         tableColumns
@@ -183,20 +198,23 @@ captureTableInsertSchema tableName tableColumns primaryKey ExtraTableMetadata {.
   recordTableInsertSchema tableName $ TableInsertSchema primaryKey' fieldSchemas
 
 translateInsertRow ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   API.TableName ->
   [ColumnInfo 'DataConnector] ->
   HashMap ColumnName (UnpreparedValue 'DataConnector) ->
   AnnotatedInsertRow 'DataConnector (UnpreparedValue 'DataConnector) ->
   m API.RowObject
-translateInsertRow sessionVariables tableName tableColumns defaultColumnValues insertRow = do
+translateInsertRow tableName tableColumns defaultColumnValues insertRow = do
   columnSchemasAndValues <- forM (HashMap.toList columnUnpreparedValues) $ \(columnName, columnValue) -> do
     fieldName <-
       case find (\ColumnInfo {..} -> ciColumn == columnName) tableColumns of
         Just ColumnInfo {..} -> pure . API.FieldName $ G.unName ciName
         Nothing -> throw500 $ "Can't find column " <> toTxt columnName <> " in table schema for " <> API.tableNameToText tableName
-    preparedLiteral <- prepareLiteral sessionVariables columnValue
+    preparedLiteral <- prepareLiteral columnValue
 
     value <-
       case preparedLiteral of
@@ -223,26 +241,38 @@ translateInsertRow sessionVariables tableName tableColumns defaultColumnValues i
         & HashMap.fromList
 
 translateUpdate ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT TableRelationships m [API.UpdateMutationOperation]
-translateUpdate sessionVariables annUpdate@AnnotatedUpdateG {..} = do
+  m [API.UpdateMutationOperation]
+translateUpdate annUpdate@AnnotatedUpdateG {..} = do
   case _auUpdateVariant of
-    SingleBatch batch -> (: []) <$> translateUpdateBatch sessionVariables annUpdate batch
-    MultipleBatches batches -> traverse (translateUpdateBatch sessionVariables annUpdate) batches
+    SingleBatch batch -> (: []) <$> translateUpdateBatch annUpdate batch
+    MultipleBatches batches -> traverse (translateUpdateBatch annUpdate) batches
 
 translateUpdateBatch ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   UpdateBatch 'DataConnector UpdateOperator (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT TableRelationships m API.UpdateMutationOperation
-translateUpdateBatch sessionVariables AnnotatedUpdateG {..} UpdateBatch {..} = do
-  updates <- lift $ translateUpdateOperations sessionVariables _ubOperations
-  whereExp <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) (BoolAnd [_auUpdatePermissions, _ubWhere])
-  postUpdateCheck <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) _auCheck
-  returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _auOutput
+  m API.UpdateMutationOperation
+translateUpdateBatch AnnotatedUpdateG {..} UpdateBatch {..} = do
+  updates <- translateUpdateOperations _ubOperations
+  whereExp <- translateBoolExpToExpression (API.TNTable tableName) (BoolAnd [_auUpdatePermissions, _ubWhere])
+  postUpdateCheck <- translateBoolExpToExpression (API.TNTable tableName) _auCheck
+  returningFields <- translateMutationOutputToReturningFields tableName _auOutput
 
   pure
     $ API.UpdateMutationOperation
@@ -257,11 +287,14 @@ translateUpdateBatch sessionVariables AnnotatedUpdateG {..} UpdateBatch {..} = d
 
 translateUpdateOperations ::
   forall m r.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   HashMap ColumnName (UpdateOperator (UnpreparedValue 'DataConnector)) ->
   m (Set API.RowUpdate)
-translateUpdateOperations sessionVariables columnUpdates =
+translateUpdateOperations columnUpdates =
   fmap Set.fromList . forM (HashMap.toList columnUpdates) $ \(columnName, updateOperator) -> do
     let (mkRowUpdate, value) =
           case updateOperator of
@@ -273,19 +306,25 @@ translateUpdateOperations sessionVariables columnUpdates =
   where
     prepareAndExtractLiteralValue :: UnpreparedValue 'DataConnector -> m (ScalarType, J.Value)
     prepareAndExtractLiteralValue unpreparedValue = do
-      preparedLiteral <- prepareLiteral sessionVariables unpreparedValue
+      preparedLiteral <- prepareLiteral unpreparedValue
       case preparedLiteral of
         ValueLiteral scalarType value -> pure (scalarType, value)
         ArrayLiteral _scalarType _values -> throw400 NotSupported "translateUpdateOperations: Array literals are not supported as column update values"
 
 translateDelete ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnDelG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT TableRelationships m API.DeleteMutationOperation
-translateDelete sessionVariables AnnDel {..} = do
-  whereExp <- translateBoolExpToExpression sessionVariables (TableNameKey tableName) (BoolAnd [permissionFilter, whereClause])
-  returningFields <- translateMutationOutputToReturningFields sessionVariables tableName _adOutput
+  m API.DeleteMutationOperation
+translateDelete AnnDel {..} = do
+  whereExp <- translateBoolExpToExpression (API.TNTable tableName) (BoolAnd [permissionFilter, whereClause])
+  returningFields <- translateMutationOutputToReturningFields tableName _adOutput
   pure
     $ API.DeleteMutationOperation
       { API._dmoTable = tableName,
@@ -297,35 +336,37 @@ translateDelete sessionVariables AnnDel {..} = do
     (permissionFilter, whereClause) = _adWhere
 
 translateMutationOutputToReturningFields ::
-  ( MonadError QErr m,
-    Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
   API.TableName ->
   MutationOutputG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (HashMap FieldName API.Field)
-translateMutationOutputToReturningFields sessionVariables tableName = \case
+  m (HashMap FieldName API.Field)
+translateMutationOutputToReturningFields tableName = \case
   MOutSinglerowObject annFields ->
-    translateAnnFields sessionVariables noPrefix (TableNameKey tableName) annFields
+    translateAnnFields noPrefix (API.TNTable tableName) annFields
   MOutMultirowFields mutFields ->
-    HashMap.unions <$> traverse (uncurry $ translateMutField sessionVariables tableName) mutFields
+    HashMap.unions <$> traverse (uncurry $ translateMutField tableName) mutFields
 
 translateMutField ::
-  ( MonadError QErr m,
-    Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
   API.TableName ->
   FieldName ->
   MutFldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (HashMap FieldName API.Field)
-translateMutField sessionVariables tableName fieldName = \case
+  m (HashMap FieldName API.Field)
+translateMutField tableName fieldName = \case
   MCount ->
     -- All mutation operations in a request return their affected rows count.
     -- The count can just be added to the response JSON during agent response reshaping
@@ -336,7 +377,7 @@ translateMutField sessionVariables tableName fieldName = \case
     -- to us
     pure mempty
   MRet annFields ->
-    translateAnnFields sessionVariables (prefixWith fieldName) (TableNameKey tableName) annFields
+    translateAnnFields (prefixWith fieldName) (API.TNTable tableName) annFields
 
 --------------------------------------------------------------------------------
 

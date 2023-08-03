@@ -719,7 +719,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     artistsQueryRequest :: Expression -> QueryRequest
     artistsQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ artistsFields & qWhere ?~ whereExp
-       in TableQueryRequest _tdArtistsTableName mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty query Nothing
 
     invoiceLinesFields :: HashMap FieldName Field
     invoiceLinesFields =
@@ -734,7 +734,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Update Mutati
     invoiceLinesQueryRequest :: Expression -> QueryRequest
     invoiceLinesQueryRequest whereExp =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qWhere ?~ whereExp
-       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty query Nothing
 
     incOperator :: UpdateColumnOperatorName
     incOperator = UpdateColumnOperatorName $ [G.name|inc|]

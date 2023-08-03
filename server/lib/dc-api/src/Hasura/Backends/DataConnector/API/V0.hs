@@ -15,6 +15,7 @@ module Hasura.Backends.DataConnector.API.V0
     module Scalar,
     module Schema,
     module Table,
+    module Target,
     module Dataset,
   )
 where
@@ -36,3 +37,4 @@ import Hasura.Backends.DataConnector.API.V0.Relationships as Relationships
 import Hasura.Backends.DataConnector.API.V0.Scalar as Scalar
 import Hasura.Backends.DataConnector.API.V0.Schema as Schema
 import Hasura.Backends.DataConnector.API.V0.Table as Table
+import Hasura.Backends.DataConnector.API.V0.Target as Target

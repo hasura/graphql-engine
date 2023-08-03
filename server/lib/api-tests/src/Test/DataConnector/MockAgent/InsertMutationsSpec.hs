@@ -221,12 +221,12 @@ tests = do
                          Just
                            $ API.ApplyBinaryComparisonOperator
                              API.Equal
-                             (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") $ API.ScalarType "number")
+                             (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "ArtistId") (API.ScalarType "number") Nothing)
                              (API.ScalarValueComparison $ API.ScalarValue (J.Number 2) (API.ScalarType "number")),
                        API._imoReturningFields =
                          mkFieldsMap
-                           [ ("insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                             ("insertedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string")),
+                           [ ("insertedRows_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                             ("insertedRows_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing),
                              ( "insertedRows_Artist",
                                API.RelField
                                  ( API.RelationshipField
@@ -234,8 +234,8 @@ tests = do
                                      ( emptyQuery
                                          & API.qFields
                                          ?~ mkFieldsMap
-                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                                             ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                                           [ ("ArtistId", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                                             ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
                                            ]
                                      )
                                  )

@@ -453,7 +453,7 @@ spec TestData {..} edgeCasesTestData Capabilities {..} = describe "Delete Mutati
     invoiceLinesQueryRequest :: QueryRequest
     invoiceLinesQueryRequest =
       let query = Data.emptyQuery & qFields ?~ invoiceLinesFields & qOrderBy ?~ OrderBy mempty (_tdOrderByColumn [] "InvoiceId" Ascending :| [])
-       in TableQueryRequest _tdInvoiceLinesTableName mempty query Nothing
+       in TableQueryRequest _tdInvoiceLinesTableName mempty mempty query Nothing
 
     invoiceIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceId"
     invoiceLineIdScalarType = _tdFindColumnScalarType _tdInvoiceLinesTableName "InvoiceLineId"

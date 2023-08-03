@@ -60,7 +60,8 @@ capabilities =
             API._cQueries =
               Just
                 API.QueryCapabilities
-                  { _qcForeach = Just API.ForeachCapabilities
+                  { _qcForeach = Just API.ForeachCapabilities,
+                    _qcRedaction = Just API.RedactionCapabilities
                   },
             API._cMutations =
               Just

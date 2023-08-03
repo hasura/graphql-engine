@@ -17,12 +17,14 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qrForeach,
     trTable,
     trRelationships,
+    trRedactionExpressions,
     trQuery,
     trForeach,
     frFunction,
     frFunctionArguments,
     frQuery,
     frRelationships,
+    frRedactionExpressions,
     FieldName (..),
     Query (..),
     qFields,
@@ -72,6 +74,7 @@ import Data.OpenApi (ToSchema)
 import Data.Set (Set)
 import Data.Text (Text)
 import Data.Text qualified as T
+import Data.Tuple.Extra (fst3, snd3, thd3, uncurry3)
 import GHC.Generics (Generic)
 import GHC.Show (appPrec, appPrec1)
 import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
@@ -125,13 +128,14 @@ instance HasCodec QueryRequest where
             ("function", ("FunctionRequest", mapToDecoder QRFunction objectCodec))
           ]
 
-pattern TableQueryRequest :: API.V0.TableName -> Set API.V0.Relationships -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
-pattern TableQueryRequest table relationships query foreach = QRTable (TableRequest table relationships query foreach)
+pattern TableQueryRequest :: API.V0.TableName -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> Query -> Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue)) -> QueryRequest
+pattern TableQueryRequest table relationships redactionExps query foreach = QRTable (TableRequest table relationships redactionExps query foreach)
 
 -- | A serializable request to retrieve strutured data from tables.
 data TableRequest = TableRequest
   { _trTable :: API.V0.TableName,
     _trRelationships :: Set API.V0.Relationships,
+    _trRedactionExpressions :: Set API.V0.TargetRedactionExpressions,
     _trQuery :: Query,
     _trForeach :: Maybe (NonEmpty (HashMap API.V0.ColumnName API.V0.ScalarValue))
   }
@@ -146,19 +150,22 @@ instance HasObjectCodec TableRequest where
       -- NOTE: This can't be done immediately as it would break compatibility in agents.
       <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request"
         .= _trRelationships
+      <*> optionalFieldWithOmittedDefault "redaction_expressions" mempty "Expressions that can be referenced by the query to redact fields/columns"
+        .= _trRedactionExpressions
       <*> requiredField "query" "The details of the query against the table"
         .= _trQuery
       <*> optionalFieldOrNull "foreach" "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query."
         .= _trForeach
 
-pattern FunctionQueryRequest :: API.V0.FunctionName -> [FunctionArgument] -> Set API.V0.Relationships -> Query -> QueryRequest
-pattern FunctionQueryRequest function args relationships query = QRFunction (FunctionRequest function args relationships query)
+pattern FunctionQueryRequest :: API.V0.FunctionName -> [FunctionArgument] -> Set API.V0.Relationships -> Set API.V0.TargetRedactionExpressions -> Query -> QueryRequest
+pattern FunctionQueryRequest function args relationships redactionExps query = QRFunction (FunctionRequest function args relationships redactionExps query)
 
 -- | A serializable request to compute strutured data from a function.
 data FunctionRequest = FunctionRequest
   { _frFunction :: API.V0.FunctionName,
     _frFunctionArguments :: [FunctionArgument],
     _frRelationships :: Set API.V0.Relationships,
+    _frRedactionExpressions :: Set API.V0.TargetRedactionExpressions,
     _frQuery :: Query
   }
   deriving stock (Eq, Ord, Show, Generic)
@@ -217,6 +224,8 @@ instance HasObjectCodec FunctionRequest where
         .= _frFunctionArguments
       <*> requiredField "relationships" "The relationships between entities involved in the entire query request"
         .= _frRelationships
+      <*> optionalFieldWithOmittedDefault "redaction_expressions" mempty "Expressions that can be referenced by the query to redact fields/columns"
+        .= _frRedactionExpressions
       <*> requiredField "query" "The details of the query against the table"
         .= _frQuery
 
@@ -313,7 +322,7 @@ arrayFieldObjectCodec =
 --   3. an "object", which indicates that the field contains a nested object
 --   4. an "array", which indicates that the field contains a nested array
 data Field
-  = ColumnField API.V0.ColumnName API.V0.ScalarType
+  = ColumnField API.V0.ColumnName API.V0.ScalarType (Maybe API.V0.RedactionExpressionName)
   | RelField RelationshipField
   | NestedObjField API.V0.ColumnName Query
   | NestedArrayField ArrayField
@@ -327,11 +336,12 @@ instance HasCodec Field where
         discriminatedUnionCodec "type" enc dec
     where
       columnCodec =
-        (,)
+        (,,)
           <$> requiredField' "column"
-            .= fst
+            .= fst3
           <*> requiredField' "column_type"
-            .= snd
+            .= snd3
+          <*> optionalFieldOrNull "redaction_expression" "If present, the name of the redaction expression to evaluate. If the expression is false, the column value must be nulled out." .= thd3
       nestedObjCodec =
         (,)
           <$> requiredField' "column"
@@ -339,13 +349,13 @@ instance HasCodec Field where
           <*> requiredField' "query"
             .= snd
       enc = \case
-        ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
+        ColumnField columnName scalarType redactionExpName -> ("column", mapToEncoder (columnName, scalarType, redactionExpName) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
         NestedObjField columnName nestedObjQuery -> ("object", mapToEncoder (columnName, nestedObjQuery) nestedObjCodec)
         NestedArrayField arrayField -> ("array", mapToEncoder arrayField arrayFieldObjectCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
+          [ ("column", ("ColumnField", mapToDecoder (uncurry3 ColumnField) columnCodec)),
             ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec)),
             ("object", ("NestedObjField", mapToDecoder (uncurry NestedObjField) nestedObjCodec)),
             ("array", ("NestedArrayField", mapToDecoder NestedArrayField arrayFieldObjectCodec))

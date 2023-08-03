@@ -144,8 +144,8 @@ tests = describe "Basic Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
                     & API.qLimit
                   ?~ 1
@@ -188,8 +188,8 @@ tests = describe "Basic Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number")),
-                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string"))
+                    [ ("id", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
                     & API.qLimit
                   ?~ 1
@@ -243,8 +243,8 @@ tests = describe "Basic Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("id", API.ColumnField (API.ColumnName "ArtistId") $ API.ScalarType "number"),
-                      ("name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")
+                    [ ("id", API.ColumnField (API.ColumnName "ArtistId") (API.ScalarType "number") Nothing),
+                      ("name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)
                     ]
                     & API.qLimit
                   ?~ 3 -- The permissions limit is smaller than the query limit, so it is used
@@ -294,14 +294,14 @@ tests = describe "Basic Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("CustomerId", API.ColumnField (API.ColumnName "CustomerId") $ API.ScalarType "number")
+                    [ ("CustomerId", API.ColumnField (API.ColumnName "CustomerId") (API.ScalarType "number") Nothing)
                     ]
                     & API.qWhere
                   ?~ API.Exists
                     (API.UnrelatedTable $ mkTableName "Employee")
                     ( API.ApplyBinaryComparisonOperator
                         API.Equal
-                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "EmployeeId") $ API.ScalarType "number")
+                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "EmployeeId") (API.ScalarType "number") Nothing)
                         (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                     )
               )

@@ -198,19 +198,19 @@ tests = describe "Object Relationships Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
+                    [ ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing),
                       ( "Genre",
                         API.RelField
                           ( API.RelationshipField
                               (API.RelationshipName "Genre")
-                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)])
                           )
                       ),
                       ( "MediaType",
                         API.RelField
                           ( API.RelationshipField
                               (API.RelationshipName "MediaType")
-                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)])
                           )
                       )
                     ]
@@ -298,7 +298,7 @@ tests = describe "Object Relationships Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string"),
+                    [ ("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing),
                       ( "Album",
                         API.RelField
                           ( API.RelationshipField
@@ -310,7 +310,7 @@ tests = describe "Object Relationships Tests" $ do
                                         API.RelField
                                           ( API.RelationshipField
                                               (API.RelationshipName "Artist")
-                                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))])
+                                              (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)])
                                           )
                                       )
                                     ]
@@ -338,8 +338,8 @@ tests = describe "Object Relationships Tests" $ do
                         ]
                     )
                     ( NE.fromList
-                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name")) API.Descending,
-                          API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name")) API.Ascending
+                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Descending,
+                          API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Ascending
                         ]
                     )
               )
@@ -409,7 +409,7 @@ tests = describe "Object Relationships Tests" $ do
               (mkTableName "Employee")
               ( emptyQuery
                   & API.qFields
-                  ?~ mkFieldsMap [("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") $ API.ScalarType "number")]
+                  ?~ mkFieldsMap [("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") (API.ScalarType "number") Nothing)]
                     & API.qLimit
                   ?~ 1
                     & API.qWhere
@@ -417,8 +417,8 @@ tests = describe "Object Relationships Tests" $ do
                     (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers")
                     ( API.ApplyBinaryComparisonOperator
                         API.Equal
-                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string")
-                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string"))
+                        (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") (API.ScalarType "string") Nothing)
+                        (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") (API.ScalarType "string") Nothing))
                     )
                     & API.qOrderBy
                   ?~ API.OrderBy
@@ -429,8 +429,8 @@ tests = describe "Object Relationships Tests" $ do
                                   $ API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep")
                                   $ API.ApplyBinaryComparisonOperator
                                     API.Equal
-                                    (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string")
-                                    (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") $ API.ScalarType "string"))
+                                    (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "Country") (API.ScalarType "string") Nothing)
+                                    (API.AnotherColumnComparison (API.ComparisonColumn API.QueryTable (API.mkColumnSelector $ API.ColumnName "Country") (API.ScalarType "string") Nothing))
                               )
                               mempty
                           )

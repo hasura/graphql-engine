@@ -270,8 +270,8 @@ tests = do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                      ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
               )
             & API._QRTable
@@ -361,8 +361,8 @@ tests = do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                      ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
               )
             & API._QRTable
@@ -464,8 +464,8 @@ tests = do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("nodes_AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                      ("nodes_Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    [ ("nodes_AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("nodes_Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
                     & API.qAggregates
                   ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
