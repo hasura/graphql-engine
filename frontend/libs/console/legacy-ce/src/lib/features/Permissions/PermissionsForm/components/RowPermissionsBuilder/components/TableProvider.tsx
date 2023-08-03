@@ -34,7 +34,11 @@ export const TableProvider = ({
     const foundTable = tables.find(t => areTablesEqual(t.table, table));
     if (foundTable) {
       setColumns(foundTable.columns);
-      setRelationships(foundTable.relationships);
+      setRelationships(
+        foundTable.relationships.filter(
+          relationship => relationship.type === 'localRelationship'
+        )
+      );
     }
   }, [stringifiedTable, stringifiedTables, setColumns, setRelationships]);
 

@@ -16,7 +16,8 @@ import {
 import { comparators } from './__tests__/fixtures/comparators';
 import { usePermissionTables } from '../hooks/usePermissionTables';
 import { usePermissionComparators } from '../hooks/usePermissionComparators';
-import { handlers } from './__tests__/fixtures/jsonb/handlers';
+import { handlers as jsonbHandlers } from './__tests__/fixtures/jsonb/handlers';
+import { handlers as manyDbsHandlers } from './__tests__/fixtures/many-dbs/handlers';
 import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
 import isEmpty from 'lodash/isEmpty';
 import { useState } from 'react';
@@ -24,9 +25,6 @@ import { Permissions } from './types';
 
 export default {
   component: RowPermissionsInput,
-  parameters: {
-    msw: handlers(),
-  },
   decorators: [ReactQueryDecorator()],
 } as Meta;
 
@@ -746,6 +744,10 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
       '{"a":"b"}'
     );
   },
+
+  parameters: {
+    msw: jsonbHandlers(),
+  },
 };
 
 export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
@@ -768,6 +770,10 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
         permissions={{ jason: { _has_keys_all: [''] } }}
       />
     );
+  },
+
+  parameters: {
+    msw: jsonbHandlers(),
   },
 };
 
@@ -815,6 +821,10 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
       },
     });
   },
+
+  parameters: {
+    msw: jsonbHandlers(),
+  },
 };
 
 export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
@@ -860,6 +870,10 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
         _eq: 12341337,
       },
     });
+  },
+
+  parameters: {
+    msw: jsonbHandlers(),
   },
 };
 
@@ -967,3 +981,47 @@ export const ReplaceEmptyArrayWithColumn: StoryObj<typeof RowPermissionsInput> =
       ).toBeInTheDocument();
     },
   };
+
+export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const [permissions, setPermissions] = useState<Permissions>({});
+    const { tables } = usePermissionTables({
+      dataSourceName: 'OhMy',
+    });
+
+    const comparators = usePermissionComparators();
+
+    if (!tables || isEmpty(comparators)) return <>Loading</>;
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={p => {
+          setPermissions(p);
+          args.onPermissionsChange?.(p);
+        }}
+        table={['Chinook', 'Artist']}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={permissions}
+      />
+    );
+  },
+
+  parameters: {
+    msw: manyDbsHandlers(),
+  },
+
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    // Wait until Loading is gone
+    await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
+      timeout: 5000,
+    });
+
+    // Open dropdown
+    await userEvent.click(canvas.getByTestId('-operator'));
+    // Should not display remote relationships
+    expect(canvas.queryByText('Album_Artist')).not.toBeInTheDocument();
+  },
+};
