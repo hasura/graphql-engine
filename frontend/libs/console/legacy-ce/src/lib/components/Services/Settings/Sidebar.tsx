@@ -16,6 +16,7 @@ import {
 import { useEELiteAccess } from '../../../features/EETrial';
 import { getQueryResponseCachingRoute } from '../../../utils/routeUtils';
 import { isCloudConsole } from '../../../utils/cloudConsole';
+import { isOpenTelemetrySupported } from '../../../utils/proConsole';
 
 export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
@@ -135,7 +136,6 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       label: 'Monitoring & observability',
       items: [],
     };
-
     sectionsData.monitoring.items.push({
       key: 'prometheus-settings',
       label: 'Prometheus Metrics',
@@ -152,12 +152,23 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       route: '/settings/prometheus-settings',
       dataTestVal: 'prometheus-settings-link',
     });
+  }
+
+  if (isOpenTelemetrySupported(window.__env)) {
+    if (!sectionsData.monitoring) {
+      sectionsData.monitoring = {
+        key: 'monitoring',
+        label: 'Monitoring & observability',
+        items: [],
+      };
+    }
 
     sectionsData.monitoring.items.push({
       key: 'opentelemetry-settings',
       label: 'OpenTelemetry Exporter (Beta)',
       status:
-        eeLiteAccess.access !== 'active'
+        eeLiteAccess.access !== 'active' &&
+        !isOpenTelemetrySupported(window.__env)
           ? 'disabled'
           : !openTelemetry
           ? 'none'

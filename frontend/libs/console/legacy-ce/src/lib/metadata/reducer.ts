@@ -217,20 +217,22 @@ export const metadataReducer = (
     case 'Metadata/ADD_INHERITED_ROLE':
       return {
         ...state,
-        inheritedRoles: [...state.inheritedRoles, action.data],
+        inheritedRoles: [...(state.inheritedRoles ?? []), action.data],
       };
     case 'Metadata/DELETE_INHERITED_ROLE':
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.filter(ir => ir.role_name !== action.data),
+          ...(state.inheritedRoles ?? []).filter(
+            ir => ir.role_name !== action.data
+          ),
         ],
       };
     case 'Metadata/UPDATE_INHERITED_ROLE':
       return {
         ...state,
         inheritedRoles: [
-          ...state.inheritedRoles.map(ir =>
+          ...(state.inheritedRoles ?? []).map(ir =>
             ir.role_name === action.data.role_name ? action.data : ir
           ),
         ],

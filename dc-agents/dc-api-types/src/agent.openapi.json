@@ -568,10 +568,14 @@
         "type": "object"
       },
       "ForeachCapabilities": {},
+      "RedactionCapabilities": {},
       "QueryCapabilities": {
         "properties": {
           "foreach": {
             "$ref": "#/components/schemas/ForeachCapabilities"
+          },
+          "redaction": {
+            "$ref": "#/components/schemas/RedactionCapabilities"
           }
         },
         "type": "object"
@@ -1710,28 +1714,56 @@
           }
         ]
       },
-      "Field": {
+      "TNFunction": {
+        "properties": {
+          "function": {
+            "$ref": "#/components/schemas/FunctionName"
+          },
+          "type": {
+            "enum": [
+              "function"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "function",
+          "type"
+        ],
+        "type": "object"
+      },
+      "TNTable": {
+        "properties": {
+          "table": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "table",
+          "type"
+        ],
+        "type": "object"
+      },
+      "TargetName": {
         "discriminator": {
           "mapping": {
-            "array": "NestedArrayField",
-            "column": "ColumnField",
-            "object": "NestedObjField",
-            "relationship": "RelationshipField"
+            "function": "TNFunction",
+            "table": "TNTable"
           },
           "propertyName": "type"
         },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/NestedArrayField"
+            "$ref": "#/components/schemas/TNFunction"
           },
           {
-            "$ref": "#/components/schemas/NestedObjField"
-          },
-          {
-            "$ref": "#/components/schemas/ColumnField"
-          },
-          {
-            "$ref": "#/components/schemas/RelationshipField"
+            "$ref": "#/components/schemas/TNTable"
           }
         ]
       },
@@ -1753,14 +1785,28 @@
           }
         ]
       },
+      "RedactionExpressionName": {
+        "type": "string"
+      },
       "ComparisonColumn": {
         "properties": {
           "column_type": {
             "$ref": "#/components/schemas/ScalarType"
           },
           "name": {
-            "description": "The name of the column",
-            "type": "string"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ],
+            "description": "The name of the column"
           },
           "path": {
             "default": [],
@@ -1769,6 +1815,9 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
           }
         },
         "required": [
@@ -2115,6 +2164,50 @@
         ],
         "type": "object"
       },
+      "TargetRedactionExpressions": {
+        "properties": {
+          "expressions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Expression"
+            },
+            "description": "The named redaction expressions associated with the target",
+            "type": "object"
+          },
+          "target": {
+            "$ref": "#/components/schemas/TargetName"
+          }
+        },
+        "required": [
+          "target",
+          "expressions"
+        ],
+        "type": "object"
+      },
+      "Field": {
+        "discriminator": {
+          "mapping": {
+            "array": "NestedArrayField",
+            "column": "ColumnField",
+            "object": "NestedObjField",
+            "relationship": "RelationshipField"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NestedArrayField"
+          },
+          {
+            "$ref": "#/components/schemas/NestedObjField"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnField"
+          },
+          {
+            "$ref": "#/components/schemas/RelationshipField"
+          }
+        ]
+      },
       "OrderByRelation": {
         "properties": {
           "subrelations": {
@@ -2146,6 +2239,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
+          },
           "result_type": {
             "$ref": "#/components/schemas/ScalarType"
           },
@@ -2168,6 +2264,9 @@
         "properties": {
           "column": {
             "type": "string"
+          },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
             "enum": [
@@ -2387,6 +2486,9 @@
           "column_type": {
             "$ref": "#/components/schemas/ScalarType"
           },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
+          },
           "type": {
             "enum": [
               "column"
@@ -2433,6 +2535,9 @@
           "function": {
             "$ref": "#/components/schemas/SingleColumnAggregateFunction"
           },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
+          },
           "result_type": {
             "$ref": "#/components/schemas/ScalarType"
           },
@@ -2460,6 +2565,9 @@
           "distinct": {
             "description": "Whether or not only distinct items should be counted",
             "type": "boolean"
+          },
+          "redaction_expression": {
+            "$ref": "#/components/schemas/RedactionExpressionName"
           },
           "type": {
             "enum": [
@@ -2526,6 +2634,14 @@
           "query": {
             "$ref": "#/components/schemas/Query"
           },
+          "redaction_expressions": {
+            "default": [],
+            "description": "Expressions that can be referenced by the query to redact fields/columns",
+            "items": {
+              "$ref": "#/components/schemas/TargetRedactionExpressions"
+            },
+            "type": "array"
+          },
           "relationships": {
             "description": "The relationships between entities involved in the entire query request",
             "items": {
@@ -2578,6 +2694,14 @@
           },
           "query": {
             "$ref": "#/components/schemas/Query"
+          },
+          "redaction_expressions": {
+            "default": [],
+            "description": "Expressions that can be referenced by the query to redact fields/columns",
+            "items": {
+              "$ref": "#/components/schemas/TargetRedactionExpressions"
+            },
+            "type": "array"
           },
           "table": {
             "$ref": "#/components/schemas/TableName"
@@ -2688,6 +2812,14 @@
             "description": "The mutation operations to perform",
             "items": {
               "$ref": "#/components/schemas/MutationOperation"
+            },
+            "type": "array"
+          },
+          "redaction_expressions": {
+            "default": [],
+            "description": "Expressions that can be referenced by the query to redact fields/columns",
+            "items": {
+              "$ref": "#/components/schemas/TargetRedactionExpressions"
             },
             "type": "array"
           },

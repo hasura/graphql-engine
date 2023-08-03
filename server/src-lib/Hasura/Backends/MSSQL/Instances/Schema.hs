@@ -7,7 +7,6 @@
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
-import Control.Applicative (Const (..))
 import Data.Char qualified as Char
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -403,9 +402,9 @@ msCountTypeInput = \case
   Nothing -> pure $ flip mkCountType Nothing
   where
     mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL, AnnRedactionExpUnpreparedValue 'MSSQL) -> CountType 'MSSQL (UnpreparedValue 'MSSQL)
-    mkCountType _ Nothing = Const MSSQL.StarCountable
-    mkCountType IR.SelectCountDistinct (Just (col, _redactionExp)) = Const $ MSSQL.DistinctCountable col -- TODO(redactionExp): Deal with redaction expressions
-    mkCountType IR.SelectCountNonDistinct (Just (col, _redactionExp)) = Const $ MSSQL.NonNullFieldCountable col -- TODO(redactionExp): Deal with redaction expressions
+    mkCountType _ Nothing = MSSQL.CountType MSSQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just (col, redactionExp)) = MSSQL.CountType $ MSSQL.DistinctCountable (col, redactionExp)
+    mkCountType IR.SelectCountNonDistinct (Just (col, redactionExp)) = MSSQL.CountType $ MSSQL.NonNullFieldCountable (col, redactionExp)
 
 msParseUpdateOperators ::
   forall m n r.

@@ -54,6 +54,7 @@ export const BasicUserFlow: StoryObj<typeof LogicalModelWidget> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await canvas.findByTestId('dataSourceName-chinook');
     await userEvent.selectOptions(
       await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
       'chinook'
@@ -95,6 +96,7 @@ export const NetworkErrorOnSubmit: StoryObj<typeof LogicalModelWidget> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await canvas.findByTestId('dataSourceName-chinook');
     await userEvent.selectOptions(
       await canvas.findByLabelText('Select a source', {}, { timeout: 4000 }),
       'chinook'

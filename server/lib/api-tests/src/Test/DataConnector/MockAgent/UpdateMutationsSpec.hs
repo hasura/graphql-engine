@@ -239,28 +239,28 @@ tests = do
                            $ Set.fromList
                              [ API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "GenreId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "GenreId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 1) (API.ScalarType "number"))
                              ],
                        API._umoPostUpdateCheck =
                          Just
                            $ API.ApplyBinaryComparisonOperator
                              API.GreaterThan
-                             (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
+                             (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "UnitPrice") (API.ScalarType "number") Nothing)
                              (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number")),
                        API._umoReturningFields =
                          mkFieldsMap
-                           [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
-                             ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+                           [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number") Nothing),
+                             ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing),
                              ( "updatedRows_Genre",
                                API.RelField
                                  ( API.RelationshipField
                                      (API.RelationshipName "Genre")
-                                     (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                                     (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)])
                                  )
                              )
                            ]
@@ -366,17 +366,17 @@ tests = do
           Just
             $ API.ApplyBinaryComparisonOperator
               API.GreaterThan
-              (API.ComparisonColumn API.CurrentTable (API.ColumnName "UnitPrice") $ API.ScalarType "number")
+              (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "UnitPrice") (API.ScalarType "number") Nothing)
               (API.ScalarValueComparison $ API.ScalarValue (J.Number 0) (API.ScalarType "number"))
     let sharedReturning =
           mkFieldsMap
-            [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number")),
-              ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string")),
+            [ ("updatedRows_TrackId", API.ColumnField (API.ColumnName "TrackId") (API.ScalarType "number") Nothing),
+              ("updatedRows_Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing),
               ( "updatedRows_Genre",
                 API.RelField
                   ( API.RelationshipField
                       (API.RelationshipName "Genre")
-                      (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") $ API.ScalarType "string")])
+                      (emptyQuery & API.qFields ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)])
                   )
               )
             ]
@@ -429,11 +429,11 @@ tests = do
                            $ Set.fromList
                              [ API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "TrackId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                              ],
                        API._umoPostUpdateCheck = sharedPostUpdateCheck,
@@ -469,11 +469,11 @@ tests = do
                            $ Set.fromList
                              [ API.ApplyBinaryComparisonOperator
                                  API.Equal
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "AlbumId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "AlbumId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number")),
                                API.ApplyBinaryComparisonOperator
                                  API.GreaterThan
-                                 (API.ComparisonColumn API.CurrentTable (API.ColumnName "TrackId") $ API.ScalarType "number")
+                                 (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "TrackId") (API.ScalarType "number") Nothing)
                                  (API.ScalarValueComparison $ API.ScalarValue (J.Number 3) (API.ScalarType "number"))
                              ],
                        API._umoPostUpdateCheck = sharedPostUpdateCheck,

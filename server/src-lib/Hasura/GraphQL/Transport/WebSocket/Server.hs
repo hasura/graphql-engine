@@ -626,8 +626,8 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
 
             let send = forever $ do
                   WSQueueResponse msg wsInfo wsTimer <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                  liftIO $ WS.sendTextData conn msg
                   messageQueueTime <- liftIO $ realToFrac <$> wsTimer
+                  (messageWriteTime, _) <- liftIO $ withElapsedTime $ WS.sendTextData conn msg
                   let messageLength = BL.length msg
                       messageDetails = MessageDetails (SB.fromLBS msg) messageLength
                   liftIO $ do
@@ -637,6 +637,9 @@ createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger wr
                     Prometheus.Histogram.observe
                       (pmWebsocketMsgQueueTimeSeconds prometheusMetrics)
                       messageQueueTime
+                    Prometheus.Histogram.observe
+                      (pmWebsocketMsgWriteTimeSeconds prometheusMetrics)
+                      (realToFrac messageWriteTime)
                   logWSLog logger $ WSLog wsId (EMessageSent messageDetails) wsInfo
 
             -- withAsync lets us be very sure that if e.g. an async exception is raised while we're

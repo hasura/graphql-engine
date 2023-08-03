@@ -136,9 +136,6 @@ export type CloudCliEnv = {
 type ProCliEnv = CloudCliEnv;
 type ProLiteCliEnv = CloudCliEnv;
 
-// Until this non-discriminated-union-based `EnvVars` exist, please keep the following spreadsheet
-// https://docs.google.com/spreadsheets/d/10feBESWKCfFuh7g9436Orp4i4fNoQxjnt5xxhrrdtJo/edit#gid=0
-// updated with all the env vars that the Console receives and their possible values. The spreadsheet acts as the source of truth for the environment variables, at the moment
 export type EnvVars = {
   nodeEnv?: string;
   apiHost?: string;

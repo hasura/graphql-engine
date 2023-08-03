@@ -1,6 +1,7 @@
 ---
 sidebar_position: 8
 ---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
@@ -14,7 +15,7 @@ React component.
 
 - Use a tab-width of 2 for nesting the requests and responses for optimal use of the space and maintaining consistency.
 - Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this by
-default.
+  default.
 - Ensure that the order of fields in the responses is the same as in the requests for better readability.
 
 Use it as follows:
@@ -41,7 +42,6 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 ```
 
 ```jsx
-
 // highlight-start
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
@@ -82,12 +82,13 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
       ]
     }
   }`}
-/>
+/>;
 ```
 
 ## Result in UI
 
 Below is how it should look in UI.
+
 <GraphiQLIDE
   query={`query get_authors_in_pincode ($jsonFilter: jsonb){
     authors(

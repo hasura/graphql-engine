@@ -9,7 +9,7 @@ import {
   useEnvironmentState,
   usePushRoute,
 } from '../../../ConnectDBRedesign/hooks';
-import { Feature, nativeDrivers } from '../../../DataSource';
+import { nativeDrivers } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { NativeQuery } from '../../../hasura-metadata-types';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
@@ -120,10 +120,6 @@ export const AddNativeQuery = ({
     isLoading: isIntrospectionLoading,
   } = useSupportedDataTypes({
     dataSourceName: selectedSource,
-    select: values => {
-      if (values === Feature.NotImplemented) return [];
-      return Object.values(values).flat();
-    },
     options: {
       enabled: !!selectedSource,
     },

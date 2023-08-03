@@ -93,12 +93,12 @@ tests = describe "Custom scalar parsing tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.ScalarType "MyInt"),
-                      ("MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.ScalarType "MyFloat"),
-                      ("MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.ScalarType "MyString"),
-                      ("MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.ScalarType "MyBoolean"),
-                      ("MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.ScalarType "MyID"),
-                      ("MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.ScalarType "MyAnything")
+                    [ ("MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") (API.ScalarType "MyInt") Nothing),
+                      ("MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") (API.ScalarType "MyFloat") Nothing),
+                      ("MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") (API.ScalarType "MyString") Nothing),
+                      ("MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") (API.ScalarType "MyBoolean") Nothing),
+                      ("MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") (API.ScalarType "MyID") Nothing),
+                      ("MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") (API.ScalarType "MyAnything") Nothing)
                     ]
                     & API.qLimit
                   ?~ 1
@@ -151,12 +151,12 @@ tests = describe "Custom scalar parsing tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") $ API.ScalarType "MyInt"),
-                      ("MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") $ API.ScalarType "MyFloat"),
-                      ("MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") $ API.ScalarType "MyString"),
-                      ("MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") $ API.ScalarType "MyBoolean"),
-                      ("MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") $ API.ScalarType "MyID"),
-                      ("MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") $ API.ScalarType "MyAnything")
+                    [ ("MyIntColumn", API.ColumnField (API.ColumnName "MyIntColumn") (API.ScalarType "MyInt") Nothing),
+                      ("MyFloatColumn", API.ColumnField (API.ColumnName "MyFloatColumn") (API.ScalarType "MyFloat") Nothing),
+                      ("MyStringColumn", API.ColumnField (API.ColumnName "MyStringColumn") (API.ScalarType "MyString") Nothing),
+                      ("MyBooleanColumn", API.ColumnField (API.ColumnName "MyBooleanColumn") (API.ScalarType "MyBoolean") Nothing),
+                      ("MyIDColumn", API.ColumnField (API.ColumnName "MyIDColumn") (API.ScalarType "MyID") Nothing),
+                      ("MyAnythingColumn", API.ColumnField (API.ColumnName "MyAnythingColumn") (API.ScalarType "MyAnything") Nothing)
                     ]
                     & API.qLimit
                   ?~ 1
@@ -165,27 +165,27 @@ tests = describe "Custom scalar parsing tests" $ do
                     ( Set.fromList
                         [ ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyBooleanColumn") (ScalarType "MyBoolean"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyBooleanColumn") (ScalarType "MyBoolean") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.Bool True) (ScalarType "MyBoolean")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyFloatColumn") (ScalarType "MyFloat"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyFloatColumn") (ScalarType "MyFloat") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.Number 3.14) (ScalarType "MyFloat")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyStringColumn") (ScalarType "MyString"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyStringColumn") (ScalarType "MyString") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.String "foo") (ScalarType "MyString")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyIDColumn") (ScalarType "MyID"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyIDColumn") (ScalarType "MyID") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.String "x") (ScalarType "MyID")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyIntColumn") (ScalarType "MyInt"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyIntColumn") (ScalarType "MyInt") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.Number 42.0) (ScalarType "MyInt")),
                           ApplyBinaryComparisonOperator
                             Equal
-                            (ComparisonColumn CurrentTable (ColumnName "MyAnythingColumn") (ScalarType "MyAnything"))
+                            (ComparisonColumn CurrentTable (mkColumnSelector $ ColumnName "MyAnythingColumn") (ScalarType "MyAnything") Nothing)
                             (ScalarValueComparison $ ScalarValue (J.Object mempty) (ScalarType "MyAnything"))
                         ]
                     )

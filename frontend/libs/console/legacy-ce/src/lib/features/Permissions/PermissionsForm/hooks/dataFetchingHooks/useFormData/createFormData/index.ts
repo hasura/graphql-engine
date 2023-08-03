@@ -70,8 +70,8 @@ export interface CreateFormDataArgs {
   table: unknown;
   metadata: Metadata;
   tableColumns: TableColumn[];
-  metadataSource: MetadataDataSource | undefined;
-  trackedTables: TableEntry[] | undefined;
+  metadataSource: MetadataDataSource;
+  trackedTables: TableEntry[];
 }
 
 export const createFormData = (props: CreateFormDataArgs) => {

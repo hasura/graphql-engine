@@ -81,7 +81,7 @@ export const TrackTablesContainer = ({
           introText="Tracking tables adds them to your GraphQL API. All objects will be
           admin-only until permissions have been set."
           learnMoreLink={
-            '"https://hasura.io/docs/latest/schema/postgres/tables/#tracking-tables"'
+            'https://hasura.io/docs/latest/schema/postgres/tables/#tracking-tables'
           }
           isLoading={isMetaLoading || isIntroLoading}
           items={{

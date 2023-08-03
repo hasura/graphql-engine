@@ -115,6 +115,7 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.SqlserverSpec
     Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.MetadataApiSpec
@@ -178,6 +179,7 @@ library
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Update.ValidationSpec
     Test.Mutations.Upsert.OnConflictSpec
+    Test.NamingConventionsSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec

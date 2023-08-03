@@ -64,6 +64,7 @@ emptyServeOptionsRaw =
       rsoWsReadCookie = UUT.WsReadCookieDisabled,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
+      rsoRemoteNullForwardingPolicy = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
       rsoMxBatchSize = Nothing,

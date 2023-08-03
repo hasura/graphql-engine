@@ -13,13 +13,20 @@ FROM pg_inherits
   JOIN pg_namespace nmsp_child    ON nmsp_child.oid   = child.relnamespace`;
 
   const sql = `
-  SELECT 
-    info_schema.table_name, 
-    info_schema.table_schema, 
+  SELECT
+    info_schema.table_name,
+    info_schema.table_schema,
     info_schema.table_type
   FROM information_schema.tables as info_schema
-  WHERE 
-    info_schema.table_schema NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')      
+  WHERE
+    info_schema.table_schema NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
+  UNION
+  SELECT
+    matviewname AS table_name,
+    schemaname AS table_schema,
+    'MATERIALIZED VIEW' AS table_type
+  FROM pg_matviews
+  WHERE schemaname NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
   `;
 
   const result = await runReadOnlySQLBulk({

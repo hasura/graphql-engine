@@ -2,6 +2,7 @@ import startCase from 'lodash/startCase';
 import { Breadcrumbs } from '../../../../new-components/Breadcrumbs';
 import { StoredProcedureWidget } from './StoredProcedureWidget';
 import { InjectedRouter, withRouter } from 'react-router';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 export const TrackStoredProcedureRoute = withRouter<{
   location: Location;
@@ -29,7 +30,8 @@ export const TrackStoredProcedureRoute = withRouter<{
         <div className="w-full">
           <div className="text-xl font-bold mt-2">Track Stored Procedure</div>
           <div className="text-muted">
-            Expose your stored SQL procedures via the GraphQL API.
+            Expose your stored SQL procedures via the GraphQL API.{' '}
+            <LearnMoreLink href="https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/stored-procedures/#step-2-track-a-stored-procedure" />
           </div>
         </div>
       </div>

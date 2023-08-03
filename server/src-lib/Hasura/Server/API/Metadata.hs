@@ -448,8 +448,8 @@ runMetadataQueryV1M env checkFeatureFlag remoteSchemaPerms currentResourceVersio
   RMTrackNativeQuery q -> dispatchMetadata (runSingleExec NativeQueries.execTrackNativeQuery) q
   RMUntrackNativeQuery q -> dispatchMetadata (runSingleExec NativeQueries.execUntrackNativeQuery) q
   RMGetStoredProcedure q -> dispatchMetadata StoredProcedures.runGetStoredProcedure q
-  RMTrackStoredProcedure q -> dispatchMetadata StoredProcedures.runTrackStoredProcedure q
-  RMUntrackStoredProcedure q -> dispatchMetadata StoredProcedures.runUntrackStoredProcedure q
+  RMTrackStoredProcedure q -> dispatchMetadata (runSingleExec StoredProcedures.execTrackStoredProcedure) q
+  RMUntrackStoredProcedure q -> dispatchMetadata (runSingleExec StoredProcedures.execUntrackStoredProcedure) q
   RMGetLogicalModel q -> dispatchMetadata LogicalModel.runGetLogicalModel q
   RMTrackLogicalModel q -> dispatchMetadata (runSingleExec LogicalModel.execTrackLogicalModel) q
   RMUntrackLogicalModel q -> dispatchMetadata (runSingleExec LogicalModel.execUntrackLogicalModel) q
@@ -646,6 +646,8 @@ runBulkAtomic cmds = do
         RMUntrackNativeQuery q -> pure $ dispatchMetadata (forgetMetadataObjId NativeQueries.execUntrackNativeQuery) q
         RMTrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execTrackLogicalModel) q
         RMUntrackLogicalModel q -> pure $ dispatchMetadata (forgetMetadataObjId LogicalModel.execUntrackLogicalModel) q
+        RMTrackStoredProcedure q -> pure $ dispatchMetadata (forgetMetadataObjId StoredProcedures.execTrackStoredProcedure) q
+        RMUntrackStoredProcedure q -> pure $ dispatchMetadata (forgetMetadataObjId StoredProcedures.execUntrackStoredProcedure) q
         _ -> throw500 "Bulk atomic does not support this command"
       RMV2 _ -> throw500 $ "Bulk atomic does not support this command"
 

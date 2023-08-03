@@ -1817,7 +1817,8 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 ## OTLPExporter {#otlpexporter}
 | Key                   | required | Schema                                                                      | Description                                                                                         |
 |-----------------------|----------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| otlp_traces_endpoint  | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL                                                       |
+| otlp_traces_endpoint  | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL for traces (usually having path "/v1/traces")         |
+| otlp_metrics_endpoint | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL for metrics (usually having path "/v1/metrics")       |
 | protocol              | false    | `String`                                                                    | Protocol to be used for the communication with the receiver. Currently only supports `http/protobuf`|
 | headers               | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \] | List of defined headers to be sent to the receiver                                                  |
 | resource_attributes   | false    | \[[Attribute](#attribute)\]                                                 | List of resource attributes to be sent to the receiver                                              |

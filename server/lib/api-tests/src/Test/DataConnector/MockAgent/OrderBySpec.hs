@@ -119,13 +119,13 @@ tests = describe "Order By Tests" $ do
               ( emptyQuery
                   & API.qFields
                   ?~ mkFieldsMap
-                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") $ API.ScalarType "number"),
-                      ("Title", API.ColumnField (API.ColumnName "Title") $ API.ScalarType "string")
+                    [ ("AlbumId", API.ColumnField (API.ColumnName "AlbumId") (API.ScalarType "number") Nothing),
+                      ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
                     & API.qLimit
                   ?~ 3
                     & API.qOrderBy
-                  ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId")) API.Ascending :| [])
+                  ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId") Nothing) API.Ascending :| [])
               )
         )
 
@@ -163,7 +163,7 @@ tests = describe "Order By Tests" $ do
               (mkTableName "Artist")
               ( emptyQuery
                   & API.qFields
-                  ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string"))]
+                  ?~ mkFieldsMap [("Name", API.ColumnField (API.ColumnName "Name") (API.ScalarType "string") Nothing)]
                     & API.qLimit
                   ?~ 2
                     & API.qOrderBy
@@ -182,6 +182,7 @@ tests = describe "Order By Tests" $ do
                                 $ API.SingleColumnAggregate
                                   (API.SingleColumnAggregateFunction [G.name|max|])
                                   (API.ColumnName "AlbumId")
+                                  Nothing
                                   (API.ScalarType "number")
                             )
                             API.Ascending

@@ -13,7 +13,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (IsIdentifier (toIdentifier))
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
-import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
+import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (PostgresGenerateSQLSelect, generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
 import Hasura.Backends.Postgres.Translate.Types
@@ -35,7 +35,7 @@ import Hasura.RQL.Types.Common
 -- See 'mkSQLSelect' for the Postgres AST.
 selectQuerySQL ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, PostgresGenerateSQLSelect pgKind) =>
   JsonAggSelect ->
   AnnSimpleSelect ('Postgres pgKind) ->
   Query
@@ -48,6 +48,7 @@ mkSQLSelect ::
   forall pgKind m.
   ( Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind,
+    PostgresGenerateSQLSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   JsonAggSelect ->
@@ -73,7 +74,7 @@ mkSQLSelect jsonAggSelect annSel = do
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
   tell customSQLCTEs
 
-  pure $ generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
+  pure $ generateSQLSelectFromArrayNode @pgKind selectSource arrayNode $ S.BELit True
   where
     strfyNum = _asnStrfyNum annSel
     rootFldIdentifier = toIdentifier rootFldName

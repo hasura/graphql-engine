@@ -7,7 +7,7 @@ export default {
   component: ConnectGDCSourceWidget,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers({ agentTestType: 'super_connector_agents_not_added' }),
+    msw: handlers({ agentTestType: 'super_connector_agents_added' }),
   },
 } as Meta<typeof ConnectGDCSourceWidget>;
 

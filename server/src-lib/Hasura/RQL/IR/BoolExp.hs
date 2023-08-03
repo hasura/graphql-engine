@@ -499,6 +499,7 @@ instance
 -- This type is parameterized over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (backend :: BackendType) leaf
   = AVColumn (ColumnInfo backend) (AnnRedactionExp backend leaf) [OpExpG backend leaf]
+  | AVNestedObject (NestedObjectInfo backend) (AnnBoolExp backend leaf)
   | AVRelationship
       (RelInfo backend)
       (RelationshipFilters backend leaf)
@@ -554,6 +555,10 @@ instance
     AVColumn pci _redactionExp opExps ->
       ( K.fromText $ toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
+      )
+    AVNestedObject noi boolExp ->
+      ( K.fromText $ toTxt $ _noiColumn noi,
+        toJSON (noi, boolExp)
       )
     AVRelationship ri filters ->
       ( K.fromText $ relNameToTxt $ riName ri,

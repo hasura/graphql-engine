@@ -13,7 +13,7 @@ import Data.Aeson
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (AnnBoolExp, OpExpG)
+import Hasura.RQL.IR.BoolExp (AnnBoolExp, AnnRedactionExp, OpExpG)
 import Hasura.RQL.Types.Backend (Backend (Column))
 import Hasura.RQL.Types.Backend qualified as B
 import Hasura.RQL.Types.BackendType (BackendType)
@@ -101,7 +101,7 @@ data AggregationPredicate (b :: BackendType) field = AggregationPredicate
   { aggPredFunctionName :: Text,
     aggPredDistinct :: Bool,
     aggPredFilter :: Maybe (AnnBoolExp b field),
-    aggPredArguments :: AggregationPredicateArguments b,
+    aggPredArguments :: AggregationPredicateArguments b field,
     aggPredPredicate :: [OpExpG b field]
   }
   deriving stock (Foldable, Traversable, Functor, Generic)
@@ -110,7 +110,7 @@ deriving instance
   ( B.Backend b,
     Eq (AnnBoolExp b field),
     Eq (OpExpG b field),
-    Eq (AggregationPredicateArguments b)
+    Eq (AggregationPredicateArguments b field)
   ) =>
   Eq (AggregationPredicate b field)
 
@@ -118,7 +118,7 @@ deriving instance
   ( B.Backend b,
     Show (AnnBoolExp b field),
     Show (OpExpG b field),
-    Show (AggregationPredicateArguments b)
+    Show (AggregationPredicateArguments b field)
   ) =>
   Show (AggregationPredicate b field)
 
@@ -132,14 +132,14 @@ instance
 
 instance
   ( B.Backend b,
-    NFData (AggregationPredicateArguments b),
+    NFData (AggregationPredicateArguments b field),
     NFData (AnnBoolExp b field),
     NFData (OpExpG b field)
   ) =>
   NFData (AggregationPredicate b field)
 
 instance
-  ( ToJSON (AggregationPredicateArguments b),
+  ( ToJSON (AggregationPredicateArguments b field),
     ToJSON (AnnBoolExp b field),
     ToJSONKeyValue (OpExpG b field)
   ) =>
@@ -155,17 +155,17 @@ instance
         ]
     )
 
-data AggregationPredicateArguments (b :: BackendType)
+data AggregationPredicateArguments (b :: BackendType) field
   = AggregationPredicateArgumentsStar
-  | AggregationPredicateArguments (NonEmpty (Column b))
-  deriving stock (Generic)
+  | AggregationPredicateArguments (NonEmpty (Column b, AnnRedactionExp b field))
+  deriving stock (Generic, Foldable, Traversable, Functor)
 
-deriving instance (B.Backend b) => Eq (AggregationPredicateArguments b)
+deriving instance (Backend b, Eq (AnnRedactionExp b field)) => Eq (AggregationPredicateArguments b field)
 
-deriving instance (B.Backend b) => Show (AggregationPredicateArguments b)
+deriving instance (Backend b, Show (AnnRedactionExp b field)) => Show (AggregationPredicateArguments b field)
 
-instance (Backend b) => Hashable (AggregationPredicateArguments b)
+instance (Backend b, Hashable (AnnRedactionExp b field)) => Hashable (AggregationPredicateArguments b field)
 
-instance (Backend b) => NFData (AggregationPredicateArguments b)
+instance (Backend b, NFData (AnnRedactionExp b field)) => NFData (AggregationPredicateArguments b field)
 
-instance (Backend b) => ToJSON (AggregationPredicateArguments b)
+instance (Backend b, ToJSON (AnnRedactionExp b field)) => ToJSON (AggregationPredicateArguments b field)

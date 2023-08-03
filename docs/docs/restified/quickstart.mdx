@@ -17,106 +17,84 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 # Quickstart RESTified Endpoints
 
 RESTified endpoints allow you to quickly and easily create REST endpoints without writing custom code. This quickstart
-will walk you through the process of creating a REST endpoint from a GraphQL query.
+will walk you through the process of creating a REST endpoint from a table.
+
+To see an alternative method of creating a REST endpoint from an query in the GraphiQL IDE, check out the
+[Create RESTified endpoints](/restified/create.mdx#create-from-graphiql) page.
+
+:::info Data source availability
+
+Available for **Postgres, MS SQL Server, Citus, AlloyDB and CockroachDB** databases.
+
+:::
 
 <SampleAppBlock dependent />
 
-## Step 1: Write a query
+### Step 1: Navigate to the products table.
 
-From the `API` tab of the Hasura Console, create a query:
+Navigate to `Data > default > public > products` and click the "Create REST Endpoints" button.
 
-<GraphiQLIDE
-  query={`query SingleProductsQuery($id: uuid!) {
-  products_by_pk(id: $id) {
-    id
-    name
-    description
-  }
-}
-`}
-  variables={`{"id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372" }`}
-  response={`{
-  "data": {
-    "products_by_pk": {
-      "id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
-      "name": "The Original Tee",
-      "description": "When you want to keep it simple"
-    }
-  }
-}`}
-/>
-
-After entering the query, click the `REST` button in the Explorer to configure your endpoint:
 
 <Thumbnail
-  src="/img/restified/restified-endpoints_click-rest-2.21-cloud.1.png"
+  src="/img/restified/restified-create-from-table-btn.png"
+  alt="Create RESTified Endpoint"
+/>
+
+### Step 2: Choose operations
+
+After clicking on the "Create REST endpoints" button, you will see a modal list of all REST operations (`READ`, `READ
+ ALL`, `CREATE`, `UPDATE`, `DELETE`) available on the table. Select `READ` and `CREATE` for this demo. Click the
+"Create" button.
+
+<Thumbnail
+  src="/img/restified/restified-modal-from-table.png"
+  alt="Create RESTified Endpoint"
+  width="400px"
+/>
+
+### Step 3: View all REST endpoints
+
+You will be able to see the newly created REST endpoints listed in the `API > REST` tab.
+
+<Thumbnail
+  src="/img/restified/restified-tracked-table-view.png"
   alt="Create RESTified Endpoint"
   width="1000px"
 />
 
-## Step 2: RESTify it
+### Step 4: Test the REST endpoint
 
-Enter a name:
-
-```
-single_product_query
-```
-
-Followed by a brief description if you wish:
-
-```
-Retrieve a single product using its id
-```
-
-Next, we'll provide a route that describes the endpoint's purpose and indicates that we wish to accept a query parameter
-of `id` for the product:
-
-```
-product/:id
-```
-
-We'll mark `GET` as the allowed method and finish creating the endpoint by clicking `Create`.
+Click on the `products_by_pk` title to get to the details page for that RESTified endpoint. In the "Request
+Variables" section for `id` enter the value `7992fdfa-65b5-11ed-8612-6a8b11ef7372`, the UUID for one of the products
+already in the `products` table of the docs sample app. Click "Run Request".
 
 <Thumbnail
-  src="/img/restified/restified-endpoints_click-create-2.21-cloud.1.png"
+  src="/img/restified/restified-test.png"
   alt="Create RESTified Endpoint"
   width="1000px"
 />
 
-## Step 3: 🍿
+You will see the result returned below the "Run Request" button.
 
-To test this endpoint, run the following curl request in your terminal:
+You can test the other `insert_products_one` endpoint that we created in the same way by providing a new product
+object as the request variable.
+
+You can also use your favourite REST client to test the endpoint. For example, using `curl`:
 
 ```bash
-curl -H "x-hasura-admin-secret: <YOUR_ADMIN_SECRET>" https://<YOUR_PROJECT_NAME>.hasura.app/api/rest/product/7992fdfa-65b5-11ed-8612-6a8b11ef7372
-```
-
-You should see a response similar to this:
-
-```json
-{
-  "products_by_pk": {
-    "id": "7992fdfa-65b5-11ed-8612-6a8b11ef7372",
-    "name": "The Original Tee",
-    "description": "When you want to keep it simple"
-  }
-}
+curl --location --request GET 'https://<your-hasura-project>/api/rest/products/7992fdfa-65b5-11ed-8612-6a8b11ef7372' \
+--header 'Content-Type: application/json' \
+--header 'x-hasura-admin-secret: <your-admin-secret>'
 ```
 
 ## Recap
 
-What just happened? Well, you just created a REST endpoint without writing a single line of code 🎉
+What just happened? Well, you just created two REST endpoints for reading a single product and inserting a product, 
+super fast, and without writing a single line of code 🎉
 
-This saves you
-significant time and effort, as you can convert any query or mutation into a REST endpoint with just a few clicks.
+This saves you significant time and effort, as you easily enable REST endpoints on your tables or [convert any query
+or mutation into a REST endpoint](/restified/create.mdx) with just a few clicks.
 
-While we created this endpoint from the Console, you can also [utilize the API](/api-reference/restified.mdx) to
-generate these endpoints for any project.
-
-You have complete control in defining the endpoint, but in this example we followed RESTful best practices to identify
-the endpoint using `product` as the pathname and then `:id` as the argument. **Any arguments should match the variables
-included in the query or mutation, as Hasura expects these values to be passed via the endpoint.**
-
-By using RESTified endpoints, you can take advantage of the benefits of both REST and GraphQL,
-making your Hasura project even more versatile and powerful. For more details, check out the
+By using RESTified endpoints, you can take advantage of the benefits of both REST and GraphQL, making your Hasura
+project even more versatile and powerful. For more details, check out the
 [configuration page](/restified/restified-config.mdx).

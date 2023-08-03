@@ -302,11 +302,18 @@ export const mergeDataMssql = (
     const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
       if (metadataTable) {
         metadataTable[key]?.forEach(
-          (perm: { role: string; permission: Record<string, any> }) => {
+          (perm: {
+            role: string;
+            permission: Record<string, any>;
+            comment?: string;
+          }) => {
             rpm[perm.role] = {
               permissions: {
                 ...(rpm[perm.role] && rpm[perm.role].permissions),
-                [keyToPermission[key]]: perm.permission,
+                [keyToPermission[key]]: {
+                  ...perm.permission,
+                  comment: perm.comment,
+                },
               },
             };
           }
@@ -499,7 +506,10 @@ export const mergeLoadSchemaDataPostgres = (
               permissions: {
                 ...(rolePermMap[perm.role] &&
                   rolePermMap[perm.role].permissions),
-                [keyToPermission[key]]: perm.permission,
+                [keyToPermission[key]]: {
+                  ...perm.permission,
+                  comment: perm.comment,
+                },
               },
             };
           });
@@ -613,11 +623,18 @@ export const mergeDataBigQuery = (
     const rolePermMap = permKeys.reduce((rpm: Record<string, any>, key) => {
       if (metadataTable) {
         metadataTable[key]?.forEach(
-          (perm: { role: string; permission: Record<string, any> }) => {
+          (perm: {
+            role: string;
+            permission: Record<string, any>;
+            comment?: string;
+          }) => {
             rpm[perm.role] = {
               permissions: {
                 ...(rpm[perm.role] && rpm[perm.role].permissions),
-                [keyToPermission[key]]: perm.permission,
+                [keyToPermission[key]]: {
+                  ...perm.permission,
+                  comment: perm.comment,
+                },
               },
             };
           }
@@ -812,7 +829,10 @@ export const mergeDataCitus = (
               permissions: {
                 ...(rolePermMap[perm.role] &&
                   rolePermMap[perm.role].permissions),
-                [keyToPermission[key]]: perm.permission,
+                [keyToPermission[key]]: {
+                  ...perm.permission,
+                  comment: perm.comment,
+                },
               },
             };
           });

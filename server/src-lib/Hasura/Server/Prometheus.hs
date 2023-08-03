@@ -76,6 +76,7 @@ data PrometheusMetrics = PrometheusMetrics
     pmScheduledTriggerMetrics :: ScheduledTriggerMetrics,
     pmSubscriptionMetrics :: SubscriptionMetrics,
     pmWebsocketMsgQueueTimeSeconds :: Histogram,
+    pmWebsocketMsgWriteTimeSeconds :: Histogram,
     pmCacheRequestMetrics :: CacheRequestMetrics
   }
 
@@ -146,6 +147,7 @@ makeDummyPrometheusMetrics = do
   pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
   pmSubscriptionMetrics <- makeDummySubscriptionMetrics
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
+  pmWebsocketMsgWriteTimeSeconds <- Histogram.new []
   pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
   pure PrometheusMetrics {..}
 

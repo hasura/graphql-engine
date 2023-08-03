@@ -18,6 +18,7 @@ module Hasura.Server.Types
     ApolloFederationStatus (..),
     isApolloFederationEnabled,
     GranularPrometheusMetricsState (..),
+    OpenTelemetryExporterState (..),
     CloseWebsocketsOnMetadataChangeStatus (..),
     isCloseWebsocketsOnMetadataChangeStatusEnabled,
     MonadGetPolicies (..),
@@ -185,6 +186,25 @@ instance ToJSON GranularPrometheusMetricsState where
   toJSON = \case
     GranularMetricsOff -> Bool False
     GranularMetricsOn -> Bool True
+
+-- | Whether or not to enable OpenTelemetry Exporter.
+--
+-- `OpenTelemetryExporterOn` will enable exporting of traces & metrics via the OTel Exporter.
+-- `OpenTelemetryExporterOff` will disable exporting of traces & metrics via the OTel Exporter.
+data OpenTelemetryExporterState
+  = OpenTelemetryExporterOff
+  | OpenTelemetryExporterOn
+  deriving (Eq, Show)
+
+instance FromJSON OpenTelemetryExporterState where
+  parseJSON = withBool "OpenTelemetryExporterState" $ \case
+    False -> pure OpenTelemetryExporterOff
+    True -> pure OpenTelemetryExporterOn
+
+instance ToJSON OpenTelemetryExporterState where
+  toJSON = \case
+    OpenTelemetryExporterOff -> Bool False
+    OpenTelemetryExporterOn -> Bool True
 
 -- | Whether or not to close websocket connections on metadata change.
 data CloseWebsocketsOnMetadataChangeStatus = CWMCEnabled | CWMCDisabled

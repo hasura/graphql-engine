@@ -1,8 +1,10 @@
 import { Decorator } from '@storybook/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
-import useUpdateEffect from '../../hooks/useUpdateEffect';
+
+const reactQueryClient = new QueryClient();
+let timestamp = 'initial';
 
 export const ReactQueryDecorator = (): Decorator => {
   return Story => (
@@ -15,14 +17,14 @@ export const ReactQueryDecorator = (): Decorator => {
 
 // you can't use hooks directly in a Decorator function, so we need to encapsulate this in a component
 const ReactQueryProvider: React.FC = ({ children }) => {
-  let reactQueryClient = new QueryClient();
+  useEffect(() => {
+    if (timestamp !== 'initial') {
+      // this resets all active queries so when HMR or a story changes and uses the same query key, it won't be able to serve stale data.
+      reactQueryClient.resetQueries();
+    }
+    timestamp = new Date().toISOString();
+  }, []);
 
-  useUpdateEffect(() => {
-    // re-render happens only on story change or HMR. in those cases we want a fresh instance of the query client so we don't end up with stale cache
-    // invalidating queries is buggy due to async behavior and can cause storybook to lock up.
-    // so, this is the safest approach.
-    reactQueryClient = new QueryClient();
-  });
   return (
     <QueryClientProvider client={reactQueryClient}>
       {children}

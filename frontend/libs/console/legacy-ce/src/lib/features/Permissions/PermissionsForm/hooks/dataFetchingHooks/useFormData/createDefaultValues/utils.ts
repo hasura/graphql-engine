@@ -104,6 +104,7 @@ export const createPermission = {
       presets,
       columns,
       backendOnly,
+      comment: permission.comment ?? '',
     };
   },
   select: (
@@ -139,6 +140,7 @@ export const createPermission = {
       operators: ops,
       query_root_fields: permission.query_root_fields || null,
       subscription_root_fields: permission.subscription_root_fields || null,
+      comment: permission.comment ?? '',
     };
 
     if (rowCount) {
@@ -173,6 +175,7 @@ export const createPermission = {
       presets,
       columns,
       rowCount,
+      comment: permission.comment ?? '',
     };
   },
   delete: (permission: DeletePermissionDefinition) => {
@@ -218,7 +221,10 @@ export const getCurrentPermission = ({
   if (currentPermissionsForSelectedRole) {
     return {
       queryType,
-      permission: currentPermissionsForSelectedRole?.permission,
+      permission: {
+        ...currentPermissionsForSelectedRole?.permission,
+        comment: currentPermissionsForSelectedRole?.comment,
+      },
     };
   }
 

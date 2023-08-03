@@ -60,7 +60,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               k = "take" :: Text.Text
               v = API.ScalarValue (Number (fromIntegral fibonacciRows)) (API.ScalarType "number")
               args = [NamedArgument k (API.ScalarArgumentValue v)]
-           in QRFunction $ FunctionRequest _ftdFibonacciFunctionName args mempty query'
+           in FunctionQueryRequest _ftdFibonacciFunctionName args mempty mempty query'
 
         testData@FunctionsTestData {..} = mkFunctionsTestData preloadedSchema testConfig
         query = fibonacciRequest testData
@@ -96,7 +96,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               relationships = Set.singleton (API.RFunction authorRelationship)
               v = API.ScalarValue (String "x") (API.ScalarType "string")
               args = [NamedArgument "query" (API.ScalarArgumentValue v)]
-           in QRFunction $ FunctionRequest _ftdSearchArticlesFunctionName args relationships query'
+           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty query'
 
         testData = mkFunctionsTestData preloadedSchema testConfig
         query = articlesRequest testData
@@ -130,7 +130,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               whereClause =
                 API.ApplyBinaryComparisonOperator
                   API.LessThan
-                  (API.ComparisonColumn API.CurrentTable (API.ColumnName "id") (API.ScalarType "number"))
+                  (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector $ API.ColumnName "id") (API.ScalarType "number") Nothing)
                   (API.ScalarValueComparison (API.ScalarValue (Number 10) (API.ScalarType "number")))
               query' = Data.emptyQuery & qFields ?~ fields & qWhere ?~ whereClause & qLimit ?~ 2
               authorRelationship =
@@ -144,7 +144,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               relationships = Set.singleton (API.RFunction authorRelationship)
               v = API.ScalarValue (String "y") (API.ScalarType "string")
               args = [NamedArgument "query" (API.ScalarArgumentValue v)]
-           in QRFunction $ FunctionRequest _ftdSearchArticlesFunctionName args relationships query'
+           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty query'
 
         testData = mkFunctionsTestData preloadedSchema testConfig
         query = articlesRequest testData

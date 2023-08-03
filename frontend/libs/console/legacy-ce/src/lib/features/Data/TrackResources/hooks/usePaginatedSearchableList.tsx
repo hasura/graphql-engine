@@ -37,10 +37,10 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
     [checkData.checkedIds, data]
   );
 
-  const handleSearch = React.useCallback(
-    (searchQuery: string) => setSearchText(searchQuery),
-    []
-  );
+  const handleSearch = React.useCallback((searchQuery: string) => {
+    setPageNumber(DEFAULT_PAGE_NUMBER);
+    setSearchText(searchQuery);
+  }, []);
 
   const incrementPage = React.useCallback(() => {
     setPageNumber(currentPage =>
@@ -54,6 +54,14 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
     );
   }, []);
 
+  const goToFirstPage = React.useCallback(() => {
+    setPageNumber(() => 1);
+  }, []);
+
+  const goToLastPage = React.useCallback(() => {
+    setPageNumber(() => totalPages);
+  }, [totalPages]);
+
   return {
     pageNumber,
     setPageNumber,
@@ -61,6 +69,8 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
     setPageSize,
     incrementPage,
     decrementPage,
+    goToFirstPage,
+    goToLastPage,
     totalPages,
     searchIsActive,
     handleSearch,
@@ -68,7 +78,7 @@ export function usePaginatedSearchableList<TData extends { id: string }>({
     filteredData,
     paginatedData,
     getCheckedItems,
-    dataSize: data.length,
+    dataSize: filteredData.length,
   };
 }
 

@@ -9,7 +9,6 @@ import {
 } from './ColumnPresets';
 
 export default {
-  title: 'Features/Permissions/Form/Presets Section',
   component: ColumnPresetsSection,
   decorators: [
     (StoryComponent: React.FC) => (

@@ -30,7 +30,7 @@ import Hasura.Backends.Postgres.Translate.BoolExp qualified as PGT
 import Hasura.Backends.Postgres.Translate.Insert qualified as PGT
 import Hasura.Backends.Postgres.Translate.Mutation qualified as PGT
 import Hasura.Backends.Postgres.Translate.Returning qualified as PGT
-import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
+import Hasura.Backends.Postgres.Translate.Select (PostgresTranslateSelect)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -59,7 +59,7 @@ convertToSQLTransaction ::
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   IR.AnnotatedInsert ('Postgres pgKind) Void Postgres.SQLExp ->
@@ -84,7 +84,7 @@ insertMultipleObjects ::
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   IR.MultiObjectInsert ('Postgres pgKind) Postgres.SQLExp ->
@@ -145,7 +145,7 @@ insertObject ::
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   IR.SingleObjectInsert ('Postgres pgKind) Postgres.SQLExp ->
@@ -233,7 +233,7 @@ insertObjRel ::
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Seq.Seq PG.PrepArg ->
@@ -273,7 +273,7 @@ insertArrRel ::
     MonadIO m,
     Tracing.MonadTrace m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   [(PGCol, Postgres.SQLExp)] ->

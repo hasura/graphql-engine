@@ -150,6 +150,7 @@ export const TableRow = React.memo(
                 callToActionLoadingText="Saving..."
                 isLoading={isLoading}
                 show={showCustomModal}
+                source={dataSourceName}
               />
             </div>
           )}

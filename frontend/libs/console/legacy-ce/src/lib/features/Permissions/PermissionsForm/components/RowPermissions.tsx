@@ -157,7 +157,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   // determines whether the inputs should be pointed at `check` or `filter`
   const rowPermissions = getRowPermission(subQueryType ?? queryType);
 
-  // determines whether the check type should be pointer at `checkType` or `filterType`
+  // determines whether the check type should be pointed at `checkType` or `filterType`
   const rowPermissionsCheckType = getRowPermissionCheckType(
     subQueryType ?? queryType
   );

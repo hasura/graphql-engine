@@ -5,6 +5,7 @@ import {
 } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
+import { WarningCard } from '../../Common/WarningCard';
 
 export const ServiceAccount = ({ name }: { name: string }) => {
   const options = [
@@ -35,7 +36,10 @@ export const ServiceAccount = ({ name }: { name: string }) => {
       </div>
 
       {connectionType === 'serviceAccountKey' ? (
-        <CodeEditorField name={`${name}.value`} label="Service Account" />
+        <>
+          <WarningCard />
+          <CodeEditorField name={`${name}.value`} label="Service Account" />
+        </>
       ) : (
         <InputField
           name={`${name}.envVar`}

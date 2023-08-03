@@ -5,7 +5,6 @@ import { Dialog } from '../../../../new-components/Dialog';
 import { useConsoleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import { Feature } from '../../../DataSource';
 import { useMetadata } from '../../../hasura-metadata-api';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
@@ -23,6 +22,8 @@ import { extractModelsAndQueriesFromMetadata } from '../../../hasura-metadata-ap
 import { Link } from 'react-router';
 import { formFieldToLogicalModelField } from './mocks/utils/formFieldToLogicalModelField';
 import { useSupportedDrivesForNativeQueries } from '../hook';
+import { useAllDriverCapabilities } from '../../hooks/useAllDriverCapabilities';
+import { supportsSchemaLessTables } from './utils';
 
 export type AddLogicalModelDialogProps = {
   defaultValues?: Partial<AddLogicalModelFormData>;
@@ -55,7 +56,6 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
   });
   const selectedDataSource = watch('dataSourceName');
   const allowedDrivers = useSupportedDrivesForNativeQueries();
-
   /**
    * Options for the data sources
    */
@@ -63,14 +63,20 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
     data: sourceOptions = [],
     error: sourceOptionError,
     isLoading: isMetadataLoading,
-  } = useMetadata(m =>
-    m.metadata.sources
-      .filter(s => allowedDrivers.includes(s.kind))
-      .map(source => ({
-        value: source.name,
-        label: source.name,
-      }))
-  );
+  } = useAllDriverCapabilities({
+    select: data => {
+      return data
+        .filter(
+          source =>
+            allowedDrivers.includes(source.driver.kind) ||
+            supportsSchemaLessTables(source.capabilities)
+        )
+        .map(({ driver }) => ({
+          value: driver.name,
+          label: driver.name,
+        }));
+    },
+  });
 
   const { data: isThereBigQueryOrMssqlSource } = useMetadata(
     m =>
@@ -88,10 +94,6 @@ export const LogicalModelWidget = (props: AddLogicalModelDialogProps) => {
     isLoading: isIntrospectionLoading,
   } = useSupportedDataTypes({
     dataSourceName: selectedDataSource,
-    select: values => {
-      if (values === Feature.NotImplemented) return [];
-      return Object.values(values).flat();
-    },
     options: {
       enabled: !!selectedDataSource,
     },

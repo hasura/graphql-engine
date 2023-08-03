@@ -2,6 +2,9 @@
 [class~='menu__link'] {
   padding-right: 0;
   height: 30px;
+  div {
+    display: flex;
+  }
 }
 
 .theme-doc-sidebar-container {

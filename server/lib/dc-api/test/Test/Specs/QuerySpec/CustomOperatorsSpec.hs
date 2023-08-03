@@ -42,12 +42,12 @@ spec TestData {..} (ScalarTypesCapabilities scalarTypesCapabilities) = describe 
       let queryRequest =
             let fields = Data.mkFieldsMap [(unColumnName columnName, _tdColumnField tableName (unColumnName columnName))]
                 query' = Data.emptyQuery & qFields ?~ fields
-             in TableQueryRequest tableName mempty query' Nothing
+             in TableQueryRequest tableName mempty mempty query' Nothing
           where' =
             ApplyBinaryComparisonOperator
               (CustomBinaryComparisonOperator (unName operatorName))
               (_tdCurrentComparisonColumn (unColumnName columnName) columnType)
-              (AnotherColumnComparison $ ComparisonColumn CurrentTable argColumnName argType)
+              (AnotherColumnComparison $ ComparisonColumn CurrentTable (mkColumnSelector argColumnName) argType Nothing)
           query =
             queryRequest
               & qrQuery . qWhere ?~ where'

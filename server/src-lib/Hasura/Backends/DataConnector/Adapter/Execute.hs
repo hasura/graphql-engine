@@ -53,7 +53,7 @@ instance BackendExecute 'DataConnector where
   type ExecutionMonad 'DataConnector = AgentClientT
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
+    queryPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkQueryPlan ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
@@ -65,7 +65,7 @@ instance BackendExecute 'DataConnector where
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir _headers _gName = do
-    queryPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkQueryPlan _uiSession ir
+    queryPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkQueryPlan ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       $ mkAnyBackend @'DataConnector
@@ -78,7 +78,7 @@ instance BackendExecute 'DataConnector where
           }
 
   mkDBMutationPlan _env _manager _logger UserInfo {..} _stringifyNum sourceName sourceConfig mutationDB _headers _gName _maybeSelSetArgs = do
-    mutationPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkMutationPlan _uiSession mutationDB
+    mutationPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkMutationPlan mutationDB
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo
@@ -96,7 +96,7 @@ instance BackendExecute 'DataConnector where
     throw400 NotSupported "mkLiveQuerySubscriptionPlan: not implemented for the Data Connector backend."
 
   mkDBRemoteRelationshipPlan UserInfo {..} sourceName sourceConfig joinIds joinIdsSchema argumentIdFieldName (resultFieldName, ir) _ _ _ = do
-    remoteRelationshipPlan@Plan {..} <- flip runReaderT sourceConfig $ Plan.mkRemoteRelationshipPlan _uiSession sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
+    remoteRelationshipPlan@Plan {..} <- flip runReaderT (API._cScalarTypes $ _scCapabilities sourceConfig, _uiSession) $ Plan.mkRemoteRelationshipPlan sourceConfig joinIds joinIdsSchema argumentIdFieldName resultFieldName ir
     transformedSourceConfig <- transformSourceConfig sourceConfig (Just _uiSession)
     pure
       DBStepInfo

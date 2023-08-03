@@ -9,6 +9,7 @@ module Hasura.NativeQuery.API
     execTrackNativeQuery,
     execUntrackNativeQuery,
     dropNativeQueryInMetadata,
+    assertNativeQueryExists,
     module Hasura.NativeQuery.Types,
   )
 where

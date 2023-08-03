@@ -7,6 +7,7 @@ import {
 } from '../../../ConnectDBRedesign/hooks';
 import { NATIVE_QUERY_ROUTES } from '../constants';
 import { injectRouteDetails, pathsToBreadcrumbs } from './route-wrapper-utils';
+import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 export type RouteWrapperProps = {
   route: keyof typeof NATIVE_QUERY_ROUTES;
@@ -21,7 +22,7 @@ export const RouteWrapper: React.FC<RouteWrapperProps> = props => {
 
   const paths = route?.split('/').filter(Boolean);
 
-  const { title, subtitle } = NATIVE_QUERY_ROUTES[route];
+  const { title, subtitle, docLink } = NATIVE_QUERY_ROUTES[route];
 
   const push = usePushRoute();
   const { consoleType } = useEnvironmentState();
@@ -41,9 +42,11 @@ export const RouteWrapper: React.FC<RouteWrapperProps> = props => {
               <div className="text-xl font-bold mt-2">
                 {injectRouteDetails(title, props)}
               </div>
-              <div className="text-muted">{subtitleOverride ?? subtitle}</div>
+              <div className="text-muted">
+                {subtitleOverride ?? subtitle}{' '}
+                {docLink && <LearnMoreLink href={docLink} />}
+              </div>
             </div>
-            <div className="text-muted">{subtitle}</div>
           </div>
         </div>
         <div className="">{children}</div>

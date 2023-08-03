@@ -1,2 +1,2 @@
-export { LogicalModelPermissionsRoute } from './LogicalModelPermissions/LogicalModelPermissionsPage';
+export { LogicalModelPermissionsRoute } from '../../Permissions/LogicalModelPermissions/LogicalModelPermissionsPage';
 export { ViewLogicalModelRoute } from './LogicalModel/ViewLogicalModelPage';

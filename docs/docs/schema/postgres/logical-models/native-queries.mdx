@@ -89,7 +89,7 @@ Click on the `Logical Models` tab, and on the `Add Logical Model` button.
 
 <Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
 
-Once the modal is open, fill in the form.
+Once the modal is open, fill in the form. Each added field will be returned as a field in the GraphQL schema.
 
 <Thumbnail
   src="/img/native-queries/create-logical-model-excerpt-example.png"
@@ -104,17 +104,17 @@ Once the modal is open, fill in the form.
 Add the following to the `default` database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  logical_models:
-    - name: article_excerpt
-      fields:
-        id:
-          type: integer
-        title:
-          type: text
-        date:
-          type: date
-        excerpt:
-          type: text
+logical_models:
+  - name: article_excerpt
+    fields:
+      id:
+        type: integer
+      title:
+        type: text
+      date:
+        type: date
+      excerpt:
+        type: text
 ```
 
 </TabItem>
@@ -165,23 +165,25 @@ We use `{{max_length}}` to refer to the argument. We need it twice, so we simply
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Click on the `Native Queries` tab and `Create Native Query` button.
+To start, click on the `Native Queries` tab and `Create Native Query` button:
 
 <Thumbnail src="/img/native-queries/native-query-create.png" alt="Create Native Query" width="1146px" />
 
-Fill in the form with the data required:
+Then, fill in the form with the data required:
 
-- Native Query name `article_with_excerpt`
-- The database to be used
-- The input parameter `max_length`
-- The Native Query statement
+| Field                      | Value                           |
+| -------------------------- | ------------------------------- |
+| Native Query name          | `article_with_excerpt`          |
+| Database                   | The database to be used         |
+| Input parameter            | `max_length`, of type `integer` |
+| The Native Query statement | Value below 👇                  |
 
 ```sql
 SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN '' else '...' END)) AS excerpt, date
 FROM article
 ```
 
-- The query return type, the Logical Model previously created `article_excerpt`
+Finally, at the end, add the Query Return Type as the `article_excerpt` Logical Model we created and click `Save`:
 
 <Thumbnail
   src="/img/native-queries/create-native-query-excerpt-example.png"
@@ -196,13 +198,15 @@ FROM article
 Add the following to the `default` database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  native_queries:
-    - root_field_name: article_with_excerpt
-      arguments:
-        max_length:
-          type: integer
-      code: SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN '' else '...' END)) AS excerpt, date FROM article
-      returns: article_excerpt
+native_queries:
+  - root_field_name: article_with_excerpt
+    arguments:
+      max_length:
+        type: integer
+    code:
+      SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN ''
+      else '...' END)) AS excerpt, date FROM article
+    returns: article_excerpt
 ```
 
 </TabItem>
@@ -303,11 +307,13 @@ Click on the `Logical Models` tab, and on the `Add Logical Model` button.
 
 Once the modal is open, fill in the forms with:
 
-- The database to use as source
-- The Logical Model name
-- The optional input fields
+| Field              | Value                         |
+| ------------------ | ----------------------------- |
+| Source             | The database to be used       |
+| Logical Model Name | The name of the Logical Model |
 
-<Thumbnail src="/img/native-queries/logical-model-modal.png" alt="Create Logical Model" width="800px" />
+Finally, add any optional fields that you would like to be included in the Logical Model and click
+`Create Logical Model`.
 
 </TabItem>
 
@@ -368,14 +374,17 @@ Click on the `Native Queries` tab and `Create Native Query` button.
 
 <Thumbnail src="/img/native-queries/native-query-create.png" alt="Create Native Query" width="1146px" />
 
-Fill in the form with the data required:
+Then, fill in the form with the data required:
 
-- Native Query name
-- An optional comment
-- The database to be used
-- Optional input parameters to be send to the Native Query
-- The Native Query statement
-- The query return type (the Logical Model previously created)
+| Field                      | Value                           |
+| -------------------------- | ------------------------------- |
+| Native Query name          | `article_with_excerpt`          |
+| Database                   | The database to be used         |
+| Input parameter            | `max_length`, of type `integer` |
+| The Native Query statement | Your SQL statement.             |
+| Query Return Type          | The Logical Model created above |
+
+Finally, click `Save`.
 
 <Thumbnail src="/img/native-queries/create-native-query.png" alt="Create Native Query Form" width="1146px" />
 
@@ -449,12 +458,14 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-You can use any SQL that you could potentially use in a parameterized query, with the following caveats:
+:::info You can use any SQL that you could potentially use in a parameterized query, with the following caveats
 
 - The query must currently be a single read-only SQL query.
 - The query must be a valid standalone query, and not a partial query.
 - The return type of the query must match with the Logical Model.
 - The SQL cannot invoke a stored procedure.
+
+:::
 
 #### Arguments
 

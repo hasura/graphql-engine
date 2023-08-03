@@ -93,7 +93,7 @@ Click on the `Logical Models` tab, and on the `Add Logical Model` button.
 
 <Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
 
-Once the modal is open, fill in the form.
+Once the modal is open, fill in the form. Each added field will be returned as a field in the GraphQL schema.
 
 <Thumbnail
   src="/img/native-queries/create-logical-model-excerpt-example.png"
@@ -108,17 +108,17 @@ Once the modal is open, fill in the form.
 Add the following to the `default` database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  logical_models:
-    - name: article_excerpt
-      fields:
-        id:
-          type: integer
-        title:
-          type: text
-        date:
-          type: date
-        excerpt:
-          type: text
+logical_models:
+  - name: article_excerpt
+    fields:
+      id:
+        type: integer
+      title:
+        type: text
+      date:
+        type: date
+      excerpt:
+        type: text
 ```
 
 </TabItem>
@@ -200,13 +200,15 @@ FROM article
 Add the following to the `default` database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  native_queries:
-    - root_field_name: article_with_excerpt
-      arguments:
-        max_length:
-          type: integer
-      code: SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN '' else '...' END)) AS excerpt, date FROM article
-      returns: article_excerpt
+native_queries:
+  - root_field_name: article_with_excerpt
+    arguments:
+      max_length:
+        type: integer
+    code:
+      SELECT id, title, (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN ''
+      else '...' END)) AS excerpt, date FROM article
+    returns: article_excerpt
 ```
 
 </TabItem>
@@ -289,8 +291,8 @@ In order to represent the structure of the data returned by the query, we first 
 
 :::info Permissions and Logical Models
 
-Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See
-the [Logical Model documentation](/schema/bigquery/logical-models/index.mdx) for information on attaching permissions.
+Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See the
+[Logical Model documentation](/schema/bigquery/logical-models/index.mdx) for information on attaching permissions.
 
 :::
 
@@ -464,8 +466,8 @@ You can use any SQL that you could potentially use in a parameterized query, wit
 
 The query can take arguments, which are specified in the metadata. These arguments can be used in the SQL using the
 syntax `{{argument_name}}`. This syntax resembles popular string templating languages such as Mustache, but does not use
-string interpolation. Instead, it works in exactly the same way as parameterized queries in the database, and so arguments
-do not need escaping or quoting in the SQL itself. They will be treated as variables of the correct type.
+string interpolation. Instead, it works in exactly the same way as parameterized queries in the database, and so
+arguments do not need escaping or quoting in the SQL itself. They will be treated as variables of the correct type.
 
 This does mean that arguments cannot be used for elements of the SQL that deal with structure. For example, you cannot
 use an argument to specify the name of the table in a `FROM` clause.
@@ -522,17 +524,17 @@ permissions.
 
 ## Relationships
 
-Relationships are supported between Native Queries.
-This is how Native Queries may implement object and array fields of their referenced Logical Model.
+Relationships are supported between Native Queries. This is how Native Queries may implement object and array fields of
+their referenced Logical Model.
 
-Unlike tables, relationships for a Native Query have to be given as part of
-tracking the Native Query: The schema of a Native Query is defined by its
-Logical Model, and the Native Query needs to implement all the fields of the
-Logical Model in order to be tracked successfully.
+Unlike tables, relationships for a Native Query have to be given as part of tracking the Native Query: The schema of a
+Native Query is defined by its Logical Model, and the Native Query needs to implement all the fields of the Logical
+Model in order to be tracked successfully.
 
 Currently relationships are only supported between Native Queries residing in the same source.
 
-As an example, consider the following definition of Logical Models and Native Queries:
+As an example, consider the following Native Queries which implement the data model of articles and authors given in the
+section on [Logical Model references](/schema/bigquery/logical-models/index.mdx#referencing-other-logical-models):
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="api" label="API">
@@ -660,11 +662,11 @@ X-Hasura-Role: admin
 
 :::info Wrap calls in `bulk_atomic`
 
-Similar to Logical Models, tracking the Native Queries one-by-one would fail,
-since `get_articles` refers to `get_authors`, which is not yet defined.
+Similar to Logical Models, tracking the Native Queries one-by-one would fail, since `get_articles` refers to
+`get_authors`, which is not yet defined.
 
-Tracking the Native Queries in one atomic operation postpones coherency checks
-until all models are tracked, which allows for mutual references.
+Tracking the Native Queries in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
 
 :::
 
@@ -674,23 +676,21 @@ The Native Queries in this example enable queries like:
 
 ```graphql
 query {
-  get_authors
-  {
+  get_authors {
     name
 
-    short_excerpt: articles(args: {length: 10})
-    {
+    short_excerpt: articles(args: { length: 10 }) {
       title
       contents
     }
 
-    long_excerpt: articles(args: {length: 100})
-    {
+    long_excerpt: articles(args: { length: 100 }) {
       title
       contents
     }
   }
 }
 ```
+
 </TabItem>
 </Tabs>

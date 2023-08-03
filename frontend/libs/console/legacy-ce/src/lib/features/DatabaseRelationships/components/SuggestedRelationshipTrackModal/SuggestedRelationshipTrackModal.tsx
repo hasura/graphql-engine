@@ -6,12 +6,12 @@ import {
   GraphQLSanitizedInputField,
 } from '../../../../new-components/Form';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import {
-  SuggestedRelationshipWithName,
-  useSuggestedRelationships,
-} from '../SuggestedRelationships/hooks/useSuggestedRelationships';
+import { SuggestedRelationshipWithName } from '../SuggestedRelationships/hooks/useSuggestedRelationships';
 import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
 import { DisplayToastErrorMessage } from '../../../Data/components/DisplayErrorMessage';
+import { useAppDispatch } from '../../../../storeHooks';
+import { updateSchemaInfo } from '../../../../components/Services/Data/DataActions';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 
 type SuggestedRelationshipTrackModalProps = {
   relationship: SuggestedRelationshipWithName;
@@ -22,14 +22,23 @@ type SuggestedRelationshipTrackModalProps = {
 export const SuggestedRelationshipTrackModal: React.VFC<
   SuggestedRelationshipTrackModalProps
 > = ({ relationship, dataSourceName, onClose }) => {
-  const { refetchSuggestedRelationships } = useSuggestedRelationships({
-    dataSourceName,
-    table: relationship.from.table,
-    isEnabled: true,
-  });
+  const dispatch = useAppDispatch();
+  const { data: driver } = useMetadata(
+    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+  );
 
-  const { createTableRelationships, isLoading } =
-    useCreateTableRelationships(dataSourceName);
+  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
+
+  const { createTableRelationships, isLoading } = useCreateTableRelationships(
+    dataSourceName,
+    {
+      onSuccess: () => {
+        if (isLoadSchemaRequired) {
+          dispatch(updateSchemaInfo());
+        }
+      },
+    }
+  );
 
   const onTrackRelationship = async (relationshipName: string) => {
     createTableRelationships({
@@ -62,7 +71,6 @@ export const SuggestedRelationshipTrackModal: React.VFC<
           type: 'success',
           title: 'Tracked Successfully',
         });
-        refetchSuggestedRelationships();
         onClose();
       },
       onError: err => {

@@ -53,6 +53,7 @@ import {
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
+  columnsDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
@@ -535,6 +536,7 @@ class AddTable extends Component {
             <div className="w-full mb-lg">
               <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
                 Columns
+                <ToolTip message={columnsDescription} />
               </h4>
               <TableColumns
                 uniqueKeys={uniqueKeys}

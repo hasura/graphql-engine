@@ -13,7 +13,11 @@ export const generateGDCRequestPayload = ({
     driver,
     details: {
       name: values.name,
-      configuration: values.configuration,
+      configuration: {
+        value: values.configuration,
+        timeout: { seconds: values.timeout },
+        template: values.template,
+      },
       customization: generateGraphQLCustomizationInfo(
         values.customization ?? {}
       ),

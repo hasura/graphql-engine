@@ -61,10 +61,12 @@ export const ArgumentsInput = ({
                   />
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell>
-                  <BooleanInput
-                    name={`${name}[${index}].nullable`}
-                    disabled={disabled}
-                  />
+                  <div className="mb-md">
+                    <BooleanInput
+                      name={`${name}[${index}].nullable`}
+                      disabled={disabled}
+                    />
+                  </div>
                 </CardedTable.TableBodyCell>
                 <CardedTable.TableBodyCell className="align-top">
                   <div className="px-sm py-xs">

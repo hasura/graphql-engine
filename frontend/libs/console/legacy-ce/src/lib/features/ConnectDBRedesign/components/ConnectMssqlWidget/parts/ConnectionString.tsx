@@ -1,6 +1,7 @@
 import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { ConnectionInfoSchema } from '../schema';
+import { WarningCard } from '../../Common/WarningCard';
 
 export const ConnectionString = ({ name }: { name: string }) => {
   const options = [
@@ -25,11 +26,14 @@ export const ConnectionString = ({ name }: { name: string }) => {
       </div>
 
       {connectionType === 'databaseUrl' ? (
-        <InputField
-          name={`${name}.url`}
-          label="Database URL"
-          placeholder="Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password"
-        />
+        <>
+          <WarningCard />
+          <InputField
+            name={`${name}.url`}
+            label="Database URL"
+            placeholder="Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password"
+          />
+        </>
       ) : (
         <InputField
           name={`${name}.envVar`}

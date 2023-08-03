@@ -113,8 +113,8 @@ When you use [webhook or JWT mode for authentication](/auth/authentication/index
 
 ### Admin Secrets
 
-A list of valid admin [secret keys](/auth/authentication/multiple-admin-secrets.mdx) any one of which can be used to access the
-Hasura instance.
+A list of valid admin [secret keys](/auth/authentication/multiple-admin-secrets.mdx) any one of which can be used to
+access the Hasura instance.
 
 |                     |                                |
 | ------------------- | ------------------------------ |
@@ -344,13 +344,13 @@ subgraph in an Apollo supergraph.
 
 Sets the maximum cumulative length of all headers in bytes.
 
-|                     |                                           |
-| ------------------- | ----------------------------------------- |
-| **Flag**            | `--max-total-header-length`               |
-| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH`  |
-| **Accepted values** | Integer                                   |
-| **Default**         | `1024*1024` (1MB)                         |
-| **Supported in**    | CE, Enterprise Edition                    |
+|                     |                                          |
+| ------------------- | ---------------------------------------- |
+| **Flag**            | `--max-total-header-length`              |
+| **Env var**         | `HASURA_GRAPHQL_MAX_TOTAL_HEADER_LENGTH` |
+| **Accepted values** | Integer                                  |
+| **Default**         | `1024*1024` (1MB)                        |
+| **Supported in**    | CE, Enterprise Edition                   |
 
 ### Enable Console
 
@@ -367,8 +367,9 @@ Enable the Hasura Console (served by the server on `/` and `/console`).
 
 ### Enable High-cardinality Labels for Metrics
 
-Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx). Enabling this setting
-will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription metrics).
+Enable high-cardinality labels for [Prometheus Metrics](/observability/enterprise-edition/prometheus/metrics.mdx).
+Enabling this setting will add more labels to some of the metrics (e.g. `operation_name` label for Graphql subscription
+metrics).
 
 |                     |                                                         |
 | ------------------- | ------------------------------------------------------- |
@@ -512,14 +513,14 @@ Postgres.
 
 List of experimental features to be enabled.
 
-|                     |                                                                                                                                                                                                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
-| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
-| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
-| **Options**         | `inherited_roles`, `optimise_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
-| **Default**         | `null`                                                                                                                                                                                                                                                            |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
+|                     |                                                                                                                                                                                                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                   |
+| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                 |
+| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                          |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields` |
+| **Default**         | `null`                                                                                                                                                                                                                                 |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                          |
 
 ### Graceful Shutdown Timeout
 
@@ -804,7 +805,8 @@ The maximum number of query plans that can be cached, where `0` disables the cac
 
 ### Rate-Limit Redis TLS Hostname
 
-The hostname to use for SNI when connecting to a rate-limiting [Redis instance over TLS](/caching/enterprise-caching.mdx).
+The hostname to use for SNI when connecting to a rate-limiting
+[Redis instance over TLS](/caching/enterprise-caching.mdx).
 
 |                     |                                                |
 | ------------------- | ---------------------------------------------- |
@@ -885,8 +887,8 @@ The path to a shared CA store to use to connect to both (caching and rate-limiti
 
 ### Redis URL
 
-The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and [Webhook Auth
-Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
+The Redis URL to use for [query caching](/caching/enterprise-caching.mdx) and
+[Webhook Auth Caching](/auth/authentication/webhook.mdx#webhook-auth-caching).
 
 |                     |                                          |
 | ------------------- | ---------------------------------------- |
@@ -945,6 +947,39 @@ List of third-party identity providers to enable Single Sign-on authentication f
 | **Default**         | `null`                                                                                                                                                                                                                                                                                                               |
 | **Example**         | `[{\"client_id\": \"<client-id-from-idp>\", \"name\": \"<display-name>\", \"scope\": \"openid\", \"authorization_url\": \"<login-url>\", \"request_token_url\": \"<request-token-url>\", \"admin_roles\": [\"admin\"], \"jwt_secret\": {\"type\": \"RS256\", \"jwk_url\": \"https://...\", \"issuer\": \"myapp\"}}]` |
 | **Supported in**    | EE                                                                                                                                                                                                                                                                                                                   |
+
+### Skip Arguments with `null` Values for Remote Schema
+
+Skip arguments with `null` values while resolving fields from Remote Schemas. For instance:
+
+```graphql
+query RemoteQuery {
+  users(type:null) {
+    id
+    ...
+  }
+}
+```
+
+is forwarded as:
+
+```graphql
+query RemoteQuery {
+  users {
+    id
+    ...
+  }
+}
+```
+
+|                     |                                           |
+| ------------------- | ----------------------------------------- |
+| **Flag**            | `--remote-schema-skip-nulls`              |
+| **Env var**         | `HASURA_GRAPHQL_REMOTE_SCHEMA_SKIP_NULLS` |
+| **Accepted values** | Boolean                                   |
+| **Options**         | `true` or `false`                         |
+| **Default**         | `false`                                   |
+| **Supported in**    | CE, Enterprise Edition, Cloud             |
 
 ### Streaming Queries Multiplexed Batch Size
 

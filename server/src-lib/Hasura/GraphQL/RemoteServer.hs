@@ -34,6 +34,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.Metadata
 import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
@@ -93,7 +94,7 @@ stitchRemoteSchema rawIntrospectionResult rsDef@ValidatedRemoteSchemaDef {..} = 
   -- quickly reject an invalid schema.
   void
     $ runMemoizeT
-    $ runRemoteSchema minimumValidContext
+    $ runRemoteSchema minimumValidContext Options.RemoteForwardAccurately
     $ buildRemoteParser @_ @_ @Parse
       _rscIntroOriginal
       mempty -- remote relationships

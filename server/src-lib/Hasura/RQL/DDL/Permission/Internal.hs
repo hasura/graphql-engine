@@ -24,7 +24,7 @@ import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.LogicalModel.Types (LogicalModelName)
+import Hasura.LogicalModel.Types (LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -124,11 +124,11 @@ procLogicalModelBoolExp ::
     Has (ScalarTypeParsingContext b) r
   ) =>
   SourceName ->
-  LogicalModelName ->
+  LogicalModelLocation ->
   FieldInfoMap (FieldInfo b) ->
   BoolExp b ->
   m (AnnBoolExpPartialSQL b, Seq SchemaDependency)
-procLogicalModelBoolExp source lmn fieldInfoMap be = do
+procLogicalModelBoolExp source logicalModelLocation fieldInfoMap be = do
   let -- The parser for the "right hand side" of operations. We use @rhsParser@
       -- as the name here for ease of grepping, though it's maybe a bit vague.
       -- More specifically, if we think of an operation that combines a field
@@ -147,7 +147,7 @@ procLogicalModelBoolExp source lmn fieldInfoMap be = do
       -- this boolean expression? This dependency system is explained more
       -- thoroughly in the 'buildLogicalModelSelPermInfo' inline comments.
       deps :: [SchemaDependency]
-      deps = getLogicalModelBoolExpDeps source lmn abe
+      deps = getLogicalModelBoolExpDeps source logicalModelLocation abe
 
   return (abe, Seq.fromList deps)
 

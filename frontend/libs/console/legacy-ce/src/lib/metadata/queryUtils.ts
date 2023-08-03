@@ -151,7 +151,7 @@ export const getCreatePermissionQuery = (
   action: 'update' | 'insert' | 'delete' | 'select',
   tableDef: QualifiedTable,
   role: string,
-  permission: any,
+  permissionAndComment: any,
   source: string
 ) => {
   let queryType: MetadataQueryType;
@@ -171,11 +171,13 @@ export const getCreatePermissionQuery = (
     default:
       throw new Error('Invalid action type');
   }
+  const { comment, ...permission } = permissionAndComment;
 
   return getMetadataQuery(queryType, source, {
     table: tableDef,
     role,
     permission,
+    comment,
   });
 };
 

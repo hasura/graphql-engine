@@ -11,7 +11,11 @@ import {
   getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
-import { DataTypeToSQLTypeMap, bigQueryCapabilities } from './utils';
+import {
+  DataTypeScalars,
+  DataTypeToSQLTypeMap,
+  bigQueryCapabilities,
+} from './utils';
 
 export type BigQueryTable = { name: string; dataset: string };
 
@@ -41,6 +45,7 @@ export const bigquery: Database = {
     getDatabaseSchemas: async () => Feature.NotImplemented,
     getIsTableView: async () => Feature.NotImplemented,
     getSupportedDataTypes: async () => DataTypeToSQLTypeMap,
+    getSupportedScalars: async () => DataTypeScalars,
   },
   query: {
     getTableRows,

@@ -34,13 +34,20 @@ export const getTableColumns = async ({
   const { schema, name } = table as PostgresTable;
 
   const sql = `
-   SELECT 
-   column_name, data_type, is_nullable
-  FROM 
-    information_schema.columns 
-  WHERE 
-    table_schema = '${schema}' AND 
-    table_name  = '${name}';`;
+  SELECT a.attname as column_name,
+       pg_catalog.format_type(a.atttypid, NULL) as data_type,
+       case
+        when a.attnotnull = 'f' then 'true'
+        else 'false'
+       end as is_nullable
+FROM pg_attribute a
+  JOIN pg_class t on a.attrelid = t.oid
+  JOIN pg_namespace s on t.relnamespace = s.oid
+WHERE a.attnum > 0 
+  AND NOT a.attisdropped
+  AND t.relname = '${name}'
+  AND s.nspname = '${schema}' 
+`;
 
   const tables = await runSQL({
     source: {

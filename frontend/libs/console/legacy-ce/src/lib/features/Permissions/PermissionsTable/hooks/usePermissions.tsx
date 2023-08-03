@@ -4,7 +4,7 @@ import type { TableColumn } from '../../../DataSource';
 
 import { useQuery } from 'react-query';
 import { useHttpClient } from '../../../Network';
-import { MetadataTable, Metadata } from '../../../hasura-metadata-types';
+import { MetadataTable, Metadata, Table } from '../../../hasura-metadata-types';
 import { keyToPermission, metadataPermissionKeys } from '../../utils';
 
 interface RolePermission {
@@ -319,6 +319,16 @@ const getRoles = (m: Metadata) => {
   return Array.from(new Set(roleNames));
 };
 
+export function permissionsTableKey({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: Table;
+}) {
+  return [dataSourceName, 'permissions', table];
+}
+
 export const useRolePermissions = ({
   dataSourceName,
   table,
@@ -329,7 +339,10 @@ export const useRolePermissions = ({
     { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
     Error
   >({
-    queryKey: [dataSourceName, 'permissionsTable', JSON.stringify(table)],
+    queryKey: permissionsTableKey({
+      dataSourceName,
+      table,
+    }),
     queryFn: async () => {
       const metadata = await exportMetadata({ httpClient });
       // get table columns for metadata table from db introspection

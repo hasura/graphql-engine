@@ -32,6 +32,7 @@ import Hasura.RQL.IR.Root
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Roles (adminRoleName)
+import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.Session (BackendOnlyFieldAccess (..), SessionVariables, UserInfo (..), mkSessionVariable)
 import Language.GraphQL.Draft.Parser qualified as G
@@ -137,7 +138,7 @@ buildQueryParsers introspection = do
   RemoteSchemaParser query _ _ <-
     runError
       $ runMemoizeT
-      $ runRemoteSchema schemaContext
+      $ runRemoteSchema schemaContext Options.RemoteForwardAccurately
       $ buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure
     $ head query

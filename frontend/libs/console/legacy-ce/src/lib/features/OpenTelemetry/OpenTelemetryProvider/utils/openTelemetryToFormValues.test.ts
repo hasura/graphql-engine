@@ -14,10 +14,11 @@ describe('openTelemetryToFormValues', () => {
       resource_attributes: [],
       protocol: 'http/protobuf',
       headers: [{ name: 'baz', value: 'qux' }],
-      otlp_traces_endpoint: 'https://hasura.io',
+      otlp_traces_endpoint: 'https://hasura.io/v1/traces',
+      otlp_metrics_endpoint: 'https://hasura.io/v1/metrics',
     },
 
-    data_types: ['traces'],
+    data_types: ['traces', 'metrics'],
     batch_span_processor: {
       max_export_batch_size: 100,
     },
@@ -28,11 +29,11 @@ describe('openTelemetryToFormValues', () => {
 
     batchSize: 100,
     attributes: [],
-    endpoint: 'https://hasura.io',
+    tracesEndpoint: 'https://hasura.io/v1/traces',
+    metricsEndpoint: 'https://hasura.io/v1/metrics',
     headers: [{ name: 'baz', value: 'qux', type: 'from_value' }],
 
-    // At the beginning, only one Data Type is available
-    dataType: ['traces'],
+    dataType: ['traces', 'metrics'],
     // At the beginning, only one Connection Type is available
     connectionType: 'http/protobuf',
   };
@@ -52,7 +53,8 @@ describe('openTelemetryToFormValues', () => {
 
         batchSize: 100,
         attributes: [],
-        endpoint: '',
+        tracesEndpoint: '',
+        metricsEndpoint: '',
         headers: [{ name: 'baz', value: 'qux', type: 'from_value' }],
 
         // At the beginning, only one Data Type is available

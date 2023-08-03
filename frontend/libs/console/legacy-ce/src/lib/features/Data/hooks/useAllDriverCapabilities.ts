@@ -4,9 +4,10 @@ import { DataSource, Feature } from '../../DataSource';
 import { Capabilities } from '@hasura/dc-api-types';
 import { useHttpClient } from '../../Network';
 import { useMetadata } from '../../hasura-metadata-api';
+import { Source } from '../../hasura-metadata-types';
 
 type AllCapabilitiesReturnType = {
-  driver: string;
+  driver: Source;
   capabilities: Feature | Capabilities;
 }[];
 
@@ -21,19 +22,20 @@ export const useAllDriverCapabilities = <
 }) => {
   const httpClient = useHttpClient();
 
-  const { data: driverNames = [], isFetching: isFetchingMetadata } =
-    useMetadata(m => m.metadata.sources.map(source => source.kind));
+  const { data: drivers = [], isFetching: isFetchingMetadata } = useMetadata(
+    m => m.metadata.sources
+  );
 
   return useQuery<AllCapabilitiesReturnType, APIError, FinalResult>(
-    [driverNames, 'all_capabilities'],
+    ['all_capabilities'],
     async () => {
-      const result = driverNames.map(async driverName => {
+      const result = drivers.map(async driver => {
         const capabilities =
           (await DataSource(httpClient).getDriverCapabilities(
-            driverName ?? ''
+            driver ? driver.kind : ''
           )) ?? Feature.NotImplemented;
 
-        return { driver: driverName, capabilities };
+        return { driver, capabilities };
       });
 
       const finalResult = await Promise.all(result);

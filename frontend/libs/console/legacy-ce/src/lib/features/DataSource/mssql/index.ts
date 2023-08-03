@@ -22,7 +22,7 @@ import {
   getStoredProcedures,
 } from './introspection';
 import { getTableRows } from './query';
-import { DataTypeToSQLTypeMap } from './utils';
+import { DataTypeToSQLTypeMap, DataTypeScalars } from './utils';
 
 export type MssqlTable = { schema: string; name: string };
 
@@ -90,6 +90,7 @@ export const mssql: Database = {
     getDatabaseSchemas,
     getIsTableView,
     getSupportedDataTypes: async () => DataTypeToSQLTypeMap,
+    getSupportedScalars: async () => DataTypeScalars,
     getStoredProcedures,
   },
   modify: {

@@ -13,11 +13,10 @@ where
 
 --------------------------------------------------------------------------------
 
-import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Bifunctor (Bifunctor (bimap))
-import Data.Has (Has)
+import Data.Has
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
@@ -63,11 +62,14 @@ instance Monoid FieldsAndAggregates where
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkQueryPlan ::
   forall m r.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m (Plan API.QueryRequest API.QueryResponse)
-mkQueryPlan sessionVariables ir = do
+mkQueryPlan ir = do
   queryRequest <- translateQueryDB ir
   pure $ Plan queryRequest (reshapeResponseToQueryShape ir)
   where
@@ -76,78 +78,103 @@ mkQueryPlan sessionVariables ir = do
       m API.QueryRequest
     translateQueryDB =
       \case
-        QDBMultipleRows simpleSelect -> translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect
-        QDBSingleRow simpleSelect -> translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect
-        QDBAggregation aggregateSelect -> translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect
+        QDBMultipleRows simpleSelect -> translateAnnSimpleSelectToQueryRequest simpleSelect
+        QDBSingleRow simpleSelect -> translateAnnSimpleSelectToQueryRequest simpleSelect
+        QDBAggregation aggregateSelect -> translateAnnAggregateSelectToQueryRequest aggregateSelect
 
 translateAnnSimpleSelectToQueryRequest ::
   forall m r.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.QueryRequest
-translateAnnSimpleSelectToQueryRequest sessionVariables simpleSelect =
-  translateAnnSelectToQueryRequest sessionVariables (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) simpleSelect
+translateAnnSimpleSelectToQueryRequest simpleSelect =
+  translateAnnSelectToQueryRequest (translateAnnFieldsWithNoAggregates noPrefix) simpleSelect
 
 translateAnnAggregateSelectToQueryRequest ::
   forall m r.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   AnnAggregateSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.QueryRequest
-translateAnnAggregateSelectToQueryRequest sessionVariables aggregateSelect =
-  translateAnnSelectToQueryRequest sessionVariables (translateTableAggregateFields sessionVariables) aggregateSelect
+translateAnnAggregateSelectToQueryRequest aggregateSelect =
+  translateAnnSelectToQueryRequest translateTableAggregateFields aggregateSelect
 
 translateAnnSelectToQueryRequest ::
   forall m r fieldType.
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
-  (TableRelationshipsKey -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT TableRelationships m FieldsAndAggregates) ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
+  ( forall state m2.
+    ( MonadState state m2,
+      Has TableRelationships state,
+      Has RedactionExpressionState state,
+      MonadError QErr m2,
+      MonadReader r m2,
+      Has API.ScalarTypesCapabilities r,
+      Has SessionVariables r
+    ) =>
+    API.TargetName ->
+    Fields (fieldType (UnpreparedValue 'DataConnector)) ->
+    m2 FieldsAndAggregates
+  ) ->
   AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
   m API.QueryRequest
-translateAnnSelectToQueryRequest sessionVariables translateFieldsAndAggregates selectG = do
+translateAnnSelectToQueryRequest translateFieldsAndAggregates selectG = do
   case _asnFrom selectG of
     FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
     FromNativeQuery {} -> throw400 NotSupported "AnnSelectG: FromNativeQuery not supported"
     FromStoredProcedure {} -> throw400 NotSupported "AnnSelectG: FromStoredProcedure not supported"
     FromTable tableName -> do
-      (query, TableRelationships tableRelationships) <-
-        CPS.runWriterT (translateAnnSelect sessionVariables translateFieldsAndAggregates (TableNameKey (Witch.into tableName)) selectG)
+      (query, (TableRelationships tableRelationships, redactionExpressionState)) <-
+        flip runStateT (mempty, RedactionExpressionState mempty) $ translateAnnSelect translateFieldsAndAggregates (API.TNTable (Witch.into tableName)) selectG
       let relationships = mkRelationships <$> HashMap.toList tableRelationships
       pure
         $ API.QRTable
           API.TableRequest
             { _trTable = Witch.into tableName,
               _trRelationships = Set.fromList relationships,
+              _trRedactionExpressions = translateRedactionExpressions redactionExpressionState,
               _trQuery = query,
               _trForeach = Nothing
             }
     FromFunction fn@(FunctionName functionName) argsExp _dListM -> do
-      args <- mkArgs sessionVariables argsExp fn
-      (query, TableRelationships tableRelationships) <-
-        CPS.runWriterT (translateAnnSelect sessionVariables translateFieldsAndAggregates (FunctionNameKey (Witch.into functionName)) selectG)
+      args <- mkArgs argsExp fn
+      (query, (redactionExpressionState, TableRelationships tableRelationships)) <-
+        flip runStateT (RedactionExpressionState mempty, mempty) $ translateAnnSelect translateFieldsAndAggregates (API.TNFunction (Witch.into functionName)) selectG
       let relationships = mkRelationships <$> HashMap.toList tableRelationships
       pure
         $ API.QRFunction
           API.FunctionRequest
             { _frFunction = Witch.into functionName,
               _frRelationships = Set.fromList relationships,
+              _frRedactionExpressions = translateRedactionExpressions redactionExpressionState,
               _frQuery = query,
               _frFunctionArguments = args
             }
 
-mkRelationships :: (TableRelationshipsKey, (HashMap API.RelationshipName API.Relationship)) -> API.Relationships
-mkRelationships (FunctionNameKey functionName, relationships) = API.RFunction (API.FunctionRelationships functionName relationships)
-mkRelationships (TableNameKey tableName, relationships) = API.RTable (API.TableRelationships tableName relationships)
+mkRelationships :: (API.TargetName, (HashMap API.RelationshipName API.Relationship)) -> API.Relationships
+mkRelationships (API.TNFunction functionName, relationships) = API.RFunction (API.FunctionRelationships functionName relationships)
+mkRelationships (API.TNTable tableName, relationships) = API.RTable (API.TableRelationships tableName relationships)
 
 mkArgs ::
-  ( MonadError QErr m
+  forall r m.
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
   Function.FunctionArgsExpG (ArgumentExp (UnpreparedValue 'DataConnector)) ->
   FunctionName ->
   m [API.FunctionArgument]
-mkArgs sessionVariables (Function.FunctionArgsExp ps ns) functionName = do
+mkArgs (Function.FunctionArgsExp ps ns) functionName = do
   unless (null ps) $ throw400 NotSupported $ "Positional arguments not supported in function " <> toTxt functionName
   getNamed
   where
@@ -158,28 +185,31 @@ mkArgs sessionVariables (Function.FunctionArgsExp ps ns) functionName = do
       UVLiteral _ -> throw400 NotSupported "Literal not supported in Data Connector function args."
       UVSessionVar _ _ -> throw400 NotSupported "SessionVar not supported in Data Connector function args."
       UVParameter _ (ColumnValue t v) -> pure (API.ScalarValue v (coerce (toTxt t)))
-      UVSession -> pure (API.ScalarValue (J.toJSON sessionVariables) (API.ScalarType "json"))
+      UVSession -> do
+        (sessionVariables :: SessionVariables) <- asks getter
+        pure (API.ScalarValue (J.toJSON sessionVariables) (API.ScalarType "json"))
 
 translateAnnSelect ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  (TableRelationshipsKey -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT writerOutput m FieldsAndAggregates) ->
-  TableRelationshipsKey ->
+  (API.TargetName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> m FieldsAndAggregates) ->
+  API.TargetName ->
   AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m API.Query
-translateAnnSelect sessionVariables translateFieldsAndAggregates entityName selectG = do
+  m API.Query
+translateAnnSelect translateFieldsAndAggregates entityName selectG = do
   FieldsAndAggregates {..} <- translateFieldsAndAggregates entityName (_asnFields selectG)
   let whereClauseWithPermissions =
         case _saWhere (_asnArgs selectG) of
           Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
           Nothing -> _tpFilter (_asnPerm selectG)
-  whereClause <- translateBoolExpToExpression sessionVariables entityName whereClauseWithPermissions
-  orderBy <- traverse (translateOrderBy sessionVariables entityName) (_saOrderBy $ _asnArgs selectG)
+  whereClause <- translateBoolExpToExpression entityName whereClauseWithPermissions
+  orderBy <- traverse (translateOrderBy entityName) (_saOrderBy $ _asnArgs selectG)
   pure
     API.Query
       { _qFields = mapFieldNameHashMap <$> _faaFields,
@@ -198,21 +228,22 @@ translateAnnSelect sessionVariables translateFieldsAndAggregates entityName sele
       }
 
 translateOrderBy ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector)) ->
-  CPS.WriterT writerOutput m API.OrderBy
-translateOrderBy sessionVariables sourceName orderByItems = do
+  m API.OrderBy
+translateOrderBy sourceName orderByItems = do
   orderByElementsAndRelations <- for orderByItems \OrderByItemG {..} -> do
     let orderDirection = maybe API.Ascending Witch.from obiType
-    translateOrderByElement sessionVariables sourceName orderDirection [] obiColumn
-  relations <- lift . mergeOrderByRelations $ snd <$> orderByElementsAndRelations
+    translateOrderByElement sourceName orderDirection [] obiColumn
+  relations <- mergeOrderByRelations $ snd <$> orderByElementsAndRelations
   pure
     API.OrderBy
       { _obRelations = relations,
@@ -220,34 +251,35 @@ translateOrderBy sessionVariables sourceName orderByItems = do
       }
 
 translateOrderByElement ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   API.OrderDirection ->
   [API.RelationshipName] ->
   AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (API.OrderByElement, HashMap API.RelationshipName API.OrderByRelation)
-translateOrderByElement sessionVariables sourceName orderDirection targetReversePath = \case
-  -- TODO(redactionExp): Deal with this redaction expressions
-  AOCColumn ColumnInfo {..} _redactionExp ->
+  m (API.OrderByElement, HashMap API.RelationshipName API.OrderByRelation)
+translateOrderByElement sourceName orderDirection targetReversePath = \case
+  AOCColumn ColumnInfo {..} redactionExp -> do
+    redactionExpName <- recordRedactionExpression sourceName redactionExp
     pure
       ( API.OrderByElement
           { _obeTargetPath = reverse targetReversePath,
-            _obeTarget = API.OrderByColumn $ Witch.from ciColumn,
+            _obeTarget = API.OrderByColumn (Witch.from ciColumn) redactionExpName,
             _obeOrderDirection = orderDirection
           },
         mempty
       )
   AOCObjectRelation relationshipInfo filterExp orderByElement -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
-    (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement sessionVariables (TableNameKey _rTargetTable) orderDirection (relationshipName : targetReversePath) orderByElement
+    (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement (API.TNTable _rTargetTable) orderDirection (relationshipName : targetReversePath) orderByElement
 
-    targetTableWhereExp <- translateBoolExpToExpression sessionVariables (TableNameKey _rTargetTable) filterExp
+    targetTableWhereExp <- translateBoolExpToExpression (API.TNTable _rTargetTable) filterExp
     let orderByRelations = HashMap.fromList [(relationshipName, API.OrderByRelation targetTableWhereExp subOrderByRelations)]
 
     pure (translatedOrderByElement, orderByRelations)
@@ -257,10 +289,10 @@ translateOrderByElement sessionVariables sourceName orderDirection targetReverse
       AAOCount ->
         pure API.OrderByStarCountAggregate
       AAOOp AggregateOrderByColumn {_aobcColumn = ColumnInfo {..}, ..} -> do
-        -- TODO(redactionExp): Deal with the redaction expression: _aobcRedactionExpression
-        aggFunction <- lift $ translateSingleColumnAggregateFunction _aobcAggregateFunctionName
+        redactionExpName <- recordRedactionExpression sourceName _aobcRedactionExpression
+        aggFunction <- translateSingleColumnAggregateFunction _aobcAggregateFunctionName
         let resultScalarType = Witch.from $ columnTypeToScalarType _aobcAggregateFunctionReturnType
-        pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction (Witch.from ciColumn) resultScalarType
+        pure . API.OrderBySingleColumnAggregate $ API.SingleColumnAggregate aggFunction (Witch.from ciColumn) redactionExpName resultScalarType
 
     let translatedOrderByElement =
           API.OrderByElement
@@ -269,7 +301,7 @@ translateOrderByElement sessionVariables sourceName orderDirection targetReverse
               _obeOrderDirection = orderDirection
             }
 
-    targetTableWhereExp <- translateBoolExpToExpression sessionVariables (TableNameKey _rTargetTable) filterExp
+    targetTableWhereExp <- translateBoolExpToExpression (API.TNTable _rTargetTable) filterExp
     let orderByRelations = HashMap.fromList [(relationshipName, API.OrderByRelation targetTableWhereExp mempty)]
     pure (translatedOrderByElement, orderByRelations)
 
@@ -293,71 +325,73 @@ mergeOrderByRelations orderByRelationsList =
         else throw500 "mergeOrderByRelations: Differing filter expressions found for the same table"
 
 translateAnnFieldsWithNoAggregates ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
   FieldPrefix ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m FieldsAndAggregates
-translateAnnFieldsWithNoAggregates sessionVariables fieldNamePrefix sourceName fields =
-  (\fields' -> FieldsAndAggregates (Just fields') Nothing) <$> translateAnnFields sessionVariables fieldNamePrefix sourceName fields
+  m FieldsAndAggregates
+translateAnnFieldsWithNoAggregates fieldNamePrefix sourceName fields =
+  (\fields' -> FieldsAndAggregates (Just fields') Nothing) <$> translateAnnFields fieldNamePrefix sourceName fields
 
 translateAnnFields ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
   FieldPrefix ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (HashMap FieldName API.Field)
-translateAnnFields sessionVariables fieldNamePrefix sourceName fields = do
-  translatedFields <- traverse (traverse (translateAnnField sessionVariables sourceName)) fields
+  m (HashMap FieldName API.Field)
+translateAnnFields fieldNamePrefix sourceName fields = do
+  translatedFields <- traverse (traverse (translateAnnField sourceName)) fields
   pure $ HashMap.fromList (mapMaybe (\(fieldName, field) -> (applyPrefix fieldNamePrefix fieldName,) <$> field) translatedFields)
 
 translateAnnField ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (Maybe API.Field)
-translateAnnField sessionVariables sourceTableName = \case
+  m (Maybe API.Field)
+translateAnnField sourceTableName = \case
   AFNestedObject nestedObj ->
     Just
       . API.NestedObjField (Witch.from $ _anosColumn nestedObj)
-      <$> translateNestedObjectSelect sessionVariables sourceTableName nestedObj
+      <$> translateNestedObjectSelect sourceTableName nestedObj
   AFNestedArray _ (ANASSimple field) ->
-    fmap mkArrayField <$> translateAnnField sessionVariables sourceTableName field
+    fmap mkArrayField <$> translateAnnField sourceTableName field
     where
       mkArrayField nestedField =
         API.NestedArrayField (API.ArrayField nestedField Nothing Nothing Nothing Nothing)
   -- TODO(dmoverton): support limit, offset, where and order_by in ArrayField
   AFNestedArray _ (ANASAggregate _) ->
     pure Nothing -- TODO(dmoverton): support nested array aggregates
-  AFColumn colField ->
-    -- TODO(redactionExp): Deal with the redaction expression: _acfRedactionExpression
-    -- TODO: make sure certain fields in colField are not in use, since we don't support them
-    pure . Just $ API.ColumnField (Witch.from $ _acfColumn colField) (Witch.from . columnTypeToScalarType $ _acfType colField)
+  AFColumn AnnColumnField {..} -> do
+    redactionExpName <- recordRedactionExpression sourceTableName _acfRedactionExpression
+    pure . Just $ API.ColumnField (Witch.from _acfColumn) (Witch.from $ columnTypeToScalarType _acfType) redactionExpName
   AFObjectRelation objRel ->
     case _aosTarget (_aarAnnSelect objRel) of
       FromTable tableName -> do
         let targetTable = Witch.from tableName
         let relationshipName = mkRelationshipName $ _aarRelationshipName objRel
-        fields <- translateAnnFields sessionVariables noPrefix (TableNameKey targetTable) (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExpToExpression sessionVariables (TableNameKey targetTable) (_aosTargetFilter (_aarAnnSelect objRel))
+        fields <- translateAnnFields noPrefix (API.TNTable targetTable) (_aosFields (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression (API.TNTable targetTable) (_aosTargetFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
@@ -385,9 +419,9 @@ translateAnnField sessionVariables sourceTableName = \case
             )
       other -> error $ "translateAnnField: " <> show other
   AFArrayRelation (ASSimple arrayRelationSelect) -> do
-    Just <$> translateArrayRelationSelect sessionVariables sourceTableName (translateAnnFieldsWithNoAggregates sessionVariables noPrefix) arrayRelationSelect
+    Just <$> translateArrayRelationSelect sourceTableName (translateAnnFieldsWithNoAggregates noPrefix) arrayRelationSelect
   AFArrayRelation (ASAggregate arrayRelationSelect) ->
-    Just <$> translateArrayRelationSelect sessionVariables sourceTableName (translateTableAggregateFields sessionVariables) arrayRelationSelect
+    Just <$> translateArrayRelationSelect sourceTableName translateTableAggregateFields arrayRelationSelect
   AFExpression _literal ->
     -- We ignore literal text fields (we don't send them to the data connector agent)
     -- and add them back to the response JSON when we reshape what the agent returns
@@ -395,25 +429,26 @@ translateAnnField sessionVariables sourceTableName = \case
     pure Nothing
 
 translateArrayRelationSelect ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
-  (TableRelationshipsKey -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> CPS.WriterT writerOutput m FieldsAndAggregates) ->
+  API.TargetName ->
+  (API.TargetName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> m FieldsAndAggregates) ->
   AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
-  CPS.WriterT writerOutput m API.Field
-translateArrayRelationSelect sessionVariables sourceName translateFieldsAndAggregates arrRel = do
+  m API.Field
+translateArrayRelationSelect sourceName translateFieldsAndAggregates arrRel = do
   case _asnFrom (_aarAnnSelect arrRel) of
-    FromIdentifier _ -> lift $ throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
-    FromNativeQuery {} -> lift $ throw400 NotSupported "AnnSelectG: FromNativeQuery not supported"
-    FromStoredProcedure {} -> lift $ throw400 NotSupported "AnnSelectG: FromStoredProcedure not supported"
-    FromFunction {} -> lift $ throw400 NotSupported "translateArrayRelationSelect: FromFunction not currently supported"
+    FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
+    FromNativeQuery {} -> throw400 NotSupported "AnnSelectG: FromNativeQuery not supported"
+    FromStoredProcedure {} -> throw400 NotSupported "AnnSelectG: FromStoredProcedure not supported"
+    FromFunction {} -> throw400 NotSupported "translateArrayRelationSelect: FromFunction not currently supported"
     FromTable targetTable -> do
-      query <- translateAnnSelect sessionVariables translateFieldsAndAggregates (TableNameKey (Witch.into targetTable)) (_aarAnnSelect arrRel)
+      query <- translateAnnSelect translateFieldsAndAggregates (API.TNTable (Witch.into targetTable)) (_aarAnnSelect arrRel)
       let relationshipName = mkRelationshipName $ _aarRelationshipName arrRel
 
       recordTableRelationship
@@ -432,41 +467,43 @@ translateArrayRelationSelect sessionVariables sourceName translateFieldsAndAggre
           query
 
 translateTableAggregateFields ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m FieldsAndAggregates
-translateTableAggregateFields sessionVariables sourceName fields = do
-  mconcat <$> traverse (uncurry (translateTableAggregateField sessionVariables sourceName)) fields
+  m FieldsAndAggregates
+translateTableAggregateFields sourceName fields = do
+  mconcat <$> traverse (uncurry (translateTableAggregateField sourceName)) fields
 
 translateTableAggregateField ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   FieldName ->
   TableAggregateFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m FieldsAndAggregates
-translateTableAggregateField sessionVariables sourceName fieldName = \case
+  m FieldsAndAggregates
+translateTableAggregateField sourceName fieldName = \case
   TAFAgg aggregateFields -> do
     let fieldNamePrefix = prefixWith fieldName
-    translatedAggregateFields <- lift $ mconcat <$> traverse (uncurry (translateAggregateField fieldNamePrefix)) aggregateFields
+    translatedAggregateFields <- mconcat <$> traverse (uncurry (translateAggregateField sourceName fieldNamePrefix)) aggregateFields
     pure
       $ FieldsAndAggregates
         Nothing
         (Just translatedAggregateFields)
   TAFNodes _ fields ->
-    translateAnnFieldsWithNoAggregates sessionVariables (prefixWith fieldName) sourceName fields
+    translateAnnFieldsWithNoAggregates (prefixWith fieldName) sourceName fields
   TAFExp _txt ->
     -- We ignore literal text fields (we don't send them to the data connector agent)
     -- and add them back to the response JSON when we reshape what the agent returns
@@ -474,30 +511,41 @@ translateTableAggregateField sessionVariables sourceName fieldName = \case
     pure mempty
 
 translateAggregateField ::
-  (MonadError QErr m) =>
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
+  API.TargetName ->
   FieldPrefix ->
   FieldName ->
   AggregateField 'DataConnector (UnpreparedValue 'DataConnector) ->
   m (HashMap FieldName API.Aggregate)
-translateAggregateField fieldPrefix fieldName = \case
-  AFCount countAggregate ->
-    let aggregate =
-          case countAggregate of
-            StarCount -> API.StarCount
-            -- TODO(redactionExp): Do something with these redaction expressions
-            ColumnCount (column, _redactionExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
-            ColumnDistinctCount (column, _redactionExp) -> API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
-     in pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) aggregate
+translateAggregateField sourceName fieldPrefix fieldName = \case
+  AFCount countAggregate -> do
+    aggregate <-
+      case countAggregate of
+        StarCount -> pure API.StarCount
+        ColumnCount (column, redactionExp) -> do
+          redactionExpName <- recordRedactionExpression sourceName redactionExp
+          pure $ API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaRedactionExpression = redactionExpName, _ccaDistinct = False}
+        ColumnDistinctCount (column, redactionExp) -> do
+          redactionExpName <- recordRedactionExpression sourceName redactionExp
+          pure $ API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaRedactionExpression = redactionExpName, _ccaDistinct = True}
+    pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) aggregate
   AFOp AggregateOp {..} -> do
     let fieldPrefix' = fieldPrefix <> prefixWith fieldName
     aggFunction <- translateSingleColumnAggregateFunction _aoOp
 
     fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
       case columnField of
-        -- TODO(redactionExp): Do something with the redactionExp
-        SFCol column resultType _redactionExp ->
+        SFCol column resultType redactionExp -> do
+          redactionExpName <- recordRedactionExpression sourceName redactionExp
           let resultScalarType = Witch.from $ columnTypeToScalarType resultType
-           in pure . Just $ (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) resultScalarType)
+          pure $ Just (applyPrefix fieldPrefix' columnFieldName, API.SingleColumn $ API.SingleColumnAggregate aggFunction (Witch.from column) redactionExpName resultScalarType)
         SFExp _txt ->
           -- We ignore literal text fields (we don't send them to the data connector agent)
           -- and add them back to the response JSON when we reshape what the agent returns
@@ -517,18 +565,19 @@ translateSingleColumnAggregateFunction functionName =
     `onNothing` throw500 ("translateSingleColumnAggregateFunction: Invalid aggregate function encountered: " <> functionName)
 
 translateNestedObjectSelect ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   AnnNestedObjectSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m API.Query
-translateNestedObjectSelect sessionVariables relationshipKey selectG = do
-  FieldsAndAggregates {..} <- translateAnnFieldsWithNoAggregates sessionVariables noPrefix relationshipKey $ _anosFields selectG
+  m API.Query
+translateNestedObjectSelect relationshipKey selectG = do
+  FieldsAndAggregates {..} <- translateAnnFieldsWithNoAggregates noPrefix relationshipKey $ _anosFields selectG
   pure
     API.Query
       { _qFields = mapFieldNameHashMap <$> _faaFields,

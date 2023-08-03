@@ -6,6 +6,7 @@ export type Permission =
 
 type BasePermission = {
   role: string;
+  comment?: string;
 };
 
 export interface InsertPermission extends BasePermission {
@@ -17,6 +18,7 @@ export interface InsertPermissionDefinition {
   set?: Record<string, unknown>;
   columns?: string[];
   backend_only?: boolean;
+  comment?: string;
 }
 
 export interface SelectPermission extends BasePermission {
@@ -29,6 +31,7 @@ export interface SelectPermissionDefinition {
   query_root_fields?: string[] | null;
   subscription_root_fields?: string[] | null;
   limit?: number;
+  comment?: string;
 }
 
 export interface UpdatePermission extends BasePermission {
@@ -41,6 +44,7 @@ export interface UpdatePermissionDefinition {
   check?: Record<string, unknown>;
   set?: Record<string, unknown>;
   backend_only?: boolean;
+  comment?: string;
 }
 
 export interface DeletePermission extends BasePermission {

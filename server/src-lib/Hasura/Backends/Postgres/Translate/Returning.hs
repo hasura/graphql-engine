@@ -84,7 +84,7 @@ mkDefaultMutFlds =
 
 mkMutFldExp ::
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   TableIdentifier ->
@@ -143,7 +143,7 @@ WITH "mra__<table-name>" AS (
 -- See Note [Mutation output expression].
 mkMutationOutputExp ::
   ( Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind
+    PostgresTranslateSelect pgKind
   ) =>
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->

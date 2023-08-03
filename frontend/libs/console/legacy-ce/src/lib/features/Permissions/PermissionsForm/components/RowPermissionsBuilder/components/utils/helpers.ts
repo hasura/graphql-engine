@@ -26,11 +26,17 @@ const getKeyPath = ({
     newKey !== '_exists' && // ignore _exists which is a special comparator
     path.length >= 1;
 
-  if (!isEmpty(value) || type === 'relationship' || isNestedComparator) {
+  const previousKey = keyPath[keyPath.length - 1];
+  if (
+    // Replacing an `_and` comparator that's empty (as opposed to the default `{}`) with a column key
+    isEmptyArray(value, previousKey) ||
+    !isEmpty(value) ||
+    type === 'relationship' ||
+    isNestedComparator
+  ) {
     path = replacePath(keyPath, permissionsState);
   }
 
-  const previousKey = keyPath[keyPath.length - 1];
   if ((previousKey === '_not' && newKey === '_and') || newKey === '_or') {
     path = replacePath(keyPath, permissionsState);
   }
@@ -138,5 +144,13 @@ export function isColumnComparator(comparator: string) {
     comparator === '_cge' ||
     comparator === '_clt' ||
     comparator === '_cle'
+  );
+}
+
+function isEmptyArray(value: string, previousKey: string) {
+  return (
+    Array.isArray(value) &&
+    isEmpty(value) &&
+    (previousKey === '_and' || previousKey === '_or' || previousKey === '_not')
   );
 }

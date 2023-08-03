@@ -179,7 +179,6 @@ common common-all
     -Wno-implicit-lift
     -Wno-identities
     -Wno-operator-whitespace
-    -Wno-partial-fields
     -Wno-redundant-bang-patterns
     -Wno-unused-type-patterns
 
@@ -257,6 +256,16 @@ common common-exe
     -- in situations where we seem to be dealing with haskell heap fragmentation. This is more a
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -kc8K --disable-delayed-os-memory-return"
+
+
+-- See 'preload-mimalloc/README.md'
+-- We want this in all server binary executable sections
+common preload-mimalloc
+    c-sources:       ../preload-mimalloc/mimalloc/src/static.c
+    include-dirs:    ../preload-mimalloc/mimalloc/include
+    cc-options:      -DMI_MALLOC_OVERRIDE
+    cc-options: -DMI_STATIC_LIB
+    cc-options:  -O3 -DNDEBUG -fPIC   -Wall -Wextra -Wno-unknown-pragmas -fvisibility=hidden -Wstrict-prototypes -ftls-model=initial-exec -std=gnu11
 
 common lib-depends
   build-depends:       Spock-core
@@ -726,6 +735,7 @@ library
                      , Hasura.GC
 
                      , Hasura.LogicalModelResolver.Codec
+                     , Hasura.LogicalModelResolver.Lenses
                      , Hasura.LogicalModelResolver.Metadata
                      , Hasura.LogicalModelResolver.Schema
                      , Hasura.LogicalModelResolver.Types
@@ -1028,6 +1038,7 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
+  import: preload-mimalloc
 
   if flag(optimize-hasura)
     ghc-options:
@@ -1174,6 +1185,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
     Hasura.Backends.DataConnector.API.V0.ExpressionSpec
+    Hasura.Backends.DataConnector.API.V0.FunctionSpec
     Hasura.Backends.DataConnector.API.V0.MutationsSpec
     Hasura.Backends.DataConnector.API.V0.OrderBySpec
     Hasura.Backends.DataConnector.API.V0.QuerySpec
@@ -1181,6 +1193,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.ScalarSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
+    Hasura.Backends.DataConnector.API.V0.TargetSpec
     Hasura.Backends.Postgres.Connection.VersionCheckSpec
     Hasura.Backends.Postgres.Execute.PrepareSpec
     Hasura.Backends.Postgres.NativeQueries.NativeQueriesSpec

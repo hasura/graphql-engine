@@ -440,7 +440,7 @@ fromUpdateSet setColumns =
 
 fromTempTableDDL :: TempTableDDL -> Printer
 fromTempTableDDL = \case
-  CreateTemp tempTableName tempColumns ->
+  TempTableCreate tempTableName tempColumns ->
     "CREATE TABLE "
       <+> fromTempTableName tempTableName
       <+> " ( "
@@ -456,7 +456,7 @@ fromTempTableDDL = \case
           <+> " "
           <+> fromString (T.unpack (scalarTypeDBName DataLengthMax ty))
           <+> " null"
-  InsertTemp declares tempTableName interpolatedQuery ->
+  TempTableInsert tempTableName declares interpolatedQuery ->
     SepByPrinter
       NewlinePrinter
       ( map fromDeclare declares
@@ -466,7 +466,7 @@ fromTempTableDDL = \case
                  <+> renderInterpolatedQuery interpolatedQuery
              ]
       )
-  DropTemp tempTableName ->
+  TempTableDrop tempTableName ->
     "DROP TABLE "
       <+> fromTempTableName tempTableName
 
@@ -666,10 +666,10 @@ fromOrderBys top moffset morderBys =
 
 fromOrderBy :: OrderBy -> [Printer]
 fromOrderBy OrderBy {..} =
-  [ fromNullsOrder orderByFieldName orderByNullsOrder,
+  [ fromNullsOrder orderByExpression orderByNullsOrder,
     -- Above: This doesn't do anything when using text, ntext or image
     -- types. See below on CAST commentary.
-    wrapNullHandling (fromFieldName orderByFieldName)
+    wrapNullHandling (fromExpression orderByExpression)
       <+> " "
       <+> fromOrder orderByOrder
   ]
@@ -695,12 +695,12 @@ fromOrder =
     AscOrder -> "ASC"
     DescOrder -> "DESC"
 
-fromNullsOrder :: FieldName -> NullsOrder -> Printer
-fromNullsOrder fieldName =
+fromNullsOrder :: Expression -> NullsOrder -> Printer
+fromNullsOrder ex =
   \case
     NullsAnyOrder -> ""
-    NullsFirst -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 0, 1)"
-    NullsLast -> "IIF(" <+> fromFieldName fieldName <+> " IS NULL, 1, 0)"
+    NullsFirst -> "IIF(" <+> fromExpression ex <+> " IS NULL, 0, 1)"
+    NullsLast -> "IIF(" <+> fromExpression ex <+> " IS NULL, 1, 0)"
 
 fromJoinAlias :: JoinAlias -> Printer
 fromJoinAlias JoinAlias {..} =
@@ -739,12 +739,12 @@ fromAggregate =
         <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TextValue text))
 
-fromCountable :: Countable FieldName -> Printer
+fromCountable :: Countable Expression -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
-    NonNullFieldCountable field -> fromFieldName field
-    DistinctCountable field -> "DISTINCT " <+> fromFieldName field
+    NonNullFieldCountable field -> fromExpression field
+    DistinctCountable field -> "DISTINCT " <+> fromExpression field
 
 fromWhere :: Where -> Printer
 fromWhere =

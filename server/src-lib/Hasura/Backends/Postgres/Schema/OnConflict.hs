@@ -157,7 +157,7 @@ conflictConstraint constraints tableInfo = do
         name <- textToName $ toTxt $ _cName
         pure
           ( P.Definition
-              name
+              (applyFieldNameCaseCust tCase name)
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
               Nothing
               []

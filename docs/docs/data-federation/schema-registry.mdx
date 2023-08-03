@@ -85,7 +85,6 @@ The changes between subsequent schemas are computed using the open source
 Breaking changes are typically the changes that could potentially break your GraphQL operations (queries, mutations or
 subscriptions) at the GraphQL operation validation layer.
 
-
 For example, if a field `name` is removed from a GraphQL object type `user`, that counts as a breaking change as it
 could potentially fail an existing GraphQL operation that queries the `name` field in the `user` type.
 
@@ -118,10 +117,38 @@ changes took place.
 
 ## Alerts
 
-The Schema Registry sends an email to the owner of the project whenever there are any changes in the GraphQL schema of
-the project. You can configure your mailing preferences by clicking the bell icon in the Schema Registry page.
+The Schema Registry provides the following options to configure notifications by clicking the bell icon in the Schema Registry page:
 
-<Thumbnail
-  src="/img/observability/schema-registry/schema-registry-alert-config.png"
-  alt="Hasura Cloud Schema Registry Alert Config"
-/>
+### Email
+
+The Schema Registry sends an email to the **owner** of the project whenever there are any changes in the GraphQL schema of the project.
+
+  <Thumbnail
+    src="/img/observability/schema-registry/schema-registry-alert-config.png"
+    alt="Hasura Cloud Schema Registry Alert Config"
+  />
+
+### Slack
+
+The Schema Registry sends an aggregate summary of GraphQL schema changes to the configured Slack channel of the respective workspace. Follow these steps to configure Slack alerts:
+
+1. Click the "Add to Slack" button in the Slack tab.
+
+   <Thumbnail
+     src="/img/observability/schema-registry/add-to-slack.png"
+     alt="Hasura Cloud Schema Registry Add To Slack"
+   />
+
+2. Select the Slack channel in your workspace in which you want alerts to appear. Click **Allow** to authorize.
+
+   <Thumbnail
+     src="/img/observability/schema-registry/select-slack-channel.png"
+     alt="Hasura Cloud Schema Registry Select Slack Channel"
+   />
+
+3. Slack alerts should be configured for the selected channel in your workspace. You can choose to disable the alerts by clicking on the delete icon.
+   
+   <Thumbnail
+     src="/img/observability/schema-registry/configured-slack-alerts.png"
+     alt="Hasura Cloud Schema Registry Configured Slack Alerts"
+   />

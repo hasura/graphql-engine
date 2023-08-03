@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../new-components/Button';
 import { useFireNotification } from '../../new-components/Notifications';
-import { useSyncResourceVersionOnMount } from '../hasura-metadata-api';
+import {
+  MetadataSelectors,
+  useMetadata,
+  useSyncResourceVersionOnMount,
+} from '../hasura-metadata-api';
 import { Table } from '../hasura-metadata-types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
 import Legend from './components/Legend';
@@ -10,6 +14,11 @@ import { RenderWidget } from './components/RenderWidget/RenderWidget';
 import { SuggestedRelationships } from './components/SuggestedRelationships/SuggestedRelationships';
 import { NOTIFICATIONS } from './components/constants';
 import { MODE, Relationship } from './types';
+import { useDriverCapabilities } from '../Data/hooks/useDriverCapabilities';
+import { Feature } from '../DataSource';
+import Skeleton from 'react-loading-skeleton';
+import { useAppDispatch } from '../../storeHooks';
+import { updateSchemaInfo } from '../../components/Services/Data/DataActions';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;
@@ -29,6 +38,22 @@ export const DatabaseRelationships = ({
   });
   const { fireNotification } = useFireNotification();
 
+  const { data: driver } = useMetadata(
+    m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
+  );
+  const dispatch = useAppDispatch();
+
+  const isLoadSchemaRequired = driver === 'mssql' || driver === 'postgres';
+
+  const { data: areForeignKeysSupported, isLoading } = useDriverCapabilities({
+    dataSourceName,
+    select: data => {
+      if (data === Feature.NotImplemented) return false;
+
+      return data.data_schema?.supports_foreign_keys;
+    },
+  });
+
   const onCancel = () => {
     setTabState({
       mode: undefined,
@@ -41,27 +66,37 @@ export const DatabaseRelationships = ({
   });
 
   const onError = (err: Error) => {
-    if (mode)
+    if (mode) {
       fireNotification({
         type: 'error',
         title: NOTIFICATIONS.onError[mode],
         message: err?.message ?? '',
       });
+      if (isLoadSchemaRequired) {
+        dispatch(updateSchemaInfo());
+      }
+    }
   };
 
   const onSuccess = () => {
-    if (mode)
+    if (mode) {
       fireNotification({
         type: 'success',
         title: 'Success!',
         message: NOTIFICATIONS.onSuccess[mode],
       });
+      if (isLoadSchemaRequired) {
+        dispatch(updateSchemaInfo());
+      }
+    }
 
     setTabState({
       mode: undefined,
       relationship: undefined,
     });
   };
+
+  if (isLoading) return <Skeleton count={10} height={20} />;
 
   return (
     <div className="my-2">
@@ -77,7 +112,12 @@ export const DatabaseRelationships = ({
           }}
         />
 
-        <SuggestedRelationships dataSourceName={dataSourceName} table={table} />
+        {areForeignKeysSupported && (
+          <SuggestedRelationships
+            dataSourceName={dataSourceName}
+            table={table}
+          />
+        )}
 
         <Legend />
       </div>

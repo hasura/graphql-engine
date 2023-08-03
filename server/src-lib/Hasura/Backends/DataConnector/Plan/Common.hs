@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingStrategies #-}
 
 -- | This module contains Data Connector request/response planning code and utility
@@ -11,15 +10,19 @@
 -- for example 'Hasura.Backends.DataConnector.Plan.QueryPlan.mkQueryPlan`.
 module Hasura.Backends.DataConnector.Plan.Common
   ( Plan (..),
+    writeOutput,
+    replaceOutput,
     TableRelationships (..),
-    TableRelationshipsKey (..),
+    recordTableRelationship,
+    recordTableRelationshipFromRelInfo,
     FieldPrefix,
     noPrefix,
     prefixWith,
     applyPrefix,
     Cardinality (..),
-    recordTableRelationship,
-    recordTableRelationshipFromRelInfo,
+    RedactionExpressionState (..),
+    recordRedactionExpression,
+    translateRedactionExpressions,
     prepareLiteral,
     translateBoolExpToExpression,
     mkRelationshipName,
@@ -28,7 +31,6 @@ module Hasura.Backends.DataConnector.Plan.Common
   )
 where
 
-import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Types qualified as J
@@ -36,11 +38,13 @@ import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt, (<<>), (<>>))
+import Data.Tuple (swap)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -69,18 +73,30 @@ data Plan request response = Plan
 
 --------------------------------------------------------------------------------
 
--- | Key datatype for TableRelationships to avoid having an Either directly as the key,
---   and make extending the types of relationships easier in future.
-data TableRelationshipsKey
-  = FunctionNameKey API.FunctionName
-  | TableNameKey API.TableName
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (Hashable)
+-- | Writes some output to state, like one might do if one was using a Writer monad.
+-- The output is combined with the existing output using '<>' from 'Semigroup'
+writeOutput :: (Semigroup output, MonadState state m, Has output state) => output -> m ()
+writeOutput x = modify $ modifier (<> x)
+
+-- | Replaces some output in the state with a new version of the output. Also, a value
+-- can be returned from the replacement function.
+--
+-- This is useful if you need to inspect the existing state, make a decision, and update it
+-- based on that decision. The result of the decision can be returned from the transformation
+-- as your 'a' value.
+replaceOutput :: (MonadState state m, Has output state) => (output -> (output, a)) -> m a
+replaceOutput replace = do
+  output <- gets getter
+  let (newOutput, retval) = replace output
+  modify (modifier (const newOutput))
+  pure retval
+
+--------------------------------------------------------------------------------
 
 -- | A monoidal data structure used to record Table Relationships encountered during request
 -- translation. Used with 'recordTableRelationship'.
 newtype TableRelationships = TableRelationships
-  {unTableRelationships :: HashMap TableRelationshipsKey (HashMap API.RelationshipName API.Relationship)}
+  {unTableRelationships :: HashMap API.TargetName (HashMap API.RelationshipName API.Relationship)}
   deriving stock (Eq, Show)
 
 instance Semigroup TableRelationships where
@@ -92,26 +108,23 @@ instance Monoid TableRelationships where
 -- | Records a table relationship encountered during request translation into the output of the current
 -- 'CPS.WriterT'
 recordTableRelationship ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
-    MonadError QErr m
+  ( MonadState state m,
+    Has TableRelationships state
   ) =>
-  TableRelationshipsKey ->
+  API.TargetName ->
   API.RelationshipName ->
   API.Relationship ->
-  CPS.WriterT writerOutput m ()
+  m ()
 recordTableRelationship sourceName relationshipName relationship =
-  let newRelationship = TableRelationships $ HashMap.singleton sourceName (HashMap.singleton relationshipName relationship)
-   in CPS.tell $ modifier (const newRelationship) mempty
+  writeOutput $ TableRelationships $ HashMap.singleton sourceName (HashMap.singleton relationshipName relationship)
 
 recordTableRelationshipFromRelInfo ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
-    MonadError QErr m
+  ( MonadState state m,
+    Has TableRelationships state
   ) =>
-  TableRelationshipsKey ->
+  API.TargetName ->
   RelInfo 'DataConnector ->
-  CPS.WriterT writerOutput m (API.RelationshipName, API.Relationship)
+  m (API.RelationshipName, API.Relationship)
 recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
   let relationshipName = mkRelationshipName riName
   let relationshipType = case riType of
@@ -131,6 +144,55 @@ recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
         relationshipName
         relationship
       pure (relationshipName, relationship)
+
+--------------------------------------------------------------------------------
+
+-- | Collects encountered redaction expressions on a per table/function basis.
+-- Expressions are deduplicated and assigned a unique name (within that table/function)
+-- that is then used to reference the expression inside the query.
+newtype RedactionExpressionState = RedactionExpressionState
+  {unRedactionExpressionState :: HashMap API.TargetName (HashMap API.RedactionExpression API.RedactionExpressionName)}
+  deriving stock (Eq, Show)
+
+recordRedactionExpression ::
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
+    MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
+  API.TargetName ->
+  AnnRedactionExp 'DataConnector (UnpreparedValue 'DataConnector) ->
+  m (Maybe API.RedactionExpressionName)
+recordRedactionExpression target = \case
+  NoRedaction -> pure Nothing
+  RedactIfFalse boolExp -> runMaybeT $ do
+    expression <- MaybeT $ fmap API.RedactionExpression <$> translateBoolExpToExpression target boolExp
+    replaceOutput $ \existingState@(RedactionExpressionState recordedExps) ->
+      let targetRecordedExps = fromMaybe mempty $ HashMap.lookup target recordedExps
+       in case HashMap.lookup expression targetRecordedExps of
+            Just existingName -> (existingState, existingName)
+            Nothing ->
+              -- A unique name is generated by counting up from zero as redaction expressions are added
+              -- by using the size of the HashMap they are placed into
+              let newName = API.RedactionExpressionName $ "RedactionExp" <> tshow (HashMap.size targetRecordedExps)
+                  newTargetRecordedExps = HashMap.insert expression newName targetRecordedExps
+                  newState = RedactionExpressionState $ HashMap.insert target newTargetRecordedExps recordedExps
+               in (newState, newName)
+
+translateRedactionExpressions :: RedactionExpressionState -> Set API.TargetRedactionExpressions
+translateRedactionExpressions (RedactionExpressionState redactionsByTarget) =
+  redactionsByTarget
+    & HashMap.toList
+    <&> ( \(targetKey, redactionExps) ->
+            API.TargetRedactionExpressions
+              { _treTarget = targetKey,
+                _treExpressions = HashMap.fromList $ swap <$> HashMap.toList redactionExps
+              }
+        )
+    & Set.fromList
 
 --------------------------------------------------------------------------------
 
@@ -165,15 +227,19 @@ data Cardinality
 --------------------------------------------------------------------------------
 
 prepareLiteral ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
   UnpreparedValue 'DataConnector ->
   m Literal
-prepareLiteral sessionVariables = \case
+prepareLiteral = \case
   UVLiteral literal -> pure $ literal
   UVParameter _ e -> pure (ValueLiteral (columnTypeToScalarType $ cvType e) (cvValue e))
   UVSession -> throw400 NotSupported "prepareLiteral: UVSession"
   UVSessionVar sessionVarType sessionVar -> do
+    sessionVariables <- asks getter
     textValue <-
       getSessionVariableValue sessionVar sessionVariables
         `onNothing` throw400 NotSupported ("prepareLiteral: session var not found: " <>> sessionVar)
@@ -221,51 +287,69 @@ parseSessionVariable varName varType varValue = do
 
 --------------------------------------------------------------------------------
 
+newtype ColumnStack = ColumnStack [ColumnName]
+
+emptyColumnStack :: ColumnStack
+emptyColumnStack = ColumnStack []
+
+pushColumn :: ColumnStack -> ColumnName -> ColumnStack
+pushColumn (ColumnStack stack) columnName = ColumnStack $ columnName : stack
+
+toColumnSelector :: ColumnStack -> ColumnName -> API.ColumnSelector
+toColumnSelector (ColumnStack stack) columnName =
+  API.ColumnSelector $ NonEmpty.reverse $ Witch.from columnName :| fmap Witch.from stack
+
+--------------------------------------------------------------------------------
+
 translateBoolExpToExpression ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m (Maybe API.Expression)
-translateBoolExpToExpression sessionVariables sourceName boolExp = do
-  removeAlwaysTrueExpression <$> translateBoolExp sessionVariables sourceName boolExp
+  m (Maybe API.Expression)
+translateBoolExpToExpression sourceName boolExp = do
+  removeAlwaysTrueExpression <$> translateBoolExp sourceName emptyColumnStack boolExp
 
 translateBoolExp ::
-  ( Has TableRelationships writerOutput,
-    Monoid writerOutput,
+  ( MonadState state m,
+    Has TableRelationships state,
+    Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
   ) =>
-  SessionVariables ->
-  TableRelationshipsKey ->
+  API.TargetName ->
+  ColumnStack ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
-  CPS.WriterT writerOutput m API.Expression
-translateBoolExp sessionVariables sourceName = \case
+  m API.Expression
+translateBoolExp sourceName columnStack = \case
   BoolAnd xs ->
-    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp' sourceName) xs
+    mkIfZeroOrMany API.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp sourceName columnStack) xs
   BoolOr xs ->
-    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp' sourceName) xs
+    mkIfZeroOrMany API.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp sourceName columnStack) xs
   BoolNot x ->
-    API.Not <$> (translateBoolExp' sourceName) x
-  BoolField (AVColumn c _redactionExp opExps) ->
-    -- TODO(redactionExp): Deal with the redaction expression
-    lift $ mkIfZeroOrMany API.And <$> traverse (translateOp sessionVariables (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) opExps
+    API.Not <$> (translateBoolExp sourceName columnStack) x
+  BoolField (AVColumn c redactionExp opExps) -> do
+    let columnSelector = toColumnSelector columnStack $ ciColumn c
+    redactionExpName <- recordRedactionExpression sourceName redactionExp
+    mkIfZeroOrMany API.And <$> traverse (translateOp columnSelector (Witch.from . columnTypeToScalarType $ ciType c) redactionExpName) opExps
+  BoolField (AVNestedObject NestedObjectInfo {..} nestedExp) ->
+    translateBoolExp sourceName (pushColumn columnStack _noiColumn) nestedExp
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp' (TableNameKey _rTargetTable) (BoolAnd [rfTargetTablePermissions, rfFilter])
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp (API.TNTable _rTargetTable) emptyColumnStack (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
-     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp' (TableNameKey tableName) _geWhere
+     in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp (API.TNTable tableName) emptyColumnStack _geWhere
   where
-    translateBoolExp' = translateBoolExp sessionVariables
-
     -- Makes an 'API.Expression' like 'API.And' if there is zero or many input expressions otherwise
     -- just returns the singleton expression. This helps remove redundant 'API.And' etcs from the expression.
     mkIfZeroOrMany :: (Set API.Expression -> API.Expression) -> [API.Expression] -> API.Expression
@@ -286,14 +370,18 @@ removeAlwaysFalseExpression = \case
   other -> Just other
 
 translateOp ::
-  (MonadError QErr m, MonadReader r m, Has API.ScalarTypesCapabilities r) =>
-  SessionVariables ->
-  API.ColumnName ->
+  ( MonadError QErr m,
+    MonadReader r m,
+    Has API.ScalarTypesCapabilities r,
+    Has SessionVariables r
+  ) =>
+  API.ColumnSelector ->
   API.ScalarType ->
+  Maybe API.RedactionExpressionName ->
   OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
   m API.Expression
-translateOp sessionVariables columnName columnType opExp = do
-  preparedOpExp <- traverse (prepareLiteral sessionVariables) $ opExp
+translateOp columnName columnType redactionExpName opExp = do
+  preparedOpExp <- traverse prepareLiteral $ opExp
   case preparedOpExp of
     AEQ _ (ValueLiteral scalarType value) ->
       pure $ mkApplyBinaryComparisonOperatorToScalar API.Equal value scalarType
@@ -351,14 +439,16 @@ translateOp sessionVariables columnName columnType opExp = do
         pure $ API.ApplyBinaryArrayComparisonOperator (API.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array (Witch.from scalarType)
   where
     currentComparisonColumn :: API.ComparisonColumn
-    currentComparisonColumn = API.ComparisonColumn API.CurrentTable columnName columnType
+    currentComparisonColumn = API.ComparisonColumn API.CurrentTable columnName columnType redactionExpName
 
     mkApplyBinaryComparisonOperatorToAnotherColumn :: API.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> API.Expression
     mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) =
       let columnPath = case rootOrCurrent of
             IsRoot -> API.QueryTable
             IsCurrent -> API.CurrentTable
-       in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
+          otherColumnSelector = API.mkColumnSelector $ Witch.from otherColumnName
+       in -- TODO(dmoverton): allow otherColumnName to refer to nested object fields.
+          API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumnComparison $ API.ComparisonColumn columnPath otherColumnSelector columnType Nothing)
 
     inOperator :: Literal -> API.Expression
     inOperator literal =

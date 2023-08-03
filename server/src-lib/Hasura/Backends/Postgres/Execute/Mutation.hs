@@ -123,7 +123,7 @@ mkMutation _userInfo table query output allCols strfyNum tCase =
 runMutation ::
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Mutation ('Postgres pgKind) ->
@@ -136,7 +136,7 @@ runMutation mut =
 mutateAndReturn ::
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Mutation ('Postgres pgKind) ->
@@ -148,7 +148,7 @@ execUpdateQuery ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
@@ -173,7 +173,7 @@ execDeleteQuery ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
@@ -190,7 +190,7 @@ execDeleteQuery strfyNum tCase userInfo (u, p) =
 execInsertQuery ::
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
@@ -222,7 +222,7 @@ mutateAndSel ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   Mutation ('Postgres pgKind) ->
@@ -254,7 +254,7 @@ executeMutationOutputQuery ::
   forall pgKind m.
   ( MonadTx m,
     Backend ('Postgres pgKind),
-    PostgresAnnotatedFieldJSON pgKind,
+    PostgresTranslateSelect pgKind,
     MonadReader QueryTagsComment m
   ) =>
   QualifiedTable ->
@@ -283,7 +283,7 @@ executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase
 
 mutateAndFetchCols ::
   forall pgKind.
-  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  (Backend ('Postgres pgKind), PostgresTranslateSelect pgKind) =>
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   (MutationCTE, DS.Seq PG.PrepArg) ->

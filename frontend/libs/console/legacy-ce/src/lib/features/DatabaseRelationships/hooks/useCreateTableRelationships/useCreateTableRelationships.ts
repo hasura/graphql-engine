@@ -1,10 +1,6 @@
 import { useCallback } from 'react';
 import { isObject } from '../../../../components/Common/utils/jsUtils';
 import { transformErrorResponse } from '../../../Data/errorUtils';
-// import {
-//   useAllDriverCapabilities,
-//   useDriverCapabilities,
-// } from '../../../Data/hooks/useDriverCapabilities';
 import { useAllDriverCapabilities } from '../../../Data/hooks/useAllDriverCapabilities';
 import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
@@ -24,6 +20,7 @@ import {
   deleteTableRelationshipRequestBody,
   renameRelationshipRequestBody,
 } from './utils';
+import { useInvalidateSuggestedRelationships } from '../../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
 
 type AllowedRelationshipDefinitions =
   | Omit<LocalTableRelationshipDefinition, 'capabilities'>
@@ -50,6 +47,18 @@ const defaultCapabilities = {
   isRemoteSchemaRelationshipSupported: true,
 };
 
+const isRemoteRelPresentInPayload = (
+  data: ReturnType<typeof createTableRelationshipRequestBody>[]
+) => {
+  const remoteRel = data.find(rel => {
+    if (rel === 'Not implemented') return false;
+
+    return rel.type.includes('_create_remote_relationship');
+  });
+
+  return !!remoteRel;
+};
+
 const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
   if ('toRemoteSchema' in target) return null;
 
@@ -63,6 +72,11 @@ export const useCreateTableRelationships = (
   globalMutateOptions?: MetadataMigrationOptions
 ) => {
   // get these capabilities
+
+  const { invalidateSuggestedRelationships } =
+    useInvalidateSuggestedRelationships({
+      dataSourceName,
+    });
 
   const { data: driverCapabilties = [] } = useAllDriverCapabilities({
     select: data => {
@@ -121,6 +135,8 @@ export const useCreateTableRelationships = (
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
       globalMutateOptions?.onSuccess?.(data, variable, ctx);
+      console.log('invalidate');
+      invalidateSuggestedRelationships();
     },
   });
 
@@ -142,12 +158,12 @@ export const useCreateTableRelationships = (
           },
           sourceCapabilities:
             driverCapabilties.find(
-              c => c.driver === getDriver(item.source.fromSource)
+              c => c.driver.kind === getDriver(item.source.fromSource)
             )?.capabilities ?? defaultCapabilities,
           targetCapabilities:
             driverCapabilties.find(
               c =>
-                c.driver ===
+                c.driver.kind ===
                 getDriver(getTargetName(item.definition.target) ?? '')
             )?.capabilities ?? defaultCapabilities,
         });
@@ -156,7 +172,9 @@ export const useCreateTableRelationships = (
       mutate(
         {
           query: {
-            type: 'bulk_atomic',
+            type: isRemoteRelPresentInPayload(payloads)
+              ? 'bulk_keep_going'
+              : 'bulk_atomic',
             args: payloads,
             resource_version,
           },

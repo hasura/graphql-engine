@@ -1,14 +1,14 @@
 a.blue-dot {
-    position: relative;
+  position: relative;
 }
 
 .blue-dot::after {
-    content: "";
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #0b89d0;
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #0b89d0;
 }

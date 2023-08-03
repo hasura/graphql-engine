@@ -6,7 +6,6 @@ import {
 } from './PermissionsConfirmationModal';
 
 export default {
-  title: 'Features/Permissions/Confirmation Modal',
   component: PermissionsConfirmationModal,
   argTypes: {
     onSubmit: { action: true },

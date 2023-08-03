@@ -7,7 +7,6 @@ import { handlers } from './__tests__/fixtures/jsonb/handlers';
 import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
 
 export default {
-  title: 'Features/Permissions/Form/Logical Model Permissions Input',
   component: RowPermissionsInput,
   parameters: {
     msw: handlers(),
@@ -25,8 +24,8 @@ export const Basic: Story = {
     logicalModels: [
       {
         fields: [
-          { name: 'one', nullable: false, type: 'text' },
-          { name: 'two', nullable: false, type: 'text' },
+          { name: 'one', type: { scalar: 'text', nullable: false } },
+          { name: 'two', type: { scalar: 'text', nullable: false } },
         ],
         name: 'hello_world',
         source: {
@@ -38,8 +37,8 @@ export const Basic: Story = {
       },
       {
         fields: [
-          { name: 'a', nullable: false, type: 'text' },
-          { name: 'b', nullable: false, type: 'text' },
+          { name: 'a', type: { scalar: 'text', nullable: false } },
+          { name: 'b', type: { scalar: 'text', nullable: false } },
         ],
         name: 'logical_model',
         source: {

@@ -284,6 +284,7 @@ export const createInsertArgs = ({
         role,
         permission,
         source: dataSourceName,
+        comment: formData.comment,
       },
     },
   ];
@@ -352,6 +353,7 @@ export const createInsertArgs = ({
             role: clonedPermission.roleName || '',
             permission: permissionWithColumnsAndPresetsRemoved,
             source: dataSourceName,
+            comment: '',
           },
         });
 

@@ -10,15 +10,12 @@ import {
   FaMagic,
   FaTable,
 } from 'react-icons/fa';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
-import { getSupportsForeignKeys } from '../../../hasura-metadata-api/utils';
+import { areTablesEqual } from '../../../hasura-metadata-api';
 import { getTableDisplayName } from '../../utils/helpers';
-import {
-  SuggestedRelationshipWithName,
-  useSuggestedRelationships,
-} from './hooks/useSuggestedRelationships';
+import { SuggestedRelationshipWithName } from './hooks/useSuggestedRelationships';
 import Skeleton from 'react-loading-skeleton';
 import { SuggestedRelationshipTrackModal } from '../SuggestedRelationshipTrackModal/SuggestedRelationshipTrackModal';
+import { useSuggestedRelationships } from '../../../Data/TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
 
 type SuggestedRelationshipsProps = {
   dataSourceName: string;
@@ -29,27 +26,23 @@ export const SuggestedRelationships = ({
   dataSourceName,
   table,
 }: SuggestedRelationshipsProps) => {
-  const { data: source } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-
-  const supportsForeignKeys = getSupportsForeignKeys(source);
-
-  const { suggestedRelationships, isLoadingSuggestedRelationships } =
+  const { data: { untracked = [] } = {}, isLoading } =
     useSuggestedRelationships({
       dataSourceName,
-      table,
-      isEnabled: supportsForeignKeys,
+      which: 'all',
     });
+
+  const untrackedSuggestedRelationships = untracked.filter(rel =>
+    areTablesEqual(rel.from.table, table)
+  );
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedRelationship, setSelectedRelationship] =
     useState<SuggestedRelationshipWithName | null>(null);
 
-  if (isLoadingSuggestedRelationships)
-    return <Skeleton count={4} height={30} />;
+  if (isLoading) return <Skeleton count={4} height={30} />;
 
-  return suggestedRelationships.length > 0 ? (
+  return untrackedSuggestedRelationships.length > 0 ? (
     <>
       <CardedTable.Table>
         <CardedTable.Header
@@ -64,7 +57,7 @@ export const SuggestedRelationships = ({
         />
 
         <CardedTable.TableBody>
-          {suggestedRelationships.map(relationship => (
+          {untrackedSuggestedRelationships.map(relationship => (
             <CardedTable.TableBodyRow key={relationship.constraintName}>
               <CardedTable.TableBodyCell>
                 <div className="flex flex-row items-center">

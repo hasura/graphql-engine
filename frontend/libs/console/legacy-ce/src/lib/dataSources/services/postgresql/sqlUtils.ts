@@ -1,6 +1,6 @@
 import type { DataSourcesAPI } from '../..';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
-import { isColTypeString } from '.';
+import { isColTypeArray, isColTypeString } from '.';
 import { FunctionState } from './types';
 import { QualifiedTable } from '../../../metadata/types';
 import { quoteDefault } from '../../../components/Services/Data/utils';
@@ -271,7 +271,8 @@ export const getCreateTableQueries = (
       currentCols[i].default?.value !== ''
     ) {
       if (
-        isColTypeString(currentCols[i].type) &&
+        (isColTypeString(currentCols[i].type) ||
+          isColTypeArray(currentCols[i].type)) &&
         !isSQLFunction(currentCols[i]?.default?.value)
       ) {
         // if a column type is text and if it has a non-func default value, add a single quote by default

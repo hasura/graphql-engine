@@ -129,7 +129,8 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 {
   "capabilities": {
     "queries": {
-      "foreach": {}
+      "foreach": {},
+      "redaction": {}
     },
     "data_schema": {
       "supports_primary_keys": true,
@@ -182,6 +183,8 @@ The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/s
 
 #### Query capabilities
 The agent can declare whether or not it supports ["foreach queries"](#foreach-queries) by including a `foreach` property with an empty object assigned to it. Foreach query support is optional, but is required if the agent is to be used as the target of remote relationships in HGE.
+
+The agent can also declare whether or not it supports ["data redaction"](#data-redaction) by including a `redaction` property with an empty object assigned to it. Data redaction support is optional, but is required if a user configures HGE with inherited roles with different column selection permissions for the same table in the inherited role's role set.
 
 #### Data schema capabilities
 The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
@@ -1564,8 +1567,7 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "last_name",
-        "column_type": "string"
+        "column": "last_name"
       },
       "order_direction": "asc"
     },
@@ -1573,8 +1575,7 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "first_name",
-        "column_type": "string"
+        "column": "first_name"
       },
       "order_direction": "desc"
     }
@@ -1823,6 +1824,369 @@ This returns:
 It is important to point out that a `LATERAL` join is necessary instead of regular join, because a lateral join preserves the necessary "for each" semantics; without it, performing other query operations like pagination using `LIMIT` and `OFFSET` in the subquery would not work correctly.
 
 The artificial `Index` column is inserted into the foreach rowset to ensure that the ordering of the results matches the original ordering of the foreach array in the query request.
+
+#### Data Redaction
+In HGE, it is possible to create inherited roles; these produce the union of the access rights of the roles in the inherited role's role set. Roles in HGE can grant or deny access to columns on tables and can filter the rows accessible on the table. Naturally, different roles composed together into an inherited role may combine different filters and column access rights for the same table.
+
+Consider the following `Test` table:
+
+| Id    | ColumnA | ColumnB | ColumnC |
+|-------|---------|---------|---------|
+| **1** | **A1**  | **B1**  | C1      |
+| **2** | **A2**  | **B2**  | **C2**  |
+| **3** | A3      | **B3**  | **C3**  |
+
+and the following roles defined for this `Test` table:
+* `RoleA`:
+    * Column Select Permissions: `Id`, `ColumnA`, `ColumnB`
+    * Row Filter: `{ Id: { _in: [1,2] } }`
+* `RoleB`:
+    * Column Select Permissions: `Id`, `ColumnB`, `ColumnC`
+    * Row Filter: `{ Id: { _in: [2,3] } }`
+* `ComboRole`: An inherited role, composed of `RoleA` and `RoleB`
+
+In this scenario, `ComboRole` grants access to all the data that has been **bolded** in the above table. Note that the `A3` is inaccessible because `RoleA` does not grant access to that row, `RoleB` does, but `RoleB` does not grant access to `ColumnA`. Similarly, `C1` is inaccessible because `RoleA` grants access to the row, but not to `ColumnC`, and `RoleB` does not grant access to the row.
+
+If a user using the `ComboRole` role was to query this `Test` table, we want the access rights as defined above to be enforced, so we'd expect the following data to be returned:
+
+| Id | ColumnA | ColumnB | ColumnC |
+|----|---------|---------|---------|
+| 1  | A1      | B1      | null    |
+| 2  | A2      | B2      | C2      |
+| 3  | null    | B3      | C3      |
+
+Data redaction is the process by which data is "nulled out" (ie. redacted) by the agent when it should be inaccessible to a user, as it has been above. It is only necessary when different roles in one inherited roles have differing column select permissions. When all the roles have the same column select permissions, the user is prevented from querying inaccessible columns in the first place. Redaction is only necessary when they have partial access to the column, such as in the above example scenario.
+
+To support data redaction, the agent must declare the `redaction` capability under the `queries` capability.
+
+```json
+{
+  "queries": {
+    "redaction": {}
+  }
+}
+```
+
+Once this is declared, all query requests that require redaction will contain a `redaction_expressions` property that will contain named redaction expressions per table/function. Then, in every place in the query that requires redaction, a `redaction_expression` property will be defined that refers to the particular named expression that needs to be used.
+
+A redaction expression is an `Expression`, same as what is used for the `where` query property used in [filters](#filters). If specified, the expression needs to be evaluated per row, and if it evaluates to false, the associated column value must be replaced with null.
+
+##### Redaction in Fields
+The first, most obvious, place redaction is applied is against columns requested in a query's `fields`.
+
+Here's an example query, querying all the columns of the above example `Test` table using the `ComboRole`:
+
+```jsonc
+{
+  "table": ["Test"],
+  "table_relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        "RedactionExp1": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      },
+      "ColumnA": {
+        "type": "column",
+        "column": "ColumnA",
+        "column_type": "string",
+        // This column must be redacted using the Test table's RedactionExp0 expression
+        // If this expression evaluates to false for a row, this field must return null for that row
+        "redaction_expression": "RedactionExp0"
+      },
+      "ColumnB": {
+        "type": "column",
+        "column": "ColumnB",
+        "column_type": "string"
+      },
+      "ColumnC": {
+        "type": "column",
+        "column": "ColumnC",
+        "column_type": "string",
+        // This column must be redacted using the Test table's RedactionExp1 expression
+        // If this expression evaluates to false for a row, this field must return null for that row
+        "redaction_expression": "RedactionExp1"
+      }
+    },
+    // The row filters from ComboRole are pushed down into the where filter predicate
+    "where": {
+      "type": "or",
+      "expressions": [
+        {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      ]
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT
+  "Id",
+  CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END AS "ColumnA",
+  "ColumnB",
+  CASE
+    WHEN "Id" IN (2,3) THEN "ColumnC"
+    ELSE NULL
+  END AS "ColumnC"
+FROM "Test"
+WHERE "Id" IN (1,2) OR "Id" IN (2,3)
+```
+
+##### Redaction in Aggregates
+Another place redaction can be applied is in aggregates. When aggregations are calculated across a set of rows, the columns being aggregated may need to be redacted _before_ being aggregated over.
+
+For example, here's an aggregation query:
+
+```jsonc
+{
+  "table": ["Test"],
+  "table_relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        },
+        "RedactionExp1": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [2,3],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "aggregates": {
+      // Both "single_column" and "column_count" aggregations can have redaction expressions
+      "aggregate_max_ColumnA": {
+        "type": "single_column",
+        "function": "max",
+        "column": "ColumnA",
+        "redaction_expression": "RedactionExp0",
+        "result_type": "string"
+      },
+      "aggregate_count_ColumnC": {
+        "type": "column_count",
+        "column": "ColumnC",
+        "redaction_expression": "RedactionExp1",
+        "distinct": false
+      }
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT
+  MAX(
+    CASE
+      WHEN "Id" IN (1,2) THEN "ColumnA"
+      ELSE NULL
+    END
+  ) AS "aggregate_max_ColumnA",
+  COUNT(
+    CASE
+      WHEN "Id" IN (2,3) THEN "ColumnC"
+      ELSE NULL
+    END
+  ) AS "aggregate_count_ColumnC"
+FROM "Test"
+```
+
+##### Redaction in Filtering
+When comparing a column to something during filtering, data redaction can require that the column be redacted before the comparison is performed.
+
+For example, here's a query that uses redaction inside the filter expression in `where`:
+
+```jsonc
+{
+  "table": ["Test"],
+  "table_relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      }
+    },
+    "where": {
+      "type": "binary_op",
+      "operator": "equals",
+      // ALl column comparisons in "binary_op", "binary_arr_op", and "unary_op"
+      // can potentially have a redaction expression
+      "column": {
+        "name": "ColumnA",
+        "column_type": "string",
+        "redaction_expression": "RedactionExp0"
+      },
+      "value": {
+        "type": "scalar",
+        "value": "A1",
+        "value_type": "string"
+      }
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT "Id"
+FROM "Test"
+WHERE
+  (CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END) = "A1"
+```
+
+##### Redaction in Ordering
+Data redaction also needs to be applied when ordering upon a column; namely the ordering should be performed across the redacted values.
+
+For example, here's a query that uses redaction inside the `order_by`:
+
+```jsonc
+{
+  "table": ["Test"],
+  "table_relationships": [],
+  // Redaction expressions are defined per table/function
+  "redaction_expressions": [
+    {
+      "target": {
+        "type": "table",
+        "table": ["Test"] // These expressions are defined for the Test table
+      },
+      "expressions": {
+        // Redaction expressions are named (names are only unique within a table/function)
+        "RedactionExp0": {
+          "type": "binary_arr_op",
+          "operator": "in",
+          "column": { "name": "Id", "column_type": "number" },
+          "values": [1,2],
+          "value_type": "number"
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Id": {
+        "type": "column",
+        "column": "Id",
+        "column_type": "number"
+      }
+    },
+    "order_by": {
+      "relations": {},
+      "elements": [
+        {
+          "target_path": [],
+          // Both "column" and "single_column_aggregate"-typed ordering targets can have
+          // redaction expressions applied to them
+          "target": {
+            "type": "column",
+            "column": "ColumnA",
+            "redaction_expression": "RedactionExp0"
+          },
+          "order_direction": "asc"
+        }
+      ]
+    }
+  }
+}
+```
+
+This query might be translated into SQL that is similar to this:
+
+```sql
+SELECT "Id"
+FROM "Test"
+ORDER BY
+  (CASE
+    WHEN "Id" IN (1,2) THEN "ColumnA"
+    ELSE NULL
+  END) ASC
+```
 
 #### Type Definitions
 
@@ -2458,7 +2822,7 @@ Schema:
 
 ```json
 {
-  "tables": [ 
+  "tables": [
     {
       "name": [
         "Artist"

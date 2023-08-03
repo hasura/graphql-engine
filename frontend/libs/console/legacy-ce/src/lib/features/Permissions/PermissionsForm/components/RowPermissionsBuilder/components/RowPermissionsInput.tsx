@@ -7,11 +7,11 @@ import { RootInput } from './RootInput';
 import { JsonEditor } from './JsonEditor';
 import { RootTableProvider } from './RootTableProvider';
 import { RootLogicalModelProvider } from './RootLogicalModelProvider';
-import { LogicalModelWithSourceName } from '../../../../../Data/LogicalModels/LogicalModelPermissions/components/types';
 import {
   ForbiddenFeaturesProvider,
   Feature,
 } from './ForbiddenFeaturesProvider';
+import { LogicalModelWithSourceName } from '../../../../LogicalModelPermissions/components/types';
 
 export const RowPermissionsInput = ({
   permissions,

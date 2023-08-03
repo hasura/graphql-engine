@@ -105,6 +105,7 @@ main = do
               SQLGenCtx
                 Options.Don'tStringifyNumbers
                 Options.Don'tDangerouslyCollapseBooleans
+                Options.RemoteForwardAccurately
                 Options.Don'tOptimizePermissionFilters
                 Options.EnableBigQueryStringNumericInput
             maintenanceMode = MaintenanceModeDisabled

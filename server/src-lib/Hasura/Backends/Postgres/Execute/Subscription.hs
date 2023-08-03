@@ -122,7 +122,7 @@ instance ToTxt MultiplexedQuery where
 
 toSQLFromItem ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind,
+    DS.PostgresTranslateSelect pgKind,
     MonadWriter CustomSQLCTEs m
   ) =>
   S.TableAlias ->
@@ -137,7 +137,7 @@ toSQLFromItem tableAlias = \case
 
 mkMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    DS.PostgresTranslateSelect pgKind
   ) =>
   InsOrdHashMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
@@ -199,7 +199,7 @@ mkMultiplexedQuery rootFields =
 
 mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
-    DS.PostgresAnnotatedFieldJSON pgKind
+    DS.PostgresTranslateSelect pgKind
   ) =>
   (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
   MultiplexedQuery

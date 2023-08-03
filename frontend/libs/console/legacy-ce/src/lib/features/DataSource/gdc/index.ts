@@ -13,6 +13,7 @@ import {
   getFKRelationships,
   getDriverCapabilities,
   getTrackableObjects,
+  getSupportedScalars,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -38,6 +39,7 @@ export const gdc: Database = {
     getFKRelationships,
     getTablesListAsTree,
     getSupportedOperators,
+    getSupportedScalars,
     getDatabaseSchemas: async () => Feature.NotImplemented,
     getIsTableView: async () => Feature.NotImplemented,
   },

@@ -1,4 +1,4 @@
-db.createCollection('mycollection', {
+db.createCollection('users', {
   validator: {
     $jsonSchema: {
       bsonType: 'object',
@@ -58,7 +58,9 @@ db.createCollection('students', {
   },
 });
 
-db.mycollection.insertMany([
+db.createCollection('books');
+
+db.users.insertMany([
   {
     name: 'John',
     age: 30,
@@ -89,5 +91,17 @@ db.students.insertMany([
       city: 'Mars',
       street: 'Volcano 10',
     },
+  },
+]);
+
+db.books.insertMany([
+  {
+    title: 'The Great Gatsby',
+  },
+  {
+    title: 'The Catcher in the Rye',
+  },
+  {
+    title: 'To Kill a Mockingbird',
   },
 ]);

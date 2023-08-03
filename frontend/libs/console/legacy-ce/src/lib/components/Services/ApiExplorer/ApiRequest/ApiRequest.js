@@ -398,12 +398,14 @@ class ApiRequest extends Component {
                   disabled={header.isDisabled === true}
                   data-header-id={i}
                   placeholder="Enter Key"
+                  name="key"
                   data-element-name="key"
                   onChange={onHeaderValueChanged}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   type="text"
                   data-test={`header-key-${i}`}
+                  autoComplete="off"
                 />
               </td>
             );
@@ -428,12 +430,14 @@ class ApiRequest extends Component {
                   disabled={header.isDisabled === true}
                   data-header-id={i}
                   placeholder="Enter Value"
+                  name="value"
                   data-element-name="value"
                   onChange={onHeaderValueChanged}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   data-test={`header-value-${i}`}
                   type={type}
+                  autoComplete="off"
                 />
               </td>
             );

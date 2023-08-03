@@ -18,8 +18,15 @@ const SampleAppBlock = ({ dependent }) => (
       <h5 className="admonition-title">DOCS E-COMMERCE SAMPLE APP</h5>
     </div>
     <p dangerouslySetInnerHTML={createMarkup(dependent)} />
-    <a href="https://cloud.hasura.io/deploy?github_repo=https://github.com/hasura/docs-sample-app&hasura_dir=/" target={"_blank"} rel={"noopener"}>
-      <img src="https://hasura.io/deploy-button.svg" alt="Deploy to Hasura Cloud" />
+    <a
+      href="https://cloud.hasura.io/deploy?github_repo=https://github.com/hasura/docs-sample-app&hasura_dir=/"
+      target={'_blank'}
+      rel={'noopener'}
+    >
+      <img
+        src="https://hasura.io/deploy-button.svg"
+        alt="Deploy to Hasura Cloud"
+      />
     </a>
   </div>
 );

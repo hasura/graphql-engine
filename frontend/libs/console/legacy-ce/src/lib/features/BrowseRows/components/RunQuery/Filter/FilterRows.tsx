@@ -12,7 +12,7 @@ export type FilterRowsProps = {
   operators: Operator[];
   name: string;
   initialFilters?: FiltersAndSortFormValues['filters'];
-  onRemove: () => void;
+  onRemove?: () => void;
 };
 
 export const FilterRows = ({
@@ -49,7 +49,7 @@ export const FilterRows = ({
 
   const removeEntry = (index: number) => {
     remove(index);
-    onRemove();
+    onRemove?.();
   };
 
   const columnOptions: SelectItem[] = columns.map(column => {
@@ -79,7 +79,7 @@ export const FilterRows = ({
 
       {!fields.length && <div className="mb-sm italic">No Filters Present</div>}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-2">
         {fields.map((_, index) => (
           <FilterRow
             key={index}

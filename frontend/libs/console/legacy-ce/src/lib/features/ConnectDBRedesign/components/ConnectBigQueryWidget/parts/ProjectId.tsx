@@ -1,6 +1,7 @@
 import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
+import { WarningCard } from '../../Common/WarningCard';
 
 export const ProjectId = ({ name }: { name: string }) => {
   const options = [
@@ -28,11 +29,14 @@ export const ProjectId = ({ name }: { name: string }) => {
       </div>
 
       {connectionType === 'value' ? (
-        <InputField
-          name={`${name}.value`}
-          label="Project ID"
-          placeholder="Project ID"
-        />
+        <>
+          <WarningCard />
+          <InputField
+            name={`${name}.value`}
+            label="Project ID"
+            placeholder="Project ID"
+          />
+        </>
       ) : (
         <InputField
           name={`${name}.envVar`}

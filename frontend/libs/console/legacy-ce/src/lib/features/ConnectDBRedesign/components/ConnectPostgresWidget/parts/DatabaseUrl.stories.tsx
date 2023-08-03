@@ -2,11 +2,14 @@ import { SimpleForm } from '../../../../../new-components/Form';
 import { Button } from '../../../../../new-components/Button';
 import { StoryFn, Meta } from '@storybook/react';
 import { z } from 'zod';
-import { DatabaseUrl } from './DatabaseUrl';
 import { databaseUrlSchema } from '../schema';
+import { ReactQueryDecorator } from '../../../../../storybook/decorators/react-query';
+
+import { DatabaseUrl } from './DatabaseUrl';
 
 export default {
   component: DatabaseUrl,
+  decorators: [ReactQueryDecorator()],
 } as Meta<typeof DatabaseUrl>;
 
 export const DatabaseUrlDefaultView: StoryFn<typeof DatabaseUrl> = () => (

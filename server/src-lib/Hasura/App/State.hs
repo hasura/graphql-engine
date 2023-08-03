@@ -247,7 +247,7 @@ buildAppContextRule ::
   (ServeOptions impl, E.Environment, InvalidationKeys) `arr` AppContext
 buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
   authMode <- buildAuthMode -< (soAdminSecret, soAuthHook, soJwtSecret, soUnAuthRole)
-  sqlGenCtx <- buildSqlGenCtx -< (soExperimentalFeatures, soStringifyNum, soDangerousBooleanCollapse)
+  let sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soRemoteNullForwardingPolicy
   responseInternalErrorsConfig <- buildResponseInternalErrorsConfig -< (soAdminInternalErrors, soDevMode)
   eventEngineCtx <- buildEventEngineCtx -< (soEventsHttpPoolSize, soEventsFetchInterval, soEventsFetchBatchSize)
   returnA
@@ -275,10 +275,6 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
           acCloseWebsocketsOnMetadataChangeStatus = soCloseWebsocketsOnMetadataChangeStatus
         }
   where
-    buildSqlGenCtx = Inc.cache proc (experimentalFeatures, stringifyNum, dangerousBooleanCollapse) -> do
-      let sqlGenCtx = initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse
-      returnA -< sqlGenCtx
-
     buildEventEngineCtx = Inc.cache proc (httpPoolSize, fetchInterval, fetchBatchSize) -> do
       eventEngineCtx <- bindA -< initEventEngineCtx httpPoolSize fetchInterval fetchBatchSize
       returnA -< eventEngineCtx
@@ -313,8 +309,8 @@ buildAppContextRule = proc (ServeOptions {..}, env, _keys) -> do
 --------------------------------------------------------------------------------
 -- subsets
 
-initSQLGenCtx :: HashSet ExperimentalFeature -> Options.StringifyNumbers -> Options.DangerouslyCollapseBooleans -> SQLGenCtx
-initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse =
+initSQLGenCtx :: HashSet ExperimentalFeature -> Options.StringifyNumbers -> Options.DangerouslyCollapseBooleans -> Options.RemoteNullForwardingPolicy -> SQLGenCtx
+initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse remoteNullForwardingPolicy =
   let optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` experimentalFeatures = Options.OptimizePermissionFilters
         | otherwise = Options.Don'tOptimizePermissionFilters
@@ -322,7 +318,7 @@ initSQLGenCtx experimentalFeatures stringifyNum dangerousBooleanCollapse =
       bigqueryStringNumericInput
         | EFBigQueryStringNumericInput `elem` experimentalFeatures = Options.EnableBigQueryStringNumericInput
         | otherwise = Options.DisableBigQueryStringNumericInput
-   in SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput
+   in SQLGenCtx stringifyNum dangerousBooleanCollapse remoteNullForwardingPolicy optimizePermissionFilters bigqueryStringNumericInput
 
 buildCacheStaticConfig :: AppEnv -> CacheStaticConfig
 buildCacheStaticConfig AppEnv {..} =

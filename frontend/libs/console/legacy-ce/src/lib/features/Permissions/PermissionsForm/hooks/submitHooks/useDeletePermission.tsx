@@ -7,6 +7,8 @@ import { useHttpClient } from '../../../../Network';
 
 import { QueryType } from '../../../types';
 import { api } from '../../api';
+import { permissionsTableKey } from '../../../PermissionsTable/hooks';
+import { permissionsFormKey } from '../dataFetchingHooks';
 
 export interface UseDeletePermissionArgs {
   dataSourceName: string;
@@ -69,17 +71,19 @@ export const useDeletePermission = ({
           });
         },
         onSettled: async () => {
-          await queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionFormData',
-            JSON.stringify(table),
-          ]);
+          await queryClient.invalidateQueries(
+            permissionsFormKey({
+              dataSourceName,
+              table,
+            })
+          );
 
-          await queryClient.invalidateQueries([
-            dataSourceName,
-            'permissionsTable',
-            JSON.stringify(table),
-          ]);
+          await queryClient.invalidateQueries(
+            permissionsTableKey({
+              dataSourceName,
+              table,
+            })
+          );
         },
       }
     );

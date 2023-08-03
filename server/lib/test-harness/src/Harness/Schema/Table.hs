@@ -100,7 +100,8 @@ data Reference = Reference
     referenceTargetTable :: Text,
     referenceTargetColumn :: Text,
     referenceTargetQualifiers :: [Text],
-    referenceInsertionOrder :: InsertOrder
+    referenceInsertionOrder :: InsertOrder,
+    referenceCascade :: Bool
   }
   deriving (Show, Eq)
 
@@ -111,7 +112,8 @@ reference localColumn targetTable targetColumn =
       referenceTargetTable = targetTable,
       referenceTargetColumn = targetColumn,
       referenceTargetQualifiers = mempty,
-      referenceInsertionOrder = BeforeParent
+      referenceInsertionOrder = BeforeParent,
+      referenceCascade = True
     }
 
 -- | Type representing manual relationship between tables. This is

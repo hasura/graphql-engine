@@ -37,7 +37,7 @@ export interface CreateDefaultValuesArgs {
   roleName: string;
   table: unknown;
   dataSourceName: string;
-  metadata: Metadata;
+  metadata: Metadata | undefined;
   tableColumns: TableColumn[];
   defaultQueryRoot: string | never[];
   metadataSource: MetadataDataSource | undefined;
@@ -67,6 +67,7 @@ export const createDefaultValues = ({
 
   const baseDefaultValues: DefaultValues = {
     queryType: 'select',
+    comment: '',
     filterType: 'none',
     columns: {},
     supportedOperators,

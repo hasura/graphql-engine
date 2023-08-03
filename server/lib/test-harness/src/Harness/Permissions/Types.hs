@@ -4,6 +4,8 @@ module Harness.Permissions.Types
     insertPermission,
     SelectPermissionDetails (..),
     selectPermission,
+    LogicalModelSelectPermissionDetails (..),
+    logicalModelSelectPermission,
     UpdatePermissionDetails (..),
     updatePermission,
     DeletePermissionDetails (..),
@@ -20,6 +22,7 @@ import Hasura.Prelude
 -- tracking metadata API payload.
 data Permission
   = SelectPermission SelectPermissionDetails
+  | LogicalModelSelectPermission LogicalModelSelectPermissionDetails
   | UpdatePermission UpdatePermissionDetails
   | InsertPermission InsertPermissionDetails
   | DeletePermission DeletePermissionDetails
@@ -35,6 +38,15 @@ data SelectPermissionDetails = SelectPermissionDetails
     selectPermissionRows :: Value,
     selectPermissionAllowAggregations :: Bool,
     selectPermissionLimit :: Value
+  }
+  deriving (Eq, Show)
+
+data LogicalModelSelectPermissionDetails = LogicalModelSelectPermissionDetails
+  { lmSelectPermissionSource :: Maybe Text,
+    lmSelectPermissionName :: Text,
+    lmSelectPermissionRole :: Text,
+    lmSelectPermissionColumns :: [Text],
+    lmSelectPermissionFilter :: Value
   }
   deriving (Eq, Show)
 
@@ -84,6 +96,16 @@ selectPermission =
       selectPermissionRows = object [],
       selectPermissionAllowAggregations = False,
       selectPermissionLimit = Null
+    }
+
+logicalModelSelectPermission :: LogicalModelSelectPermissionDetails
+logicalModelSelectPermission =
+  LogicalModelSelectPermissionDetails
+    { lmSelectPermissionSource = Nothing,
+      lmSelectPermissionName = "",
+      lmSelectPermissionRole = "",
+      lmSelectPermissionColumns = [],
+      lmSelectPermissionFilter = object []
     }
 
 updatePermission :: UpdatePermissionDetails

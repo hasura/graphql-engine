@@ -250,13 +250,12 @@ translateAggPredBoolExp
   subselectIdentifier
   (AggregationPredicate {aggPredFunctionName, aggPredPredicate}) = do
     BoolExpCtx {rootReference} <- ask
-    -- TODO(redactionExp): Use of NoRedaction below is a placeholder. Investigate what is necessary here
     let (Identifier aggAlias) = identifierWithSuffix relTableName aggPredFunctionName
         boolExps =
           map
             (mkFieldCompExp rootReference (S.QualifiedIdentifier subselectIdentifier Nothing) NoRedaction $ LColumn (FieldName aggAlias))
             aggPredPredicate
-    pure $ sqlAnd boolExps
+    pure $ S.simplifyBoolExp $ sqlAnd boolExps
 
 translateAggPredsSubselect ::
   forall pgKind.
@@ -298,15 +297,16 @@ translateAggPredsSubselect
         S.mkSelect
           { S.selExtr = [extractorsExp],
             S.selFrom = Just $ S.FromExp fromExp,
-            S.selWhere = Just $ S.WhereFrag whereExp
+            S.selWhere = Just $ S.WhereFrag $ S.simplifyBoolExp whereExp
           }
         subselectAlias
 
 translateAggPredExtractor ::
-  forall pgKind field.
+  forall pgKind.
+  (Backend ('Postgres pgKind)) =>
   TableIdentifier ->
   TableName ('Postgres pgKind) ->
-  AggregationPredicate ('Postgres pgKind) field ->
+  AggregationPredicate ('Postgres pgKind) S.SQLExp ->
   S.Extractor
 translateAggPredExtractor relTableNameIdentifier relTableName (AggregationPredicate {aggPredFunctionName, aggPredArguments}) =
   let predArgsExp = toList $ translateAggPredArguments aggPredArguments relTableNameIdentifier
@@ -315,14 +315,19 @@ translateAggPredExtractor relTableNameIdentifier relTableName (AggregationPredic
 
 translateAggPredArguments ::
   forall pgKind.
-  AggregationPredicateArguments ('Postgres pgKind) ->
+  (Backend ('Postgres pgKind)) =>
+  AggregationPredicateArguments ('Postgres pgKind) S.SQLExp ->
   TableIdentifier ->
   NonEmpty S.SQLExp
 translateAggPredArguments predArgs relTableNameIdentifier =
   case predArgs of
     AggregationPredicateArgumentsStar -> pure $ S.SEStar Nothing
     (AggregationPredicateArguments cols) ->
-      S.SEQIdentifier . S.mkQIdentifier relTableNameIdentifier <$> cols
+      cols
+        <&> ( \(column, redactionExp) ->
+                withRedactionExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) redactionExp
+                  $ S.mkQIdenExp relTableNameIdentifier column
+            )
 
 translateTableRelationship :: HashMap PGCol PGCol -> TableIdentifier -> BoolExpM S.BoolExp
 translateTableRelationship colMapping relTableNameIdentifier = do

@@ -31,5 +31,6 @@ export const createDefaultValues = (props: CreateDefaultsArgs) => {
       filter: operators,
     },
     filter: existingPermission,
+    comment: existingPermission.comment,
   };
 };

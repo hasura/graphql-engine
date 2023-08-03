@@ -23,6 +23,7 @@ export const customFieldNamesPlaceholders = (
   delete: `delete_${tableName} (default)`,
   delete_by_pk: `delete_${tableName}_by_pk (default)`,
   update_many: `update_many_${tableName} (default)`,
+  logical_model: 'Select a logical model',
 });
 
 export const buildConfigFromFormValues = (
@@ -32,9 +33,10 @@ export const buildConfigFromFormValues = (
 
   const config: MetadataTableConfig = {};
   // the shape of the form type almost matches the config type
-  const { custom_name, ...customRoots } = values;
+  const { custom_name, logical_model, ...customRoots } = values;
 
   if (custom_name) config.custom_name = custom_name;
+  if (logical_model) config.logical_model = logical_model;
 
   const rootsWithValues = pickBy(customRoots, v => v !== '');
 
@@ -95,5 +97,6 @@ export const initFormValues = (currentConfiguration?: MetadataTableConfig) => ({
   delete: '',
   delete_by_pk: '',
   update_many: '',
+  logical_model: '',
   ...(currentConfiguration?.custom_root_fields || {}),
 });

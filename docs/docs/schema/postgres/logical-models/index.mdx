@@ -41,11 +41,10 @@ Logical Models themselves, read on.
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src="/img/native-queries/create-logical-model-excerpt-example.png"
-  alt="Create Logical Model"
-  width="800px"
-/>
+You can create a Logical Model from the "Data" tab of the Console, by clicking on `Native Queries` in the sidebar, then
+`Add Logical Model`:
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
 
 </TabItem>
 
@@ -101,10 +100,11 @@ The type of each field can be either a [PostgreSQL data type](/schema/postgres/p
 other Logical Models, and each field can be marked as nullable or not, see
 [LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
-For example, we could track a representation of an article as follows:
-
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
+
+For example, we could track a representation of an article with excerpts as follows, by defining the fields we want to
+be able to return:
 
 <Thumbnail
   src="/img/native-queries/create-logical-model-excerpt-example.png"
@@ -119,29 +119,32 @@ For example, we could track a representation of an article as follows:
 Add the following to the `default` database definition in the `metadata > databases.yaml` file:
 
 ```yaml
-  logical_models:
-    - name: article
-      fields:
-        id:
-          type: integer
-          nullable: false
-        title:
-          type: text
-          nullable: false
-        contents:
-          type: text
-          nullable: false
-        published_date:
-          type: date
-          nullable: true
-        is_published:
-          type: boolean
-          nullable: false
+logical_models:
+  - name: article
+    fields:
+      id:
+        type: integer
+        nullable: false
+      title:
+        type: text
+        nullable: false
+      contents:
+        type: text
+        nullable: false
+      published_date:
+        type: date
+        nullable: true
+      is_published:
+        type: boolean
+        nullable: false
 ```
 
 </TabItem>
 
 <TabItem value="api" label="API">
+
+For example, we could track a representation of an article with excerpts as follows, by defining the fields we want to
+be able to return:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -203,11 +206,9 @@ X-Hasura-Role: admin
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src="/img/native-queries/delete-logical-model.png"
-  alt="Delete Logical Model"
-  width="800px"
-/>
+To untrack a Logical Model, click `Remove` next to the Logical Model:
+
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
 
 </TabItem>
 
@@ -245,16 +246,12 @@ will fail. You must remove the Native Query first.
 
 :::
 
-To untrack the above "article" Logical Model, we would run the following:
+To untrack the above `article` Logical Model, we would run the following:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src="/img/native-queries/delete-logical-model.png"
-  alt="Delete Logical Model"
-  width="800px"
-/>
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
 
 </TabItem>
 
@@ -289,7 +286,7 @@ Logical Model fields are allowed to refer to other Logical Models, even recursiv
 
 Object or array relationships between Native Queries are an example use of this.
 
-To elaborate on the "article" example above, we can include authors in the data model:
+To elaborate on the `article` example above, we can include authors in the data model:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="api" label="API">
@@ -474,7 +471,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-For example, to allow access to the "article" Logical Model for the "reader" role, but only for published articles, we
+For example, to allow access to the `article` Logical Model for the `reader` role, but only for published articles, we
 could use the following permission to limit the accessible rows to those where `is_published` is `true`, and then hide
 that column from the list (by specifying all other columns).
 
@@ -490,22 +487,21 @@ that column from the list (by specifying all other columns).
 Add the required permissions to the relevant logical model in `metadata > databases.yaml`:
 
 ```yaml
-  logical_models:
-    - name: "<name>"
-      fields:
-        ...
-      select_permissions:
-        - role: reader
-          permission:
-            columns:
-              - id
-              - title
-              - contents
-              - date
-            filter:
-              is_published:
-                _eq: true
-        - ...
+logical_models:
+  - name: '<name>'
+    fields: ...
+    select_permissions:
+      - role: reader
+        permission:
+          columns:
+            - id
+            - title
+            - contents
+            - date
+          filter:
+            is_published:
+              _eq: true
+      - ...
 ```
 
 </TabItem>

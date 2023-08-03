@@ -64,6 +64,7 @@ defaultSchemaOptions =
   SchemaOptions
     { soStringifyNumbers = Options.Don'tStringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soRemoteNullForwardingPolicy = Options.RemoteForwardAccurately,
       soInferFunctionPermissions = Options.InferFunctionPermissions,
       soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
       soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,

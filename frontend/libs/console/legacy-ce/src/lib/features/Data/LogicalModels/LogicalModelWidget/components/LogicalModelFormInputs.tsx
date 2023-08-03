@@ -24,7 +24,7 @@ export const LogicalModelFormInputs = (props: LogicalModelFormProps) => {
         name="dataSourceName"
         label="Select a source"
         options={props.sourceOptions}
-        dataTestId="dataSoureName"
+        dataTestId="dataSourceName"
         placeholder="Pick a database..."
         disabled={props.disabled?.dataSourceName}
       />

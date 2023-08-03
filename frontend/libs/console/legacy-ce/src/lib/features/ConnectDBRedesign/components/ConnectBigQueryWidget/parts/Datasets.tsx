@@ -1,6 +1,7 @@
 import { InputField, Radio } from '../../../../../new-components/Form';
 import { useFormContext } from 'react-hook-form';
 import { BigQueryConnectionSchema } from '../schema';
+import { WarningCard } from '../../Common/WarningCard';
 
 export const Datasets = ({ name }: { name: string }) => {
   const options = [
@@ -28,11 +29,14 @@ export const Datasets = ({ name }: { name: string }) => {
       </div>
 
       {connectionType === 'value' ? (
-        <InputField
-          name={`${name}.value`}
-          label="Datasets"
-          placeholder="dataset_1,dataset_2"
-        />
+        <>
+          <WarningCard />
+          <InputField
+            name={`${name}.value`}
+            label="Datasets"
+            placeholder="dataset_1,dataset_2"
+          />
+        </>
       ) : (
         <InputField
           name={`${name}.envVar`}

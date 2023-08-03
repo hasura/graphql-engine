@@ -321,18 +321,18 @@ initBasicConnectionInfo
           }
       mkSourceConfig srcURL =
         PostgresConnConfiguration
-          { _pccConnectionInfo =
+          { pccConnectionInfo =
               PostgresSourceConnInfo
-                { _psciDatabaseUrl = srcURL,
-                  _psciPoolSettings = poolSettings,
-                  _psciUsePreparedStatements = usePreparedStatements,
-                  _psciIsolationLevel = isolationLevel,
-                  _psciSslConfiguration = Nothing
+                { psciDatabaseUrl = srcURL,
+                  psciPoolSettings = poolSettings,
+                  psciUsePreparedStatements = usePreparedStatements,
+                  psciIsolationLevel = isolationLevel,
+                  psciSslConfiguration = Nothing
                 },
-            _pccReadReplicas = Nothing,
-            _pccExtensionsSchema = defaultPostgresExtensionsSchema,
-            _pccConnectionTemplate = Nothing,
-            _pccConnectionSet = mempty
+            pccReadReplicas = Nothing,
+            pccExtensionsSchema = defaultPostgresExtensionsSchema,
+            pccConnectionTemplate = Nothing,
+            pccConnectionSet = mempty
           }
 
 -- | Creates a 'PG.ConnInfo' from a 'UrlConf' parameter.
@@ -502,7 +502,7 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
   let cacheStaticConfig = buildCacheStaticConfig appEnv
       Loggers _ logger pgLogger = appEnvLoggers
-      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse
+      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soRemoteNullForwardingPolicy
       cacheDynamicConfig =
         CacheDynamicConfig
           soInferFunctionPermissions
@@ -1449,7 +1449,7 @@ telemetryNotice =
 
 mkPgSourceResolver :: PG.PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkPgSourceResolver pgLogger env sourceName config = runExceptT do
-  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
+  let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
@@ -1459,24 +1459,25 @@ mkPgSourceResolver pgLogger env sourceName config = runExceptT do
           { PG.cpIdleTime = idleTimeout,
             PG.cpConns = maxConns,
             PG.cpAllowPrepare = allowPrepare,
-            PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
-            PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
+            PG.cpMbLifetime = ppsConnectionLifetime =<< poolSettings,
+            PG.cpTimeout = ppsPoolTimeout =<< poolSettings
           }
   let context = J.object [("source" J..= sourceName)]
   pgPool <- liftIO $ Q.initPGPool connInfo context connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
-  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (_pccExtensionsSchema config) mempty ConnTemplate_NotApplicable
+  pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty (pccExtensionsSchema config) mempty ConnTemplate_NotApplicable
 
-mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
+mkMSSQLSourceResolver :: SourceResolver 'MSSQL
 mkMSSQLSourceResolver env _name (MSSQLConnConfiguration connInfo _) = runExceptT do
   let MSSQLConnectionInfo iConnString poolSettings isolationLevel = connInfo
       connOptions = case poolSettings of
-        MSSQLPoolSettings {..} ->
-          MSPool.ConnectionOptions
-            { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
-              _coStripes = 1,
-              _coIdleTime = _mpsIdleTimeout
-            }
+        MSSQLPoolSettingsPool (MSSQLPoolConnectionSettings {..}) ->
+          MSPool.ConnectionOptionsPool
+            $ MSPool.PoolOptions
+              { poConnections = fromMaybe defaultMSSQLMaxConnections mpsMaxConnections,
+                poStripes = 1,
+                poIdleTime = mpsIdleTimeout
+              }
         MSSQLPoolSettingsNoPool -> MSPool.ConnectionOptionsNoPool
   (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
   let mssqlExecCtx = mkMSSQLExecCtx isolationLevel mssqlPool NeverResizePool

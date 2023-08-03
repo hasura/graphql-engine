@@ -9,10 +9,15 @@ export const STORED_PROCEDURE_UNTRACK_SUCCESS =
 export const STORED_PROCEDURE_UNTRACK_ERROR =
   'Unable to untrack Stored Procedure';
 
-export const NATIVE_QUERY_ROUTES = {
+export const NATIVE_QUERY_ROUTES: Record<
+  string,
+  { title: string; subtitle: string; docLink?: string }
+> = {
   '/data/native-queries': {
     title: 'Native Queries',
     subtitle: 'Access more queries and operators through SQL on your database',
+    docLink:
+      'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/native-queries/',
   },
   // create new native query
   '/data/native-queries/create': {
@@ -29,11 +34,15 @@ export const NATIVE_QUERY_ROUTES = {
     title: 'Logical Models',
     subtitle:
       'Creating Logical Models in advance can help generate Native Queries faster',
+    docLink:
+      'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/index/',
   },
   '/data/native-queries/logical-models/create': {
     title: 'Logical Models',
     subtitle:
       'Creating Logical Models in advance can help generate Native Queries faster',
+    docLink:
+      'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/native-queries/#2-create-a-native-query',
   },
   '/data/native-queries/logical-models/{{source}}/{{name}}': {
     title: '{{name}}',
@@ -43,6 +52,8 @@ export const NATIVE_QUERY_ROUTES = {
   '/data/native-queries/stored-procedures': {
     title: 'Stored Procedures',
     subtitle: 'Add support for stored procedures on SQL over a GraphQL API',
+    docLink:
+      'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/stored-procedures/',
   },
   '/data/native-queries/stored-procedures/track': {
     title: 'Track Stored Procedure',

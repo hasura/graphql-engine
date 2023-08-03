@@ -49,9 +49,6 @@ const headersSchema = z.array(
 // OTHER PROPERTIES
 // --------------------------------------------------
 
-// In the future, also 'metrics' | 'logs' will be available
-const dataTypesSchema = z.literal('traces');
-
 // In the future, also 'grpc' will be available
 const protocolSchema = z.literal('http/protobuf');
 
@@ -65,57 +62,70 @@ const exporterSchema = z.object({
   resource_attributes: z.array(attributeSchema),
 
   /**
-   * The most important part of the configuration. You cannot enable OpenTelemetry without a valid
-   * endpoint.
+   * The most important parts of the configuration. If OpenTelemetry export is
+   * enabled globally, AND a specific telemetry type is enabled, then a valid
+   * endpoint URL must be provided.
    */
   otlp_traces_endpoint: validUrlSchema,
+  otlp_metrics_endpoint: validUrlSchema,
 });
-
-// --------------------------------------------------
-// ENABLED/DISABLED DIFFERENCES
-// --------------------------------------------------
-
-const enabledOpenTelemetrySchema = {
-  /**
-   * If OpenTelemetry is enabled or not. Allows to enable/disable the feature without losing the
-   * configuration and/or inferring the status from other data (initially, data_types meant that
-   * OpenTelemetry is disabled if it is empty but this is not true anymore because of the bad UX
-   * consequences).
-   */
-  status: z.literal('enabled'),
-
-  /**
-   * The request headers sent to the OpenTelemetry endpoint.
-   */
-  data_types: z.array(dataTypesSchema),
-
-  batch_span_processor: z.object({
-    // a value between 1 and 512
-    max_export_batch_size: z.number().min(1).max(512),
-  }),
-
-  exporter_otlp: exporterSchema,
-};
-
-const disabledOpenTelemetrySchema = {
-  ...enabledOpenTelemetrySchema,
-
-  status: z.literal('disabled'),
-
-  exporter_otlp: exporterSchema.extend({
-    // If OpenTelemetry is disabled, the endpoint is not required
-    otlp_traces_endpoint: validUrlSchema
-      .or(z.literal(''))
-      .or(z.literal(undefined)),
-  }),
-};
 
 // --------------------------------------------------
 // OPEN TELEMETRY
 // --------------------------------------------------
-export const openTelemetrySchema = z.discriminatedUnion('status', [
-  z.object(disabledOpenTelemetrySchema),
-  z.object(enabledOpenTelemetrySchema),
-]);
+export const openTelemetrySchema = z
+  .object({
+    /**
+     * If OpenTelemetry is enabled or not. Allows to enable/disable the feature without losing the
+     * configuration and/or inferring the status from other data (initially, data_types meant that
+     * OpenTelemetry is disabled if it is empty but this is not true anymore because of the bad UX
+     * consequences).
+     */
+    status: z.enum(['enabled', 'disabled']),
+
+    /**
+     * The individually-enabled telemetry export types
+     */
+    data_types: z.array(z.enum(['traces', 'metrics'])),
+
+    batch_span_processor: z.object({
+      // a value between 1 and 512
+      max_export_batch_size: z.number().min(1).max(512),
+    }),
+
+    exporter_otlp: exporterSchema.extend({
+      // NOTE: refine validation below assumes a non-falsy value is valid URL
+      otlp_traces_endpoint: validUrlSchema
+        .or(z.literal(''))
+        .or(z.literal(undefined)),
+      otlp_metrics_endpoint: validUrlSchema
+        .or(z.literal(''))
+        .or(z.literal(undefined)),
+    }),
+  })
+  // enforce invariant that: when export is enabled globally AND when the
+  // corresponding data_type is enabled THEN a valid endpoint url is provided.
+  .refine(
+    obj =>
+      obj.status === 'enabled' && obj.data_types.includes('traces')
+        ? obj.exporter_otlp.otlp_traces_endpoint
+        : true,
+    {
+      message:
+        'A valid traces endpoint must be supplied when trace export is enabled',
+      path: ['exporter_otlp', 'otlp_traces_endpoint'],
+    }
+  )
+  .refine(
+    obj =>
+      obj.status === 'enabled' && obj.data_types.includes('metrics')
+        ? obj.exporter_otlp.otlp_metrics_endpoint
+        : true,
+    {
+      message:
+        'A valid metrics endpoint must be supplied when metrics export is enabled',
+      path: ['exporter_otlp', 'otlp_metrics_endpoint'],
+    }
+  );
 
 export type OpenTelemetry = z.infer<typeof openTelemetrySchema>;
