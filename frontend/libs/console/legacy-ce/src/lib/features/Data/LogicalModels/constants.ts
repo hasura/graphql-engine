@@ -1,5 +1,7 @@
 export const LOGICAL_MODEL_CREATE_SUCCESS =
-  'Successfully tracked Logical Model';
+  'Successfully created Logical Model';
+export const LOGICAL_MODEL_EDIT_SUCCESS = 'Successfully edited Logical Model';
+export const LOGICAL_MODEL_EDIT_ERROR = 'Unable to edit Logical Model';
 export const LOGICAL_MODEL_CREATE_ERROR = 'Unable to track Logical Model';
 export const STORED_PROCEDURE_TRACK_SUCCESS =
   'Successfully tracked Stored Procedure';
@@ -9,7 +11,23 @@ export const STORED_PROCEDURE_UNTRACK_SUCCESS =
 export const STORED_PROCEDURE_UNTRACK_ERROR =
   'Unable to untrack Stored Procedure';
 
-export const NATIVE_QUERY_ROUTES: Record<
+export const Routes = {
+  NativeQueries: '/data/native-queries',
+  CreateNativeQuery: '/data/native-queries/create',
+  EditNativeQuery: '/data/native-queries/{{source}}/{{name}}/{{tab}}',
+  LogicalModels: '/data/native-queries/logical-models',
+  CreateLogicalModels: '/data/native-queries/logical-models/create',
+  EditLogicalModel:
+    '/data/native-queries/logical-models/{{source}}/{{name}}/{{tab}}',
+  LogicalModelsPermissions:
+    '/data/native-queries/logical-models/{{source}}/{{name}}/permissions',
+  StoredProcedures: '/data/native-queries/stored-procedures',
+  TrackStoredProcedure: '/data/native-queries/stored-procedures/track',
+  StoredProcedureDetail:
+    '/data/native-queries/stored-procedures/{{source}}/{{name}}',
+} as const;
+
+export const NATIVE_QUERY_ROUTE_DETAIL: Record<
   string,
   { title: string; subtitle: string; docLink?: string }
 > = {
@@ -19,51 +37,47 @@ export const NATIVE_QUERY_ROUTES: Record<
     docLink:
       'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/native-queries/',
   },
-  // create new native query
-  '/data/native-queries/create': {
+  [Routes.CreateNativeQuery]: {
     title: 'Create Native Query',
     subtitle: 'Access more queries and operators through SQL on your database',
   },
-  // edit/view native query:
-  '/data/native-queries/{{source}}/{{name}}/{{tab}}': {
+  [Routes.EditNativeQuery]: {
     title: '{{name}}',
-    //setting via the RouteWrapper props for this one so it can be dynamic based on tab
     subtitle: '',
   },
-  '/data/native-queries/logical-models': {
+  [Routes.LogicalModels]: {
     title: 'Logical Models',
     subtitle:
       'Creating Logical Models in advance can help generate Native Queries faster',
     docLink:
       'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/index/',
   },
-  '/data/native-queries/logical-models/create': {
+  [Routes.CreateLogicalModels]: {
     title: 'Logical Models',
     subtitle:
       'Creating Logical Models in advance can help generate Native Queries faster',
     docLink:
       'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/native-queries/#2-create-a-native-query',
   },
-  '/data/native-queries/logical-models/{{source}}/{{name}}': {
+  [Routes.EditLogicalModel]: {
     title: '{{name}}',
-    subtitle:
-      'Creating Logical Models in advance can help generate Native Queries faster',
+    subtitle: '',
   },
-  '/data/native-queries/stored-procedures': {
+  [Routes.StoredProcedures]: {
     title: 'Stored Procedures',
     subtitle: 'Add support for stored procedures on SQL over a GraphQL API',
     docLink:
       'https://hasura.io/docs/latest/schema/ms-sql-server/logical-models/stored-procedures/',
   },
-  '/data/native-queries/stored-procedures/track': {
+  [Routes.TrackStoredProcedure]: {
     title: 'Track Stored Procedure',
     subtitle: 'Expose your stored SQL procedures via the GraphQL API',
   },
-  '/data/native-queries/stored-procedures/{{source}}/{{name}}': {
+  [Routes.StoredProcedureDetail]: {
     title: 'Track Stored Procedure',
     subtitle: 'Expose your stored SQL procedures via the GraphQL API',
   },
-  '/data/native-queries/logical-models/{{source}}/{{name}}/permissions': {
+  [Routes.LogicalModelsPermissions]: {
     title: 'Logical Models Permissions',
     subtitle:
       'Add permissions to your Logical Models to control access to your data',

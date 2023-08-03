@@ -1,14 +1,15 @@
-import { rest } from 'msw';
 import { metadata } from './metadata';
 import { mssqlStoredProceduresMockResponse } from './query';
+import { extractTypeAndArgs } from '../../AddNativeQuery/mocks/native-query-handlers';
+import { rest } from 'msw';
 
 export const handlers = {
   200: [
     rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-      const body = await req.json();
+      const { type, isBulkAtomic } = await extractTypeAndArgs(req);
       if (
-        body.type.endsWith('_track_logical_model') ||
-        body.type.endsWith('_track_stored_procedure')
+        (isBulkAtomic && type.endsWith('_track_logical_model')) ||
+        type.endsWith('_track_stored_procedure')
       ) {
         return res(
           ctx.json({
@@ -16,7 +17,7 @@ export const handlers = {
           })
         );
       }
-      if (body.type === 'export_metadata') {
+      if (type === 'export_metadata') {
         return res(ctx.json(metadata));
       }
     }),
@@ -29,21 +30,24 @@ export const handlers = {
   ],
   400: [
     rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-      const body = await req.json();
+      const { type, isBulkAtomic, args } = await extractTypeAndArgs<{
+        name: string;
+      }>(req);
       if (
-        body.type.endsWith('_track_logical_model') ||
-        body.type.endsWith('_track_stored_procedure')
+        isBulkAtomic &&
+        (type.endsWith('_track_logical_model') ||
+          type.endsWith('_track_stored_procedure'))
       ) {
         return res(
           ctx.status(400),
           ctx.json({
             code: 'already-tracked',
-            error: `Logical model '${body.args.name}' is already tracked.`,
+            error: `Logical model '${args.name}' is already tracked.`,
             path: '$.args',
           })
         );
       }
-      if (body.type === 'export_metadata') {
+      if (type === 'export_metadata') {
         return res(ctx.json(metadata));
       }
     }),
@@ -56,8 +60,9 @@ export const handlers = {
   ],
   500: [
     rest.post('http://localhost:8080/v1/metadata', async (req, res, ctx) => {
-      const body = await req.json();
-      if (body.type.endsWith('_track_logical_model')) {
+      const { type, isBulkAtomic } = await extractTypeAndArgs(req);
+
+      if (isBulkAtomic && type.endsWith('_track_logical_model')) {
         return res(
           ctx.status(500),
           ctx.json({
@@ -67,7 +72,7 @@ export const handlers = {
           })
         );
       }
-      if (body.type === 'export_metadata') {
+      if (type === 'export_metadata') {
         return res(ctx.json(metadata));
       }
     }),

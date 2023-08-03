@@ -108,7 +108,6 @@ export const NativeQueryRelationships = (
   });
 
   const { destructiveConfirm } = useDestructiveAlert();
-
   const handleDelete = (data: ListNativeQueryRow) => {
     destructiveConfirm({
       resourceName: data.name,

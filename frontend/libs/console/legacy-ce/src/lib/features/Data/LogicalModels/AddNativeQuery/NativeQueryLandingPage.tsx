@@ -1,44 +1,59 @@
-import { InjectedRouter, withRouter } from 'react-router';
+import { withRouter } from 'react-router';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { Tabs } from '../../../../new-components/Tabs';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { MetadataSelectors } from '../../../hasura-metadata-api';
+import { NativeQuery } from '../../../hasura-metadata-types';
+import { MetadataWrapper } from '../../components';
 import { NativeQueryRelationships } from '../NativeQueryRelationships/NativeQueryRelationships';
 import { RouteWrapper } from '../components/RouteWrapper';
 import { injectRouteDetails } from '../components/route-wrapper-utils';
-import { NATIVE_QUERY_ROUTES } from '../constants';
+import { Routes } from '../constants';
+import { NativeQueryTabs } from '../types';
 import { AddNativeQuery } from './AddNativeQuery';
 
-type allowedTabs = 'details' | 'relationships';
+export const NativeQueryRoute = withRouter<{
+  params: { source: string; name: string; tabName?: NativeQueryTabs };
+}>(({ params }) => {
+  const { source, name } = params;
 
-export type NativeQueryLandingPage = {
-  params: { source: string; name: string; tabName?: allowedTabs };
-  location: Location;
-  router: InjectedRouter;
-};
+  if (!source || !name) {
+    return (
+      <IndicatorCard status="negative">
+        Unable to parse data from URL.
+      </IndicatorCard>
+    );
+  }
 
-export const NativeQueryLandingPage = withRouter<{
-  location: Location;
-  router: InjectedRouter;
-  params: { source: string; name: string; tabName?: allowedTabs };
-}>(props => {
-  const {
-    params: { source: dataSourceName, name: nativeQueryName, tabName },
-  } = props;
-
-  const { data: nativeQuery } = useMetadata(
-    MetadataSelectors.findNativeQuery(dataSourceName, nativeQueryName)
+  return (
+    // bind metadata to UI component from URL Params:
+    <MetadataWrapper
+      selector={MetadataSelectors.findNativeQuery(source, name)}
+      render={({ data: nativeQuery }) => (
+        <NativeQueryLandingPage {...params} nativeQuery={nativeQuery} />
+      )}
+    />
   );
+});
 
+// presentational component that has no data fetching:
+const NativeQueryLandingPage = ({
+  name: nativeQueryName,
+  source,
+  tabName,
+  nativeQuery,
+}: {
+  name: string;
+  source: string;
+  tabName?: string;
+  nativeQuery: NativeQuery | undefined;
+}) => {
   const push = usePushRoute();
-
-  const route: keyof typeof NATIVE_QUERY_ROUTES =
-    '/data/native-queries/{{source}}/{{name}}/{{tab}}';
 
   if (!nativeQuery) {
     return (
       <IndicatorCard status="negative">
-        Native Query {nativeQueryName} not found in {dataSourceName}
+        Native Query {nativeQueryName} not found in {source}
       </IndicatorCard>
     );
   }
@@ -49,8 +64,8 @@ export const NativeQueryLandingPage = withRouter<{
 
   return (
     <RouteWrapper
-      route={route}
-      itemSourceName={dataSourceName}
+      route={Routes.EditNativeQuery}
+      itemSourceName={source}
       itemName={nativeQuery?.root_field_name}
       itemTabName={tabName}
       subtitle={
@@ -63,9 +78,9 @@ export const NativeQueryLandingPage = withRouter<{
         value={tabName ?? 'details'}
         onValueChange={tab =>
           push(
-            injectRouteDetails(route, {
+            injectRouteDetails(Routes.EditNativeQuery, {
               itemName: nativeQuery.root_field_name,
-              itemSourceName: dataSourceName,
+              itemSourceName: source,
               itemTabName: tab,
             })
           )
@@ -73,7 +88,9 @@ export const NativeQueryLandingPage = withRouter<{
         items={[
           {
             content: (
-              <AddNativeQuery editDetails={{ dataSourceName, nativeQuery }} />
+              <AddNativeQuery
+                editDetails={{ dataSourceName: source, nativeQuery }}
+              />
             ),
             label: 'Details',
             value: 'details',
@@ -81,7 +98,7 @@ export const NativeQueryLandingPage = withRouter<{
           {
             content: (
               <NativeQueryRelationships
-                dataSourceName={dataSourceName}
+                dataSourceName={source}
                 nativeQueryName={nativeQueryName}
               />
             ),
@@ -99,4 +116,4 @@ export const NativeQueryLandingPage = withRouter<{
       />
     </RouteWrapper>
   );
-});
+};

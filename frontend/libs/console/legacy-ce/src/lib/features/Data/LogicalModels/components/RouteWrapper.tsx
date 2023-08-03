@@ -5,12 +5,12 @@ import {
   useEnvironmentState,
   usePushRoute,
 } from '../../../ConnectDBRedesign/hooks';
-import { NATIVE_QUERY_ROUTES } from '../constants';
+import { NATIVE_QUERY_ROUTE_DETAIL } from '../constants';
 import { injectRouteDetails, pathsToBreadcrumbs } from './route-wrapper-utils';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 
 export type RouteWrapperProps = {
-  route: keyof typeof NATIVE_QUERY_ROUTES;
+  route: keyof typeof NATIVE_QUERY_ROUTE_DETAIL;
   itemSourceName?: string;
   itemName?: string;
   itemTabName?: string;
@@ -22,7 +22,7 @@ export const RouteWrapper: React.FC<RouteWrapperProps> = props => {
 
   const paths = route?.split('/').filter(Boolean);
 
-  const { title, subtitle, docLink } = NATIVE_QUERY_ROUTES[route];
+  const { title, subtitle, docLink } = NATIVE_QUERY_ROUTE_DETAIL[route];
 
   const push = usePushRoute();
   const { consoleType } = useEnvironmentState();

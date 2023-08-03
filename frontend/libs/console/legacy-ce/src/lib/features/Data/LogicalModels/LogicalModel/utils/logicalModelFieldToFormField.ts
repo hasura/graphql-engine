@@ -1,6 +1,7 @@
 import { LogicalModel } from '../../../../hasura-metadata-types';
 import {
   isArrayLogicalModelType,
+  isArrayScalarFieldType,
   isLogicalModelType,
   isScalarFieldType,
 } from '../../../../hasura-metadata-types/source/typeGuards';
@@ -32,6 +33,15 @@ export function logicalModelFieldToFormField(
       name: f.name,
       type: f.type.array.logical_model,
       typeClass: 'logical_model',
+      nullable: f.type.array.nullable,
+      array: true,
+    };
+  }
+  if (isArrayScalarFieldType(f.type)) {
+    return {
+      name: f.name,
+      type: f.type.array.scalar,
+      typeClass: 'scalar',
       nullable: f.type.array.nullable,
       array: true,
     };

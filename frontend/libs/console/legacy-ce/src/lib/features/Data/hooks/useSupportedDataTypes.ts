@@ -22,7 +22,8 @@ export const useSupportedDataTypes = <FinalResult = string[]>({
       if (result === Feature.NotImplemented) {
         return [];
       }
-      return result;
+      // using Set to remove duplicates that result from the way the data types are flattened from definition object
+      return Array.from(new Set(result));
     },
     {
       ...getDefaultQueryOptions(),

@@ -8,16 +8,6 @@ export const useSupportedDrivesForNativeQueries = () => {
 
   const { access: eeLiteAccess } = useEELiteAccess(globals);
 
-  /**
-   * There are three cases here.
-   * 1. If it's OSS - do not show the children at all. (there is no point in using this wrapper for oss features)
-   * 2. If it's pro lite
-   *   - show the "Try pro-lite" license form if license is not active.
-   *   - show the children if license is active.
-   * 3. If it's cloud/pro just show the children
-   *
-   */
-
   // this will tell us if console is pro or cloud
   const isPro = isProConsole(window.__env);
 

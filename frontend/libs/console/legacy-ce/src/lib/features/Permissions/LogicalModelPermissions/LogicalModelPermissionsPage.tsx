@@ -1,13 +1,11 @@
-import { InjectedRouter, withRouter } from 'react-router';
+import Skeleton from 'react-loading-skeleton';
+
 import { LogicalModelPermissions } from './LogicalModelPermissions';
 import { useCreateLogicalModelsPermissions } from './hooks/useCreateLogicalModelsPermissions';
 import { useRemoveLogicalModelsPermissions } from './hooks/useRemoveLogicalModelsPermissions';
 import { useMetadata } from '../../hasura-metadata-api';
-import { usePermissionComparators } from '../PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
-import Skeleton from 'react-loading-skeleton';
 import { extractModelsAndQueriesFromMetadata } from '../../hasura-metadata-api/selectors';
-import { LogicalModelTabs } from '../../Data/LogicalModels/components/LogicalModelTabs';
-import { RouteWrapper } from '../../Data/LogicalModels/components/RouteWrapper';
+import { usePermissionComparators } from '../PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
 
 export const LogicalModelPermissionsPage = ({
   source,
@@ -75,28 +73,3 @@ export const LogicalModelPermissionsPage = ({
     </div>
   );
 };
-
-export const LogicalModelPermissionsRoute = withRouter<{
-  location: Location;
-  router: InjectedRouter;
-  params: {
-    source: string;
-    name: string;
-  };
-}>(({ params }) => {
-  return (
-    <RouteWrapper
-      route={
-        '/data/native-queries/logical-models/{{source}}/{{name}}/permissions'
-      }
-      itemSourceName={params.source}
-      itemName={params.name}
-    >
-      <LogicalModelTabs
-        source={params.source}
-        name={params.name}
-        defaultValue={'logical-model-permissions'}
-      />
-    </RouteWrapper>
-  );
-});

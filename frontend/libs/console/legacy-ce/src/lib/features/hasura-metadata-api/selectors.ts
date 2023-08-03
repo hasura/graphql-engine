@@ -34,6 +34,12 @@ export const findNativeQuery =
       .findMetadataSource(dataSourceName, m)
       ?.native_queries?.find(nq => nq.root_field_name === nativeQueryName);
 
+export const findLogicalModel =
+  (dataSourceName: string, logicalModelName: string) => (m: Metadata) =>
+    utils
+      .findMetadataSource(dataSourceName, m)
+      ?.logical_models?.find(lm => lm.name === logicalModelName);
+
 export const getTables = (dataSourceName: string) => (m: Metadata) =>
   utils.findMetadataSource(dataSourceName, m)?.tables;
 
