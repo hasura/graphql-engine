@@ -238,9 +238,16 @@ export const generateUpdateEndpoint: Generator['generator'] = (
 ) => {
   const { fields } = extractFields(operation, microfiber);
 
-  const pkTypeName = recursiveType(
-    operation.args?.find(arg => arg.name === 'pk_columns')?.type
-  )?.name;
+  const pkArg = operation.args?.find(
+    arg => arg.name === 'pk_columns' || arg.name === 'pkColumns'
+  );
+
+  if (!pkArg) {
+    throw new Error('pk_columns argument is required');
+  }
+
+  const pkTypeName = recursiveType(pkArg.type)?.name;
+  const pkName = pkArg.name;
 
   const pkType = microfiber.getType({
     kind: 'INPUT_OBJECT',
@@ -254,7 +261,7 @@ export const generateUpdateEndpoint: Generator['generator'] = (
   )?.name;
 
   const grapqhlOperation = `
-    ${operation.name}(pk_columns: {
+    ${operation.name}(${pkName}: {
       ${operationArgs}
     }, _set: $object) {
       ${fields?.join('\n')}

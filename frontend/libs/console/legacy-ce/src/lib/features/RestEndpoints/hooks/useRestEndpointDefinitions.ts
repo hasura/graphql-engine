@@ -17,6 +17,18 @@ import {
 } from './utils';
 import { formatSdl } from 'format-graphql';
 import { useMetadata } from '../../hasura-metadata-api';
+import camelCase from 'lodash/camelCase';
+
+const toPascalCase = (str: string) => {
+  return str
+    .split('_')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('');
+};
+
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
 
 export type EndpointType = 'READ' | 'READ_ALL' | 'CREATE' | 'UPDATE' | 'DELETE';
 
@@ -33,6 +45,19 @@ type EndpointDefinitions = {
 
 type Table = MetadataTable & { table: { name: string; schema: string } };
 
+const getGraphqlBaseOperationName = (schemaPrefix: string, table: Table) => {
+  if (table.configuration?.custom_name) {
+    return schemaPrefix
+      ? `${schemaPrefix}${capitalizeFirstLetter(
+          table.configuration?.custom_name
+        )}`
+      : table.configuration?.custom_name;
+  }
+  return schemaPrefix
+    ? `${schemaPrefix}${toPascalCase(table?.table?.name)}`
+    : `${camelCase(table?.table?.name)}`;
+};
+
 export type Generator = {
   operationName: (source: Source, table: Table) => string;
   generator: (
@@ -45,6 +70,9 @@ export type Generator = {
 
 export const getSchemaPrefix = (source: Source, table: Table) => {
   const schemaName = table.table.schema;
+  if (table.configuration?.custom_name) {
+    return '';
+  }
   if (source.kind === 'mssql' && schemaName === 'dbo') {
     return '';
   }
@@ -55,10 +83,12 @@ export const getSchemaPrefix = (source: Source, table: Table) => {
     return '';
   }
 
-  return `${table?.table?.schema}_`;
+  return source.customization?.naming_convention === 'graphql-default'
+    ? `${table?.table?.schema}`
+    : `${table?.table?.schema}_`;
 };
 
-export const getOperations = (microfiber: any) => {
+export const getOperations = (root: string, microfiber: any) => {
   const queryType = microfiber.getQueryType();
   const mutationType = microfiber.getMutationType();
 
@@ -70,29 +100,18 @@ export const getOperations = (microfiber: any) => {
   let queryTypeName: string = queryType.name;
   let mutationTypeName: string = mutationType.name;
 
-  let root = '';
-
   if (queryType.fields[0].name === 'no_queries_available') {
-    return {
-      root: '',
-      operations: [],
-    };
+    return [];
   }
 
-  if (
-    queryType.fields.length === 1 &&
-    queryType.fields[0].type.name.includes('query')
-  ) {
-    queryTypeName = queryType.fields[0].type.name;
-    root = queryType.fields[0].name;
+  if (root) {
+    queryTypeName = queryType.fields.find((f: any) => f.name === root)?.type
+      .name;
   }
 
-  if (
-    mutationType.fields.length === 1 &&
-    mutationType.fields[0].type.name.includes('mutation')
-  ) {
-    mutationTypeName = mutationType.fields[0].type.name;
-    root = mutationType.fields[0].name;
+  if (root) {
+    mutationTypeName = mutationType.fields.find((f: any) => f.name === root)
+      ?.type.name;
   }
 
   const queries = microfiber.getType({
@@ -104,10 +123,7 @@ export const getOperations = (microfiber: any) => {
     name: mutationTypeName,
   }).fields;
 
-  return {
-    root,
-    operations: [...queries, ...mutations],
-  };
+  return [...queries, ...mutations];
 };
 
 const generators: Record<EndpointType, Generator> = {
@@ -118,6 +134,13 @@ const generators: Record<EndpointType, Generator> = {
       }
       const schemaPrefix = getSchemaPrefix(source, table);
       const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `${baseOperationName}ByPk`;
+      }
       return `${schemaPrefix}${tableName}_by_pk`;
     },
     generator: generateViewEndpoint,
@@ -129,6 +152,13 @@ const generators: Record<EndpointType, Generator> = {
       }
       const schemaPrefix = getSchemaPrefix(source, table);
       const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return baseOperationName;
+      }
       return `${schemaPrefix}${tableName}`;
     },
     generator: generateViewAllEndpoint,
@@ -140,6 +170,13 @@ const generators: Record<EndpointType, Generator> = {
       }
       const schemaPrefix = getSchemaPrefix(source, table);
       const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `insert${capitalizeFirstLetter(baseOperationName)}One`;
+      }
       return `insert_${schemaPrefix}${tableName}_one`;
     },
     generator: generateInsertEndpoint,
@@ -151,6 +188,13 @@ const generators: Record<EndpointType, Generator> = {
       }
       const schemaPrefix = getSchemaPrefix(source, table);
       const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `update${capitalizeFirstLetter(baseOperationName)}ByPk`;
+      }
       return `update_${schemaPrefix}${tableName}_by_pk`;
     },
     generator: generateUpdateEndpoint,
@@ -163,6 +207,13 @@ const generators: Record<EndpointType, Generator> = {
       }
       const schemaPrefix = getSchemaPrefix(source, table);
       const tableName = table.configuration?.custom_name ?? table?.table?.name;
+      if (source.customization?.naming_convention === 'graphql-default') {
+        const baseOperationName = getGraphqlBaseOperationName(
+          schemaPrefix,
+          table
+        );
+        return `delete${capitalizeFirstLetter(baseOperationName)}ByPk`;
+      }
       return `delete_${schemaPrefix}${tableName}_by_pk`;
     },
     generator: generateDeleteEndpoint,
@@ -190,24 +241,26 @@ export const useRestEndpointDefinitions = () => {
       const response: EndpointDefinitions = {};
       const microfiber = new Microfiber(introspectionSchema);
 
-      const operations = getOperations(microfiber);
-
-      if (!operations) {
-        setData({});
-        return;
-      }
-
       for (const source of metadata?.sources || []) {
+        const root = source?.customization?.root_fields?.namespace ?? '';
+        const operations = getOperations(root, microfiber);
+
         const sourcePrefix = source.customization?.root_fields?.prefix || '';
 
         const sourceSuffix = source.customization?.root_fields?.suffix || '';
         for (const table of source.tables as Table[]) {
           for (const [type, generator] of Object.entries(generators)) {
-            const operationName = `${sourcePrefix}${generator.operationName(
-              source,
-              table
-            )}${sourceSuffix}`;
-            const operation = operations.operations.find(
+            let baseOperationName = generator.operationName(source, table);
+            if (
+              sourcePrefix &&
+              source.customization?.naming_convention === 'graphql-default'
+            ) {
+              baseOperationName =
+                baseOperationName[0].toUpperCase() + baseOperationName.slice(1);
+            }
+            const operationName = `${sourcePrefix}${baseOperationName}${sourceSuffix}`;
+
+            const operation = operations.find(
               operation => operation.name === operationName
             );
 
@@ -218,7 +271,7 @@ export const useRestEndpointDefinitions = () => {
             const tableName = table?.table?.name;
 
             const definition = generators[type as EndpointType].generator(
-              operations.root,
+              root,
               tableName,
               operation,
               microfiber
