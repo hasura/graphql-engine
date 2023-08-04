@@ -30,16 +30,22 @@ export const useAllDriverCapabilities = <
     ['all_capabilities'],
     async () => {
       const result = drivers.map(async driver => {
-        const capabilities =
-          (await DataSource(httpClient).getDriverCapabilities(
-            driver ? driver.kind : ''
-          )) ?? Feature.NotImplemented;
+        try {
+          const capabilities =
+            (await DataSource(httpClient).getDriverCapabilities(
+              driver ? driver.kind : ''
+            )) ?? Feature.NotImplemented;
 
-        return { driver, capabilities };
+          return { driver, capabilities };
+        } catch (err) {
+          /**
+           * Instead of erroring out if one of DC agents is unreachable, set the unreachable one to {} and let the request pass.
+           */
+          return { driver, capabilities: {} };
+        }
       });
 
       const finalResult = await Promise.all(result);
-
       return finalResult;
     },
     {
