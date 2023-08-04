@@ -7,7 +7,7 @@ exports[`check if remote schema to remote schema relationships are created prope
           "to_remote_schema": {
             "lhs_fields": [],
             "remote_field": {
-              "continent": {
+              "continents": {
                 "arguments": {}
               }
             },

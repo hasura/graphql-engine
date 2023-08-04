@@ -50,18 +50,24 @@ export const PrimaryWithTest: StoryObj<RemoteSchemaToDbFormProps> = {
     expect(typeError).toBeInTheDocument();
 
     // update fields
-    const nameInput = await canvas.findByLabelText('Name');
+
+    const nameInput = await canvas.findByLabelText('Relationship Name');
     userEvent.type(nameInput, 'test');
 
+    const typeLabel = await canvas.findByText('Select a type');
     const dbLabel = await canvas.findByLabelText('Reference Database');
     const schemaLabel = await canvas.findByLabelText('Reference Schema');
     const tableLabel = await canvas.findByLabelText('Reference Table');
-    const typeLabel = await canvas.findByLabelText('Source Type');
 
     userEvent.selectOptions(dbLabel, 'chinook');
     userEvent.selectOptions(schemaLabel, 'public');
     userEvent.selectOptions(tableLabel, 'Album');
-    userEvent.selectOptions(typeLabel, 'Language');
+
+    userEvent.click(typeLabel);
+    await userEvent.click(await canvas.findByText('Language'), undefined, {
+      skipHover: true,
+    });
+
     userEvent.click(submitButton);
   },
 };

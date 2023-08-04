@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useRemoteSchema } from '../../../../MetadataAPI';
 import { useTableColumns } from '../../../../SqlQueries';
-import { InputField, Select } from '../../../../../new-components/Form';
 import { MapSelector } from '../../../../../new-components/MapSelector';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
@@ -72,42 +71,13 @@ export const FormElements = ({
 
   return (
     <>
-      <div className="w-full sm:w-6/12 my-md">
-        <div className="mb-md">
-          <InputField
-            name="relationshipName"
-            label="Name"
-            placeholder="Relationship name"
-            dataTest="rs-to-db-rel-name"
-            disabled={!!existingRelationshipName}
-          />
-        </div>
-
-        <div className="mb-md">
-          <Select
-            name="relationshipType"
-            label="Type"
-            dataTest="select-rel-type"
-            placeholder="Select a relationship type..."
-            options={[
-              {
-                label: 'Array Relationship',
-                value: 'array',
-              },
-              {
-                label: 'Object Relationship',
-                value: 'object',
-              },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12">
+      <div className="grid grid-cols-12 mt-md">
         <div className="col-span-5">
           <RsSourceTypeSelector
             types={remoteSchemaTypes.map(t => t.typeName).sort()}
             sourceTypeKey="typeName"
+            nameTypeKey="relationshipName"
+            isModify={!!existingRelationshipName}
           />
         </div>
 

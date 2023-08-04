@@ -130,6 +130,7 @@ export const SelectField: React.VFC<SelectFieldProps> = ({
 
           return (
             <ReactSelect
+              aria-labelledby={name}
               name={controllerName}
               placeholder={placeholder}
               isDisabled={disabled}

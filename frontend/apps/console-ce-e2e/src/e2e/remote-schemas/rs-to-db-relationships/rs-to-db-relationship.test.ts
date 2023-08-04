@@ -7,7 +7,6 @@ describe('check if remote schema to db relationships are created properly', () =
   before(() => {
     // create a table called destination_table
     postgres.helpers.createTable('destination_table');
-
     // load stuff into the metadata
     replaceMetadata({
       version: 3,
@@ -53,13 +52,20 @@ describe('check if remote schema to db relationships are created properly', () =
     });
   });
 
+  after(() => {
+    // delete the table
+    postgres.helpers.deleteTable('destination_table');
+  });
+
   it('verify creating a new rs-to-db relationship', () => {
     cy.visit('/remote-schemas/manage/source_rs/relationships');
     cy.findByText('Add a new relationship').click();
     cy.findByText('Remote Database').click();
     cy.get('[name=relationshipName]').type('RelationshipName');
     cy.get('[name=relationshipType]').select('array');
-    cy.get('[name=typeName]').select('Pokemon');
+    cy.get('[aria-labelledby=typeName]')
+      .focus() // workaround for selecting things with react-select
+      .type('Pokemon{enter}', { force: true });
     cy.get('[name=database]').select('default', { force: true });
     cy.get('[name=schema]').select('public');
     cy.get('[name=table]').select('destination_table');
@@ -99,8 +105,5 @@ describe('check if remote schema to db relationships are created properly', () =
       },
     });
     cy.findByRole('button', { name: 'Delete' }).click();
-
-    // delete the table
-    postgres.helpers.deleteTable('destination_table');
   });
 });

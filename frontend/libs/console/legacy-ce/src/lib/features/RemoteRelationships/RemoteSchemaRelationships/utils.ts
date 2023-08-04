@@ -2,7 +2,12 @@ import { GraphQLSchema, isObjectType } from 'graphql';
 
 export const getTypesFromIntrospection = (data: GraphQLSchema) => {
   return Object.entries(data.getTypeMap())
-    .filter(([typeName, i]) => isObjectType(i) && !typeName.startsWith('__'))
+    .filter(
+      ([typeName, i]) =>
+        isObjectType(i) &&
+        !typeName.startsWith('__') &&
+        !['Mutation', 'Subscription'].includes(typeName)
+    )
     .map(([typeName, x]) => ({
       typeName,
       // eslint-disable-next-line no-underscore-dangle
