@@ -12,12 +12,15 @@ export const ManageSuggestedRelationships = ({
 }: ManageDatabaseProps) => {
   const [tab, setTab] = React.useState<TabState>('untracked');
 
-  const { data: { tracked = [], untracked = [] } = {}, isLoading } =
-    useSuggestedRelationships({
-      dataSourceName,
-      which: 'all',
-      schema,
-    });
+  const {
+    data: { tracked = [], untracked = [] } = {},
+    isLoading,
+    invalidateQuery,
+  } = useSuggestedRelationships({
+    dataSourceName,
+    which: 'all',
+    schema,
+  });
 
   return (
     <TrackableResourceTabs
@@ -33,6 +36,9 @@ export const ManageSuggestedRelationships = ({
             <TrackedSuggestedRelationships
               dataSourceName={dataSourceName}
               trackedRelationships={tracked}
+              onChange={() => {
+                invalidateQuery();
+              }}
             />
           ),
         },
@@ -42,6 +48,9 @@ export const ManageSuggestedRelationships = ({
             <UntrackedRelationships
               untrackedRelationships={untracked}
               dataSourceName={dataSourceName}
+              onTrack={() => {
+                invalidateQuery();
+              }}
             />
           ),
         },

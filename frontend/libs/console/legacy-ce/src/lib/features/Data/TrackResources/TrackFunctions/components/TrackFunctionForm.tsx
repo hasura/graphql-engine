@@ -9,10 +9,11 @@ import {
   MetadataSelectors,
   useMetadata,
 } from '../../../../hasura-metadata-api';
-import { getQualifiedTable } from '../../utils';
+
 import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { useTrackFunction } from '../../../hooks/useTrackFunction';
+import { getQualifiedTable } from '../../../ManageTable/utils';
 
 const validationSchema = z.object({
   qualifiedFunction: z.any(),

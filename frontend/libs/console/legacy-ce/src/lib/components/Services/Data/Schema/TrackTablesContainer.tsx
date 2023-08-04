@@ -67,7 +67,7 @@ export const TrackTablesContainer = ({
         title={<div>Untracked tables or views</div>}
         tooltip="Tables or views that are not exposed over the GraphQL API"
         defaultOpen
-        key={`${dataSourceName}-${schema}`}
+        key={`tables-${dataSourceName}-${schema}`}
       >
         <ExperimentalFeatureBanner
           githubIssueLink={
@@ -127,7 +127,7 @@ export const TrackTablesContainer = ({
         title={<div>Untracked Foreign-key relationships</div>}
         tooltip="Tables or views that are not exposed over the GraphQL API"
         defaultOpen
-        key={`${dataSourceName}-${schema}`}
+        key={`relationships-${dataSourceName}-${schema}`}
       >
         <ExperimentalFeatureBanner
           githubIssueLink={

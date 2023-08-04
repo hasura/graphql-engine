@@ -1,4 +1,5 @@
-import React from 'react';
+import { MetadataSelectors } from '../../hasura-metadata-api';
+import { MetadataWrapper, ReactQueryStatusUI } from '../components';
 import { useTableDefinition } from '../hooks';
 import { ManageDatabase } from './ManageDatabase';
 
@@ -10,8 +11,24 @@ export const ManageDatabaseRoute = () => {
 
   const { database } = urlData.data;
 
-  /**
-   * If the url is only managing a database and not the table, then show the DB-management screen
-   */
-  return <ManageDatabase dataSourceName={database} />;
+  return (
+    <MetadataWrapper
+      selector={MetadataSelectors.findSource(database)}
+      render={({ data: source }) => {
+        // if we don't find the source, report an error:
+        if (!source) {
+          return (
+            <ReactQueryStatusUI
+              status="error"
+              error={{
+                message: `Source ${database}" could not be found in Metadata!`,
+              }}
+            />
+          );
+        }
+
+        return <ManageDatabase dataSourceName={database} />;
+      }}
+    />
+  );
 };

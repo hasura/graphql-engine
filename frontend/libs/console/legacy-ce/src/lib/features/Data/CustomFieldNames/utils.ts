@@ -1,12 +1,30 @@
+import pickBy from 'lodash/pickBy';
 import { Driver } from '../../../dataSources';
 import { getDriverPrefix } from '../../DataSource';
 import { MetadataTableConfig } from '../../hasura-metadata-types';
-import pickBy from 'lodash/pickBy';
 import {
   CustomFieldNamesFormVals,
   GetTablePayloadArgs,
   QualifiedTable,
 } from './types';
+
+export const getQualifiedTableForCustomFieldNames = ({
+  driver,
+  schema,
+  tableName,
+}: GetTablePayloadArgs): QualifiedTable => {
+  if (driver === 'bigquery') {
+    return {
+      dataset: schema,
+      name: tableName,
+    };
+  }
+
+  return {
+    schema,
+    name: tableName,
+  };
+};
 
 export const customFieldNamesPlaceholders = (
   tableName: string
@@ -50,23 +68,6 @@ export const buildConfigFromFormValues = (
 export const getTrackTableType = (driver: Driver) => {
   const prefix = getDriverPrefix(driver);
   return `${prefix}_track_table`;
-};
-
-export const getQualifiedTable = ({
-  driver,
-  schema,
-  tableName,
-}: GetTablePayloadArgs): QualifiedTable => {
-  if (driver === 'bigquery') {
-    return {
-      dataset: schema,
-      name: tableName,
-    };
-  }
-  return {
-    schema,
-    name: tableName,
-  };
 };
 
 export const query_field_props: (keyof CustomFieldNamesFormVals)[] = [

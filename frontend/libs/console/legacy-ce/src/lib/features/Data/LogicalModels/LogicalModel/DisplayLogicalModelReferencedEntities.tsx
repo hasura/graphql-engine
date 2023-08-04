@@ -1,5 +1,5 @@
 import { isLogicalModelType } from '../../../hasura-metadata-types';
-import { getQualifiedTable } from '../../TrackResources/utils';
+import { getQualifiedTable } from '../../ManageTable/utils';
 import { findReferencedEntities } from './utils/findReferencedEntities';
 
 export const DisplayReferencedLogicalModelEntities = ({

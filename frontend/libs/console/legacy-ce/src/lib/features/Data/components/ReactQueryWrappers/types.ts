@@ -1,7 +1,9 @@
 import { SkeletonProps } from 'react-loading-skeleton';
 import { APIError } from '../../../../hooks/error';
+import { PartialBy } from '../../../../components/Common/utils/tsUtils';
 
-export type ErrorType = APIError | null;
+// make the name property optional for easier use
+export type ErrorType = PartialBy<APIError, 'name'> | null;
 
 export type CommonProps<TData = unknown> = {
   renderError?: (params: { error: ErrorType }) => JSX.Element;

@@ -12,8 +12,9 @@ import { usePaginatedSearchableList } from '../../TrackResources/hooks';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { TrackableTable } from '../types';
-import { filterByTableType, filterByText } from '../utils';
+
 import { TableRow } from './TableRow';
+import { filterByTableType, filterByText } from '../../TrackResources/utils';
 
 interface TableListProps {
   dataSourceName: string;
