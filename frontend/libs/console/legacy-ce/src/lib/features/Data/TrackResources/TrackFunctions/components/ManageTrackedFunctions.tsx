@@ -9,27 +9,39 @@ import {
 import { adaptFunctionName } from '../utils';
 import { TrackedFunctions } from './TrackedFunctions';
 import { TrackableResourceTabs } from '../../../ManageDatabase/components';
+import { PostgresTable } from '../../../../DataSource';
 
 type TabState = 'tracked' | 'untracked';
 
 export const ManageTrackedFunctions = ({
   dataSourceName,
+  schema,
 }: {
   dataSourceName: string;
+  schema?: string;
 }) => {
   const [tab, setTab] = React.useState<TabState>('untracked');
 
-  const { data: untrackedFunctions = [], isSuccess } =
-    useUntrackedFunctions(dataSourceName);
+  const {
+    data: untrackedFunctions = [],
+    isLoading: isUntrackedFunctionsLoading,
+  } = useUntrackedFunctions(dataSourceName, schema);
 
-  const { data: trackedFunctions = [] } = useMetadata(m =>
-    (MetadataSelectors.findSource(dataSourceName)(m)?.functions ?? []).map(
-      fn => ({
+  const { data: trackedFunctions = [], isLoading: isTrackedFunctionsLoading } =
+    useMetadata(m => {
+      const result = (
+        MetadataSelectors.findSource(dataSourceName)(m)?.functions ?? []
+      ).map(fn => ({
         qualifiedFunction: fn.function,
         name: adaptFunctionName(fn.function).join(' / '),
-      })
-    )
-  );
+      }));
+
+      if (!schema) return result;
+
+      return result.filter(
+        fn => (fn.qualifiedFunction as PostgresTable).schema === schema
+      );
+    });
 
   return (
     <TrackableResourceTabs
@@ -40,15 +52,27 @@ export const ManageTrackedFunctions = ({
       onValueChange={value => {
         setTab(value);
       }}
-      isLoading={!isSuccess}
+      isLoading={isUntrackedFunctionsLoading || isTrackedFunctionsLoading}
       items={{
         untracked: {
           amount: untrackedFunctions.length,
-          content: <UntrackedFunctions dataSourceName={dataSourceName} />,
+          content: (
+            <UntrackedFunctions
+              dataSourceName={dataSourceName}
+              isLoading={isUntrackedFunctionsLoading}
+              untrackedFunctions={untrackedFunctions}
+            />
+          ),
         },
         tracked: {
           amount: trackedFunctions.length,
-          content: <TrackedFunctions dataSourceName={dataSourceName} />,
+          content: (
+            <TrackedFunctions
+              dataSourceName={dataSourceName}
+              isLoading={isTrackedFunctionsLoading}
+              trackedFunctions={trackedFunctions}
+            />
+          ),
         },
       }}
     />

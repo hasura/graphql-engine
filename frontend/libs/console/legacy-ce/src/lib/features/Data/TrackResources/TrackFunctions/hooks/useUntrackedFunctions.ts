@@ -1,4 +1,8 @@
-import { Feature, IntrospectedFunction } from '../../../../DataSource';
+import {
+  Feature,
+  IntrospectedFunction,
+  PostgresTable,
+} from '../../../../DataSource';
 import {
   MetadataSelectors,
   areTablesEqual,
@@ -26,7 +30,10 @@ export const adaptUntrackedFunctions =
     });
   };
 
-export const useUntrackedFunctions = (dataSourceName: string) => {
+export const useUntrackedFunctions = (
+  dataSourceName: string,
+  schema?: string
+) => {
   const { data: trackedFunctions = [], isFetched } = useMetadata(
     m => MetadataSelectors.findSource(dataSourceName)(m)?.functions ?? []
   );
@@ -34,8 +41,21 @@ export const useUntrackedFunctions = (dataSourceName: string) => {
   return useIntrospectedFunctions({
     dataSourceName,
     options: {
-      select: introspectedFunctions =>
-        adaptUntrackedFunctions(trackedFunctions)(introspectedFunctions),
+      select: introspectedFunctions => {
+        const result = adaptUntrackedFunctions(trackedFunctions)(
+          introspectedFunctions
+        );
+
+        if (result === Feature.NotImplemented) return [];
+
+        if (!schema) return result;
+
+        const filteredResult = result.filter(
+          fn => (fn.qualifiedFunction as PostgresTable).schema === schema
+        );
+
+        return filteredResult;
+      },
       enabled: isFetched,
     },
   });

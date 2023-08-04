@@ -5,7 +5,7 @@ import { CardedTable } from '../../../../../new-components/CardedTable';
 import { DropdownMenu } from '../../../../../new-components/DropdownMenu';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { LearnMoreLink } from '../../../../../new-components/LearnMoreLink';
-import { Feature, nativeDrivers } from '../../../../DataSource';
+import { IntrospectedFunction, nativeDrivers } from '../../../../DataSource';
 import {
   MetadataSelectors,
   useInvalidateMetadata,
@@ -13,7 +13,7 @@ import {
 } from '../../../../hasura-metadata-api';
 import { FunctionDisplayName } from './FunctionDisplayName';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHasuraAlert } from '../../../../../new-components/Alert';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { QualifiedFunction } from '../../../../hasura-metadata-types';
@@ -21,23 +21,22 @@ import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessag
 import { useTrackFunction } from '../../../hooks/useTrackFunction';
 import { TrackableListMenu } from '../../components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../hooks';
-import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
 import {
   TrackFunctionForm,
   TrackFunctionFormSchema,
 } from './TrackFunctionForm';
+import { useInvalidateIntrospectedFunction } from '../../../hooks/useTrackableFunctions';
 
 export type UntrackedFunctionsProps = {
   dataSourceName: string;
+  isLoading: boolean;
+  untrackedFunctions: IntrospectedFunction[];
 };
 
 export type AllowedFunctionTypes = 'mutation' | 'query' | 'root_field';
 
 export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
-  const { dataSourceName } = props;
-
-  const { data: untrackedFunctions = [], isLoading } =
-    useUntrackedFunctions(dataSourceName);
+  const { dataSourceName, untrackedFunctions = [], isLoading } = props;
 
   const functionsWithId = React.useMemo(
     () =>
@@ -47,7 +46,15 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
     [untrackedFunctions]
   );
 
+  const invalidateUntrackedFunctions = useInvalidateIntrospectedFunction();
   const invalidateMetadata = useInvalidateMetadata();
+
+  // Fire this when the component loads because RunSQL could add/remove functions from the database.
+  // This is an extra call but it's unavoidable at the moment.
+  useEffect(() => {
+    invalidateUntrackedFunctions(dataSourceName);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [activeRow, setActiveRow] = useState<number | undefined>();
 
@@ -92,8 +99,6 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
   });
 
   if (isLoading) return <Skeleton count={5} height={20} className="mb-1" />;
-
-  if (untrackedFunctions === Feature.NotImplemented) return null;
 
   if (!untrackedFunctions.length)
     return (
@@ -155,6 +160,7 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
           isLoading={isLoading}
           {...listProps}
         />
+
         <CardedTable.Table>
           <CardedTable.TableHead>
             <CardedTable.TableHeadRow>
@@ -166,14 +172,15 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
                       [
                         <span
                           className="py-2"
-                          onClick={() =>
+                          onClick={() => {
+                            invalidateUntrackedFunctions(dataSourceName);
                             invalidateMetadata({
                               componentName: 'UntrackedFunctions',
                               reasons: [
                                 'Refreshing untracked functions on Dropdown Menu item click.',
                               ],
-                            })
-                          }
+                            });
+                          }}
                         >
                           Refresh
                         </span>,
