@@ -18,10 +18,10 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import ProductBadge from '@site/src/components/ProductBadge';
 
-# Export Traces and Metrics to OpenTelemetry Compliant Receiver from Hasura EE
+# Export Traces and Metrics to OpenTelemetry Compliant Receiver from Hasura
 
 <div className="badge-container">
-  <ProductBadge ee self />
+  <ProductBadge free standard pro ee self />
   <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
@@ -49,8 +49,11 @@ future.
 
 :::info Supported from
 
-OpenTelemetry traces are supported for Hasura GraphQL Engine versions `v2.18.0` and above, with support for metrics
-export added in `v2.31.0`.
+OpenTelemetry traces are supported for Hasura GraphQL Engine versions `v2.18.0` and above on Self-Hosted Enterprise, with support for metrics export added in `v2.31.0` and made available to all cloud tiers.
+
+We have deprecated the previous Open Telemetry exporter integration on Hasura Cloud in favor of this native feature, and you can now configure this directly via the Hasura Console's `Settings` page under the `Monitoring & Observability` section. 
+
+All users are encouraged to migrate to this new integration.
 
 :::
 
