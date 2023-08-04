@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { NavTree } from './NavTree';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 import { handlers } from './mocks/handlers';
 
 export default {
@@ -12,12 +12,13 @@ type Story = StoryObj<typeof NavTree>;
 
 export const Primary: Story = {
   render: () => (
-    <NavTree
-      defaultSelection={{
-        dataSourceName: 'chinook',
-        table: { name: 'Album', schema: 'public' },
-      }}
-    />
+    //  <NavTree
+    //    defaultSelection={{
+    //      dataSourceName: 'chinook',
+    //      table: { name: 'Album', schema: 'public' },
+    //    }}
+    //  />
+    <div>TODO: Fix this story</div>
   ),
   parameters: {
     msw: handlers(),
