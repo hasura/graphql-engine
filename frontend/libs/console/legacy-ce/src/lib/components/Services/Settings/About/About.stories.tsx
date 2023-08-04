@@ -4,6 +4,7 @@ import { ReactQueryDecorator } from '../../../../storybook/decorators/react-quer
 import { eeLicenseInfo } from '../../../../features/EETrial/mocks/http';
 
 import { About } from './About';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 
 export default {
   title: 'components/Services/Settings/About',
@@ -38,10 +39,9 @@ export const WithoutEnterpriseLicense: StoryObj<typeof About> = {
       <About serverVersion="v2.17.0" consoleAssetVersion="9acd324" />
     </div>
   ),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [eeLicenseInfo.none],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -51,10 +51,9 @@ export const DeactivatedEnterpriseLicense: StoryObj<typeof About> = {
       <About serverVersion="v2.17.0" consoleAssetVersion="9acd324" />
     </div>
   ),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [eeLicenseInfo.deactivated],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -64,10 +63,9 @@ export const ExpiredEnterpriseLicense: StoryObj<typeof About> = {
       <About serverVersion="v2.17.0" consoleAssetVersion="9acd324" />
     </div>
   ),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [eeLicenseInfo.expired],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -77,9 +75,8 @@ export const ActiveEnterpriseLicense: StoryObj<typeof About> = {
       <About serverVersion="v2.17.0" consoleAssetVersion="9acd324" />
     </div>
   ),
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: [eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };

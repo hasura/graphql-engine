@@ -5,6 +5,7 @@ import { isCloudConsole } from '../../utils';
 import { ConnectDatabaseV2 } from './ConnectDatabase';
 import { useEnvironmentState } from './hooks';
 import { handlers } from './mocks/handlers.mock';
+import { ConsoleTypeDecorator } from '../../storybook/decorators';
 
 export default {
   component: ConnectDatabaseV2,
@@ -23,6 +24,7 @@ const Template: StoryObj<typeof ConnectDatabaseV2> = {
 };
 
 export const FromEnvironment: StoryObj<typeof ConnectDatabaseV2> = {
+  decorators: [ConsoleTypeDecorator({ consoleType: 'cloud-pro' })],
   render: () => {
     const env = useEnvironmentState();
     const cloud = isCloudConsole(globals);
@@ -32,7 +34,7 @@ export const FromEnvironment: StoryObj<typeof ConnectDatabaseV2> = {
           This component attempts to read Console Type, and EE License Info from
           the environment
         </div>
-        <div>isCloud: {cloud.toString()}</div>
+        <div>is Cloud Console: {cloud.toString()}</div>
         <div>Console Type: {globals.consoleType}</div>
         <div>Tenant Id: {globals.hasuraCloudTenantId}</div>
         <ConnectDatabaseV2 {...env} />

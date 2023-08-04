@@ -19621,7 +19621,6 @@ __metadata:
     sql-formatter: 2.3.3
     start-server-and-test: ^1.15.3
     storybook: ^7.0.7
-    storybook-addon-console-env: ^2.0.11
     storybook-dark-mode: ^1.1.0
     stream-browserify: ^3.0.0
     stream-http: ^3.2.0
@@ -33260,23 +33259,6 @@ __metadata:
   version: 2.14.2
   resolution: "store2@npm:2.14.2"
   checksum: 6f270fc5bab99b63f45fcc7bd8b99c2714b4adf880f557ed7ffb5ed3987131251165bccde425a00928aaf044870aee79ddeef548576d093c68703ed2edec45d7
-  languageName: node
-  linkType: hard
-
-"storybook-addon-console-env@npm:^2.0.11":
-  version: 2.0.11
-  resolution: "storybook-addon-console-env@npm:2.0.11"
-  dependencies:
-    "@storybook/blocks": 7.0.7
-    prop-types: 15.7.2
-  peerDependencies:
-    "@storybook/addons": ^7.0.7
-    "@storybook/api": ^7.0.7
-    "@storybook/components": ^7.0.7
-    "@swc/helpers": ^0.5.1
-    react: 17.0.2
-    react-dom: 17.0.2
-  checksum: e8b065c1ae9d7709fee4534891aa23ea566d1d9ab6d2c35d9ab48c14f4cd4f5e3b7c0ecf5d263193f64826495ce1a55309b78c2228f9c87e1126a836bbd28017
   languageName: node
   linkType: hard
 

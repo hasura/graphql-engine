@@ -1,31 +1,17 @@
-import React from 'react';
-import { StoryObj, Meta } from '@storybook/react';
-import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
+import { Meta, StoryObj } from '@storybook/react';
 import { AutoCleanupForm } from '../../../../components/Services/Events/EventTriggers/Common/AutoCleanupForm';
-import {
-  registerEETrialLicenseActiveMutation,
-  registerEETrialLicenseDeactivatedMutation,
-  registerEETrialLicenseExpiredMutation,
-} from '../../mocks/registration.mock';
-import { ETAutoCleanupWrapper } from './ETAutoCleanupWrapper';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
+import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { eeLicenseInfo } from '../../mocks/http';
-import { EE_LICENSE_INFO_QUERY_NAME } from '../../constants';
-import { useQueryClient } from 'react-query';
+import { registerEETrialLicenseActiveMutation } from '../../mocks/registration.mock';
+import { ETAutoCleanupWrapper } from './ETAutoCleanupWrapper';
 
 export default {
   title: 'features / EETrial / Event Trigger Auto Cleanup Card 🧬️',
   component: ETAutoCleanupWrapper,
   decorators: [
-    // This is done so as we have set some cache time on the EE_LICENSE_INFO_QUERY_NAME query.
-    // So we need to refetch the cache data, so it doesn't persist across different stories. And
-    // it makes sure that our component actually does the network call, letting msw mocks return the
-    // desired response.
-    Story => {
-      const queryClient = useQueryClient();
-      void queryClient.refetchQueries(EE_LICENSE_INFO_QUERY_NAME);
-      return <Story />;
-    },
     ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro-lite' }),
   ],
 } as Meta<typeof ETAutoCleanupWrapper>;
 
@@ -42,7 +28,6 @@ export const Default: StoryObj<typeof ETAutoCleanupWrapper> = {
 
   parameters: {
     msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.none],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -59,7 +44,6 @@ export const LicenseActive: StoryObj<typeof ETAutoCleanupWrapper> = {
 
   parameters: {
     msw: [registerEETrialLicenseActiveMutation, eeLicenseInfo.active],
-    consoleType: 'pro-lite',
   },
 };
 
@@ -75,8 +59,7 @@ export const LicenseExpired: StoryObj<typeof ETAutoCleanupWrapper> = {
   name: '💠 License Expired',
 
   parameters: {
-    msw: [registerEETrialLicenseExpiredMutation, eeLicenseInfo.expired],
-    consoleType: 'pro-lite',
+    msw: [eeLicenseInfo.expired],
   },
 };
 
@@ -92,7 +75,6 @@ export const LicenseDeactivated: StoryObj<typeof ETAutoCleanupWrapper> = {
   name: '💠 License Deactivated',
 
   parameters: {
-    msw: [registerEETrialLicenseDeactivatedMutation, eeLicenseInfo.deactivated],
-    consoleType: 'pro-lite',
+    msw: [eeLicenseInfo.deactivated],
   },
 };

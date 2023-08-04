@@ -7,23 +7,27 @@ import {
   waitFor,
   within,
 } from '@storybook/testing-library';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { dismissToast } from '../../../../utils/StoryUtils';
 import { LogicalModel } from '../../../hasura-metadata-types';
 import { waitForSpinnerOverlay } from '../../components/ReactQueryWrappers/story-utils';
 import { logicalModelFieldToFormField } from '../LogicalModel/utils/logicalModelFieldToFormField';
-import { LogicalModelWidget } from './LogicalModelWidget';
-import { handlers } from './mocks/handlers';
-import { defaultEmptyValues } from './validationSchema';
 import {
   LOGICAL_MODEL_CREATE_ERROR,
   LOGICAL_MODEL_CREATE_SUCCESS,
   LOGICAL_MODEL_EDIT_SUCCESS,
 } from '../constants';
+import { LogicalModelWidget } from './LogicalModelWidget';
+import { handlers } from './mocks/handlers';
+import { defaultEmptyValues } from './validationSchema';
 
 export default {
   component: LogicalModelWidget,
-  decorators: [ReactQueryDecorator()],
+  decorators: [
+    ConsoleTypeDecorator({ consoleType: 'pro' }),
+    ReactQueryDecorator(),
+  ],
 } as Meta<typeof LogicalModelWidget>;
 
 export const DefaultView: StoryObj<typeof LogicalModelWidget> = {

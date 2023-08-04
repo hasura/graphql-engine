@@ -1,6 +1,7 @@
 import { expect } from '@storybook/jest';
 import { Meta, StoryObj } from '@storybook/react';
 import { screen, userEvent, waitFor, within } from '@storybook/testing-library';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 import { ReactQueryDecorator } from '../../../../storybook/decorators/react-query';
 import { dismissToast } from '../../../../utils/StoryUtils';
 import { NativeQuery } from '../../../hasura-metadata-types';
@@ -101,9 +102,9 @@ export const WithRouteWrapper: Story = {
     </RouteWrapper>
   ),
   name: '🚏 Route Wrapper',
-  parameters: {
-    consoleType: 'pro',
-  },
+  decorators: [
+    ConsoleTypeDecorator({ consoleType: 'pro', menuPlacement: 'top' }),
+  ],
 };
 
 export const HappyPath: Story = {

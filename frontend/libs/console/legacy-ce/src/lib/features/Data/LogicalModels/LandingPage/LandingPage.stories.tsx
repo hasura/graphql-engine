@@ -7,6 +7,7 @@ import { confirmAlert, dismissToast } from '../../../../utils/StoryUtils';
 import { nativeQueryHandlers } from '../AddNativeQuery/mocks';
 import { Routes } from '../constants';
 import { LandingPage } from './LandingPage';
+import { ConsoleTypeDecorator } from '../../../../storybook/decorators';
 
 export default {
   component: LandingPage,
@@ -21,9 +22,8 @@ export const Basic: StoryObj<typeof LandingPage> = {
   render: args => {
     return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -39,9 +39,8 @@ export const NoQueries: StoryObj<typeof LandingPage> = {
   render: args => {
     return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: { postgres: { models: true, queries: false } },
     }),
@@ -52,9 +51,8 @@ export const NoModels: StoryObj<typeof LandingPage> = {
   render: args => {
     return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: { postgres: { models: false, queries: true } },
     }),
@@ -140,9 +138,8 @@ export const HappyPath: StoryObj<typeof LandingPage> = {
   },
 
   name: '😊 Happy Path',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -164,9 +161,7 @@ export const Referenced: StoryObj<typeof LandingPage> = {
   render: args => {
     return <LandingPage pathname={Routes.NativeQueries} />;
   },
-
   name: '🚨 Cannot Remove Referenced Logical Model',
-
   parameters: {
     consoleType: 'pro',
     msw: nativeQueryHandlers({
@@ -205,9 +200,8 @@ export const NotFound: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Not found',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -239,9 +233,8 @@ export const Disabled: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Native Queries Disabled',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
-    consoleType: 'pro',
     msw: nativeQueryHandlers({
       metadataOptions: {
         postgres: { models: true, queries: true },
@@ -269,7 +262,7 @@ export const Oss: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Native Queries Oss',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'oss' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -279,7 +272,6 @@ export const Oss: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'oss',
   },
 };
 
@@ -289,7 +281,7 @@ export const Pro: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Native Queries Pro',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -299,7 +291,6 @@ export const Pro: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'pro',
   },
 };
 
@@ -309,7 +300,7 @@ export const ProLite: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Native Queries ProLite',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro-lite' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -319,7 +310,6 @@ export const ProLite: StoryObj<typeof LandingPage> = {
       untrackNativeQueryResult: 'native_queries_disabled',
       untrackLogicalModelResult: 'native_queries_disabled',
     }),
-    consoleType: 'pro-lite',
   },
 };
 
@@ -329,7 +319,7 @@ export const FeatureFlagDisabled: StoryObj<typeof LandingPage> = {
   },
 
   name: '🚨 Native Queries FeatureFlagDisabled',
-
+  decorators: [ConsoleTypeDecorator({ consoleType: 'pro' })],
   parameters: {
     msw: nativeQueryHandlers({
       metadataOptions: {
@@ -340,6 +330,5 @@ export const FeatureFlagDisabled: StoryObj<typeof LandingPage> = {
       untrackLogicalModelResult: 'native_queries_disabled',
       enabledFeatureFlag: false,
     }),
-    consoleType: 'pro',
   },
 };
