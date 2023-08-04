@@ -197,18 +197,27 @@ customersTableName = mkTableName "Customer"
 customersRows :: [HashMap API.FieldName API.FieldValue]
 customersRows = sortBy (API.FieldName "CustomerId") $ readTableFromXmlIntoRows customersTableName
 
+customersRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
+customersRowsById =
+  HashMap.fromList $ mapMaybe (\customer -> (,customer) <$> customer ^? field "CustomerId" . _ColumnFieldNumber) customersRows
+
 customersTableRelationships :: API.TableRelationships
 customersTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+      invoicesJoinFieldMapping = HashMap.fromList [(API.ColumnName "CustomerId", API.ColumnName "CustomerId")]
    in API.TableRelationships
         customersTableName
         ( HashMap.fromList
-            [ (supportRepRelationshipName, API.Relationship employeesTableName API.ObjectRelationship joinFieldMapping)
+            [ (supportRepRelationshipName, API.Relationship employeesTableName API.ObjectRelationship supportRepJoinFieldMapping),
+              (invoicesRelationshipName, API.Relationship invoicesTableName API.ArrayRelationship invoicesJoinFieldMapping)
             ]
         )
 
 supportRepRelationshipName :: API.RelationshipName
 supportRepRelationshipName = API.RelationshipName "SupportRep"
+
+invoicesRelationshipName :: API.RelationshipName
+invoicesRelationshipName = API.RelationshipName "Invoices"
 
 employeesTableName :: API.TableName
 employeesTableName = mkTableName "Employee"
@@ -405,7 +414,9 @@ data TestData = TestData
     -- = Customers table
     _tdCustomersTableName :: API.TableName,
     _tdCustomersRows :: [HashMap API.FieldName API.FieldValue],
+    _tdCustomersRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
     _tdCustomersTableRelationships :: API.TableRelationships,
+    _tdInvoicesRelationshipName :: API.RelationshipName,
     _tdSupportRepRelationshipName :: API.RelationshipName,
     -- = Employees table
     _tdEmployeesTableName :: API.TableName,
@@ -477,7 +488,9 @@ mkTestData schemaResponse testConfig =
       _tdTracksRelationshipName = tracksRelationshipName,
       _tdCustomersTableName = formatTableName testConfig customersTableName,
       _tdCustomersRows = customersRows,
+      _tdCustomersRowsById = customersRowsById,
       _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
+      _tdInvoicesRelationshipName = invoicesRelationshipName,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
       _tdEmployeesTableName = formatTableName testConfig employeesTableName,
       _tdEmployeesRows = employeesRows,

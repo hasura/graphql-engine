@@ -229,6 +229,7 @@ schemaInspectionTests = describe "Schema and Source Inspection" $ do
                 <&> Lens.set (key "config_schema_response" . key "config_schema") J.Null
                 <&> Lens.set (key "capabilities" . _Object . Lens.at "datasets") Nothing
                 <&> Lens.set (key "capabilities" . _Object . Lens.at "licensing") Nothing
+                <&> Lens.set (key "capabilities" . key "queries" . _Object . Lens.at "redaction") Nothing
                 <&> Lens.set (key "options" . key "uri") J.Null
                 <&> Lens.set (_Object . Lens.at "display_name") Nothing
                 <&> Lens.set (_Object . Lens.at "release_name") Nothing

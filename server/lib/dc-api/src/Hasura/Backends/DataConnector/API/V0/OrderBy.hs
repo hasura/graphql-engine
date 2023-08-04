@@ -1,11 +1,18 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.OrderBy
   ( OrderBy (..),
     OrderByRelation (..),
     OrderByElement (..),
+    obeTargetPath,
+    obeTarget,
+    obeOrderDirection,
     OrderByTarget (..),
+    _OrderByColumn,
+    _OrderByStarCountAggregate,
+    _OrderBySingleColumnAggregate,
     OrderDirection (..),
   )
 where
@@ -13,6 +20,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
@@ -114,3 +122,6 @@ instance HasCodec OrderDirection where
   codec =
     named "OrderDirection" $
       stringConstCodec [(Ascending, "asc"), (Descending, "desc")]
+
+$(makeLenses 'OrderByElement)
+$(makePrisms ''OrderByTarget)

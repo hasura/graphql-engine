@@ -13,6 +13,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     FunctionArgument (..),
     ArgumentValue (..),
     qrRelationships,
+    qrRedactionExpressions,
     qrQuery,
     qrForeach,
     trTable,
@@ -35,6 +36,10 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qWhere,
     qOrderBy,
     Field (..),
+    _ColumnField,
+    _RelField,
+    _NestedObjField,
+    _NestedArrayField,
     RelationshipField (..),
     ArrayField (..),
     QueryResponse (..),
@@ -112,6 +117,14 @@ qrQuery = lens get set
     get (QRFunction (FunctionRequest {_frQuery})) = _frQuery
     set (QRTable qrt) x = QRTable (qrt {_trQuery = x})
     set (QRFunction qrf) x = QRFunction (qrf {_frQuery = x})
+
+qrRedactionExpressions :: Lens' QueryRequest (Set API.V0.TargetRedactionExpressions)
+qrRedactionExpressions = lens get set
+  where
+    get (QRTable (TableRequest {_trRedactionExpressions})) = _trRedactionExpressions
+    get (QRFunction (FunctionRequest {_frRedactionExpressions})) = _frRedactionExpressions
+    set (QRTable qrt) x = QRTable (qrt {_trRedactionExpressions = x})
+    set (QRFunction qrf) x = QRFunction (qrf {_frRedactionExpressions = x})
 
 instance HasCodec QueryRequest where
   codec =
@@ -511,6 +524,7 @@ $(makeLenses ''TableRequest)
 $(makeLenses ''FunctionRequest)
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)
+$(makePrisms ''Field)
 $(makeLenses ''QueryResponse)
 $(makePrisms ''FieldValue)
 
