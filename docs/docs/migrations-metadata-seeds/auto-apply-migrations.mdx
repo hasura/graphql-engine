@@ -18,9 +18,9 @@ Hasura ships a special `cli-migrations` Docker image which can be used to automa
 when the server starts.
 
 This image is a drop-in place replacement for the standard Hasura GraphQL Engine
-[images](https://github.com/hasura/graphql-engine/tree/master/install-manifests). This container provides a method to
-apply [Migrations and Metadata](/migrations-metadata-seeds/overview.mdx) automatically when the container starts up. It
-works by:
+[images](https://hub.docker.com/r/hasura/graphql-engine). This container provides a method to apply
+[Migrations and Metadata](/migrations-metadata-seeds/overview.mdx) automatically when the container starts up. It works
+by:
 
 - Starting a temporary server securely through `localhost` with the Migrations API allowed.
 - The server will then apply the Metadata and Migrations
