@@ -4,6 +4,7 @@
 module Hasura.LogicalModel.Types
   ( LogicalModelName (..),
     LogicalModelField (..),
+    LogicalModelFields,
     LogicalModelType (..),
     LogicalModelTypeScalar (..),
     LogicalModelTypeArray (..),
@@ -300,6 +301,8 @@ instance (Backend b) => Hashable (LogicalModelField b)
 
 instance (Backend b) => NFData (LogicalModelField b)
 
+type LogicalModelFields b = InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b)
+
 -- we parse in as an array of NullableScalarTypeFromArray and then turn into
 -- InsOrdHashMap because JSON objects cannot be depended on for ordering
 logicalModelFieldMapCodec ::
@@ -307,8 +310,8 @@ logicalModelFieldMapCodec ::
   (Backend b) =>
   AC.Codec
     Value
-    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
-    (InsOrdHashMap.InsOrdHashMap (Column b) (LogicalModelField b))
+    (LogicalModelFields b)
+    (LogicalModelFields b)
 logicalModelFieldMapCodec =
   AC.dimapCodec
     ( InsOrdHashMap.fromList

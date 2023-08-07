@@ -49,6 +49,7 @@ import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Fields (runLogicalModelFieldsLookup)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation (..), LogicalModelName (..), LogicalModelType (..), LogicalModelTypeArray (..), LogicalModelTypeReference (..))
 import Hasura.LogicalModelResolver.Metadata (InlineLogicalModelMetadata (..), LogicalModelIdentifier (..))
@@ -811,6 +812,11 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             allFields :: FieldInfoMap (FieldInfo b) <- addNonColumnFields allSources sourceName sourceConfig tablesRawInfo columns remoteSchemaMap dbFunctions nonColumnInput
             pure $ tableRawInfo {_tciFieldInfoMap = allFields}
 
+      -- Combine logical models that come from DB schema introspection with logical models
+      -- provided via metadata. If two logical models have the same name the one from metadata is preferred.
+      let unifiedLogicalModels = logicalModels <> introspectedLogicalModels
+          unifiedLogicalModelsHashMap = InsOrdHashMap.toHashMap unifiedLogicalModels
+
       -- permissions
       result <-
         interpretWriter
@@ -828,6 +834,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       tableFields
                       permissionInputs
                       orderedRoles
+                      unifiedLogicalModelsHashMap
                 pure $ TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
       -- Generate a non-recoverable error when inherited roles were not ordered in a way that allows for building permissions to succeed
       tableCache <- bindA -< liftEither result
@@ -893,10 +900,6 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       -- fetch static config
       cacheStaticConfig <- bindA -< askCacheStaticConfig
 
-      -- Combine logical models that come from DB schema introspection with logical models
-      -- provided via metadata. If two logical models have the same name the one from metadata is preferred.
-      let unifiedLogicalModels = logicalModels <> introspectedLogicalModels
-
       let getLogicalModelTypeDependencies ::
             LogicalModelType b ->
             S.Set LogicalModelName
@@ -932,6 +935,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 logicalModelPermissions <-
                   flip runReaderT sourceConfig
+                    $ runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
                     $ buildLogicalModelPermissions sourceName tableCoreInfos (LMLLogicalModel _lmmName) _lmmFields _lmmSelectPermissions orderedRoles
 
                 let recordDep (metadataObject, sourceObject) =
@@ -999,7 +1003,9 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       (throw400 InvalidConfiguration ("The logical model " <> toTxt logicalModelName <> " could not be found"))
                   LMIInlineLogicalModel (InlineLogicalModelMetadata {_ilmmFields, _ilmmSelectPermissions}) -> do
                     logicalModelPermissions <-
-                      flip runReaderT sourceConfig $ buildLogicalModelPermissions sourceName tableCoreInfos (LMLNativeQuery _nqmRootFieldName) _ilmmFields _ilmmSelectPermissions orderedRoles
+                      flip runReaderT sourceConfig
+                        $ runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
+                        $ buildLogicalModelPermissions sourceName tableCoreInfos (LMLNativeQuery _nqmRootFieldName) _ilmmFields _ilmmSelectPermissions orderedRoles
 
                     let recordDep (metadataObject', sourceObject) =
                           recordDependenciesM metadataObject' sourceObject

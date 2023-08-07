@@ -18,7 +18,9 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.LogicalModel.Metadata (WithLogicalModel (..))
+import Hasura.LogicalModel.API (LogicalModelName)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT (..), LogicalModelFieldsRM (..), runLogicalModelFieldsLookup)
+import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..), WithLogicalModel (..))
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation (..))
 import Hasura.NativeQuery.Metadata (WithNativeQuery (..))
 import Hasura.Prelude
@@ -201,8 +203,9 @@ buildTablePermissions ::
   FieldInfoMap (FieldInfo b) ->
   TablePermissionInputs b ->
   OrderedRoles ->
+  HashMap LogicalModelName (LogicalModelMetadata b) ->
   m (RolePermInfoMap b)
-buildTablePermissions env source tableCache tableFields tablePermissions orderedRoles = do
+buildTablePermissions env source tableCache tableFields tablePermissions orderedRoles logicalModels = do
   let alignedPermissions = alignPermissions tablePermissions
       go accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) = do
         parentRolePermissions <-
@@ -267,16 +270,15 @@ buildTablePermissions env source tableCache tableFields tablePermissions ordered
         when (_pdRole permission == adminRoleName)
           $ throw400 ConstraintViolation "cannot define permission for admin role"
         (info, dependencies) <-
-          runTableCoreCacheRT
-            ( buildPermInfo
-                env
-                source
-                table
-                tableFields
-                (_pdRole permission)
-                (_pdPermission permission)
-            )
-            tableCache
+          flip runTableCoreCacheRT tableCache
+            $ runLogicalModelFieldsLookup _lmmFields logicalModels
+            $ buildPermInfo
+              env
+              source
+              table
+              tableFields
+              (_pdRole permission)
+              (_pdPermission permission)
         recordDependenciesM metadataObject schemaObject dependencies
         pure info
 
@@ -300,7 +302,8 @@ buildLogicalModelPermissions ::
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
-    Has (ScalarTypeParsingContext b) r
+    Has (ScalarTypeParsingContext b) r,
+    LogicalModelFieldsRM b m
   ) =>
   SourceName ->
   TableCoreCache b ->
@@ -362,7 +365,8 @@ buildLogicalModelSelectPermission ::
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
-    Has (ScalarTypeParsingContext b) r
+    Has (ScalarTypeParsingContext b) r,
+    LogicalModelFieldsRM b m
   ) =>
   SourceName ->
   TableCoreCache b ->
@@ -421,12 +425,14 @@ buildLogicalModelSelectPermission sourceName tableCache logicalModelLocation log
           <<> ": "
           <> err
 
+  logicalModels <- getLogicalModelFieldsLookup @b
   select <- withRecordInconsistencyM metadataObject $ modifyError do
     when (role == adminRoleName)
       $ throw400 ConstraintViolation "cannot define permission for admin role"
 
     (permissionInformation, dependencies) <-
       flip runTableCoreCacheRT tableCache
+        $ flip runLogicalModelFieldsLookupRT logicalModels
         $ buildLogicalModelPermInfo sourceName logicalModelLocation logicalModelFields
         $ _pdPermission selectPermission
 

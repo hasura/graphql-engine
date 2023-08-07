@@ -1247,7 +1247,24 @@ assertColumnExists ::
   Column backend ->
   m ()
 assertColumnExists m msg c = do
-  void $ askColInfo m c msg
+  fieldInfo <-
+    modifyErr ("column " <>)
+      $ askFieldInfo m (fromCol @backend c)
+  case fieldInfo of
+    (FIColumn _) -> pure ()
+    (FIRelationship _) -> throwErr "relationship"
+    (FIComputedField _) -> throwErr "computed field"
+    (FIRemoteRelationship _) -> throwErr "remote relationship"
+  where
+    throwErr fieldType =
+      throwError
+        $ err400 UnexpectedPayload
+        $ "expecting a database column; but, "
+        <> c
+        <<> " is a "
+        <> fieldType
+        <> "; "
+        <> msg
 
 askRelType ::
   (MonadError QErr m) =>

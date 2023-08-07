@@ -19,6 +19,8 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM, runLogicalModelFieldsLookup)
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
@@ -75,7 +77,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith ::
-  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m, LogicalModelFieldsRM ('Postgres 'Vanilla) m) =>
   SessionVariableBuilder m ->
   (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
   CountQuery ->
@@ -125,7 +127,9 @@ validateCountQ ::
 validateCountQ query = do
   let source = cqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
+  logicalModelCache :: LogicalModelCache ('Postgres 'Vanilla) <- fold <$> askLogicalModelCache source
   flip runTableCacheRT tableCache
+    $ runLogicalModelFieldsLookup _lmiFields logicalModelCache
     $ runDMLP1T
     $ validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 

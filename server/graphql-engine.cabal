@@ -703,6 +703,7 @@ library
                      , Hasura.LogicalModel.API
                      , Hasura.LogicalModel.Cache
                      , Hasura.LogicalModel.Common
+                     , Hasura.LogicalModel.Fields
                      , Hasura.LogicalModel.IR
                      , Hasura.LogicalModel.Lenses
                      , Hasura.LogicalModel.Metadata

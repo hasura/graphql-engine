@@ -44,6 +44,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.LogicalModel.Common (logicalModelFieldsToFieldInfo)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM)
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission.Internal
@@ -236,6 +237,7 @@ buildPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
@@ -259,6 +261,7 @@ buildLogicalModelPermInfo ::
   ( BackendMetadata b,
     QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
     Has (ScalarTypeParsingContext b) r
@@ -347,6 +350,7 @@ buildInsPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -367,7 +371,7 @@ buildInsPermInfo env source tn fieldInfoMap (InsPerm checkCond set mCols backend
       $ do
         indexedForM insCols $ \col -> do
           -- Check that all columns specified do in fact exist and are columns
-          _ <- askColumnType fieldInfoMap col relInInsErr
+          assertColumnExists fieldInfoMap relInInsErr col
           -- Check that the column is insertable
           ci <- askColInfo fieldInfoMap col ""
           unless (_cmIsInsertable $ ciMutability ci)
@@ -458,6 +462,7 @@ buildLogicalModelSelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -532,6 +537,7 @@ buildSelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -555,8 +561,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName sp = withPathK "permissi
   void
     $ withPathK "columns"
     $ indexedForM pgCols
-    $ \pgCol ->
-      askColumnType fieldInfoMap pgCol autoInferredErr
+    $ assertColumnExists fieldInfoMap autoInferredErr
 
   -- validate computed fields
   validComputedFields <-
@@ -603,6 +608,7 @@ buildUpdPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
@@ -629,7 +635,7 @@ buildUpdPermInfo env source tn fieldInfoMap (UpdPerm colSpec set fltr check back
     $ indexedForM updCols
     $ \updCol -> do
       -- Check that all columns specified do in fact exist and are columns
-      _ <- askColumnType fieldInfoMap updCol relInUpdErr
+      assertColumnExists fieldInfoMap relInUpdErr updCol
       -- Check that the column is updatable
       ci <- askColInfo fieldInfoMap updCol ""
       unless (_cmIsUpdatable $ ciMutability ci)
@@ -655,6 +661,7 @@ buildDelPermInfo ::
   forall b m r.
   ( QErrM m,
     TableCoreInfoRM b m,
+    LogicalModelFieldsRM b m,
     BackendMetadata b,
     GetAggregationPredicatesDeps b,
     MonadReader r m,
