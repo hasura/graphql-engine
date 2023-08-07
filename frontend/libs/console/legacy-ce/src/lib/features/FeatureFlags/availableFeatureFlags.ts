@@ -45,16 +45,17 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     defaultValue: false,
     discussionUrl: 'https://github.com/hasura/graphql-engine/discussions/9727',
   },
-  {
-    id: manageDatabaseTabbedInterface,
-    description:
-      'Try out the new tabbed Manage Database UI for GDC sources only.',
-    title: 'Tabbed Manage Database UI',
-    section: 'data',
-    status: 'experimental',
-    defaultValue: false,
-    discussionUrl: '',
-  },
+  // Leave this commented out until we get more details about feature parity requirement
+  // {
+  //   id: manageDatabaseTabbedInterface,
+  //   description:
+  //     'Try out the new tabbed Manage Database UI for GDC sources only.',
+  //   title: 'Tabbed Manage Database UI',
+  //   section: 'data',
+  //   status: 'experimental',
+  //   defaultValue: false,
+  //   discussionUrl: '',
+  // },
   // eslint-disable-next-line no-underscore-dangle
   ...(isProConsole(globals) ? [importActionFromOpenApi] : []),
 ];
