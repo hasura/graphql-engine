@@ -53,15 +53,12 @@ export const addConstraintName = (
   namingConvention: NamingConvention
 ): SuggestedRelationshipWithName[] =>
   relationships.map(relationship => {
-    const fromTable = getTableDisplayName(relationship.from.table);
     const toTableName = formatRelationToTableName({
       table: relationship.to.table,
       relationshipType: relationship.type,
     });
 
-    const baseConstraintName = makeStringGraphQLCompliant(
-      `${fromTable}_${toTableName}`
-    );
+    const baseConstraintName = makeStringGraphQLCompliant(toTableName);
 
     const constraintName =
       namingConvention === 'graphql-default'
