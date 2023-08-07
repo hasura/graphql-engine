@@ -9,7 +9,7 @@ self: super:
     packages = super.haskell.packages // {
       ${self.ghcName} = super.haskell.packages.${self.ghcName}.override {
         overrides = hself: hsuper: {
-          ormolu_0_7_0_0 = hsuper.ormolu_0_7_0_0.override {
+          ormolu_0_7_1_0 = hsuper.ormolu_0_7_1_0.override {
             Cabal-syntax = hsuper.Cabal-syntax_3_10_1_0;
             ghc-lib-parser = hsuper.ghc-lib-parser_9_6_2_20230523;
           };
