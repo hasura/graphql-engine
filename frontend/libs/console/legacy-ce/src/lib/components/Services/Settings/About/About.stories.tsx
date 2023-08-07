@@ -12,6 +12,7 @@ export default {
     Benefits: {
       source: { type: 'code' },
     },
+    mockdate: new Date('2020-01-14T15:47:18.502Z'),
   },
   component: About,
   decorators: [ReactQueryDecorator()],

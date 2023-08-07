@@ -5,19 +5,16 @@ import { Button } from '../../../../new-components/Button';
 import { useConsoleForm } from '../../../../new-components/Form';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { useIsStorybook } from '../../../../utils/StoryUtils';
-import {
-  useEnvironmentState,
-  usePushRoute,
-} from '../../../ConnectDBRedesign/hooks';
-import { nativeDrivers } from '../../../DataSource';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { NativeQuery } from '../../../hasura-metadata-types';
+import { MetadataWrapper } from '../../components';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
+import { Routes } from '../constants';
+import { useSupportedDrivesForNativeQueries } from '../hook';
 import { NativeQueryFormFields } from './components/NativeQueryDetailsForm';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { normalizeArguments, transformFormOutputToMetadata } from './utils';
-import { MetadataWrapper } from '../../components';
-import { Routes } from '../constants';
 
 type AddNativeQueryProps = {
   editDetails?: {
@@ -98,9 +95,7 @@ export const AddNativeQuery = ({
     });
   };
 
-  const { consoleType } = useEnvironmentState();
-
-  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
+  const allowedDrivers = useSupportedDrivesForNativeQueries();
 
   return (
     <MetadataWrapper

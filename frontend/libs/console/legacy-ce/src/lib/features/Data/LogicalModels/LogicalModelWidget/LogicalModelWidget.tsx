@@ -14,7 +14,7 @@ import { Metadata, Source } from '../../../hasura-metadata-types';
 import { ReactQueryStatusUI } from '../../components';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 
-import { multipleQueries } from '../../components/ReactQueryWrappers/utils';
+import { multipleQueryUtils } from '../../components/ReactQueryWrappers/utils';
 import { useAllDriverCapabilities } from '../../hooks/useAllDriverCapabilities';
 import { useTrackLogicalModel } from '../../hooks/useTrackLogicalModel';
 import { DisplayReferencedLogicalModelEntities } from '../LogicalModel/DisplayLogicalModelReferencedEntities';
@@ -108,13 +108,16 @@ const DataBoundWidgetUI = (props: AddLogicalModelDialogProps) => {
 
   const metadataResult = useMetadata(metadataSelector);
 
-  const { status, error } = {
-    status: multipleQueries.status([metadataResult, capabilitiesResult]),
-    error: multipleQueries.firstError([metadataResult, capabilitiesResult]),
-  };
-
   if (!metadataResult.isSuccess || !capabilitiesResult.isSuccess)
-    return <ReactQueryStatusUI status={status} error={error} />;
+    return (
+      <ReactQueryStatusUI
+        status={multipleQueryUtils.status([metadataResult, capabilitiesResult])}
+        error={multipleQueryUtils.firstError([
+          metadataResult,
+          capabilitiesResult,
+        ])}
+      />
+    );
 
   return (
     <Form

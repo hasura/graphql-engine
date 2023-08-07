@@ -10,6 +10,7 @@ import { RouteWrapper } from '../components/RouteWrapper';
 import { Routes } from '../constants';
 import { AddNativeQuery } from './AddNativeQuery';
 import { nativeQueryHandlers } from './mocks';
+import { eeLicenseInfo } from '../../../EETrial/mocks/http';
 
 type Story = StoryObj<typeof AddNativeQuery>;
 
@@ -282,5 +283,70 @@ export const Update: Story = {
       'data-state',
       'unchecked'
     );
+  },
+};
+
+export const EEBannerDisplayed: typeof Basic = {
+  ...Basic,
+  name: '⭐️ EE License - None',
+  decorators: [
+    ConsoleTypeDecorator({ consoleType: 'pro-lite', menuPlacement: 'top' }),
+  ],
+  parameters: {
+    msw: [
+      eeLicenseInfo.none,
+      ...nativeQueryHandlers({
+        metadataOptions: { postgres: { models: true, queries: true } },
+        trackNativeQueryResult: 'native_queries_disabled',
+      }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const c = within(canvasElement);
+    await waitForSpinnerOverlay(canvasElement);
+
+    await expect(
+      await c.findByText(
+        'Looking to add Native Queries for SQL Server/Big Query databases?'
+      )
+    ).toBeInTheDocument();
+
+    await expect(c.getByText('Enable Enterprise')).toBeInTheDocument();
+
+    //checks that the correct options are present in the dropdown
+    await expect(c.queryByTestId('source-mssql')).not.toBeInTheDocument();
+    await expect(c.getByTestId('source-postgres')).toBeInTheDocument();
+  },
+};
+
+export const EEBannerNotDisplayed: typeof Basic = {
+  ...Basic,
+  name: '⭐️ EE License - Active',
+  decorators: [
+    ConsoleTypeDecorator({ consoleType: 'pro-lite', menuPlacement: 'top' }),
+  ],
+  parameters: {
+    msw: [
+      eeLicenseInfo.active,
+      ...nativeQueryHandlers({
+        metadataOptions: { postgres: { models: true, queries: true } },
+        trackNativeQueryResult: 'native_queries_disabled',
+      }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const c = within(canvasElement);
+    await waitForSpinnerOverlay(canvasElement);
+    await expect(
+      await c.queryByText(
+        'Looking to add Native Queries for SQL Server/Big Query databases?'
+      )
+    ).not.toBeInTheDocument();
+
+    await expect(c.queryByText('Enable Enterprise')).not.toBeInTheDocument();
+
+    //checks that the correct options are present in the dropdown
+    await expect(c.getByTestId('source-mssql')).toBeInTheDocument();
+    await expect(c.getByTestId('source-postgres')).toBeInTheDocument();
   },
 };

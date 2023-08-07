@@ -25,7 +25,7 @@ export const nonSuccessRenderChildren = ({
 
 type MultipleQueryResults = UseQueryResult<unknown, ErrorType>[];
 
-export const multipleQueries = {
+export const multipleQueryUtils = {
   status: (results: MultipleQueryResults): UseQueryResult['status'] => {
     const statuses = results.map(r => r.status);
     // prioritize error. if any statuses are error, then status is error
