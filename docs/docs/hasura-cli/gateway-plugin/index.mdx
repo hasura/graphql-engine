@@ -1,0 +1,54 @@
+---
+description: Hasura Gateway Plugin
+keywords:
+  - hasura
+  - docs
+  - command line interface
+  - cli
+sidebar_class_name: cloud-icon
+---
+
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Hasura Gateway Plugin
+
+<div className="badge-container">
+  <ProductBadge free pro ee />
+  <div className="badge badge-gray heading-badge">Alpha</div>
+</div>
+
+This Hasura CLI Gateway Plugin enables publishing and management of Hasura federated instances and enables CI/CD support
+for them. Users can `check`, `build` and `publish` the metadata of child Hasura instances added as Remote Schema
+configurations to a parent gateway instance.
+
+## Install the Hasura CLI Gateway Plugin
+
+To start using the Gateway plugin, the following pre-requisites are needed:
+
+1. Install the [Hasura CLI](/hasura-cli/install-hasura-cli.mdx)
+
+2. Update the plugin index
+
+```bash
+hasura plugins list
+```
+
+3. Install the `gateway` plugin
+
+```bash
+hasura plugins install gateway
+```
+
+4. Verify the installation with the `--help` flag
+
+```bash
+hasura gateway --help
+```
+
+## Uninstall the Hasura CLI Gateway Plugin
+
+To uninstall the Hasura CLI Gateway Plugin, use the `uninstall` command:
+
+```bash
+hasura plugins uninstall gateway
+```
