@@ -1,4 +1,0 @@
-with-compiler: ghc-9.2.5
-
-package graphql-parser
-  ghc-options: -Werror
