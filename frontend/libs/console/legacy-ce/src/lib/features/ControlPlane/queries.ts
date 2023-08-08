@@ -270,7 +270,6 @@ subscription FetchConfigStatus($tenantId: uuid!) {
     config_statuses(where: {is_active: {_eq: true}, tenant_id: {_eq: $tenantId}}) {
       hash
       message
-      worker_id
     }
   }
 }`);
