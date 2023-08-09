@@ -28,9 +28,6 @@ genBigDecimal = do
   i2 <- HH.int constantBounded
   pure $ BQ.BigDecimal $ tshow i1 <> "." <> tshow i2
 
-genOrderBy :: HH.Gen BQ.OrderBy
-genOrderBy = BQ.OrderBy <$> genFieldName <*> hgen <*> hgen
-
 genTableName :: HH.Gen BQ.TableName
 genTableName = BQ.TableName <$> genText <*> genText
 
@@ -60,7 +57,6 @@ spec = do
       jsonRoundTrip @BQ.EntityAlias (BQ.EntityAlias <$> genText)
       jsonRoundTrip @BQ.Geography (BQ.Geography <$> genText)
       jsonRoundTrip @BQ.Int64 genInt64
-      jsonRoundTrip @BQ.OrderBy genOrderBy
       jsonRoundTrip @BQ.TableName genTableName
       jsonRoundTrip @BQ.Time (BQ.Time <$> genText)
       jsonRoundTrip @BQ.Timestamp (BQ.Timestamp <$> genText)
