@@ -32,6 +32,7 @@ export interface ServerConfig {
     claims_format: string;
   };
   is_prometheus_metrics_enabled: boolean;
+  is_apollo_federation_enabled: boolean;
 }
 
 export function useServerConfig<T = ServerConfig>(

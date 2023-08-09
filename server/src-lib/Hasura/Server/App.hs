@@ -756,6 +756,7 @@ configApiGetHandler appStateRef = do
                   acEnabledAPIs
                   acDefaultNamingConvention
                   featureFlagSettings
+                  acApolloFederationStatus
           return (emptyHttpLogGraphQLInfo, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
