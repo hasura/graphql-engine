@@ -277,7 +277,7 @@ export function HeroEnabled() {
             </g>
 
             <a
-              href="https://hasura.io/docs/latest/enterprise/opentelemetry/#view-traces"
+              href="https://hasura.io/docs/latest/observability/opentelemetry/#view-traces"
               className="hover:cursor-pointer"
               target="_blank"
               rel="noreferrer noopener"
