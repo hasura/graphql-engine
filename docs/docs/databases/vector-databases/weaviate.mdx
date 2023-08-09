@@ -1,0 +1,178 @@
+---
+sidebar_label: Weaviate
+keywords:
+  - hasura
+  - docs
+  - databases
+  - vector databases
+  - ai
+  - machine learning
+  - weaviate
+sidebar_position: 2
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Connect Hasura to Weaviate
+
+[Weaviate](https://weaviate.io/) is a cloud-native, modular, real-time vector search engine that allows you to build
+intelligent applications by using machine learning models as the data layer. It is open-source and can be deployed
+on-premise or in the cloud.
+
+:::info Connecting vector databases to Hasura
+
+To connect a vector database to Hasura, you'll need to take advantage of
+[Hasura Data Connectors](/databases/data-connectors/index.mdx). You can deploy any custom data connector agent to Hasura
+Cloud using our CLI plugin. For more information, refer to the [docs](/hasura-cli/connector-plugin/index.mdx).
+
+If you're curious what other connectors are available, check out our [NDC Hub](https://github.com/hasura/ndc-hub).
+
+:::
+
+## Step 1: Deploy a data connector agent
+
+We'll use the Hasura CLI to deploy a custom data connector agent to Hasura Cloud. Below, we're using the `create`
+command and naming our connector `weaviate-connector:v1`. We're also passing in the GitHub repo URL for the connector
+agent using the `--github-repo-url` flag:
+
+```bash
+hasura connector create weaviate-connector:v1 --github-repo-url https://github.com/hasura/weaviate_gdc/tree/main
+```
+
+We can check on the progress of the deployment using the `status` command:
+
+```bash
+hasura connector status weaviate-connector:v1
+```
+
+Once the `DONE` status is returned, we can grab the URL for our data connector agent using the `list` command:
+
+```bash
+hasura connector list
+```
+
+This will return a list of all the custom data connector agents you own. **The second value returned is the URL which
+we'll use in the next step; copy it to your clipboard.**
+
+## Step 2: Add the data connector agent to your Hasura Cloud project
+
+In your Cloud project, navigate to the `Data` tab and click `Manage` in the left-hand sidebar.
+
+At the bottom of the screen, you'll see an expandable section titled `Data Connector Agents`.
+
+<Thumbnail
+  src="/img/databases/vector-dbs/weaviate/weaviate_add-agent.png"
+  alt="Add the agent for a Weaviate database"
+  width="1000px"
+/>
+
+Click this and scroll down to `Add Agent`.
+
+Name this agent `weaviate` and paste the URL you copied from the CLI into the `URL` field and click `Connect`.
+
+<Thumbnail
+  src="/img/databases/vector-dbs/weaviate/weaviate_configure-agent.png"
+  alt="Add the agent for a Weaviate database"
+  width="1000px"
+/>
+
+## Step 3: Select the driver
+
+Navigate to the `Data` tab and select `Connect Database`, then select `Weaviate` from the list of drivers:
+
+<Thumbnail
+  src="/img/databases/vector-dbs/weaviate/weaviate_connect-db.png"
+  alt="Configure the Weaviate agent"
+  width="1000px"
+/>
+
+## Step 4: Connect your database
+
+At this point, we'll need to configure a few parameters:
+
+<Thumbnail
+  src="/img/databases/vector-dbs/weaviate/connect-weaveate-database.png"
+  alt="Connect Weaviate database"
+  width="1000px"
+/>
+
+| Parameter     | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| Database Name | The name of your Weaviate database.                     |
+| `apiKey`      | The API key for your Weaviate database.                 |
+| `host`        | The URL of your Weaviate database.                      |
+| `openAPIKey`  | The OpenAI key for use with your Weaviate database.     |
+| `scheme`      | The URL scheme for your Weaviate database (http/https). |
+
+:::info Where can I find these parameters?
+
+For the Weaviate-specific parameters, on the
+[Weaviate Cloud Services' Console](https://console.weaviate.cloud/dashboard), you can see your cluster's connection
+information on the cluster's card.
+
+You can register for an OpenAI key [here](https://openai.com/blog/openai-api).
+
+:::
+
+## Step 5: Track your tables
+
+To make schemas accessible for querying using GraphQL, we'll need to track them. In the example below, we're tracking a
+schema called `Resume` by checking the box next to it and clicking `Track Selected`:
+
+<Thumbnail src="/img/databases/vector-dbs/weaviate/track-tables.png" alt="Connect Weaviate database" width="1000px" />
+
+Tracking this schema will generate a type available in your GraphQL API that you can query against 🎉
+
+:::info Don't have any tables to track?
+
+You will need to define the schema in your vector database. For a walkthrough of setting up a Weaviate schema, refer to
+this [tutorial](https://weaviate.io/developers/weaviate/configuration/schema-configuration).
+
+:::
+
+## Step 6: Define a remote relationship
+
+The information stored in Weaviate is vectorized and not in a human-readable format. We want to be able to return the
+information from our relational database using the vectorized data from Weaviate. To do this, we need to define a remote
+relationship.
+
+In the example below, we're defining a remote relationship between the `Resume` schema in our vector database and the
+`application` table in our relational database. This way, whenever we query the vectorized information in our `Resume`
+table, we can return the information from our relational database.
+
+<Thumbnail
+  src="/img/databases/vector-dbs/weaviate/define-remote-relationship.png"
+  alt="Define remote relationship"
+  width="1000px"
+/>
+
+## Step 7: Query your data
+
+You can now query across both your vector database and your existing relational database tables as if they were in one
+location!
+
+In our example, we have two tables in our relational database:
+
+1. `candidate`
+
+<Thumbnail src="/img/databases/vector-dbs/weaviate/candidate.png" alt="Candidate 1 table" width="425px" />
+
+2. `application`
+
+<Thumbnail src="/img/databases/vector-dbs/weaviate/application.png" alt="Application 2 table" width="700px" />
+
+Our vector database stores the resumes as:
+
+<Thumbnail src="/img/databases/vector-dbs/weaviate/resume-store.png" alt="Resume store" width="1000px" />
+
+If we head to the `API` tab in the Hasura Console, in our GraphQL query, we are able to fetch all the candidate and
+application information for a resume. Hasura brings this all together to provide this seamless querying experience.
+
+<Thumbnail src="/img/databases/vector-dbs/weaviate/execute-query.png" alt="Execute query" width="1000px" />
+
+## Next Steps
+
+- Check out our [Learn tutorial](https://hasura.io/learn/graphql/vectordbs/introduction/) on Generative AI using Hasura,
+  Weaviate, Next.js and Tailwind CSS 🎉
+- Learn more about [Hasura Data Connectors](/databases/data-connectors/index.mdx).
+- Check out the available connectors on the [NDC Hub](https://github.com/hasura/ndc-hub)... or build your own!
