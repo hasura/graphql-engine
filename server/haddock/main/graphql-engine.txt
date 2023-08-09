@@ -20170,7 +20170,7 @@ downgradeCommandParser :: Parser DowngradeOptions
 -- | API related to server configuration
 module Hasura.Server.API.Config
 data ServerConfig
-ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !AllowListStatus -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> !Bool -> !NamingCase -> !HashSet FeatureFlagInfo -> ServerConfig
+ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !AllowListStatus -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> !Bool -> !NamingCase -> !HashSet FeatureFlagInfo -> !ApolloFederationStatus -> ServerConfig
 [scfgVersion] :: ServerConfig -> !Version
 [scfgIsFunctionPermissionsInferred] :: ServerConfig -> !InferFunctionPermissions
 [scfgIsRemoteSchemaPermissionsEnabled] :: ServerConfig -> !RemoteSchemaPermissions
@@ -20186,7 +20186,8 @@ ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermission
 [scfgIsPrometheusMetricsEnabled] :: ServerConfig -> !Bool
 [scfgDefaultNamingConvention] :: ServerConfig -> !NamingCase
 [scfgFeatureFlags] :: ServerConfig -> !HashSet FeatureFlagInfo
-runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> AllowListStatus -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> HashSet API -> NamingCase -> [(FeatureFlag, Text, Bool)] -> ServerConfig
+[scfgIsApolloFederationEnabled] :: ServerConfig -> !ApolloFederationStatus
+runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> AllowListStatus -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> HashSet API -> NamingCase -> [(FeatureFlag, Text, Bool)] -> ApolloFederationStatus -> ServerConfig
 instance Data.Hashable.Class.Hashable Hasura.Server.API.Config.FeatureFlagInfo
 instance GHC.Generics.Generic Hasura.Server.API.Config.FeatureFlagInfo
 instance GHC.Classes.Eq Hasura.Server.API.Config.FeatureFlagInfo
@@ -24897,22 +24898,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) TriggerOnReplication
-cteqCleanupConfig :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe Text)
-cetqWebhook :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe InputWebhook)
-cetqUpdate :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe (SubscribeOpSpec b_at0bd))
-cetqTable :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (TableName b_at0bd)
-cetqSource :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) SourceName
-cetqRetryConf :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe RequestTransform)
-cetqReplace :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) Bool
-cetqName :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) TriggerName
-cetqInsert :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe (SubscribeOpSpec b_at0bd))
-cetqHeaders :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe Bool)
-cetqDelete :: forall b_at0bd. Lens' (CreateEventTriggerQuery b_at0bd) (Maybe (SubscribeOpSpec b_at0bd))
+cteqTriggerOnReplication :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) TriggerOnReplication
+cteqCleanupConfig :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe Text)
+cetqWebhook :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe InputWebhook)
+cetqUpdate :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe (SubscribeOpSpec b_at0pu))
+cetqTable :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (TableName b_at0pu)
+cetqSource :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) SourceName
+cetqRetryConf :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe RequestTransform)
+cetqReplace :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) Bool
+cetqName :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) TriggerName
+cetqInsert :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe (SubscribeOpSpec b_at0pu))
+cetqHeaders :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe Bool)
+cetqDelete :: forall b_at0pu. Lens' (CreateEventTriggerQuery b_at0pu) (Maybe (SubscribeOpSpec b_at0pu))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
