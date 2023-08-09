@@ -29,7 +29,7 @@
 </span><span id="line-22"></span><span>    </span><span id="metaV2Tables"><span class="annot"><span class="annottext">MetadataV2 -&gt; PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Tables"><span class="hs-identifier hs-var hs-var">metaV2Tables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687238936"><span id="local-6989586621687238951"><span id="local-6989586621687238955"><span class="annot"><span class="annottext">Int -&gt; MetadataV2 -&gt; ShowS
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687243055"><span id="local-6989586621687243070"><span id="local-6989586621687243074"><span class="annot"><span class="annottext">Int -&gt; MetadataV2 -&gt; ShowS
 [MetadataV2] -&gt; ShowS
 MetadataV2 -&gt; String
 (Int -&gt; MetadataV2 -&gt; ShowS)
@@ -44,7 +44,7 @@ $cshow :: MetadataV2 -&gt; String
 show :: MetadataV2 -&gt; String
 $cshowList :: [MetadataV2] -&gt; ShowS
 showList :: [MetadataV2] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687238961"><span id="local-6989586621687238974"><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataV2 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687243080"><span id="local-6989586621687243093"><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataV2 -&gt; Bool
 (MetadataV2 -&gt; MetadataV2 -&gt; Bool)
 -&gt; (MetadataV2 -&gt; MetadataV2 -&gt; Bool) -&gt; Eq MetadataV2
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -52,7 +52,7 @@ $c== :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
 == :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
 $c/= :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
 /= :: MetadataV2 -&gt; MetadataV2 -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687238981"><span id="local-6989586621687238983"><span class="annot"><span class="annottext">(forall x. MetadataV2 -&gt; Rep MetadataV2 x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687243100"><span id="local-6989586621687243102"><span class="annot"><span class="annottext">(forall x. MetadataV2 -&gt; Rep MetadataV2 x)
 -&gt; (forall x. Rep MetadataV2 x -&gt; MetadataV2) -&gt; Generic MetadataV2
 forall x. Rep MetadataV2 x -&gt; MetadataV2
 forall x. MetadataV2 -&gt; Rep MetadataV2 x
@@ -63,7 +63,7 @@ from :: forall x. MetadataV2 -&gt; Rep MetadataV2 x
 $cto :: forall x. Rep MetadataV2 x -&gt; MetadataV2
 to :: forall x. Rep MetadataV2 x -&gt; MetadataV2
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687238987"><span id="local-6989586621687238993"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV2]
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687243106"><span id="local-6989586621687243112"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV2]
 Value -&gt; Parser MetadataV2
 (Value -&gt; Parser MetadataV2)
 -&gt; (Value -&gt; Parser [MetadataV2]) -&gt; FromJSON MetadataV2
@@ -73,7 +73,7 @@ $cparseJSON :: Value -&gt; Parser MetadataV2
 parseJSON :: Value -&gt; Parser MetadataV2
 $cparseJSONList :: Value -&gt; Parser [MetadataV2]
 parseJSONList :: Value -&gt; Parser [MetadataV2]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687239001"><span id="local-6989586621687239007"><span id="local-6989586621687239012"><span id="local-6989586621687239017"><span class="annot"><span class="annottext">[MetadataV2] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687243120"><span id="local-6989586621687243126"><span id="local-6989586621687243131"><span id="local-6989586621687243136"><span class="annot"><span class="annottext">[MetadataV2] -&gt; Value
 [MetadataV2] -&gt; Encoding
 MetadataV2 -&gt; Value
 MetadataV2 -&gt; Encoding
@@ -96,7 +96,7 @@ $ctoJSONList :: [MetadataV2] -&gt; Value
 toJSONList :: [MetadataV2] -&gt; Value
 $ctoEncodingList :: [MetadataV2] -&gt; Encoding
 toEncodingList :: [MetadataV2] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687239026"><span class="annot"><span class="annottext">Typeable MetadataV2
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687243145"><span class="annot"><span class="annottext">Typeable MetadataV2
 Typeable MetadataV2
 -&gt; (Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema)
 -&gt; ToSchema MetadataV2
@@ -109,8 +109,8 @@ $cdeclareNamedSchema :: Proxy MetadataV2 -&gt; Declare (Definitions Schema) Name
 declareNamedSchema :: Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/openapi3-3.2.2-411f041c76f17280045586ed89ed0741a1b2678cfd49151141e5caba3de901c4/share/doc/html/src/Data.OpenApi.Internal.Schema.html#ToSchema"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687239036"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621687239078"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV2
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687243155"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621687243197"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV2
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-00cb1cbc7f345afc191cdd0073541cc013c9159e8ff9242d227dfcd1b17adb5e/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec MetadataV2 MetadataV2 -&gt; JSONCodec MetadataV2
 forall input output.
