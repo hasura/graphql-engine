@@ -85,7 +85,6 @@ export const RelationshipMapping = ({
             <Columns mapping={relationship.definition.mapping} type="to" />
           </>
         )}
-        R
       </div>
     </div>
   );
