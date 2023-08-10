@@ -88,6 +88,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
+import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..))
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
@@ -1031,9 +1032,11 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       $ Seq.singleton dependency
                   Nothing -> pure ()
 
+                let wrapRelDef (RelDef a b c) = RelDef a (RelManualNativeQueryConfig b) c
+
                 arrayRelationships <-
                   traverse
-                    (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ArrRel)
+                    (nativeQueryRelationshipSetup sourceName _nqmRootFieldName ArrRel . wrapRelDef)
                     (_nqmArrayRelationships preValidationNativeQuery)
 
                 objectRelationships <-

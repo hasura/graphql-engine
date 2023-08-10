@@ -868,7 +868,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__BigQuery"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__BigQuery"
                         },
                         "type": "array"
                     },
@@ -1825,7 +1825,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Citus_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Citus_"
                         },
                         "type": "array"
                     },
@@ -2825,7 +2825,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Cockroach_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Cockroach_"
                         },
                         "type": "array"
                     },
@@ -3980,7 +3980,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__DataConnector"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__DataConnector"
                         },
                         "type": "array"
                     },
@@ -5675,7 +5675,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig__MSSQL"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig__MSSQL"
                         },
                         "type": "array"
                     },
@@ -6954,7 +6954,7 @@
                     "object_relationships": {
                         "default": [],
                         "items": {
-                            "$ref": "#/components/schemas/RelDef_RelManualNativeQueryConfig___Postgres__Vanilla_"
+                            "$ref": "#/components/schemas/RelDef_RelManualConfig___Postgres__Vanilla_"
                         },
                         "type": "array"
                     },
@@ -8018,6 +8018,162 @@
                 },
                 "required": [
                     "max_reqs_per_min"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__BigQuery": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__DataConnector": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig__MSSQL": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Citus_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Cockroach_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
+                ],
+                "type": "object"
+            },
+            "RelDef_RelManualConfig___Postgres__Vanilla_": {
+                "properties": {
+                    "comment": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "using": {
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "using"
                 ],
                 "type": "object"
             },

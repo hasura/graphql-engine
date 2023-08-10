@@ -301,9 +301,9 @@ updateRelDefs source qt rn renameTable = do
     updateObjRelDef (oldQT, newQT) =
       rdUsing %~ \case
         RUFKeyOn fk -> RUFKeyOn fk
-        RUManual (RelManualTableConfig origQT (RelManualCommon rmCols rmIO)) ->
+        RUManual (RelManualTableConfigC origQT (RelManualCommon rmCols rmIO)) ->
           let updQT = bool origQT newQT $ oldQT == origQT
-           in RUManual $ RelManualTableConfig updQT (RelManualCommon rmCols rmIO)
+           in RUManual $ RelManualTableConfigC updQT (RelManualCommon rmCols rmIO)
 
     updateArrRelDef :: RenameTable b -> ArrRelDef b -> ArrRelDef b
     updateArrRelDef (oldQT, newQT) =
@@ -311,9 +311,9 @@ updateRelDefs source qt rn renameTable = do
         RUFKeyOn (ArrRelUsingFKeyOn origQT c) ->
           let updQT = getUpdQT origQT
            in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-        RUManual (RelManualTableConfig origQT (RelManualCommon rmCols rmIO)) ->
+        RUManual (RelManualTableConfigC origQT (RelManualCommon rmCols rmIO)) ->
           let updQT = getUpdQT origQT
-           in RUManual $ RelManualTableConfig updQT (RelManualCommon rmCols rmIO)
+           in RUManual $ RelManualTableConfigC updQT (RelManualCommon rmCols rmIO)
       where
         getUpdQT origQT = bool origQT newQT $ oldQT == origQT
 
@@ -743,8 +743,8 @@ updateRelManualConfig ::
   RenameCol b ->
   RelManualTableConfig b ->
   RelManualTableConfig b
-updateRelManualConfig fromQT toQT rnCol (RelManualTableConfig tn (RelManualCommon colMap io)) =
-  RelManualTableConfig tn (RelManualCommon (updateColMap fromQT toQT rnCol colMap) io)
+updateRelManualConfig fromQT toQT rnCol (RelManualTableConfigC tn (RelManualCommon colMap io)) =
+  RelManualTableConfigC tn (RelManualCommon (updateColMap fromQT toQT rnCol colMap) io)
 
 updateColMap ::
   forall b.
