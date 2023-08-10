@@ -136,7 +136,8 @@ data AppEnv = AppEnv
     appEnvSchemaPollInterval :: OptionalInterval,
     appEnvCheckFeatureFlag :: CheckFeatureFlag,
     appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
-    appEnvMaxTotalHeaderLength :: Int
+    appEnvMaxTotalHeaderLength :: Int,
+    appEnvTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed

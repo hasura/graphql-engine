@@ -68,6 +68,7 @@ import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Headers
+import Hasura.Server.Types (TriggersErrorLogLevelStatus, isTriggersErrorLogLevelEnabled)
 import Hasura.Session (SessionVariables)
 import Hasura.Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -207,11 +208,13 @@ instance J.ToJSON (HTTPRespExtra a) where
         Nothing -> updateReqDetail v "original_request"
         Just _ -> updateReqDetail v "transformed_request"
 
-instance ToEngineLog (HTTPRespExtra 'EventType) Hasura where
-  toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
+data HTTPRespExtraLog a = HTTPRespExtraLog {_hrelLevel :: !LogLevel, _hrelpayload :: HTTPRespExtra a}
 
-instance ToEngineLog (HTTPRespExtra 'ScheduledType) Hasura where
-  toEngineLog resp = (LevelInfo, scheduledTriggerLogType, J.toJSON resp)
+instance ToEngineLog (HTTPRespExtraLog 'EventType) Hasura where
+  toEngineLog (HTTPRespExtraLog level resp) = (level, eventTriggerLogType, J.toJSON resp)
+
+instance ToEngineLog (HTTPRespExtraLog 'ScheduledType) Hasura where
+  toEngineLog (HTTPRespExtraLog level resp) = (level, scheduledTriggerLogType, J.toJSON resp)
 
 isNetworkError :: HTTPErr a -> Bool
 isNetworkError = \case
@@ -251,6 +254,25 @@ instance J.ToJSON HTTPReq where
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
 
+logHTTPForTriggers ::
+  ( MonadReader r m,
+    Has (Logger Hasura) r,
+    MonadIO m,
+    ToEngineLog (HTTPRespExtraLog a) Hasura
+  ) =>
+  Either (HTTPErr a) (HTTPResp a) ->
+  ExtraLogContext ->
+  RequestDetails ->
+  Text ->
+  [HeaderConf] ->
+  TriggersErrorLogLevelStatus ->
+  m ()
+logHTTPForTriggers eitherResp extraLogCtx reqDetails webhookVarName logHeaders triggersErrorLogLevelStatus = do
+  logger :: Logger Hasura <- asks getter
+  case (eitherResp, isTriggersErrorLogLevelEnabled triggersErrorLogLevelStatus) of
+    (Left _, True) -> unLogger logger $ HTTPRespExtraLog LevelError $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+    (_, _) -> unLogger logger $ HTTPRespExtraLog LevelInfo $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+
 logHTTPForET ::
   ( MonadReader r m,
     Has (Logger Hasura) r,
@@ -261,10 +283,9 @@ logHTTPForET ::
   RequestDetails ->
   Text ->
   [HeaderConf] ->
+  TriggersErrorLogLevelStatus ->
   m ()
-logHTTPForET eitherResp extraLogCtx reqDetails webhookVarName logHeaders = do
-  logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+logHTTPForET = logHTTPForTriggers
 
 logHTTPForST ::
   ( MonadReader r m,
@@ -276,10 +297,9 @@ logHTTPForST ::
   RequestDetails ->
   Text ->
   [HeaderConf] ->
+  TriggersErrorLogLevelStatus ->
   m ()
-logHTTPForST eitherResp extraLogCtx reqDetails webhookVarName logHeaders = do
-  logger :: Logger Hasura <- asks getter
-  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx reqDetails webhookVarName logHeaders
+logHTTPForST = logHTTPForTriggers
 
 runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
 runHTTP manager req = do

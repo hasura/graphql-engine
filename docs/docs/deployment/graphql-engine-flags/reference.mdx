@@ -352,6 +352,18 @@ Sets the maximum cumulative length of all headers in bytes.
 | **Default**         | `1024*1024` (1MB)                        |
 | **Supported in**    | CE, Enterprise Edition                   |
 
+### Enable Error Log Level for Trigger Errors
+
+Sets the log-level as `error` for Trigger type error logs (Event Triggers, Scheduled Triggers, Cron Triggers).
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-triggers-error-log-level`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL` |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition                           |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).

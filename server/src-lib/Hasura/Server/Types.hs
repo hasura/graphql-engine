@@ -16,7 +16,9 @@ module Hasura.Server.Types
     CheckFeatureFlag (..),
     getRequestId,
     ApolloFederationStatus (..),
+    TriggersErrorLogLevelStatus (..),
     isApolloFederationEnabled,
+    isTriggersErrorLogLevelEnabled,
     GranularPrometheusMetricsState (..),
     OpenTelemetryExporterState (..),
     CloseWebsocketsOnMetadataChangeStatus (..),
@@ -164,6 +166,20 @@ isApolloFederationEnabled = \case
 
 instance ToJSON ApolloFederationStatus where
   toJSON = toJSON . isApolloFederationEnabled
+
+data TriggersErrorLogLevelStatus = TriggersErrorLogLevelEnabled | TriggersErrorLogLevelDisabled
+  deriving stock (Show, Eq, Ord, Generic)
+
+instance FromJSON TriggersErrorLogLevelStatus where
+  parseJSON = fmap (bool TriggersErrorLogLevelDisabled TriggersErrorLogLevelEnabled) . parseJSON
+
+isTriggersErrorLogLevelEnabled :: TriggersErrorLogLevelStatus -> Bool
+isTriggersErrorLogLevelEnabled = \case
+  TriggersErrorLogLevelEnabled -> True
+  TriggersErrorLogLevelDisabled -> False
+
+instance ToJSON TriggersErrorLogLevelStatus where
+  toJSON = toJSON . isTriggersErrorLogLevelEnabled
 
 -- | Whether or not to enable granular metrics for Prometheus.
 --

@@ -484,7 +484,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvCheckFeatureFlag = ceCheckFeatureFlag env,
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing,
-          appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength
+          appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
+          appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus
         }
     )
 
@@ -1275,6 +1276,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           appEnvServerMetrics
           (pmEventTriggerMetrics appEnvPrometheusMetrics)
           appEnvEnableMaintenanceMode
+          appEnvTriggersErrorLogLevelStatus
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
@@ -1346,6 +1348,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           (pmScheduledTriggerMetrics appEnvPrometheusMetrics)
           (getSchemaCache appStateRef)
           lockedEventsCtx
+          appEnvTriggersErrorLogLevelStatus
 
 runInSeparateTx ::
   PG.TxE QErr a ->

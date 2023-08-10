@@ -309,8 +309,9 @@ processEventQueue ::
   ServerMetrics ->
   EventTriggerMetrics ->
   MaintenanceMode () ->
+  TriggersErrorLogLevelStatus ->
   m (Forever m)
-processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode = do
+processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx activeEventProcessingThreads LockedEventsCtx {leEvents} serverMetrics eventTriggerMetrics maintenanceMode triggersErrorLogLevelStatus = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -542,7 +543,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         >>= \reqDetails -> do
                           let request = extractRequest reqDetails
                               logger' res details = do
-                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
+                                logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus
                                 liftIO $ do
                                   case res of
                                     Left _err -> pure ()
