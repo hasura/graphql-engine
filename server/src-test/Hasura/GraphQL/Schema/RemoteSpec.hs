@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.RemoteSpec (spec) where
@@ -125,10 +126,11 @@ mkTestVariableValues vars = runIdentity
 
 buildQueryParsers ::
   RemoteSchemaIntrospection ->
+  RemoteSchemaCustomizer ->
   IO (P.FieldParser TestMonad (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))
-buildQueryParsers introspection = do
+buildQueryParsers introspection customizer = do
   let introResult = IntrospectionResult introspection GName._Query Nothing Nothing
-      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef (EnvRecord "" N.nullURI) [] False 60 Nothing) identityCustomizer
+      remoteSchemaInfo = RemoteSchemaInfo (ValidatedRemoteSchemaDef (EnvRecord "" N.nullURI) [] False 60 Nothing) customizer
       remoteSchemaRels = mempty
       schemaContext =
         SchemaContext
@@ -161,6 +163,24 @@ runQueryParser parser (varDefs, selSet) vars = runIdentity . runError $ do
     _ -> error "expecting only one field in the query"
   runTest (P.fParser parser field) `onLeft` (throw500 . fromErrorMessage)
 
+runWithSchemaCustomizer ::
+  -- | schema
+  Text ->
+  -- | query
+  Text ->
+  -- | variables
+  LBS.ByteString ->
+  -- | Schema customizer
+  RemoteSchemaCustomizer ->
+  IO (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
+runWithSchemaCustomizer schema query variables customizer = do
+  parser <- buildQueryParsers (mkTestRemoteSchema schema) customizer
+  pure
+    $ runQueryParser
+      parser
+      (mkTestExecutableDocument query)
+      (mkTestVariableValues variables)
+
 run ::
   -- | schema
   Text ->
@@ -169,13 +189,8 @@ run ::
   -- | variables
   LBS.ByteString ->
   IO (GraphQLField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable)
-run schema query variables = do
-  parser <- buildQueryParsers $ mkTestRemoteSchema schema
-  pure
-    $ runQueryParser
-      parser
-      (mkTestExecutableDocument query)
-      (mkTestVariableValues variables)
+run schema query variables =
+  runWithSchemaCustomizer schema query variables identityCustomizer
 
 -- actual test
 
@@ -189,6 +204,7 @@ spec = do
   testAbsentValuesWithDefault
   testPartialVarExpansionIfPreset
   testVariableSubstitutionCollision
+  testVariablesNullInlineWhenSchemaCustomized
 
 testNoVarExpansionIfNoPreset :: Spec
 testNoVarExpansionIfNoPreset = it "variables aren't expanded if there's no preset" $ do
@@ -539,6 +555,47 @@ query($a: [Int], $b: [String]) {
   "b": []
 }
 |]
+
+-- | Regression test for https://github.com/hasura/graphql-engine/issues/9757
+testVariablesNullInlineWhenSchemaCustomized :: Spec
+testVariablesNullInlineWhenSchemaCustomized = it "inline input variable null value for nullable scalar field when schema type is altered" $ do
+  field <-
+    runWithSchemaCustomizer
+      -- schema
+      [raw|
+scalar SomeInt
+scalar Int
+
+type Query {
+  test(a: SomeInt): Int
+}
+|]
+      -- query
+      [raw|
+query ($a: CustomInt) {
+  test(a: $a)
+}
+|]
+      -- variables
+      [raw|
+{
+  "a": null
+}
+|]
+      -- customizer
+      ( RemoteSchemaCustomizer
+          Nothing
+          (HashMap.singleton $$(G.litName "SomeInt") $$(G.litName "CustomInt"))
+          mempty
+      )
+
+  let arg = head $ HashMap.toList $ _fArguments field
+  arg
+    `shouldBe` ( _a,
+                 -- fieldOptional has peeled the variable;  Since the type is customized,
+                 -- null value is forwarded without variable
+                 G.VNull
+               )
 
 -- | Convenience function to focus on a 'G.VVariable' when pulling test values
 -- out in 'testVariableSubstitutionCollision'.
