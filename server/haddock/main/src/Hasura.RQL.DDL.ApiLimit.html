@@ -18,39 +18,39 @@
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier">MonadGetPolicies</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span id="local-6989586621687589327"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#runSetApiLimits"><span class="hs-identifier hs-type">runSetApiLimits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589327"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589327"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589327"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589327"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-21"></span><span id="local-6989586621687589433"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#runSetApiLimits"><span class="hs-identifier hs-type">runSetApiLimits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589433"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589433"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589433"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589433"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-23"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#ApiLimit"><span class="hs-identifier hs-type">ApiLimit</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-24"></span><span>  </span><span class="annot"><a href="#local-6989586621687589327"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="#local-6989586621687589433"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-25"></span><span id="runSetApiLimits"><span class="annot"><span class="annottext">runSetApiLimits :: forall (m :: * -&gt; *).
 (MonadError QErr m, MetadataM m, CacheRWM m, MonadGetPolicies m) =&gt;
 ApiLimit -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.ApiLimit.html#runSetApiLimits"><span class="hs-identifier hs-var hs-var">runSetApiLimits</span></a></span></span><span> </span><span id="local-6989586621687589431"><span class="annot"><span class="annottext">ApiLimit
-</span><a href="#local-6989586621687589431"><span class="hs-identifier hs-var">al</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687589432"><span class="annot"><span class="annottext">userTimeLimitAPILimit :: Maybe MaxTime
-</span><a href="#local-6989586621687589432"><span class="hs-identifier hs-var hs-var">userTimeLimitAPILimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Limit MaxTime -&gt; MaxTime
+</span><a href="Hasura.RQL.DDL.ApiLimit.html#runSetApiLimits"><span class="hs-identifier hs-var hs-var">runSetApiLimits</span></a></span></span><span> </span><span id="local-6989586621687589537"><span class="annot"><span class="annottext">ApiLimit
+</span><a href="#local-6989586621687589537"><span class="hs-identifier hs-var">al</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687589538"><span class="annot"><span class="annottext">userTimeLimitAPILimit :: Maybe MaxTime
+</span><a href="#local-6989586621687589538"><span class="hs-identifier hs-var hs-var">userTimeLimitAPILimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Limit MaxTime -&gt; MaxTime
 forall a. Limit a -&gt; a
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_lGlobal"><span class="hs-identifier hs-var">_lGlobal</span></a></span><span> </span><span class="annot"><span class="annottext">(Limit MaxTime -&gt; MaxTime)
 -&gt; Maybe (Limit MaxTime) -&gt; Maybe MaxTime
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ApiLimit -&gt; Maybe (Limit MaxTime)
 </span><a href="Hasura.RQL.Types.ApiLimit.html#_alTimeLimit"><span class="hs-identifier hs-var">_alTimeLimit</span></a></span><span> </span><span class="annot"><span class="annottext">ApiLimit
-</span><a href="#local-6989586621687589431"><span class="hs-identifier hs-var">al</span></a></span><span>
+</span><a href="#local-6989586621687589537"><span class="hs-identifier hs-var">al</span></a></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-comment">-- If both user time limit and cloud limit are present then check if the user time limit API limit is greater than the</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-comment">-- cloud time limit API limit. Otheriwse, apply the API limit configuration (without the warning).</span><span>
-</span><span id="line-29"></span><span>  </span><span id="local-6989586621687589436"><span class="annot"><span class="annottext">Either MetadataWarning ()
-</span><a href="#local-6989586621687589436"><span class="hs-identifier hs-var">warningResultEither</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe MaxTime -&gt; m (Either MetadataWarning ())
+</span><span id="line-29"></span><span>  </span><span id="local-6989586621687589542"><span class="annot"><span class="annottext">Either MetadataWarning ()
+</span><a href="#local-6989586621687589542"><span class="hs-identifier hs-var">warningResultEither</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe MaxTime -&gt; m (Either MetadataWarning ())
 forall (m :: * -&gt; *).
 MonadGetPolicies m =&gt;
 Maybe MaxTime -&gt; m (Either MetadataWarning ())
 </span><a href="Hasura.RQL.DDL.ApiLimit.html#compareTimeLimitWith"><span class="hs-identifier hs-var">compareTimeLimitWith</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe MaxTime
-</span><a href="#local-6989586621687589432"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span>
+</span><a href="#local-6989586621687589538"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either MetadataWarning ()
-</span><a href="#local-6989586621687589436"><span class="hs-identifier hs-var">warningResultEither</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687589437"><span class="annot"><span class="annottext">MetadataWarning
-</span><a href="#local-6989586621687589437"><span class="hs-identifier hs-var">warning</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621687589438"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621687589438"><span class="hs-identifier hs-var">successMsgWithWarning</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StateT MetadataWarnings m () -&gt; m EncJSON
+</span><a href="#local-6989586621687589542"><span class="hs-identifier hs-var">warningResultEither</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621687589543"><span class="annot"><span class="annottext">MetadataWarning
+</span><a href="#local-6989586621687589543"><span class="hs-identifier hs-var">warning</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621687589544"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621687589544"><span class="hs-identifier hs-var">successMsgWithWarning</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StateT MetadataWarnings m () -&gt; m EncJSON
 forall (m :: * -&gt; *).
 Monad m =&gt;
 StateT MetadataWarnings m () -&gt; m EncJSON
@@ -60,18 +60,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MetadataWarning -&gt; StateT MetadataWarnings m ()
 forall (m :: * -&gt; *). MonadWarnings m =&gt; MetadataWarning -&gt; m ()
 </span><a href="Hasura.RQL.DDL.Warnings.html#warn"><span class="hs-identifier hs-var">warn</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataWarning
-</span><a href="#local-6989586621687589437"><span class="hs-identifier hs-var">warning</span></a></span><span>
+</span><a href="#local-6989586621687589543"><span class="hs-identifier hs-var">warning</span></a></span><span>
 </span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
-</span><a href="#local-6989586621687589441"><span class="hs-identifier hs-var">setApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621687589438"><span class="hs-identifier hs-var">successMsgWithWarning</span></a></span><span>
+</span><a href="#local-6989586621687589547"><span class="hs-identifier hs-var">setApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621687589544"><span class="hs-identifier hs-var">successMsgWithWarning</span></a></span><span>
 </span><span id="line-34"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="annot"><span class="annottext">()
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
-</span><a href="#local-6989586621687589441"><span class="hs-identifier hs-var">setApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621687589547"><span class="hs-identifier hs-var">setApiLimit</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>    </span><span id="local-6989586621687589441"><span class="annot"><span class="annottext">setApiLimit :: EncJSON -&gt; m EncJSON
-</span><a href="#local-6989586621687589441"><span class="hs-identifier hs-var hs-var">setApiLimit</span></a></span></span><span> </span><span id="local-6989586621687589443"><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621687589443"><span class="hs-identifier hs-var">successMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621687589547"><span class="annot"><span class="annottext">setApiLimit :: EncJSON -&gt; m EncJSON
+</span><a href="#local-6989586621687589547"><span class="hs-identifier hs-var hs-var">setApiLimit</span></a></span></span><span> </span><span id="local-6989586621687589549"><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621687589549"><span class="hs-identifier hs-var">successMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span>
@@ -96,38 +96,38 @@ Lens' Metadata ApiLimit
 -&gt; ApiLimit -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-22cda9c87ba0895fb01b8d672783a02a3b5a739dc983952e7bf80db110d44a27/share/doc/html/src/Control.Lens.Setter.html#.~"><span class="hs-operator hs-var">.~</span></a></span><span> </span><span class="annot"><span class="annottext">ApiLimit
-</span><a href="#local-6989586621687589431"><span class="hs-identifier hs-var">al</span></a></span><span>
+</span><a href="#local-6989586621687589537"><span class="hs-identifier hs-var">al</span></a></span><span>
 </span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
-</span><a href="#local-6989586621687589443"><span class="hs-identifier hs-var">successMessage</span></a></span><span>
+</span><a href="#local-6989586621687589549"><span class="hs-identifier hs-var">successMessage</span></a></span><span>
 </span><span id="line-43"></span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- This function compares the user time_limit and the cloud time_limit (used in both set_api_limit and replace_metadata</span><span>
 </span><span id="line-45"></span><span class="hs-comment">-- APIs). The function returns either a metadata warning or `()`</span><span>
-</span><span id="line-46"></span><span id="local-6989586621687589351"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#compareTimeLimitWith"><span class="hs-identifier hs-type">compareTimeLimitWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589351"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687589351"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Warnings.html#MetadataWarning"><span class="hs-identifier hs-type">MetadataWarning</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-46"></span><span id="local-6989586621687589457"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#compareTimeLimitWith"><span class="hs-identifier hs-type">compareTimeLimitWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#MonadGetPolicies"><span class="hs-identifier hs-type">MonadGetPolicies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589457"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687589457"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Warnings.html#MetadataWarning"><span class="hs-identifier hs-type">MetadataWarning</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-47"></span><span id="compareTimeLimitWith"><span class="annot"><span class="annottext">compareTimeLimitWith :: forall (m :: * -&gt; *).
 MonadGetPolicies m =&gt;
 Maybe MaxTime -&gt; m (Either MetadataWarning ())
-</span><a href="Hasura.RQL.DDL.ApiLimit.html#compareTimeLimitWith"><span class="hs-identifier hs-var hs-var">compareTimeLimitWith</span></a></span></span><span> </span><span id="local-6989586621687589458"><span class="annot"><span class="annottext">Maybe MaxTime
-</span><a href="#local-6989586621687589458"><span class="hs-identifier hs-var">userTimeLimitMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621687589459"><span class="annot"><span class="annottext">Maybe MaxTime
-</span><a href="#local-6989586621687589459"><span class="hs-identifier hs-var">cloudApiTimeLimit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe MaxTime)
+</span><a href="Hasura.RQL.DDL.ApiLimit.html#compareTimeLimitWith"><span class="hs-identifier hs-var hs-var">compareTimeLimitWith</span></a></span></span><span> </span><span id="local-6989586621687589564"><span class="annot"><span class="annottext">Maybe MaxTime
+</span><a href="#local-6989586621687589564"><span class="hs-identifier hs-var">userTimeLimitMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621687589565"><span class="annot"><span class="annottext">Maybe MaxTime
+</span><a href="#local-6989586621687589565"><span class="hs-identifier hs-var">cloudApiTimeLimit</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe MaxTime)
 forall (m :: * -&gt; *). MonadGetPolicies m =&gt; m (Maybe MaxTime)
 </span><a href="Hasura.Server.Types.html#runGetApiTimeLimit"><span class="hs-identifier hs-var">runGetApiTimeLimit</span></a></span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687589461"><span class="annot"><span class="annottext">compareTimeLimitResultEither :: Either MetadataWarning ()
-</span><a href="#local-6989586621687589461"><span class="hs-identifier hs-var hs-var">compareTimeLimitResultEither</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687589567"><span class="annot"><span class="annottext">compareTimeLimitResultEither :: Either MetadataWarning ()
+</span><a href="#local-6989586621687589567"><span class="hs-identifier hs-var hs-var">compareTimeLimitResultEither</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe MaxTime
-</span><a href="#local-6989586621687589458"><span class="hs-identifier hs-var">userTimeLimitMaybe</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe MaxTime
-</span><a href="#local-6989586621687589459"><span class="hs-identifier hs-var">cloudApiTimeLimit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-51"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687589462"><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589462"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687589463"><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589463"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621687589564"><span class="hs-identifier hs-var">userTimeLimitMaybe</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe MaxTime
+</span><a href="#local-6989586621687589565"><span class="hs-identifier hs-var">cloudApiTimeLimit</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-51"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687589568"><span class="annot"><span class="annottext">MaxTime
+</span><a href="#local-6989586621687589568"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687589569"><span class="annot"><span class="annottext">MaxTime
+</span><a href="#local-6989586621687589569"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-52"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589462"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; MaxTime -&gt; Bool
+</span><a href="#local-6989586621687589568"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; MaxTime -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589463"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span>
+</span><a href="#local-6989586621687589569"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span>
 </span><span id="line-53"></span><span>              </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">MetadataWarning -&gt; Either MetadataWarning ()
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(MetadataWarning -&gt; Either MetadataWarning ())
@@ -135,8 +135,8 @@ forall a b. a -&gt; Either a b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; MaxTime -&gt; MetadataWarning
 </span><a href="Hasura.RQL.DDL.ApiLimit.html#warningMessage"><span class="hs-identifier hs-var">warningMessage</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589462"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589463"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span>
+</span><a href="#local-6989586621687589568"><span class="hs-identifier hs-var">userTimeLimitAPILimit</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
+</span><a href="#local-6989586621687589569"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span>
 </span><span id="line-54"></span><span>              </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">() -&gt; Either MetadataWarning ()
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -148,14 +148,14 @@ forall a b. b -&gt; Either a b
 forall a. a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Either MetadataWarning ()
-</span><a href="#local-6989586621687589461"><span class="hs-identifier hs-var">compareTimeLimitResultEither</span></a></span><span>
+</span><a href="#local-6989586621687589567"><span class="hs-identifier hs-var">compareTimeLimitResultEither</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="hs-comment">-- warning message if the user time limit API limit is greater than the cloud time limit API limit</span><span>
 </span><span id="line-59"></span><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#warningMessage"><span class="hs-identifier hs-type">warningMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ApiLimit.html#MaxTime"><span class="hs-identifier hs-type">MaxTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Warnings.html#MetadataWarning"><span class="hs-identifier hs-type">MetadataWarning</span></a></span><span>
 </span><span id="line-60"></span><span id="warningMessage"><span class="annot"><span class="annottext">warningMessage :: MaxTime -&gt; MaxTime -&gt; MetadataWarning
-</span><a href="Hasura.RQL.DDL.ApiLimit.html#warningMessage"><span class="hs-identifier hs-var hs-var">warningMessage</span></a></span></span><span> </span><span id="local-6989586621687589465"><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589465"><span class="hs-identifier hs-var">userTimeLimit</span></a></span></span><span> </span><span id="local-6989586621687589466"><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589466"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.ApiLimit.html#warningMessage"><span class="hs-identifier hs-var hs-var">warningMessage</span></a></span></span><span> </span><span id="local-6989586621687589571"><span class="annot"><span class="annottext">MaxTime
+</span><a href="#local-6989586621687589571"><span class="hs-identifier hs-var">userTimeLimit</span></a></span></span><span> </span><span id="local-6989586621687589572"><span class="annot"><span class="annottext">MaxTime
+</span><a href="#local-6989586621687589572"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">WarningCode -&gt; MetadataObjId -&gt; Text -&gt; MetadataWarning
 </span><a href="Hasura.RQL.DDL.Warnings.html#MetadataWarning"><span class="hs-identifier hs-var">MetadataWarning</span></a></span><span> </span><span class="annot"><span class="annottext">WarningCode
 </span><a href="Hasura.RQL.DDL.Warnings.html#WCTimeLimitExceededSystemLimit"><span class="hs-identifier hs-var">WCTimeLimitExceededSystemLimit</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
@@ -174,7 +174,7 @@ forall a. Show a =&gt; a -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; Seconds
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxTime"><span class="hs-identifier hs-var">unMaxTime</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589465"><span class="hs-identifier hs-var">userTimeLimit</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687589571"><span class="hs-identifier hs-var">userTimeLimit</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -188,7 +188,7 @@ forall a. Show a =&gt; a -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; Seconds
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxTime"><span class="hs-identifier hs-var">unMaxTime</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589466"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687589572"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -202,15 +202,15 @@ forall a. Show a =&gt; a -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxTime -&gt; Seconds
 </span><a href="Hasura.RQL.Types.ApiLimit.html#unMaxTime"><span class="hs-identifier hs-var">unMaxTime</span></a></span><span> </span><span class="annot"><span class="annottext">MaxTime
-</span><a href="#local-6989586621687589466"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687589572"><span class="hs-identifier hs-var">cloudTimeLimit</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; will be applied&quot;</span></span><span>
 </span><span id="line-69"></span><span>
-</span><span id="line-70"></span><span id="local-6989586621687589384"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#runRemoveApiLimits"><span class="hs-identifier hs-type">runRemoveApiLimits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589384"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589384"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589384"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621687589384"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-70"></span><span id="local-6989586621687589490"><span class="annot"><a href="Hasura.RQL.DDL.ApiLimit.html#runRemoveApiLimits"><span class="hs-identifier hs-type">runRemoveApiLimits</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589490"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589490"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687589490"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="#local-6989586621687589490"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-73"></span><span id="runRemoveApiLimits"><span class="annot"><span class="annottext">runRemoveApiLimits :: forall (m :: * -&gt; *).
 (MonadError QErr m, MetadataM m, CacheRWM m) =&gt;
 m EncJSON
