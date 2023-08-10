@@ -303,6 +303,26 @@ consider investigating the subscription query and see if indexes can help improv
 | Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100          |
 | Labels | `subscription_kind`: streaming \| live-query, `operation_name`, `parameterized_query_hash` |
 
+#### WebSocket Egress
+
+The total size of WebSocket messages sent in bytes.
+
+|        |                                              |
+| ------ | -------------------------------------------- |
+| Name   | `hasura_websocket_messages_sent_bytes_total` |
+| Type   | Counter                                      |
+| Labels | `operation_name`, `parameterized_query_hash` |
+
+#### WebSocket Ingress
+
+The total size of WebSocket messages received in bytes.
+
+|        |                                                  |
+| ------ | ------------------------------------------------ |
+| Name   | `hasura_websocket_messages_received_bytes_total` |
+| Type   | Counter                                          |
+| Labels | none                                             |
+
 #### Websocket Message Queue Time
 
 The time for which a websocket message remains queued in the GraphQL engine's websocket queue.

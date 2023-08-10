@@ -71,7 +71,7 @@ data PrometheusMetrics = PrometheusMetrics
     pmGraphQLRequestMetrics :: GraphQLRequestMetrics,
     pmEventTriggerMetrics :: EventTriggerMetrics,
     pmWebSocketBytesReceived :: Counter,
-    pmWebSocketBytesSent :: Counter,
+    pmWebSocketBytesSent :: CounterVector DynamicSubscriptionLabel,
     pmActionBytesReceived :: Counter,
     pmActionBytesSent :: Counter,
     pmScheduledTriggerMetrics :: ScheduledTriggerMetrics,
@@ -157,7 +157,7 @@ makeDummyPrometheusMetrics = do
   pmGraphQLRequestMetrics <- makeDummyGraphQLRequestMetrics
   pmEventTriggerMetrics <- makeDummyEventTriggerMetrics
   pmWebSocketBytesReceived <- Counter.new
-  pmWebSocketBytesSent <- Counter.new
+  pmWebSocketBytesSent <- CounterVector.new
   pmActionBytesReceived <- Counter.new
   pmActionBytesSent <- Counter.new
   pmScheduledTriggerMetrics <- makeDummyScheduledTriggerMetrics
@@ -336,7 +336,7 @@ liveQuerySubscriptionLabel :: SubscriptionKindLabel
 liveQuerySubscriptionLabel = SubscriptionKindLabel "live-query"
 
 data DynamicSubscriptionLabel = DynamicSubscriptionLabel
-  { _dslParamQueryHash :: ParameterizedQueryHash,
+  { _dslParamQueryHash :: Maybe ParameterizedQueryHash,
     _dslOperationName :: Maybe OperationName
   }
   deriving stock (Generic, Ord, Eq)
@@ -344,7 +344,7 @@ data DynamicSubscriptionLabel = DynamicSubscriptionLabel
 instance ToLabels DynamicSubscriptionLabel where
   toLabels (DynamicSubscriptionLabel hash opName) =
     Map.fromList
-      $ [("parameterized_query_hash", bsToTxt $ unParamQueryHash hash)]
+      $ maybe [] (\pqh -> [("parameterized_query_hash", bsToTxt $ unParamQueryHash pqh)]) hash
       <> maybe [] (\op -> [("operation_name", G.unName $ _unOperationName op)]) opName
 
 data SubscriptionLabel = SubscriptionLabel
@@ -416,7 +416,7 @@ recordSubcriptionMetric getMetricState alwaysObserve operationNamesMap parameter
   -- if no operation names are present, then emit metric with only param query hash as dynamic label
   if (null operationNamesMap)
     then do
-      let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash Nothing)
+      let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) Nothing)
           promMetricLabel = SubscriptionLabel subscriptionKind Nothing
       recordMetricWithLabel
         getMetricState
@@ -427,7 +427,7 @@ recordSubcriptionMetric getMetricState alwaysObserve operationNamesMap parameter
     do
       let operationNames = HashMap.keys operationNamesMap
       for_ operationNames $ \opName -> do
-        let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel parameterizedQueryHash opName)
+        let promMetricGranularLabel = SubscriptionLabel subscriptionKind (Just $ DynamicSubscriptionLabel (Just parameterizedQueryHash) opName)
             promMetricLabel = SubscriptionLabel subscriptionKind Nothing
         recordMetricWithLabel
           getMetricState
