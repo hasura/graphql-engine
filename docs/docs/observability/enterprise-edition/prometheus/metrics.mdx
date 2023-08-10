@@ -419,6 +419,26 @@ Current number of active PostgreSQL connections. Compare this to
 | Type   | Gauge                                                                                                                                                                             |
 | Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
 
+### Hasura Postgres Connection Initialization Time
+
+The time taken to establish and initialize a PostgreSQL connection.
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_connection_init_time`                                                                                                                                            |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
+### Hasura Postgres Pool Wait Time
+
+The time taken to acquire a connection from the pool.
+
+|        |                                                                                                                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name   | `hasura_postgres_pool_wait_time`                                                                                                                                                  |
+| Type   | Histogram<br /><br />Buckets: 0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100                                                                                                 |
+| Labels | `source_name`: name of the database<br />`conn_info`: connection url string (password omitted) or name of the connection url environment variable<br />`role`: primary \| replica |
+
 ### Hasura source health
 
 Health check status of a particular data source, corresponding to the output of `/healthz/sources`, with possible values
