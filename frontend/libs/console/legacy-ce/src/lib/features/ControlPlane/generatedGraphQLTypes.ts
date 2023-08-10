@@ -4093,6 +4093,8 @@ export type Config_Status = {
   tenant_id: Scalars['uuid'];
   updated_at: Scalars['timestamptz'];
   worker_id: Scalars['uuid'];
+  /** A computed field, executes function "config_status_worker_state" */
+  worker_state?: Maybe<Scalars['String']>;
 };
 
 /** aggregated selection of "config_status" */
@@ -4169,6 +4171,7 @@ export type Config_Status_Bool_Exp = {
   tenant_id?: Maybe<Uuid_Comparison_Exp>;
   updated_at?: Maybe<Timestamptz_Comparison_Exp>;
   worker_id?: Maybe<Uuid_Comparison_Exp>;
+  worker_state?: Maybe<String_Comparison_Exp>;
 };
 
 /** unique or primary key constraints on table "config_status" */
@@ -4251,6 +4254,7 @@ export type Config_Status_Order_By = {
   tenant_id?: Maybe<Order_By>;
   updated_at?: Maybe<Order_By>;
   worker_id?: Maybe<Order_By>;
+  worker_state?: Maybe<Order_By>;
 };
 
 /** primary key columns input for table: config_status */
@@ -10017,6 +10021,17 @@ export type Ddn_Project_Entitlement_Access_Aggregate = {
   nodes: Array<Ddn_Project_Entitlement_Access>;
 };
 
+export type Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp = {
+  count?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp_Count>;
+};
+
+export type Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp_Count = {
+  arguments?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  distinct?: Maybe<Scalars['Boolean']>;
+  filter?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+  predicate: Int_Comparison_Exp;
+};
+
 /** aggregate fields of "ddn.project_entitlement_access" */
 export type Ddn_Project_Entitlement_Access_Aggregate_Fields = {
   __typename?: 'ddn_project_entitlement_access_aggregate_fields';
@@ -10029,6 +10044,20 @@ export type Ddn_Project_Entitlement_Access_Aggregate_Fields = {
 export type Ddn_Project_Entitlement_Access_Aggregate_FieldsCountArgs = {
   columns?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
   distinct?: Maybe<Scalars['Boolean']>;
+};
+
+/** order by aggregate values of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Aggregate_Order_By = {
+  count?: Maybe<Order_By>;
+  max?: Maybe<Ddn_Project_Entitlement_Access_Max_Order_By>;
+  min?: Maybe<Ddn_Project_Entitlement_Access_Min_Order_By>;
+};
+
+/** input type for inserting array relation for remote table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Arr_Rel_Insert_Input = {
+  data: Array<Ddn_Project_Entitlement_Access_Insert_Input>;
+  /** upsert condition */
+  on_conflict?: Maybe<Ddn_Project_Entitlement_Access_On_Conflict>;
 };
 
 /**
@@ -10075,6 +10104,15 @@ export type Ddn_Project_Entitlement_Access_Max_Fields = {
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
+/** order by max() on columns of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Max_Order_By = {
+  created_at?: Maybe<Order_By>;
+  entitlement_id?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
+};
+
 /** aggregate min on columns */
 export type Ddn_Project_Entitlement_Access_Min_Fields = {
   __typename?: 'ddn_project_entitlement_access_min_fields';
@@ -10083,6 +10121,15 @@ export type Ddn_Project_Entitlement_Access_Min_Fields = {
   id?: Maybe<Scalars['uuid']>;
   project_id?: Maybe<Scalars['uuid']>;
   updated_at?: Maybe<Scalars['timestamp']>;
+};
+
+/** order by min() on columns of table "ddn.project_entitlement_access" */
+export type Ddn_Project_Entitlement_Access_Min_Order_By = {
+  created_at?: Maybe<Order_By>;
+  entitlement_id?: Maybe<Order_By>;
+  id?: Maybe<Order_By>;
+  project_id?: Maybe<Order_By>;
+  updated_at?: Maybe<Order_By>;
 };
 
 /** response of any mutation on the table "ddn.project_entitlement_access" */
@@ -10186,7 +10233,7 @@ export type Ddn_Project_Entitlement_Catalogue = {
   created_at: Scalars['timestamp'];
   id: Scalars['uuid'];
   name: Scalars['String'];
-  type: Scalars['String'];
+  type: Ddn_Project_Entitlement_Types_Enum;
   updated_at: Scalars['timestamp'];
 };
 
@@ -10238,7 +10285,7 @@ export type Ddn_Project_Entitlement_Catalogue_Bool_Exp = {
   created_at?: Maybe<Timestamp_Comparison_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
   name?: Maybe<String_Comparison_Exp>;
-  type?: Maybe<String_Comparison_Exp>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum_Comparison_Exp>;
   updated_at?: Maybe<Timestamp_Comparison_Exp>;
 };
 
@@ -10262,7 +10309,7 @@ export type Ddn_Project_Entitlement_Catalogue_Insert_Input = {
   created_at?: Maybe<Scalars['timestamp']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
@@ -10273,7 +10320,6 @@ export type Ddn_Project_Entitlement_Catalogue_Max_Fields = {
   created_at?: Maybe<Scalars['timestamp']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
@@ -10284,7 +10330,6 @@ export type Ddn_Project_Entitlement_Catalogue_Min_Fields = {
   created_at?: Maybe<Scalars['timestamp']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
@@ -10352,7 +10397,7 @@ export type Ddn_Project_Entitlement_Catalogue_Set_Input = {
   created_at?: Maybe<Scalars['timestamp']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
@@ -10389,7 +10434,7 @@ export type Ddn_Project_Entitlement_Catalogue_Stream_Cursor_Value_Input = {
   created_at?: Maybe<Scalars['timestamp']>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
   updated_at?: Maybe<Scalars['timestamp']>;
 };
 
@@ -10490,6 +10535,27 @@ export enum Ddn_Project_Entitlement_Types_Constraint {
   ProjectEntitlementTypesPkey = 'project_entitlement_types_pkey',
 }
 
+export enum Ddn_Project_Entitlement_Types_Enum {
+  /** Maximum number of builds a v3 project can have at once */
+  BuildLimit = 'build_limit',
+  /** Maximum number of builds a v3 project can have at once */
+  EnvironmentLimit = 'environment_limit',
+  /** Maximum size in for a serialized metadata artifact */
+  MetadataSizeLimit = 'metadata_size_limit',
+}
+
+/**
+ * Boolean expression to compare columns of type
+ * "ddn_project_entitlement_types_enum". All fields are combined with logical 'AND'.
+ */
+export type Ddn_Project_Entitlement_Types_Enum_Comparison_Exp = {
+  _eq?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  _in?: Maybe<Array<Ddn_Project_Entitlement_Types_Enum>>;
+  _is_null?: Maybe<Scalars['Boolean']>;
+  _neq?: Maybe<Ddn_Project_Entitlement_Types_Enum>;
+  _nin?: Maybe<Array<Ddn_Project_Entitlement_Types_Enum>>;
+};
+
 /** input type for inserting data into table "ddn.project_entitlement_types" */
 export type Ddn_Project_Entitlement_Types_Insert_Input = {
   comment?: Maybe<Scalars['String']>;
@@ -10589,6 +10655,10 @@ export type Ddn_Projects = {
   builds_aggregate: Ddn_Build_Aggregate;
   created_at: Scalars['timestamptz'];
   /** An array relationship */
+  entitlements: Array<Ddn_Project_Entitlement_Access>;
+  /** An aggregate relationship */
+  entitlements_aggregate: Ddn_Project_Entitlement_Access_Aggregate;
+  /** An array relationship */
   environments: Array<Ddn_Environment>;
   /** An aggregate relationship */
   environments_aggregate: Ddn_Environment_Aggregate;
@@ -10616,6 +10686,24 @@ export type Ddn_ProjectsBuilds_AggregateArgs = {
   offset?: Maybe<Scalars['Int']>;
   order_by?: Maybe<Array<Ddn_Build_Order_By>>;
   where?: Maybe<Ddn_Build_Bool_Exp>;
+};
+
+/** columns and relationships of "ddn.projects" */
+export type Ddn_ProjectsEntitlementsArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+};
+
+/** columns and relationships of "ddn.projects" */
+export type Ddn_ProjectsEntitlements_AggregateArgs = {
+  distinct_on?: Maybe<Array<Ddn_Project_Entitlement_Access_Select_Column>>;
+  limit?: Maybe<Scalars['Int']>;
+  offset?: Maybe<Scalars['Int']>;
+  order_by?: Maybe<Array<Ddn_Project_Entitlement_Access_Order_By>>;
+  where?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
 };
 
 /** columns and relationships of "ddn.projects" */
@@ -10665,6 +10753,8 @@ export type Ddn_Projects_Bool_Exp = {
   builds?: Maybe<Ddn_Build_Bool_Exp>;
   builds_aggregate?: Maybe<Ddn_Build_Aggregate_Bool_Exp>;
   created_at?: Maybe<Timestamptz_Comparison_Exp>;
+  entitlements?: Maybe<Ddn_Project_Entitlement_Access_Bool_Exp>;
+  entitlements_aggregate?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Bool_Exp>;
   environments?: Maybe<Ddn_Environment_Bool_Exp>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Bool_Exp>;
   id?: Maybe<Uuid_Comparison_Exp>;
@@ -10686,6 +10776,7 @@ export enum Ddn_Projects_Constraint {
 export type Ddn_Projects_Insert_Input = {
   builds?: Maybe<Ddn_Build_Arr_Rel_Insert_Input>;
   created_at?: Maybe<Scalars['timestamptz']>;
+  entitlements?: Maybe<Ddn_Project_Entitlement_Access_Arr_Rel_Insert_Input>;
   environments?: Maybe<Ddn_Environment_Arr_Rel_Insert_Input>;
   id?: Maybe<Scalars['uuid']>;
   name?: Maybe<Scalars['String']>;
@@ -10741,6 +10832,7 @@ export type Ddn_Projects_On_Conflict = {
 export type Ddn_Projects_Order_By = {
   builds_aggregate?: Maybe<Ddn_Build_Aggregate_Order_By>;
   created_at?: Maybe<Order_By>;
+  entitlements_aggregate?: Maybe<Ddn_Project_Entitlement_Access_Aggregate_Order_By>;
   environments_aggregate?: Maybe<Ddn_Environment_Aggregate_Order_By>;
   id?: Maybe<Order_By>;
   name?: Maybe<Order_By>;
@@ -82461,13 +82553,9 @@ export type FetchConfigStatusSubscriptionVariables = Exact<{
 
 export type FetchConfigStatusSubscription = {
   __typename?: 'subscription_root';
-  hasura_worker: Array<{
-    __typename?: 'hasura_worker';
-    config_statuses: Array<{
-      __typename?: 'config_status';
-      hash: string;
-      message?: string | null;
-      worker_id: any;
-    }>;
+  config_status: Array<{
+    __typename?: 'config_status';
+    hash: string;
+    message?: string | null;
   }>;
 };

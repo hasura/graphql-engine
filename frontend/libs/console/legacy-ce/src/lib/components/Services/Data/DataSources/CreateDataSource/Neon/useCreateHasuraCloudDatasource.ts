@@ -182,17 +182,9 @@ export function useCreateHasuraCloudDatasource(
                 tenantId: Globals.hasuraCloudTenantId,
               },
               data => {
-                const configStatusData = data.hasura_worker
-                  .map(config_status_obj =>
-                    config_status_obj.config_statuses.map(
-                      config_data => config_data
-                    )
-                  )
-                  .flat(1);
-
                 if (
                   // check if all workers are successfully configured with the new hash
-                  configStatusData.every(
+                  data.config_status.every(
                     config =>
                       config.message === 'Service configured successfully' &&
                       config.hash !== oldConfigHash
