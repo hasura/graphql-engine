@@ -8,6 +8,7 @@ module Hasura.Server.Prometheus
     GraphQLRequestMetrics (..),
     EventTriggerMetrics (..),
     CacheRequestMetrics (..),
+    OpenTelemetryMetrics (..),
     makeDummyPrometheusMetrics,
     ConnectionsGauge,
     Connections (..),
@@ -77,7 +78,8 @@ data PrometheusMetrics = PrometheusMetrics
     pmSubscriptionMetrics :: SubscriptionMetrics,
     pmWebsocketMsgQueueTimeSeconds :: Histogram,
     pmWebsocketMsgWriteTimeSeconds :: Histogram,
-    pmCacheRequestMetrics :: CacheRequestMetrics
+    pmCacheRequestMetrics :: CacheRequestMetrics,
+    pmOpenTelemetryMetrics :: OpenTelemetryMetrics
   }
 
 data GraphQLRequestMetrics = GraphQLRequestMetrics
@@ -133,6 +135,20 @@ data CacheRequestMetrics = CacheRequestMetrics
     crmCacheMisses :: Counter
   }
 
+-- | Metrics related to OTel telemetry export; for now the volume of logs and
+-- trace spans shipped, and counts of log lines and spans dropped due to high
+-- volume.
+data OpenTelemetryMetrics = OpenTelemetryMetrics
+  { otmSentSpans :: Counter,
+    -- | Dropped due to the send buffer being full
+    otmDroppedSpansInBuffer :: Counter,
+    -- | Dropped due to some error (after retrying) when sending to collector
+    otmDroppedSpansInSend :: Counter,
+    otmSentLogs :: Counter,
+    otmDroppedLogsInBuffer :: Counter,
+    otmDroppedLogsInSend :: Counter
+  }
+
 -- | Create dummy mutable references without associating them to a metrics
 -- store.
 makeDummyPrometheusMetrics :: IO PrometheusMetrics
@@ -149,6 +165,7 @@ makeDummyPrometheusMetrics = do
   pmWebsocketMsgQueueTimeSeconds <- Histogram.new []
   pmWebsocketMsgWriteTimeSeconds <- Histogram.new []
   pmCacheRequestMetrics <- makeDummyCacheRequestMetrics
+  pmOpenTelemetryMetrics <- makeDummyOpenTelemetryMetrics
   pure PrometheusMetrics {..}
 
 makeDummyGraphQLRequestMetrics :: IO GraphQLRequestMetrics
@@ -208,6 +225,16 @@ makeDummyCacheRequestMetrics = do
   crmCacheHits <- Counter.new
   crmCacheMisses <- Counter.new
   pure CacheRequestMetrics {..}
+
+makeDummyOpenTelemetryMetrics :: IO OpenTelemetryMetrics
+makeDummyOpenTelemetryMetrics = do
+  otmSentSpans <- Counter.new
+  otmDroppedSpansInSend <- Counter.new
+  otmDroppedSpansInBuffer <- Counter.new
+  otmSentLogs <- Counter.new
+  otmDroppedLogsInSend <- Counter.new
+  otmDroppedLogsInBuffer <- Counter.new
+  pure OpenTelemetryMetrics {..}
 
 --------------------------------------------------------------------------------
 

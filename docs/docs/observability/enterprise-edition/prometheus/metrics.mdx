@@ -430,3 +430,30 @@ Health check status of a particular data source, corresponding to the output of 
 | Name   | `hasura_source_health`              |
 | Type   | Gauge                               |
 | Labels | `source_name`: name of the database |
+
+### OpenTelemetry OTLP Export Metrics
+
+These metrics allow for monitoring the reliability and performance of OTLP
+exports of telemetry data.
+
+#### Hasura OTLP Sent Spans
+
+Total number of successfully exported trace spans.
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_otel_sent_spans`                                       |
+| Type   | Counter                                                        |
+| Labels | none                                                           |
+
+#### Hasura OTLP Dropped Spans
+
+Total number of trace spans dropped due to either high trace volume that filled
+the buffer, or errors during send (e.g. a timeout or error response from the
+collector).
+
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| Name   | `hasura_otel_dropped_spans`                                    |
+| Type   | Counter                                                        |
+| Labels | `reason`: buffer_full \| send_failed                           |
