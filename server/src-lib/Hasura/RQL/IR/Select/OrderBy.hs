@@ -28,6 +28,9 @@ data AnnotatedOrderByElement (b :: BackendType) v
       -- | This type is used to determine whether the column should be redacted
       -- before being ordered over
       (AnnRedactionExp b v)
+  | AOCNestedObject
+      (NestedObjectInfo b)
+      (AnnotatedOrderByElement b v)
   | AOCObjectRelation
       (RelInfo b)
       -- | Permission filter of the remote table to which the relationship is defined

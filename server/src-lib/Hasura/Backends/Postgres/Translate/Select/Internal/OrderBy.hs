@@ -270,6 +270,7 @@ processOrderByItems sourcePrefix' selectSourceQual fieldAlias' similarArrayField
               S.applyJsonBuildObj [S.SELit $ getPGColTxt $ ciColumn colInfo, valExp]
             ]
 
+        annObColToJSONField :: S.SQLExp -> AnnotatedOrderByElement ('Postgres pgKind) v -> [S.SQLExp]
         annObColToJSONField valExp = \case
           AOCColumn pgCol _redactionExp -> [S.SELit $ getPGColTxt $ ciColumn pgCol, valExp]
           AOCObjectRelation relInfo _ obCol ->

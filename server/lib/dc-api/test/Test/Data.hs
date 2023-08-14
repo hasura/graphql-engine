@@ -797,7 +797,7 @@ scalarValueComparison value valueType = API.ScalarValueComparison $ API.ScalarVa
 
 orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn columnName Nothing) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn (API.mkColumnSelector columnName) Nothing) orderDirection
 
 insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
 insertAutoIncPk pkFieldName startingPkId rows =

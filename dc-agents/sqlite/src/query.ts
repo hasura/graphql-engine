@@ -228,7 +228,7 @@ function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, qu
   const path = comparisonColumn.path ?? [];
   const queryTablePrefix = queryTableAlias ? `${queryTableAlias}.` : '';
   const currentTablePrefix = currentTableAlias ? `${currentTableAlias}.` : '';
-  const selector = getComparisonColumnSelector(comparisonColumn);
+  const selector = getColumnSelector(comparisonColumn.name);
   if (path.length === 0) {
     return `${currentTablePrefix}${escapeIdentifier(selector)}`
   } else if (path.length === 1 && path[0] === "$") {
@@ -610,7 +610,7 @@ function generateOrderByAggregateTargetJoinInfo(
 
 function getOrderByTargetAlias(orderByTarget: OrderByTarget): string {
   switch (orderByTarget.type) {
-    case "column": return escapeIdentifier(orderByTarget.column);
+    case "column": return escapeIdentifier(getColumnSelector(orderByTarget.column));
     case "star_count_aggregate": return escapeIdentifier("__star_count__");
     case "single_column_aggregate": return escapeIdentifier(`__${orderByTarget.function}_${orderByTarget.column}__`);
     default:
@@ -883,8 +883,8 @@ type AnalysisEntry = {
   detail: string
 }
 
-const getComparisonColumnSelector = (comparisonColumn: ComparisonColumn): string => {
-  if (typeof comparisonColumn.name === "string")
-    return comparisonColumn.name;
-  return comparisonColumn.name[0];
+const getColumnSelector = (columnSelector: string | Array<string>): string => {
+  if (typeof columnSelector === "string")
+    return columnSelector;
+  return columnSelector[0];
 }

@@ -28,6 +28,10 @@ module Hasura.Backends.DataConnector.Plan.Common
     mkRelationshipName,
     mapFieldNameHashMap,
     encodeAssocListAsObject,
+    ColumnStack,
+    emptyColumnStack,
+    pushColumn,
+    toColumnSelector,
   )
 where
 

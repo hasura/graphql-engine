@@ -95,10 +95,10 @@ const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator):
   };
 };
 
-const getComparisonColumnSelector = (comparisonColumn: ComparisonColumn): string => {
-  if (typeof comparisonColumn.name === "string")
-    return comparisonColumn.name;
-  return comparisonColumn.name[0];
+const getColumnSelector = (columnSelector: string | Array<string>): string => {
+  if (typeof columnSelector === "string")
+    return columnSelector;
+  return columnSelector[0];
 }
 
 const prettyPrintComparisonColumn = (comparisonColumn: ComparisonColumn): string => {
@@ -257,9 +257,10 @@ const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, order
   if (relationshipName === undefined) {
     switch (orderByElement.target.type) {
       case "column":
+        const columnSelector = getColumnSelector(orderByElement.target.column);
         return {
           fields: {
-            [orderByElement.target.column]: { type: "column", column: orderByElement.target.column, column_type: "unknown" } // Unknown column type here is a hack because we don't actually know what the column type is and we don't care
+            [columnSelector]: { type: "column", column: columnSelector, column_type: "unknown" } // Unknown column type here is a hack because we don't actually know what the column type is and we don't care
           }
         };
       case "single_column_aggregate":
@@ -309,7 +310,7 @@ const extractResultFromOrderByElementQueryResponse = (orderByElement: OrderByEle
         if (rows.length > 1)
           throw new Error(`Unexpected number of rows (${rows.length}) returned by order by element query`);
 
-        const fieldValue = rows.length === 1 ? rows[0][orderByElement.target.column] : null;
+        const fieldValue = rows.length === 1 ? rows[0][getColumnSelector(orderByElement.target.column)] : null;
         if (fieldValue !== null && typeof fieldValue === "object")
           throw new Error("Column order by target path did not end in a column field value");
 
@@ -346,7 +347,7 @@ const makeGetOrderByElementValue = (
   if (relationshipName === undefined) {
     if (orderByElement.target.type !== "column")
       throw new Error(`Cannot perform an order by target of type ${orderByElement.target.type} on the current table. Only column-typed targets are supported.`)
-    return applyRedaction(row, orderByElement.target.redaction_expression, coerceUndefinedToNull(row[orderByElement.target.column]));
+    return applyRedaction(row, orderByElement.target.redaction_expression, coerceUndefinedToNull(row[getColumnSelector(orderByElement.target.column)]));
   } else {
     const relationship = findRelationship(relationshipName);
     const orderByRelation = orderByRelations[relationshipName];
@@ -522,12 +523,12 @@ const addRelationshipFilterToQuery = (row: Record<string, RawScalarValue>, relat
 const makeGetComparisonColumnValue = (parentQueryRowChain: Record<string, RawScalarValue>[], applyRedaction: ApplyRedaction) => (comparisonColumn: ComparisonColumn, row: Record<string, RawScalarValue>): RawScalarValue => {
   const path = comparisonColumn.path ?? [];
   if (path.length === 0) {
-    return applyRedaction(row, comparisonColumn.redaction_expression, coerceUndefinedToNull(row[getComparisonColumnSelector(comparisonColumn)]));
+    return applyRedaction(row, comparisonColumn.redaction_expression, coerceUndefinedToNull(row[getColumnSelector(comparisonColumn.name)]));
   } else if (path.length === 1 && path[0] === "$") {
     const queryRow = parentQueryRowChain.length === 0
       ? row
       : parentQueryRowChain[0];
-    return coerceUndefinedToNull(queryRow[getComparisonColumnSelector(comparisonColumn)]);
+    return coerceUndefinedToNull(queryRow[getColumnSelector(comparisonColumn.name)]);
   } else {
     throw new Error(`Unsupported path on ComparisonColumn: ${prettyPrintComparisonColumn(comparisonColumn)}`);
   }

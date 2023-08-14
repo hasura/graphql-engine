@@ -12,8 +12,7 @@ import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.AggregateSpec (genSingleColumnAggregate)
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
-import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression, genRedactionExpressionName)
+import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genColumnSelector, genExpression, genRedactionExpressionName)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
@@ -28,7 +27,7 @@ spec = do
   describe "OrderByTarget" $ do
     describe "OrderByColumn"
       $ testToFromJSONToSchema
-        (OrderByColumn (ColumnName "test_column") (Just $ RedactionExpressionName "RedactionExp2"))
+        (OrderByColumn (mkColumnSelector $ ColumnName "test_column") (Just $ RedactionExpressionName "RedactionExp2"))
         [aesonQQ|
           { "type": "column",
             "column": "test_column",
@@ -58,7 +57,7 @@ spec = do
     testToFromJSONToSchema
       ( OrderByElement
           [RelationshipName "relation1", RelationshipName "relation2"]
-          (OrderByColumn (ColumnName "my_column_name") (Just $ RedactionExpressionName "RedactionExp2"))
+          (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") (Just $ RedactionExpressionName "RedactionExp2"))
           Ascending
       )
       [aesonQQ|
@@ -148,7 +147,7 @@ genOrderByElement =
 genOrderByTarget :: Gen OrderByTarget
 genOrderByTarget =
   Gen.choice
-    [ OrderByColumn <$> genColumnName <*> Gen.maybe genRedactionExpressionName,
+    [ OrderByColumn <$> genColumnSelector <*> Gen.maybe genRedactionExpressionName,
       pure OrderByStarCountAggregate,
       OrderBySingleColumnAggregate <$> genSingleColumnAggregate
     ]
