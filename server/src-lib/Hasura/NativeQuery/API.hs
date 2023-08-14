@@ -22,7 +22,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as InsOrdHashMap
 import Data.Text.Extended (toTxt, (<<>))
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.LogicalModelResolver.Codec (nativeQueryOrTableRelationshipsCodec, nativeQueryRelationshipsCodec)
+import Hasura.LogicalModelResolver.Codec (nativeQueryRelationshipsCodec)
 import Hasura.LogicalModelResolver.Metadata (LogicalModelIdentifier)
 import Hasura.NativeQuery.Metadata (ArgumentName, NativeQueryMetadata (..), parseInterpolatedQuery)
 import Hasura.NativeQuery.Types (NativeQueryName, NullableScalarType)
@@ -38,7 +38,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig, RelManualNativeQueryConfig)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Hasura.SQL.AnyBackend qualified as AB
 
 -- | Default implementation of the 'track_native_query' request payload.
@@ -47,7 +47,7 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap ArgumentName (NullableScalarType b),
-    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
+    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelIdentifier b
@@ -69,7 +69,7 @@ instance (Backend b) => HasCodec (TrackNativeQuery b) where
       AC..= tnqArguments
         <*> AC.optionalFieldWithDefaultWith "array_relationships" nativeQueryRelationshipsCodec mempty arrayRelationshipsDoc
       AC..= tnqArrayRelationships
-        <*> AC.optionalFieldWithDefaultWith "object_relationships" nativeQueryOrTableRelationshipsCodec mempty objectRelationshipsDoc
+        <*> AC.optionalFieldWithDefaultWith "object_relationships" nativeQueryRelationshipsCodec mempty objectRelationshipsDoc
       AC..= tnqObjectRelationships
         <*> AC.optionalField "description" descriptionDoc
       AC..= tnqDescription

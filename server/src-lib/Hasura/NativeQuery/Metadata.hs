@@ -28,7 +28,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common (RelName, SourceName, ToAesonPairs (toAesonPairs), defaultSource)
-import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..), RelManualNativeQueryConfig (..))
+import Hasura.RQL.Types.Relationships.Local (RelDef (..), RelManualConfig (..))
 
 -- | copy pasta'd from Hasura.RQL.Types.Metadata.Common, forgive me Padre i did
 -- not have the heart for the Real Fix.
@@ -42,7 +42,7 @@ data NativeQueryMetadata (b :: BackendType) = NativeQueryMetadata
     _nqmCode :: InterpolatedQuery ArgumentName,
     _nqmReturns :: LogicalModelIdentifier b,
     _nqmArguments :: HashMap ArgumentName (NullableScalarType b),
-    _nqmArrayRelationships :: Relationships (RelDef (RelManualNativeQueryConfig b)),
+    _nqmArrayRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmObjectRelationships :: Relationships (RelDef (RelManualConfig b)),
     _nqmDescription :: Maybe Text
   }

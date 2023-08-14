@@ -12,7 +12,6 @@ import Data.Has (Has (getter))
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Set qualified as S
-import Hasura.Base.Error (throw500)
 import Hasura.GraphQL.Schema.Backend
   ( BackendLogicalModelSelectSchema (..),
     BackendNativeQuerySelectSchema (..),
@@ -344,11 +343,11 @@ nativeQueryRelationshipField ri | riType ri == ObjRel = runMaybeT do
             $ IR.AnnObjectSelectG fields (IR.FromTable otherTableName)
             $ IR._tpFilter
             $ tablePermissionsInfo remotePerms
-nativeQueryRelationshipField ri = runMaybeT do
+nativeQueryRelationshipField ri = do
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
   case riTarget ri of
-    RelTargetNativeQuery nativeQueryName -> do
+    RelTargetNativeQuery nativeQueryName -> runMaybeT $ do
       nativeQueryInfo <- askNativeQueryInfo nativeQueryName
-      relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
 
       let objectRelDesc = Just $ G.Description "An array relationship"
           arrayNullability = Nullable
@@ -356,11 +355,22 @@ nativeQueryRelationshipField ri = runMaybeT do
 
       nativeQueryParser <-
         MaybeT $ selectNativeQuery nativeQueryInfo relFieldName arrayNullability objectRelDesc
+
       pure
         $ nativeQueryParser
         <&> \selectExp ->
           IR.AFArrayRelation
             $ IR.ASSimple
             $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
-    RelTargetTable _otherTableName -> do
-      throw500 "Array relationships from logical models to tables are not implemented"
+    RelTargetTable otherTableName -> runMaybeT $ do
+      let arrayRelDesc = Just $ G.Description "An array relationship"
+
+      otherTableInfo <- lift $ askTableInfo otherTableName
+      otherTableParser <- MaybeT $ selectTable otherTableInfo relFieldName arrayRelDesc
+      let arrayRelField =
+            otherTableParser <&> \selectExp ->
+              IR.AFArrayRelation
+                $ IR.ASSimple
+                $ IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable
+                $ selectExp
+      pure arrayRelField
