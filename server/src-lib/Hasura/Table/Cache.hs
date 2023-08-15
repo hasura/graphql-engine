@@ -90,7 +90,6 @@ module Hasura.Table.Cache
     _FIComputedField,
     _FIRelationship,
     _FIRemoteRelationship,
-    setFieldNameCase,
   )
 where
 
@@ -122,7 +121,6 @@ import Data.List.Extended (duplicates)
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
-import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
@@ -137,12 +135,10 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
-import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..), ValidateInput (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles (RoleName, adminRoleName)
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend (runBackend)
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
@@ -1317,20 +1313,3 @@ mkAdminRolePermInfo tableInfo =
     s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
     u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing HashMap.empty False mempty Nothing
     d = DelPermInfo tableName annBoolExpTrue False mempty Nothing
-
--- | Builds field name with proper case. Please note that this is a pure
---   function as all the validation has already been done while preparing
---   @GQLNameIdentifier@.
-setFieldNameCase ::
-  NamingCase ->
-  TableInfo b ->
-  CustomRootField ->
-  (C.GQLNameIdentifier -> C.GQLNameIdentifier) ->
-  C.GQLNameIdentifier ->
-  G.Name
-setFieldNameCase tCase tInfo crf getFieldName tableName =
-  (applyFieldNameCaseIdentifier tCase fieldIdentifier)
-  where
-    tccName = fmap C.fromCustomName . _tcCustomName . _tciCustomConfig . _tiCoreInfo $ tInfo
-    crfName = fmap C.fromCustomName (_crfName crf)
-    fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
