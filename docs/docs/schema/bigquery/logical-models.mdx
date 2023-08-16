@@ -1,10 +1,11 @@
 ---
-slug: index
+sidebar_label: Logical Models
+sidebar_position: 4
 description: Customize the Hasura GraphQL schema with Logical Models
 keywords:
   - hasura
   - docs
-  - postgres
+  - bigquery
   - schema
   - Logical Models
   - Native Queries
@@ -14,26 +15,24 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Postgres: Logical Models
+# BigQuery: Logical Models
 
 ## Introduction
 
 :::tip Supported from
 
-- Hasura Cloud: `v2.26.0`.
-- Hasura Enterprise Edition: `v2.26.0`.
-- Hasura Community Edition: `v2.28.0`.
+Logical Models are supported from `v2.26.0`.
 
 :::
 
 Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
 
 Logical Models are a new approach from Hasura and are currently used by the
-[Native Queries](/schema/postgres/logical-models/native-queries.mdx) feature to automatically create a GraphQL API for a
+[Native Queries](/schema/bigquery/native-queries.mdx) feature to automatically create a GraphQL API for a
 native database query.
 
 You can find examples of how to use Logical Models in the
-[Native Queries](/schema/postgres/logical-models/native-queries.mdx) documentation. For a more detailed explanation of
+[Native Queries](/schema/bigquery/native-queries.mdx) documentation. For a more detailed explanation of
 Logical Models themselves, read on.
 
 ## Tracking a Logical Model
@@ -58,7 +57,7 @@ file:
     - name: "<name>"
       fields:
         "<field name>":
-          type: "<PostgreSQL field type>"
+          type: "<BigQuery field type>"
           nullable: false | true
           description: "<optional field description>"
         ...
@@ -76,14 +75,14 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "bigquery_track_logical_model",
   "args": {
     "source": "default",
     "name": "<name>",
     "fields": [
       {
         "name": "<field name>",
-        "type": "<PostgreSQL field type>",
+        "type": "<BigQuery field type>",
         "nullable": false | true,
         "description": "<optional field description>"
       },
@@ -96,8 +95,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-The type of each field can be either a [PostgreSQL data type](/schema/postgres/postgresql-types.mdx) or references to
-other Logical Models, and each field can be marked as nullable or not, see
+The type of each field can be either a [BigQuery data type](/schema/bigquery/bigquery-types.mdx) or references to other
+Logical Models, and each field can be marked as nullable or not, see
 [LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
 
 <Tabs groupId="user-preference" className="api-tabs">
@@ -143,16 +142,13 @@ logical_models:
 
 <TabItem value="api" label="API">
 
-For example, we could track a representation of an article with excerpts as follows, by defining the fields we want to
-be able to return:
-
 ```http
 POST /v1/metadata HTTP/1.1
 Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_track_logical_model",
+  "type": "bigquery_track_logical_model",
   "args": {
     "source": "default",
     "name": "article",
@@ -228,7 +224,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_untrack_logical_model",
+  "type": "bigquery_untrack_logical_model",
   "args": {
     "source": "default",
     "name": "<name>"
@@ -251,8 +247,11 @@ To untrack the above `article` Logical Model, we would run the following:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
-
+<Thumbnail
+  src="/img/native-queries/delete-logical-model.png"
+  alt="Delete Logical Model"
+  width="800px"
+/>
 </TabItem>
 
 <TabItem value="cli" label="CLI">
@@ -269,7 +268,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_untrack_logical_model",
+  "type": "bigquery_untrack_logical_model",
   "args": {
     "source": "default",
     "name": "article"
@@ -301,7 +300,7 @@ X-Hasura-Role: admin
   "args":
   [
     {
-      "type": "pg_track_logical_model",
+      "type": "bigquery_track_logical_model",
       "args": {
         "source": "default",
         "name": "article",
@@ -345,7 +344,7 @@ X-Hasura-Role: admin
       }
     },
     {
-      "type": "pg_track_logical_model",
+      "type": "bigquery_track_logical_model",
       "args": {
         "source": "default",
         "name": "author",
@@ -442,7 +441,7 @@ Add the required permissions to the relevant logical model in `metadata > databa
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/postgres/query-filters.mdx). To allow all
+The filter is the same boolean expression syntax as [query filters](/queries/bigquery/query-filters.mdx). To allow all
 rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 ```http
@@ -451,7 +450,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_logical_model_select_permission",
+  "type": "bigquery_create_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",
@@ -514,7 +513,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_create_logical_model_select_permission",
+  "type": "bigquery_create_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "article",
@@ -541,7 +540,9 @@ You can also drop permissions:
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
-  <Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
+<Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
 </TabItem>
 
 <TabItem value="cli" label="CLI">
@@ -558,7 +559,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-  "type": "pg_drop_logical_model_select_permission",
+  "type": "bigquery_drop_logical_model_select_permission",
   "args": {
     "source": "default",
     "name": "<logical model name>",

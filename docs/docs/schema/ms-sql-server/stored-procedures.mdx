@@ -1,6 +1,6 @@
 ---
-sidebar_label: Stored procedures
-sidebar_position: 6
+sidebar_label: Extend with Stored procedures
+sidebar_position: 3.1
 description: Customize the Hasura GraphQL schema with stored procedures
 keywords:
   - hasura
@@ -9,7 +9,6 @@ keywords:
   - schema
   - logical models
   - stored procedures
-sidebar_class_name: beta-tag
 ---
 
 import ProductBadge from '@site/src/components/ProductBadge';
@@ -21,7 +20,6 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 <div className="badge-container">
   <ProductBadge standard pro ee self />
-  <div className="badge badge-gray heading-badge">Beta</div>
 </div>
 
 ## What are stored procedures?
@@ -52,7 +50,7 @@ this time.
 
 We’ll start with an example. Let’s use this new feature to execute a built-in stored procedure from our Hasura API. If
 you’d like some reference documentation, scroll down, and also take a look at the
-[Logical Models documentation](/schema/ms-sql-server/logical-models/index.mdx).
+[Logical Models documentation](/schema/ms-sql-server/logical-models.mdx).
 
 For our case, we would like to get some information about our database. Specifically, which tables are currently defined
 in the database. On SQL Server we can do that by executing the
@@ -276,7 +274,7 @@ In order to represent the structure of the data returned by the query, we first 
 :::info Permissions and Logical Models
 
 Note that this Logical Model has no attached permissions and therefore will only be available to the admin role. See the
-[Logical Model documentation](/schema/ms-sql-server/logical-models/index.mdx) for information on attaching permissions.
+[Logical Model documentation](/schema/ms-sql-server/logical-models.mdx) for information on attaching permissions.
 
 :::
 
@@ -451,5 +449,5 @@ A future release will allow mutations to be specified using stored procedures.
 ## Permissions
 
 stored procedures will inherit the permissions of the Logical Model that they return. See the
-[documentation on Logical Models](/schema/ms-sql-server/logical-models/index.mdx) for an explanation of how to add
+[documentation on Logical Models](/schema/ms-sql-server/logical-models.mdx) for an explanation of how to add
 permissions.
