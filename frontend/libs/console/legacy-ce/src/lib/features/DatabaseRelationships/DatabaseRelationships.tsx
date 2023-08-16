@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../new-components/Button';
-import { useFireNotification } from '../../new-components/Notifications';
 import {
   MetadataSelectors,
   useMetadata,
   useSyncResourceVersionOnMount,
 } from '../hasura-metadata-api';
-import { Table } from '../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  Table,
+  isBulkAtomicResponseError,
+} from '../hasura-metadata-types';
 import { AvailableRelationshipsList } from './components/AvailableRelationshipsList/AvailableRelationshipsList';
 import Legend from './components/Legend';
 import { RenderWidget } from './components/RenderWidget/RenderWidget';
@@ -19,6 +22,9 @@ import { Feature } from '../DataSource';
 import Skeleton from 'react-loading-skeleton';
 import { useAppDispatch } from '../../storeHooks';
 import { updateSchemaInfo } from '../../components/Services/Data/DataActions';
+import { DisplayToastErrorMessage } from '../Data/components/DisplayErrorMessage';
+import { hasuraToast } from '../../new-components/Toasts';
+import { safeParseErrors } from './hooks/useCreateTableRelationships/utils';
 
 export interface DatabaseRelationshipsProps {
   dataSourceName: string;
@@ -36,7 +42,6 @@ export const DatabaseRelationships = ({
     mode: undefined,
     relationship: undefined,
   });
-  const { fireNotification } = useFireNotification();
 
   const { data: driver } = useMetadata(
     m => MetadataSelectors.findSource(dataSourceName)(m)?.kind
@@ -67,7 +72,7 @@ export const DatabaseRelationships = ({
 
   const onError = (err: Error) => {
     if (mode) {
-      fireNotification({
+      hasuraToast({
         type: 'error',
         title: NOTIFICATIONS.onError[mode],
         message: err?.message ?? '',
@@ -78,13 +83,26 @@ export const DatabaseRelationships = ({
     }
   };
 
-  const onSuccess = () => {
+  const onSuccess = (data: BulkAtomicResponse) => {
     if (mode) {
-      fireNotification({
-        type: 'success',
-        title: 'Success!',
-        message: NOTIFICATIONS.onSuccess[mode],
-      });
+      const errors = data.filter(isBulkAtomicResponseError);
+
+      if (errors.length) {
+        hasuraToast({
+          type: 'error',
+          title: NOTIFICATIONS.onError[mode],
+          children: (
+            <DisplayToastErrorMessage message={safeParseErrors(errors)} />
+          ),
+        });
+      } else {
+        hasuraToast({
+          type: 'success',
+          title: 'Success!',
+          message: NOTIFICATIONS.onSuccess[mode],
+        });
+      }
+
       if (isLoadSchemaRequired) {
         dispatch(updateSchemaInfo());
       }

@@ -1,4 +1,4 @@
-import { Table } from '../../../hasura-metadata-types';
+import { MetadataError, Table } from '../../../hasura-metadata-types';
 import zipObject from 'lodash/zipObject';
 import {
   CreateTableRelationshipRequestBodyProps,
@@ -277,4 +277,12 @@ export const deleteTableRelationshipRequestBody = (
       relationship: props.name,
     },
   };
+};
+
+export const safeParseErrors = (errors: MetadataError[]) => {
+  try {
+    return errors.map(err => err.error).join('\n');
+  } catch (err) {
+    return JSON.stringify(errors);
+  }
 };

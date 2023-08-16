@@ -1,4 +1,4 @@
-import { Table } from '../../../hasura-metadata-types';
+import { BulkAtomicResponse, Table } from '../../../hasura-metadata-types';
 import { Dialog } from '../../../../new-components/Dialog';
 import { MODE, Relationship } from '../../types';
 import { RelationshipForm } from '../RelationshipForm';
@@ -11,7 +11,7 @@ interface RenderWidgetProps {
   mode: MODE;
   relationship?: Relationship;
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess: (data: BulkAtomicResponse) => void;
   onError: (err: Error) => void;
 }
 

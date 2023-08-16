@@ -1,4 +1,4 @@
-import { Table } from '../../../hasura-metadata-types';
+import { BulkAtomicResponse, Table } from '../../../hasura-metadata-types';
 import { Button } from '../../../../new-components/Button';
 import {
   InputField,
@@ -25,7 +25,7 @@ interface WidgetProps {
   dataSourceName: string;
   table: Table;
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess: (data: BulkAtomicResponse) => void;
   onError: (err: Error) => void;
   defaultValue?: Relationship;
 }
