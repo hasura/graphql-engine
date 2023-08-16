@@ -30,6 +30,9 @@ RUN echo "deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main" > /etc/ap
   # delete all pg tools except pg_dump to keep the image minimal
   && find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
+RUN apt-get -y update \
+  && apt-get -y upgrade
+
 # Cleanup unwanted files and packages
 RUN apt-get -y remove curl gnupg2 \
   && apt-get -y auto-remove \
