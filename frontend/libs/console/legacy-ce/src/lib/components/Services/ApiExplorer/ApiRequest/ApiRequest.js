@@ -176,62 +176,59 @@ class ApiRequest extends Component {
     });
   }
 
-  analyzeBearerToken(e) {
-    const { dispatch } = this.props;
+  analyzeBearerToken(token, dataHeaderIndex) {
+    return () => {
+      const { dispatch } = this.props;
 
-    const token = e.target.getAttribute('token');
+      const analyzingHeaderRow = parseInt(dataHeaderIndex, 10);
 
-    const analyzingHeaderRow = parseInt(
-      e.target.getAttribute('data-header-index'),
-      10
-    );
+      this.setState({
+        isAnalyzingToken: true,
+        analyzingHeaderRow,
+        tokenInfo: {
+          ...this.state.tokenInfo,
+          serverResp: {},
+          error: null,
+        },
+      });
 
-    this.setState({
-      isAnalyzingToken: true,
-      analyzingHeaderRow,
-      tokenInfo: {
-        ...this.state.tokenInfo,
-        serverResp: {},
-        error: null,
-      },
-    });
+      const decodeAndSetState = serverResp => {
+        const decoded = this.state.jwt.decode(token, { complete: true });
 
-    const decodeAndSetState = serverResp => {
-      const decoded = this.jwt.decode(token, { complete: true });
+        if (decoded) {
+          this.setState({
+            tokenInfo: {
+              ...this.state.tokenInfo,
+              header: decoded.header,
+              payload: decoded.payload,
+              error: null,
+              serverResp: serverResp,
+            },
+          });
+        } else {
+          const message =
+            'This JWT seems to be invalid. Please check the token value and try again!';
 
-      if (decoded) {
-        this.setState({
-          tokenInfo: {
-            ...this.state.tokenInfo,
-            header: decoded.header,
-            payload: decoded.payload,
-            error: null,
-            serverResp: serverResp,
-          },
-        });
-      } else {
-        const message =
-          'This JWT seems to be invalid. Please check the token value and try again!';
+          this.setState({
+            tokenInfo: {
+              ...this.state.tokenInfo,
+              error: message,
+              serverResp: serverResp,
+            },
+          });
+        }
+      };
 
-        this.setState({
-          tokenInfo: {
-            ...this.state.tokenInfo,
-            error: message,
-            serverResp: serverResp,
-          },
-        });
+      if (token) {
+        dispatch(verifyJWTToken(token))
+          .then(data => {
+            decodeAndSetState(data);
+          })
+          .catch(err => {
+            decodeAndSetState(err);
+          });
       }
     };
-
-    if (token) {
-      dispatch(verifyJWTToken(token))
-        .then(data => {
-          decodeAndSetState(data);
-        })
-        .catch(err => {
-          decodeAndSetState(err);
-        });
-    }
   }
 
   render() {
@@ -483,9 +480,8 @@ class ApiRequest extends Component {
                 analyzeIcon = (
                   <FaUserSecret
                     className="cursor-pointer mr-sm"
-                    token={token}
                     data-header-index={i}
-                    onClick={this.analyzeBearerToken}
+                    onClick={this.analyzeBearerToken(token, i)}
                   />
                 );
               }
