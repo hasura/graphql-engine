@@ -3216,8 +3216,8 @@ Agent API Request:
     "arguments": null
   },
   "interpolated_queries": {
-    "native_baz_1": ["select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as a"],
-    "native_baz_2": ["select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as x /* ", {"type": "bool", "value": true}," */"]
+    "native_baz_1": [{"type": "text", "value": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as a"}],
+    "native_baz_2": [{"type": "text", "value": "select 'db0d9bd6-ca4e-4eb4-8798-944b9536eb3d' as x /* "}, {"type": "scalar", "value_type": "bool", "value": true}, {"type": "text", "value": " */"}]
   },
   "relationships": [
     {
