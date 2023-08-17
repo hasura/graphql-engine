@@ -5,6 +5,7 @@ module Hasura.LogicalModel.IR
   )
 where
 
+import Data.Aeson (ToJSON (toEncoding), defaultOptions, genericToEncoding)
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Hasura.LogicalModel.Types (LogicalModelField, LogicalModelName)
 import Hasura.Prelude hiding (first)
@@ -21,3 +22,6 @@ data LogicalModel (b :: BackendType) = LogicalModel
 deriving instance (Backend b) => Eq (LogicalModel b)
 
 deriving instance (Backend b) => Show (LogicalModel b)
+
+instance (Backend b) => ToJSON (LogicalModel b) where
+  toEncoding = genericToEncoding defaultOptions

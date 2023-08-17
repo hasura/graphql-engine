@@ -77,10 +77,12 @@ export const nameEquals = (name1: TableName | FunctionName) => (name2: TableName
 
 export const targetNameEquals = (name1: TargetName) => (name2: TargetName): boolean => {
   switch (name1.type) {
-    case "table":
+    case 'table':
       return name2.type === "table" && nameEquals(name1.table)(name2.table);
-    case "function":
+    case 'function':
       return name2.type === "function" && nameEquals(name1.function)(name2.function);
+    case 'interpolated':
+      return name2.type === "interpolated" && name1.interpolated == name2.interpolated;
     default:
       return unreachable(name1["type"]);
   }

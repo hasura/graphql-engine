@@ -12,7 +12,7 @@ import { runRawOperation } from './raw';
 import { DATASETS, DATASET_DELETE, LOG_LEVEL, METRICS, MUTATIONS, PERMISSIVE_CORS, PRETTY_PRINT_LOGS } from './environment';
 import { cloneDataset, deleteDataset, getDataset } from './datasets';
 import { runMutation } from './mutation';
-import { ErrorWithStatusCode } from './util';
+import { ErrorWithStatusCode, unreachable } from './util';
 
 const port = Number(process.env.PORT) || 8100;
 
@@ -132,13 +132,14 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
   const body = request.body;
-  switch(body.type) {
+  switch(body.target.type) {
     case 'function':
       throw new ErrorWithStatusCode(
         "User defined functions not supported in queries",
         500,
-        {function: { name: body.function }}
+        {function: { name: body.target.name }}
       );
+    case 'interpolated': // interpolated should actually work identically to tables when using the CTE pattern
     case 'table':
       try {
         const result : QueryResponse = await queryData(config, sqlLogger, body);
@@ -160,15 +161,19 @@ server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (re
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
   const body = request.body;
-  switch(body.type) {
+  switch(body.target.type) {
     case 'function':
       throw new ErrorWithStatusCode(
         "User defined functions not supported in queries",
         500,
-        {function: { name: body.function }}
+        {function: { name: body.target.name }}
       );
     case 'table':
       return explain(config, sqlLogger, body);
+    case 'interpolated':
+      return explain(config, sqlLogger, body);
+    default:
+      throw(unreachable);
   }
 });
 

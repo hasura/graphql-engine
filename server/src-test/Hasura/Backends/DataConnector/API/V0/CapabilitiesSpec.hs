@@ -140,6 +140,9 @@ genUpdateColumnOperatorDefinition = UpdateColumnOperatorDefinition <$> genScalar
 genRelationshipCapabilities :: (MonadGen m) => m RelationshipCapabilities
 genRelationshipCapabilities = pure RelationshipCapabilities {}
 
+genInterpolatedQueryCapabilities :: (MonadGen m) => m InterpolatedQueryCapabilities
+genInterpolatedQueryCapabilities = pure InterpolatedQueryCapabilities {}
+
 genComparisonCapabilities :: (MonadGen m) => m ComparisonCapabilities
 genComparisonCapabilities =
   ComparisonCapabilities
@@ -177,6 +180,7 @@ genCapabilities =
     <*> Gen.maybe genSubscriptionCapabilities
     <*> genScalarTypesCapabilities
     <*> Gen.maybe genRelationshipCapabilities
+    <*> Gen.maybe genInterpolatedQueryCapabilities
     <*> Gen.maybe genComparisonCapabilities
     <*> Gen.maybe genMetricsCapabilities
     <*> Gen.maybe genExplainCapabilities

@@ -1024,7 +1024,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           _lmiDescription = _nqmDescription,
                           _lmiPermissions = logicalModelPermissions
                         }
-                nqmCode <- validateNativeQuery @b env sourceName (_smConfiguration sourceMetadata) logicalModel preValidationNativeQuery
+                nqmCode <- validateNativeQuery @b env sourceName (_smConfiguration sourceMetadata) sourceConfig logicalModel preValidationNativeQuery
 
                 case maybeDependency of
                   Just dependency ->

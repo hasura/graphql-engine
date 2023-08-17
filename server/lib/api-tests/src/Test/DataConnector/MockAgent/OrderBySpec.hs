@@ -198,7 +198,7 @@ tests = describe "Order By Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Albums",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Album",
+                                { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                 }

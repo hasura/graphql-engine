@@ -274,8 +274,7 @@ tests = do
                       ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
               )
-            & API._QRTable
-            . API.trForeach
+            & API.qrForeach
             ?~ NonEmpty.fromList
               [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
                 HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]
@@ -365,8 +364,7 @@ tests = do
                       ("Title", API.ColumnField (API.ColumnName "Title") (API.ScalarType "string") Nothing)
                     ]
               )
-            & API._QRTable
-            . API.trForeach
+            & API.qrForeach
             ?~ NonEmpty.fromList
               [ HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 3) (API.ScalarType "number"))],
                 HashMap.fromList [(API.ColumnName "AlbumId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
@@ -470,8 +468,7 @@ tests = do
                     & API.qAggregates
                   ?~ mkFieldsMap [("aggregate_count", API.StarCount)]
               )
-            & API._QRTable
-            . API.trForeach
+            & API.qrForeach
             ?~ NonEmpty.fromList
               [ HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 1) (API.ScalarType "number"))],
                 HashMap.fromList [(API.ColumnName "ArtistId", API.ScalarValue (J.Number 2) (API.ScalarType "number"))]

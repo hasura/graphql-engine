@@ -81,7 +81,10 @@ package *
   haddock-internal: true
   -- -----------------------------------------------------------
   -- Allow for dead-code elimination at link-time, to reduce binary size
-  ghc-options: -split-sections
+  if !os(darwin)
+    ghc-options:
+      -split-sections
+
 if(os(linux))
  package *
   -- ld on M1 OSX does not recognise this:

@@ -1,6 +1,6 @@
 import { Config }  from "./config";
 import { defaultMode, SqlLogger, withConnection } from "./db";
-import { coerceUndefinedToNull, coerceUndefinedOrNullToEmptyRecord, isEmptyObject, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode, mapObject } from "./util";
+import { coerceUndefinedToNull, tableNameEquals, unreachable, stringArrayEquals, ErrorWithStatusCode, mapObject } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -24,8 +24,12 @@ import {
     OrderByElement,
     OrderByTarget,
     ScalarValue,
-    TableRequest,
-    FunctionRelationships,
+    InterpolatedRelationships,
+    Target,
+    InterpolatedQueries,
+    Relationships,
+    InterpolatedQuery,
+    InterpolatedItem,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 import { DEBUGGING_TAGS, QUERY_LENGTH_LIMIT } from "./environment";
@@ -84,6 +88,17 @@ export function escapeTableName(tableName: TableName): string {
   return validateTableName(tableName).map(escapeIdentifier).join(".");
 }
 
+export function escapeTargetName(target: Target): string {
+  switch(target.type) {
+    case 'table':
+      return escapeTableName(target.name);
+    case 'interpolated':
+      return escapeTableName([target.id]); // Interpret as CTE reference
+    default:
+      throw(new ErrorWithStatusCode('`escapeTargetName` only implemented for tables and interpolated queries', 500, {target}));
+  }
+}
+
 /**
  * @param tableName
  * @returns escaped tableName string with schema qualification removed
@@ -94,21 +109,18 @@ export function escapeTableNameSansSchema(tableName: TableName): string {
   return escapeTableName(getTableNameSansSchema(tableName));
 }
 
-export function json_object(relationships: TableRelationships[], fields: Fields, table: TableName, tableAlias: string): string {
+export function json_object(all_relationships: Relationships[], fields: Fields, target: Target, tableAlias: string): string {
   const result = Object.entries(fields).map(([fieldName, field]) => {
     switch(field.type) {
       case "column":
         return `${escapeString(fieldName)}, ${escapeIdentifier(field.column)}`;
       case "relationship":
-        const tableRelationships = relationships.find(tr => tableNameEquals(tr.source_table)(table));
-        if (tableRelationships === undefined) {
-          throw new Error(`Couldn't find table relationships for table ${table}`);
-        }
-        const rel = tableRelationships.relationships[field.relationship];
+        const relationships = find_relationships(all_relationships, target);
+        const rel = relationships.relationships[field.relationship];
         if(rel === undefined) {
-          throw new Error(`Couldn't find relationship ${field.relationship} for field ${fieldName} on table ${table}`);
+          throw new Error(`Couldn't find relationship ${field.relationship} for field ${fieldName} on target ${JSON.stringify(target)}`);
         }
-        return `'${fieldName}', ${relationship(relationships, rel, field, tableAlias)}`;
+        return `'${fieldName}', ${relationship(all_relationships, rel, field, tableAlias)}`;
       case "object":
         throw new Error('Unsupported field type "object"');
       case "array":
@@ -121,30 +133,31 @@ export function json_object(relationships: TableRelationships[], fields: Fields,
   return tag('json_object', `JSON_OBJECT(${result})`);
 }
 
-export function where_clause(relationships: TableRelationships[], expression: Expression, queryTableName: TableName, queryTableAlias: string): string {
-  const generateWhere = (expression: Expression, currentTableName: TableName, currentTableAlias: string): string => {
+export function where_clause(relationships: Relationships[], expression: Expression, queryTarget: Target, queryTableAlias: string): string {
+  const generateWhere = (expression: Expression, currentTarget: Target, currentTableAlias: string): string => {
     switch(expression.type) {
       case "not":
-        const aNot = generateWhere(expression.expression, currentTableName, currentTableAlias);
+        const aNot = generateWhere(expression.expression, currentTarget, currentTableAlias);
           return `(NOT ${aNot})`;
 
       case "and":
-        const aAnd = expression.expressions.flatMap(x => generateWhere(x, currentTableName, currentTableAlias));
+        const aAnd = expression.expressions.flatMap(x => generateWhere(x, currentTarget, currentTableAlias));
         return aAnd.length > 0
           ? `(${aAnd.join(" AND ")})`
           : "(1 = 1)" // true
 
       case "or":
-        const aOr = expression.expressions.flatMap(x => generateWhere(x, currentTableName, currentTableAlias));
+        const aOr = expression.expressions.flatMap(x => generateWhere(x, currentTarget, currentTableAlias));
         return aOr.length > 0
           ? `(${aOr.join(" OR ")})`
           : "(1 = 0)" // false
 
       case "exists":
-        const joinInfo = calculateExistsJoinInfo(relationships, expression, currentTableName, currentTableAlias);
-        const subqueryWhere = generateWhere(expression.where, joinInfo.joinTableName, joinInfo.joinTableAlias);
+        const joinInfo = calculateExistsJoinInfo(relationships, expression, currentTarget, currentTableAlias);
+        const tableTarget: Target = joinInfo.joinTarget;
+        const subqueryWhere = generateWhere(expression.where, tableTarget, joinInfo.joinTableAlias);
         const whereComparisons = [...joinInfo.joinComparisonFragments, subqueryWhere].join(" AND ");
-        return tag('exists',`EXISTS (SELECT 1 FROM ${escapeTableName(joinInfo.joinTableName)} AS ${joinInfo.joinTableAlias} WHERE ${whereComparisons})`);
+        return tag('exists',`EXISTS (SELECT 1 FROM ${escapeTargetName(joinInfo.joinTarget)} AS ${joinInfo.joinTableAlias} WHERE ${whereComparisons})`);
 
       case "unary_op":
         const uop = uop_op(expression.operator);
@@ -180,33 +193,33 @@ export function where_clause(relationships: TableRelationships[], expression: Ex
     }
   };
 
-  return generateWhere(expression, queryTableName, queryTableAlias);
+  return generateWhere(expression, queryTarget, queryTableAlias);
 }
 
 type ExistsJoinInfo = {
-  joinTableName: TableName,
+  joinTarget: Target,
   joinTableAlias: string,
   joinComparisonFragments: string[]
 }
 
-function calculateExistsJoinInfo(allTableRelationships: TableRelationships[], exists: ExistsExpression, sourceTableName: TableName, sourceTableAlias: string): ExistsJoinInfo {
+function calculateExistsJoinInfo(allRelationships: Relationships[], exists: ExistsExpression, sourceTarget: Target, sourceTableAlias: string): ExistsJoinInfo {
   switch (exists.in_table.type) {
     case "related":
-      const tableRelationships = find_table_relationship(allTableRelationships, sourceTableName);
+      const tableRelationships = find_relationships(allRelationships, sourceTarget);
       const relationship = tableRelationships.relationships[exists.in_table.relationship];
-      const joinTableAlias = generateTableAlias(relationship.target_table);
+      const joinTableAlias = generateTargetAlias(relationship.target);
 
       const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, joinTableAlias);
 
       return {
-        joinTableName: relationship.target_table,
+        joinTarget: relationship.target,
         joinTableAlias,
         joinComparisonFragments,
       };
 
     case "unrelated":
       return {
-        joinTableName: exists.in_table.table,
+        joinTarget: {type: 'table', name: exists.in_table.table},
         joinTableAlias: generateTableAlias(exists.in_table.table),
         joinComparisonFragments: []
       };
@@ -249,6 +262,17 @@ function generateComparisonValueFragment(comparisonValue: ComparisonValue, query
   }
 }
 
+export function generateTargetAlias(target: Target): string {
+  switch(target.type) {
+    case 'function':
+      throw new ErrorWithStatusCode("Can't create alias for functions", 500, {target});
+    case 'interpolated':
+      return generateTableAlias([target.id]);
+    case 'table':
+      return generateTableAlias(target.name);
+  }
+}
+
 function generateTableAlias(tableName: TableName): string {
   return generateIdentifierAlias(validateTableName(tableName).join("_"))
 }
@@ -264,14 +288,26 @@ function generateIdentifierAlias(identifier: string): string {
  * @param tableName Table Name
  * @returns Relationships matching table-name
  */
-function find_table_relationship(allTableRelationships: TableRelationships[], tableName: TableName): TableRelationships {
-  for(var i = 0; i < allTableRelationships.length; i++) {
-    const r = allTableRelationships[i];
-    if(tableNameEquals(r.source_table)(tableName)) {
-      return r;
-    }
+function find_relationships(allRelationships: Relationships[], target: Target): Relationships {
+  switch(target.type) {
+    case 'table':
+      for(var i = 0; i < allRelationships.length; i++) {
+        const r = allRelationships[i] as TableRelationships;
+        if(r.source_table != undefined && tableNameEquals(r.source_table)(target)) {
+          return r;
+        }
+      }
+      break
+    case 'interpolated':
+      for(var i = 0; i < allRelationships.length; i++) {
+        const r = allRelationships[i] as InterpolatedRelationships;
+        if(r.source_interpolated_query != undefined && r.source_interpolated_query == target.id) {
+          return r;
+        }
+      }
+      break;
   }
-  throw new Error(`Couldn't find table relationships for table ${tableName} - This shouldn't happen.`);
+  throw new Error(`Couldn't find table relationships for target ${JSON.stringify(target)} - This shouldn't happen.`);
 }
 
 function cast_aggregate_function(f: string): string {
@@ -291,8 +327,8 @@ function cast_aggregate_function(f: string): string {
  * Builds an Aggregate query expression.
  */
 function aggregates_query(
-    ts: TableRelationships[],
-    tableName: TableName,
+    allRelationships: Relationships[],
+    target: Target,
     joinInfo: RelationshipJoinInfo | null,
     aggregates: Aggregates,
     wWhere: Expression | null,
@@ -300,14 +336,13 @@ function aggregates_query(
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
-  const tableAlias = generateTableAlias(tableName);
 
-  const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
+  const tableAlias = generateTargetAlias(target);
+  const orderByInfo = orderBy(allRelationships, wOrder, target, tableAlias);
   const orderByJoinClauses = orderByInfo?.joinClauses.join(" ") ?? "";
   const orderByClause = orderByInfo?.orderByClause ?? "";
-
-  const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
-  const sourceSubquery = `SELECT ${tableAlias}.* FROM ${escapeTableName(tableName)} AS ${tableAlias} ${orderByJoinClauses} ${whereClause} ${orderByClause} ${limit(wLimit)} ${offset(wOffset)}`
+  const whereClause = where(allRelationships, wWhere, joinInfo, target, tableAlias);
+  const sourceSubquery = `SELECT ${tableAlias}.* FROM ${escapeTargetName(target)} AS ${tableAlias} ${orderByJoinClauses} ${whereClause} ${orderByClause} ${limit(wLimit)} ${offset(wOffset)}`
 
   const aggregate_pairs = Object.entries(aggregates).map(([k,v]) => {
     switch(v.type) {
@@ -332,9 +367,9 @@ type RelationshipJoinInfo = {
   columnMapping: Record<string, string> // Mapping from source table column name to target table column name
 }
 
-function table_query(
-    ts: TableRelationships[],
-    tableName: TableName,
+function target_query( // TODO: Rename as `target_query`
+    allRelationships: Relationships[],
+    target: Target,
     joinInfo: RelationshipJoinInfo | null,
     fields: Fields | null,
     aggregates: Aggregates | null,
@@ -344,36 +379,46 @@ function table_query(
     wOffset: number | null,
     wOrder: OrderBy | null,
   ): string {
-  const tableAlias      = generateTableAlias(tableName);
-  const aggregateSelect = aggregates ? [aggregates_query(ts, tableName, joinInfo, aggregates, wWhere, aggregatesLimit, wOffset, wOrder)] : [];
+  
+  var tableName;
+
+  // TableNames are resolved from IDs when using NQs.
+  switch(target.type) {
+    case 'table':        tableName = target.name; break;
+    case 'interpolated': tableName = [target.id]; break;
+    case 'function':
+      throw new ErrorWithStatusCode(`Can't execute table_query for UDFs`, 500, {target});
+  }
+
+  const tableAlias      = generateTargetAlias(target);
+  const aggregateSelect = aggregates ? [aggregates_query(allRelationships, target, joinInfo, aggregates, wWhere, aggregatesLimit, wOffset, wOrder)] : [];
   // The use of the JSON function inside JSON_GROUP_ARRAY is necessary from SQLite 3.39.0 due to breaking changes in
   // SQLite. See https://sqlite.org/forum/forumpost/e3b101fb3234272b for more details. This approach still works fine
   // for older versions too.
   const fieldSelect     = fields === null ? [] : [`'rows', JSON_GROUP_ARRAY(JSON(j))`];
   const fieldFrom       = fields === null ? '' : (() => {
-    const whereClause = where(ts, wWhere, joinInfo, tableName, tableAlias);
+    const whereClause = where(allRelationships, wWhere, joinInfo, target, tableAlias);
     // NOTE: The reuse of the 'j' identifier should be safe due to scoping. This is confirmed in testing.
     if(wOrder === null || wOrder.elements.length < 1) {
-      return `FROM ( SELECT ${json_object(ts, fields, tableName, tableAlias)} AS j FROM ${escapeTableName(tableName)} AS ${tableAlias} ${whereClause} ${limit(wLimit)} ${offset(wOffset)})`;
+      return `FROM ( SELECT ${json_object(allRelationships, fields, target, tableAlias)} AS j FROM ${escapeTableName(tableName)} AS ${tableAlias} ${whereClause} ${limit(wLimit)} ${offset(wOffset)})`;
     } else {
-      const orderByInfo = orderBy(ts, wOrder, tableName, tableAlias);
+      const orderByInfo = orderBy(allRelationships, wOrder, target, tableAlias);
       const orderByJoinClauses = orderByInfo?.joinClauses.join(" ") ?? "";
       const orderByClause = orderByInfo?.orderByClause ?? "";
 
       const innerSelect = `SELECT ${tableAlias}.* FROM ${escapeTableName(tableName)} AS ${tableAlias} ${orderByJoinClauses} ${whereClause} ${orderByClause} ${limit(wLimit)} ${offset(wOffset)}`;
 
       const wrappedQueryTableAlias = generateTableAlias(tableName);
-      return `FROM (SELECT ${json_object(ts, fields, tableName, wrappedQueryTableAlias)} AS j FROM (${innerSelect}) AS ${wrappedQueryTableAlias})`;
+      return `FROM (SELECT ${json_object(allRelationships, fields, target, wrappedQueryTableAlias)} AS j FROM (${innerSelect}) AS ${wrappedQueryTableAlias})`;
     }
   })()
 
   return tag('table_query',`(SELECT JSON_OBJECT(${[...fieldSelect, ...aggregateSelect].join(', ')}) ${fieldFrom})`);
 }
 
-function relationship(ts: TableRelationships[], r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
+function relationship(ts: Relationships[], r: Relationship, field: RelationshipField, sourceTableAlias: string): string {
   const relationshipJoinInfo = {
     sourceTableAlias,
-    targetTable: r.target_table,
     columnMapping: r.column_mapping,
   };
 
@@ -384,9 +429,9 @@ function relationship(ts: TableRelationships[], r: Relationship, field: Relation
       ? [1, 1]
       : [coerceUndefinedToNull(field.query.limit), coerceUndefinedToNull(field.query.aggregates_limit)];
 
-  return tag("relationship", table_query(
+  return tag("relationship", target_query(
     ts,
-    r.target_table,
+    r.target,
     relationshipJoinInfo,
     coerceUndefinedToNull(field.query.fields),
     coerceUndefinedToNull(field.query.aggregates),
@@ -446,7 +491,7 @@ type OrderByInfo = {
   orderByClause: string,
 }
 
-function orderBy(allTableRelationships: TableRelationships[], orderBy: OrderBy | null, queryTableName: TableName, queryTableAlias: string): OrderByInfo | null {
+function orderBy(allRelationships: Relationships[], orderBy: OrderBy | null, queryTarget: Target, queryTableAlias: string): OrderByInfo | null {
   if (orderBy === null || orderBy.elements.length < 1) {
     return null;
   }
@@ -454,7 +499,7 @@ function orderBy(allTableRelationships: TableRelationships[], orderBy: OrderBy |
   const joinInfos = Object
     .entries(orderBy.relations)
     .flatMap(([subrelationshipName, subrelation]) =>
-      generateOrderByJoinClause(allTableRelationships, orderBy.elements, [], subrelationshipName, subrelation, queryTableName, queryTableAlias)
+      generateOrderByJoinClause(allRelationships, orderBy.elements, [], subrelationshipName, subrelation, queryTarget, queryTableAlias)
     );
 
   const orderByFragments =
@@ -503,17 +548,17 @@ type OrderByJoinInfo = {
 }
 
 function generateOrderByJoinClause(
-    allTableRelationships: TableRelationships[],
+    allRelationships: Relationships[],
     allOrderByElements: OrderByElement[],
     parentRelationshipNames: string[],
     relationshipName: string,
     orderByRelation: OrderByRelation,
-    sourceTableName: TableName,
+    sourceTarget: Target,
     sourceTableAlias: string
   ): OrderByJoinInfo[] {
   const relationshipPath = [...parentRelationshipNames, relationshipName];
-  const tableRelationships = find_table_relationship(allTableRelationships, sourceTableName);
-  const relationship = tableRelationships.relationships[relationshipName];
+  const relationships = find_relationships(allRelationships, sourceTarget);
+  const relationship = relationships.relationships[relationshipName];
 
   const orderByElements = allOrderByElements.filter(byTargetPath(relationshipPath));
   const columnTargetsExist = orderByElements.some(element => getJoinTableTypeForTarget(element.target) === "column");
@@ -522,12 +567,12 @@ function generateOrderByJoinClause(
   const [columnTargetJoin, subrelationJoinInfo] = (() => {
     const subrelationsExist = Object.keys(orderByRelation.subrelations).length > 0;
     if (columnTargetsExist || subrelationsExist) {
-      const columnTargetJoin = generateOrderByColumnTargetJoinInfo(allTableRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where);
+      const columnTargetJoin = generateOrderByColumnTargetJoinInfo(allRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where);
 
       const subrelationJoinInfo = Object
         .entries(orderByRelation.subrelations)
         .flatMap(([subrelationshipName, subrelation]) =>
-          generateOrderByJoinClause(allTableRelationships, allOrderByElements, relationshipPath, subrelationshipName, subrelation, relationship.target_table, columnTargetJoin.tableAlias)
+          generateOrderByJoinClause(allRelationships, allOrderByElements, relationshipPath, subrelationshipName, subrelation, relationship.target, columnTargetJoin.tableAlias)
         );
 
       return [[columnTargetJoin], subrelationJoinInfo]
@@ -538,7 +583,7 @@ function generateOrderByJoinClause(
   })();
 
   const aggregateTargetJoin = aggregateElements.length > 0
-    ? [generateOrderByAggregateTargetJoinInfo(allTableRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where, aggregateElements)]
+    ? [generateOrderByAggregateTargetJoinInfo(allRelationships, relationshipPath, relationship, sourceTableAlias, orderByRelation.where, aggregateElements)]
     : [];
 
 
@@ -552,19 +597,19 @@ function generateOrderByJoinClause(
 const byTargetPath = (relationshipPath: string[]) => (orderByElement: OrderByElement): boolean => stringArrayEquals(orderByElement.target_path)(relationshipPath);
 
 function generateOrderByColumnTargetJoinInfo(
-    allTableRelationships: TableRelationships[],
+    allRelationships: Relationships[],
     relationshipPath: string[],
     relationship: Relationship,
     sourceTableAlias: string,
     whereExpression: Expression | undefined
   ): OrderByJoinInfo {
-  const targetTableAlias = generateTableAlias(relationship.target_table);
+  const targetTableAlias = generateTargetAlias(relationship.target);
 
   const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, targetTableAlias);
-  const whereComparisons = whereExpression ? [where_clause(allTableRelationships, whereExpression, relationship.target_table, targetTableAlias)] : [];
+  const whereComparisons = whereExpression ? [where_clause(allRelationships, whereExpression, relationship.target, targetTableAlias)] : [];
   const joinOnFragment = [...joinComparisonFragments, ...whereComparisons].join(" AND ");
 
-  const joinClause = tag("columnTargetJoin", `LEFT JOIN ${escapeTableName(relationship.target_table)} AS ${targetTableAlias} ON ${joinOnFragment}`);
+  const joinClause = tag("columnTargetJoin", `LEFT JOIN ${escapeTargetName(relationship.target)} AS ${targetTableAlias} ON ${joinOnFragment}`);
   return {
     joinTableType: "column",
     relationshipPath: relationshipPath,
@@ -574,15 +619,16 @@ function generateOrderByColumnTargetJoinInfo(
 }
 
 function generateOrderByAggregateTargetJoinInfo(
-  allTableRelationships: TableRelationships[],
+  allTableRelationships: Relationships[],
   relationshipPath: string[],
   relationship: Relationship,
   sourceTableAlias: string,
   whereExpression: Expression | undefined,
   aggregateElements: OrderByElement[],
 ): OrderByJoinInfo {
-  const targetTableAlias = generateTableAlias(relationship.target_table);
-  const subqueryTableAlias = generateTableAlias(relationship.target_table);
+
+  const targetTableAlias = generateTargetAlias(relationship.target);
+  const subqueryTableAlias = generateTargetAlias(relationship.target);
 
   const aggregateColumnsFragments = aggregateElements.flatMap(element => {
     switch (element.target.type) {
@@ -594,8 +640,8 @@ function generateOrderByAggregateTargetJoinInfo(
   });
   const joinColumns = Object.values(relationship.column_mapping).map(escapeIdentifier);
   const selectColumns = [...joinColumns, aggregateColumnsFragments];
-  const whereClause = whereExpression ? `WHERE ${where_clause(allTableRelationships, whereExpression, relationship.target_table, subqueryTableAlias)}` : "";
-  const aggregateSubquery = `SELECT ${selectColumns.join(", ")} FROM ${escapeTableName(relationship.target_table)} AS ${subqueryTableAlias} ${whereClause} GROUP BY ${joinColumns.join(", ")}`
+  const whereClause = whereExpression ? `WHERE ${where_clause(allTableRelationships, whereExpression, relationship.target, subqueryTableAlias)}` : "";
+  const aggregateSubquery = `SELECT ${selectColumns.join(", ")} FROM ${escapeTargetName(relationship.target)} AS ${subqueryTableAlias} ${whereClause} GROUP BY ${joinColumns.join(", ")}`
 
   const joinComparisonFragments = generateRelationshipJoinComparisonFragments(relationship, sourceTableAlias, targetTableAlias);
   const joinOnFragment = [ ...joinComparisonFragments ].join(" AND ");
@@ -623,8 +669,8 @@ function getOrderByTargetAlias(orderByTarget: OrderByTarget): string {
  * @param joinInfo Information about a possible join from a source table to the query table that needs to be generated into the where clause
  * @returns string representing the combined where clause
  */
-function where(ts: TableRelationships[], whereExpression: Expression | null, joinInfo: RelationshipJoinInfo | null, queryTableName: TableName, queryTableAlias: string): string {
-  const whereClause = whereExpression !== null ? [where_clause(ts, whereExpression, queryTableName, queryTableAlias)] : [];
+function where(allRelationships: Relationships[], whereExpression: Expression | null, joinInfo: RelationshipJoinInfo | null, queryTarget: Target, queryTableAlias: string): string {
+  const whereClause = whereExpression !== null ? [where_clause(allRelationships, whereExpression, queryTarget, queryTableAlias)] : [];
   const joinArray = joinInfo
     ? Object
       .entries(joinInfo.columnMapping)
@@ -655,11 +701,52 @@ function offset(o: number | null): string {
   }
 }
 
-function query(request: TableRequest): string {
-  const tableRelationships = only_table_relationships(request.table_relationships);
-  const result = table_query(
-    tableRelationships,
-    request.table,
+// NOTE: InterpolatedItem can be extended to support arrays of values.
+// NOTE: It appears that value.value_type comes back as `Boolean` when we advertise only items from `ScalarTypeKey`
+function cte_item(value: InterpolatedItem): string {
+  switch(value.type) {
+    case 'text':
+      return value.value;
+    case 'scalar':
+      switch(value.value_type.toLowerCase()) {
+        // Check this list against the types listed in capabilities
+        case 'string':
+          return escapeString(value.value);
+        case 'number':
+        case 'int':
+        case 'integer':
+        case 'float':
+          return `${value.value}`;
+        case 'bool':
+        case 'boolean':
+          return `${value.value ? 1 : 0}`;
+        // Assume that everything else is a JSON value
+        case 'json':
+        default:
+          return `json( ${ escapeString(JSON.stringify(value.value)) } )`;
+      }
+    default:
+      return unreachable(value["type"]);
+  }
+}
+
+function cte_items(iq: InterpolatedQuery): string {
+  const items = iq.items.map(cte_item);
+  const joined = items.join(' ');
+  return `${iq.id} AS ( ${joined} )`;
+}
+
+function cte_block(qs: InterpolatedQueries): string {
+  const ctes = Object.entries(qs).map(([_id, iq], _ix) => cte_items(iq));
+  const cte_string = ctes.join(', ');
+  return `WITH ${cte_string}`;
+}
+
+function query(request: QueryRequest): string {
+  const cte = request.interpolated_queries == null ? '' : cte_block(request.interpolated_queries);
+  const result = target_query(
+    request.relationships,
+    request.target,
     null,
     coerceUndefinedToNull(request.query.fields),
     coerceUndefinedToNull(request.query.aggregates),
@@ -669,7 +756,7 @@ function query(request: TableRequest): string {
     coerceUndefinedToNull(request.query.offset),
     coerceUndefinedToNull(request.query.order_by),
     );
-  return tag('query', `SELECT ${result} as data`);
+  return tag('query', `${cte} SELECT ${result} as data`);
 }
 
 /**
@@ -715,7 +802,8 @@ function foreach_ids_table_value(foreachIds: Record<string, ScalarValue>[]): str
  * SELECT table_subquery AS data
  * ```
  */
-function foreach_query(foreachIds: Record<string, ScalarValue>[], request: TableRequest): string {
+function foreach_query(foreachIds: Record<string, ScalarValue>[], request: QueryRequest): string {
+
   const randomSuffix = nanoid();
   const foreachTableName: TableName = [`foreach_ids_${randomSuffix}`];
   const foreachRelationshipName = "Foreach";
@@ -725,7 +813,7 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Table
     relationships: {
       [foreachRelationshipName]: {
         relationship_type: "array",
-        target_table: request.table,
+        target: request.target,
         column_mapping: mapObject(foreachIds[0], ([columnName, _scalarValue]) => [columnName, columnName])
       }
     }
@@ -739,10 +827,9 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Table
   };
 
   const foreachIdsTableValue = foreach_ids_table_value(foreachIds);
-  const tableRelationships = only_table_relationships(request.table_relationships);
-  const tableSubquery = table_query(
-    [foreachTableRelationship, ...(tableRelationships)],
-    foreachTableName,
+  const tableSubquery = target_query(
+    [foreachTableRelationship, ...(request.relationships)],
+    {type: 'table', name: foreachTableName}, // Note: expand to other target types
     null,
     foreachQueryFields,
     null,
@@ -753,14 +840,6 @@ function foreach_query(foreachIds: Record<string, ScalarValue>[], request: Table
     null,
     );
   return tag('foreach_query', `WITH ${escapeTableName(foreachTableName)} AS (${foreachIdsTableValue}) SELECT ${tableSubquery} AS data`);
-}
-
-function only_table_relationships(all: Array<TableRelationships | FunctionRelationships>): Array<TableRelationships> {
-  return all.filter(isTableRelationship);
-}
-
-function isTableRelationship(relationships: TableRelationships | FunctionRelationships,): relationships is TableRelationships {
-  return (relationships as TableRelationships).source_table !== undefined;
 }
 
 /** Function to add SQL comments to the generated SQL to tag which procedures generated what text.
@@ -821,7 +900,7 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<QueryResponse> {
+export async function queryData(config: Config, sqlLogger: SqlLogger, request: QueryRequest): Promise<QueryResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
     const q =
     request.foreach
@@ -855,7 +934,7 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, request: T
  * @param queryRequest
  * @returns
  */
-export async function explain(config: Config, sqlLogger: SqlLogger, request: TableRequest): Promise<ExplainResponse> {
+export async function explain(config: Config, sqlLogger: SqlLogger, request: QueryRequest): Promise<ExplainResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
     const q = query(request);
     const result = await db.query(`EXPLAIN QUERY PLAN ${q}`);

@@ -101,6 +101,7 @@ library
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
     Hasura.Backends.DataConnector.API.V0.Target
+    Hasura.Backends.DataConnector.API.V0.InterpolatedQuery
     Hasura.Backends.DataConnector.API.V0.Dataset
   other-modules:
     Hasura.Backends.DataConnector.API.V0.Name

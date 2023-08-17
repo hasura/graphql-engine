@@ -56,6 +56,9 @@ import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types
+import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
+import Hasura.NativeQuery.Validation
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (ComparisonNullability (..), OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
@@ -114,6 +117,14 @@ instance BackendMetadata 'DataConnector where
   listAllTrackables = listAllTrackables'
   getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
+
+  validateNativeQuery _ _ _ sc _ nq = do
+    unless (isJust (API._cInterpolatedQueries (DC._scCapabilities sc))) do
+      let nqName = _nqmRootFieldName nq
+      throw400 NotSupported $ "validateNativeQuery: " <> toTxt nqName <> " - Native Queries not implemented for this Data Connector backend."
+    -- Adapted from server/src-lib/Hasura/Backends/BigQuery/Instances/Metadata.hs
+    validateArgumentDeclaration nq
+    pure (trimQueryEnd (_nqmCode nq)) -- for now, all queries are valid
 
 arityJsonAggSelect :: API.FunctionArity -> JsonAggSelect
 arityJsonAggSelect = \case

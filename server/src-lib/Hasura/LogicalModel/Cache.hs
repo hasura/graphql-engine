@@ -22,7 +22,7 @@ data LogicalModelInfo (b :: BackendType) = LogicalModelInfo
     _lmiDescription :: Maybe Text,
     _lmiPermissions :: RolePermInfoMap b
   }
-  deriving (Generic)
+  deriving (Show, Generic)
 
 instance
   (Backend b, ToJSON (RolePermInfoMap b)) =>

@@ -75,6 +75,7 @@ capabilities =
             API._cSubscriptions = Nothing,
             API._cScalarTypes = scalarTypesCapabilities,
             API._cRelationships = Just API.RelationshipCapabilities {},
+            API._cInterpolatedQueries = Just API.InterpolatedQueryCapabilities {},
             API._cComparisons =
               Just
                 API.ComparisonCapabilities

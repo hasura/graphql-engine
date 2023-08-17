@@ -192,21 +192,22 @@ tests = do
 
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Track",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Genre",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Genre",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Track",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Genre",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Genre",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.UpdateOperation
@@ -382,21 +383,22 @@ tests = do
             ]
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Track",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Genre",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Genre",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Track",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Genre",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Genre",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.UpdateOperation

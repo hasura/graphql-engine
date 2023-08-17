@@ -13,7 +13,7 @@ module Hasura.Backends.DataConnector.Plan.Common
     writeOutput,
     replaceOutput,
     TableRelationships (..),
-    recordTableRelationship,
+    recordRelationship,
     recordTableRelationshipFromRelInfo,
     FieldPrefix,
     noPrefix,
@@ -28,6 +28,8 @@ module Hasura.Backends.DataConnector.Plan.Common
     mkRelationshipName,
     mapFieldNameHashMap,
     encodeAssocListAsObject,
+    targetToTargetName,
+    recordNativeQuery,
     ColumnStack,
     emptyColumnStack,
     pushColumn,
@@ -40,8 +42,10 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Types qualified as J
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
+import Data.Char (intToDigit)
 import Data.Has
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (hash)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Set (Set)
 import Data.Set qualified as Set
@@ -53,6 +57,8 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
 import Hasura.Base.Error
+import Hasura.NativeQuery.IR
+import Hasura.NativeQuery.InterpolatedQuery as IQ
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
@@ -63,6 +69,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
+import Numeric (showIntAtBase)
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -109,9 +116,9 @@ instance Semigroup TableRelationships where
 instance Monoid TableRelationships where
   mempty = TableRelationships mempty
 
--- | Records a table relationship encountered during request translation into the output of the current
+-- | Records a relationship encountered during request translation into the output of the current
 -- 'CPS.WriterT'
-recordTableRelationship ::
+recordRelationship ::
   ( MonadState state m,
     Has TableRelationships state
   ) =>
@@ -119,7 +126,7 @@ recordTableRelationship ::
   API.RelationshipName ->
   API.Relationship ->
   m ()
-recordTableRelationship sourceName relationshipName relationship =
+recordRelationship sourceName relationshipName relationship =
   writeOutput $ TableRelationships $ HashMap.singleton sourceName (HashMap.singleton relationshipName relationship)
 
 recordTableRelationshipFromRelInfo ::
@@ -139,15 +146,49 @@ recordTableRelationshipFromRelInfo sourceTableName RelInfo {..} = do
     RelTargetTable targetTableName -> do
       let relationship =
             API.Relationship
-              { _rTargetTable = Witch.from targetTableName,
+              { _rTarget = API.TTable (API.TargetTable (Witch.from targetTableName)),
                 _rRelationshipType = relationshipType,
                 _rColumnMapping = HashMap.fromList $ bimap Witch.from Witch.from <$> HashMap.toList riMapping
               }
-      recordTableRelationship
+      recordRelationship
         sourceTableName
         relationshipName
         relationship
       pure (relationshipName, relationship)
+
+-- | Records a Native Query encountered during request translation into the output of the current
+-- 'CPS.WriterT'
+recordNativeQuery ::
+  ( Has API.InterpolatedQueries state,
+    Has API.ScalarTypesCapabilities r,
+    MonadReader r m,
+    MonadState state m,
+    MonadError QErr m,
+    Has SessionVariables r
+  ) =>
+  NativeQuery 'DataConnector (UnpreparedValue 'DataConnector) ->
+  m API.InterpolatedQueryId
+recordNativeQuery nq = do
+  nqL <- traverse prepareLiteral nq
+  let iq@(API.InterpolatedQuery i _) = apiInterpolateQuery nqL
+      interpolatedQueries = API.InterpolatedQueries $ HashMap.singleton i iq
+  writeOutput interpolatedQueries
+  pure i
+
+apiInterpolateQuery :: NativeQuery 'DataConnector Literal -> API.InterpolatedQuery
+apiInterpolateQuery NativeQuery {nqRootFieldName, nqInterpolatedQuery} = API.InterpolatedQuery i interpolatedItems
+  where
+    -- NOTE: An alternative hash mechanism could be explored if any issues are found with this implementation.
+    i = API.InterpolatedQueryId (toTxt nqRootFieldName <> "_" <> qh)
+    qh = T.pack $ showIntAtBase 16 intToDigit (abs $ hash nqInterpolatedQuery) ""
+    interpolatedItems = interpolateItem <$> IQ.getInterpolatedQuery nqInterpolatedQuery
+
+interpolateItem :: IQ.InterpolatedItem Literal -> API.InterpolatedItem
+interpolateItem = \case
+  IQ.IIText t -> API.InterpolatedText t
+  IQ.IIVariable l -> case l of
+    ValueLiteral st v -> API.InterpolatedScalar (API.ScalarValue v (Witch.from st)) -- TODO: Witchify?
+    _ -> error "array literals not yet implemented"
 
 --------------------------------------------------------------------------------
 
@@ -162,6 +203,7 @@ recordRedactionExpression ::
   ( MonadState state m,
     Has TableRelationships state,
     Has RedactionExpressionState state,
+    Has API.InterpolatedQueries state,
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
@@ -308,6 +350,7 @@ toColumnSelector (ColumnStack stack) columnName =
 translateBoolExpToExpression ::
   ( MonadState state m,
     Has TableRelationships state,
+    Has API.InterpolatedQueries state,
     Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
@@ -323,6 +366,7 @@ translateBoolExpToExpression sourceName boolExp = do
 translateBoolExp ::
   ( MonadState state m,
     Has TableRelationships state,
+    Has API.InterpolatedQueries state,
     Has RedactionExpressionState state,
     MonadError QErr m,
     MonadReader r m,
@@ -349,7 +393,7 @@ translateBoolExp sourceName columnStack = \case
   BoolField (AVRelationship relationshipInfo (RelationshipFilters {rfTargetTablePermissions, rfFilter})) -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
-    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp (API.TNTable _rTargetTable) emptyColumnStack (BoolAnd [rfTargetTablePermissions, rfFilter])
+    API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp (targetToTargetName _rTarget) emptyColumnStack (BoolAnd [rfTargetTablePermissions, rfFilter])
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
      in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp (API.TNTable tableName) emptyColumnStack _geWhere
@@ -360,6 +404,13 @@ translateBoolExp sourceName columnStack = \case
     mkIfZeroOrMany mk = \case
       [singleExp] -> singleExp
       zeroOrManyExps -> mk $ Set.fromList zeroOrManyExps
+
+-- | Helper function to convert targets into Keys
+targetToTargetName :: API.Target -> API.TargetName
+targetToTargetName = \case
+  (API.TTable (API.TargetTable tn)) -> API.TNTable tn
+  (API.TFunction (API.TargetFunction n _)) -> API.TNFunction n
+  (API.TInterpolated (API.TargetInterpolatedQuery qId)) -> API.TNInterpolatedQuery qId
 
 removeAlwaysTrueExpression :: API.Expression -> Maybe API.Expression
 removeAlwaysTrueExpression = \case

@@ -3,8 +3,8 @@
 /* eslint-disable */
 
 import type { MutationOperation } from './MutationOperation';
+import type { Relationships } from './Relationships';
 import type { TableInsertSchema } from './TableInsertSchema';
-import type { TableRelationships } from './TableRelationships';
 import type { TargetRedactionExpressions } from './TargetRedactionExpressions';
 
 export type MutationRequest = {
@@ -21,8 +21,8 @@ export type MutationRequest = {
    */
   redaction_expressions?: Array<TargetRedactionExpressions>;
   /**
-   * The relationships between tables involved in the entire mutation request
+   * The relationships involved in the entire mutation request
    */
-  table_relationships: Array<TableRelationships>;
+  relationships: Array<Relationships>;
 };
 

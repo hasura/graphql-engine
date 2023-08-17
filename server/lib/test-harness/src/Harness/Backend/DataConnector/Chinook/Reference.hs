@@ -79,7 +79,8 @@ backendTypeConfig =
       backendReleaseNameString = Nothing,
       backendServerUrl = Just "http://localhost:65005",
       backendSchemaKeyword = "schema",
-      backendScalarType = const ""
+      backendScalarType = const "",
+      backendGraphQLType = const ""
     }
 
 --------------------------------------------------------------------------------

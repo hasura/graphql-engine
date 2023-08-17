@@ -672,6 +672,9 @@ data RolePermInfo (b :: BackendType) = RolePermInfo
   }
   deriving (Generic)
 
+instance Show (RolePermInfo b) where
+  show _ = "Debugging Show instance for data RolePermInfo (b :: BackendType) = RolePermInfo"
+
 instance
   ( Backend b,
     NFData (InsPermInfo b),

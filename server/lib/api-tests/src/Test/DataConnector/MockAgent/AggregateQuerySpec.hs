@@ -175,7 +175,7 @@ tests = describe "Aggregate Query Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Albums",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Album",
+                                { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                 }
@@ -298,7 +298,7 @@ tests = describe "Aggregate Query Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "InvoiceLines",
                               API.Relationship
-                                { _rTargetTable = mkTableName "InvoiceLine",
+                                { _rTarget = mkTableTarget "InvoiceLine",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "InvoiceId", API.ColumnName "InvoiceId")]
                                 }

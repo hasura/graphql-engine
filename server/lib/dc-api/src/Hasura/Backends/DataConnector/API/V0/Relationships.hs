@@ -8,12 +8,13 @@ module Hasura.Backends.DataConnector.API.V0.Relationships
     pattern RFunctionRelationships,
     FunctionRelationships (..),
     TableRelationships (..),
+    InterpolatedRelationships (..),
     trelSourceTable,
     trelRelationships,
     frelRelationships,
     frelSourceFunction,
     Relationship (..),
-    rTargetTable,
+    rTarget,
     rRelationshipType,
     rColumnMapping,
     RelationshipName (..),
@@ -36,10 +37,12 @@ import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Function qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.InterpolatedQuery qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Target qualified as API.V0
 import Prelude
 
-data Relationships = RTable TableRelationships | RFunction FunctionRelationships
+data Relationships = RTable TableRelationships | RFunction FunctionRelationships | RInterpolated InterpolatedRelationships
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Relationships
 
@@ -58,11 +61,25 @@ instance HasCodec Relationships where
       enc = \case
         RTable rt -> ("table", mapToEncoder rt objectCodec)
         RFunction rf -> ("function", mapToEncoder rf objectCodec)
+        RInterpolated ri -> ("interpolated", mapToEncoder ri objectCodec)
       dec =
         HashMap.fromList
           [ ("table", ("TableRelationships", mapToDecoder RTable objectCodec)),
-            ("function", ("FunctionRelationships", mapToDecoder RFunction objectCodec))
+            ("function", ("FunctionRelationships", mapToDecoder RFunction objectCodec)),
+            ("interpolated", ("InterpolatedRelationships", mapToDecoder RInterpolated objectCodec))
           ]
+
+data InterpolatedRelationships = InterpolatedRelationships
+  { _irSource :: API.V0.InterpolatedQueryId,
+    _irRelationships :: HashMap.HashMap RelationshipName Relationship
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+instance HasObjectCodec InterpolatedRelationships where
+  objectCodec =
+    InterpolatedRelationships
+      <$> requiredField "source_interpolated_query" "The source interpolated query involved in the relationship" .= _irSource
+      <*> requiredField "relationships" "A map of relationships from the interpolated table to targets. The key of the map is the relationship name" .= _irRelationships
 
 -- NOTE: Prefix is `trel` due to TableRequest conflicting with `tr` prefix.
 data TableRelationships = TableRelationships
@@ -70,23 +87,12 @@ data TableRelationships = TableRelationships
     _trelRelationships :: HashMap.HashMap RelationshipName Relationship
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec TableRelationships
 
 instance HasObjectCodec TableRelationships where
   objectCodec =
     TableRelationships
       <$> requiredField "source_table" "The name of the source table in the relationship" .= _trelSourceTable
-      <*> requiredField "relationships" "A map of relationships from the source table to target tables. The key of the map is the relationship name" .= _trelRelationships
-
--- Note: This instance is defined because MutationRequest uses TableRelationships directly without wrapping it in RTable.
-instance HasCodec TableRelationships where
-  codec = object "TableRelationships" $ typeTag *> objectFields
-    where
-      typeTag = requiredFieldWith' "type" (literalTextCodec "table") .= const "table"
-      objectFields =
-        TableRelationships
-          <$> requiredField "source_table" "The name of the source table in the relationship" .= _trelSourceTable
-          <*> requiredField "relationships" "A map of relationships from the source table to target tables. The key of the map is the relationship name" .= _trelRelationships
+      <*> requiredField "relationships" "A map of relationships from the source table to targets. The key of the map is the relationship name" .= _trelRelationships
 
 data FunctionRelationships = FunctionRelationships
   { _frelSourceFunction :: API.V0.FunctionName,
@@ -98,11 +104,11 @@ instance HasObjectCodec FunctionRelationships where
   objectCodec =
     FunctionRelationships
       <$> requiredField "source_function" "The name of the source function in the relationship" .= _frelSourceFunction
-      <*> requiredField "relationships" "A map of relationships from the source table to target tables. The key of the map is the relationship name" .= _frelRelationships
+      <*> requiredField "relationships" "A map of relationships from the source function to targets. The key of the map is the relationship name" .= _frelRelationships
 
 -- Top level seperation of tables and functions should be adopted here too.
 data Relationship = Relationship
-  { _rTargetTable :: API.V0.TableName,
+  { _rTarget :: API.V0.Target,
     _rRelationshipType :: RelationshipType,
     _rColumnMapping :: HashMap.HashMap SourceColumnName TargetColumnName
   }
@@ -113,7 +119,7 @@ instance HasCodec Relationship where
   codec =
     object "Relationship" $
       Relationship
-        <$> requiredField "target_table" "The name of the target table in the relationship" .= _rTargetTable
+        <$> requiredField "target" "The name of the target table in the relationship" .= _rTarget
         <*> requiredField "relationship_type" "The type of the relationship" .= _rRelationshipType
         <*> requiredField "column_mapping" "A mapping between columns on the source table to columns on the target table" .= _rColumnMapping
 

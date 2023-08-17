@@ -368,7 +368,7 @@ spec TestData {..} Capabilities {..} = describe "Data Redaction in Queries" $ do
                 ("BillingCity", _tdColumnField _tdInvoicesTableName "BillingCity")
               ]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdInvoicesTableName mempty mempty query Nothing
+       in TableQueryRequest _tdInvoicesTableName mempty mempty mempty query Nothing
 
     customerQueryRequest :: QueryRequest
     customerQueryRequest =
@@ -379,7 +379,7 @@ spec TestData {..} Capabilities {..} = describe "Data Redaction in Queries" $ do
                 ("LastName", _tdColumnField _tdCustomersTableName "LastName")
               ]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdCustomersTableName mempty mempty query Nothing
+       in TableQueryRequest _tdCustomersTableName mempty mempty mempty query Nothing
 
     singleColumnAggregateMin :: ColumnName -> ScalarType -> RedactionExpressionName -> Aggregate
     singleColumnAggregateMin columnName resultType redactionExpName = SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|]) columnName (Just redactionExpName) resultType

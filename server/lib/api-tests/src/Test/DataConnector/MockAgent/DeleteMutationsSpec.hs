@@ -178,21 +178,22 @@ tests = do
 
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Album",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Artist",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Artist",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.DeleteOperation
@@ -286,21 +287,22 @@ tests = do
 
     let expectedRequest =
           emptyMutationRequest
-            & API.mrTableRelationships
+            & API.mrRelationships
             .~ Set.fromList
-              [ API.TableRelationships
-                  { API._trelSourceTable = mkTableName "Album",
-                    API._trelRelationships =
-                      HashMap.fromList
-                        [ ( API.RelationshipName "Artist",
-                            API.Relationship
-                              { API._rTargetTable = mkTableName "Artist",
-                                API._rRelationshipType = API.ObjectRelationship,
-                                API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
-                              }
-                          )
-                        ]
-                  }
+              [ API.RTable
+                  $ API.TableRelationships
+                    { API._trelSourceTable = mkTableName "Album",
+                      API._trelRelationships =
+                        HashMap.fromList
+                          [ ( API.RelationshipName "Artist",
+                              API.Relationship
+                                { API._rTarget = mkTableTarget "Artist",
+                                  API._rRelationshipType = API.ObjectRelationship,
+                                  API._rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+                                }
+                            )
+                          ]
+                    }
               ]
               & API.mrOperations
             .~ [ API.DeleteOperation

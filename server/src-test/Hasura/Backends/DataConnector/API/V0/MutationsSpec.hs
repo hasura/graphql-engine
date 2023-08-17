@@ -30,7 +30,7 @@ spec = do
     testToFromJSONToSchema
       (MutationRequest [] [] [] [])
       [aesonQQ|
-        { "table_relationships": [],
+        { "relationships": [],
           "insert_schema": [],
           "operations": [] }
       |]
@@ -252,7 +252,7 @@ spec = do
 genMutationRequest :: Gen MutationRequest
 genMutationRequest =
   MutationRequest
-    <$> Gen.set defaultRange genTableRelationships
+    <$> Gen.set defaultRange (RTable <$> genTableRelationships)
     <*> Gen.set defaultRange genTargetRedactionExpressions
     <*> Gen.set defaultRange genTableInsertSchema
     <*> Gen.list defaultRange genMutationOperation

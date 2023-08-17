@@ -1,4 +1,4 @@
-﻿import { ErrorResponseType, TableName } from "@hasura/dc-api-types";
+﻿import { ErrorResponseType, TableName, Target } from "@hasura/dc-api-types";
 
 export const coerceUndefinedToNull = <T>(v: T | undefined): T | null => v === undefined ? null : v;
 
@@ -52,8 +52,18 @@ export function delay(ms: number): Promise<void> {
   return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-export const tableNameEquals = (tableName1: TableName) => (tableName2: TableName): boolean => {
-  return stringArrayEquals(tableName1)(tableName2);
+export const tableNameEquals = (tableName1: TableName) => (target: Target): boolean => {
+  if(target.type != 'table') {
+    return false;
+  }
+  return stringArrayEquals(tableName1)(target.name);
+}
+
+export const tableToTarget = (tableName: TableName): Target => {
+  return {
+    type: 'table',
+    name: tableName
+  }
 }
 
 export const stringArrayEquals = (arr1: string[]) => (arr2: string[]): boolean => {

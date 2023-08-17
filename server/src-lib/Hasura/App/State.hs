@@ -331,6 +331,7 @@ buildCacheStaticConfig AppEnv {..} =
       -- Native Queries are always enabled for Postgres in the OSS edition.
       _cscAreNativeQueriesEnabled = \case
         Postgres Vanilla -> True
+        DataConnector -> True
         _ -> False,
       _cscAreStoredProceduresEnabled = False
     }

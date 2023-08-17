@@ -60,7 +60,7 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
               k = "take" :: Text.Text
               v = API.ScalarValue (Number (fromIntegral fibonacciRows)) (API.ScalarType "number")
               args = [NamedArgument k (API.ScalarArgumentValue v)]
-           in FunctionQueryRequest _ftdFibonacciFunctionName args mempty mempty query'
+           in FunctionQueryRequest _ftdFibonacciFunctionName args mempty mempty mempty query' mempty
 
         testData@FunctionsTestData {..} = mkFunctionsTestData preloadedSchema testConfig
         query = fibonacciRequest testData
@@ -90,13 +90,13 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
                  in API.FunctionRelationships
                       _ftdSearchArticlesFunctionName
                       ( HashMap.fromList
-                          [ (_ftdAuthorRelationshipName, API.Relationship _ftdAuthorsTableName API.ObjectRelationship authorsJoinFieldMapping)
+                          [ (_ftdAuthorRelationshipName, API.Relationship (API.TTargetTable _ftdAuthorsTableName) API.ObjectRelationship authorsJoinFieldMapping)
                           ]
                       )
               relationships = Set.singleton (API.RFunction authorRelationship)
               v = API.ScalarValue (String "x") (API.ScalarType "string")
               args = [NamedArgument "query" (API.ScalarArgumentValue v)]
-           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty query'
+           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty mempty query' mempty
 
         testData = mkFunctionsTestData preloadedSchema testConfig
         query = articlesRequest testData
@@ -138,13 +138,13 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
                  in API.FunctionRelationships
                       _ftdSearchArticlesFunctionName
                       ( HashMap.fromList
-                          [ (_ftdAuthorRelationshipName, API.Relationship _ftdAuthorsTableName API.ObjectRelationship authorsJoinFieldMapping)
+                          [ (_ftdAuthorRelationshipName, API.Relationship (API.TTargetTable _ftdAuthorsTableName) API.ObjectRelationship authorsJoinFieldMapping)
                           ]
                       )
               relationships = Set.singleton (API.RFunction authorRelationship)
               v = API.ScalarValue (String "y") (API.ScalarType "string")
               args = [NamedArgument "query" (API.ScalarArgumentValue v)]
-           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty query'
+           in FunctionQueryRequest _ftdSearchArticlesFunctionName args relationships mempty mempty query' mempty
 
         testData = mkFunctionsTestData preloadedSchema testConfig
         query = articlesRequest testData

@@ -65,7 +65,7 @@ import Harness.Schema
   )
 import Harness.Schema qualified as Schema
 import Harness.Services.Database.Postgres qualified as Postgres
-import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType (BackendTypeConfig, postgresishGraphQLType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (GlobalTestEnvironment (..), TestEnvironment (..), TestingMode (..))
@@ -86,7 +86,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 -- Native Queries is a pro-only feature now for anything but Postgres.
 -- This test ensures that this continues to be the case.
-module Test.Queries.NativeQueriesSpec (spec) where
+module Test.Queries.NativeQueries.ProOnlySpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
