@@ -8,6 +8,8 @@ import {
   SchemaRegistryDumpWithSiblingSchema,
   SiblingSchema,
   GetRegistrySchemaResponseWithError,
+  Role,
+  SchemaChangeCard,
 } from './types';
 import {
   getLSItem,
@@ -22,7 +24,7 @@ export const CapitalizeFirstLetter = (str: string) => {
   return str[0].toUpperCase() + str.slice(1);
 };
 
-export const FindIfSubStringExists = (
+export const findIfSubStringExists = (
   originalString: string,
   subString: string
 ) => {
@@ -35,6 +37,21 @@ export const schemaRegsitryControlPlaneClient = createControlPlaneClient(
   schemaRegsitryLuxDataEndpoint,
   {}
 );
+export const getSearchParam = (search: string, param: string) => {
+  try {
+    const params = new URLSearchParams(search);
+    return params.get(param) || null;
+  } catch {
+    return null;
+  }
+};
+
+export const setSearchParam = (pageNumber: number) => {
+  const params = new URLSearchParams(window.location.search);
+  params.set('page', pageNumber.toString());
+  const newUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.pushState({}, '', newUrl);
+};
 
 export const schemaListTransformFn = (
   dumps: NonNullable<
@@ -74,6 +91,35 @@ export const schemaListTransformFn = (
       id: dump.id,
       entry_hash: dump.entry_hash,
       roleBasedSchemas: roleBasedSchemas,
+      tags: dump.schema_tags,
+    };
+
+    schemaList.push(schema);
+  });
+  return schemaList;
+};
+
+export const schemaChangeListTransformFn = (
+  dumps: NonNullable<
+    GetSchemaListResponseWithError['data']
+  >['schema_registry_dumps']
+) => {
+  const schemaList: SchemaChangeCard[] = [];
+  dumps.forEach((dump: SchemaRegistryDumpWithSiblingSchema) => {
+    const schemaRoles: Role[] = [];
+    dump.sibling_schemas.forEach((childSchema: SiblingSchema) => {
+      const schemaRole: Role = {
+        id: childSchema.id,
+        role: childSchema.hasura_schema_role,
+      };
+      schemaRoles.push(schemaRole);
+    });
+    const schema: SchemaChangeCard = {
+      hash: dump.schema_hash,
+      created_at: dump.change_recorded_at,
+      id: dump.id,
+      entry_hash: dump.entry_hash,
+      roles: schemaRoles,
       tags: dump.schema_tags,
     };
 

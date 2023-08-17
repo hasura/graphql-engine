@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SchemasList } from './SchemasList';
+import { SchemaRegistryHome } from './SchemaRegistryHome';
 import { FeatureRequest } from './FeatureRequest';
 import globals from '../../../Globals';
 import { SCHEMA_REGISTRY_FEATURE_NAME } from '../constants';
@@ -15,16 +15,16 @@ const Header: React.VFC = () => {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex w-3/5 mb-sm justify-between">
-        <div className="flex items-center">
-          <h1 className="text-xl font-semibold">GraphQL Schema Registry</h1>
-          <Badge className="mx-2" color="blue">
-            BETA
-          </Badge>
-        </div>
+      <div className="flex mb-sm mt-md w-full">
+        <h1 className="inline-block text-xl font-semibold mr-2 text-slate-900">
+          GraphQL Schema Registry
+        </h1>
+        <Badge className="mx-2" color="blue">
+          BETA
+        </Badge>
         <Analytics name="data-schema-registry-alerts-btn">
           <div
-            className="flex text-lg mt-2 mr-2 cursor-pointer"
+            className="flex text-lg mt-2 mx-2 cursor-pointer"
             role="button"
             onClick={() => setIsAlertModalOpen(true)}
           >
@@ -36,7 +36,7 @@ const Header: React.VFC = () => {
         </Analytics>
       </div>
       <a
-        className="text-muted w-auto"
+        className="text-muted w-auto mb-md"
         href={SCHEMA_REGISTRY_REF_URL}
         target="_blank"
         rel="noreferrer noopener"
@@ -52,16 +52,11 @@ const Header: React.VFC = () => {
 
 const Body: React.VFC<{ hasFeatureAccess: boolean }> = props => {
   const { hasFeatureAccess } = props;
-
   if (!hasFeatureAccess) {
     return <FeatureRequest />;
   }
 
-  return (
-    <div className="flex w-full">
-      <SchemasList />
-    </div>
-  );
+  return <SchemaRegistryHome />;
 };
 
 export const SchemaRegistryContainer: React.VFC = () => {
@@ -71,12 +66,8 @@ export const SchemaRegistryContainer: React.VFC = () => {
 
   return (
     <div className="p-4 flex flex-col w-full">
-      <div className="flex w-full mb-md">
-        <Header />
-      </div>
-      <div className="flex w-full mb-md">
-        <Body hasFeatureAccess={hasFeatureAccess} />
-      </div>
+      <Header />
+      <Body hasFeatureAccess={hasFeatureAccess} />
     </div>
   );
 };
