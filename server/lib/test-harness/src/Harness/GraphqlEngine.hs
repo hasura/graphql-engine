@@ -15,6 +15,7 @@ module Harness.GraphqlEngine
     postMetadataWithStatus,
     postMetadataWithStatusAndHeaders,
     postExplain,
+    postExplainWithStatus,
     exportMetadata,
     reloadMetadata,
     postGraphqlYaml,
@@ -255,9 +256,14 @@ postGraphqlWithHeaders testEnvironment headers value =
 
 -- | post to /v1/graphql/explain endpoint
 postExplain :: (HasCallStack) => TestEnvironment -> Value -> IO Value
-postExplain testEnvironment value =
+postExplain = postExplainWithStatus 200
+
+-- | post to /v1/graphql/explain endpoint and expect a specific status
+postExplainWithStatus :: (HasCallStack) => Int -> TestEnvironment -> Value -> IO Value
+postExplainWithStatus status testEnvironment value =
   withFrozenCallStack
-    $ postWithHeaders
+    $ postWithHeadersStatus
+      status
       testEnvironment
       "/v1/graphql/explain"
       mempty

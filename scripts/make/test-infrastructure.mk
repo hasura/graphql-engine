@@ -33,7 +33,7 @@ start-api-tests-pro-postgres:
 .PHONY: stop-everything
 ## stop-everything: tear down test databases
 stop-everything:
-	docker compose down --volumes
+	docker compose down # don't discard volumes used for manual testing
 	$(API_TESTS_DOCKER_COMPOSE) down --volumes
 	$(API_TESTS_PRO_DOCKER_COMPOSE) down --volumes
 	$(PYTHON_TESTS_DOCKER_COMPOSE) down --volumes
