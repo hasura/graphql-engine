@@ -15,6 +15,8 @@ import TabItem from '@theme/TabItem';
 
 # Backend Only Mutations
 
+## Introduction
+
 If a mutation permission is marked as "backend only", it is accessible to the given role only if the
 `x-hasura-use-backend-only-permissions` session variable exists on the request and is set to `true`. The
 `x-hasura-admin-secret` must also be present if any auth is configured.
