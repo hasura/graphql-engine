@@ -242,7 +242,7 @@ translateOrderBy ::
 translateOrderBy sourceName orderByItems = do
   orderByElementsAndRelations <- for orderByItems \OrderByItemG {..} -> do
     let orderDirection = maybe API.Ascending Witch.from obiType
-    translateOrderByElement sourceName orderDirection [] obiColumn
+    translateOrderByElement sourceName orderDirection [] emptyColumnStack obiColumn
   relations <- mergeOrderByRelations $ snd <$> orderByElementsAndRelations
   pure
     API.OrderBy
@@ -262,22 +262,25 @@ translateOrderByElement ::
   API.TargetName ->
   API.OrderDirection ->
   [API.RelationshipName] ->
+  ColumnStack ->
   AnnotatedOrderByElement 'DataConnector (UnpreparedValue 'DataConnector) ->
   m (API.OrderByElement, HashMap API.RelationshipName API.OrderByRelation)
-translateOrderByElement sourceName orderDirection targetReversePath = \case
+translateOrderByElement sourceName orderDirection targetReversePath columnStack = \case
   AOCColumn ColumnInfo {..} redactionExp -> do
     redactionExpName <- recordRedactionExpression sourceName redactionExp
     pure
       ( API.OrderByElement
           { _obeTargetPath = reverse targetReversePath,
-            _obeTarget = API.OrderByColumn (Witch.from ciColumn) redactionExpName,
+            _obeTarget = API.OrderByColumn (toColumnSelector columnStack ciColumn) redactionExpName,
             _obeOrderDirection = orderDirection
           },
         mempty
       )
+  AOCNestedObject NestedObjectInfo {..} nestedOrderBy ->
+    translateOrderByElement sourceName orderDirection targetReversePath (pushColumn columnStack _noiColumn) nestedOrderBy
   AOCObjectRelation relationshipInfo filterExp orderByElement -> do
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
-    (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement (API.TNTable _rTargetTable) orderDirection (relationshipName : targetReversePath) orderByElement
+    (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement (API.TNTable _rTargetTable) orderDirection (relationshipName : targetReversePath) columnStack orderByElement
 
     targetTableWhereExp <- translateBoolExpToExpression (API.TNTable _rTargetTable) filterExp
     let orderByRelations = HashMap.fromList [(relationshipName, API.OrderByRelation targetTableWhereExp subOrderByRelations)]

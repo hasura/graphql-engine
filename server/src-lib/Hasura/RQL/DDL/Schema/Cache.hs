@@ -52,9 +52,11 @@ import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
 import Hasura.LogicalModel.Fields (runLogicalModelFieldsLookup)
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types (LogicalModelField (..), LogicalModelLocation (..), LogicalModelName (..), LogicalModelType (..), LogicalModelTypeArray (..), LogicalModelTypeReference (..))
+import Hasura.LogicalModelResolver.Lenses (ilmmSelectPermissions, _LMIInlineLogicalModel)
 import Hasura.LogicalModelResolver.Metadata (InlineLogicalModelMetadata (..), LogicalModelIdentifier (..))
 import Hasura.Metadata.Class
 import Hasura.NativeQuery.Cache (NativeQueryCache, NativeQueryInfo (..))
+import Hasura.NativeQuery.Lenses (nqmReturns)
 import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..), getNativeQueryName)
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -826,15 +828,16 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               \((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
                 let tableFields = _tciFieldInfoMap tableCoreInfo
                 permissionInfos <-
-                  flip runReaderT sourceConfig
-                    $ buildTablePermissions
-                      env
-                      sourceName
-                      tableCoreInfos
-                      tableFields
-                      permissionInputs
-                      orderedRoles
-                      unifiedLogicalModelsHashMap
+                  buildTablePermissions
+                    env
+                    sourceName
+                    sourceConfig
+                    tableCoreInfos
+                    (_tciName tableCoreInfo)
+                    tableFields
+                    permissionInputs
+                    orderedRoles
+                    unifiedLogicalModelsHashMap
                 pure $ TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
       -- Generate a non-recoverable error when inherited roles were not ordered in a way that allows for building permissions to succeed
       tableCache <- bindA -< liftEither result
@@ -934,9 +937,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             \lmm@LogicalModelMetadata {..} ->
               withRecordInconsistencyM (mkLogicalModelMetadataObject lmm) $ do
                 logicalModelPermissions <-
-                  flip runReaderT sourceConfig
-                    $ runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
-                    $ buildLogicalModelPermissions sourceName tableCoreInfos (LMLLogicalModel _lmmName) _lmmFields _lmmSelectPermissions orderedRoles
+                  runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
+                    $ buildLogicalModelPermissions sourceName sourceConfig tableCoreInfos (LMLLogicalModel _lmmName) _lmmFields _lmmSelectPermissions orderedRoles
 
                 let recordDep (metadataObject, sourceObject) =
                       recordDependenciesM metadataObject sourceObject
@@ -1003,9 +1005,8 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                       (throw400 InvalidConfiguration ("The logical model " <> toTxt logicalModelName <> " could not be found"))
                   LMIInlineLogicalModel (InlineLogicalModelMetadata {_ilmmFields, _ilmmSelectPermissions}) -> do
                     logicalModelPermissions <-
-                      flip runReaderT sourceConfig
-                        $ runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
-                        $ buildLogicalModelPermissions sourceName tableCoreInfos (LMLNativeQuery _nqmRootFieldName) _ilmmFields _ilmmSelectPermissions orderedRoles
+                      runLogicalModelFieldsLookup Hasura.LogicalModel.Metadata._lmmFields unifiedLogicalModelsHashMap
+                        $ buildLogicalModelPermissions sourceName sourceConfig tableCoreInfos (LMLNativeQuery _nqmRootFieldName) _ilmmFields _ilmmSelectPermissions orderedRoles
 
                     let recordDep (metadataObject', sourceObject) =
                           recordDependenciesM metadataObject' sourceObject
@@ -1166,16 +1167,24 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< InsOrdHashMap.elems remoteSchemas
           sourceRoles =
             HS.fromList
-              $ concat
               $ InsOrdHashMap.elems sources
               >>= \(BackendSourceMetadata e) ->
-                AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions _nativeQueries _storedProcedures _logicalModels _ _ _ _) -> do
-                  table <- InsOrdHashMap.elems tables
-                  pure
-                    $ InsOrdHashMap.keys (_tmInsertPermissions table)
-                    <> InsOrdHashMap.keys (_tmSelectPermissions table)
-                    <> InsOrdHashMap.keys (_tmUpdatePermissions table)
-                    <> InsOrdHashMap.keys (_tmDeletePermissions table)
+                AB.dispatchAnyBackend @Backend e \(SourceMetadata _ _ tables _functions nativeQueries _storedProcedures logicalModels _ _ _ _) ->
+                  let tableRoles = do
+                        table <- InsOrdHashMap.elems tables
+                        InsOrdHashMap.keys (_tmInsertPermissions table)
+                          <> InsOrdHashMap.keys (_tmSelectPermissions table)
+                          <> InsOrdHashMap.keys (_tmUpdatePermissions table)
+                          <> InsOrdHashMap.keys (_tmDeletePermissions table)
+
+                      logicalModelRoles = do
+                        logicalModel <- InsOrdHashMap.elems logicalModels
+                        InsOrdHashMap.keys (_lmmSelectPermissions logicalModel)
+
+                      nativeQueryRoles = do
+                        nativeQuery <- InsOrdHashMap.elems nativeQueries
+                        concat . maybeToList $ InsOrdHashMap.keys <$> nativeQuery ^? nqmReturns . _LMIInlineLogicalModel . ilmmSelectPermissions
+                   in tableRoles <> logicalModelRoles <> nativeQueryRoles
           inheritedRoleNames = InsOrdHashMap.keys inheritedRoles
           allRoleNames = sourceRoles <> HS.fromList (remoteSchemaRoles <> actionRoles <> inheritedRoleNames)
 

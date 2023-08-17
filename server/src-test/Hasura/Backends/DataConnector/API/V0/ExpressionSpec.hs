@@ -10,6 +10,7 @@ module Hasura.Backends.DataConnector.API.V0.ExpressionSpec
     genExpression,
     genRedactionExpressionName,
     genTargetRedactionExpressions,
+    genColumnSelector,
   )
 where
 

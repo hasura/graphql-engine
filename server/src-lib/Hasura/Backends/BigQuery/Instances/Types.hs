@@ -26,7 +26,7 @@ instance Backend 'BigQuery where
   type ConstraintName 'BigQuery = Void
   type BasicOrderType 'BigQuery = BigQuery.Order
   type NullsOrderType 'BigQuery = BigQuery.NullsOrder
-  type CountType 'BigQuery = Const (BigQuery.Countable BigQuery.ColumnName) -- TODO(redactionExp): Going to need to replace this Const with a fixed up type here
+  type CountType 'BigQuery = BigQuery.CountType
   type Column 'BigQuery = BigQuery.ColumnName
   type ScalarValue 'BigQuery = BigQuery.Value
   type ScalarType 'BigQuery = BigQuery.ScalarType
@@ -120,4 +120,5 @@ instance HasSourceConfiguration 'BigQuery where
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
   sourceConfigNumReadReplicas = const 0 -- not supported
   sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = BigQueryKind

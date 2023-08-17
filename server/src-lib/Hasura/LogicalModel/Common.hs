@@ -1,6 +1,5 @@
 module Hasura.LogicalModel.Common
-  ( toFieldInfo,
-    columnsFromFields,
+  ( columnsFromFields,
     logicalModelFieldsToFieldInfo,
     getSelPermInfoForLogicalModel,
   )
@@ -41,30 +40,6 @@ columnsFromFields =
             Just (NullableScalarType {..})
         _ -> Nothing
     )
-
-toFieldInfo :: forall b. (Backend b) => InsOrdHashMap.InsOrdHashMap (Column b) (NullableScalarType b) -> Maybe [FieldInfo b]
-toFieldInfo fields =
-  traverseWithIndex
-    (\i -> fmap FIColumn . logicalModelToColumnInfo i)
-    (InsOrdHashMap.toList fields)
-
-traverseWithIndex :: (Applicative m) => (Int -> aa -> m bb) -> [aa] -> m [bb]
-traverseWithIndex f = zipWithM f [0 ..]
-
-logicalModelToColumnInfo :: forall b. (Backend b) => Int -> (Column b, NullableScalarType b) -> Maybe (StructuredColumnInfo b)
-logicalModelToColumnInfo i (column, NullableScalarType {..}) = do
-  name <- G.mkName (toTxt column)
-  pure
-    $ SCIScalarColumn
-    $ ColumnInfo
-      { ciColumn = column,
-        ciName = name,
-        ciPosition = i,
-        ciType = ColumnScalar nstType,
-        ciIsNullable = nstNullable,
-        ciDescription = G.Description <$> nstDescription,
-        ciMutability = ColumnMutability {_cmIsInsertable = False, _cmIsUpdatable = False}
-      }
 
 logicalModelFieldsToFieldInfo ::
   forall b.

@@ -1001,6 +1001,9 @@ tableConnectionArgs pkeyColumns tableInfo selectPermissions = do
           IR.AOCColumn columnInfo _redactionExp ->
             let pathElement = toTxt $ ciColumn columnInfo
              in [pathElement]
+          IR.AOCNestedObject nestedObjectInfo nestedOrderBy ->
+            let pathElement = toTxt $ _noiName nestedObjectInfo
+             in pathElement : getPathFromOrderBy nestedOrderBy
           IR.AOCObjectRelation relInfo _ obCol ->
             let pathElement = relNameToTxt $ riName relInfo
              in pathElement : getPathFromOrderBy obCol
@@ -1016,6 +1019,7 @@ tableConnectionArgs pkeyColumns tableInfo selectPermissions = do
 
         getOrderByColumnType = \case
           IR.AOCColumn columnInfo _redactionExp -> ciType columnInfo
+          IR.AOCNestedObject _ nestedOrderBy -> getOrderByColumnType nestedOrderBy
           IR.AOCObjectRelation _ _ obCol -> getOrderByColumnType obCol
           IR.AOCArrayAggregation _ _ aggOb -> aggregateOrderByColumnType aggOb
           IR.AOCComputedField cfob ->

@@ -63,7 +63,7 @@ spec = do
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
-              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (ColumnName "my_column_name") Nothing) Ascending :| [])
+              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") Nothing) Ascending :| [])
             }
     testToFromJSONToSchema
       query

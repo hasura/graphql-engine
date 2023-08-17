@@ -2263,7 +2263,18 @@
       "OrderByColumn": {
         "properties": {
           "column": {
-            "type": "string"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "redaction_expression": {
             "$ref": "#/components/schemas/RedactionExpressionName"

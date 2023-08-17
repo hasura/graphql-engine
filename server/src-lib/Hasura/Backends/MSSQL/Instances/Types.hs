@@ -126,4 +126,5 @@ instance HasSourceConfiguration 'MSSQL where
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration
   sourceConfigNumReadReplicas = MSSQL._mscReadReplicas
   sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceSupportsColumnRedaction = const True
   sourceConfigBackendSourceKind _sourceConfig = MSSQLKind

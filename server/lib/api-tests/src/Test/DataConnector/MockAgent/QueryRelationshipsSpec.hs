@@ -338,8 +338,8 @@ tests = describe "Object Relationships Tests" $ do
                         ]
                     )
                     ( NE.fromList
-                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Descending,
-                          API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Ascending
+                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.mkColumnSelector $ API.ColumnName "Name") Nothing) API.Descending,
+                          API.OrderByElement [] (API.OrderByColumn (API.mkColumnSelector $ API.ColumnName "Name") Nothing) API.Ascending
                         ]
                     )
               )
