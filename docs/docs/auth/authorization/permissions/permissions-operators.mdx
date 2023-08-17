@@ -12,16 +12,17 @@ sidebar_position: 80
 
 ## Common operators (all column types except json, jsonb)
 
-| Operator | PostgreSQL equivalent | Description              |
-|----------|-----------------------|--------------------------|
-| `_eq`    | `=`                   | Equal to                 |
-| `_ne`    | `<>`                  | Not equal to             |
-| `_gt`    | `>`                   | Greater than             |
-| `_lt`    | `<`                   | Less than                |
-| `_gte`   | `>=`                  | Greater than or equal to |
-| `_lte`   | `<=`                  | Less than or equal to    |
-| `_in`    | `IN`                  | In array                 |
-| `_nin`   | `NOT IN`              | Not in array             |
+| Operator   | PostgreSQL equivalent | Description              |
+|------------|-----------------------|--------------------------|
+| `_eq`      | `=`                   | Equal to                 |
+| `_ne`      | `<>`                  | Not equal to             |
+| `_gt`      | `>`                   | Greater than             |
+| `_lt`      | `<`                   | Less than                |
+| `_gte`     | `>=`                  | Greater than or equal to |
+| `_lte`     | `<=`                  | Less than or equal to    |
+| `_in`      | `IN`                  | In array                 |
+| `_nin`     | `NOT IN`              | Not in array             |
+| `_is_null` | `IS NULL`             | Is null                  |
 
 
 ## Logical operators
@@ -64,19 +65,16 @@ regular expressions are a curious cross between LIKE notation and common regular
 
 :::
 
-## Numeric extended operators
+## Column comparison operators
 
-| Operator   | PostgreSQL equivalent | Description                               |
-|------------|-----------------------|-------------------------------------------|
-| `_eq`      | `=`                   | Equal to                                  |
-| `_ne`      | `<>`                  | Not equal to                              |
-| `_ceq`     | `~=`                  | Case insensitive equal to                 |
-| `_cne`     | `!~=`                 | Case insensitive not equal to             |
-| `_cgt`     | `~>`                  | Case insensitive greater than             |
-| `_clt`     | `~<`                  | Case insensitive less than                |
-| `_cgte`    | `~>=`                 | Case insensitive greater than or equal to |
-| `_clte`    | `~<=`                 | Case insensitive less than or equal to    |
-| `_is_null` | `IS NULL`             | Is null                                   |
+| Operator   | Description                     |
+|------------|---------------------------------|
+| `_ceq`     | Column equal to                 |
+| `_cne`     | Column not equal to             |
+| `_cgt`     | Column greater than             |
+| `_clt`     | Column less than                |
+| `_cgte`    | Column greater than or equal to |
+| `_clte`    | Column less than or equal to    |
 
 
 ## JSONB operators
