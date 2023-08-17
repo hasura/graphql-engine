@@ -556,6 +556,7 @@ defaultTableSelectionSet ::
   forall b r m n.
   ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
+    BackendNativeQuerySelectSchema b,
     Eq (AnnBoolExp b (IR.UnpreparedValue b)),
     MonadBuildSchema b r m n
   ) =>
@@ -1290,6 +1291,7 @@ fieldSelection ::
   forall b r m n.
   ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
+    BackendNativeQuerySelectSchema b,
     Eq (AnnBoolExp b (IR.UnpreparedValue b)),
     MonadBuildSchema b r m n
   ) =>
@@ -1512,20 +1514,18 @@ relationshipField ::
   forall b r m n.
   ( AggregationPredicatesSchema b,
     BackendTableSelectSchema b,
+    BackendNativeQuerySelectSchema b,
     Eq (AnnBoolExp b (IR.UnpreparedValue b)),
     MonadBuildSchema b r m n
   ) =>
   TableName b ->
   RelInfo b ->
   SchemaT r m (Maybe [FieldParser n (AnnotatedField b)])
-relationshipField table ri = runMaybeT do
+relationshipField table ri@RelInfo {riTarget = RelTargetTable otherTableName} = runMaybeT do
   tCase <- retrieve $ _rscNamingConvention . _siCustomization @b
   roleName <- retrieve scRole
   optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
   tableInfo <- lift $ askTableInfo @b table
-  otherTableName <- case riTarget ri of
-    RelTargetNativeQuery _ -> error "relationshipField RelTargetNativeQuery"
-    RelTargetTable tn -> pure tn
   otherTableInfo <- lift $ askTableInfo otherTableName
   tablePerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
@@ -1661,3 +1661,24 @@ relationshipField table ri = runMaybeT do
             fmap (IR.AFArrayRelation . IR.ASAggregate . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteAggField,
             fmap (IR.AFArrayRelation . IR.ASConnection . IR.AnnRelationSelectG (riName ri) (riMapping ri) Nullable) <$> remoteConnectionField
           ]
+relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQueryName} = runMaybeT do
+  relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
+
+  case riType ri of
+    ObjRel -> do
+      nativeQueryInfo <- askNativeQueryInfo nativeQueryName
+
+      let objectRelDesc = Just $ G.Description "An object relationship"
+
+      nativeQueryParser <-
+        MaybeT $ selectNativeQueryObject nativeQueryInfo relFieldName objectRelDesc
+
+      -- this only affects the generated GraphQL type
+      let nullability = Nullable
+
+      pure
+        $ pure
+        $ nativeQueryParser
+        <&> \selectExp ->
+          IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
+    ArrRel -> throw500 "Table -> Native Query array relationships not supported"

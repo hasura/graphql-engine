@@ -233,10 +233,10 @@ mkReferenceSql :: SchemaName -> Schema.Reference -> Text
 mkReferenceSql (SchemaName localSchemaName) Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
   let schemaName = maybe localSchemaName unSchemaName (resolveReferenceSchema referenceTargetQualifiers)
    in [i|
-    FOREIGN KEY ("#{ referenceLocalColumn }")
-    REFERENCES "#{ schemaName }"."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
-    ON DELETE CASCADE ON UPDATE CASCADE
-  |]
+        FOREIGN KEY ("#{ referenceLocalColumn }")
+        REFERENCES "#{ schemaName }"."#{ referenceTargetTable }" ("#{ referenceTargetColumn }")
+        ON DELETE CASCADE ON UPDATE CASCADE
+      |]
 
 uniqueConstraintSql :: Schema.Constraint -> Text
 uniqueConstraintSql = \case

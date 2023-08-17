@@ -30,7 +30,9 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
+import Hasura.LogicalModel.Common (getSelPermInfoForLogicalModel)
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnRedactionExpPartialSQL, AnnRedactionExpUnpreparedValue)
 import Hasura.RQL.Types.Backend
@@ -249,7 +251,9 @@ tableSelectFields tableInfo = do
       canBeSelected role permissions (FIColumn _naiColumnInfo)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       case riTarget relationshipInfo of
-        RelTargetNativeQuery _ -> error "tableSelectFields RelTargetNativeQuery"
+        RelTargetNativeQuery nativeQueryName -> do
+          nativeQueryInfo <- askNativeQueryInfo nativeQueryName
+          pure $! isJust $ getSelPermInfoForLogicalModel @b role (_nqiReturns nativeQueryInfo)
         RelTargetTable tableName -> do
           tableInfo' <- askTableInfo tableName
           pure $! isJust $ tableSelectPermissions @b role tableInfo'

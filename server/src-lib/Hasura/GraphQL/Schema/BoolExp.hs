@@ -33,6 +33,7 @@ import Hasura.LogicalModel.Cache (LogicalModelInfo (..))
 import Hasura.LogicalModel.Common
 import Hasura.LogicalModel.Types (LogicalModelName (..))
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Cache (NativeQueryInfo (_nqiReturns))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
@@ -148,7 +149,14 @@ boolExpInternal gqlName selectPermissions fieldInfos description memoizeKey mkAg
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
-            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetNativeQuery nativeQueryName -> do
+              logicalModelInfo <- _nqiReturns <$> askNativeQueryInfo nativeQueryName
+              let remoteLogicalModelPermissions =
+                    (fmap . fmap) (partialSQLExpToUnpreparedValue)
+                      $ maybe annBoolExpTrue spiFilter
+                      $ getSelPermInfoForLogicalModel roleName logicalModelInfo
+              remoteBoolExp <- lift $ logicalModelBoolExp logicalModelInfo
+              pure $ fmap (AVRelationship relationshipInfo . RelationshipFilters remoteLogicalModelPermissions) remoteBoolExp
             RelTargetTable remoteTable -> do
               remoteTableInfo <- askTableInfo $ remoteTable
               let remoteTablePermissions =

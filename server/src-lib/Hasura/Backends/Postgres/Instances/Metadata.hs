@@ -151,11 +151,13 @@ instance PostgresMetadata 'Citus where
         case obj of
           RUFKeyOn (SameTable _) -> pure ()
           RUFKeyOn (RemoteTable targetTable _) -> checkObjectRelationship sourceTableInfo targetTable
-          RUManual RelManualTableConfigC {} -> pure ()
+          RUManual RelManualTableConfig {} -> pure ()
+          RUManual RelManualNativeQueryConfig {} -> pure ()
       Right (RelDef _ obj _) ->
         case obj of
           RUFKeyOn (ArrRelUsingFKeyOn targetTable _col) -> checkArrayRelationship sourceTableInfo targetTable
-          RUManual RelManualTableConfigC {} -> pure ()
+          RUManual RelManualTableConfig {} -> pure ()
+          RUManual RelManualNativeQueryConfig {} -> pure ()
     where
       lookupTableInfo tableName =
         HashMap.lookup tableName tableCache

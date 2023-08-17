@@ -149,7 +149,7 @@ instance (Backend b) => AC.HasObjectCodec (RelManualCommon b) where
 
 data RelUsing (b :: BackendType) a
   = RUFKeyOn a
-  | RUManual (RelManualTableConfig b)
+  | RUManual (RelManualConfig b)
   deriving (Show, Eq, Generic)
 
 instance (Backend b, HasCodec a, Typeable a) => HasCodec (RelUsing b a) where

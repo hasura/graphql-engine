@@ -946,7 +946,15 @@
             "BigqueryRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BigqueryRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -1919,7 +1927,15 @@
             "CitusRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CitusRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -2919,7 +2935,15 @@
             "CockroachRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/CockroachRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -4063,7 +4087,15 @@
             "DataconnectorRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/DataconnectorRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -5768,7 +5800,15 @@
             "MssqlRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/MssqlRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [
@@ -7123,7 +7163,15 @@
             "PostgresRUManual": {
                 "properties": {
                     "manual_configuration": {
-                        "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                        "additionalProperties": true,
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualTableConfig"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PostgresRelManualNativeQueryConfig"
+                            }
+                        ]
                     }
                 },
                 "required": [

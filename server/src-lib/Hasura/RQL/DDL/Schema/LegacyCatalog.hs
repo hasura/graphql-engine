@@ -930,6 +930,7 @@ recreateSystemMetadata = do
     arrayRel name using = Right $ RelDef (RelName name) using Nothing
     manualConfig schemaName tableName columns =
       RUManual
+        $ RelManualTableConfig
         $ RelManualTableConfigC
           (QualifiedObject schemaName tableName)
           (RelManualCommon (HashMap.fromList columns) Nothing)

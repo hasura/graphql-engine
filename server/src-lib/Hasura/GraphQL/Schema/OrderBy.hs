@@ -147,7 +147,7 @@ orderByExpInternal gqlName description selectPermissions tableFields memoizeKey 
         FIColumn (SCIArrayColumn _) -> empty
         FIRelationship relationshipInfo -> do
           case riTarget relationshipInfo of
-            RelTargetNativeQuery _ -> error "mkField RelTargetNativeQuery"
+            RelTargetNativeQuery _ -> hoistMaybe Nothing -- we do not support ordering by a nested Native Query yet
             RelTargetTable remoteTableName -> do
               remoteTableInfo <- askTableInfo remoteTableName
               perms <- hoistMaybe $ tableSelectPermissions roleName remoteTableInfo
