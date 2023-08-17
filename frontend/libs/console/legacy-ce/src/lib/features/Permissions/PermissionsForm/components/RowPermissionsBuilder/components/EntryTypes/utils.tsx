@@ -3,11 +3,13 @@ import get from 'lodash/get';
 import { TableProvider } from '../TableProvider';
 import { PermissionType, Relationships } from '../types';
 
-export function createWrapper({
+export function Wrapper({
+  children,
   types,
   path,
   relationships,
 }: {
+  children?: ReactNode;
   types: Record<
     string,
     {
@@ -17,8 +19,15 @@ export function createWrapper({
   path: string[];
   relationships: Relationships;
 }) {
-  let Wrapper: any = Fragment;
   const type = get(types, path)?.type;
+
+  // MongoDB's nested objects behave like relationships
+  // so we put them inside a wrapper that has their fields as columns
+  if (type === 'object') {
+    return (
+      <TableProvider objectPath={path.join('.')}>{children}</TableProvider>
+    );
+  }
 
   if (type === 'relationship') {
     const relationship = relationships.find(
@@ -26,13 +35,14 @@ export function createWrapper({
     );
     if (relationship) {
       if (!('toTable' in relationship.definition)) {
-        return;
+        return null;
       }
       const relationshipTable = relationship.definition.toTable;
-      Wrapper = ({ children }: { children?: ReactNode | undefined }) => (
+      return (
         <TableProvider table={relationshipTable}>{children}</TableProvider>
       );
     }
   }
-  return Wrapper;
+
+  return <Fragment>{children}</Fragment>;
 }

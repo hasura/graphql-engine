@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { InputCustomEvent } from './TextInput';
 import { ColumnRowInput } from './ColumnRowInput';
 import { SupportedDrivers } from '../../hasura-metadata-types';
+import { columnDataType } from '../../DataSource/utils';
 
 type RowValue = {
   columnName: string;
@@ -131,7 +132,7 @@ export const ColumnRow = ({
       />
 
       <ColumnRowInput
-        dataType={dataType}
+        dataType={columnDataType(dataType)}
         name={name}
         onChange={onValueChange}
         onInput={checkValueRadio}

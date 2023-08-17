@@ -5,7 +5,7 @@ import { tableContext } from '../TableProvider';
 import { typesContext } from '../TypesProvider';
 import { ValueInput } from '../ValueInput';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { createWrapper } from './utils';
+import { Wrapper } from './utils';
 
 export function ArrayEntry({
   k,
@@ -20,14 +20,9 @@ export function ArrayEntry({
   const { relationships } = useContext(tableContext);
   const { setValue } = useContext(rowPermissionsContext);
 
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   const array = Array.isArray(v) ? v : [];
   return (
-    <Wrapper>
+    <Wrapper types={types} path={path} relationships={relationships}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''

@@ -51,7 +51,7 @@ export const UpdatePermissions: StoryObj<PermissionsTabProps> = {
     await userEvent.click(await canvas.findByTestId('custom-check'));
 
     await userEvent.selectOptions(
-      await canvas.findByTestId('-operator'),
+      await canvas.findByTestId('root-operator'),
       '_and'
     );
 

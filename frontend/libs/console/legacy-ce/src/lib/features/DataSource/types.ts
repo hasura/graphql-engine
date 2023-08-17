@@ -64,7 +64,7 @@ export type TableColumn = {
   /**
    * dataType of the column as defined in the DB
    */
-  dataType: string;
+  dataType: string | { type: string; name: string };
   /**
    * console data type: the dataType property is group into one of these types and console uses this internally
    */

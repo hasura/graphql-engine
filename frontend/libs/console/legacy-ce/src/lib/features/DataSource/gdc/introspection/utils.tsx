@@ -69,9 +69,9 @@ export function convertToTreeData(
 }
 
 export function adaptAgentDataType(
-  sqlDataType: string
+  sqlDataType: TableColumn['dataType']
 ): TableColumn['dataType'] {
-  const DataTypeToSQLTypeMap: Record<TableColumn['dataType'], string[]> = {
+  const DataTypeToSQLTypeMap: Record<string, string[]> = {
     bool: ['bool'],
     string: ['string'],
     number: ['number', 'integer', 'float'],
@@ -83,21 +83,14 @@ export function adaptAgentDataType(
 
   const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
     value.includes(
-      // Check if sqlDataType is a string or an object
-      // Reason is `Error: sqlDataType.toLowerCase is not a function`
-      /*
-        sqlDataType ->
-          {
-            element_type: "string",
-            nullable: false,
-            type: "array"
-          }
-      */
       typeof sqlDataType === 'string'
         ? sqlDataType.toLowerCase()
-        : (sqlDataType as any).type.toLowerCase() // Doubt: Could also be element_type in the case of arrays
+        : sqlDataType.type.toLowerCase()
     )
-  ) ?? ['string', []];
+  ) ?? [
+    typeof sqlDataType === 'string' ? 'string' : sqlDataType.type.toLowerCase(),
+    [],
+  ];
 
   return dataType;
 }

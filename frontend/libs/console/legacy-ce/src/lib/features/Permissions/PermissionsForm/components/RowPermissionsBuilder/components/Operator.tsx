@@ -19,11 +19,14 @@ export const Operator = ({
   const { columns, table, relationships } = useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
   const parent = path[path.length - 1];
-  const operatorLevelId = `${path?.join('.')}-operator`;
+  const operatorLevelId =
+    path.length === 0
+      ? 'root-operator'
+      : `${path?.join('.')}-operator${operator ? `-root` : ''}`;
   const { hasFeature } = useForbiddenFeatures();
   return (
     <select
-      data-testid={operatorLevelId || 'root-operator-picker'}
+      data-testid={operatorLevelId}
       className="border border-gray-200 rounded-md p-2 pr-4"
       value={operator}
       disabled={parent === '_where' && isEmpty(table)}
@@ -50,7 +53,7 @@ export const Operator = ({
         <optgroup label="Columns">
           {columns.map((column, index) => (
             <option
-              data-type="column"
+              data-type={column.dataType === 'object' ? 'object' : 'column'}
               key={'column' + index}
               value={column.name}
             >

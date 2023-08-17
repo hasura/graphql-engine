@@ -9,6 +9,7 @@ import { RiPlayFill } from 'react-icons/ri';
 import { FilterRows } from '../RunQuery/Filter';
 import { SortRows } from '../RunQuery/Sort';
 import { useTableColumns } from '../../hooks/useTableColumns';
+import { columnDataType } from '../../../DataSource/utils';
 
 interface QueryDialogProps {
   table: Table;
@@ -42,9 +43,9 @@ const transformFilterValues = (
 
   const dataType = column?.graphQLProperties?.scalarType ?? column.dataType;
 
-  if (['boolean', 'Boolean'].includes(dataType)) return filter;
+  if (['boolean', 'Boolean'].includes(columnDataType(dataType))) return filter;
 
-  if (['String', 'string'].includes(dataType)) return filter;
+  if (['String', 'string'].includes(columnDataType(dataType))) return filter;
 
   return { ...filter, value: parseInt(filter.value, 10) };
 };

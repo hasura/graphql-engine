@@ -10,7 +10,10 @@ export type Operators = Record<
 
 export type Permissions = Record<string, any>;
 
-export type Columns = Pick<TableColumn, 'dataType' | 'name'>[];
+export type Columns = Pick<
+  TableColumn,
+  'dataType' | 'name' | 'graphQLProperties'
+>[];
 
 export type Relationships = Array<Relationship>;
 
@@ -39,6 +42,7 @@ export type PermissionType =
   | 'column'
   | 'exist'
   | 'relationship'
+  | 'object'
   | 'value'
   | 'comparator';
 
