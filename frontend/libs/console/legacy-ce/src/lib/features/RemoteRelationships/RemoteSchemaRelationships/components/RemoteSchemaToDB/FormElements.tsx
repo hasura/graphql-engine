@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useRemoteSchema } from '../../../../MetadataAPI';
-import { useTableColumns } from '../../../../SqlQueries';
 import { MapSelector } from '../../../../../new-components/MapSelector';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import {
@@ -12,6 +11,7 @@ import { RemoteDatabaseWidget } from '../RemoteDatabaseWidget';
 import { RsSourceTypeSelector } from '../RsSourceTypeSelector';
 import { Schema } from './schema';
 import { getTypesFromIntrospection } from '../../utils';
+import { useTableColumns } from '../../../../DatabaseRelationships/hooks/useTableColumns';
 
 export const FormElements = ({
   sourceRemoteSchema,
@@ -22,9 +22,7 @@ export const FormElements = ({
 }) => {
   const { watch } = useFormContext<Schema>();
 
-  const database = watch('database');
-  const schema = watch('schema');
-  const table = watch('table');
+  const target = watch('target');
   const RSTypeName = watch('typeName');
   const mapping = watch('mapping');
   const { fetchSchema, data, isLoading } = useRemoteSchema();
@@ -33,13 +31,12 @@ export const FormElements = ({
     []
   );
 
-  const { data: columnData } = useTableColumns(database, {
-    name: table,
-    schema,
-  });
+  const dataSourceName = target?.dataSourceName;
+  const table = target?.table;
+  const { data: columnData } = useTableColumns({ dataSourceName, table });
 
   const columns: string[] = columnData
-    ? columnData.slice(1).map((x: string[]) => x[3])
+    ? (columnData ?? []).map(column => column.name)
     : [];
 
   useEffect(() => {
@@ -83,7 +80,7 @@ export const FormElements = ({
 
         <LinkBlockHorizontal />
 
-        <div className="col-span-5">
+        <div className="col-span-5 pt-10 mt-20">
           <RemoteDatabaseWidget />
         </div>
       </div>

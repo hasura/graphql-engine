@@ -3,9 +3,11 @@ import { z } from 'zod';
 export const schema = z.object({
   relationshipType: z.literal('array').or(z.literal('object')),
   relationshipName: z.string().min(1, { message: 'Name is required!' }),
-  database: z.string().min(1, { message: 'Database is required!' }),
-  schema: z.string().min(1, { message: 'Schema is required!' }),
-  table: z.string().min(1, { message: 'Table is required!' }),
+  target: z.object({
+    type: z.literal('table'),
+    dataSourceName: z.string().min(1, 'Reference source is a required field'),
+    table: z.any(),
+  }),
   mapping: z.array(
     z.object({
       field: z.string(),

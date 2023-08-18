@@ -66,9 +66,9 @@ describe('check if remote schema to db relationships are created properly', () =
     cy.get('[aria-labelledby=typeName]')
       .focus() // workaround for selecting things with react-select
       .type('Pokemon{enter}', { force: true });
-    cy.get('[name=database]').select('default', { force: true });
-    cy.get('[name=schema]').select('public');
-    cy.get('[name=table]').select('destination_table');
+    cy.get('[aria-labelledby=target]')
+      .focus() // workaround for selecting things with react-select
+      .type('default / public / destination_table{enter}', { force: true });
     cy.get('[data-test=select-source-field').select('id');
     cy.get('[data-test=select-ref-col').select('name');
     cy.findByRole('button', { name: 'Add Relationship' }).click();
