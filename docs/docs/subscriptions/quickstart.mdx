@@ -18,8 +18,8 @@ import SampleAppBlock from '@site/src/components/SampleAppBlock';
 
 # Quickstart Subscriptions
 
-This quickstart will help you create your first subscription. We're going to subscribe to live updates for a message
-thread.
+This quickstart will help you create your first subscription. We're going to subscribe to live updates for a
+notification thread.
 
 <SampleAppBlock dependent />
 
@@ -28,12 +28,11 @@ thread.
 Head to the `API` tab of the Hasura Console and paste in this value:
 
 ```graphql
-subscription MessageThreadSubscription($thread_id: uuid = "75e0f7b0-b5fc-11ed-ad85-1a122c2a1c44") {
-  messages(where: { thread_id: { _eq: $thread_id } }) {
-    created_at
+subscription UserNotificationSubscription($user_id: uuid = "9bd9d300-65b7-11ed-b908-571fef22d2ba") {
+  notifications(where: { user_id: { _eq: $user_id } }) {
     id
-    body
-    is_read
+    created_at
+    message
   }
 }
 ```
@@ -48,20 +47,20 @@ Once hitting run, you should see the following output:
 
 :::tip That's it?
 
-Yep! Remember, you get subscriptions out of the box with Hasura 🔥 You won't see any messages in your results yet
-because there aren't any in the database, but the subscription is live and running. To test it, and mimic a client
-application, let's ping the server with curl in the next step.
+Yep! Remember, you get subscriptions out of the box with Hasura 🔥 You'll see a few notifications in your results
+because they're already in the database. To test it — and see new notifications mimicking a client application — let's
+ping the server with curl in the next step.
 
 :::
 
-## Step 2: Insert a message
+## Step 2: Insert a notification
 
-To avoid the need for a client application, we'll use curl to insert a message into the database. You can enter the curl
-command below into a terminal window, and replace the `<YOUR_ADMIN_SECRET>` and `<YOUR_HASURA_PROJECT_ENDPOINT>` values
-with your own:
+To avoid the need for a client application, we'll use curl to insert a notification into the database. You can enter the
+curl command below into a terminal window, and replace the `<YOUR_ADMIN_SECRET>` and `<YOUR_HASURA_PROJECT_ENDPOINT>`
+values with your own:
 
 ```shell
-curl -X POST -H "Content-Type: application/json" -H "X-Hasura-Admin-Secret: <YOUR_ADMIN_SECRET>" -d '{"query": "mutation { insert_messages(objects: {body: \"This is a live-updating subscription\", user_id: \"82001336-65b7-11ed-b905-7fa26a16d198\", thread_id: \"75e0f7b0-b5fc-11ed-ad85-1a122c2a1c44\" }) { affected_rows } } "}' <YOUR_HASURA_PROJECT_ENDPOINT>
+curl -X POST -H "Content-Type: application/json" -H "x-hasura-admin-secret: <YOUR_ADMIN_SECRET>" -d '{"query":"mutation InsertNewNotification {\n  insert_notifications_one(object: {user_id: \"9bd9d300-65b7-11ed-b908-571fef22d2ba\", message: \"This is a live-updating subscription!\"}) {\n    id\n  }\n}"}' <YOUR_PROJECT_GRAPHQL_ENDPOINT>
 ```
 
 After entering the above command hitting `enter`, you should see the following output on your Console's API tab:
@@ -74,11 +73,11 @@ After entering the above command hitting `enter`, you should see the following o
 
 ## Recap
 
-What just happened? Well, you just wrote your first subscription! You can now subscribe to live updates for a message
-thread. Think of the possibilities in a real-world application: you can subscribe to live updates for a chat thread, a
-shopping cart, or a live leaderboard.
+What just happened? Well, you just wrote your first subscription! You can now subscribe to live updates for a
+notification thread. Think of the possibilities in a real-world application: you can subscribe to live updates for a
+chat thread, a shopping cart, or a live leaderboard.
 
-At the start, you created a subscription using the Hasura Console's API tab. This subscription returns the `created_at`,
-`id`, `body`, and `is_read` fields for all messages with a `thread_id` equal to the provided value. This allows us to
-receive new data, live from the server, rather than just a single response. So, as new messages are inserted into the
-database - like we did with the curl command - the subscription will return them.
+At the start, you created a subscription using the Hasura Console's API tab. This subscription returns the `id` field
+for all notifications with a `user_id` equal to the provided value. This allows us to receive new data, live from the
+server, rather than just a single response. So, as new notifications are inserted into the database - like we did with
+the curl command - the subscription will return them.
