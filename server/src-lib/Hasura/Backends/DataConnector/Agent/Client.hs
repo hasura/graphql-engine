@@ -26,7 +26,7 @@ import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
-import Hasura.Tracing (MonadTrace, traceHTTPRequest)
+import Hasura.Tracing (MonadTrace, MonadTraceContext, traceHTTPRequest)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types.Status (Status)
 import Servant.Client
@@ -48,7 +48,7 @@ data AgentClientContext = AgentClientContext
   }
 
 newtype AgentClientT m a = AgentClientT (ReaderT AgentClientContext m a)
-  deriving newtype (Functor, Applicative, Monad, MonadError e, MonadTrace, MonadIO)
+  deriving newtype (Functor, Applicative, Monad, MonadError e, MonadTraceContext, MonadTrace, MonadIO)
 
 runAgentClientT :: AgentClientT m a -> AgentClientContext -> m a
 runAgentClientT (AgentClientT action) ctx = runReaderT action ctx

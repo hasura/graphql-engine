@@ -281,6 +281,7 @@ newtype MetadataT m a = MetadataT {unMetadataT :: StateT Metadata m a}
       CacheRM,
       CacheRWM,
       MFunctor,
+      Tracing.MonadTraceContext,
       Tracing.MonadTrace,
       MonadBase b,
       MonadBaseControl b,

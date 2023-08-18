@@ -88,7 +88,7 @@ main = do
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
         t <- liftIO $ getFormattedTime Nothing
-        liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail
+        liftIO $ putStrLn $ LBS.toString $ J.encode $ EngineLog t logLevel logType logDetail Nothing Nothing
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings

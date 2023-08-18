@@ -154,6 +154,8 @@ withTraceContext ::
   PG.TxET QErr m a
 withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
+deriving instance (Tracing.MonadTraceContext m) => Tracing.MonadTraceContext (PG.TxET e m)
+
 deriving instance (Tracing.MonadTrace m) => Tracing.MonadTrace (PG.TxET e m)
 
 checkDbConnection :: (MonadTx m) => m ()

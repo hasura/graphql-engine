@@ -190,6 +190,7 @@ newtype CacheRWT m a
       UserInfoM,
       MonadMetadataStorage,
       Tracing.MonadTrace,
+      Tracing.MonadTraceContext,
       MonadBase b,
       MonadBaseControl b,
       ProvidesNetwork,
