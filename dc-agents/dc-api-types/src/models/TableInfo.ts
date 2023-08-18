@@ -11,7 +11,7 @@ export type TableInfo = {
   /**
    * The columns of the table
    */
-  columns: Array<ColumnInfo>;
+  columns?: Array<ColumnInfo>;
   /**
    * Whether or not existing rows can be deleted in the table
    */

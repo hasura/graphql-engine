@@ -84,6 +84,7 @@ type SchemaApi config =
   "schema"
     :> SourceNameHeader Required
     :> ConfigHeader config Required
+    :> ReqBody '[JSON] V0.SchemaRequest
     :> UVerb 'GET '[JSON] SchemaResponses
 
 -- | This function defines a central place to ensure that all cases are covered for query and error responses.

@@ -194,8 +194,8 @@ data FunctionInfo = FunctionInfo
   { -- NOTE: Some fields from PG are omitted here due to initial implementation, or non-generality.
     _fiName :: FunctionName,
     _fiFunctionType :: FunctionType,
-    _fiReturns :: FunctionReturnType, -- Functions must currently return tables as per PG.
-    _fiResponseCardinality :: FunctionArity,
+    _fiReturns :: Maybe FunctionReturnType, -- Functions must currently return tables as per PG.
+    _fiResponseCardinality :: Maybe FunctionArity,
     _fiInputArgs :: [FunctionArg], -- Args info is listed grouped unlike PG.
     _fiDescription :: Maybe Text
   }
@@ -209,9 +209,9 @@ instance HasCodec FunctionInfo where
       FunctionInfo
         <$> requiredField "name" "The name of the table" .= _fiName
         <*> requiredField "type" "read/write classification of the function" .= _fiFunctionType
-        <*> requiredField "returns" "table listed in schema that matches the return type of the function - to relax later" .= _fiReturns
-        <*> requiredField "response_cardinality" "object response if false, rows if true" .= _fiResponseCardinality
-        <*> requiredField "args" "argument info - name/types" .= _fiInputArgs
+        <*> optionalFieldOrNull "returns" "table listed in schema that matches the return type of the function - to relax later" .= _fiReturns
+        <*> optionalFieldOrNull "response_cardinality" "object response if false, rows if true" .= _fiResponseCardinality
+        <*> optionalFieldWithOmittedDefault "args" [] "argument info - name/types" .= _fiInputArgs
         <*> optionalFieldOrNull "description" "Description of the table" .= _fiDescription
 
 --------------------------------------------------------------------------------

@@ -105,9 +105,9 @@ capabilities = do
     defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
     capabilitiesGuard = API.capabilitiesCase defaultAction pure errorAction
 
-schema :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> AgentClientT m API.SchemaResponse
-schema sourceName config = do
-  schemaGuard =<< (genericClient // API._schema) (toTxt sourceName) config
+schema :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> API.Config -> API.SchemaRequest -> AgentClientT m API.SchemaResponse
+schema sourceName config schemaRequest = do
+  schemaGuard =<< (genericClient // API._schema) (toTxt sourceName) config schemaRequest
   where
     errorAction e = throw400WithDetail (mapErrorType $ API._crType e) (API._crMessage e) (API._crDetails e)
     defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"

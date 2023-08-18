@@ -1,26 +1,26 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Module containing tests for user-defined-functions aka. "UDFs".
-module Test.Specs.UDFSpec (spec) where
+-- | Module containing tests for user-defined-functions
+module Test.Specs.FunctionsSpec (spec) where
 
 --------------------------------------------------------------------------------
 
 import Command (TestConfig)
-import Control.Lens ((?~))
+import Control.Lens ((<&>), (?~))
 import Control.Lens.Lens ((&))
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Reader (MonadReader)
 import Data.Aeson (Value (..))
 import Data.HashMap.Strict qualified as HashMap
-import Data.List (sort)
+import Data.List (sort, sortOn)
 import Data.Set qualified as Set
 import Data.Text qualified as Text
 import GHC.Stack (HasCallStack)
 import Hasura.Backends.DataConnector.API
 import Hasura.Backends.DataConnector.API qualified as API
-import Test.AgentAPI (getSchemaGuarded, queryGuarded)
+import Test.AgentAPI (getSchemaGuarded, getSchemaGuarded', queryGuarded)
 import Test.AgentClient (HasAgentClient, runAgentClientT)
 import Test.AgentDatasets (HasDatasetContext)
 import Test.AgentTestContext (HasAgentTestContext)
@@ -49,6 +49,36 @@ spec testConfig API.Capabilities {} = describe "supports functions" $ preloadAge
 
     functionNames <- (extractFunctionNames . API._srFunctions) <$> getPreloadedAgentSchema
     functionNames `jsonShouldBe` expectedFunctionNames
+
+  it "returns the specified functions from the Functions dataset when filtered" do
+    preloadedSchema <- getPreloadedAgentSchema
+    let FunctionsTestData {..} = mkFunctionsTestData preloadedSchema testConfig
+        extractFunctionNames = sort . fmap API._fiName
+        desiredFunctions = [_ftdFibonacciFunctionName]
+        filters = mempty {API._sfOnlyFunctions = Just desiredFunctions}
+
+    functionNames <- extractFunctionNames . API._srFunctions <$> getSchemaGuarded' (API.SchemaRequest filters API.BasicInfo)
+    functionNames `jsonShouldBe` desiredFunctions
+
+  it "returns the no functions when filtered with an empty list" do
+    let filters = mempty {API._sfOnlyFunctions = Just []}
+
+    functionInfos <- API._srFunctions <$> getSchemaGuarded' (API.SchemaRequest filters API.BasicInfo)
+    functionInfos `jsonShouldBe` []
+
+  it "returns only Function names and types when using basic_info detail level" $ do
+    preloadedSchema <- getPreloadedAgentSchema
+
+    let FunctionsTestData {..} = mkFunctionsTestData preloadedSchema testConfig
+        expectedFunctionNames = [_ftdFibonacciFunctionName, _ftdSearchArticlesFunctionName]
+
+    functionInfos <- sortOn API._fiName . API._srFunctions <$> getSchemaGuarded' (API.SchemaRequest mempty API.BasicInfo)
+
+    let expectedFunctionInfos =
+          expectedFunctionNames
+            <&> (\functionName -> API.FunctionInfo functionName API.FRead Nothing Nothing [] Nothing)
+
+    functionInfos `jsonShouldBe` expectedFunctionInfos
 
   it "can query for a list Fibonacci numbers using the fibonacci function" $ do
     preloadedSchema <- getPreloadedAgentSchema

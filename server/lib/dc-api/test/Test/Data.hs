@@ -658,7 +658,7 @@ functionField :: API.SchemaResponse -> TestConfig -> API.TableName -> API.Functi
 functionField schemaResponse@API.SchemaResponse {..} testConfig defaultTableName functionName columnName =
   columnField schemaResponse testConfig tableName columnName
   where
-    tableName = fromMaybe defaultTableName (functionReturnType ^? API._FunctionReturnsTable)
+    tableName = fromMaybe defaultTableName (functionReturnType ^? _Just . API._FunctionReturnsTable)
     functionReturnType = maybe (error $ "Can't find the function " <> show functionName <> " in " <> show (API._fiName <$> _srFunctions)) API._fiReturns functionInfo
     functionInfo = find (\API.FunctionInfo {..} -> _fiName == functionName) _srFunctions
 

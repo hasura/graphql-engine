@@ -4,7 +4,7 @@ import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse } from '@hasura/dc-api-types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse, MutationRequest, MutationResponse, DatasetTemplateName, DatasetGetTemplateResponse, DatasetCreateCloneRequest, DatasetCreateCloneResponse, DatasetDeleteCloneResponse, SchemaRequest } from '@hasura/dc-api-types';
 import { defaultMode, withConnection } from './db';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
@@ -97,6 +97,14 @@ if(PERMISSIVE_CORS) {
   })
 })();
 
+// This is a hack to get Fastify to parse bodies on /schema GET requests
+// We basically trick its code into thinking the request is actually a POST
+// request so it doesn't skip parsing request bodies.
+server.addHook("onRequest", async(request, reply) => {
+  if (request.routerPath === "/schema")
+    request.raw.method = "POST"
+})
+
 // Serves as an example of a custom histogram
 // Not especially useful at present as this mirrors
 // http_request_duration_seconds_bucket but is less general
@@ -118,10 +126,10 @@ server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _re
   return capabilitiesResponse;
 });
 
-server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
+server.get<{ Body: SchemaRequest | undefined, Reply: SchemaResponse }>("/schema", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "schema.request");
   const config = getConfig(request);
-  return getSchema(config, sqlLogger);
+  return getSchema(config, sqlLogger, request.body);
 });
 
 /**

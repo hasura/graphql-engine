@@ -63,6 +63,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/SchemaRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -82,7 +91,7 @@
                 }
               }
             },
-            "description": " or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "description": " or `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
           },
           "500": {
             "content": {
@@ -1286,6 +1295,7 @@
       "TableInfo": {
         "properties": {
           "columns": {
+            "default": [],
             "description": "The columns of the table",
             "items": {
               "$ref": "#/components/schemas/ColumnInfo"
@@ -1336,8 +1346,7 @@
           }
         },
         "required": [
-          "name",
-          "columns"
+          "name"
         ],
         "type": "object"
       },
@@ -1428,6 +1437,7 @@
       "FunctionInfo": {
         "properties": {
           "args": {
+            "default": [],
             "description": "argument info - name/types",
             "items": {
               "$ref": "#/components/schemas/FunctionInformationArgument"
@@ -1448,6 +1458,7 @@
               "one",
               "many"
             ],
+            "nullable": true,
             "type": "string"
           },
           "returns": {
@@ -1459,10 +1470,7 @@
         },
         "required": [
           "name",
-          "type",
-          "returns",
-          "response_cardinality",
-          "args"
+          "type"
         ],
         "type": "object"
       },
@@ -1489,6 +1497,44 @@
           "columns"
         ],
         "type": "object"
+      },
+      "SchemaRequest": {
+        "properties": {
+          "detail_level": {
+            "$ref": "#/components/schemas/DetailLevel"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SchemaFilters"
+          }
+        },
+        "type": "object"
+      },
+      "SchemaFilters": {
+        "properties": {
+          "only_functions": {
+            "description": "Only get the schemas for these functions",
+            "items": {
+              "$ref": "#/components/schemas/FunctionName"
+            },
+            "type": "array"
+          },
+          "only_tables": {
+            "description": "Only get the schemas for these tables",
+            "items": {
+              "$ref": "#/components/schemas/TableName"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "DetailLevel": {
+        "description": "How much information to return about the schema. Values:\n- 'everything': All information about the schema.\n- 'basic_info': For tables, only the table name and table type, for functions, only the function name and function type.\n",
+        "enum": [
+          "everything",
+          "basic_info"
+        ],
+        "type": "string"
       },
       "QueryResponse": {
         "properties": {

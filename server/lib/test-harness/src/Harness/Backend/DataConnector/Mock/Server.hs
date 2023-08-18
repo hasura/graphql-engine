@@ -866,8 +866,8 @@ mockCapabilitiesHandler mcfg = liftIO $ do
   cfg <- I.readIORef mcfg
   pure $ inject $ SOP.I $ _capabilitiesResponse cfg
 
-mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler (Union API.SchemaResponses)
-mockSchemaHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig = liftIO $ do
+mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe AgentRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.SchemaRequest -> Handler (Union API.SchemaResponses)
+mockSchemaHandler mcfg mRecordedRequest mRecordedRequestConfig _sourceName requestConfig _schemaRequest = liftIO $ do
   cfg <- I.readIORef mcfg
   I.writeIORef mRecordedRequest (Just Schema)
   I.writeIORef mRecordedRequestConfig (Just requestConfig)
