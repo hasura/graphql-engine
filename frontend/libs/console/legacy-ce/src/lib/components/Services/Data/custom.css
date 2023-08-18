@@ -15,3 +15,11 @@
 .ant-tree {
   color: grey;
 }
+
+.ant-tree-title + .ant-tree-iconEle svg {
+  height: 16px;
+}
+
+.ant-tree-list-holder-inner {
+  gap: 4px;
+}
