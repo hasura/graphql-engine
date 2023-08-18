@@ -10,7 +10,7 @@ import { NativeQuery } from '../../../hasura-metadata-types';
 import { MetadataWrapper } from '../../components';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
 import { Routes } from '../constants';
-import { useSupportedDrivesForNativeQueries } from '../hook';
+import { useSupportedDriversForNativeQueries } from '../hook';
 import { NativeQueryFormFields } from './components/NativeQueryDetailsForm';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
@@ -95,7 +95,7 @@ export const AddNativeQuery = ({
     });
   };
 
-  const allowedDrivers = useSupportedDrivesForNativeQueries();
+  const allowedDrivers = useSupportedDriversForNativeQueries();
 
   return (
     <MetadataWrapper

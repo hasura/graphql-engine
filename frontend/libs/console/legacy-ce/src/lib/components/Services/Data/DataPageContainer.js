@@ -7,9 +7,14 @@ import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import styles from '../../Common/TableCommon/Table.module.scss';
+import { useMetadata } from '../../../features/hasura-metadata-api';
 
-const DataPageContainer = ({ children, location, currentDataSource }) => {
+const DataPageContainer = ({ children, location }) => {
   const currentLocation = location.pathname;
+
+  const { data: areSourcesPresent = false } = useMetadata(
+    m => !!m.metadata.sources.length
+  );
 
   let migrationTab = null;
   if (globals.consoleMode === CLI_CONSOLE_MODE) {
@@ -50,7 +55,7 @@ const DataPageContainer = ({ children, location, currentDataSource }) => {
 
           <DataSubSidebar />
         </li>
-        {currentDataSource && (
+        {areSourcesPresent && (
           <>
             <li
               role="presentation"

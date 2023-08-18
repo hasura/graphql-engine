@@ -25,7 +25,7 @@ import {
   LOGICAL_MODEL_EDIT_ERROR,
   LOGICAL_MODEL_EDIT_SUCCESS,
 } from '../constants';
-import { useSupportedDrivesForNativeQueries } from '../hook';
+import { useSupportedDriversForNativeQueries } from '../hook';
 import { LogicalModelWithSource, NativeQueryWithSource } from '../types';
 import { LogicalModelFormInputs } from './components/LogicalModelFormInputs';
 import { formFieldToLogicalModelField } from './mocks/utils/formFieldToLogicalModelField';
@@ -74,7 +74,7 @@ const DataBoundWidgetUI = (props: AddLogicalModelDialogProps) => {
 
   const selectedDataSource = watch('dataSourceName');
 
-  const allowedDrivers = useSupportedDrivesForNativeQueries();
+  const allowedDrivers = useSupportedDriversForNativeQueries();
 
   const capabilitiesResult = useAllDriverCapabilities({
     select: data => {

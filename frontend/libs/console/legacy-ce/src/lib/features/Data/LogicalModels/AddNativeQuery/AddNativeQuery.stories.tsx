@@ -346,7 +346,14 @@ export const EEBannerNotDisplayed: typeof Basic = {
     await expect(c.queryByText('Enable Enterprise')).not.toBeInTheDocument();
 
     //checks that the correct options are present in the dropdown
-    await expect(c.getByTestId('source-mssql')).toBeInTheDocument();
-    await expect(c.getByTestId('source-postgres')).toBeInTheDocument();
+    await waitFor(
+      async () => {
+        await expect(c.getByTestId('source-mssql')).toBeInTheDocument();
+        await expect(c.getByTestId('source-postgres')).toBeInTheDocument();
+      },
+      {
+        timeout: 5000,
+      }
+    );
   },
 };
