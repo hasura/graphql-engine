@@ -249,6 +249,12 @@
       "name": "get_t2",
       "schema": "public"
      }
+    },
+    {
+     "function": [
+      "test1",
+      "test2"
+     ]
     }
    ]
   },
