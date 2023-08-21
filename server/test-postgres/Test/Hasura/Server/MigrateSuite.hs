@@ -125,7 +125,7 @@ suite srcConfig pgExecCtx pgConnInfo = do
   let logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
         t <- liftIO $ getFormattedTime Nothing
-        liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail
+        liftIO $ putStrLn $ LBS.toString $ encode $ EngineLog t logLevel logType logDetail Nothing Nothing
 
       migrateCatalogAndBuildCache env time = do
         dynamicConfig <- asks fst

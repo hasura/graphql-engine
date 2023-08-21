@@ -7,6 +7,7 @@ import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { useTableInfo } from '../Data/hooks/useTableInfo';
 import { useMetadata } from '../hasura-metadata-api';
 import { SupportedDrivers } from '../hasura-metadata-types';
+import { columnDataType } from '../DataSource/utils';
 
 type InsertRowFormContainerProps = {
   dataSourceName: string;
@@ -74,7 +75,7 @@ export const InsertRowFormContainer = ({
           : true,
       description: columnInfo?.description || '',
       dataType,
-      placeholder: getPlaceholder(dataType),
+      placeholder: getPlaceholder(columnDataType(dataType)),
     };
   });
 

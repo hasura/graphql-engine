@@ -159,7 +159,7 @@ artistsTableRelationships =
    in API.TableRelationships
         artistsTableName
         ( HashMap.fromList
-            [ (albumsRelationshipName, API.Relationship albumsTableName API.ArrayRelationship joinFieldMapping)
+            [ (albumsRelationshipName, API.Relationship (API.TTargetTable albumsTableName) API.ArrayRelationship joinFieldMapping)
             ]
         )
 
@@ -180,8 +180,8 @@ albumsTableRelationships =
    in API.TableRelationships
         albumsTableName
         ( HashMap.fromList
-            [ (artistRelationshipName, API.Relationship artistsTableName API.ObjectRelationship artistsJoinFieldMapping),
-              (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship tracksJoinFieldMapping)
+            [ (artistRelationshipName, API.Relationship (API.TTargetTable artistsTableName) API.ObjectRelationship artistsJoinFieldMapping),
+              (tracksRelationshipName, API.Relationship (API.TTargetTable tracksTableName) API.ArrayRelationship tracksJoinFieldMapping)
             ]
         )
 
@@ -197,18 +197,27 @@ customersTableName = mkTableName "Customer"
 customersRows :: [HashMap API.FieldName API.FieldValue]
 customersRows = sortBy (API.FieldName "CustomerId") $ readTableFromXmlIntoRows customersTableName
 
+customersRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
+customersRowsById =
+  HashMap.fromList $ mapMaybe (\customer -> (,customer) <$> customer ^? field "CustomerId" . _ColumnFieldNumber) customersRows
+
 customersTableRelationships :: API.TableRelationships
 customersTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+  let supportRepJoinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+      invoicesJoinFieldMapping = HashMap.fromList [(API.ColumnName "CustomerId", API.ColumnName "CustomerId")]
    in API.TableRelationships
         customersTableName
         ( HashMap.fromList
-            [ (supportRepRelationshipName, API.Relationship employeesTableName API.ObjectRelationship joinFieldMapping)
+            [ (supportRepRelationshipName, API.Relationship (API.TTargetTable employeesTableName) API.ObjectRelationship supportRepJoinFieldMapping),
+              (invoicesRelationshipName, API.Relationship (API.TTargetTable invoicesTableName) API.ArrayRelationship invoicesJoinFieldMapping)
             ]
         )
 
 supportRepRelationshipName :: API.RelationshipName
 supportRepRelationshipName = API.RelationshipName "SupportRep"
+
+invoicesRelationshipName :: API.RelationshipName
+invoicesRelationshipName = API.RelationshipName "Invoices"
 
 employeesTableName :: API.TableName
 employeesTableName = mkTableName "Employee"
@@ -227,8 +236,8 @@ employeesTableRelationships =
    in API.TableRelationships
         employeesTableName
         ( HashMap.fromList
-            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship supportRepJoinFieldMapping),
-              (reportsToEmployeeRelationshipName, API.Relationship employeesTableName API.ObjectRelationship reportsToEmployeeJoinFieldMapping)
+            [ (supportRepForCustomersRelationshipName, API.Relationship (API.TTargetTable customersTableName) API.ArrayRelationship supportRepJoinFieldMapping),
+              (reportsToEmployeeRelationshipName, API.Relationship (API.TTargetTable employeesTableName) API.ObjectRelationship reportsToEmployeeJoinFieldMapping)
             ]
         )
 
@@ -255,8 +264,8 @@ invoicesTableRelationships =
    in API.TableRelationships
         invoicesTableName
         ( HashMap.fromList
-            [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
-              (customerRelationshipName, API.Relationship customersTableName API.ObjectRelationship customersJoinFieldMapping)
+            [ (invoiceLinesRelationshipName, API.Relationship (API.TTargetTable invoiceLinesTableName) API.ArrayRelationship invoiceLinesJoinFieldMapping),
+              (customerRelationshipName, API.Relationship (API.TTargetTable customersTableName) API.ObjectRelationship customersJoinFieldMapping)
             ]
         )
 
@@ -276,8 +285,8 @@ invoiceLinesTableRelationships =
    in API.TableRelationships
         invoiceLinesTableName
         ( HashMap.fromList
-            [ (invoiceRelationshipName, API.Relationship invoicesTableName API.ObjectRelationship invoiceJoinFieldMapping),
-              (trackRelationshipName, API.Relationship tracksTableName API.ObjectRelationship tracksJoinFieldMapping)
+            [ (invoiceRelationshipName, API.Relationship (API.TTargetTable invoicesTableName) API.ObjectRelationship invoiceJoinFieldMapping),
+              (trackRelationshipName, API.Relationship (API.TTargetTable tracksTableName) API.ObjectRelationship tracksJoinFieldMapping)
             ]
         )
 
@@ -313,11 +322,11 @@ tracksTableRelationships =
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
-            [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
-              (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping),
-              (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping),
-              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping),
-              (playlistTracksRelationshipName, API.Relationship playlistTracksTableName API.ArrayRelationship playlistTracksJoinFieldMapping)
+            [ (invoiceLinesRelationshipName, API.Relationship (API.TTargetTable invoiceLinesTableName) API.ArrayRelationship invoiceLinesJoinFieldMapping),
+              (mediaTypeRelationshipName, API.Relationship (API.TTargetTable mediaTypesTableName) API.ObjectRelationship mediaTypeJoinFieldMapping),
+              (albumRelationshipName, API.Relationship (API.TTargetTable albumsTableName) API.ObjectRelationship albumJoinFieldMapping),
+              (genreRelationshipName, API.Relationship (API.TTargetTable genresTableName) API.ObjectRelationship genreJoinFieldMapping),
+              (playlistTracksRelationshipName, API.Relationship (API.TTargetTable playlistTracksTableName) API.ArrayRelationship playlistTracksJoinFieldMapping)
             ]
         )
 
@@ -354,7 +363,7 @@ genresTableRelationships =
    in API.TableRelationships
         genresTableName
         ( HashMap.fromList
-            [ (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship joinFieldMapping)
+            [ (tracksRelationshipName, API.Relationship (API.TTargetTable tracksTableName) API.ArrayRelationship joinFieldMapping)
             ]
         )
 
@@ -405,7 +414,9 @@ data TestData = TestData
     -- = Customers table
     _tdCustomersTableName :: API.TableName,
     _tdCustomersRows :: [HashMap API.FieldName API.FieldValue],
+    _tdCustomersRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
     _tdCustomersTableRelationships :: API.TableRelationships,
+    _tdInvoicesRelationshipName :: API.RelationshipName,
     _tdSupportRepRelationshipName :: API.RelationshipName,
     -- = Employees table
     _tdEmployeesTableName :: API.TableName,
@@ -477,7 +488,9 @@ mkTestData schemaResponse testConfig =
       _tdTracksRelationshipName = tracksRelationshipName,
       _tdCustomersTableName = formatTableName testConfig customersTableName,
       _tdCustomersRows = customersRows,
+      _tdCustomersRowsById = customersRowsById,
       _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
+      _tdInvoicesRelationshipName = invoicesRelationshipName,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
       _tdEmployeesTableName = formatTableName testConfig employeesTableName,
       _tdEmployeesRows = employeesRows,
@@ -530,7 +543,7 @@ mkTestData schemaResponse testConfig =
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
       API.trelSourceTable %~ formatTableName testConfig
-        >>> API.trelRelationships . traverse . API.rTargetTable %~ formatTableName testConfig
+        >>> API.trelRelationships . traverse . API.rTarget . API._TTable . API.ttName %~ (formatTableName testConfig)
 
 -- | Test data from the TestingEdgeCases dataset template
 data EdgeCasesTestData = EdgeCasesTestData
@@ -645,7 +658,7 @@ functionField :: API.SchemaResponse -> TestConfig -> API.TableName -> API.Functi
 functionField schemaResponse@API.SchemaResponse {..} testConfig defaultTableName functionName columnName =
   columnField schemaResponse testConfig tableName columnName
   where
-    tableName = fromMaybe defaultTableName (functionReturnType ^? API._FunctionReturnsTable)
+    tableName = fromMaybe defaultTableName (functionReturnType ^? _Just . API._FunctionReturnsTable)
     functionReturnType = maybe (error $ "Can't find the function " <> show functionName <> " in " <> show (API._fiName <$> _srFunctions)) API._fiReturns functionInfo
     functionInfo = find (\API.FunctionInfo {..} -> _fiName == functionName) _srFunctions
 
@@ -784,7 +797,7 @@ scalarValueComparison value valueType = API.ScalarValueComparison $ API.ScalarVa
 
 orderByColumn :: [API.RelationshipName] -> API.ColumnName -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
-  API.OrderByElement targetPath (API.OrderByColumn columnName Nothing) orderDirection
+  API.OrderByElement targetPath (API.OrderByColumn (API.mkColumnSelector columnName) Nothing) orderDirection
 
 insertAutoIncPk :: Text -> Integer -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
 insertAutoIncPk pkFieldName startingPkId rows =

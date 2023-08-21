@@ -14,4 +14,5 @@ export const postgresCapabilities: Capabilities = {
   data_schema: {
     supports_foreign_keys: true,
   },
+  interpolated_queries: {},
 };

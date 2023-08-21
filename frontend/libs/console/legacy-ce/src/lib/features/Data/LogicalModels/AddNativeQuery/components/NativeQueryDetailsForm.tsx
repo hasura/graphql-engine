@@ -1,3 +1,5 @@
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '../../../../../new-components/Button';
 import {
@@ -5,28 +7,18 @@ import {
   InputField,
   Select,
 } from '../../../../../new-components/Form';
-import React from 'react';
-import { useFormContext } from 'react-hook-form';
-import Skeleton from 'react-loading-skeleton';
+import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
+import { useMetadata } from '../../../../hasura-metadata-api';
+import { ReactQueryStatusUI } from '../../../components/ReactQueryWrappers/ReactQueryStatusUI';
 import { Source } from '../../../../hasura-metadata-types';
+import { useSupportedDataTypes } from '../../../hooks/useSupportedDataTypes';
 import { LogicalModelWidget } from '../../LogicalModelWidget/LogicalModelWidget';
 import { ArgumentsField } from '../components/ArgumentsField';
 import { SqlEditorField } from '../components/SqlEditorField';
 import { NativeQueryForm } from '../types';
-import { LimitedFeatureWrapper } from '../../../../ConnectDBRedesign/components/LimitedFeatureWrapper/LimitedFeatureWrapper';
-import { useMetadata } from '../../../../hasura-metadata-api';
+import { ReactQueryUIWrapper } from '../../../components';
 
-export const NativeQueryFormFields = ({
-  isSourcesLoading,
-  sources,
-  isIntrospectionLoading,
-  typeOptions,
-}: {
-  sources?: Source[];
-  isSourcesLoading: boolean;
-  isIntrospectionLoading: boolean;
-  typeOptions: string[];
-}) => {
+export const NativeQueryFormFields = ({ sources }: { sources?: Source[] }) => {
   const { watch, setValue } = useFormContext<NativeQueryForm>();
   const selectedSource = watch('source');
 
@@ -56,6 +48,16 @@ export const NativeQueryFormFields = ({
   const [isLogicalModelsDialogOpen, setIsLogicalModelsDialogOpen] =
     React.useState(false);
 
+  /**
+   * Options for the data source types
+   */
+  const supportedDataTypesResult = useSupportedDataTypes({
+    dataSourceName: selectedSource,
+    options: {
+      enabled: !!selectedSource,
+    },
+  });
+
   return (
     <>
       <div className="max-w-xl flex flex-col">
@@ -75,7 +77,6 @@ export const NativeQueryFormFields = ({
           label="Database"
           // saving prop for future update
           //noOptionsMessage="No databases found."
-          loading={isSourcesLoading}
           options={(sources ?? []).map(m => ({
             label: m.name,
             value: m.name,
@@ -92,14 +93,20 @@ export const NativeQueryFormFields = ({
           />
         )}
       </div>
-      {isIntrospectionLoading ? (
-        <div>
-          <Skeleton />
-          <Skeleton />
-        </div>
-      ) : (
-        <ArgumentsField types={typeOptions} />
-      )}
+      <ReactQueryUIWrapper
+        loadingStyle="overlay"
+        loader="spinner"
+        fallbackData={[]}
+        miniSpinnerBackdrop
+        useQueryResult={supportedDataTypesResult}
+        render={({ data: typeOptions }) => (
+          <ArgumentsField
+            noSourceSelected={!selectedSource}
+            types={typeOptions}
+          />
+        )}
+      />
+
       <SqlEditorField />
       <div className="flex w-full">
         {/* Logical Model Dropdown */}
@@ -108,7 +115,6 @@ export const NativeQueryFormFields = ({
           selectClassName="max-w-xl"
           label="Query Return Type"
           placeholder={logicalModelSelectPlaceholder()}
-          loading={isSourcesLoading}
           options={(logicalModels ?? []).map(m => ({
             label: m.name,
             value: m.name,

@@ -1,8 +1,9 @@
-import { SchemaResponse, ColumnInfo, TableInfo, Constraint, ColumnValueGenerationStrategy } from "@hasura/dc-api-types"
+import { SchemaResponse, ColumnInfo, TableInfo, Constraint, ColumnValueGenerationStrategy, SchemaRequest, DetailLevel, TableName } from "@hasura/dc-api-types"
 import { ScalarTypeKey } from "./capabilities";
 import { Config } from "./config";
 import { defaultMode, SqlLogger, withConnection } from './db';
 import { MUTATIONS } from "./environment";
+import { unreachable } from "./util";
 
 var sqliteParser = require('sqlite-parser');
 
@@ -62,18 +63,33 @@ function nullableCast(ds: any[]): boolean {
   return true;
 }
 
-const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
+const formatTableInfo = (config: Config, detailLevel: DetailLevel): ((info: TableInfoInternal) => TableInfo) => {
+  switch (detailLevel) {
+    case "everything": return formatEverythingTableInfo(config);
+    case "basic_info": return formatBasicTableInfo(config);
+    default: return unreachable(detailLevel);
+  }
+}
+
+const formatBasicTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
   const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
+  return {
+    name: tableName,
+    type: "table"
+  }
+}
+
+const formatEverythingTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
+  const basicTableInfo = formatBasicTableInfo(config)(info);
   const ast = sqliteParser(info.sql);
   const columnsDdl = getColumnsDdl(ast);
   const primaryKeys = getPrimaryKeyNames(ast);
-  const foreignKeys = ddlFKs(config, tableName, ast);
+  const foreignKeys = ddlFKs(config, basicTableInfo.name, ast);
   const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
   const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
 
   return {
-    name: tableName,
-    type: "table",
+    ...basicTableInfo,
     ...primaryKey,
     ...foreignKey,
     description: info.sql,
@@ -92,14 +108,21 @@ function isMeta(table : TableInfoInternal) {
   return table.type != 'table' || table.name === 'sqlite_sequence';
 }
 
-function includeTable(config: Config, table: TableInfoInternal): boolean {
-  if(config.tables === null) {
-    if(isMeta(table) && ! config.meta) {
-      return false;
-    }
-    return true;
+const includeTable = (config: Config, only_tables?: TableName[]) => (table: TableInfoInternal): boolean => {
+  if (isMeta(table) && !config.meta) {
+    return false;
+  }
+
+  const filterForOnlyTheseTables = only_tables
+    // If we're using an explicit main schema, only use those table names that belong to that schema
+    ?.filter(n => config.explicit_main_schema ? n.length === 2 && n[0] === "main" : true)
+    // Just keep the actual table name
+    ?.map(n => n[n.length - 1])
+
+  if (config.tables || only_tables) {
+    return (config.tables ?? []).concat(filterForOnlyTheseTables ?? []).indexOf(table.name) >= 0;
   } else {
-    return config.tables.indexOf(table.name) >= 0
+    return true;
   }
 }
 
@@ -227,12 +250,14 @@ function getPrimaryKeyNames(ddl: any): string[] {
     })
 }
 
-export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<SchemaResponse> {
+export async function getSchema(config: Config, sqlLogger: SqlLogger, schemaRequest: SchemaRequest = {}): Promise<SchemaResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
+    const detailLevel = schemaRequest.detail_level ?? "everything";
+
     const results = await db.query("SELECT * from sqlite_schema");
     const resultsT: TableInfoInternal[] = results as TableInfoInternal[];
-    const filtered: TableInfoInternal[] = resultsT.filter(table => includeTable(config,table));
-    const result:   TableInfo[]         = filtered.map(formatTableInfo(config));
+    const filtered: TableInfoInternal[] = resultsT.filter(includeTable(config, schemaRequest?.filters?.only_tables));
+    const result:   TableInfo[]         = filtered.map(formatTableInfo(config, detailLevel));
 
     return {
       tables: result

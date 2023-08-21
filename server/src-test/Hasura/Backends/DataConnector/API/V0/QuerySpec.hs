@@ -21,7 +21,7 @@ import Hasura.Backends.DataConnector.API.V0.FunctionSpec (genFunctionArgument, g
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genRelationships)
 import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType, genScalarValue)
-import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
+import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableTarget)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText, genHashMap)
 import Hasura.Prelude
 import Hedgehog
@@ -63,7 +63,7 @@ spec = do
               _qLimit = Just 10,
               _qOffset = Just 20,
               _qWhere = Just $ And [],
-              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (ColumnName "my_column_name") Nothing) Ascending :| [])
+              _qOrderBy = Just $ OrderBy [] (OrderByElement [] (OrderByColumn (mkColumnSelector $ ColumnName "my_column_name") Nothing) Ascending :| [])
             }
     testToFromJSONToSchema
       query
@@ -92,20 +92,22 @@ spec = do
 
   describe "TableRequest" $ do
     let queryRequest =
-          QRTable
-            $ TableRequest
-              { _trTable = TableName ["my_table"],
-                _trRelationships = [],
-                _trRedactionExpressions = [],
-                _trQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
-                _trForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
-              }
+          QueryRequest
+            { _qrTarget = TTable (TargetTable (TableName ["my_table"])),
+              _qrRelationships = [],
+              _qrRedactionExpressions = [],
+              _qrInterpolatedQueries = mempty,
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing,
+              _qrForeach = Just (HashMap.fromList [(ColumnName "my_id", ScalarValue (J.Number 666) (ScalarType "number"))] :| [])
+            }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "type": "table",
-          "table": ["my_table"],
-          "table_relationships": [],
+        { "target": {
+            "type": "table",
+            "name": ["my_table"]
+          },
+          "relationships": [],
           "query": { "fields": {} },
           "foreach": [
             { "my_id": { "value": 666, "value_type": "number" } }
@@ -116,20 +118,22 @@ spec = do
 
   describe "FunctionRequest" $ do
     let queryRequest =
-          QRFunction
-            $ FunctionRequest
-              { _frFunction = FunctionName ["my_function"],
-                _frFunctionArguments = [],
-                _frRelationships = [],
-                _frRedactionExpressions = [],
-                _frQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
-              }
+          QueryRequest
+            { _qrTarget = TFunction (TargetFunction (FunctionName ["my_function"]) []),
+              _qrRelationships = [],
+              _qrRedactionExpressions = [],
+              _qrInterpolatedQueries = mempty,
+              _qrForeach = Nothing,
+              _qrQuery = Query (Just mempty) Nothing Nothing Nothing Nothing Nothing Nothing
+            }
     testToFromJSONToSchema
       queryRequest
       [aesonQQ|
-        { "type": "function",
-          "function": ["my_function"],
-          "function_arguments": [],
+        { "target": {
+            "type": "function",
+              "name": ["my_function"],
+              "arguments": []
+          },
           "relationships": [],
           "query": { "fields": {} }
         }
@@ -217,21 +221,31 @@ genQuery =
 genQueryRequest :: Gen QueryRequest
 genQueryRequest = genTableRequest <|> genFunctionRequest -- NOTE: We should probably weight tables more than functions...
 
+genFunctionTarget :: Gen Target
+genFunctionTarget =
+  TFunction
+    <$> ( TargetFunction
+            <$> genFunctionName
+            <*> Gen.list defaultRange genFunctionArgument
+        )
+
 genFunctionRequest :: Gen QueryRequest
 genFunctionRequest =
-  FunctionQueryRequest
-    <$> genFunctionName
-    <*> Gen.list defaultRange genFunctionArgument
+  QueryRequest
+    <$> genFunctionTarget
     <*> Gen.set defaultRange genRelationships
     <*> Gen.set defaultRange genTargetRedactionExpressions
+    <*> pure mempty
     <*> genQuery
+    <*> pure Nothing
 
 genTableRequest :: Gen QueryRequest
 genTableRequest =
-  TableQueryRequest
-    <$> genTableName
+  QueryRequest
+    <$> genTableTarget
     <*> Gen.set defaultRange genRelationships
     <*> Gen.set defaultRange genTargetRedactionExpressions
+    <*> pure mempty
     <*> genQuery
     <*> Gen.maybe (Gen.nonEmpty defaultRange (genHashMap genColumnName genScalarValue defaultRange))
 

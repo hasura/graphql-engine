@@ -56,6 +56,9 @@ import Hasura.Logging (Hasura, Logger)
 import Hasura.LogicalModel.Cache
 import Hasura.LogicalModel.Metadata (LogicalModelMetadata (..))
 import Hasura.LogicalModel.Types
+import Hasura.NativeQuery.InterpolatedQuery (trimQueryEnd)
+import Hasura.NativeQuery.Metadata (NativeQueryMetadata (..))
+import Hasura.NativeQuery.Validation
 import Hasura.Prelude
 import Hasura.RQL.DDL.Relationship (defaultBuildArrayRelationshipInfo, defaultBuildObjectRelationshipInfo)
 import Hasura.RQL.IR.BoolExp (ComparisonNullability (..), OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
@@ -115,6 +118,14 @@ instance BackendMetadata 'DataConnector where
   getTableInfo = getTableInfo'
   supportsBeingRemoteRelationshipTarget = supportsBeingRemoteRelationshipTarget'
 
+  validateNativeQuery _ _ _ sc _ nq = do
+    unless (isJust (API._cInterpolatedQueries (DC._scCapabilities sc))) do
+      let nqName = _nqmRootFieldName nq
+      throw400 NotSupported $ "validateNativeQuery: " <> toTxt nqName <> " - Native Queries not implemented for this Data Connector backend."
+    -- Adapted from server/src-lib/Hasura/Backends/BigQuery/Instances/Metadata.hs
+    validateArgumentDeclaration nq
+    pure (trimQueryEnd (_nqmCode nq)) -- for now, all queries are valid
+
 arityJsonAggSelect :: API.FunctionArity -> JsonAggSelect
 arityJsonAggSelect = \case
   API.FunctionArityOne -> JASSingleObject
@@ -123,11 +134,11 @@ arityJsonAggSelect = \case
 functionReturnTypeFromAPI ::
   (MonadError QErr m) =>
   DC.FunctionName ->
-  (Maybe (FunctionReturnType 'DataConnector), API.FunctionReturnType) ->
+  (Maybe (FunctionReturnType 'DataConnector), Maybe API.FunctionReturnType) ->
   m DC.TableName
 functionReturnTypeFromAPI funcGivenName = \case
   (Just (DC.FunctionReturnsTable t), _) -> pure t
-  (_, API.FunctionReturnsTable t) -> pure (Witch.into t)
+  (_, Just (API.FunctionReturnsTable t)) -> pure (Witch.into t)
   _ ->
     throw400 NotSupported
       $ "Function "
@@ -166,7 +177,7 @@ buildFunctionInfo'
       objid <-
         case (_fcResponse, returnType) of
           (Just (DC.FunctionReturnsTable t), _) -> pure $ SOSourceObj sourceName $ mkAnyBackend $ SOITable @'DataConnector t
-          (_, API.FunctionReturnsTable t) -> pure $ SOSourceObj sourceName $ mkAnyBackend $ SOITable @'DataConnector (Witch.into t)
+          (_, Just (API.FunctionReturnsTable t)) -> pure $ SOSourceObj sourceName $ mkAnyBackend $ SOITable @'DataConnector (Witch.into t)
           _ ->
             throw400 NotSupported
               $ "Function "
@@ -194,6 +205,10 @@ buildFunctionInfo'
                   else IAUserProvided arg
 
       functionReturnType <- functionReturnTypeFromAPI funcName (_fcResponse, returnType)
+      jsonAggSelect <-
+        arityJsonAggSelect
+          <$> infoSet
+          `onNothing` throw400 NotSupported ("Function " <> tshow funcName <> " is missing a response cardinality")
 
       let funcInfo =
             FunctionInfo
@@ -208,7 +223,7 @@ buildFunctionInfo'
                 _fiReturnType = functionReturnType,
                 _fiDescription = infoDesc,
                 _fiPermissions = permissionMap,
-                _fiJsonAggSelect = arityJsonAggSelect infoSet,
+                _fiJsonAggSelect = jsonAggSelect,
                 _fiComment = funcComment
               }
       pure $ (funcInfo, SchemaDependency objid DRTable)
@@ -325,8 +340,9 @@ resolveDatabaseMetadata' ::
   SourceMetadata 'DataConnector ->
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
-resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig = runExceptT do
-  API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig
+resolveDatabaseMetadata' logger sourceMetadata@SourceMetadata {_smName} sourceConfig = runExceptT do
+  let schemaRequest = makeTrackedItemsOnlySchemaRequest sourceMetadata
+  API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig schemaRequest
   let logicalModels =
         maybe mempty (InsOrdHashMap.fromList . map toLogicalModelMetadata . toList) _srObjectTypes
       tables = HashMap.fromList $ do
@@ -379,17 +395,29 @@ resolveDatabaseMetadata' logger SourceMetadata {_smName} sourceConfig = runExcep
             _rsLogicalModels = logicalModels
           }
 
+makeTrackedItemsOnlySchemaRequest :: SourceMetadata 'DataConnector -> API.SchemaRequest
+makeTrackedItemsOnlySchemaRequest SourceMetadata {..} =
+  API.SchemaRequest
+    { _srFilters =
+        API.SchemaFilters
+          { _sfOnlyTables = Just $ Witch.into <$> InsOrdHashMap.keys _smTables,
+            _sfOnlyFunctions = Just $ Witch.into <$> InsOrdHashMap.keys _smFunctions
+          },
+      _srDetailLevel = API.Everything
+    }
+
 requestDatabaseSchema ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   Logger Hasura ->
   SourceName ->
   DC.SourceConfig ->
+  API.SchemaRequest ->
   m API.SchemaResponse
-requestDatabaseSchema logger sourceName sourceConfig = do
+requestDatabaseSchema logger sourceName sourceConfig schemaRequest = do
   transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
   ignoreTraceT
     . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
-    $ Client.schema sourceName (DC._scConfig transformedSourceConfig)
+    $ Client.schema sourceName (DC._scConfig transformedSourceConfig) schemaRequest
 
 getFieldType :: Bool -> API.ColumnType -> LogicalModelType 'DataConnector
 getFieldType isNullable = \case
@@ -624,14 +652,14 @@ listAllTables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl
 listAllTables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig
+  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
   pure $ fmap (Witch.from . API._tiName) $ API._srTables schemaResponse
 
 listAllTrackables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, MetadataM m) => SourceName -> m (TrackableInfo 'DataConnector)
 listAllTrackables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig
+  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
   let functions = fmap (\fi -> TrackableFunctionInfo (Witch.into (API._fiName fi)) (getVolatility (API._fiFunctionType fi))) $ API._srFunctions schemaResponse
   let tables = fmap (TrackableTableInfo . Witch.into . API._tiName) $ API._srTables schemaResponse
   pure

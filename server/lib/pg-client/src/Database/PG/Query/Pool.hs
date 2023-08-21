@@ -11,7 +11,9 @@ module Database.PG.Query.Pool
   ( ConnParams (..),
     PGPool,
     pgPoolStats,
+    pgPoolMetrics,
     PGPoolStats (..),
+    PGPoolMetrics (..),
     getInUseConnections,
     defaultConnParams,
     initPGPool,
@@ -56,6 +58,8 @@ import Language.Haskell.TH.Quote (QuasiQuoter (..))
 import Language.Haskell.TH.Syntax (Exp, Q, lift, qAddDependentFile, runIO)
 import System.Metrics.Distribution (Distribution)
 import System.Metrics.Distribution qualified as EKG.Distribution
+import System.Metrics.Prometheus.Histogram (Histogram)
+import System.Metrics.Prometheus.Histogram qualified as Histogram
 import Prelude
 
 -------------------------------------------------------------------------------
@@ -64,11 +68,16 @@ data PGPool = PGPool
   { -- | the underlying connection pool
     _pool :: !(RP.Pool PGConn),
     -- | EKG stats about how we acquire, release, and manage connections
-    _stats :: !PGPoolStats
+    _stats :: !PGPoolStats,
+    -- | Prometheus metrics about how we acquire, release, and manage connections
+    _metrics :: !PGPoolMetrics
   }
 
 pgPoolStats :: PGPool -> PGPoolStats
 pgPoolStats = _stats
+
+pgPoolMetrics :: PGPool -> PGPoolMetrics
+pgPoolMetrics = _metrics
 
 -- | Actual ekg gauges and other metrics are not created here, since those depend on
 -- a store and it's much simpler to perform the sampling of the distribution from within graphql-engine.
@@ -76,6 +85,13 @@ data PGPoolStats = PGPoolStats
   { -- | time taken to acquire new connections from postgres
     _dbConnAcquireLatency :: !Distribution,
     _poolConnAcquireLatency :: !Distribution
+  }
+
+data PGPoolMetrics = PGPoolMetrics
+  { -- | time taken to establish and initialise a PostgreSQL connection
+    _pgConnAcquireLatencyMetric :: !Histogram,
+    -- | time taken to acquire a connection from the pool
+    _poolWaitTimeMetric :: !Histogram
   }
 
 getInUseConnections :: PGPool -> IO Int
@@ -105,6 +121,14 @@ initPGPoolStats = do
   _poolConnAcquireLatency <- EKG.Distribution.new
   pure PGPoolStats {..}
 
+initPGPoolMetrics :: IO PGPoolMetrics
+initPGPoolMetrics = do
+  _pgConnAcquireLatencyMetric <- Histogram.new histogramBuckets
+  _poolWaitTimeMetric <- Histogram.new histogramBuckets
+  pure PGPoolMetrics {..}
+  where
+    histogramBuckets = [0.000001, 0.0001, 0.01, 0.1, 0.3, 1, 3, 10, 30, 100]
+
 initPGPool ::
   ConnInfo ->
   Value ->
@@ -113,19 +137,22 @@ initPGPool ::
   IO PGPool
 initPGPool ci context cp logger = do
   _stats <- initPGPoolStats
-  _pool <- RP.createPool' (creator _stats) destroyer nStripes diffTime nConns nTimeout
+  _metrics <- initPGPoolMetrics
+  _pool <- RP.createPool' (creator _stats _metrics) destroyer nStripes diffTime nConns nTimeout
   pure PGPool {..}
   where
     nStripes = cpStripes cp
     nConns = cpConns cp
     nTimeout = cpTimeout cp
     retryP = mkPGRetryPolicy $ ciRetries ci
-    creator stats = do
+    creator stats metrics = do
       createdAt <- getCurrentTime
       pqConn <- initPQConn ci logger
       connAcquiredAt <- getCurrentTime
       let connAcquiredMicroseconds = realToFrac (1000000 * diffUTCTime connAcquiredAt createdAt)
+          connAcquiredSeconds = realToFrac $ diffUTCTime connAcquiredAt createdAt
       EKG.Distribution.add (_dbConnAcquireLatency stats) connAcquiredMicroseconds
+      Histogram.observe (_pgConnAcquireLatencyMetric metrics) connAcquiredSeconds
       ctr <- newIORef 0
       table <- HIO.new
       return $ PGConn context pqConn (cpAllowPrepare cp) (cpCancel cp) retryP logger ctr table createdAt (cpMbLifetime cp)
@@ -316,7 +343,9 @@ withExpiringPGconn pool f = do
     RP.withResource (_pool pool) $ \connRsrc@PGConn {..} -> do
       now <- liftIO getCurrentTime
       let microseconds = realToFrac (1000000 * diffUTCTime now old)
+          seconds = realToFrac $ diffUTCTime now old
       liftIO (EKG.Distribution.add (_poolConnAcquireLatency (_stats pool)) microseconds)
+      liftIO (Histogram.observe (_poolWaitTimeMetric (_metrics pool)) seconds)
       let connectionStale =
             any (\lifetime -> now `diffUTCTime` pgCreatedAt > lifetime) pgMbLifetime
       when connectionStale $ do

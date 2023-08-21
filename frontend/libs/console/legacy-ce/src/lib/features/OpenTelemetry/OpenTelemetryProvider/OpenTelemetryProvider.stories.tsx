@@ -9,6 +9,7 @@ import {
   handlers,
 } from '../../../mocks/metadata.mock';
 
+import { ConsoleTypeDecorator } from '../../../storybook/decorators';
 import { OpenTelemetryEEProvider } from './OpenTelemetryEEProvider';
 
 // --------------------------------------------------
@@ -23,6 +24,7 @@ export default {
   decorators: [
     ReduxDecorator({ tables: { currentDataSource: 'default' } }),
     ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro' }),
   ],
   parameters: {
     msw: handlers({
@@ -52,7 +54,6 @@ export const HappyPath: StoryObj<typeof OpenTelemetryEEProvider> = {
 
   parameters: {
     chromatic: { disableSnapshot: true },
-    consoleType: 'pro',
     msw: handlers({
       // Speeds up the test as much as possible
       delay: 0,

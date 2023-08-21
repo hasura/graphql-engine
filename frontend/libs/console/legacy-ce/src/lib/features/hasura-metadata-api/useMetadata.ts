@@ -1,12 +1,12 @@
+import React from 'react';
 import { useQuery } from 'react-query';
 import { APIError } from '../../hooks/error';
+import { exportMetadata as exportMetadataAction } from '../../metadata/actions';
+import { getCurrentReduxResourceVersion } from '../../store/utils';
 import { useAppDispatch } from '../../storeHooks';
 import { useHttpClient } from '../Network';
 import { Metadata } from '../hasura-metadata-types';
 import { exportMetadata } from './exportMetadata';
-import { getCurrentReduxResourceVersion } from '../../store/utils/';
-import { exportMetadata as exportMetadataAction } from '../../metadata/actions';
-import React from 'react';
 
 export const DEFAULT_STALE_TIME = 5 * 60000; // 5 minutes as default stale time
 
@@ -20,7 +20,7 @@ export type MetadataQueryKey = 'export_metadata';
 
 export const METADATA_QUERY_KEY: MetadataQueryKey = 'export_metadata';
 
-type Options = {
+export type Options = {
   staleTime?: number;
   enabled?: boolean;
 };

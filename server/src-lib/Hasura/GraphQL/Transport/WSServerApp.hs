@@ -50,6 +50,7 @@ import System.Metrics.Gauge qualified as EKG.Gauge
 
 createWSServerApp ::
   ( MonadIO m,
+    MonadFail m, -- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681
     MC.MonadBaseControl IO m,
     LA.Forall (LA.Pure m),
     UserAuthentication m,

@@ -409,13 +409,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      TableQueryRequest _tdAlbumsTableName mempty mempty albumsQuery Nothing
+      TableQueryRequest _tdAlbumsTableName mempty mempty mempty albumsQuery Nothing
 
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField _tdArtistsTableName "ArtistId"), ("Name", _tdColumnField _tdArtistsTableName "Name")]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdArtistsTableName mempty mempty query Nothing
+       in TableQueryRequest _tdArtistsTableName mempty mempty mempty query Nothing
 
     tracksQuery :: Query
     tracksQuery =
@@ -424,13 +424,13 @@ spec TestData {..} Capabilities {..} = describe "Order By in Queries" $ do
 
     tracksQueryRequest :: QueryRequest
     tracksQueryRequest =
-      TableQueryRequest _tdTracksTableName mempty mempty tracksQuery Nothing
+      TableQueryRequest _tdTracksTableName mempty mempty mempty tracksQuery Nothing
 
     invoicesQueryRequest :: QueryRequest
     invoicesQueryRequest =
       let fields = Data.mkFieldsMap [("InvoiceId", _tdColumnField _tdInvoicesTableName "InvoiceId"), ("BillingState", _tdColumnField _tdInvoicesTableName "BillingState")]
           query = Data.emptyQuery & qFields ?~ fields
-       in TableQueryRequest _tdInvoicesTableName mempty mempty query Nothing
+       in TableQueryRequest _tdInvoicesTableName mempty mempty mempty query Nothing
 
     orderBySingleColumnAggregateMax :: ColumnName -> ScalarType -> OrderByTarget
     orderBySingleColumnAggregateMax columnName resultType = OrderBySingleColumnAggregate $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|]) columnName Nothing resultType

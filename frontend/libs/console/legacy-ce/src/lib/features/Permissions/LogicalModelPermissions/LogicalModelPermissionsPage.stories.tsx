@@ -1,8 +1,10 @@
 import { Meta, StoryObj } from '@storybook/react';
 import { LogicalModelPermissionsPage } from './LogicalModelPermissionsPage';
 import { handlers, deleteHandlers } from './mocks';
+
 import { RouteWrapper } from '../../Data/LogicalModels/components/RouteWrapper';
 import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
+import { ConsoleTypeDecorator } from '../../../storybook/decorators';
 
 const name = 'LogicalModel';
 const source = 'Postgres';
@@ -21,7 +23,10 @@ export default {
       </RouteWrapper>
     );
   },
-  decorators: [ReactQueryDecorator()],
+  decorators: [
+    ReactQueryDecorator(),
+    ConsoleTypeDecorator({ consoleType: 'pro' }),
+  ],
 } as Meta;
 
 type Story = StoryObj<typeof LogicalModelPermissionsPage>;
@@ -60,7 +65,6 @@ export const SavePermission: Story = {
   // },
   parameters: {
     msw: handlers(),
-    consoleType: 'pro',
   },
 };
 
@@ -100,6 +104,5 @@ export const DeletePermission: Story = {
   // },
   parameters: {
     msw: deleteHandlers(),
-    consoleType: 'pro',
   },
 };

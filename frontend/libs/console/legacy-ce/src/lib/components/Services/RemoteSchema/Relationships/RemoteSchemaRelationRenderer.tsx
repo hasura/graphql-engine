@@ -116,7 +116,7 @@ export const RemoteSchemaRelationRenderer = ({
         <InconsistentBadge inconsistencyDetails={inconsistencyDetails} />
       )}
 
-      {remoteSchemaRels?.length ? (
+      {isFormOpen ? null : remoteSchemaRels?.length ? (
         <RemoteSchemaRelationshipTable
           remoteSchemaRels={remoteSchemaRels}
           showActionCell

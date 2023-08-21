@@ -1,11 +1,18 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.OrderBy
   ( OrderBy (..),
     OrderByRelation (..),
     OrderByElement (..),
+    obeTargetPath,
+    obeTarget,
+    obeOrderDirection,
     OrderByTarget (..),
+    _OrderByColumn,
+    _OrderByStarCountAggregate,
+    _OrderBySingleColumnAggregate,
     OrderDirection (..),
   )
 where
@@ -13,6 +20,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
@@ -22,7 +30,6 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
-import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Prelude
@@ -76,7 +83,7 @@ instance HasCodec OrderByElement where
         <*> requiredField "order_direction" "The direction of ordering to apply" .= _obeOrderDirection
 
 data OrderByTarget
-  = OrderByColumn API.V0.ColumnName (Maybe API.V0.RedactionExpressionName)
+  = OrderByColumn API.V0.ColumnSelector (Maybe API.V0.RedactionExpressionName)
   | OrderByStarCountAggregate
   | OrderBySingleColumnAggregate API.V0.SingleColumnAggregate
   deriving stock (Eq, Generic, Ord, Show)
@@ -114,3 +121,6 @@ instance HasCodec OrderDirection where
   codec =
     named "OrderDirection" $
       stringConstCodec [(Ascending, "asc"), (Descending, "desc")]
+
+$(makeLenses 'OrderByElement)
+$(makePrisms ''OrderByTarget)

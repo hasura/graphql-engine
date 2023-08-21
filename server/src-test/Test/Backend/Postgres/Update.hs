@@ -79,5 +79,5 @@ runMultipleUpdates TestBuilder {..} =
           . toSQLTxt
           <$> ctes
           `shouldBe` SI.fromText
-          <$> expectedSQL
+            <$> expectedSQL
       _ -> assertFailure "expected update_many, got single update"

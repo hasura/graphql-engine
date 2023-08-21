@@ -66,7 +66,7 @@ export function Form(props: FormProps) {
           label="Traces Endpoint"
           placeholder="Your OpenTelemetry traces endpoint"
           tooltip="OpenTelemetry-compliant traces receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/traces"
-          learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#endpoint"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
           className="pr-4"
@@ -90,7 +90,7 @@ export function Form(props: FormProps) {
           label="Metrics Endpoint"
           placeholder="Your OpenTelemetry metrics endpoint"
           tooltip="OpenTelemetry-compliant metrics receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/metrics. Metrics will be sampled and exported every 15 seconds."
-          learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#endpoint"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
           disabled={!metricsType}
@@ -115,7 +115,7 @@ export function Form(props: FormProps) {
         label="Batch Size"
         placeholder="A number between 1 and 512"
         tooltip="The maximum number of data points in an export request. The value should be between 1-512. Default value is 512."
-        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#batch-size"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#batch-size"
         clearButton
         loading={skeletonMode}
       />
@@ -123,7 +123,7 @@ export function Form(props: FormProps) {
         inputFieldName="headers"
         label="Headers"
         tooltip="Additional custom headers added to export request."
-        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#headers"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#headers"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
@@ -133,7 +133,7 @@ export function Form(props: FormProps) {
         inputFieldName="attributes"
         label="Attributes"
         tooltip="Additional custom tags added to export request."
-        learnMoreLink="https://hasura.io/docs/latest/enterprise/opentelemetry/#attributes"
+        learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#attributes"
         loading={skeletonMode}
       >
         {/* No need to redact the input fields since Heap avoid recording the input field values by default */}

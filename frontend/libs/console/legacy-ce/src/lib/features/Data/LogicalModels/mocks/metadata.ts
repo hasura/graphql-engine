@@ -142,6 +142,19 @@ const testModels: Record<string, LogicalModel[]> = {
           type: { scalar: 'string', nullable: true },
         },
       ],
+      name: 'hello_mssql_unused',
+    },
+    {
+      fields: [
+        {
+          name: 'one',
+          type: { scalar: 'string', nullable: true },
+        },
+        {
+          name: 'two',
+          type: { scalar: 'string', nullable: true },
+        },
+      ],
       name: 'hello_mssql',
     },
     {

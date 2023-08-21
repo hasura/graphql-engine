@@ -2,12 +2,13 @@ import { Dialog } from '../../../../../new-components/Dialog';
 import React from 'react';
 import { Relationship } from '../../../types';
 import { useCreateTableRelationships } from '../../../hooks/useCreateTableRelationships/useCreateTableRelationships';
+import { BulkAtomicResponse } from '../../../../hasura-metadata-types';
 
 interface ConfirmDeleteRelationshipPopupProps {
   relationship: Relationship;
   onCancel: () => void;
   onError: (err: Error) => void;
-  onSuccess: () => void;
+  onSuccess: (data: BulkAtomicResponse) => void;
 }
 
 export const ConfirmDeleteRelationshipPopup = (

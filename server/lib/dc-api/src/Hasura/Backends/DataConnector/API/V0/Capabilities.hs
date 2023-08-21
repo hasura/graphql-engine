@@ -16,6 +16,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     cSubscriptions,
     cScalarTypes,
     cRelationships,
+    cInterpolatedQueries,
     cComparisons,
     cMetrics,
     cExplain,
@@ -52,6 +53,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ScalarTypeCapabilities (..),
     ScalarTypesCapabilities (..),
     RelationshipCapabilities (..),
+    InterpolatedQueryCapabilities (..),
     ComparisonCapabilities (..),
     SubqueryComparisonCapabilities (..),
     MetricsCapabilities (..),
@@ -101,6 +103,7 @@ data Capabilities = Capabilities
     _cSubscriptions :: Maybe SubscriptionCapabilities,
     _cScalarTypes :: ScalarTypesCapabilities,
     _cRelationships :: Maybe RelationshipCapabilities,
+    _cInterpolatedQueries :: Maybe InterpolatedQueryCapabilities,
     _cComparisons :: Maybe ComparisonCapabilities,
     _cMetrics :: Maybe MetricsCapabilities,
     _cExplain :: Maybe ExplainCapabilities,
@@ -114,7 +117,7 @@ data Capabilities = Capabilities
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -126,6 +129,7 @@ instance HasCodec Capabilities where
         <*> optionalField "subscriptions" "The agent's subscription capabilities" .= _cSubscriptions
         <*> optionalFieldWithOmittedDefault "scalar_types" mempty "The agent's scalar types and their capabilities" .= _cScalarTypes
         <*> optionalField "relationships" "The agent's relationship capabilities" .= _cRelationships
+        <*> optionalField "interpolated_queries" "The agent's interpolated (native) query capabilities" .= _cInterpolatedQueries
         <*> optionalField "comparisons" "The agent's comparison capabilities" .= _cComparisons
         <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
@@ -308,6 +312,14 @@ data RelationshipCapabilities = RelationshipCapabilities {}
 
 instance HasCodec RelationshipCapabilities where
   codec = object "RelationshipCapabilities" $ pure RelationshipCapabilities
+
+data InterpolatedQueryCapabilities = InterpolatedQueryCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec InterpolatedQueryCapabilities
+
+instance HasCodec InterpolatedQueryCapabilities where
+  codec = object "InterpolatedQueryCapabilities" $ pure InterpolatedQueryCapabilities
 
 newtype ComparisonOperators = ComparisonOperators
   { unComparisonOperators :: HashMap GQL.Syntax.Name ScalarType

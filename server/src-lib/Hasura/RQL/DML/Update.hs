@@ -19,6 +19,8 @@ import Hasura.Backends.Postgres.Types.Table
 import Hasura.Backends.Postgres.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM, runLogicalModelFieldsLookup)
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.DML.Internal
@@ -104,7 +106,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
         <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith ::
-  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m, LogicalModelFieldsRM ('Postgres 'Vanilla) m) =>
   SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   UpdateQuery ->
@@ -218,7 +220,9 @@ validateUpdateQuery ::
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
+  logicalModelCache :: LogicalModelCache ('Postgres 'Vanilla) <- fold <$> askLogicalModelCache source
   flip runTableCacheRT tableCache
+    $ runLogicalModelFieldsLookup _lmiFields logicalModelCache
     $ runDMLP1T
     $ validateUpdateQueryWith sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 

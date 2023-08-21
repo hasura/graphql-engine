@@ -17,6 +17,8 @@ import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (selectToSelectWith, toQuery)
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM, runLogicalModelFieldsLookup)
 import Hasura.Prelude
 import Hasura.RQL.DML.Internal
 import Hasura.RQL.DML.Types
@@ -187,7 +189,8 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 convSelectQ ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   TableName ('Postgres 'Vanilla) ->
@@ -267,7 +270,8 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 convExtRel ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
@@ -321,7 +325,8 @@ convExtRel sqlGen fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
 convSelectQuery ::
   ( UserInfoM m,
     QErrM m,
-    TableInfoRM ('Postgres 'Vanilla) m
+    TableInfoRM ('Postgres 'Vanilla) m,
+    LogicalModelFieldsRM ('Postgres 'Vanilla) m
   ) =>
   SQLGenCtx ->
   SessionVariableBuilder m ->
@@ -355,7 +360,9 @@ phaseOne ::
 phaseOne sqlGen query = do
   let sourceName = getSourceDMLQuery query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache sourceName
+  logicalModelCache :: LogicalModelCache ('Postgres 'Vanilla) <- fold <$> askLogicalModelCache sourceName
   flip runTableCacheRT tableCache
+    $ runLogicalModelFieldsLookup _lmiFields logicalModelCache
     $ runDMLP1T
     $ convSelectQuery sqlGen sessVarFromCurrentSetting (valueParserWithCollectableType binRHSBuilder) query
 

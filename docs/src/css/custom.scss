@@ -51,6 +51,9 @@
     grid-template-columns: 1fr;
   }
 }
+.theme-back-to-top-button {
+  display: none;
+}
 
 .arrow {
   transition: all 0.3s ease-in-out;

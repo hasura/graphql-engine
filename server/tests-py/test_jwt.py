@@ -54,6 +54,8 @@ def get_header_fmt(conf):
             return (hdr_fmt, None)
         elif hdr_fmt == 'Cookie':
             return (hdr_fmt, conf['header']['name'])
+        elif hdr_fmt == "CustomHeader":
+            return (hdr_fmt, conf['header']['name'])
         else:
             raise Exception('Invalid JWT header format: %s' % conf)
     except KeyError:
@@ -68,6 +70,8 @@ def mk_authz_header(conf, token):
         return {'Authorization': 'Bearer ' + token}
     elif header == 'Cookie' and name:
         return {'Cookie': name + '=' + token}
+    elif header == 'CustomHeader' and name:
+        return {name: token}
     else:
         raise Exception('Invalid JWT header format')
 
@@ -373,6 +377,12 @@ class TestJwtBasicWithEd25519AndCookie(AbstractTestJwtBasic):
     'header': {'type': 'Cookie', 'name': 'hasura_user'},
 })
 class TestJwtBasicWithEsAndCookie(AbstractTestJwtBasic):
+    pass
+
+@pytest.mark.jwt('rsa', {
+    'header': {'type': 'CustomHeader', 'name': 'hasura_user'},
+})
+class TestJwtBasicWithRsaAndCustomHeader(AbstractTestJwtBasic):
     pass
 
 

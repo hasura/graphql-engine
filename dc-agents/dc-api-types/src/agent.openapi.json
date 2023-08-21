@@ -63,6 +63,15 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/SchemaRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "content": {
@@ -82,7 +91,7 @@
                 }
               }
             },
-            "description": " or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+            "description": " or `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
           },
           "500": {
             "content": {
@@ -507,6 +516,9 @@
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
+          "interpolated_queries": {
+            "$ref": "#/components/schemas/InterpolatedQueryCapabilities"
+          },
           "licensing": {
             "$ref": "#/components/schemas/Licensing"
           },
@@ -695,6 +707,7 @@
         "type": "object"
       },
       "RelationshipCapabilities": {},
+      "InterpolatedQueryCapabilities": {},
       "SubqueryComparisonCapabilities": {
         "nullable": true,
         "properties": {
@@ -1282,6 +1295,7 @@
       "TableInfo": {
         "properties": {
           "columns": {
+            "default": [],
             "description": "The columns of the table",
             "items": {
               "$ref": "#/components/schemas/ColumnInfo"
@@ -1332,8 +1346,7 @@
           }
         },
         "required": [
-          "name",
-          "columns"
+          "name"
         ],
         "type": "object"
       },
@@ -1424,6 +1437,7 @@
       "FunctionInfo": {
         "properties": {
           "args": {
+            "default": [],
             "description": "argument info - name/types",
             "items": {
               "$ref": "#/components/schemas/FunctionInformationArgument"
@@ -1444,6 +1458,7 @@
               "one",
               "many"
             ],
+            "nullable": true,
             "type": "string"
           },
           "returns": {
@@ -1455,10 +1470,7 @@
         },
         "required": [
           "name",
-          "type",
-          "returns",
-          "response_cardinality",
-          "args"
+          "type"
         ],
         "type": "object"
       },
@@ -1485,6 +1497,44 @@
           "columns"
         ],
         "type": "object"
+      },
+      "SchemaRequest": {
+        "properties": {
+          "detail_level": {
+            "$ref": "#/components/schemas/DetailLevel"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SchemaFilters"
+          }
+        },
+        "type": "object"
+      },
+      "SchemaFilters": {
+        "properties": {
+          "only_functions": {
+            "description": "Only get the schemas for these functions",
+            "items": {
+              "$ref": "#/components/schemas/FunctionName"
+            },
+            "type": "array"
+          },
+          "only_tables": {
+            "description": "Only get the schemas for these tables",
+            "items": {
+              "$ref": "#/components/schemas/TableName"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "DetailLevel": {
+        "description": "How much information to return about the schema. Values:\n- 'everything': All information about the schema.\n- 'basic_info': For tables, only the table name and table type, for functions, only the function name and function type.\n",
+        "enum": [
+          "everything",
+          "basic_info"
+        ],
+        "type": "string"
       },
       "QueryResponse": {
         "properties": {
@@ -1528,21 +1578,68 @@
         "type": "null"
       },
       "QueryRequest": {
-        "discriminator": {
-          "mapping": {
-            "function": "FunctionRequest",
-            "table": "TableRequest"
+        "properties": {
+          "foreach": {
+            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/ScalarValue"
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
           },
-          "propertyName": "type"
-        },
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/FunctionRequest"
+          "interpolated_queries": {
+            "$ref": "#/components/schemas/InterpolatedQueries"
           },
-          {
-            "$ref": "#/components/schemas/TableRequest"
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "redaction_expressions": {
+            "default": [],
+            "description": "Expressions that can be referenced by the query to redact fields/columns",
+            "items": {
+              "$ref": "#/components/schemas/TargetRedactionExpressions"
+            },
+            "type": "array"
+          },
+          "relationships": {
+            "description": "The relationships between tables involved in the entire query request",
+            "items": {
+              "$ref": "#/components/schemas/Relationships"
+            },
+            "type": "array"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
           }
-        ]
+        },
+        "required": [
+          "target",
+          "relationships",
+          "query"
+        ],
+        "type": "object"
+      },
+      "TInterpolated": {
+        "properties": {
+          "id": {
+            "description": "The id for the query interpolation template",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "interpolated"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
       },
       "ScalarArgumentValue": {
         "properties": {
@@ -1615,6 +1712,71 @@
           }
         ]
       },
+      "TFunction": {
+        "properties": {
+          "arguments": {
+            "description": "The arguments of the function",
+            "items": {
+              "$ref": "#/components/schemas/FunctionRequestArgument"
+            },
+            "type": "array"
+          },
+          "name": {
+            "$ref": "#/components/schemas/FunctionName"
+          },
+          "type": {
+            "enum": [
+              "function"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "arguments",
+          "type"
+        ],
+        "type": "object"
+      },
+      "TTable": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/TableName"
+          },
+          "type": {
+            "enum": [
+              "table"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "Target": {
+        "discriminator": {
+          "mapping": {
+            "function": "TFunction",
+            "interpolated": "TInterpolated",
+            "table": "TTable"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TInterpolated"
+          },
+          {
+            "$ref": "#/components/schemas/TFunction"
+          },
+          {
+            "$ref": "#/components/schemas/TTable"
+          }
+        ]
+      },
       "RelationshipType": {
         "enum": [
           "object",
@@ -1634,14 +1796,41 @@
           "relationship_type": {
             "$ref": "#/components/schemas/RelationshipType"
           },
-          "target_table": {
-            "$ref": "#/components/schemas/TableName"
+          "target": {
+            "$ref": "#/components/schemas/Target"
           }
         },
         "required": [
-          "target_table",
+          "target",
           "relationship_type",
           "column_mapping"
+        ],
+        "type": "object"
+      },
+      "InterpolatedRelationships": {
+        "properties": {
+          "relationships": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "A map of relationships from the interpolated table to targets. The key of the map is the relationship name",
+            "type": "object"
+          },
+          "source_interpolated_query": {
+            "description": "The source interpolated query involved in the relationship",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "interpolated"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_interpolated_query",
+          "relationships",
+          "type"
         ],
         "type": "object"
       },
@@ -1651,7 +1840,7 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Relationship"
             },
-            "description": "A map of relationships from the source table to target tables. The key of the map is the relationship name",
+            "description": "A map of relationships from the source function to targets. The key of the map is the relationship name",
             "type": "object"
           },
           "source_function": {
@@ -1677,7 +1866,7 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Relationship"
             },
-            "description": "A map of relationships from the source table to target tables. The key of the map is the relationship name",
+            "description": "A map of relationships from the source table to targets. The key of the map is the relationship name",
             "type": "object"
           },
           "source_table": {
@@ -1691,9 +1880,9 @@
           }
         },
         "required": [
-          "type",
           "source_table",
-          "relationships"
+          "relationships",
+          "type"
         ],
         "type": "object"
       },
@@ -1701,11 +1890,15 @@
         "discriminator": {
           "mapping": {
             "function": "FunctionRelationships",
+            "interpolated": "InterpolatedRelationships",
             "table": "TableRelationships"
           },
           "propertyName": "type"
         },
         "oneOf": [
+          {
+            "$ref": "#/components/schemas/InterpolatedRelationships"
+          },
           {
             "$ref": "#/components/schemas/FunctionRelationships"
           },
@@ -1713,6 +1906,25 @@
             "$ref": "#/components/schemas/TableRelationships"
           }
         ]
+      },
+      "TNInterpolatedQuery": {
+        "properties": {
+          "interpolated": {
+            "description": "The id of the interpolated query",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "interpolated"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "interpolated",
+          "type"
+        ],
+        "type": "object"
       },
       "TNFunction": {
         "properties": {
@@ -1754,11 +1966,15 @@
         "discriminator": {
           "mapping": {
             "function": "TNFunction",
+            "interpolated": "TNInterpolatedQuery",
             "table": "TNTable"
           },
           "propertyName": "type"
         },
         "oneOf": [
+          {
+            "$ref": "#/components/schemas/TNInterpolatedQuery"
+          },
           {
             "$ref": "#/components/schemas/TNFunction"
           },
@@ -2183,6 +2399,89 @@
         ],
         "type": "object"
       },
+      "InterpolatedText": {
+        "properties": {
+          "type": {
+            "enum": [
+              "text"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "type"
+        ],
+        "type": "object"
+      },
+      "InterpolatedScalar": {
+        "properties": {
+          "type": {
+            "enum": [
+              "scalar"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "value",
+          "value_type",
+          "type"
+        ],
+        "type": "object"
+      },
+      "InterpolatedItem": {
+        "discriminator": {
+          "mapping": {
+            "scalar": "InterpolatedScalar",
+            "text": "InterpolatedText"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InterpolatedText"
+          },
+          {
+            "$ref": "#/components/schemas/InterpolatedScalar"
+          }
+        ]
+      },
+      "InterpolatedQuery": {
+        "properties": {
+          "id": {
+            "description": "An id associated with the interpolated query - Should be unique across the request",
+            "type": "string"
+          },
+          "items": {
+            "description": "Interpolated items in the query",
+            "items": {
+              "$ref": "#/components/schemas/InterpolatedItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "items"
+        ],
+        "type": "object"
+      },
+      "InterpolatedQueries": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/InterpolatedQuery"
+        },
+        "type": "object"
+      },
       "Field": {
         "discriminator": {
           "mapping": {
@@ -2263,7 +2562,18 @@
       "OrderByColumn": {
         "properties": {
           "column": {
-            "type": "string"
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
           },
           "redaction_expression": {
             "$ref": "#/components/schemas/RedactionExpressionName"
@@ -2618,52 +2928,6 @@
           }
         ]
       },
-      "FunctionRequest": {
-        "properties": {
-          "function": {
-            "$ref": "#/components/schemas/FunctionName"
-          },
-          "function_arguments": {
-            "default": [],
-            "description": "Function Arguments. TODO. Improve this.",
-            "items": {
-              "$ref": "#/components/schemas/FunctionRequestArgument"
-            },
-            "type": "array"
-          },
-          "query": {
-            "$ref": "#/components/schemas/Query"
-          },
-          "redaction_expressions": {
-            "default": [],
-            "description": "Expressions that can be referenced by the query to redact fields/columns",
-            "items": {
-              "$ref": "#/components/schemas/TargetRedactionExpressions"
-            },
-            "type": "array"
-          },
-          "relationships": {
-            "description": "The relationships between entities involved in the entire query request",
-            "items": {
-              "$ref": "#/components/schemas/Relationships"
-            },
-            "type": "array"
-          },
-          "type": {
-            "enum": [
-              "function"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "function",
-          "relationships",
-          "query",
-          "type"
-        ],
-        "type": "object"
-      },
       "ScalarValue": {
         "properties": {
           "value": {
@@ -2676,55 +2940,6 @@
         "required": [
           "value",
           "value_type"
-        ],
-        "type": "object"
-      },
-      "TableRequest": {
-        "properties": {
-          "foreach": {
-            "description": "If present, a list of columns and values for the columns that the query must be repeated for, applying the column values as a filter for each query.",
-            "items": {
-              "additionalProperties": {
-                "$ref": "#/components/schemas/ScalarValue"
-              },
-              "type": "object"
-            },
-            "nullable": true,
-            "type": "array"
-          },
-          "query": {
-            "$ref": "#/components/schemas/Query"
-          },
-          "redaction_expressions": {
-            "default": [],
-            "description": "Expressions that can be referenced by the query to redact fields/columns",
-            "items": {
-              "$ref": "#/components/schemas/TargetRedactionExpressions"
-            },
-            "type": "array"
-          },
-          "table": {
-            "$ref": "#/components/schemas/TableName"
-          },
-          "table_relationships": {
-            "description": "The relationships between tables involved in the entire query request",
-            "items": {
-              "$ref": "#/components/schemas/Relationships"
-            },
-            "type": "array"
-          },
-          "type": {
-            "enum": [
-              "table"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "table",
-          "table_relationships",
-          "query",
-          "type"
         ],
         "type": "object"
       },
@@ -2823,16 +3038,16 @@
             },
             "type": "array"
           },
-          "table_relationships": {
-            "description": "The relationships between tables involved in the entire mutation request",
+          "relationships": {
+            "description": "The relationships involved in the entire mutation request",
             "items": {
-              "$ref": "#/components/schemas/TableRelationships"
+              "$ref": "#/components/schemas/Relationships"
             },
             "type": "array"
           }
         },
         "required": [
-          "table_relationships",
+          "relationships",
           "insert_schema",
           "operations"
         ],

@@ -1,7 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Hasura.Backends.DataConnector.API.V0.Schema
-  ( SchemaResponse (..),
+  ( SchemaRequest (..),
+    SchemaFilters (..),
+    DetailLevel (..),
+    SchemaResponse (..),
     ObjectTypeDefinition (..),
   )
 where
@@ -23,6 +27,60 @@ import Prelude
 
 --------------------------------------------------------------------------------
 -- Schema Response
+
+data SchemaRequest = SchemaRequest
+  { _srFilters :: SchemaFilters,
+    _srDetailLevel :: DetailLevel
+  }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec SchemaRequest
+
+instance HasCodec SchemaRequest where
+  codec =
+    object "SchemaRequest" $
+      SchemaRequest
+        <$> optionalFieldWithOmittedDefault "filters" mempty "Optional schema filtering settings" .= _srFilters
+        <*> optionalFieldWithOmittedDefault "detail_level" Everything "Only return names for schema items" .= _srDetailLevel
+
+data SchemaFilters = SchemaFilters
+  { _sfOnlyTables :: Maybe [API.V0.TableName],
+    _sfOnlyFunctions :: Maybe [API.V0.FunctionName]
+  }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec SchemaFilters
+
+instance Semigroup SchemaFilters where
+  a <> b =
+    SchemaFilters
+      { _sfOnlyTables = _sfOnlyTables a <> _sfOnlyTables b,
+        _sfOnlyFunctions = _sfOnlyFunctions a <> _sfOnlyFunctions b
+      }
+
+instance Monoid SchemaFilters where
+  mempty = SchemaFilters Nothing Nothing
+
+instance HasCodec SchemaFilters where
+  codec =
+    object "SchemaFilters" $
+      SchemaFilters
+        <$> optionalField "only_tables" "Only get the schemas for these tables" .= _sfOnlyTables
+        <*> optionalField "only_functions" "Only get the schemas for these functions" .= _sfOnlyFunctions
+
+data DetailLevel = Everything | BasicInfo
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DetailLevel
+
+instance HasCodec DetailLevel where
+  codec =
+    named "DetailLevel" $
+      stringConstCodec [(Everything, "everything"), (BasicInfo, "basic_info")]
+        <??> [ "How much information to return about the schema. Values:",
+               "- 'everything': All information about the schema.",
+               "- 'basic_info': For tables, only the table name and table type, for functions, only the function name and function type."
+             ]
 
 -- | The Schema Response provides the schemas for tracked tables and
 -- 'Capabilities' supported by the service.

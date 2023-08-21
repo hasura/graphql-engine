@@ -70,11 +70,11 @@ describe('addConstraintName', () => {
       const expected = [
         {
           ...relationships[0],
-          constraintName: 'Album_Artist',
+          constraintName: 'Artist',
         },
         {
           ...relationships[1],
-          constraintName: 'Genre_Artists',
+          constraintName: 'Artists',
         },
       ];
 
@@ -114,11 +114,11 @@ describe('addConstraintName', () => {
       const expected = [
         {
           ...relationships[0],
-          constraintName: 'albumArtist',
+          constraintName: 'artist',
         },
         {
           ...relationships[1],
-          constraintName: 'genreArtists',
+          constraintName: 'artists',
         },
       ];
 

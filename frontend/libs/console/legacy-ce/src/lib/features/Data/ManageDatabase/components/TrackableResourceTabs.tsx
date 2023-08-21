@@ -1,8 +1,14 @@
-import React from 'react';
-import { Tabs } from '../../../../new-components/Tabs';
 import clsx from 'clsx';
+import React from 'react';
 import Skeleton from 'react-loading-skeleton';
+import { Badge } from '../../../../new-components/Badge';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
+import { Tabs } from '../../../../new-components/Tabs';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '../../../FeatureFlags';
+import { TAB_COLORS } from '../constants';
 
 export type TabState = 'tracked' | 'untracked';
 
@@ -19,7 +25,6 @@ type ManageResourceTabsProps = Omit<
   isLoading?: boolean;
   learnMoreLink?: string;
 };
-
 /**
  *
  * This is a wrapper around the `<Tabs />` component that simplifies and specializes the props API to be used to display tabbed lists of Trackable Resources
@@ -36,30 +41,42 @@ export const TrackableResourceTabs = ({
 }: ManageResourceTabsProps) => {
   const { untracked, tracked } = items;
 
+  const { enabled: newTabbedUIEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.manageDatabaseTabbedInterface
+  );
+
   return isLoading ? (
     <div className="mx-sm">
       <Skeleton count={8} height={25} className="mb-2" />
     </div>
   ) : (
     <div data-testid="trackable-resource-tabs" className="mx-sm">
-      {!!introText && (
-        <div className="my-2 text-muted">
+      {introText ? (
+        <div className="my-4 text-muted">
           {introText}
           {!!learnMoreLink && <LearnMoreLink href={learnMoreLink} />}
         </div>
+      ) : (
+        // spacer:
+        <div className="my-4" />
       )}
       <Tabs
+        color={newTabbedUIEnabled ? TAB_COLORS.trackingLevel : 'yellow'}
+        accentStyle={newTabbedUIEnabled ? 'background' : 'underline'}
         className={clsx('space-y-4', className)}
         onValueChange={value => onValueChange(value as TabState)}
         items={[
           {
             value: 'untracked',
             label: (
-              <div className="flex items-center" data-testid="untracked-tab">
+              <div
+                className="flex items-center gap-2"
+                data-testid="untracked-tab"
+              >
                 Untracked
-                <span className="bg-gray-300 ml-1 px-1.5 py-0.5 rounded text-xs">
+                <Badge className="px-xs" color="gray">
                   {untracked.amount}
-                </span>
+                </Badge>
               </div>
             ),
             content: untracked.content,
@@ -67,11 +84,14 @@ export const TrackableResourceTabs = ({
           {
             value: 'tracked',
             label: (
-              <div className="flex items-center" data-testid="tracked-tab">
+              <div
+                className="flex items-center gap-2"
+                data-testid="tracked-tab"
+              >
                 Tracked
-                <span className="bg-gray-300 ml-1 px-1.5 py-0.5 rounded text-xs">
+                <Badge className="px-xs" color="gray">
                   {tracked.amount}
-                </span>
+                </Badge>
               </div>
             ),
             content: tracked.content,

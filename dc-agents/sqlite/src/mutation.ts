@@ -1,8 +1,8 @@
-import { ArrayRelationInsertFieldValue, ColumnInsertFieldValue, DeleteMutationOperation, Expression, Field, InsertFieldSchema, InsertMutationOperation, MutationOperation, MutationOperationResults, MutationRequest, MutationResponse, ObjectRelationInsertFieldValue, RowUpdate, TableInsertSchema, TableName, TableRelationships, UpdateMutationOperation } from "@hasura/dc-api-types";
+import { ArrayRelationInsertFieldValue, ColumnInsertFieldValue, DeleteMutationOperation, Expression, Field, InsertFieldSchema, InsertMutationOperation, MutationOperation, MutationOperationResults, MutationRequest, MutationResponse, ObjectRelationInsertFieldValue, Relationships, RowUpdate, TableInsertSchema, TableName, TableRelationships, UpdateMutationOperation } from "@hasura/dc-api-types";
 import { Config } from "./config";
 import { Connection, defaultMode, SqlLogger, withConnection } from "./db";
 import { escapeIdentifier, escapeTableName, escapeTableNameSansSchema, json_object, where_clause, } from "./query";
-import { asyncSequenceFromInputs, ErrorWithStatusCode, mapObjectToArray, tableNameEquals, unreachable } from "./util";
+import { asyncSequenceFromInputs, ErrorWithStatusCode, mapObjectToArray, tableNameEquals, tableToTarget, unreachable } from "./util";
 
 // Types
 
@@ -86,7 +86,7 @@ function columnsString(infos: Array<RowInfo>): string {
 function getTableInsertSchema(schemas: Array<TableInsertSchema>, table: TableName): TableInsertSchema | null {
   for(var i = 0; i < schemas.length; i++) {
     const schema = schemas[i];
-    if(tableNameEquals(schema.table)(table)) {
+    if(tableNameEquals(schema.table)(tableToTarget(table))) {
       return schema;
     }
   }
@@ -100,8 +100,8 @@ function getTableInsertSchema(schemas: Array<TableInsertSchema>, table: TableNam
  *
  * Note: The heavy lifting is performed by `where_clause` from query.ts
  */
-function whereString(relationships: Array<TableRelationships>, e: Expression, table: TableName): string {
-  const w = where_clause(relationships, e, table, escapeTableNameSansSchema(table));
+function whereString(relationships: Array<Relationships>, e: Expression, table: TableName): string {
+  const w = where_clause(relationships, e, tableToTarget(table), escapeTableNameSansSchema(table));
   return w;
 }
 
@@ -111,7 +111,7 @@ function whereString(relationships: Array<TableRelationships>, e: Expression, ta
  *
  * The `json_object` function from query.ts performs the heavy lifting here.
  */
-function returningString(relationships: Array<TableRelationships>, fields: Record<string, Field>, table: TableName): string {
+function returningString(relationships: Array<Relationships>, fields: Record<string, Field>, table: TableName): string {
   /* Example of fields:
     {
       "ArtistId": {
@@ -121,7 +121,7 @@ function returningString(relationships: Array<TableRelationships>, fields: Recor
       }
     }
   */
-  const r = json_object(relationships, fields, table, escapeTableNameSansSchema(table));
+  const r = json_object(relationships, fields, tableToTarget(table), escapeTableNameSansSchema(table));
   return r;
 }
 
@@ -131,7 +131,7 @@ function queryValues(info: Array<Info>): Record<string, unknown> {
 
 const EMPTY_AND: Expression = { type: 'and', expressions: [] };
 
-function insertString(relationships: Array<TableRelationships>, op: InsertMutationOperation, info: Array<RowInfo>): string {
+function insertString(relationships: Array<Relationships>, op: InsertMutationOperation, info: Array<RowInfo>): string {
   const columnValues =
     info.length > 0
       ? `(${columnsString(info)}) VALUES (${valuesString(info)})`
@@ -145,7 +145,7 @@ function insertString(relationships: Array<TableRelationships>, op: InsertMutati
   `;
 }
 
-function deleteString(relationships: Array<TableRelationships>, op: DeleteMutationOperation): string {
+function deleteString(relationships: Array<Relationships>, op: DeleteMutationOperation): string {
   return `
     DELETE FROM ${escapeTableName(op.table)}
     WHERE ${whereString(relationships, op.where || EMPTY_AND, op.table)}
@@ -155,7 +155,7 @@ function deleteString(relationships: Array<TableRelationships>, op: DeleteMutati
   `;
 }
 
-function updateString(relationships: Array<TableRelationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>): string {
+function updateString(relationships: Array<Relationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>): string {
   const result = `
     UPDATE ${escapeTableName(op.table)}
     SET ${setString(info)}
@@ -208,7 +208,7 @@ function getUpdateRowInfos(op: UpdateMutationOperation): Array<UpdateInfo> {
   });
 }
 
-async function insertRow(db: Connection, relationships: Array<TableRelationships>, op: InsertMutationOperation, info: Array<RowInfo>):  Promise<Array<Row>> {
+async function insertRow(db: Connection, relationships: Array<Relationships>, op: InsertMutationOperation, info: Array<RowInfo>):  Promise<Array<Row>> {
   const q = insertString(relationships, op, info);
   const v = queryValues(info);
   const results = await db.query(q,v);
@@ -221,7 +221,7 @@ async function insertRow(db: Connection, relationships: Array<TableRelationships
   return results;
 }
 
-async function updateRow(db: Connection, relationships: Array<TableRelationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>):  Promise<Array<Row>> {
+async function updateRow(db: Connection, relationships: Array<Relationships>, op: UpdateMutationOperation, info: Array<UpdateInfo>):  Promise<Array<Row>> {
   const q = updateString(relationships, op, info);
   const v = queryValues(info);
   const results = await db.query(q,v);
@@ -234,7 +234,7 @@ async function updateRow(db: Connection, relationships: Array<TableRelationships
   return results;
 }
 
-async function deleteRows(db: Connection, relationships: Array<TableRelationships>, op: DeleteMutationOperation):  Promise<Array<Row>> {
+async function deleteRows(db: Connection, relationships: Array<Relationships>, op: DeleteMutationOperation):  Promise<Array<Row>> {
   const q = deleteString(relationships, op);
   const results = await db.query(q);
   return results;
@@ -247,7 +247,7 @@ function postMutationCheckError(op: MutationOperation, failed: Array<Row>): Erro
   );
 }
 
-async function mutationOperation(db: Connection, relationships: Array<TableRelationships>, schema: Array<TableInsertSchema>, op: MutationOperation): Promise<MutationOperationResults> {
+async function mutationOperation(db: Connection, relationships: Array<Relationships>, schema: Array<TableInsertSchema>, op: MutationOperation): Promise<MutationOperationResults> {
   switch(op.type) {
     case 'insert':
       const infos = getInsertRowInfos(schema, op);
@@ -322,7 +322,7 @@ async function mutationOperation(db: Connection, relationships: Array<TableRelat
  */
 export async function runMutation(config: Config, sqlLogger: SqlLogger, request: MutationRequest): Promise<MutationResponse> {
   return await withConnection(config, defaultMode, sqlLogger, async db => {
-    const resultSet = await asyncSequenceFromInputs(request.operations, (op) => mutationOperation(db, request.table_relationships, request.insert_schema, op));
+    const resultSet = await asyncSequenceFromInputs(request.operations, (op) => mutationOperation(db, request.relationships, request.insert_schema, op));
     return {
       operation_results: resultSet
     };

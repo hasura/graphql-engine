@@ -110,6 +110,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: false,
       frequentlyUsedColumns: false,
       columnTypeSelector: false,
+      arrayTypes: false,
     },
     browse: {
       enabled: true,
@@ -292,11 +293,11 @@ export const bigquery: DataSourcesAPI = {
     select
     t.table_schema as table_schema,
     t.table_name as table_name,
-    t.table_type as table_type, 
+    t.table_type as table_type,
     opts.option_value as comment,
-    CONCAT("[", c.json_data ,"]") as columns  
+    CONCAT("[", c.json_data ,"]") as columns
     FROM ${dataset}.INFORMATION_SCHEMA.TABLES as t
-    LEFT JOIN 
+    LEFT JOIN
     (
     with x as (
         select table_name, table_schema, column_name, ordinal_position, is_nullable, data_type from ${dataset}.INFORMATION_SCHEMA.COLUMNS
@@ -449,13 +450,13 @@ export const bigquery: DataSourcesAPI = {
     });
     let query = '';
     Object.keys(schemaMap).forEach((schema, index) => {
-      query += ` select 
-      table_name, 
-      table_schema, 
+      query += ` select
+      table_name,
+      table_schema,
       case
         when table_type = 'VIEW' then 'view'
         else 'table'
-      end as table_type 
+      end as table_type
       from  ${schema}.INFORMATION_SCHEMA.TABLES where table_name in (${schemaMap[
         schema
       ]

@@ -3,23 +3,22 @@
  * This Module defines some mock functions that can be invoked.
  */
 
-import { ArgumentValue, FunctionRequest, NamedArgument, TableName } from "@hasura/dc-api-types";
-import { prettyPrintTableName, Rows } from "./query";
-import { StaticData, } from "./data";
+import { ArgumentValue, FunctionName, FunctionRequestArgument, NamedArgument, TableName } from "@hasura/dc-api-types";
+import { prettyPrintName, Rows } from "./query";
 
 type RawScalarValue = (string | number | boolean | null)
 type GetTable = (tableName: TableName) => Record<string, RawScalarValue>[] | undefined
 
-export function respondToFunction(queryRequest: FunctionRequest, tableName: TableName, getTable: GetTable): Rows {
-  const t = prettyPrintTableName(tableName);
+export function respondToFunction(functionName: FunctionName, functionArgs: FunctionRequestArgument[], getTable: GetTable): Rows {
+  const t = prettyPrintName(functionName);
   const f = functions[t];
   if(! f) {
     throw(Error(`Couldn't find function ${t}`));
   }
-  return f(queryRequest, getTable);
+  return f(functionArgs, getTable);
 }
 
-const functions: Record<string, ((x: any, getTable: GetTable) => Rows)> = {
+const functions: Record<string, ((functionArgs: FunctionRequestArgument[], getTable: GetTable) => Rows)> = {
   '[Fibonacci]': fibonacci,
   '[SearchArticles]': search_articles,
 }
@@ -29,15 +28,12 @@ function namedArguments(args: Array<NamedArgument>): Record<string, ArgumentValu
 }
 
 /**
- * 
- * @param q FunctionRequest with 'take' nat arg.
+ *
+ * @param functionArgs Arguments, should contain the 'take' nat arg.
  * @returns List of n Fibonacci numbers
  */
-function fibonacci(q: FunctionRequest): Rows {
-
-  const argzArray = q.function_arguments;
-  if(! argzArray) { throw(Error('Expecting function_arguments')); }
-  const argz = namedArguments(argzArray);
+function fibonacci(functionArgs: FunctionRequestArgument[]): Rows {
+  const argz = namedArguments(functionArgs);
 
   const n = argz['take'].value;
   if(! n) { throw(Error('Expecting `take` arg')); }
@@ -55,11 +51,9 @@ function fibonacci(q: FunctionRequest): Rows {
   return rows;
 }
 
-function search_articles(f: FunctionRequest, getTable: GetTable): Rows {
-
-  const argzArray = f.function_arguments;
-  if(! argzArray) { throw(Error('Expecting function_arguments')); }
-  const argz = namedArguments(argzArray);
+function search_articles(functionArgs: FunctionRequestArgument[], getTable: GetTable): Rows {
+  if(! functionArgs) { throw(Error('Expecting function_arguments')); }
+  const argz = namedArguments(functionArgs);
 
   const table = getTable(['Articles']);
   if(!table) { throw(Error('Could not find `Articles` table.')); }

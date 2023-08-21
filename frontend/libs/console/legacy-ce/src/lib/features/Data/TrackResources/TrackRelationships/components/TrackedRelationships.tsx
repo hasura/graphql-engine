@@ -15,7 +15,14 @@ import { hasuraToast } from '../../../../../new-components/Toasts';
 import { UNTRACK_RELATIONSHIP_SUCCESS_MESSAGE } from '../constants';
 import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
 import React from 'react';
-import { anyIncludes } from '../utils';
+import { anyIncludes, getTableDisplayName } from '../utils';
+
+const getRelationshipRowId = (relationship: TrackedSuggestedRelationship) => {
+  const fromTable = getTableDisplayName(relationship.fromTable);
+  const toTable = getTableDisplayName(relationship.toTable);
+
+  return `${fromTable}_${toTable}_${relationship.name}`;
+};
 
 type TrackedSuggestedRelationshipWithId = TrackedSuggestedRelationship & {
   id: string;
@@ -35,7 +42,11 @@ export const TrackedSuggestedRelationships = ({
   onChange?: () => void;
 }) => {
   const listValues: TrackedSuggestedRelationshipWithId[] = useMemo(
-    () => trackedRelationships.map(rel => ({ ...rel, id: rel.name })),
+    () =>
+      trackedRelationships.map(rel => ({
+        ...rel,
+        id: getRelationshipRowId(rel),
+      })),
     [trackedRelationships]
   );
 

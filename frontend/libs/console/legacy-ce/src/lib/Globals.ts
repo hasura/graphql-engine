@@ -9,6 +9,7 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
 import { SERVER_CONSOLE_MODE } from './constants';
 import { ConsoleType, parseConsoleType } from './utils/envUtils';
+import { storybookGlobals } from './storybook/decorators/console-type/storybook-globals';
 
 export type LuxFeature =
   | 'DatadogIntegration'
@@ -272,4 +273,19 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
   }
 }
 
-export default globals;
+const globalsProxy = new Proxy(globals, {
+  get: (originalTarget, property) => {
+    // if running storybook, refer to the StorybookGlobals when the property matches a key of that object
+    // this allows us to manipulate certain properties without affecting the console
+    const target =
+      !!process.env.STORYBOOK && property in storybookGlobals
+        ? storybookGlobals
+        : originalTarget;
+
+    return Reflect.get(target, property);
+  },
+});
+
+const exportedGlobals = process.env.STORYBOOK ? globalsProxy : globals;
+
+export default exportedGlobals;

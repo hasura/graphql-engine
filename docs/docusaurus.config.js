@@ -18,6 +18,13 @@ const config = {
   organizationName: 'hasura',
   projectName: 'graphql-engine',
   staticDirectories: ['static', 'public'],
+  scripts: [
+    {
+      src: "https://www.chatbase.co/embed.min.js",
+      id: "iiL6XJbYo6tRR_M4rUB9F",
+      defer: true,
+    }
+  ],
   webpack: {
     jsLoader: isServer => ({
       loader: require.resolve('swc-loader'),

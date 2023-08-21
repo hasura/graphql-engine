@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 128 128" style="enable-background:new 0 0 128 128;" xml:space="preserve">
+  <style type="text/css">
+    .st3 {
+      fill: none;
+      stroke: #475569;
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-miterlimit: 10;
+    }
+  </style>
+  <g>
+    <g>
+      <g transform="translate(-30 0)">
+        <polyline class="st3 move" points="111,52.1 122.6,64.3 110.4,75.9" />
+      </g>
+      <line class="st3" x1="86" y1="64" x2="23.3" y2="64" />
+      <circle class="st3" cx="14.1" cy="64" r="8.7" />
+      <circle class="st3" cx="114" cy="64" r="8.7" />
+    </g>
+  </g>
+</svg>

@@ -226,14 +226,14 @@ tests = describe "Object Relationships Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Genre",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Genre",
+                                { _rTarget = mkTableTarget "Genre",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
                                 }
                             ),
                             ( API.RelationshipName "MediaType",
                               API.Relationship
-                                { _rTargetTable = mkTableName "MediaType",
+                                { _rTarget = mkTableTarget "MediaType",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping =
                                     HashMap.fromList
@@ -338,8 +338,8 @@ tests = describe "Object Relationships Tests" $ do
                         ]
                     )
                     ( NE.fromList
-                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Descending,
-                          API.OrderByElement [] (API.OrderByColumn (API.ColumnName "Name") Nothing) API.Ascending
+                        [ API.OrderByElement [API.RelationshipName "Album", API.RelationshipName "Artist"] (API.OrderByColumn (API.mkColumnSelector $ API.ColumnName "Name") Nothing) API.Descending,
+                          API.OrderByElement [] (API.OrderByColumn (API.mkColumnSelector $ API.ColumnName "Name") Nothing) API.Ascending
                         ]
                     )
               )
@@ -352,7 +352,7 @@ tests = describe "Object Relationships Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Album",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Album",
+                                { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
                                 }
@@ -366,7 +366,7 @@ tests = describe "Object Relationships Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Artist",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Artist",
+                                { _rTarget = mkTableTarget "Artist",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                 }
@@ -447,7 +447,7 @@ tests = describe "Object Relationships Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "SupportRep",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Employee",
+                                { _rTarget = mkTableTarget "Employee",
                                   _rRelationshipType = API.ObjectRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
                                 }
@@ -461,7 +461,7 @@ tests = describe "Object Relationships Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "SupportRepForCustomers",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Customer",
+                                { _rTarget = mkTableTarget "Customer",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
                                 }

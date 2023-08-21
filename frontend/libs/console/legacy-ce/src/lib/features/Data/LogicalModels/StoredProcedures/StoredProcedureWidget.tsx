@@ -13,6 +13,7 @@ import Skeleton from 'react-loading-skeleton';
 import { useTrackStoredProcedure } from '../../hooks/useTrackStoredProcedure';
 import { StoredProcedureArgument } from '../../../hasura-metadata-types';
 import {
+  Routes,
   STORED_PROCEDURE_TRACK_ERROR,
   STORED_PROCEDURE_TRACK_SUCCESS,
 } from '../constants';
@@ -142,7 +143,7 @@ export const StoredProcedureWidget = () => {
           type: 'success',
           title: STORED_PROCEDURE_TRACK_SUCCESS,
         });
-        pushRoute('/data/native-queries/stored-procedures');
+        pushRoute(Routes.StoredProcedures);
       },
       onError: err => {
         hasuraToast({

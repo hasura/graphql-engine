@@ -6,7 +6,7 @@ import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
 import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
-import { Table } from '../../../hasura-metadata-types';
+import { BulkAtomicResponse, Table } from '../../../hasura-metadata-types';
 import {
   DeleteRelationshipProps,
   LocalTableRelationshipDefinition,
@@ -69,7 +69,9 @@ const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
 
 export const useCreateTableRelationships = (
   dataSourceName: string,
-  globalMutateOptions?: MetadataMigrationOptions
+  globalMutateOptions?: Omit<MetadataMigrationOptions, 'onSuccess'> & {
+    onSuccess?: (data: BulkAtomicResponse, variable?: any, ctx?: any) => void;
+  }
 ) => {
   // get these capabilities
 
@@ -130,12 +132,11 @@ export const useCreateTableRelationships = (
     [metadataSources]
   );
 
-  const { mutate, ...rest } = useMetadataMigration({
+  const { mutate, ...rest } = useMetadataMigration<BulkAtomicResponse>({
     ...globalMutateOptions,
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
       globalMutateOptions?.onSuccess?.(data, variable, ctx);
-      console.log('invalidate');
       invalidateSuggestedRelationships();
     },
   });

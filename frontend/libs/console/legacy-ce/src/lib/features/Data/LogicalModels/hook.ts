@@ -1,30 +1,30 @@
 import globals from '../../../Globals';
+import { isObject } from '../../../components/Common/utils/jsUtils';
 import { isProConsole } from '../../../utils';
-import { nativeDrivers } from '../../DataSource';
+import { Feature } from '../../DataSource';
 import { useEELiteAccess } from '../../EETrial';
+import { useAllDriverCapabilities } from '../hooks/useAllDriverCapabilities';
 
-export const useSupportedDrivesForNativeQueries = () => {
-  const allowedDriversForCE = ['postgres'];
+export const useSupportedDriversForNativeQueries = () => {
+  const { data: supportedDrivers = [] } = useAllDriverCapabilities({
+    select: data => {
+      return data
+        .filter(item => {
+          if (item.capabilities === Feature.NotImplemented) return false;
 
+          return isObject(item.capabilities.interpolated_queries);
+        })
+        .map(item => item.driver.kind);
+    },
+  });
   const { access: eeLiteAccess } = useEELiteAccess(globals);
-
-  /**
-   * There are three cases here.
-   * 1. If it's OSS - do not show the children at all. (there is no point in using this wrapper for oss features)
-   * 2. If it's pro lite
-   *   - show the "Try pro-lite" license form if license is not active.
-   *   - show the children if license is active.
-   * 3. If it's cloud/pro just show the children
-   *
-   */
 
   // this will tell us if console is pro or cloud
   const isPro = isProConsole(window.__env);
 
-  if (eeLiteAccess === 'active' || isPro) return nativeDrivers;
+  // Hardcoded list until we have a proper way to determine from capabilities
+  if (eeLiteAccess === 'active' || isPro) return supportedDrivers;
 
-  // this is to return nothing for oss
-  if (eeLiteAccess === 'forbidden') return allowedDriversForCE;
-
-  return allowedDriversForCE;
+  // for all other acess statuses, just return only postgres
+  return ['postgres'];
 };

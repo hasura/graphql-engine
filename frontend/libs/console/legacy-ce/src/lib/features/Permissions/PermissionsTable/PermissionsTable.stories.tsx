@@ -23,7 +23,7 @@ export const GDCTable: StoryObj<PermissionsTableProps> = {
   },
 
   args: {
-    dataSourceName: 'sqlite',
+    dataSourceName: 'Lite',
     table: ['Artist'],
   },
 };

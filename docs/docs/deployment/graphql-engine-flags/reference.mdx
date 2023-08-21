@@ -352,6 +352,18 @@ Sets the maximum cumulative length of all headers in bytes.
 | **Default**         | `1024*1024` (1MB)                        |
 | **Supported in**    | CE, Enterprise Edition                   |
 
+### Enable Error Log Level for Trigger Errors
+
+Sets the log-level as `error` for Trigger type error logs (Event Triggers, Scheduled Triggers, Cron Triggers).
+
+|                     |                                                  |
+| ------------------- | ------------------------------------------------ |
+| **Flag**            | `--enable-triggers-error-log-level`              |
+| **Env var**         | `HASURA_GRAPHQL_ENABLE_TRIGGERS_ERROR_LOG_LEVEL` |
+| **Accepted values** | Boolean                                          |
+| **Default**         | `false`                                          |
+| **Supported in**    | CE, Enterprise Edition                           |
+
 ### Enable Console
 
 Enable the Hasura Console (served by the server on `/` and `/console`).
@@ -513,14 +525,14 @@ Postgres.
 
 List of experimental features to be enabled.
 
-|                     |                                                                                                                                                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                   |
-| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                 |
-| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                          |
-| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields` |
-| **Default**         | `null`                                                                                                                                                                                                                                 |
-| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                          |
+|                     |                                                                                                                                                                                                                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Flag**            | `--experimental-features <FEATURES>`                                                                                                                                                                                                                              |
+| **Env var**         | `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES`                                                                                                                                                                                                                            |
+| **Accepted values** | String (Comma-separated list)                                                                                                                                                                                                                                     |
+| **Options**         | `inherited_roles`, `optimize_permission_filters`, `naming_convention`, `streaming_subscriptions`, `apollo_federation`, `hide_update_many_fields`, `bigquery_string_numeric_input`, `hide_aggregation_predicates`, `hide_stream_fields`, `disable_postgres_arrays` |
+| **Default**         | `null`                                                                                                                                                                                                                                                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud                                                                                                                                                                                                                                     |
 
 ### Graceful Shutdown Timeout
 

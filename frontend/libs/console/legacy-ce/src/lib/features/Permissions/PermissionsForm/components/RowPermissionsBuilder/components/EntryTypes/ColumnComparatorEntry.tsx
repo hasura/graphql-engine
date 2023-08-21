@@ -3,7 +3,7 @@ import { isComparator } from '../utils/helpers';
 import { tableContext } from '../TableProvider';
 import { typesContext } from '../TypesProvider';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { createWrapper } from './utils';
+import { Wrapper } from './utils';
 import { rootTableContext } from '../RootTableProvider';
 
 export function ColumnComparatorEntry({
@@ -18,11 +18,6 @@ export function ColumnComparatorEntry({
   const { setValue } = useContext(rowPermissionsContext);
   const { types } = useContext(typesContext);
   const { relationships } = useContext(tableContext);
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   const showRootColumns = v.includes('$');
   const stringifiedValue = JSON.stringify(v);
   useEffect(() => {
@@ -31,7 +26,7 @@ export function ColumnComparatorEntry({
     }
   }, [stringifiedValue, setValue]);
   return (
-    <Wrapper>
+    <Wrapper types={types} path={path} relationships={relationships}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''

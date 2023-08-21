@@ -83,16 +83,18 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
     Nothing
       | OtelTraces `Set.member` enabledDataTypes ->
           Left (err400 InvalidParams "Traces export is enabled but tracing endpoint missing")
-      | otherwise -> pure Nothing -- disabled
-    Just rawTracesEndpoint ->
-      mkExportReq rawTracesEndpoint
+    Just rawTracesEndpoint
+      | OtelTraces `Set.member` enabledDataTypes ->
+          mkExportReq rawTracesEndpoint
+    _ -> pure Nothing -- disabled
   _oteleiMetricsBaseRequest <- case _oecMetricsEndpoint of
     Nothing
       | OtelMetrics `Set.member` enabledDataTypes ->
           Left (err400 InvalidParams "Metrics export is enabled but metrics endpoint missing")
-      | otherwise -> pure Nothing -- disabled
-    Just rawTracesEndpoint ->
-      mkExportReq rawTracesEndpoint
+    Just rawTracesEndpoint
+      | OtelMetrics `Set.member` enabledDataTypes ->
+          mkExportReq rawTracesEndpoint
+    _ -> pure Nothing -- disabled
   pure
     $ OtelExporterInfo
       { _oteleiMetricsBaseRequest,

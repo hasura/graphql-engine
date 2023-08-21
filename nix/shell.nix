@@ -108,7 +108,7 @@ let
     (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
-    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu_0_7_0_0)
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.ormolu_0_7_1_0)
   ];
 
   devInputs = [

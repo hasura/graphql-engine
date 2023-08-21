@@ -305,7 +305,7 @@ fromOrderBys top moffset morderBys =
 fromOrderBy :: OrderBy -> Printer
 fromOrderBy OrderBy {..} =
   "("
-    <+> fromFieldName orderByFieldName
+    <+> fromExpression orderByExpression
     <+> ") "
     <+> fromOrder orderByOrder
     <+> fromNullsOrder orderByNullsOrder
@@ -495,15 +495,15 @@ fromAggregate =
         <+> ")"
     TextAggregate text -> fromExpression (ValueExpression (TypedValue StringScalarType (StringValue text)))
 
-fromCountable :: Countable FieldName -> Printer
+fromCountable :: Countable Expression -> Printer
 fromCountable =
   \case
     StarCountable -> "*"
     NonNullFieldCountable fields ->
-      SepByPrinter ", " (map fromFieldName (toList fields))
+      SepByPrinter ", " (map fromExpression (toList fields))
     DistinctCountable fields ->
       "DISTINCT "
-        <+> SepByPrinter ", " (map fromFieldName (toList fields))
+        <+> SepByPrinter ", " (map fromExpression (toList fields))
 
 fromWhere :: Where -> Printer
 fromWhere =

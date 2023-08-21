@@ -405,11 +405,6 @@ const commonDataTypes = [
     description: 'signed four-byte integer',
   },
   {
-    name: 'Integer Array',
-    value: 'integer[]',
-    description: 'signed four-byte integer array',
-  },
-  {
     name: 'Integer (auto-increment)',
     value: 'serial',
     description: 'autoincrementing four-byte integer',
@@ -420,11 +415,6 @@ const commonDataTypes = [
     description: 'variable-length character string',
   },
   {
-    name: 'Text Array',
-    value: 'text[]',
-    description: 'variable-length character strings array',
-  },
-  {
     name: 'Boolean',
     value: 'boolean',
     description: 'logical Boolean (true/false)',
@@ -433,11 +423,6 @@ const commonDataTypes = [
     name: 'Numeric',
     value: 'numeric',
     description: 'exact numeric of selected precision',
-  },
-  {
-    name: 'Numeric Array',
-    value: 'numeric[]',
-    description: 'exact numeric of selected precision array',
   },
   {
     name: 'Timestamp',
@@ -468,11 +453,6 @@ const commonDataTypes = [
     name: 'Big Integer',
     value: 'bigint',
     description: 'signed eight-byte integer',
-  },
-  {
-    name: 'Big Integer Array',
-    value: 'bigint[]',
-    description: 'signed eight-byte integer array',
   },
   {
     name: 'Big Integer (auto-increment)',
@@ -663,6 +643,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       frequentlyUsedColumns: true,
       columnTypeSelector: true,
+      arrayTypes: true,
     },
     browse: {
       enabled: true,

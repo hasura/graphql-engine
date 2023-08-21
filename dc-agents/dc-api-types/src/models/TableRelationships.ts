@@ -7,7 +7,7 @@ import type { TableName } from './TableName';
 
 export type TableRelationships = {
   /**
-   * A map of relationships from the source table to target tables. The key of the map is the relationship name
+   * A map of relationships from the source table to targets. The key of the map is the relationship name
    */
   relationships: Record<string, Relationship>;
   source_table: TableName;

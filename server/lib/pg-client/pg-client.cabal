@@ -62,6 +62,7 @@ library
     , base
     , bytestring
     , ekg-core
+    , ekg-prometheus
     , hashable
     , hashtables
     , mmorph

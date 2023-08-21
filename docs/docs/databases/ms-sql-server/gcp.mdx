@@ -1,0 +1,181 @@
+---
+sidebar_label: Google Cloud SQL for SQL Server
+description: Using Hasura with a Google Cloud SQL for SQL Server database
+title: 'Cloud: Using Hasura Cloud with a Google Cloud SQL for SQL Server database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - google cloud
+  - SQL Server
+  - MS SQL Server
+sidebar_position: 5
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Connecting Hasura to a Google Cloud SQL for SQL Server Database
+
+## Introduction
+
+This guide explains how to connect a new or existing
+[Google Cloud SQL for SQL Server database](https://cloud.google.com/sql) to a Hasura instance, either on
+[Hasura Cloud](https://cloud.hasura.io?skip_onboarding=true) or via one of our
+[self-hosted](/deployment/deployment-guides/index.mdx) solutions.
+
+:::info Hasura Cloud vs self-hosting
+
+If you plan on using Hasura Cloud, which we recommend, follow steps 1 and 2 below. If you're self-hosting a Hasura
+instance and already have a project running, skip to [step 3](#create-pg-db-gcp).
+
+:::
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project-gcp}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src="/img/cloud-dbs/create-hasura-cloud-project.png" alt="Create Hasura Cloud project" width="1000px" />
+
+After the project is successfully initialized, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to the `Data` tab and choose `Connect Existing Database`. Hasura will prompt you for an
+ODBC URL. We'll grab this after creating our database and then come back here.
+
+<Thumbnail src="/img/databases/ms-sql-server/existing-db-setup.png" alt="Hasura Cloud database setup" width="700px" />
+
+## Step 3: Create a SQL Server DB on Google Cloud SQL {#create-ms-sql-db-gcp}
+
+:::info Existing database
+
+If you have an existing SQL Server database on GCP, you can skip this step and move on to [step 4](#allow-connections).
+
+:::
+
+Log into the [GCP console](https://console.cloud.google.com/).
+
+On the left-side navigation, scroll down to `Storage` and click on `SQL`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/navigate-to-sql.png" alt="Navigate to SQL in GCP" width="250px" />
+
+On the top, click on `Create instance`:
+
+<Thumbnail src="/img/cloud-dbs/gcp/create-instance.png" alt="Create database instance in GCP" width="1000px" />
+
+Select SQL Server:
+
+<Thumbnail
+  src="/img/databases/ms-sql-server/select-sql-server.png"
+  alt="Select SQL Server database instance in GCP"
+  width="1000px"
+/>
+
+Choose an instance ID, as well as a default user password. If required, choose a specific region and zone.
+
+<Thumbnail
+  src="/img/databases/ms-sql-server/configure-instance-sql-server.png"
+  alt="Configure database instance in GCP"
+  width="1000px"
+/>
+
+Then click `Create`.
+
+## Step 4: Allow connections to your DB from Hasura {#allow-connections}
+
+We need to allowlist the IP on which Hasura is running to be able to communicate with the database.
+
+On the dashboard of your Google Cloud SQL database instance, on the left sidebar, click on `Connections` and then the
+`Networking` tab. Then, scroll down ot the checkbox `Public IP`, and click `Add a network`:
+
+<Thumbnail src="/img/databases/ms-sql-server/connections.png" alt="Navigate to connections in GCP" width="1000px" />
+
+If using Hasura Cloud, from your project's dashboard, copy the Hasura Cloud IP address:
+
+<Thumbnail src="/img/projects/hasura-cloud-ip.png" alt="Hasura Cloud IP field" width="1000px" />
+
+:::info Self-hosted IP addresses
+
+If you're using a self-hosted solution, you'll need to determine the IP address manually depending on your hosting
+service.
+
+:::
+
+Enter the Hasura IP address that you copied along with a name (e.g., `Hasura`):
+
+<Thumbnail src="/img/databases/ms-sql-server/add-network.png" alt="Add a new network in GCP" width="1000px" />
+
+Then click `Done` and `Save`.
+
+## Step 5: Construct the database connection URL {#construct-db-url-gcp}
+
+The structure of the database connection URL is as follows:
+
+```text
+Driver={ODBC Driver 17 for SQL Server};Server=<server>;Database=<db-name>;UID=<username>;PWD=<password>
+```
+
+- `username`: Google Cloud SQL defaults your `sa` username to `sqlserver`. If you have a separate database user, use
+  their username. Otherwise, use `sqlserver`.
+- `password`: If you have a separate database user, use their password. Otherwise, use the password that you chose when
+  creating the database.
+- `server`: The public IP can be obtained by clicking on `Overview` on the left-side navigation and then scrolling down
+  to `Connect to this instance`:
+
+<Thumbnail
+  src="/img/databases/ms-sql-server/public-ip-ms-sql.png"
+  alt="Find the public IP for a Google Cloud SQL MS SQL Server database"
+  width="1000px"
+/>
+
+## Step 6: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in [step 5](#construct-db-url-gcp):
+
+<Thumbnail src="/img/databases/ms-sql-server/ms-sql-complete.png" alt="Database setup" width="1000px" />
+
+Then click `Connect Database`.
+
+:::info Secrets in env vars
+
+For security reasons, it is recommended to set database URLs as [env vars](/hasura-cloud/projects/env-vars.mdx) use
+those to connect to the databases in place of the raw database URLs. This prevents connections strings leaking in plain
+text via metadata in version control.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" width="1100px" />
+
+## Next steps
+
+- You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+  [GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+- If using Hasura Cloud, you can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+  [collaborators](/hasura-cloud/projects/collaborators.mdx), [env vars](/hasura-cloud/projects/env-vars.mdx) or
+  [custom domains](/hasura-cloud/domains.mdx)).
+
+<Thumbnail src="/img/getting-started/project-manage.png" alt="Project actions" width="860px" />
+
+:::info MySQL feature support
+
+For more information on which MySQL features we support, check out
+[this page](/databases/mysql/index.mdx#feature-support).
+
+:::
+
+### Auth Proxy
+
+Google Cloud SQL offers a [Cloud SQL Auth proxy](https://cloud.google.com/sql/docs/sqlserver/sql-proxy) that can be used
+to connect to your database. This is useful if you want to connect to your database from a local machine or a server
+that doesn't have a public IP address.
+
+To use the Cloud SQL Auth proxy, follow the instructions in the
+[Cloud SQL Auth proxy docs](https://cloud.google.com/sql/docs/sqlserver/sql-proxy#install).

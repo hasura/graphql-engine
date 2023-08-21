@@ -298,7 +298,10 @@ sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata ex
           }
 
 onConn ::
-  (MonadIO m, MonadReader (WSServerEnv impl) m) =>
+  ( MonadFail m {- only due to https://gitlab.haskell.org/ghc/ghc/-/issues/15681 -},
+    MonadIO m,
+    MonadReader (WSServerEnv impl) m
+  ) =>
   WS.OnConnH m WSConnData
 onConn wsId requestHead ipAddress onConnHActions = do
   res <- runExceptT $ do

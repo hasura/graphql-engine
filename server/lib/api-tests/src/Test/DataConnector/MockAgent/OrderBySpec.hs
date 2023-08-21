@@ -125,7 +125,7 @@ tests = describe "Order By Tests" $ do
                     & API.qLimit
                   ?~ 3
                     & API.qOrderBy
-                  ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.ColumnName "AlbumId") Nothing) API.Ascending :| [])
+                  ?~ API.OrderBy mempty (API.OrderByElement [] (API.OrderByColumn (API.mkColumnSelector $ API.ColumnName "AlbumId") Nothing) API.Ascending :| [])
               )
         )
 
@@ -198,7 +198,7 @@ tests = describe "Order By Tests" $ do
                         HashMap.fromList
                           [ ( API.RelationshipName "Albums",
                               API.Relationship
-                                { _rTargetTable = mkTableName "Album",
+                                { _rTarget = mkTableTarget "Album",
                                   _rRelationshipType = API.ArrayRelationship,
                                   _rColumnMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
                                 }

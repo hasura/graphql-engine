@@ -17,6 +17,7 @@ module Hasura.RQL.Types.SchemaCache
     askTableInfo,
     askTableCoreInfo,
     askTableFieldInfoMap,
+    askLogicalModelCache,
     askTableMetadata,
     askFunctionInfo,
     askFieldInfoMapSource,
@@ -125,6 +126,8 @@ import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Function.Cache
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
+import Hasura.LogicalModel.Cache (LogicalModelCache)
+import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT)
 import Hasura.LogicalModel.Types (LogicalModelLocation (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -461,6 +464,15 @@ askTableFieldInfoMap ::
 askTableFieldInfoMap sourceName tableName =
   _tciFieldInfoMap <$> askTableCoreInfo sourceName tableName
 
+askLogicalModelCache ::
+  forall b m.
+  (Backend b, CacheRM m) =>
+  SourceName ->
+  m (Maybe (LogicalModelCache b))
+askLogicalModelCache sourceName = do
+  sources <- scSources <$> askSchemaCache
+  pure $ unsafeSourceLogicalModels =<< HashMap.lookup sourceName sources
+
 -- | Retrieves the metadata information about a table for a given source name
 -- and table name.
 --
@@ -629,6 +641,9 @@ instance (Monoid w, TableCoreInfoRM b m) => TableCoreInfoRM b (WriterT w m) wher
 instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
+instance (TableCoreInfoRM b m) => TableCoreInfoRM b (LogicalModelFieldsLookupRT b m) where
+  lookupTableCoreInfo = lift . lookupTableCoreInfo
+
 newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: TableCoreCache b -> m a}
   deriving
     (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
@@ -658,6 +673,9 @@ instance (Monoid w, TableInfoRM b m) => TableInfoRM b (WriterT w m) where
 
 instance (TableInfoRM b m) => TableInfoRM b (TraceT m) where
   lookupTableInfo tableName = lift $ lookupTableInfo tableName
+
+instance (TableInfoRM b m) => TableInfoRM b (LogicalModelFieldsLookupRT b m) where
+  lookupTableInfo = lift . lookupTableInfo
 
 newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: TableCache b -> m a}
   deriving

@@ -35,6 +35,7 @@ export interface SearchableSelectProps {
   isCreatable?: boolean;
   onSearchValueChange?: (v: string | undefined | null) => void;
   createNewOption?: (v: string) => OnChangeValue<any, boolean>;
+  isClearable?: boolean;
 }
 
 const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -48,6 +49,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   isCreatable,
   createNewOption,
   onSearchValueChange,
+  isClearable,
 }) => {
   const [searchValue, setSearchValue] = useState<string | null>(null);
   const [localValue, setLocalValue] = useState<Option | null>(null);
@@ -152,7 +154,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   return (
     <ReactSelect
       isSearchable
-      isClearable={false}
+      isClearable={isClearable}
       blurInputOnSelect
       components={{ Option: CustomOption }}
       classNamePrefix={bsClass}

@@ -115,6 +115,8 @@ library
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.EnablePKSpec
     Test.Auth.Authorization.DisableRootFields.SelectPermission.RelationshipSpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.BigquerySpec
+    Test.Auth.Authorization.InheritedRoles.ColumnRedaction.NotSupportedSpec
     Test.Auth.Authorization.InheritedRoles.ColumnRedaction.SqlserverSpec
     Test.Auth.Authorization.InheritedRoles.ColumnRedactionSpec
     Test.DataConnector.AggregateQuerySpec
@@ -191,7 +193,8 @@ library
     Test.Queries.Errors.NoQueriesAvailableSpec
     Test.Queries.FilterSearch.AggregationPredicatesSpec
     Test.Queries.FilterSearch.FilterSearchSpec
-    Test.Queries.NativeQueriesSpec
+    Test.Queries.NativeQueries.ProOnlySpec
+    Test.Queries.NativeQueries.NativeQueriesSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec

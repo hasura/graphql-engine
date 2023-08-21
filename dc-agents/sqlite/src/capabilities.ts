@@ -99,6 +99,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       foreach: {}
     },
     relationships: {},
+    interpolated_queries: {},
     comparisons: {
       subquery: {
         supports_relations: true

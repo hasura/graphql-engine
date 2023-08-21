@@ -4,7 +4,7 @@
 
 module Hasura.Backends.DataConnector.API.V0.Mutations
   ( MutationRequest (..),
-    mrTableRelationships,
+    mrRelationships,
     mrRedactionExpressions,
     mrInsertSchema,
     mrOperations,
@@ -82,7 +82,7 @@ import Prelude
 --
 -- TODO: Does this need to be enhanced ala. QueryRequest to support FunctionRequests?
 data MutationRequest = MutationRequest
-  { _mrTableRelationships :: Set API.V0.TableRelationships,
+  { _mrRelationships :: Set API.V0.Relationships,
     _mrRedactionExpressions :: Set API.V0.TargetRedactionExpressions,
     _mrInsertSchema :: Set TableInsertSchema,
     _mrOperations :: [MutationOperation]
@@ -95,8 +95,8 @@ instance HasCodec MutationRequest where
   codec =
     object "MutationRequest" $
       MutationRequest
-        <$> requiredField "table_relationships" "The relationships between tables involved in the entire mutation request"
-          .= _mrTableRelationships
+        <$> requiredField "relationships" "The relationships involved in the entire mutation request"
+          .= _mrRelationships
         <*> optionalFieldWithOmittedDefault "redaction_expressions" mempty "Expressions that can be referenced by the query to redact fields/columns"
           .= _mrRedactionExpressions
         <*> requiredField "insert_schema" "The schema by which to interpret row data specified in any insert operations in this request"

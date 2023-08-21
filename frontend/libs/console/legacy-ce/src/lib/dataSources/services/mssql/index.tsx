@@ -121,6 +121,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       frequentlyUsedColumns: false,
       columnTypeSelector: false,
+      arrayTypes: false,
     },
     browse: {
       enabled: true,

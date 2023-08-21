@@ -47,7 +47,7 @@ import Harness.Logging
 import Harness.Quoter.Yaml (interpolateYaml)
 import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Schema qualified as Schema
-import Harness.Test.BackendType (BackendTypeConfig)
+import Harness.Test.BackendType (BackendTypeConfig, postgresishGraphQLType)
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
@@ -67,7 +67,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------

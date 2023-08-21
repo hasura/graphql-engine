@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Expression
   ( Expression (..),
@@ -8,6 +9,10 @@ module Hasura.Backends.DataConnector.API.V0.Expression
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
     ComparisonColumn (..),
+    ccPath,
+    ccName,
+    ccColumnType,
+    ccRedactionExpression,
     ColumnPath (..),
     ColumnSelector (..),
     mkColumnSelector,
@@ -21,7 +26,7 @@ where
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Control.Lens ((^.), _1, _2, _3, _4)
+import Control.Lens (makeLenses, (^.), _1, _2, _3, _4)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, Value)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
@@ -373,3 +378,5 @@ newtype RedactionExpression = RedactionExpression {unRedactionExpression :: Expr
 
 instance HasCodec RedactionExpression where
   codec = dimapCodec RedactionExpression unRedactionExpression codec
+
+$(makeLenses 'ComparisonColumn)

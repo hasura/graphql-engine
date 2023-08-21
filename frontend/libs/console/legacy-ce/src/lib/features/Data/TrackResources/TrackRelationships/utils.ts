@@ -53,17 +53,17 @@ export const addConstraintName = ({
         : inflection.singularize(getTableDisplayName(relationship.to.table));
 
     // make graphql compliant, replace "." with "_"
-    const baseConstraintName = `${fromTableName}_${toTableName}`.replace(
-      '.',
-      '_'
-    );
-    const id =
+    const sanitizedTableName = toTableName.replace('.', '_');
+    const constraintName =
       namingConvention === 'graphql-default'
-        ? camelCase(baseConstraintName)
-        : baseConstraintName;
+        ? camelCase(sanitizedTableName)
+        : sanitizedTableName;
+
+    const id = fromTableName + '_' + constraintName;
+
     return {
       ...relationship,
-      constraintName: id,
+      constraintName,
       id,
     };
   });
@@ -73,9 +73,9 @@ export const addConstraintName = ({
  *
  * @param {string} query
  * @param {string[]} toSearch
- * @return a boolean indiciating if the query was found in any of the string within toSearch
+ * @return a boolean indicating if the query was found in any of the string within toSearch
  */
 export const anyIncludes = (query: string, toSearch: string[]) => {
   const lowered = query.toLowerCase();
-  return toSearch.some(x => x.includes(lowered));
+  return toSearch.some(x => x.toLowerCase().includes(lowered));
 };

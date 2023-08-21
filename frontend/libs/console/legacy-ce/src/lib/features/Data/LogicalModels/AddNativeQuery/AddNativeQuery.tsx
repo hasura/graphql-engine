@@ -3,22 +3,18 @@ import { FaSave } from 'react-icons/fa';
 import { useHasuraAlert } from '../../../../new-components/Alert';
 import { Button } from '../../../../new-components/Button';
 import { useConsoleForm } from '../../../../new-components/Form';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
-import {
-  useEnvironmentState,
-  usePushRoute,
-} from '../../../ConnectDBRedesign/hooks';
-import { nativeDrivers } from '../../../DataSource';
-import { useMetadata } from '../../../hasura-metadata-api';
+import { useIsStorybook } from '../../../../utils/StoryUtils';
+import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
 import { NativeQuery } from '../../../hasura-metadata-types';
-import { useSupportedDataTypes } from '../../hooks/useSupportedDataTypes';
+import { MetadataWrapper } from '../../components';
 import { useTrackNativeQuery } from '../../hooks/useTrackNativeQuery';
+import { Routes } from '../constants';
+import { useSupportedDriversForNativeQueries } from '../hook';
 import { NativeQueryFormFields } from './components/NativeQueryDetailsForm';
 import { schema } from './schema';
 import { NativeQueryForm } from './types';
 import { normalizeArguments, transformFormOutputToMetadata } from './utils';
-import { useIsStorybook } from '../../../../utils/StoryUtils';
 
 type AddNativeQueryProps = {
   editDetails?: {
@@ -52,17 +48,6 @@ export const AddNativeQuery = ({
 
   const push = usePushRoute();
 
-  const { consoleType } = useEnvironmentState();
-  const allowedDrivers = consoleType === 'oss' ? ['postgres'] : nativeDrivers;
-
-  const {
-    data: sources,
-    isLoading: isSourcesLoading,
-    error: sourcesError,
-  } = useMetadata(s => {
-    return s.metadata.sources.filter(s => allowedDrivers.includes(s.kind));
-  });
-
   React.useEffect(() => {
     const subscription = watch((value, { name, type }) => {
       if (name === 'source' && type === 'change') {
@@ -74,11 +59,10 @@ export const AddNativeQuery = ({
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const selectedSource = watch('source');
-
   const { trackNativeQuery, isLoading: isSaving } = useTrackNativeQuery();
 
   const { hasuraConfirm } = useHasuraAlert();
+
   const handleFormSubmit = (values: NativeQueryForm) => {
     const metadataNativeQuery = transformFormOutputToMetadata(values);
 
@@ -98,7 +82,7 @@ export const AddNativeQuery = ({
           toastOptions: { duration: 3000 },
         });
         // Go to list
-        push('/data/native-queries');
+        push(Routes.NativeQueries);
       },
       onError: err => {
         hasuraToast({
@@ -111,71 +95,53 @@ export const AddNativeQuery = ({
     });
   };
 
-  /**
-   * Options for the data source types
-   */
-  const {
-    data: typeOptions = [],
-    error: typeOptionError,
-    isLoading: isIntrospectionLoading,
-  } = useSupportedDataTypes({
-    dataSourceName: selectedSource,
-    options: {
-      enabled: !!selectedSource,
-    },
-  });
-
-  if (sourcesError || typeOptionError)
-    return (
-      <IndicatorCard status="negative" headline="Internal Error">
-        <div>{sourcesError}</div>
-        <div> {typeOptionError?.message}</div>
-      </IndicatorCard>
-    );
+  const allowedDrivers = useSupportedDriversForNativeQueries();
 
   return (
-    <Form onSubmit={handleFormSubmit}>
-      <div className="py-2" />
-      <NativeQueryFormFields
-        isIntrospectionLoading={isIntrospectionLoading}
-        isSourcesLoading={isSourcesLoading}
-        typeOptions={typeOptions}
-        sources={sources}
-      />
-      <div className="sticky bottom-0 z-10 bg-slate-50 p-3 border-t-slate-200 border-t flex flex-row justify-end gap-2 ">
-        <Button
-          type={'button'}
-          onClick={() => {
-            if (formHasChanges) {
-              hasuraConfirm({
-                title: 'Unsaved changes!',
-                confirmText: 'Discard Changes',
-                cancelText: 'Stay Here',
-                destructive: true,
-                message:
-                  'Are you sure you want to leave this page? Your changes will not be saved.',
+    <MetadataWrapper
+      selector={m =>
+        m.metadata.sources.filter(s => allowedDrivers.includes(s.kind))
+      }
+      render={({ data: sources }) => (
+        <Form onSubmit={handleFormSubmit}>
+          <div className="py-2" />
+          <NativeQueryFormFields sources={sources} />
+          <div className="sticky bottom-0 z-10 bg-slate-50 p-3 border-t-slate-200 border-t flex flex-row justify-end gap-2 ">
+            <Button
+              type={'button'}
+              onClick={() => {
+                if (formHasChanges) {
+                  hasuraConfirm({
+                    title: 'Unsaved changes!',
+                    confirmText: 'Discard Changes',
+                    cancelText: 'Stay Here',
+                    destructive: true,
+                    message:
+                      'Are you sure you want to leave this page? Your changes will not be saved.',
 
-                onClose: ({ confirmed }) => {
-                  if (confirmed) push('/data/native-queries');
-                },
-              });
-            } else {
-              push('/data/native-queries');
-            }
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          icon={<FaSave />}
-          mode="primary"
-          isLoading={isSaving}
-        >
-          Save
-        </Button>
-      </div>
-    </Form>
+                    onClose: ({ confirmed }) => {
+                      if (confirmed) push(Routes.NativeQueries);
+                    },
+                  });
+                } else {
+                  push(Routes.NativeQueries);
+                }
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              icon={<FaSave />}
+              mode="primary"
+              isLoading={isSaving}
+            >
+              {editDetails ? 'Save' : 'Create'}
+            </Button>
+          </div>
+        </Form>
+      )}
+    />
   );
 };
 

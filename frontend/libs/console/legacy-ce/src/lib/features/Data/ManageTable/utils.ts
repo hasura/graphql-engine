@@ -1,4 +1,27 @@
+import isPlainObject from 'lodash/isPlainObject';
 import { Table } from '../../hasura-metadata-types';
+
+type PostgresOrMssqlTable = {
+  name: string;
+  schema: string;
+};
+type BigQueryTable = {
+  name: string;
+  dataset: string;
+};
+
+function isRecordObject(x: unknown): x is Record<string, unknown> {
+  return isPlainObject(x);
+}
+
+export function hasNameAndSchema(
+  table: unknown
+): table is PostgresOrMssqlTable {
+  return isRecordObject(table) && 'schema' in table && 'name' in table;
+}
+export function isBigQueryTable(table: unknown): table is BigQueryTable {
+  return isRecordObject(table) && 'dataset' in table && 'name' in table;
+}
 
 export const getQualifiedTable = (table: Table): string[] => {
   if (Array.isArray(table)) return table;
@@ -6,39 +29,14 @@ export const getQualifiedTable = (table: Table): string[] => {
   // This is a safe assumption to make because the only native database that supports functions is postgres( and variants)
   if (typeof table === 'string') return ['public', table];
 
-  const postgresOrMssqlTable = table as {
-    schema: string;
-    name: string;
-  };
+  //postgres and variants OR mssql
+  if (hasNameAndSchema(table)) {
+    return [table.schema, table.name];
+  }
 
-  if ('schema' in postgresOrMssqlTable)
-    return [postgresOrMssqlTable.schema, postgresOrMssqlTable.name];
-
-  const bigQueryTable = table as { dataset: string; name: string };
-
-  if ('dataset' in bigQueryTable)
-    return [bigQueryTable.dataset, bigQueryTable.name];
+  if (isBigQueryTable(table)) {
+    return [table.dataset, table.name];
+  }
 
   return [];
-};
-
-export const paginate = <T>(
-  array: T[],
-  page_size: number,
-  page_number: number
-): T[] => {
-  // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
-  return array.slice((page_number - 1) * page_size, page_number * page_size);
-};
-
-export const filterByText = (parentText: string, searchText: string) => {
-  if (!searchText.length) return true;
-
-  return parentText.includes(searchText.toLowerCase());
-};
-
-export const filterByTableType = (type: string, selectedTypes?: string[]) => {
-  if (!selectedTypes?.length) return true;
-
-  return selectedTypes.includes(type);
 };

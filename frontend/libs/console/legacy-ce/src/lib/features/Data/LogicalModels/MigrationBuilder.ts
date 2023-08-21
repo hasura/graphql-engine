@@ -1,17 +1,29 @@
+import produce from 'immer';
 import {
   LogicalModel,
   LogicalModelField,
   NativeQuery,
   NativeQueryRelationship,
+  StoredProcedure,
+  isArrayLogicalModelType,
+  isLogicalModelType,
 } from '../../hasura-metadata-types';
+import { isFieldImplementingLogicalModel } from './LogicalModel/utils/findReferencedEntities';
+import cloneDeep from 'lodash/cloneDeep';
 
 type CommonParams = {
   dataSourceName: string;
   driver: string;
 };
-interface MigrationPayloadBuilderParams<T extends NativeQuery | LogicalModel> {
+
+type SupportedTypes = NativeQuery | LogicalModel | StoredProcedure;
+type MetadataCommandFragments =
+  | 'logical_model'
+  | 'native_query'
+  | 'stored_procedure';
+interface MigrationPayloadBuilderParams<T extends SupportedTypes> {
   entity: T;
-  commandEntity: 'logical_model' | 'native_query';
+  commandEntity: MetadataCommandFragments;
   entityKey: keyof T;
 }
 
@@ -22,12 +34,12 @@ interface MigrationPayloadBuilderParams<T extends NativeQuery | LogicalModel> {
  *
  * The other methods mutate the nativeQuery initially passed in that will get used in the track() command
  */
-export class MigrationPayloadBuilder<T extends NativeQuery | LogicalModel> {
+export class MigrationPayloadBuilder<T extends SupportedTypes> {
   protected payloadSequence: Record<string, unknown>[] = [];
   protected source: string;
   protected driver: string;
   protected entity: T;
-  protected commandEntity: 'logical_model' | 'native_query';
+  protected commandEntity: MetadataCommandFragments;
   protected entityKey: keyof T;
 
   constructor({
@@ -53,7 +65,10 @@ export class MigrationPayloadBuilder<T extends NativeQuery | LogicalModel> {
 
     this.source = dataSourceName;
     this.driver = driver;
-    this.entity = entity;
+
+    // copying object to prevent weird issues with references so mutations to entity within the class don't end up being made to the referenced object
+    this.entity = cloneDeep(entity);
+
     this.commandEntity = commandEntity;
     this.entityKey = entityKey;
 
@@ -134,6 +149,11 @@ export class NativeQueryMigrationBuilder extends MigrationPayloadBuilder<NativeQ
     }
   }
 
+  updateLogicalModel(name: string) {
+    this.entity.returns = name;
+    return this;
+  }
+
   addRelationship(
     type: 'object' | 'array',
     relationshipDetails: NativeQueryRelationship
@@ -193,8 +213,57 @@ export class LogicalModelMigrationBuilder extends MigrationPayloadBuilder<Logica
     return this;
   }
 
+  // this method updates any fields that refer to an external logical model
+  // i.e. the referenced logical model's name is changing and we need to update the field to preserve the reference
+  updateFieldsLogicalModelReference({
+    currentName,
+    newName,
+  }: {
+    currentName: string;
+    newName: string;
+  }): this {
+    this.entity.fields = this.entity.fields.map(field => {
+      const isMatch = isFieldImplementingLogicalModel(field, currentName);
+
+      if (!isMatch) return field;
+
+      return produce(field, draft => {
+        if (isLogicalModelType(draft.type)) {
+          draft.type.logical_model = newName;
+        } else if (isArrayLogicalModelType(draft.type)) {
+          draft.type.array.logical_model = newName;
+        }
+      });
+    });
+
+    return this;
+  }
+
   removeField(name: string): this {
     this.entity.fields = this.entity.fields.filter(f => f.name === name);
+    return this;
+  }
+}
+
+export class StoredProcedureMigrationBuilder extends MigrationPayloadBuilder<StoredProcedure> {
+  constructor({
+    dataSourceName,
+    driver,
+    storedProcedure,
+  }: CommonParams & { storedProcedure: StoredProcedure }) {
+    super({
+      dataSourceName,
+      driver,
+      entity: storedProcedure,
+      entityKey: 'stored_procedure',
+      commandEntity: 'stored_procedure',
+    });
+
+    return this;
+  }
+
+  updateLogicalModel(name: string) {
+    this.entity.returns = name;
     return this;
   }
 }

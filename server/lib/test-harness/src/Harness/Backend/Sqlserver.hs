@@ -38,7 +38,7 @@ import Harness.Logging
 import Harness.Quoter.Yaml (yaml)
 import Harness.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Schema qualified as Schema
-import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..))
+import Harness.Test.BackendType (BackendType (SQLServer), BackendTypeConfig (..), postgresishGraphQLType)
 import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
@@ -57,7 +57,8 @@ backendTypeMetadata =
       backendReleaseNameString = Nothing,
       backendServerUrl = Nothing,
       backendSchemaKeyword = "schema",
-      backendScalarType = scalarType
+      backendScalarType = scalarType,
+      backendGraphQLType = postgresishGraphQLType
     }
 
 --------------------------------------------------------------------------------

@@ -16,7 +16,7 @@ const roleName = 'user';
 
 export const GDCSelect: StoryObj<PermissionsFormProps> = {
   args: {
-    dataSourceName: 'sqlite',
+    dataSourceName: 'Lite',
     queryType: 'select',
     table: ['Artist'],
     roleName,

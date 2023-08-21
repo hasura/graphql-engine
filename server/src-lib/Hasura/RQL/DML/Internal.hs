@@ -41,6 +41,7 @@ import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
+import Hasura.LogicalModel.Fields (LogicalModelFieldsRM)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Permission (annBoolExp)
 import Hasura.RQL.IR.BoolExp
@@ -68,6 +69,7 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
       MonadError e,
       TableCoreInfoRM b,
       TableInfoRM b,
+      LogicalModelFieldsRM b,
       CacheRM,
       UserInfoM
     )
@@ -372,7 +374,7 @@ checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp ::
-  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m, LogicalModelFieldsRM ('Postgres 'Vanilla) m) =>
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   SelPermInfo ('Postgres 'Vanilla) ->
   BoolExp ('Postgres 'Vanilla) ->

@@ -22,8 +22,3 @@ export const Basic: StoryObj<typeof ListLogicalModels> = {
     return <ListLogicalModels {...args} logicalModels={data.models} />;
   },
 };
-export const Loading: StoryObj<typeof ListLogicalModels> = {
-  render: args => {
-    return <ListLogicalModels {...args} isLoading />;
-  },
-};

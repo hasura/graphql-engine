@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
-import { useFireNotification } from '../../../../new-components/Notifications/index';
 import { exportMetadata } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
 import { useHttpClient } from '../../../Network';
 import { LogicalModel, Source } from '../../../hasura-metadata-types';
 import { errorTransform } from './utils/errorTransform';
 import { getCreateLogicalModelBody } from './utils/getCreateLogicalModelBody';
+import { hasuraToast } from '../../../../new-components/Toasts';
 
 const useCreateLogicalModelsPermissions = ({
   logicalModels,
@@ -17,7 +17,6 @@ const useCreateLogicalModelsPermissions = ({
   const mutate = useMetadataMigration({
     errorTransform,
   });
-  const { fireNotification } = useFireNotification();
   const httpClient = useHttpClient();
 
   const create = useCallback(
@@ -41,14 +40,14 @@ const useCreateLogicalModelsPermissions = ({
           },
           {
             onSuccess: async () => {
-              fireNotification({
+              hasuraToast({
                 type: 'success',
                 title: 'Success!',
                 message: 'Permissions saved successfully!',
               });
             },
             onError: err => {
-              fireNotification({
+              hasuraToast({
                 type: 'error',
                 title: 'Error!',
                 message:
@@ -62,7 +61,7 @@ const useCreateLogicalModelsPermissions = ({
           }
         );
       } catch (error: any) {
-        fireNotification({
+        hasuraToast({
           type: 'error',
           title: 'Error!',
           message:

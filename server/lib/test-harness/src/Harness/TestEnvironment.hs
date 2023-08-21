@@ -18,6 +18,7 @@ module Harness.TestEnvironment
     focusFixtureLeft,
     focusFixtureRight,
     scalarTypeToText,
+    graphQLTypeToText,
     serverUrl,
     stopServer,
     testLogTrace,
@@ -77,6 +78,11 @@ scalarTypeToText :: TestEnvironment -> ScalarType -> Text
 scalarTypeToText TestEnvironment {fixtureName} = case fixtureName of
   Backend BackendTypeConfig {backendScalarType} -> backendScalarType
   _ -> error "scalarTypeToText only currently defined for the `Backend` `FixtureName`"
+
+graphQLTypeToText :: TestEnvironment -> ScalarType -> Text
+graphQLTypeToText TestEnvironment {fixtureName} = case fixtureName of
+  Backend BackendTypeConfig {backendGraphQLType} -> backendGraphQLType
+  _ -> error "graphQLTypeToText only currently defined for the `Backend` `FixtureName`"
 
 -- | The role we're going to use for testing. Either we're an admin, in which
 -- case all permissions are implied, /or/ we're a regular user, in which case

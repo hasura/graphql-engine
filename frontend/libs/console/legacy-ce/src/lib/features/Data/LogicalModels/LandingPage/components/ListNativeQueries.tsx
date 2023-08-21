@@ -5,7 +5,6 @@ import {
 } from '@tanstack/react-table';
 import React from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-import Skeleton from 'react-loading-skeleton';
 import { Button } from '../../../../../new-components/Button';
 import { CardedTableFromReactTable } from '../../components/CardedTableFromReactTable';
 import { NativeQueryWithSource } from '../../types';
@@ -16,9 +15,7 @@ export const ListNativeQueries = ({
   nativeQueries,
   onEditClick,
   onRemoveClick,
-  isLoading,
 }: {
-  isLoading?: boolean;
   nativeQueries: NativeQueryWithSource[];
   onEditClick: (model: NativeQueryWithSource) => void;
   onRemoveClick: (model: NativeQueryWithSource) => void;
@@ -68,9 +65,6 @@ export const ListNativeQueries = ({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (isLoading) {
-    return <Skeleton count={5} height={30} />;
-  }
   return (
     <CardedTableFromReactTable
       table={table}

@@ -20,7 +20,13 @@ import { NativeQueryArgumentNormalized, NativeQueryForm } from '../types';
 
 const columnHelper = createColumnHelper<NativeQueryArgumentNormalized>();
 
-export const ArgumentsField = ({ types }: { types: string[] }) => {
+export const ArgumentsField = ({
+  types,
+  noSourceSelected,
+}: {
+  types: string[];
+  noSourceSelected: boolean;
+}) => {
   const { control } = useFormContext<NativeQueryForm>();
 
   const { append, remove, fields } = useFieldArray({
@@ -109,6 +115,7 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
           <div className={clsx(fieldLabelStyles, 'mb-0')}>Query Parameters</div>
           <Button
             icon={<FaPlusCircle />}
+            disabled={noSourceSelected}
             onClick={() => {
               append({
                 name: '',
@@ -124,7 +131,11 @@ export const ArgumentsField = ({ types }: { types: string[] }) => {
         <ArgumentsTableElement
           table={argumentsTable}
           ref={tableRef}
-          noRowsMessage={'No query parameters added.'}
+          noRowsMessage={
+            noSourceSelected
+              ? 'Select a data source to add query arguments'
+              : 'No query parameters added.'
+          }
         />
       </div>
     </div>

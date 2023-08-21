@@ -23,7 +23,7 @@ import Hasura.Backends.DataConnector.Adapter.Types.Mutations qualified as DC
 import Hasura.Base.Error
 import Hasura.Function.Cache qualified as RQL
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), BackendUpdateOperatorsSchema (..), ComparisonExp, MonadBuildSchema)
+import Hasura.GraphQL.Schema.Backend (BackendLogicalModelSelectSchema (..), BackendNativeQuerySelectSchema (..), BackendSchema (..), BackendTableSelectSchema (..), BackendUpdateOperatorsSchema (..), ComparisonExp, MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
@@ -33,7 +33,10 @@ import Hasura.GraphQL.Schema.Table qualified as GS.T
 import Hasura.GraphQL.Schema.Typename qualified as GS.N
 import Hasura.GraphQL.Schema.Update qualified as GS.U
 import Hasura.GraphQL.Schema.Update.Batch qualified as GS.U.B
+import Hasura.LogicalModel.Cache qualified as Cache
+import Hasura.LogicalModel.Schema qualified as Schema
 import Hasura.Name qualified as Name
+import Hasura.NativeQuery.Schema qualified as NativeQueries
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Delete qualified as IR
@@ -86,6 +89,8 @@ instance BackendSchema 'DataConnector where
 
   countTypeInput = countTypeInput'
 
+  buildNativeQueryRootFields = NativeQueries.defaultBuildNativeQueryRootFields
+
   -- aggregateOrderByCountType is only used when generating Relay schemas, and Data Connector backends do not yet support Relay
   -- If/when we want to support this we would need to add something to Capabilities to tell HGE what (integer-like) scalar
   -- type should be used to represent the result of a count aggregate in relay order-by queries.
@@ -94,6 +99,14 @@ instance BackendSchema 'DataConnector where
 
   computedField =
     error "computedField: not implemented for the Data Connector backend."
+
+instance BackendLogicalModelSelectSchema 'DataConnector where
+  logicalModelArguments = dataConnectorLogicalModelArgs
+  logicalModelSelectionSet = Schema.defaultLogicalModelSelectionSet
+
+instance BackendNativeQuerySelectSchema 'DataConnector where
+  selectNativeQuery = NativeQueries.defaultSelectNativeQuery
+  selectNativeQueryObject = NativeQueries.defaultSelectNativeQueryObject
 
 instance BackendTableSelectSchema 'DataConnector where
   tableArguments = tableArgs'
@@ -105,6 +118,21 @@ instance BackendUpdateOperatorsSchema 'DataConnector where
   type UpdateOperators 'DataConnector = DC.UpdateOperator
 
   parseUpdateOperators = parseUpdateOperators'
+
+-- | Based on `defaultLogicalModelArgs` from `Hasura.LogicalModel.Schema`
+--   Omits distinct as this is not implemented for Data Connectors.
+dataConnectorLogicalModelArgs ::
+  forall b r m n.
+  ( MonadBuildSchema b r m n,
+    GS.BE.AggregationPredicatesSchema b
+  ) =>
+  Cache.LogicalModelInfo b ->
+  GS.C.SchemaT r m (P.InputFieldsParser n (GS.C.SelectArgs b))
+dataConnectorLogicalModelArgs logicalModel = do
+  whereParser <- Schema.logicalModelWhereArg logicalModel
+  orderByParser <- Schema.logicalModelOrderByArg logicalModel
+  distinctParser <- pure $ pure Nothing
+  GS.S.defaultArgsParser whereParser orderByParser distinctParser
 
 --------------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 import { PermissionsInput } from '../PermissionsInput';
 import { EmptyEntry } from '../EmptyEntry';
-import { createWrapper } from './utils';
+import { Wrapper } from './utils';
 import { useContext } from 'react';
 import { isComparator } from '../utils';
 import { Token } from '../Token';
@@ -21,13 +21,8 @@ export function ObjectOrArrayEntry({
   const { types } = useContext(typesContext);
   const { relationships } = useContext(tableContext);
 
-  const Wrapper = createWrapper({
-    types,
-    path,
-    relationships,
-  });
   return (
-    <Wrapper>
+    <Wrapper types={types} path={path} relationships={relationships}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''

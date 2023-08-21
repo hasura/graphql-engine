@@ -56,7 +56,8 @@ const capabilities: Capabilities = {
     column_nullability: "nullable_and_non_nullable",
   },
   queries: {
-    foreach: {}
+    foreach: {},
+    redaction: {},
   },
   relationships: {},
   comparisons: {

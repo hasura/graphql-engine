@@ -37,8 +37,8 @@ export const getTableColumns = async ({
   SELECT a.attname as column_name,
        pg_catalog.format_type(a.atttypid, NULL) as data_type,
        case
-        when a.attnotnull = 'f' then 'true'
-        else 'false'
+        when a.attnotnull = 'f' then 'YES'
+        else 'NO'
        end as is_nullable
 FROM pg_attribute a
   JOIN pg_class t on a.attrelid = t.oid

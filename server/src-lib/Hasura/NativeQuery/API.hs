@@ -38,7 +38,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualNativeQueryConfig)
+import Hasura.RQL.Types.Relationships.Local (RelDef, RelManualConfig)
 import Hasura.SQL.AnyBackend qualified as AB
 
 -- | Default implementation of the 'track_native_query' request payload.
@@ -47,8 +47,8 @@ data TrackNativeQuery (b :: BackendType) = TrackNativeQuery
     tnqRootFieldName :: NativeQueryName,
     tnqCode :: Text,
     tnqArguments :: HashMap ArgumentName (NullableScalarType b),
-    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
-    tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualNativeQueryConfig b)),
+    tnqArrayRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
+    tnqObjectRelationships :: InsOrdHashMap.InsOrdHashMap RelName (RelDef (RelManualConfig b)),
     tnqDescription :: Maybe Text,
     tnqReturns :: LogicalModelIdentifier b
   }

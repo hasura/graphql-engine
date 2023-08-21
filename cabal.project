@@ -64,7 +64,7 @@ package *
   -- but optimizations for local hasura packages are overridden/controlled
   -- via the 'optimize-hasura' flag.
   optimization: 2
-  -- For tooling, e.g. 'weeder', and IDE-like stuff:
+  -- For tooling support, e.g. HLS:
   ghc-options: -fwrite-ide-info
 
   -- we statically link malloc from mimalloc. Out of an abundance of caution, 
@@ -79,13 +79,13 @@ package *
   haddock-hyperlink-source: true
   haddock-quickjump: true
   haddock-internal: true
-  -- -----------------------------------------------------------
-  -- Allow for dead-code elimination at link-time, to reduce binary size
-  ghc-options: -split-sections
+
+-- Allow for dead-code elimination at link-time, to reduce binary size
 if(os(linux))
  package *
   -- ld on M1 OSX does not recognise this:
   ld-options: -Wl,--gc-sections
+  ghc-options: -split-sections
   -- -----------------------------------------------------------
 
 package graphql-engine

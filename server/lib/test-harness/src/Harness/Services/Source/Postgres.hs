@@ -141,34 +141,6 @@ trackObjectRelationships (Schema.Table {tableName, tableReferences {-, tableManu
             foreign_key_constraint_on: *referenceLocalColumn
       |]
 
-{-
-for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-  let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-        Just schema -> schema
-        Nothing -> getSchemaName testEnvironment
-      relationshipName = mkObjectRelationshipName ref
-      targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-      manualConfiguration :: J.Value
-      manualConfiguration =
-        J.object
-          [ "remote_table" .= targetTableField,
-            "column_mapping"
-              .= J.object [K.fromText referenceLocalColumn .= referenceTargetColumn]
-          ]
-      payload =
-        [yaml|
-          type: *requestType
-          args:
-            source: *source
-            table: *tableField
-            name: *relationshipName
-            using:
-              manual_configuration: *manualConfiguration
-        |]
-
-  GraphqlEngine.postMetadata_ testEnvironment payload
-  -}
-
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Schema.Reference -> Text
 mkObjectRelationshipName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} =
@@ -188,22 +160,32 @@ trackArrayRelationships ::
   Schema.Table ->
   env ->
   IO ()
-trackArrayRelationships (Schema.Table {tableName, tableReferences {-, tableManualRelationships-}}) env = do
+trackArrayRelationships (Schema.Table {tableName, tableReferences}) env = do
   let localSchema = getter @SchemaName env
       source = postgresSourceName $ getter @PostgresSource env
       tableField = J.object ["schema" J..= J.String (unSchemaName localSchema), "name" J..= J.String tableName]
 
-  for_ tableReferences $ \Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = localSchema
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = J.object ["schema" J..= J.String (unSchemaName targetSchema), "name" J..= J.String referenceTargetTable]
+  for_ tableReferences
+    $ \Schema.Reference
+         { referenceLocalColumn,
+           referenceTargetTable,
+           referenceTargetColumn,
+           referenceTargetQualifiers
+         } -> do
+        let targetSchema = localSchema
+            relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
+            targetTableField =
+              J.object
+                [ "schema" J..= J.String (unSchemaName targetSchema),
+                  "name" J..= J.String referenceTargetTable
+                ]
 
-    hgePost
-      env
-      200
-      "/v1/metadata"
-      []
-      [yaml|
+        hgePost
+          env
+          200
+          "/v1/metadata"
+          []
+          [yaml|
         type: pg_create_array_relationship
         args:
           source: *source
@@ -214,36 +196,6 @@ trackArrayRelationships (Schema.Table {tableName, tableReferences {-, tableManua
               table: *tableField
               column: *referenceLocalColumn
       |]
-
--- Unfinished implementation of manual relationships, to be completed when the need arises.
-{-
-  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn, referenceTargetQualifiers} -> do
-    let targetSchema = case resolveReferenceSchema referenceTargetQualifiers of
-          Just schema -> schema
-          Nothing -> getSchemaName testEnvironment
-        relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn referenceTargetQualifiers
-        targetTableField = mkTableField backendTypeMetadata targetSchema referenceTargetTable
-        manualConfiguration :: J.Value
-        manualConfiguration =
-          J.object
-            [ "remote_table"
-                .= tableField,
-              "column_mapping"
-                .= J.object [K.fromText referenceTargetColumn .= referenceLocalColumn]
-            ]
-        payload =
-          [yaml|
-type: *requestType
-args:
-  source: *source
-  table: *targetTableField
-  name: *relationshipName
-  using:
-    manual_configuration: *manualConfiguration
-\|]
-
-    GraphqlEngine.postMetadata_ testEnvironment payload
-    -}
 
 -- | Helper to create the array relationship name
 mkArrayRelationshipName :: Text -> Text -> Text -> [Text] -> Text

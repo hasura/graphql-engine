@@ -4,7 +4,7 @@ product_skus
 `;
 
 export const columnsDescription = `
-Any data type can be used as an array type. If you don't find it in the list, type it followed by [] (i.e. circle[])
+Any data type can be used as an array type. Enable the "Array" checkbox to convert the data type to array.
 `;
 
 export const primaryKeyDescription = `

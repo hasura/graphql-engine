@@ -177,6 +177,8 @@ instance HasSourceConfiguration 'DataConnector where
 
   sourceConfigNumReadReplicas = const 0 -- not supported
   sourceConfigConnectonTemplateEnabled = const False -- not supported
+  sourceSupportsColumnRedaction DC.SourceConfig {..} =
+    _scCapabilities & API._cQueries >>= API._qcRedaction & isJust
   sourceConfigBackendSourceKind DC.SourceConfig {..} = DataConnectorKind _scDataConnectorName
 
 data CustomBooleanOperator a = CustomBooleanOperator

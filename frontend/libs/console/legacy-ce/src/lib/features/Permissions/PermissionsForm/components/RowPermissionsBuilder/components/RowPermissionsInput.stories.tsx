@@ -16,7 +16,9 @@ import {
 import { comparators } from './__tests__/fixtures/comparators';
 import { usePermissionTables } from '../hooks/usePermissionTables';
 import { usePermissionComparators } from '../hooks/usePermissionComparators';
-import { handlers } from './__tests__/fixtures/jsonb/handlers';
+import { handlers as jsonbHandlers } from './__tests__/fixtures/jsonb/handlers';
+import { handlers as manyDbsHandlers } from './__tests__/fixtures/many-dbs/handlers';
+import { handlers as mongoHandlers } from './__tests__/fixtures/mongo/handlers';
 import { ReactQueryDecorator } from '../../../../../../storybook/decorators/react-query';
 import isEmpty from 'lodash/isEmpty';
 import { useState } from 'react';
@@ -24,9 +26,6 @@ import { Permissions } from './types';
 
 export default {
   component: RowPermissionsInput,
-  parameters: {
-    msw: handlers(),
-  },
   decorators: [ReactQueryDecorator()],
 } as Meta;
 
@@ -45,8 +44,11 @@ export const SetRootLevelPermission: StoryObj<typeof RowPermissionsInput> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByTestId('-operator'));
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), 'Subject');
+    await userEvent.click(canvas.getByTestId('root-operator'));
+    await userEvent.selectOptions(
+      canvas.getByTestId('root-operator'),
+      'Subject'
+    );
   },
 };
 
@@ -66,7 +68,10 @@ export const SetExistsPermission: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_exists');
+    await userEvent.selectOptions(
+      canvas.getByTestId('root-operator'),
+      '_exists'
+    );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
@@ -107,7 +112,10 @@ export const SetMultilevelExistsPermission: StoryObj<
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_exists');
+    await userEvent.selectOptions(
+      canvas.getByTestId('root-operator'),
+      '_exists'
+    );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_exists._table-value-input'),
@@ -156,7 +164,7 @@ export const SetAndPermission: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_and');
+    await userEvent.selectOptions(canvas.getByTestId('root-operator'), '_and');
 
     await userEvent.selectOptions(
       canvas.getByTestId('_and.1-operator'),
@@ -192,7 +200,10 @@ export const SetMultilevelAndPermission: StoryObj<typeof RowPermissionsInput> =
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement);
 
-      await userEvent.selectOptions(canvas.getByTestId('-operator'), '_and');
+      await userEvent.selectOptions(
+        canvas.getByTestId('root-operator'),
+        '_and'
+      );
 
       await userEvent.selectOptions(
         canvas.getByTestId('_and.1-operator'),
@@ -236,7 +247,7 @@ export const SetNotPermission: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_not');
+    await userEvent.selectOptions(canvas.getByTestId('root-operator'), '_not');
 
     const all = await canvas.getAllByTestId('_not-operator');
     await userEvent.selectOptions(all[all?.length - 1], 'Period');
@@ -264,7 +275,7 @@ export const SetOrPermission: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_or');
+    await userEvent.selectOptions(canvas.getByTestId('root-operator'), '_or');
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
@@ -298,7 +309,7 @@ export const SetMultilevelOrPermission: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('-operator'), '_or');
+    await userEvent.selectOptions(canvas.getByTestId('root-operator'), '_or');
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
@@ -559,7 +570,7 @@ export const BooleanArrayType: StoryObj<typeof RowPermissionsInput> = {
 
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByTestId('Author-operator')).toBeInTheDocument();
+    expect(canvas.getByTestId('Author-operator-root')).toBeInTheDocument();
     const element = await canvas.getByLabelText('Author._ceq-comparator');
     await expect(element.getAttribute('id')).toEqual(
       'Author._ceq-comparator-select-value'
@@ -746,6 +757,10 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
       '{"a":"b"}'
     );
   },
+
+  parameters: {
+    msw: jsonbHandlers(),
+  },
 };
 
 export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
@@ -768,6 +783,10 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
         permissions={{ jason: { _has_keys_all: [''] } }}
       />
     );
+  },
+
+  parameters: {
+    msw: jsonbHandlers(),
   },
 };
 
@@ -815,6 +834,10 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
       },
     });
   },
+
+  parameters: {
+    msw: jsonbHandlers(),
+  },
 };
 
 export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
@@ -861,6 +884,10 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
       },
     });
   },
+
+  parameters: {
+    msw: jsonbHandlers(),
+  },
 };
 
 export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
@@ -881,15 +908,18 @@ export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByTestId('_not-operator'), '_or');
+    await userEvent.selectOptions(
+      canvas.getByTestId('_not-operator-root'),
+      '_or'
+    );
 
     await userEvent.selectOptions(
-      canvas.getByTestId('_or-operator'),
+      canvas.getByTestId('_or-operator-root'),
       '_exists'
     );
 
     await userEvent.selectOptions(
-      canvas.getByTestId('_exists-operator'),
+      canvas.getByTestId('_exists-operator-root'),
       '_and'
     );
 
@@ -898,7 +928,10 @@ export const OperatorDropdownHandling: StoryObj<typeof RowPermissionsInput> = {
       'Period'
     );
 
-    await userEvent.selectOptions(canvas.getByTestId('_and-operator'), '_or');
+    await userEvent.selectOptions(
+      canvas.getByTestId('_and-operator-root'),
+      '_or'
+    );
 
     await userEvent.selectOptions(
       canvas.getByTestId('_or.1-operator'),
@@ -928,10 +961,12 @@ export const ReplaceArrayWithColumn: StoryObj<typeof RowPermissionsInput> = {
     const canvas = within(canvasElement);
     // Should be able to select the _and dropdown and change it to be a column
     await userEvent.selectOptions(
-      canvas.getByTestId('_and-operator'),
+      canvas.getByTestId('_and-operator-root'),
       'Series_reference'
     );
-    expect(canvas.getByTestId('Series_reference-operator')).toBeInTheDocument();
+    expect(
+      canvas.getByTestId('Series_reference-operator-root')
+    ).toBeInTheDocument();
   },
 };
 
@@ -959,11 +994,215 @@ export const ReplaceEmptyArrayWithColumn: StoryObj<typeof RowPermissionsInput> =
       const canvas = within(canvasElement);
       // Should be able to select the _and dropdown and change it to be a column
       await userEvent.selectOptions(
-        canvas.getByTestId('_and-operator'),
+        canvas.getByTestId('_and-operator-root'),
         'Series_reference'
       );
       expect(
-        canvas.getByTestId('Series_reference-operator')
+        canvas.getByTestId('Series_reference-operator-root')
       ).toBeInTheDocument();
     },
   };
+
+export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const [permissions, setPermissions] = useState<Permissions>({});
+    const { tables } = usePermissionTables({
+      dataSourceName: 'OhMy',
+    });
+
+    const comparators = usePermissionComparators();
+
+    if (!tables || isEmpty(comparators)) return <>Loading</>;
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={p => {
+          setPermissions(p);
+          args.onPermissionsChange?.(p);
+        }}
+        table={['Chinook', 'Artist']}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={permissions}
+      />
+    );
+  },
+
+  parameters: {
+    msw: manyDbsHandlers(),
+  },
+
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    // Wait until Loading is gone
+    await waitForElementToBeRemoved(() => canvas.queryByText('Loading'), {
+      timeout: 5000,
+    });
+
+    // Open dropdown
+    await userEvent.click(canvas.getByTestId('root-operator'));
+    // Should not display remote relationships
+    expect(canvas.queryByText('Album_Artist')).not.toBeInTheDocument();
+  },
+};
+
+export const NestedObjects: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const { tables } = usePermissionTables({
+      dataSourceName: 'M',
+    });
+
+    const comparators = usePermissionComparators();
+
+    if (!tables || isEmpty(comparators)) return <>Loading</>;
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={action('onPermissionsChange')}
+        table={['students']}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={{ address: { city: { _eq: 'Moon' } } }}
+      />
+    );
+  },
+
+  parameters: {
+    msw: mongoHandlers(),
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Should display city
+    expect(
+      await canvas.findByTestId('address.city-operator-root')
+    ).toBeInTheDocument();
+  },
+};
+
+export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
+  {
+    render: args => {
+      const { tables } = usePermissionTables({
+        dataSourceName: 'M',
+      });
+
+      const comparators = usePermissionComparators();
+
+      if (!tables || isEmpty(comparators)) return <>Loading</>;
+      return (
+        <RowPermissionsInput
+          onPermissionsChange={action('onPermissionsChange')}
+          table={['students']}
+          tables={tables}
+          comparators={comparators}
+          logicalModel={undefined}
+          logicalModels={[]}
+          permissions={{}}
+        />
+      );
+    },
+
+    parameters: {
+      msw: mongoHandlers(),
+    },
+
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+
+      await canvas.findAllByRole('option', {
+        name: 'address',
+      });
+      // Open root dropdown
+      await userEvent.selectOptions(
+        await canvas.findByTestId('root-operator'),
+        'address'
+      );
+      // Open address dropdown
+      await userEvent.selectOptions(
+        await canvas.findByTestId('address-operator'),
+        await canvas.findAllByRole('option', {
+          name: 'city',
+        })
+      );
+      // Should display city
+      expect(
+        await canvas.findByTestId('address.city-operator-root')
+      ).toBeInTheDocument();
+    },
+  };
+
+export const NestedObjectsAnd: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const { tables } = usePermissionTables({
+      dataSourceName: 'M',
+    });
+
+    const comparators = usePermissionComparators();
+
+    if (!tables || isEmpty(comparators)) return <>Loading</>;
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={action('onPermissionsChange')}
+        table={['students']}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={{ _and: [{ address: { city: { _eq: 'Moon' } } }] }}
+      />
+    );
+  },
+
+  parameters: {
+    msw: mongoHandlers(),
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Should display city
+    expect(
+      await canvas.findByTestId('_and.0.address.city-operator-root')
+    ).toBeInTheDocument();
+  },
+};
+
+export const NestedObjectsOr: StoryObj<typeof RowPermissionsInput> = {
+  render: args => {
+    const { tables } = usePermissionTables({
+      dataSourceName: 'M',
+    });
+
+    const comparators = usePermissionComparators();
+
+    if (!tables || isEmpty(comparators)) return <>Loading</>;
+    return (
+      <RowPermissionsInput
+        onPermissionsChange={action('onPermissionsChange')}
+        table={['students']}
+        tables={tables}
+        comparators={comparators}
+        logicalModel={undefined}
+        logicalModels={[]}
+        permissions={{ _or: [{}, { address: { city: { _eq: 'Moon' } } }] }}
+      />
+    );
+  },
+
+  parameters: {
+    msw: mongoHandlers(),
+  },
+
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Should display city
+    expect(
+      await canvas.findByTestId('_or.1.address.city-operator-root')
+    ).toBeInTheDocument();
+  },
+};

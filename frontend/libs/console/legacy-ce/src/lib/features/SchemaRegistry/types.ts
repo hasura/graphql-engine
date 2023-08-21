@@ -29,6 +29,11 @@ export type RoleBasedSchema = {
   changes?: SchemaChange[];
 };
 
+export type Role = {
+  role: string;
+  id: string;
+};
+
 export type Schema = {
   id: string;
   hash: string;
@@ -37,7 +42,14 @@ export type Schema = {
   roleBasedSchemas: RoleBasedSchema[];
   tags: SchemaRegistryTag[];
 };
-
+export type SchemaChangeCard = {
+  id: string;
+  hash: string;
+  entry_hash: string;
+  created_at: string;
+  roles: Role[];
+  tags: SchemaRegistryTag[];
+};
 /*
   Schema Registry Query types
 */
@@ -49,8 +61,14 @@ export type GetSchemaListResponseWithError = {
 
 export type GetSchemaListQueryResponse = {
   schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
+  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
 };
-
+export type SchemaRegistryDumpsAggregate = {
+  aggregate: SchemaRegistryCountAggregate;
+};
+export type SchemaRegistryCountAggregate = {
+  count: number;
+};
 export type SchemaRegistryDump = {
   id: string;
   entry_hash: string;

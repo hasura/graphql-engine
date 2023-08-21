@@ -69,7 +69,7 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
       expect(await canvas.findAllByText('RELATIONSHIP')).toHaveLength(2);
 
       expect(await canvas.findByText('SUGGESTED RELATIONSHIPS')).toBeVisible();
-      expect(await canvas.findByText('albumArtist')).toBeVisible();
+      expect(await canvas.findByText('artist')).toBeVisible();
       expect(await canvas.findAllByText('Object')).toHaveLength(2);
       expect(await canvas.findAllByText('Artist')).toHaveLength(2);
 
@@ -96,9 +96,7 @@ export const Testing: StoryObj<typeof DatabaseRelationships> = {
     // click "Add" button
     userEvent.click(await canvas.findByText('Add'));
 
-    expect(
-      await canvas.findByText('Track relationship: albumArtist')
-    ).toBeVisible();
+    expect(await canvas.findByText('Track relationship: artist')).toBeVisible();
     expect(await canvas.findByText('Track relationship')).toBeVisible();
 
     userEvent.click(await canvas.findByText('Cancel'));

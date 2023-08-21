@@ -3,17 +3,17 @@ import { Dialog } from '../../../../../new-components/Dialog';
 import { Select, useConsoleForm } from '../../../../../new-components/Form';
 import { AllowedFunctionTypes } from './UntrackedFunctions';
 import { useUntrackedFunctions } from '../hooks/useUntrackedFunctions';
-import { Feature } from '../../../../DataSource';
 import { IndicatorCard } from '../../../../../new-components/IndicatorCard';
 import { adaptFunctionName } from '../utils';
 import {
   MetadataSelectors,
   useMetadata,
 } from '../../../../hasura-metadata-api';
-import { getQualifiedTable } from '../../utils';
+
 import { DisplayToastErrorMessage } from '../../../components/DisplayErrorMessage';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { useTrackFunction } from '../../../hooks/useTrackFunction';
+import { getQualifiedTable } from '../../../ManageTable/utils';
 
 const validationSchema = z.object({
   qualifiedFunction: z.any(),
@@ -88,17 +88,7 @@ export const TrackFunctionForm = ({
     }))
   );
 
-  console.log(tableOptions);
-
-  if (untrackedFunctions === Feature.NotImplemented)
-    return (
-      <IndicatorCard headline="Feature is not implemented">
-        This feature is not available for {dataSourceName}
-      </IndicatorCard>
-    );
-
   const onHandleSubmit = (data: TrackFunctionFormSchema) => {
-    console.log(data);
     trackFunction({
       functionsToBeTracked: [
         {

@@ -30,4 +30,5 @@ export const bigQueryCapabilities: Capabilities = {
   data_schema: {
     supports_foreign_keys: false,
   },
+  interpolated_queries: {},
 };

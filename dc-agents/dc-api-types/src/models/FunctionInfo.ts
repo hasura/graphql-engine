@@ -11,7 +11,7 @@ export type FunctionInfo = {
   /**
    * argument info - name/types
    */
-  args: Array<FunctionInformationArgument>;
+  args?: Array<FunctionInformationArgument>;
   /**
    * Description of the table
    */
@@ -20,8 +20,8 @@ export type FunctionInfo = {
   /**
    * object response if false, rows if true
    */
-  response_cardinality: 'one' | 'many';
-  returns: FunctionReturnType;
+  response_cardinality?: 'one' | 'many' | null;
+  returns?: FunctionReturnType;
   type: FunctionType;
 };
 

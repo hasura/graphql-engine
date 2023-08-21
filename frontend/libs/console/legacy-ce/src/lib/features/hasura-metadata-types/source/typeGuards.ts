@@ -1,5 +1,6 @@
 import {
   ArrayLogicalModelType,
+  ArrayScalarFieldType,
   LogicalModelField,
   LogicalModelType,
   ScalarFieldType,
@@ -26,7 +27,13 @@ export const isLogicalModelType = (
 export const isArrayLogicalModelType = (
   fieldType: LogicalModelField['type']
 ): fieldType is ArrayLogicalModelType => {
-  return 'array' in fieldType;
+  return 'array' in fieldType && 'logical_model' in fieldType.array;
+};
+
+export const isArrayScalarFieldType = (
+  fieldType: LogicalModelField['type']
+): fieldType is ArrayScalarFieldType => {
+  return 'array' in fieldType && 'scalar' in fieldType.array;
 };
 
 export const isArrayFkRelationship = (

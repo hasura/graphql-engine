@@ -1,7 +1,0 @@
-with-compiler: ghc-9.2.5
-
-allow-newer:
-  weeder:optparse-applicative
-
-package *
-  optimization: 0

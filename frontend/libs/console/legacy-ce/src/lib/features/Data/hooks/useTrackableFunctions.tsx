@@ -1,8 +1,17 @@
-import { UseQueryOptions, useQuery } from 'react-query';
+import { UseQueryOptions, useQuery, useQueryClient } from 'react-query';
 import { DataSource, Feature, IntrospectedFunction } from '../../DataSource';
 import { useHttpClient } from '../../Network';
 import { APIError } from '../../../hooks/error';
 import { DEFAULT_STALE_TIME } from '../../hasura-metadata-api/useInconsistentMetadata';
+
+export const useInvalidateIntrospectedFunction = () => {
+  const queryClient = useQueryClient();
+  const invalidateIntrospectedFunction = (dataSourceName: string) => {
+    queryClient.invalidateQueries([dataSourceName, 'introspected_functions']);
+  };
+
+  return invalidateIntrospectedFunction;
+};
 
 export const useIntrospectedFunctions = <
   FinalResult = Feature | IntrospectedFunction[],

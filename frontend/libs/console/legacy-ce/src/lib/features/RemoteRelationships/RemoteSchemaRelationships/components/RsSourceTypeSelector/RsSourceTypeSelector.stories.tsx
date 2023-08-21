@@ -39,6 +39,7 @@ export const Primary: StoryObj<RsSourceTypeSelectorProps> = {
   args: {
     types: ['country', 'continent', 'language', 'state'],
     sourceTypeKey: 'type_name',
+    nameTypeKey: 'name',
   },
 
   parameters: {

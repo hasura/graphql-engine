@@ -90,7 +90,7 @@ instance HasCodec TableInfo where
       TableInfo
         <$> requiredField "name" "The name of the table" .= _tiName
         <*> optionalFieldWithDefault "type" Table "The type of table" .= _tiType
-        <*> requiredField "columns" "The columns of the table" .= _tiColumns
+        <*> optionalFieldWithDefault "columns" [] "The columns of the table" .= _tiColumns
         <*> dimapMaybeNonEmpty (optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table") .= _tiPrimaryKey
         <*> optionalFieldWithOmittedDefault "foreign_keys" (ForeignKeys mempty) "Foreign key constraints" .= _tiForeignKeys
         <*> optionalFieldOrNull "description" "Description of the table" .= _tiDescription

@@ -1,0 +1,42 @@
+---
+sidebar_label: gateway build
+sidebar_position: 2
+description: build if the current Hasura's Remote Schema configuration is compatible with gateway Hasura
+keywords:
+  - hasura
+  - docs
+  - CLI
+  - connector create
+---
+
+# Hasura CLI: gateway build
+
+Build the final metadata to be applied to the gateway.
+
+## Synopsis
+
+This command reads the Remote Schema configuration of the current child Hasura present in the file mentioned by the flag
+`--gateway-configuration-file`, appends it to the gateway's metadata, and displays the final metadata build. Please note:
+
+- `gateway-url`, `gateway-configuration-file`, and the gateway's `admin-secret` are required to run this command.
+
+```bash
+hasura gateway [flags] build
+```
+
+## Usage
+
+```bash
+# building the final metadata to be applied to the gateway
+hasura gateway --gateway-url https://gateway-hasura-app.hasura.app --gateway-configuration-file /path/to/gateway-configuration.json --admin-secret myadminsecret build
+
+```
+
+## Options
+
+```sass
+    --gateway-url string                  url of the gateway instance
+    --gateway-configuration-file string   path to the current Hasura's configuration
+    --admin-secret string                 admin secret of the gateway
+-h, --help                                help for build
+```

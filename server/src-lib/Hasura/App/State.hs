@@ -136,7 +136,8 @@ data AppEnv = AppEnv
     appEnvSchemaPollInterval :: OptionalInterval,
     appEnvCheckFeatureFlag :: CheckFeatureFlag,
     appEnvLicenseKeyCache :: Maybe (CredentialCache AgentLicenseKey),
-    appEnvMaxTotalHeaderLength :: Int
+    appEnvMaxTotalHeaderLength :: Int,
+    appEnvTriggersErrorLogLevelStatus :: TriggersErrorLogLevelStatus
   }
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can be changed
@@ -330,6 +331,7 @@ buildCacheStaticConfig AppEnv {..} =
       -- Native Queries are always enabled for Postgres in the OSS edition.
       _cscAreNativeQueriesEnabled = \case
         Postgres Vanilla -> True
+        DataConnector -> True
         _ -> False,
       _cscAreStoredProceduresEnabled = False
     }

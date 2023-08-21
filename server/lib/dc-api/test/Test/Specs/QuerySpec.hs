@@ -10,6 +10,7 @@ import Test.Specs.QuerySpec.CustomOperatorsSpec qualified as CustomOperatorsSpec
 import Test.Specs.QuerySpec.FilteringSpec qualified as FilteringSpec
 import Test.Specs.QuerySpec.ForeachSpec qualified as ForeachSpec
 import Test.Specs.QuerySpec.OrderBySpec qualified as OrderBySpec
+import Test.Specs.QuerySpec.RedactionSpec qualified as RedactionSpec
 import Test.Specs.QuerySpec.RelationshipsSpec qualified as RelationshipsSpec
 import Test.TestHelpers (AgentDatasetTestSpec)
 import Prelude
@@ -26,3 +27,5 @@ spec testData capabilities@Capabilities {..} = do
     AggregatesSpec.spec testData _cRelationships
     for_ (_cQueries >>= _qcForeach) $ \_foreachCapabilities ->
       ForeachSpec.spec testData capabilities
+    for_ (_cQueries >>= _qcRedaction) $ \_redactionCapabilities ->
+      RedactionSpec.spec testData capabilities
