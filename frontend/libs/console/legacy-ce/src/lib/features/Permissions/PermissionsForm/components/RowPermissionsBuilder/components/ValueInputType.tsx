@@ -6,6 +6,8 @@ import { useOperators } from './utils/comparatorsFromSchema';
 import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';
 import { Operator } from './types';
+import { rootTableContext } from './RootTableProvider';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 export const checkUseObjectInput = (
   comparatorName: string,
@@ -39,6 +41,7 @@ export const ValueInputType = ({
   comparatorName: string;
   value: any;
 }) => {
+  const { tables } = useContext(rootTableContext);
   const { setValue } = useContext(rowPermissionsContext);
   const { table } = useContext(tableContext);
   const operators = useOperators({ path });
@@ -73,8 +76,23 @@ export const ValueInputType = ({
       value={value}
       onChange={e => {
         let value = e.target.value as any;
+        const foundTable = tables.find(t => areTablesEqual(t.table, table));
+        const column = foundTable?.columns.find(
+          c => c.name === path[path.length - 2]
+        );
         if (!isNaN(value) && value !== '') {
-          value = parseInt(value);
+          try {
+            if (column?.graphQLProperties?.scalarType === 'Int') {
+              value = parseInt(value);
+            } else if (column?.graphQLProperties?.scalarType === 'Float') {
+              value = parseFloat(value);
+            }
+          } catch (e) {
+            console.error(e);
+            // If there is an error it means it's a string
+            // This can happen, users can set values like X-Hasura-User-Id
+            // We catch so we use the value as is
+          }
         }
         setValue(
           path,

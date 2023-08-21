@@ -2,7 +2,7 @@ import { StoryObj, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
-import { within } from '@storybook/testing-library';
+import { waitFor, within } from '@storybook/testing-library';
 import {
   fireEvent,
   userEvent,
@@ -830,7 +830,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
 
     expect(args.onPermissionsChange).toHaveBeenCalledWith({
       name: {
-        _eq: 1337,
+        _eq: '1337',
       },
     });
   },
@@ -875,13 +875,24 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
       timeout: 5000,
     });
 
-    // // Write a number in the input
+    // Write a number in the input
     await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
 
-    expect(args.onPermissionsChange).toHaveBeenCalledWith({
-      id: {
-        _eq: 12341337,
-      },
+    await waitFor(async () => {
+      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+        id: {
+          _eq: 12341337,
+        },
+      });
+    });
+
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByText('[x-hasura-user-id]'));
+      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+        id: {
+          _eq: 'X-Hasura-User-Id',
+        },
+      });
     });
   },
 

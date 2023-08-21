@@ -5,6 +5,7 @@ import unset from 'lodash/unset';
 import isObjectLike from 'lodash/isObjectLike';
 import { RowPermissionsState, PermissionType } from '../types';
 import { allOperators } from './comparatorsFromSchema';
+import cloneDeep from 'lodash/cloneDeep';
 
 const getKeyPath = ({
   keyPath,
@@ -112,7 +113,10 @@ export const updateKey = ({
   keyPath: string[]; // Path to the key to be deleted
   type?: PermissionType;
 }) => {
-  const clone = { ...permissionsState };
+  // Clone deep so we don't run into issues with immutability
+  // The issue happens when cloning with spread operator, after submitting and getting an error
+  // Using cloneDeep we don't run into this issue
+  const clone = cloneDeep(permissionsState);
   const path = getKeyPath({ permissionsState: clone, keyPath, newKey, type });
   const value = getInitialValue(newKey, type);
 
