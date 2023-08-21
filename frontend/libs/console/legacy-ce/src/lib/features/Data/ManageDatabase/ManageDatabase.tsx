@@ -95,6 +95,7 @@ const Tabs = ({
     MetadataSelectors.findSource(dataSourceName)
   );
   const [currentTab, setCurrentTab] = React.useState('tables');
+  const label = source?.kind === 'mongo' ? 'Collections' : 'Tables/Views';
 
   const tabItems = React.useMemo(
     () => [
@@ -105,7 +106,7 @@ const Tabs = ({
             key={dataSourceName}
           />
         ),
-        label: 'Tables/Views',
+        label,
         value: 'tables',
         icon: <FaTable />,
       },
@@ -172,11 +173,21 @@ const Collapsibles = ({
   areUserDefinedFunctionsSupported,
   areForeignKeysSupported,
 }: ContentProps) => {
+  const { data: source } = useMetadata(
+    MetadataSelectors.findSource(dataSourceName)
+  );
+
+  const isMongoDB = source?.kind === 'mongo';
+  const trackTablesTitle = isMongoDB ? 'Collections' : 'Tables/Views';
+  const trackTablesTooltip = `Expose the ${
+    isMongoDB ? 'collections' : 'tables'
+  } available in your database via the GraphQL API`;
+
   return (
     <>
       <CollapsibleResource
-        title="Tables/Views"
-        tooltip="Expose the tables available in your database via the GraphQL API"
+        title={trackTablesTitle}
+        tooltip={trackTablesTooltip}
         defaultOpen
       >
         <ManageTrackedTables

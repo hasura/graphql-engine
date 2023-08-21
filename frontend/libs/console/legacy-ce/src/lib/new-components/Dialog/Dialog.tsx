@@ -2,7 +2,7 @@ import { useGetAnalyticsAttributes } from '../../features/Analytics';
 import { IconTooltip } from '../Tooltip';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import clsx from 'clsx';
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { Button, ButtonProps } from '../Button/Button';
 
@@ -20,6 +20,7 @@ export type FooterProps = {
   onSubmitAnalyticsName?: string;
   onCancelAnalyticsName?: string;
   disabled?: boolean;
+  leftContent?: string | ReactElement;
   id?: string;
 };
 
@@ -39,6 +40,7 @@ const Footer: React.VFC<FooterProps> = ({
   onSubmitAnalyticsName,
   onCancelAnalyticsName,
   disabled = false,
+  leftContent,
   id,
 }) => {
   const callToActionProps: ButtonProps = {
@@ -63,6 +65,8 @@ const Footer: React.VFC<FooterProps> = ({
         className
       )}
     >
+      {leftContent && <div className="justify-self-start">{leftContent}</div>}
+      <div className="grow"></div>
       {callToDeny && (
         <div className="mr-1.5">
           <Button onClick={onClose} {...onCancelAnalyticsAttributes}>
@@ -102,13 +106,13 @@ const dialogSizing: Record<DialogSize, string> = {
 };
 
 export type DialogProps = {
-  children: string | React.ReactElement;
-  title?: string | React.ReactElement;
+  children: string | ReactElement;
+  title?: string | ReactElement;
   titleTooltip?: string;
-  description?: string;
+  description?: string | ReactElement;
   hasBackdrop?: boolean;
   onClose?: () => void;
-  footer?: FooterProps | React.ReactElement;
+  footer?: FooterProps | ReactElement;
   size?: DialogSize;
   portal?: boolean;
   // provides a way to add styles to the div wrapping the

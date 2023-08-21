@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
+import inflection from 'inflection';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { useMetadata } from '../../../hasura-metadata-api';
+import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
 import { TrackableResourceTabs } from '../../ManageDatabase/components/TrackableResourceTabs';
 import { useIntrospectedTables } from '../../hooks/useIntrospectedTables';
 import { TableList } from '../parts/TableList';
 import { selectTrackedTables, splitByTracked } from '../selectors';
 import { Feature, IntrospectedTable } from '../../../DataSource';
 import { useInvalidateSuggestedRelationships } from '../../TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import { useDriverCapabilities } from '../../hooks/useDriverCapabilities';
+import { supportsSchemaLessTables } from '../../LogicalModels/LogicalModelWidget/utils';
 
 type TabState = 'tracked' | 'untracked';
 
@@ -15,7 +18,7 @@ export const ManageTrackedTables = ({
 }: {
   dataSourceName: string;
 }) => {
-  const [tab, setTab] = React.useState<TabState>('tracked');
+  const [tab, setTab] = useState<TabState>('tracked');
 
   const {
     data: metadataTables = [],
@@ -24,11 +27,24 @@ export const ManageTrackedTables = ({
     error: introspectionError,
   } = useMetadata(m => selectTrackedTables(m)(dataSourceName));
 
-  const selector = React.useCallback(
+  const { data: dataSource } = useMetadata(
+    MetadataSelectors.findSource(dataSourceName)
+  );
+
+  const selector = useCallback(
     (introspectedTables: Feature | IntrospectedTable[]) =>
       splitByTracked({ metadataTables, introspectedTables }),
     [metadataTables]
   );
+
+  const { data: capabilities } = useDriverCapabilities({
+    dataSourceName: dataSourceName,
+  });
+
+  const areSchemaLessTablesSupported = supportsSchemaLessTables(capabilities);
+
+  const tableLabel = dataSource?.kind === 'mongo' ? 'collection' : 'table';
+  const tablesLabel = inflection.pluralize(tableLabel);
 
   const {
     data: { trackedTables = [], untrackedTables = [] } = {},
@@ -69,9 +85,7 @@ export const ManageTrackedTables = ({
 
   return (
     <TrackableResourceTabs
-      introText={
-        'Tracking tables adds them to your GraphQL API. All objects will be admin-only until permissions have been set.'
-      }
+      introText={`Tracking ${tablesLabel} adds them to your GraphQL API. All objects will be admin-only until permissions have been set.`}
       value={tab}
       onValueChange={value => {
         setTab(value);
@@ -85,6 +99,7 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'untracked'}
               dataSourceName={dataSourceName}
               tables={untrackedTables}
+              isMultipleRowsTrackingEnabled={!areSchemaLessTablesSupported}
               onChange={() => {
                 invalidateSuggestedRelationships();
               }}
@@ -98,6 +113,7 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'tracked'}
               dataSourceName={dataSourceName}
               tables={trackedTables}
+              isMultipleRowsTrackingEnabled
               onChange={() => {
                 invalidateSuggestedRelationships();
               }}
