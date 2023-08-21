@@ -26,6 +26,7 @@ export type LogicalModelPermissionsProps = {
   comparators: Comparators;
   isCreating?: boolean;
   isRemoving?: boolean;
+  roles: string[];
 };
 
 export type LogicalModelPermissionsState = {
@@ -43,13 +44,17 @@ export const LogicalModelPermissions = ({
   comparators,
   isCreating,
   isRemoving,
+  roles,
 }: LogicalModelPermissionsProps) => {
   const logicalModel = logicalModels.find(
     model => model.name === logicalModelName
   );
 
   return (
-    <LogicalModelPermissionsFormProvider logicalModel={logicalModel}>
+    <LogicalModelPermissionsFormProvider
+      logicalModel={logicalModel}
+      roles={roles}
+    >
       <PureLogicalModelPermissions
         onSave={onSave}
         onDelete={onDelete}
@@ -58,6 +63,7 @@ export const LogicalModelPermissions = ({
         comparators={comparators}
         logicalModelName={logicalModelName}
         logicalModels={logicalModels}
+        roles={roles}
       />
     </LogicalModelPermissionsFormProvider>
   );

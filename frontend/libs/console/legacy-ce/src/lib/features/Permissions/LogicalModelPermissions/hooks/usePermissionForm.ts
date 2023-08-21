@@ -11,31 +11,52 @@ import isEmpty from 'lodash/isEmpty';
 import { permissionColumnAccess, permissionRowAccess } from '../utils';
 
 export function useLogicalModelPermissionsForm(
-  logicalModel: LogicalModelWithPermissions | undefined
+  logicalModel: LogicalModelWithPermissions | undefined,
+  allRoles: string[]
 ) {
-  const defaultPermissions: Permission[] = [
-    ...(logicalModel?.select_permissions?.map(permission => ({
-      roleName: permission.role,
-      filter: permission.permission.filter,
-      columns: permission.permission.columns,
+  const defaultPermissions: Permission[] = allRoles.map(role => {
+    const savedPermissionForRole = logicalModel?.select_permissions?.find(
+      select_perm => select_perm.role === role
+    );
+
+    if (!savedPermissionForRole)
+      return {
+        roleName: role,
+        filter: {},
+        columns: [],
+        action: 'select' as const,
+        isNew: false,
+        source: logicalModel?.source.name || '',
+      };
+
+    return {
+      roleName: savedPermissionForRole.role,
+      filter: savedPermissionForRole.permission.filter,
+      columns: savedPermissionForRole.permission.columns,
       action: 'select' as const,
       isNew: false,
-      source: logicalModel?.source.name,
-    })) ?? []),
-    {
-      roleName: '',
-      filter: {},
-      columns: [],
-      action: 'select' as const,
-      isNew: true,
-      source: logicalModel?.source.name || '',
-    },
-  ];
+      source: logicalModel?.source.name ?? '',
+    };
+  });
+
   const methods = useForm<LogicalModelPermissionsState>({
     defaultValues: {
       activePermission: null,
       rowSelectPermissions: 'without_filter',
-      permissions: defaultPermissions,
+      /**
+       * Push an empty record at the end for "Add New Role" row
+       */
+      permissions: [
+        ...defaultPermissions,
+        {
+          roleName: '',
+          filter: {},
+          columns: [],
+          action: 'select' as const,
+          isNew: true,
+          source: logicalModel?.source.name || '',
+        },
+      ],
       columns: logicalModel?.fields?.map(field => field.name) ?? [],
     },
   });

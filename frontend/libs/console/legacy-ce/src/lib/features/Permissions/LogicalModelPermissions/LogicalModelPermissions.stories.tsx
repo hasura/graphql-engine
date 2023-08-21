@@ -44,6 +44,7 @@ const noPermissionArgs: Partial<
   ],
   logicalModelName: 'hello_world',
   comparators,
+  roles: [],
 };
 
 const existingPermissionArgs: Partial<
@@ -87,6 +88,7 @@ const existingPermissionArgs: Partial<
   ],
   logicalModelName: 'hello_world',
   comparators,
+  roles: ['user'],
 };
 
 export const NewPermission: Story = {

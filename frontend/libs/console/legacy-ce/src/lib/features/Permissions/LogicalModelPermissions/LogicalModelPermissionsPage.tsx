@@ -3,7 +3,7 @@ import Skeleton from 'react-loading-skeleton';
 import { LogicalModelPermissions } from './LogicalModelPermissions';
 import { useCreateLogicalModelsPermissions } from './hooks/useCreateLogicalModelsPermissions';
 import { useRemoveLogicalModelsPermissions } from './hooks/useRemoveLogicalModelsPermissions';
-import { useMetadata } from '../../hasura-metadata-api';
+import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { extractModelsAndQueriesFromMetadata } from '../../hasura-metadata-api/selectors';
 import { usePermissionComparators } from '../PermissionsForm/components/RowPermissionsBuilder/hooks/usePermissionComparators';
 
@@ -18,6 +18,7 @@ export const LogicalModelPermissionsPage = ({
     extractModelsAndQueriesFromMetadata(m)
   );
   const comparators = usePermissionComparators();
+  const { data: roles = [] } = useMetadata(MetadataSelectors.getRoles);
   const logicalModels = data?.models ?? [];
   const logicalModel = logicalModels.find(
     model => model.name === name && model.source.name === source
@@ -68,6 +69,7 @@ export const LogicalModelPermissionsPage = ({
           comparators={comparators}
           logicalModelName={logicalModel?.name}
           logicalModels={logicalModels}
+          roles={roles}
         />
       )}
     </div>
