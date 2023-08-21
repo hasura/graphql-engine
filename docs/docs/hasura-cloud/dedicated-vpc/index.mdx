@@ -1,0 +1,82 @@
+---
+description: Dedicated VPC with VPC peering and private network access
+title: 'Cloud: Dedicated VPC'
+keywords:
+  - hasura
+  - cloud
+  - docs
+  - VPC
+  - VPC peering
+sidebar_label: Dedicated VPC
+sidebar_position: 50
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Dedicated VPC
+
+<ProductBadge ee />
+
+## Introduction
+
+You can request a Dedicated VPC to be provisioned for you on Hasura Cloud so that you have better isolation in terms of
+your project placement. You can also initiate VPC peering with you own networks for secure connectivity.
+
+:::info Available on Hasura Cloud Enterprise
+
+Dedicated VPC is only available as a part of the **[Cloud Enterprise](/hasura-cloud/overview.mdx/#cloud-enterprise)**
+plan. Peering requests are available for **AWS** and **GCP**. [Contact Sales](https://hasura.io/contact-us/) to know
+more.
+
+:::
+
+## Creating a VPC
+
+Once the feature is enabled for your account, you'll see a new tab on the dashboard called **VPCs**. All existing VPCs
+can be found here. You can also initiate a request to create a new VPC. To request a new VPC, click on the **Create New
+VPC** button on top. This will open a form with the following fields:
+
+<Thumbnail src="/img/deployment/dedicated-vpc/view-vpc-list.png" alt="VPC list" width="1146px" />
+
+Enter the following details:
+
+| Field          | Description                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------- |
+| Cloud Provider | The cloud provider where the VPC should be provisioned.                                                       |
+| Region         | The region where the VPC should be provisioned (note that projects will also be created in this region, too). |
+| VPC Name       | A display name for Hasura Dashboard.                                                                          |
+| VPC CIDR       | A valid private IPV4 address range (/16) that should be used with this VPC.                                   |
+
+:::info Examples of IP ranges
+
+For example `172.16.0.0/16`, `10.10.0.0/16` are valid CIDR ranges. However, it cannot be `10.2.0.0/16`.
+
+Additionally, your VPC CIDR cannot conflict with VPCs that you intend to peer with _this_ VPC.
+
+:::
+
+Once you submit the request, the VPC will appear as `Pending`. It will take about 10-20 minutes for your VPC to be
+provisioned. Once it is provisioned, you will be able to see the VPC's details from your Cloud dashboard and create
+peering and projects.
+
+If the provisioning fails, you'll see the VPC in a `Failed` state. [Reach out to support](https://hasura.io/help/) to
+resolve this.
+
+## Create projects within the VPC
+
+Once the VPC is provisioned, create a project by clicking on the **New Project** button in VPC details screen or
+[get in touch with us](https://hasura.io/help/) to migrate your existing Hasura Project to the VPC.
+
+<Thumbnail src="/img/deployment/dedicated-vpc/create-vpc-projects.png" alt="Create VPC Project" width="500px" />
+
+All projects within a VPC are listed under **Projects**.
+
+<Thumbnail src="/img/deployment/dedicated-vpc/vpc-projects-list.png" alt="VPC Projects List" width="900px" />
+
+## VPC Peering
+
+- [AWS](/hasura-cloud/dedicated-vpc/aws-network-peering.mdx)
+- [Azure](/hasura-cloud/dedicated-vpc/azure-network-peering.mdx)
+- [GCP](/hasura-cloud/dedicated-vpc/gcp-network-peering.mdx)
