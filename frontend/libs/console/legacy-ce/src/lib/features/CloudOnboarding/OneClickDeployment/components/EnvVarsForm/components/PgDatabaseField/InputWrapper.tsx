@@ -21,7 +21,7 @@ export function InputWrapper(props: InputWrapperProps) {
         <div className="flex justify-start items-center mb-xs">
           <FaCheckCircle className="text-emerald-500 mr-2" />
           <span className="text-gray-600">
-            Neon Database created succesfully!
+            Neon Database created successfully!
           </span>
         </div>
       ) : (
