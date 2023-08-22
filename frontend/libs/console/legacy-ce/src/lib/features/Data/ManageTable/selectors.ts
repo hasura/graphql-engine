@@ -3,7 +3,7 @@ import { MetadataSelectors, areTablesEqual } from '../../hasura-metadata-api';
 import { Metadata, Table } from '../../hasura-metadata-types';
 import { getQualifiedTable } from './utils';
 
-type PayloadTable = {
+export type PayloadTable = {
   id: string;
   is_tracked: boolean;
   name: string;

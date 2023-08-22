@@ -1,30 +1,35 @@
-import { BrowseRowsContainer } from '../../BrowseRows';
-import { DatabaseRelationships } from '../../DatabaseRelationships';
-import { getTableName } from '../../DataSource';
-import { PermissionsTab } from '../../Permissions';
-import { Table } from '../../hasura-metadata-types';
-import { IndicatorCard } from '../../../new-components/IndicatorCard';
-import { Tabs } from '../../../new-components/Tabs';
-import { getRoute } from '..';
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
-import { ModifyTable } from '../ModifyTable/ModifyTable';
-import { Breadcrumbs, TableName } from './parts';
-import _push from '../../../components/Services/Data/push';
-import { InsertRowFormContainer } from '../../InsertRow/InsertRowFormContainer';
-import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
+import { getRoute } from '..';
 import {
+  TypedObjectValidator,
   isObject,
   isTypedObject,
-  TypedObjectValidator,
 } from '../../../components/Common/utils/jsUtils';
+import _push from '../../../components/Services/Data/push';
+import { IndicatorCard } from '../../../new-components/IndicatorCard';
+import { Tabs } from '../../../new-components/Tabs';
+import { sessionStore } from '../../../utils/sessionStorage';
+import { BrowseRowsContainer } from '../../BrowseRows';
+import { getTableName } from '../../DataSource';
+import { DatabaseRelationships } from '../../DatabaseRelationships';
+import { InsertRowFormContainer } from '../../InsertRow/InsertRowFormContainer';
+import { PermissionsTab } from '../../Permissions';
+import { Table } from '../../hasura-metadata-types';
+import { ModifyTable } from '../ModifyTable/ModifyTable';
+import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
+import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
 import { EnabledTabs, useEnabledTabs } from '../hooks/useEnabledTabs';
+import { Breadcrumbs, TableName } from './parts';
 
-type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
+export type ManageTableTabs =
+  | 'modify'
+  | 'browse'
+  | 'relationships'
+  | 'permissions';
 export interface ManageTableProps {
   params: {
-    operation: AllowedTabs;
+    operation: ManageTableTabs;
   };
 }
 
@@ -65,6 +70,7 @@ const availableTabs = (
           content: (
             <InsertRowFormContainer
               dataSourceName={dataSourceName}
+              key={JSON.stringify(table)}
               table={table}
             />
           ),
@@ -75,6 +81,7 @@ const availableTabs = (
       label: 'Modify',
       content: (
         <ModifyTable
+          key={JSON.stringify(table)}
           dataSourceName={dataSourceName}
           table={table}
           tableName={tableName}
@@ -85,13 +92,23 @@ const availableTabs = (
       value: 'relationships',
       label: 'Relationships',
       content: (
-        <DatabaseRelationships dataSourceName={dataSourceName} table={table} />
+        <DatabaseRelationships
+          key={JSON.stringify(table)}
+          dataSourceName={dataSourceName}
+          table={table}
+        />
       ),
     },
     {
       value: 'permissions',
       label: 'Permissions',
-      content: <PermissionsTab dataSourceName={dataSourceName} table={table} />,
+      content: (
+        <PermissionsTab
+          key={JSON.stringify(table)}
+          dataSourceName={dataSourceName}
+          table={table}
+        />
+      ),
     },
   ].filter(
     (item): item is Tab =>
@@ -159,6 +176,12 @@ export const ManageTable: React.VFC<ManageTableProps> = (
           onValueChange={_operation => {
             dispatch(
               _push(getRoute().table(dataSourceName, table, _operation))
+            );
+
+            // save last tab to session storage:
+            sessionStore.setItem(
+              'manageTable.lastTab',
+              _operation as ManageTableTabs
             );
           }}
           items={availableTabs(

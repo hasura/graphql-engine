@@ -5,7 +5,7 @@ import globals from '../../Globals';
 const relationshipTabTablesId = 'f6c57c31-abd3-46d9-aae9-b97435793273';
 const importActionFromOpenApiId = '12e5aaf4-c794-4b8f-b762-5fda0bff946a';
 const trackingSectionUI = 'c2536b28-0ea3-11ee-be56-0242ac120002';
-const manageDatabaseTabbedInterface = 'd2660cdf-658b-4b46-a050-1d10e292d9c5';
+const performanceMode = '29ea2999-b1fe-4c0d-a2ba-113098521919';
 
 const importActionFromOpenApi: FeatureFlagDefinition = {
   id: importActionFromOpenApiId,
@@ -22,7 +22,7 @@ export const availableFeatureFlagIds = {
   relationshipTabTablesId,
   importActionFromOpenApiId,
   trackingSectionUI,
-  manageDatabaseTabbedInterface,
+  performanceMode,
 };
 
 export const availableFeatureFlags: FeatureFlagDefinition[] = [
@@ -45,17 +45,16 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     defaultValue: false,
     discussionUrl: 'https://github.com/hasura/graphql-engine/discussions/9727',
   },
-  // Leave this commented out until we get more details about feature parity requirement
-  // {
-  //   id: manageDatabaseTabbedInterface,
-  //   description:
-  //     'Try out the new tabbed Manage Database UI for GDC sources only.',
-  //   title: 'Tabbed Manage Database UI',
-  //   section: 'data',
-  //   status: 'experimental',
-  //   defaultValue: false,
-  //   discussionUrl: '',
-  // },
+  {
+    id: performanceMode,
+    title: 'Data Tab Performance Mode',
+    description:
+      'Enables high performance components in the Data tab. Some database features are not available.',
+    section: 'data',
+    status: 'experimental',
+    defaultValue: false,
+    discussionUrl: '',
+  },
   // eslint-disable-next-line no-underscore-dangle
   ...(isProConsole(globals) ? [importActionFromOpenApi] : []),
 ];

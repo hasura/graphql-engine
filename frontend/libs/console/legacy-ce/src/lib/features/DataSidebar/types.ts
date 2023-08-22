@@ -4,4 +4,5 @@ export type SidebarLinkType = {
   icon: JSX.Element;
   hideIfNoSources?: boolean;
   cliOnly?: boolean;
+  isLinkActive: () => boolean;
 };

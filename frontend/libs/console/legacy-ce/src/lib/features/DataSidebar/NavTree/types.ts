@@ -38,20 +38,12 @@ export const isDataSourceNode = (
   return 'driver' in value.node.data;
 };
 
-// export const isFunctionNode = (
-//   value:
-//     | NodeRendererProps<TableNode>
-//     | NodeRendererProps<DataSourceNode>
-//     | NodeRendererProps<FunctionNode>
-// ): value is NodeRendererProps<FunctionNode> => {
-//   return 'function' in value.node.data;
-// };
-
-// export const isTableNode = (
-//   value:
-//     | NodeRendererProps<TableNode>
-//     | NodeRendererProps<DataSourceNode>
-//     | NodeRendererProps<FunctionNode>
-// ): value is NodeRendererProps<TableNode> => {
-//   return 'table' in value.node.data;
-// };
+export type LeafType =
+  | {
+      dataSourceName: string;
+      table: Table;
+    }
+  | {
+      dataSourceName: string;
+      function: QualifiedFunction;
+    };

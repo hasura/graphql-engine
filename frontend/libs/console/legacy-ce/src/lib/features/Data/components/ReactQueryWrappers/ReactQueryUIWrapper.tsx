@@ -30,7 +30,6 @@ export function ReactQueryUIWrapper<TData = unknown>({
       <ReactQueryStatusUI
         status={'error'}
         error={{
-          name: '',
           message: IdleQueryErrorMessage,
         }}
       />

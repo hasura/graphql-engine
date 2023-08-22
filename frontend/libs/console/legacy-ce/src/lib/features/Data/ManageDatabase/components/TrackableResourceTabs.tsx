@@ -4,10 +4,6 @@ import Skeleton from 'react-loading-skeleton';
 import { Badge } from '../../../../new-components/Badge';
 import { LearnMoreLink } from '../../../../new-components/LearnMoreLink';
 import { Tabs } from '../../../../new-components/Tabs';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../../FeatureFlags';
 import { TAB_COLORS } from '../constants';
 
 export type TabState = 'tracked' | 'untracked';
@@ -30,6 +26,7 @@ type ManageResourceTabsProps = Omit<
  * This is a wrapper around the `<Tabs />` component that simplifies and specializes the props API to be used to display tabbed lists of Trackable Resources
  *
  */
+
 export const TrackableResourceTabs = ({
   items,
   onValueChange,
@@ -40,10 +37,6 @@ export const TrackableResourceTabs = ({
   ...rest
 }: ManageResourceTabsProps) => {
   const { untracked, tracked } = items;
-
-  const { enabled: newTabbedUIEnabled } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.manageDatabaseTabbedInterface
-  );
 
   return isLoading ? (
     <div className="mx-sm">
@@ -61,8 +54,8 @@ export const TrackableResourceTabs = ({
         <div className="my-4" />
       )}
       <Tabs
-        color={newTabbedUIEnabled ? TAB_COLORS.trackingLevel : 'yellow'}
-        accentStyle={newTabbedUIEnabled ? 'background' : 'underline'}
+        color={TAB_COLORS.secondary}
+        accentStyle={'background'}
         className={clsx('space-y-4', className)}
         onValueChange={value => onValueChange(value as TabState)}
         items={[
@@ -74,7 +67,7 @@ export const TrackableResourceTabs = ({
                 data-testid="untracked-tab"
               >
                 Untracked
-                <Badge className="px-xs" color="gray">
+                <Badge className={clsx(`px-xs`)} color="dark-gray">
                   {untracked.amount}
                 </Badge>
               </div>
@@ -89,7 +82,7 @@ export const TrackableResourceTabs = ({
                 data-testid="tracked-tab"
               >
                 Tracked
-                <Badge className="px-xs" color="gray">
+                <Badge className={clsx(`px-xs`)} color="dark-gray">
                   {tracked.amount}
                 </Badge>
               </div>

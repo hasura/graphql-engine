@@ -3,9 +3,10 @@ import { ReactNode } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
 import Skeleton from 'react-loading-skeleton';
 import { UseQueryResult } from 'react-query';
+import { APIError } from '../../../../hooks/error';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { CenteredSpinner } from '../../../components';
-import { CommonProps, ErrorType } from './types';
+import { CommonProps } from './types';
 
 // Only for rendering loading / error UI given react query status/error object:
 const ID_PREFIX = 'react-query-status-ui';
@@ -25,14 +26,17 @@ export const TestIds = {
 
 const twSkeletonOverley = `w-full h-full absolute inset-0 grid grid-flow-row dynamic-skeleton-grid gap-[2px] max-h-full overflow-hidden`;
 
-export type ReactQueryStatusUIProps<TData = unknown> = CommonProps<TData> & {
+export type ReactQueryStatusUIProps<
+  TData = unknown,
+  TError = unknown
+> = CommonProps<TData> & {
   status: UseQueryResult['status'];
-  error: ErrorType;
+  error: TError;
   children?: ReactNode;
 };
 export function ReactQueryStatusUI<TData = unknown>({
   status,
-  error,
+  error: rawError,
   renderError,
   renderIdle,
   children,
@@ -128,6 +132,8 @@ export function ReactQueryStatusUI<TData = unknown>({
     }
   };
 
+  const error = APIError.fromUnknown(rawError);
+
   // error rendered using an indicator card. is the default error display if nor renderError prop is given:
   const errorIndicator = () => (
     <span data-testid={TestIds.error}>
@@ -138,7 +144,7 @@ export function ReactQueryStatusUI<TData = unknown>({
         showIcon
         customIcon={() => <FiAlertTriangle />}
       >
-        {error?.message ?? JSON.stringify(error, null, 2)}
+        {error.message}
       </IndicatorCard>
     </span>
   );

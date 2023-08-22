@@ -30,3 +30,19 @@ export const search = <T extends { qualifiedFunction: QualifiedFunction }>(
       .includes(searchText.toLowerCase())
   );
 };
+
+export const functionDisplayName = ({
+  qualifiedFunction,
+  dataSourceName,
+}: {
+  qualifiedFunction: QualifiedFunction;
+  dataSourceName?: string;
+}) => {
+  const functionName = adaptFunctionName(qualifiedFunction);
+
+  const name = dataSourceName
+    ? `${dataSourceName} / ${functionName.join(' / ')}`
+    : functionName.join(' / ');
+
+  return name;
+};

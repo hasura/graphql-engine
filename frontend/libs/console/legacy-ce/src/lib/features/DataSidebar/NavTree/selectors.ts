@@ -1,3 +1,4 @@
+import orderBy from 'lodash/orderBy';
 import { getQualifiedTable } from '../../Data/ManageTable/utils';
 import { DriverInfo } from '../../DataSource';
 import {
@@ -9,6 +10,7 @@ import {
   MetadataFunction,
   MetadataTable,
   QualifiedFunction,
+  Source,
   Table,
 } from '../../hasura-metadata-types';
 import { DataSourceNode, DatabaseItemNode } from './types';
@@ -107,23 +109,36 @@ const functionToNode = (
   name: getQualifiedTable(f.function).join(' / '),
 });
 
+const getNodesFromSource = (source: Source) => {
+  const tableNodes = orderBy(
+    source.tables.map(t => tableToNode(t, source.name)),
+    ['name'],
+    ['asc']
+  );
+
+  const functionNodes = (source.functions ?? [])
+    .map(f => functionToNode(f, source.name))
+    .sort();
+
+  // since we are dealing with potentially huge amounts of tables, we want to avoid spread syntax and go with a more performant approach
+  // i tested with .push, spread syntax, and concat, and this was the fastest:
+  const nodes = tableNodes.concat(functionNodes);
+
+  return nodes;
+};
+
 export const adaptSourcesIntoTreeData =
   (m: Metadata) =>
   (drivers: DriverInfo[], inconsistentData: InconsistentData) =>
-    m.metadata.sources.map<DataSourceNode>(source => {
-      return {
-        id: getSourceTreeId(source.name),
-        dataSourceName: source.name,
-        name: source.name,
-        driver: source.kind,
-        releaseType: drivers?.find(driver => source.kind === driver.name)
-          ?.release,
-        inconsistentObject: inconsistentData.inconsistentSources.find(
-          i => i.definition === source.name
-        ),
-        children: [
-          ...source.tables.map(t => tableToNode(t, source.name)),
-          ...(source.functions ?? []).map(f => functionToNode(f, source.name)),
-        ],
-      };
-    });
+    m.metadata.sources.map<DataSourceNode>(source => ({
+      id: getSourceTreeId(source.name),
+      dataSourceName: source.name,
+      name: source.name,
+      driver: source.kind,
+      releaseType: drivers?.find(driver => source.kind === driver.name)
+        ?.release,
+      inconsistentObject: inconsistentData.inconsistentSources.find(
+        i => i.definition === source.name
+      ),
+      children: getNodesFromSource(source),
+    }));

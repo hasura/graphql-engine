@@ -1,18 +1,19 @@
 import clsx from 'clsx';
+import { useEffect } from 'react';
 import { NodeRendererProps } from 'react-arborist';
+import { BsFillExclamationTriangleFill } from 'react-icons/bs';
+import { CgSpinner } from 'react-icons/cg';
 import { RxTriangleRight } from 'react-icons/rx';
 import { Badge } from '../../../../new-components/Badge';
 import { Tooltip } from '../../../../new-components/Tooltip';
-import { DataSourceNode } from '../types';
-import { GetHighlightedText } from './GetHighlightedText';
-import { DatabaseIcon } from '../../constants';
-import { BsFillExclamationTriangleFill } from 'react-icons/bs';
-import { styles } from '../../styles';
-import { CgSpinner } from 'react-icons/cg';
 import {
   useIsAnythingLoading,
   useIsDataSourceLoading,
 } from '../../SidebarContext';
+import { DatabaseIcon } from '../../constants';
+import { styles } from '../../styles';
+import { DataSourceNode } from '../types';
+import { GetHighlightedText } from './GetHighlightedText';
 
 const StatusReport = ({
   node,
@@ -68,16 +69,33 @@ export const DataSourceTreeNode = (
   const DbIcon = isInconsistent ? BsFillExclamationTriangleFill : DatabaseIcon;
   const isLoading = useIsDataSourceLoading(node.data.dataSourceName);
   const treeLoading = useIsAnythingLoading();
+
+  const hasChildren = !!node.children?.length;
+
+  useEffect(() => {
+    if (node.isSelected && node.isClosed) {
+      node.open();
+    }
+  }, []);
+
   return (
     <button
       disabled={isLoading || treeLoading}
-      onClick={() => {
+      onClick={e => {
         if (isLoading || treeLoading) return;
 
         // only send click event if user is opening the node
-        if (node.isClosed && !isLoading && !treeLoading) node.data?.onClick?.();
+        if (node.isClosed && !isLoading && !treeLoading) {
+          node.data?.onClick?.();
+          node.open();
+          node.select();
+        } else {
+          node.close();
 
-        node.toggle();
+          // we close the data source node without moving selection to it
+          e.preventDefault();
+          e.stopPropagation();
+        }
       }}
       className={clsx(
         styles.sideBarItem.default,
@@ -91,7 +109,7 @@ export const DataSourceTreeNode = (
           className={clsx(
             'transition ease-in-out text-gray-600',
             node.isOpen ? 'rotate-90' : 'rotate-0',
-            !node.children?.length && 'text-gray-400'
+            !hasChildren && 'opacity-0'
           )}
         />
         <Tooltip
@@ -114,10 +132,14 @@ export const DataSourceTreeNode = (
         text={node.data.name}
         highlight={tree.searchTerm}
       />
-      {!!node.children?.length && (
+      {hasChildren ? (
         <Badge color={'green'} className="rounded-md px-2 font-normal">
-          {node.children.length}
+          {node.children?.length}
         </Badge>
+      ) : (
+        <div className="muted italic text-gray-500 text-sm">
+          (No Tracked Items)
+        </div>
       )}
       {isLoading && <CgSpinner className="animate-spin" size={20} />}
     </button>

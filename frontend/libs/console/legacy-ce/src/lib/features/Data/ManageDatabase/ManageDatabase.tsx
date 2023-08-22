@@ -4,22 +4,21 @@ import { FaCode, FaDatabase, FaLink, FaTable } from 'react-icons/fa';
 import TemplateGallery from '../../../components/Services/Data/Schema/TemplateGallery/TemplateGallery';
 import { Tabs as TabUI } from '../../../new-components/Tabs';
 import { Analytics, REDACT_EVERYTHING } from '../../Analytics';
-import {
-  availableFeatureFlagIds,
-  useIsFeatureFlagEnabled,
-} from '../../FeatureFlags';
 import { MetadataSelectors, useMetadata } from '../../hasura-metadata-api';
 import { ManageTrackedTables } from '../ManageTable/components/ManageTrackedTables';
 import { ManageTrackedFunctions } from '../TrackResources/TrackFunctions/components/ManageTrackedFunctions';
 import { ManageSuggestedRelationships } from '../TrackResources/TrackRelationships/ManageSuggestedRelationships';
 import { useDriverCapabilities } from '../hooks/useDriverCapabilities';
-import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
 import { TAB_COLORS } from './constants';
+import { BreadCrumbs, CollapsibleResource, SourceName } from './parts';
 
 export interface ManageDatabaseProps {
   dataSourceName: string;
   schema?: string;
 }
+
+// hard coding this instead of feature flag until we are sure the new tab UI is accepted.
+const USE_TABS = true;
 
 //This component has the code for template gallery but is currently commented out until further notice.
 export const ManageDatabase = ({
@@ -43,10 +42,6 @@ export const ManageDatabase = ({
       };
     },
   });
-
-  const { enabled: USE_TABS } = useIsFeatureFlagEnabled(
-    availableFeatureFlagIds.manageDatabaseTabbedInterface
-  );
 
   return (
     <Analytics name="ManageDatabaseV2" {...REDACT_EVERYTHING}>
@@ -95,7 +90,6 @@ const Tabs = ({
     MetadataSelectors.findSource(dataSourceName)
   );
   const [currentTab, setCurrentTab] = React.useState('tables');
-  const label = source?.kind === 'mongo' ? 'Collections' : 'Tables/Views';
 
   const tabItems = React.useMemo(
     () => [
@@ -106,7 +100,7 @@ const Tabs = ({
             key={dataSourceName}
           />
         ),
-        label,
+        label: source?.kind === 'mongo' ? 'Collections' : 'Tables/Views',
         value: 'tables',
         icon: <FaTable />,
       },
@@ -159,7 +153,7 @@ const Tabs = ({
   );
   return (
     <TabUI
-      color={TAB_COLORS.topLevel}
+      color={TAB_COLORS.primary}
       accentStyle="background"
       value={currentTab}
       onValueChange={setCurrentTab}
@@ -168,6 +162,7 @@ const Tabs = ({
   );
 };
 
+// leaving this in for now just in case we get any push back on the new tab UI
 const Collapsibles = ({
   dataSourceName,
   areUserDefinedFunctionsSupported,

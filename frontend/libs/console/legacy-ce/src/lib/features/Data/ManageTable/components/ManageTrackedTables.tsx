@@ -1,41 +1,48 @@
-import React, { useCallback, useState } from 'react';
-import inflection from 'inflection';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import React from 'react';
+import { Feature, IntrospectedTable } from '../../../DataSource';
+import { MetadataUtils, useMetadata } from '../../../hasura-metadata-api';
+import { supportsSchemaLessTables } from '../../LogicalModels/LogicalModelWidget/utils';
 import { TrackableResourceTabs } from '../../ManageDatabase/components/TrackableResourceTabs';
+import { useInvalidateSuggestedRelationships } from '../../TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
+import { ReactQueryStatusUI } from '../../components';
+import { multipleQueryUtils } from '../../components/ReactQueryWrappers/utils';
+import { useDriverCapabilities } from '../../hooks/useDriverCapabilities';
 import { useIntrospectedTables } from '../../hooks/useIntrospectedTables';
 import { TableList } from '../parts/TableList';
-import { selectTrackedTables, splitByTracked } from '../selectors';
-import { Feature, IntrospectedTable } from '../../../DataSource';
-import { useInvalidateSuggestedRelationships } from '../../TrackResources/TrackRelationships/hooks/useSuggestedRelationships';
-import { useDriverCapabilities } from '../../hooks/useDriverCapabilities';
-import { supportsSchemaLessTables } from '../../LogicalModels/LogicalModelWidget/utils';
+import {
+  PayloadTable,
+  selectTrackedTables,
+  splitByTracked,
+} from '../selectors';
 
 type TabState = 'tracked' | 'untracked';
 
-export const ManageTrackedTables = ({
-  dataSourceName,
-}: {
-  dataSourceName: string;
-}) => {
-  const [tab, setTab] = useState<TabState>('tracked');
+const DataBound = ({ dataSourceName }: { dataSourceName: string }) => {
+  // we need both the tables and the source
+  const metadataResult = useMetadata(m => ({
+    metadataTables: selectTrackedTables(m)(dataSourceName),
+    dataSource: MetadataUtils.findMetadataSource(dataSourceName, m),
+  }));
 
   const {
-    data: metadataTables = [],
-    isFetched,
-    isError: isMetadataError,
-    error: introspectionError,
-  } = useMetadata(m => selectTrackedTables(m)(dataSourceName));
+    data: { metadataTables = [], dataSource } = {},
+    status: metadataStatus,
+  } = metadataResult;
 
-  const { data: dataSource } = useMetadata(
-    MetadataSelectors.findSource(dataSourceName)
-  );
-
-  const selector = useCallback(
+  const introspectSelector = React.useCallback(
     (introspectedTables: Feature | IntrospectedTable[]) =>
       splitByTracked({ metadataTables, introspectedTables }),
     [metadataTables]
   );
+
+  const introspectedTablesResult = useIntrospectedTables({
+    dataSourceName,
+    options: {
+      select: introspectSelector,
+      enabled: metadataStatus === 'success',
+      refetchOnWindowFocus: false,
+    },
+  });
 
   const { data: capabilities } = useDriverCapabilities({
     dataSourceName: dataSourceName,
@@ -43,45 +50,53 @@ export const ManageTrackedTables = ({
 
   const areSchemaLessTablesSupported = supportsSchemaLessTables(capabilities);
 
-  const tableLabel = dataSource?.kind === 'mongo' ? 'collection' : 'table';
-  const tablesLabel = inflection.pluralize(tableLabel);
+  const tablesLabel = dataSource?.kind === 'mongo' ? 'collections' : 'tables';
 
-  const {
-    data: { trackedTables = [], untrackedTables = [] } = {},
-    isSuccess,
-    isError: isIntrospectionError,
-    error: metadataError,
-  } = useIntrospectedTables({
-    dataSourceName,
-    options: {
-      select: selector,
-      enabled: isFetched,
-      refetchOnWindowFocus: false,
-      onSuccess: data => {
-        if (data.trackedTables.length === 0) {
-          // if user has no tracked tables, switch to the untracked list
-          setTab('untracked');
-        }
-      },
-    },
-  });
+  if (!introspectedTablesResult.isSuccess || !metadataResult.isSuccess) {
+    return (
+      <ReactQueryStatusUI
+        status={multipleQueryUtils.status([
+          metadataResult,
+          introspectedTablesResult,
+        ])}
+        error={multipleQueryUtils.firstError([
+          metadataResult,
+          introspectedTablesResult,
+        ])}
+      />
+    );
+  }
+
+  return (
+    <ManageTrackedTablesUI
+      dataSourceName={dataSourceName}
+      tablesLabel={tablesLabel}
+      trackMultipleEnabled={!areSchemaLessTablesSupported}
+      {...introspectedTablesResult.data}
+    />
+  );
+};
+
+const ManageTrackedTablesUI = ({
+  dataSourceName,
+  trackedTables,
+  untrackedTables,
+  tablesLabel = 'tables',
+  trackMultipleEnabled = true,
+  untrackMultipleEnabled = true,
+}: {
+  dataSourceName: string;
+  untrackedTables: PayloadTable[];
+  trackedTables: PayloadTable[];
+  tablesLabel?: string;
+  trackMultipleEnabled?: boolean;
+  untrackMultipleEnabled?: boolean;
+}) => {
+  const [tab, setTab] = React.useState<TabState>(
+    trackedTables.length === 0 ? 'untracked' : 'tracked'
+  );
   const { invalidateSuggestedRelationships } =
     useInvalidateSuggestedRelationships({ dataSourceName });
-
-  if (isMetadataError || isIntrospectionError)
-    return (
-      <IndicatorCard
-        status="negative"
-        headline="Error while fetching data"
-        showIcon
-      >
-        <div>
-          {metadataError?.message ??
-            (introspectionError as any)?.message ??
-            'Something went wrong'}
-        </div>
-      </IndicatorCard>
-    );
 
   return (
     <TrackableResourceTabs
@@ -90,7 +105,6 @@ export const ManageTrackedTables = ({
       onValueChange={value => {
         setTab(value);
       }}
-      isLoading={!isSuccess}
       items={{
         untracked: {
           amount: untrackedTables.length,
@@ -99,7 +113,7 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'untracked'}
               dataSourceName={dataSourceName}
               tables={untrackedTables}
-              isMultipleRowsTrackingEnabled={!areSchemaLessTablesSupported}
+              trackMultipleEnabled={trackMultipleEnabled}
               onChange={() => {
                 invalidateSuggestedRelationships();
               }}
@@ -113,7 +127,7 @@ export const ManageTrackedTables = ({
               viewingTablesThatAre={'tracked'}
               dataSourceName={dataSourceName}
               tables={trackedTables}
-              isMultipleRowsTrackingEnabled
+              trackMultipleEnabled={untrackMultipleEnabled}
               onChange={() => {
                 invalidateSuggestedRelationships();
               }}
@@ -124,3 +138,5 @@ export const ManageTrackedTables = ({
     />
   );
 };
+
+export const ManageTrackedTables = DataBound;
