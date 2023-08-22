@@ -56,24 +56,32 @@ The following fields can be defined for a Remote Schema relationship:
 - **Field Mapping**: A mapping between fields in the source table and their corresponding fields in the target table,
   just as a foreign key relationship would be defined by such mapping within a single database.
 
-For example, say we have a table `order(id int, user_id int)` in the source database and a table
+For example, say we have a table `orders(id int, user_id int)` in the source database and a table
 `user(id int, name text)` in the target database.
 
-We can create an object remote database relationship `user` joining the `order` table to the `user` table using the
-`order.user_id` and `user.id` fields.
+We can create an object remote database relationship `user` joining the `orders` table to the `user` table using the
+`orders.user_id` and `user.id` fields.
 
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Data > [database] > [orders] > Relationships` tab. Under the `Remote Database Relationships` section,
-select `Add a remote database relationship`.
+1. Head to the `Data > [database] > [orders] > Relationships` tab. Click on `Add Relationships` to open the widget.
+
+2. Search for the remote database table in the "To Reference" input box
 
 <Thumbnail
-  src="/img/databases/postgres/schema/create-remote-source-relationship.png"
+  src="/img/schema/add-remote-db-rel-step-1.png"
   alt="Create remote database relationships"
 />
 
-Hit `Save`.
+3. Fill in the relationships details - type of the relationship & column mapping.
+
+<Thumbnail
+  src="/img/schema/add-remote-db-rel-step-2.png"
+  alt="Create remote database relationships"
+/>
+
+4. Hit `Create Relationship` to track the remote relationship.
 
 </TabItem>
 <TabItem value="cli" label="CLI">
