@@ -14,6 +14,7 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
 
 # Send an Abandoned Cart Reminder Email using Scheduled Triggers
 
@@ -27,19 +28,21 @@ to their cart but hasn't checked out within one day, otherwise known as an aband
 The trigger will be executed every hour to check if a user has a cart that hasn't been updated for 24 hours and hasn't
 already received a reminder. If true, we'll send them an email.
 
+<SampleAppBlock dependent />
+
 ## Prerequisites
 
-Before starting, make sure you have:
+Before getting started, ensure that you have the following in place:
 
-- A Hasura project, either [locally](/getting-started/docker-simple.mdx) or using
-  [Hasura Cloud](https://cloud.hasura.io/?skip_onboarding=true).
-- A working SMTP server or an email-sending service if you really do want to send emails. We will send to Ethereal Mail,
-  a mock email service in this demo, but to actually send email you could use a
-  [Gmail account](https://support.google.com/a/answer/176600?hl=en) if you have one or a service such as
-  [Postmark](https://postmarkapp.com/).
-- If you plan on using a webhook endpoint hosted on your own machine with a Hasura project hosted elsewhere, make sure
-  you have a tunneling service like [ngrok](https://ngrok.com/) set up so a remotely hosted instance can communicate
-  with your local machine.
+- The docs e-commerce sample app deployed to Hasura Cloud.
+- A working SMTP server or email-sending service that you can integrate with to send emails.
+
+:::info Tunneling your webhook endpoint from your local machine
+
+If you plan on using a webhook endpoint hosted on your own machine, ensure that you have a tunneling service such as
+[ngrok](https://ngrok.com/) set up so that your Cloud Project can communicate with your local machine.
+
+:::
 
 ## Our Model
 
@@ -51,99 +54,15 @@ When sending transactional emails like this, consider three essential components
   return information so that you have the correct data to include in the email?
 - **Your email templating**: How will you generate and send the email containing the information you want to send?
 
-In this example, we assume there are three tables in our database: `cart`, `products`, and `users`.
+Our sample app's database contains, among others, three tables: `cart`, `cart_items`, `products`, and `users`.
 
-The `cart` table
-contains details of all products added to the cart by users, including the product ID, customer ID, and the last
-modified date which we'll use to determine when a user last interacted with the cart.
+One shopping `cart` can have multiple `cart_items` and there is a one-to-many relationship enabled between these tables.
+Each cart belongs to one `user` via the `user_id` foreign key, and we can use the `cart_items` `updated_at` field to
+determine when last a user interacted with their cart.
 
-The `products` table contains
-the details of all products, including the product name and description.
+The `products` table contains the details of all products, including the product name and description.
 
-The `users` table contains the details of
-all users, including the user's email address.
-
-<details>
-<summary>
-Click here for the SQL to generate these tables and some seed data.
-</summary>
-
-```sql
--- Create the 'users' table
-CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    email TEXT NOT NULL
-);
-
--- Create the 'products' table
-CREATE TABLE public.products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT
-);
-
--- Create the 'cart' table
-CREATE TABLE public.carts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    is_reminder_sent BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES public.users (id)
-);
-
--- Create the 'cart_items' table
-CREATE TABLE public.cart_items (
-    id SERIAL PRIMARY KEY,
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-    product_id INTEGER NOT NULL,
-    cart_id INTEGER NOT NULL,
-    quantity INTEGER NOT NULL,
-    FOREIGN KEY (product_id) REFERENCES public.products (id),
-    FOREIGN KEY (cart_id) REFERENCES public.carts (id)
-);
-
--- Seed data for the 'users' table
-INSERT INTO public.users (name, email) VALUES
-    ('Lewis Hamilton', 'user1@example.com'),
-    ('Max Verstappen', 'user2@example.com'),
-    ('George Russell', 'user3@example.com');
-
--- Seed data for the 'products' table
-INSERT INTO public.products (name, description) VALUES
-    ('Product A', 'Description for Product A'),
-    ('Product B', 'Description for Product B'),
-    ('Product C', 'Description for Product C');
-
--- Seed data for the 'cart' table
-INSERT INTO public.carts (user_id) VALUES
-    (1),
-    (2),
-    (3),
-    (2);
-
--- Insert 10 items into the 'cart_items' table, each with an updated_at time that's more than a day old.
-INSERT INTO public.cart_items (updated_at, product_id, cart_id, quantity) VALUES
-  (NOW() - INTERVAL '1 day', 1, 1, 1),
-  (NOW() - INTERVAL '2 day', 2, 1, 2),
-  (NOW() - INTERVAL '3 day', 3, 1, 3),
-  (NOW() - INTERVAL '4 day', 1, 2, 1),
-  (NOW() - INTERVAL '5 day', 2, 2, 2),
-  (NOW() - INTERVAL '6 day', 3, 2, 3),
-  (NOW() - INTERVAL '7 day', 1, 3, 1),
-  (NOW() - INTERVAL '8 day', 2, 3, 2),
-  (NOW() - INTERVAL '9 day', 3, 3, 3),
-  (NOW() - INTERVAL '10 day', 1, 4, 1);
-```
-
-You can copy / paste this into the `RUN SQL` tab in the Hasura Console on the `Data` page. Then, track all relationships
-under the `Public` schema on the `Data` page. This will identify the foreign key relationships between the tables and
-use them in the GraphQL schema.
-
-**For any cart that is not checked out, do make sure to change the `updated_at` date to a day before the current date.**
-
-</details>
+The `users` table contains the details of all users, including the user's email address.
 
 ## Step 1: Create the Scheduled Event
 
@@ -169,7 +88,7 @@ In the example below, if we're using Docker, we'll use a webhook endpoint hosted
 `4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
 
 ```
-http://host.docker.internal:4000/abandoned-cart
+https://<your-webhook-url>/abandoned-cart
 ```
 
 :::info Tunneling your webhook endpoint
@@ -182,16 +101,17 @@ You'll need to modify your webhook URL to use the public URL provided by ngrok.
 
 :::
 
-In the Cron Schedule field, set the cron expression to `0 * * * *`, which means the trigger will be
-activated every hour.
+In the Cron Schedule field, set the cron expression to `0 * * * *`, which means the trigger will be activated every
+hour.
 
 Our trigger must also have a payload. This payload will be sent to the webhook endpoint when the event is triggered. We
 don't have to include any data in the payload, but we can if we want to. In this example, we'll simply send a
-`trigger_type` property categorizing the event as a `review_requests`. In the `Payload` section, enter the following:
+`trigger_type` property categorizing the event as a `check_abandoned_carts`. In the `Payload` section, enter the
+following:
 
 ```json
 {
-  "trigger_type": "review_requests"
+  "trigger_type": "check_abandoned_carts"
 }
 ```
 
@@ -212,7 +132,8 @@ Finally, click the "Add Cron Trigger" button to create the Scheduled Event.
 Your webhook can be a simple HTTP server that performs the desired tasks. It could be written in any programming
 language or framework you prefer. The webhook needs to do three main things when triggered:
 
-1. Query the database to find users who have items in their cart that were added over 24 hours ago and haven't completed the checkout process.
+1. Query the database to find users who have items in their cart that were added over 24 hours ago and haven't completed
+   the checkout process.
 2. For each user found, generate a reminder email containing the product details.
 3. Send the email.
 
@@ -268,15 +189,15 @@ nodemailer.createTestAccount((err, account) => {
 
     // Fetch the data from our Hasura instance
     async function getRecentNoReminderCarts() {
-      const response = await fetch('http://localhost:8080/v1/graphql', {
+      const response = await fetch('<YOUR_CLOUD_PROJECT_ENDPOINT>', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // "x-hasura-admin-secret": "<YOUR_ADMIN_SECRET>",
+          'x-hasura-admin-secret': '<YOUR_ADMIN_SECRET>',
         },
         body: JSON.stringify({
           query: `
-            query EmailsOfUsersWithAbandonedCarts($updated_date: timestamp!) {
+            query EmailsOfUsersWithAbandonedCarts($updated_date: timestamptz!) {
               carts(where: {_and: {is_reminder_sent: {_eq: false}, cart_items: {updated_at: {_lt: $updated_date}}}}) {
                 id
                 created_at
@@ -354,7 +275,6 @@ nodemailer.createTestAccount((err, account) => {
 
 </details>
 
-
 This script connects to a Postgres database, finds the users who have abandoned their carts, generates a reminder email
 for each user, and sends it. The script uses the [Nodemailer](https://nodemailer.com/about/) package to send emails.
 
@@ -363,51 +283,86 @@ for each user, and sends it. The script uses the [Nodemailer](https://nodemailer
 Now that your Scheduled Trigger and webhook are set up, you can test it by simulating an abandoned cart situation.
 
 With your server running, Hasura should start hitting our endpoint. As we set our cron expression to `0 * * * *`, the
-webhook will be triggered every hour. We don't want to wait that long to test it. For now, update the
-expression to `* * * * *` to trigger the webhook every minute. Then, check out your invocation logs in the Hasura
-Console to verify that the webhook was triggered successfully and your terminal to see the outputted information and
-a handy link to a the mock email
-🎉
+webhook will be triggered every hour. We don't want to wait that long to test it. For now, update the expression to
+`* * * * *` to trigger the webhook every minute. Then, check out your invocation logs in the Hasura Console to verify
+that the webhook was triggered successfully and your terminal to see the outputted information and a handy link to a the
+mock email 🎉
 
 <details>
 
-<summary>
-Click here to see an example of the console log of the webhook.
-</summary>
+<summary>Click here to see an example of the console log of the webhook.</summary>
 
 ```
 carts:  [
   {
-    "id": 1,
-    "created_at": "2023-07-25T10:24:40.992543",
-    "user_id": 1,
+    "id": "e2f27008-673d-11ed-8a24-7224baf239e5",
+    "created_at": "2023-08-20T16:22:21.68884+00:00",
+    "user_id": "7cf0a66c-65b7-11ed-b904-fb49f034fbbb",
     "is_reminder_sent": false,
     "user": {
-      "id": 1,
-      "email": "user1@example.com",
-      "name": "Lewis Hamilton"
+      "id": "7cf0a66c-65b7-11ed-b904-fb49f034fbbb",
+      "email": "seandemo@hasura.io",
+      "name": "Sean"
     }
   },
   {
-    "id": 2,
-    "created_at": "2023-07-25T10:24:40.992543",
-    "user_id": 2,
+    "id": "e6e0edc0-673d-11ed-8a25-7224baf239e5",
+    "created_at": "2023-08-20T12:22:21.68884+00:00",
+    "user_id": "82001336-65b7-11ed-b905-7fa26a16d198",
     "is_reminder_sent": false,
     "user": {
-      "id": 2,
-      "email": "user2@example.com",
-      "name": "Max Verstappen"
+      "id": "82001336-65b7-11ed-b905-7fa26a16d198",
+      "email": "robdemo@hasura.io",
+      "name": "Rob"
     }
   },
+  {
+    "id": "ea226f5e-673d-11ed-8a26-7224baf239e5",
+    "created_at": "2023-08-20T02:22:21.68884+00:00",
+    "user_id": "86d5fba0-65b7-11ed-b906-afb985970e2e",
+    "is_reminder_sent": false,
+    "user": {
+      "id": "86d5fba0-65b7-11ed-b906-afb985970e2e",
+      "email": "mariondemo@hasura.io",
+      "name": "Marion"
+    }
+  },
+  {
+    "id": "ee2c0948-673d-11ed-8a27-7224baf239e5",
+    "created_at": "2023-08-20T20:22:21.68884+00:00",
+    "user_id": "8dea1160-65b7-11ed-b907-e3c5123cb650",
+    "is_reminder_sent": false,
+    "user": {
+      "id": "8dea1160-65b7-11ed-b907-e3c5123cb650",
+      "email": "sandeepdemo@hasura.io",
+      "name": "Sandeep"
+    }
+  },
+  {
+    "id": "f11e43aa-673d-11ed-8a28-7224baf239e5",
+    "created_at": "2023-08-20T20:22:21.68884+00:00",
+    "user_id": "9bd9d300-65b7-11ed-b908-571fef22d2ba",
+    "is_reminder_sent": false,
+    "user": {
+      "id": "9bd9d300-65b7-11ed-b908-571fef22d2ba",
+      "email": "abbydemo@hasura.io",
+      "name": "Abby"
+    }
+  }
 ]
 
-Message sent to Lewis Hamilton: https://ethereal.email/message/ZL.tQ1YCrRDIGmuRZL.wnaB0Nr7g2dK.AAAAKW2uT6Ga.XBJk646t3LUyeF
+Message sent to Sean: https://ethereal.email/message/ZOOv8vpfkoUaaaERZOOwe8.vdLF4IYAAAAAAC9ZopFVSeISEbido2clhdIY
 
-Message sent to Max Verstappen: https://ethereal.email/message/ZL.tQ1YCrRDIGmuRZL.woDUm7WJPod6AAAAAKooppuJYfxT-chHO.2QY6sd
+Message sent to Rob: https://ethereal.email/message/ZOOv8vpfkoUaaaERZOOwfbf8ObJ559KGAAAADNWlylfrS2nLoNm08jGBs8U
+
+Message sent to Marion: https://ethereal.email/message/ZOOv8vpfkoUaaaERZOOwf8.vdLF4IYADAAAADeBzopphA4UxwgtGz41In74
+
+Message sent to Sandeep: https://ethereal.email/message/ZOOv8vpfkoUaaaERZOOwgfNxowjZihTyAAAADnGmSjpMKPsxQbwhwmVjlcE
+
+Message sent to Abby: https://ethereal.email/message/ZOOv8vpfkoUaaaERZOOwg.NxowjZihT1AAAAD-Lx3fc0Cofq6XFMj6bn69E
 ```
 
 </details>
-
 
 ## Conclusion
 

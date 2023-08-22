@@ -21,7 +21,9 @@ import Thumbnail from '@site/src/components/Thumbnail';
 ## Introduction
 
 Scheduled Triggers allows you to schedule business, or other logic to occur at specific times or intervals. In this
-guide, we'll walk through how to use Scheduled Triggers on an e-commerce type application to send a reminder email to users when their coupon is about to expire. Nudges like this can help increase conversion rates and improve the overall user experience.
+guide, we'll walk through how to use Scheduled Triggers on an e-commerce type application to send a reminder email to
+users when their coupon is about to expire. Nudges like this can help increase conversion rates and improve the overall
+user experience.
 
 ## Prerequisites
 
@@ -149,6 +151,8 @@ Under `Advanced Settings`, we can configure the headers that will be sent with t
   width="1000"
 />
 
+Also, change the `Request Transform Options` to `POST` so that the payload is sent in the request body.
+
 Finally, click the `Add Cron Trigger` button to create the Scheduled Event.
 
 ## Step 3: Create a webhook to handle the request
@@ -255,7 +259,7 @@ nodemailer.createTestAccount((err, account) => {
     // map over the data and send an email to each customer
     async function sendCouponReminder(coupons) {
       let outcomes = [];
-      coupons.map(async (coupon) => {
+      coupons.map(async coupon => {
         // Create a message object
         const message = {
           from: 'SuperStore.com <sender@SuperStore.com>',
