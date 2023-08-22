@@ -83,11 +83,11 @@ The route on our webhook we'll use is `/review-request`. Below, we'll see what t
 https://<your-webhook-url>/review-request
 ```
 
-:::info Tunneling your webhook endpoint
+:::info Tunneling your webhook endpoint to your local machine
 
-Since our project is running on Hasura Cloud, and our handler will run on our local machine, we'll use ngrok to expose
-the webhook endpoint to the internet. This will allow us to expose a public URL that will forward requests to our local
-machine and the server we'll configure below.
+You'll need to use a tunneling service such as [ngrok](https://ngrok.com/) to expose a webhook endpoint running on your
+local machine to the internet and Hasura Cloud. This will give you a public URL that will forward requests to your local
+machine and the server which we'll configure below.
 
 You'll need to modify your webhook URL to use the public URL provided by ngrok.
 

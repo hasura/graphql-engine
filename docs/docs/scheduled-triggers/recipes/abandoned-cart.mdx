@@ -84,20 +84,29 @@ called when the scheduled event is triggered. This URL should point to the logic
 - Generate the reminder email
 - Send the email to the correct users
 
-In the example below, if we're using Docker, we'll use a webhook endpoint hosted on our own machine running on port
-`4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
+Enter the URL of the webhook to allow Hasura to communicate with it:
 
 ```
 https://<your-webhook-url>/abandoned-cart
 ```
 
-:::info Tunneling your webhook endpoint
+:::info Tunneling your webhook endpoint to your local machine
 
-If you're not running your Hasura instance on the same machine as your webhook endpoint, you'll need to use a tunneling
-service such as [ngrok](https://ngrok.com/) to expose your webhook endpoint to the internet. This will allow you to
-expose a public URL that will forward requests to your local machine and the server we'll configure below.
+You'll need to use a tunneling service such as [ngrok](https://ngrok.com/) to expose a webhook endpoint running on your
+local machine to the internet and Hasura Cloud. This will give you a public URL that will forward requests to your local
+machine and the server which we'll configure below.
 
 You'll need to modify your webhook URL to use the public URL provided by ngrok.
+
+After installing ngrok and
+[authenticating](https://ngrok.com/docs/secure-tunnels/ngrok-agent/tunnel-authtokens/#:~:text=Once%20you've%20signed%20up,make%20installing%20the%20authtoken%20simple.),
+you can do this by running:
+
+```bash
+ngrok http 4000
+```
+
+Then, copy the `Forwarding` value for use in our webhook 🎉
 
 :::
 

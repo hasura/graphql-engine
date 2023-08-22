@@ -72,8 +72,31 @@ First, provide a name for your trigger, e.g., `send_coupon_expiration_email`. Th
 called when the event is triggered. This webhook will be responsible for sending the email and can be hosted anywhere,
 and written in any language, you like.
 
-In the example below, if we're using Docker, we'll use a webhook endpoint hosted on our own machine running on port
-`4000`. Let's enter the following URL to allow Docker to communicate with the host machine:
+Enter the URL of the webhook to allow Hasura to communicate with it:
+
+```
+https://<your-webhook-url>/expiration_check
+```
+
+:::info Tunneling your webhook endpoint to your local machine
+
+You'll need to use a tunneling service such as [ngrok](https://ngrok.com/) to expose a webhook endpoint running on your
+local machine to the internet and Hasura Cloud. This will give you a public URL that will forward requests to your local
+machine and the server which we'll configure below.
+
+You'll need to modify your webhook URL to use the public URL provided by ngrok.
+
+After installing ngrok and
+[authenticating](https://ngrok.com/docs/secure-tunnels/ngrok-agent/tunnel-authtokens/#:~:text=Once%20you've%20signed%20up,make%20installing%20the%20authtoken%20simple.),
+you can do this by running:
+
+```bash
+ngrok http 4000
+```
+
+Then, copy the `Forwarding` value for use in our webhook 🎉
+
+:::
 
 ```
 https://<your-webhook-url>/expiration_check
