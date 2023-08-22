@@ -1681,4 +1681,20 @@ relationshipField _table ri@RelInfo {riTarget = RelTargetNativeQuery nativeQuery
         $ nativeQueryParser
         <&> \selectExp ->
           IR.AFObjectRelation (IR.AnnRelationSelectG (riName ri) (riMapping ri) nullability selectExp)
-    ArrRel -> throw500 "Table -> Native Query array relationships not supported"
+    ArrRel -> do
+      nativeQueryInfo <- askNativeQueryInfo nativeQueryName
+
+      let objectRelDesc = Just $ G.Description "An array relationship"
+          arrayNullability = Nullable
+          innerNullability = Nullable
+
+      nativeQueryParser <-
+        MaybeT $ selectNativeQuery nativeQueryInfo relFieldName arrayNullability objectRelDesc
+
+      pure
+        $ pure
+        $ nativeQueryParser
+        <&> \selectExp ->
+          IR.AFArrayRelation
+            $ IR.ASSimple
+            $ IR.AnnRelationSelectG (riName ri) (riMapping ri) innerNullability selectExp
