@@ -21,7 +21,7 @@
 </span><span id="line-21"></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">newtype</span><span> </span><span id="CacheSize"><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CacheSize"><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-var">CacheSize</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCacheSize"><span class="annot"><span class="annottext">CacheSize -&gt; Word16
 </span><a href="Hasura.Cache.Bounded.html#unCacheSize"><span class="hs-identifier hs-var hs-var">unCacheSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">}</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687295643"><span id="local-6989586621687295649"><span id="local-6989586621687295653"><span class="annot"><span class="annottext">Int -&gt; CacheSize -&gt; ShowS
+</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687296369"><span id="local-6989586621687296375"><span id="local-6989586621687296379"><span class="annot"><span class="annottext">Int -&gt; CacheSize -&gt; ShowS
 [CacheSize] -&gt; ShowS
 CacheSize -&gt; String
 (Int -&gt; CacheSize -&gt; ShowS)
@@ -36,7 +36,7 @@ $cshow :: CacheSize -&gt; String
 show :: CacheSize -&gt; String
 $cshowList :: [CacheSize] -&gt; ShowS
 showList :: [CacheSize] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295657"><span id="local-6989586621687295661"><span id="local-6989586621687295664"><span id="local-6989586621687295674"><span class="annot"><span class="annottext">ReadPrec [CacheSize]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296383"><span id="local-6989586621687296387"><span id="local-6989586621687296390"><span id="local-6989586621687296400"><span class="annot"><span class="annottext">ReadPrec [CacheSize]
 ReadPrec CacheSize
 Int -&gt; ReadS CacheSize
 ReadS [CacheSize]
@@ -56,7 +56,7 @@ $creadPrec :: ReadPrec CacheSize
 readPrec :: ReadPrec CacheSize
 $creadListPrec :: ReadPrec [CacheSize]
 readListPrec :: ReadPrec [CacheSize]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295678"><span id="local-6989586621687295683"><span class="annot"><span class="annottext">CacheSize -&gt; CacheSize -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296404"><span id="local-6989586621687296409"><span class="annot"><span class="annottext">CacheSize -&gt; CacheSize -&gt; Bool
 (CacheSize -&gt; CacheSize -&gt; Bool)
 -&gt; (CacheSize -&gt; CacheSize -&gt; Bool) -&gt; Eq CacheSize
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -64,7 +64,7 @@ $c== :: CacheSize -&gt; CacheSize -&gt; Bool
 == :: CacheSize -&gt; CacheSize -&gt; Bool
 $c/= :: CacheSize -&gt; CacheSize -&gt; Bool
 /= :: CacheSize -&gt; CacheSize -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295691"><span id="local-6989586621687295696"><span id="local-6989586621687295700"><span id="local-6989586621687295704"><span id="local-6989586621687295708"><span id="local-6989586621687295712"><span id="local-6989586621687295716"><span class="annot"><span class="annottext">Eq CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296417"><span id="local-6989586621687296422"><span id="local-6989586621687296426"><span id="local-6989586621687296430"><span id="local-6989586621687296434"><span id="local-6989586621687296438"><span id="local-6989586621687296442"><span class="annot"><span class="annottext">Eq CacheSize
 Eq CacheSize
 -&gt; (CacheSize -&gt; CacheSize -&gt; Ordering)
 -&gt; (CacheSize -&gt; CacheSize -&gt; Bool)
@@ -101,14 +101,14 @@ $cmax :: CacheSize -&gt; CacheSize -&gt; CacheSize
 max :: CacheSize -&gt; CacheSize -&gt; CacheSize
 $cmin :: CacheSize -&gt; CacheSize -&gt; CacheSize
 min :: CacheSize -&gt; CacheSize -&gt; CacheSize
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295722"><span id="local-6989586621687295727"><span class="annot"><span class="annottext">CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296448"><span id="local-6989586621687296453"><span class="annot"><span class="annottext">CacheSize
 CacheSize -&gt; CacheSize -&gt; Bounded CacheSize
 forall a. a -&gt; a -&gt; Bounded a
 $cminBound :: CacheSize
 minBound :: CacheSize
 $cmaxBound :: CacheSize
 maxBound :: CacheSize
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295733"><span id="local-6989586621687295737"><span id="local-6989586621687295741"><span id="local-6989586621687295745"><span id="local-6989586621687295749"><span id="local-6989586621687295753"><span id="local-6989586621687295757"><span class="annot"><span class="annottext">Integer -&gt; CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296459"><span id="local-6989586621687296463"><span id="local-6989586621687296467"><span id="local-6989586621687296471"><span id="local-6989586621687296475"><span id="local-6989586621687296479"><span id="local-6989586621687296483"><span class="annot"><span class="annottext">Integer -&gt; CacheSize
 CacheSize -&gt; CacheSize
 CacheSize -&gt; CacheSize -&gt; CacheSize
 (CacheSize -&gt; CacheSize -&gt; CacheSize)
@@ -142,7 +142,7 @@ $csignum :: CacheSize -&gt; CacheSize
 signum :: CacheSize -&gt; CacheSize
 $cfromInteger :: Integer -&gt; CacheSize
 fromInteger :: Integer -&gt; CacheSize
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295767"><span class="annot"><span class="annottext">Num CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296493"><span class="annot"><span class="annottext">Num CacheSize
 Ord CacheSize
 Num CacheSize
 -&gt; Ord CacheSize -&gt; (CacheSize -&gt; Rational) -&gt; Real CacheSize
@@ -150,7 +150,7 @@ CacheSize -&gt; Rational
 forall a. Num a -&gt; Ord a -&gt; (a -&gt; Rational) -&gt; Real a
 $ctoRational :: CacheSize -&gt; Rational
 toRational :: CacheSize -&gt; Rational
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295779"><span id="local-6989586621687295784"><span id="local-6989586621687295788"><span id="local-6989586621687295792"><span id="local-6989586621687295796"><span id="local-6989586621687295800"><span id="local-6989586621687295804"><span class="annot"><span class="annottext">Enum CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Real</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296505"><span id="local-6989586621687296510"><span id="local-6989586621687296514"><span id="local-6989586621687296518"><span id="local-6989586621687296522"><span id="local-6989586621687296526"><span id="local-6989586621687296530"><span class="annot"><span class="annottext">Enum CacheSize
 Real CacheSize
 Real CacheSize
 -&gt; Enum CacheSize
@@ -190,7 +190,7 @@ $cdivMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
 divMod :: CacheSize -&gt; CacheSize -&gt; (CacheSize, CacheSize)
 $ctoInteger :: CacheSize -&gt; Integer
 toInteger :: CacheSize -&gt; Integer
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Integral</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295810"><span id="local-6989586621687295815"><span id="local-6989586621687295819"><span id="local-6989586621687295823"><span id="local-6989586621687295827"><span id="local-6989586621687295831"><span id="local-6989586621687295835"><span id="local-6989586621687295839"><span class="annot"><span class="annottext">Int -&gt; CacheSize
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Integral</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296536"><span id="local-6989586621687296541"><span id="local-6989586621687296545"><span id="local-6989586621687296549"><span id="local-6989586621687296553"><span id="local-6989586621687296557"><span id="local-6989586621687296561"><span id="local-6989586621687296565"><span class="annot"><span class="annottext">Int -&gt; CacheSize
 CacheSize -&gt; Int
 CacheSize -&gt; [CacheSize]
 CacheSize -&gt; CacheSize
@@ -231,7 +231,7 @@ $cenumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
 enumFromTo :: CacheSize -&gt; CacheSize -&gt; [CacheSize]
 $cenumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
 enumFromThenTo :: CacheSize -&gt; CacheSize -&gt; CacheSize -&gt; [CacheSize]
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295844"><span id="local-6989586621687295849"><span id="local-6989586621687295853"><span id="local-6989586621687295857"><span class="annot"><span class="annottext">[CacheSize] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296570"><span id="local-6989586621687296575"><span id="local-6989586621687296579"><span id="local-6989586621687296583"><span class="annot"><span class="annottext">[CacheSize] -&gt; Value
 [CacheSize] -&gt; Encoding
 CacheSize -&gt; Value
 CacheSize -&gt; Encoding
@@ -254,7 +254,7 @@ $ctoJSONList :: [CacheSize] -&gt; Value
 toJSONList :: [CacheSize] -&gt; Value
 $ctoEncodingList :: [CacheSize] -&gt; Encoding
 toEncodingList :: [CacheSize] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687295863"><span id="local-6989586621687295868"><span class="annot"><span class="annottext">Value -&gt; Parser [CacheSize]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687296589"><span id="local-6989586621687296594"><span class="annot"><span class="annottext">Value -&gt; Parser [CacheSize]
 Value -&gt; Parser CacheSize
 (Value -&gt; Parser CacheSize)
 -&gt; (Value -&gt; Parser [CacheSize]) -&gt; FromJSON CacheSize
@@ -268,21 +268,21 @@ parseJSONList :: Value -&gt; Parser [CacheSize]
 </span><span id="line-24"></span><span>
 </span><span id="line-25"></span><span class="annot"><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-type">parseCacheSize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="Hasura.Cache.Bounded.html#CacheSize"><span class="hs-identifier hs-type">CacheSize</span></a></span><span>
 </span><span id="line-26"></span><span id="parseCacheSize"><span class="annot"><span class="annottext">parseCacheSize :: String -&gt; Either String CacheSize
-</span><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-var hs-var">parseCacheSize</span></a></span></span><span> </span><span id="local-6989586621687295873"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687295873"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Cache.Bounded.html#parseCacheSize"><span class="hs-identifier hs-var hs-var">parseCacheSize</span></a></span></span><span> </span><span id="local-6989586621687296599"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687296599"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-comment">-- NOTE: naively using readMaybe Word16 will silently wrap</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe Natural
 forall a. Read a =&gt; String -&gt; Maybe a
 </span><span class="hs-identifier hs-var">readMaybe</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687295873"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687295875"><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621687295875"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621687295875"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+</span><a href="#local-6989586621687296599"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687296601"><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621687296601"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621687296601"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621687295877"><span class="hs-identifier hs-var">max16</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621687296603"><span class="hs-identifier hs-var">max16</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621687295875"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
+</span><a href="#local-6989586621687296601"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Natural -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Natural
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CacheSize -&gt; Either String CacheSize
@@ -294,7 +294,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Word16
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621687295875"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687296601"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>    </span><span class="annot"><span class="annottext">Maybe Natural
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String CacheSize
 forall a. String -&gt; Either String a
@@ -302,8 +302,8 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;cache size must be given as a number between 0 and 65535&quot;</span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>    </span><span id="local-6989586621687295877"><span class="annot"><span class="annottext">max16 :: Natural
-</span><a href="#local-6989586621687295877"><span class="hs-identifier hs-var hs-var">max16</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Natural
+</span><span id="line-32"></span><span>    </span><span id="local-6989586621687296603"><span class="annot"><span class="annottext">max16 :: Natural
+</span><a href="#local-6989586621687296603"><span class="hs-identifier hs-var hs-var">max16</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word16 -&gt; Natural
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word16
 forall a. Bounded a =&gt; a
