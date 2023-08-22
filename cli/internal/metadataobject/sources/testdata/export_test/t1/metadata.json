@@ -79,6 +79,9 @@
             "schema": "public",
             "name": "get_t2"
           }
+        },
+        {
+          "function": ["test1", "test2"]
         }
       ],
       "logical_models": [
