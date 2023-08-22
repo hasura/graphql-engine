@@ -142,6 +142,7 @@ library
     Test.Databases.Postgres.ArraySpec
     Test.Databases.Postgres.BackendOnlyPermissionsSpec
     Test.Databases.Postgres.DataValidation.PermissionSpec
+    Test.Databases.Postgres.DataValidation.RemoteSourcePermissionPredicateSpec
     Test.Databases.Postgres.JsonbSpec
     Test.Databases.Postgres.TimestampSpec
     Test.Databases.Postgres.UniqueConstraintsSpec

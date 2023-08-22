@@ -42,26 +42,28 @@ data CountQueryP1 = CountQueryP1
   deriving (Eq)
 
 mkSQLCount ::
-  CountQueryP1 -> S.Select
-mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
-  S.mkSelect
-    { S.selExtr = [S.Extractor S.countStar Nothing],
-      S.selFrom =
-        Just
-          $ S.FromExp
-            [S.mkSelFromExp False innerSel $ TableName "r"]
-    }
+  (MonadIO m, MonadError QErr m) =>
+  UserInfo ->
+  CountQueryP1 ->
+  m S.Select
+mkSQLCount userInfo (CountQueryP1 tn (permFltr, mWc) mDistCols) = do
+  finalWC <-
+    toSQLBoolExp userInfo (S.QualTable tn)
+      $ maybe permFltr (andAnnBoolExps permFltr) mWc
+  let innerSel =
+        partSel
+          { S.selFrom = Just $ S.mkSimpleFromExp tn,
+            S.selWhere = S.WhereFrag <$> Just finalWC
+          }
+  pure
+    $ S.mkSelect
+      { S.selExtr = [S.Extractor S.countStar Nothing],
+        S.selFrom =
+          Just
+            $ S.FromExp
+              [S.mkSelFromExp False innerSel $ TableName "r"]
+      }
   where
-    finalWC =
-      toSQLBoolExp (S.QualTable tn)
-        $ maybe permFltr (andAnnBoolExps permFltr) mWc
-
-    innerSel =
-      partSel
-        { S.selFrom = Just $ S.mkSimpleFromExp tn,
-          S.selWhere = S.WhereFrag <$> Just finalWC
-        }
-
     partSel = case mDistCols of
       Just distCols ->
         let extrs = flip map distCols $ \c -> S.Extractor (S.mkSIdenExp c) Nothing
@@ -134,10 +136,12 @@ validateCountQ query = do
     $ validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
 countQToTx ::
-  (MonadTx m) =>
+  (MonadTx m, MonadIO m) =>
+  UserInfo ->
   (CountQueryP1, DS.Seq PG.PrepArg) ->
   m EncJSON
-countQToTx (u, p) = do
+countQToTx userInfo (u, p) = do
+  countSQL <- toSQL <$> mkSQLCount userInfo u
   qRes <-
     liftTx
       $ PG.rawQE
@@ -147,7 +151,6 @@ countQToTx (u, p) = do
         True
   return $ encJFromBuilder $ encodeCount qRes
   where
-    countSQL = toSQL $ mkSQLCount u
     encodeCount (PG.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
@@ -164,5 +167,6 @@ runCount ::
   CountQuery ->
   m EncJSON
 runCount q = do
+  userInfo <- askUserInfo
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) (Tx PG.ReadOnly Nothing) LegacyRQLQuery . countQToTx userInfo

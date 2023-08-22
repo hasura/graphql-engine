@@ -130,6 +130,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
           columnValues = mapMaybe snd insertRequests
       selectExpr <- PGT.mkSelectExpFromColumnValues table columnInfos columnValues
       PGE.executeMutationOutputQuery
+        userInfo
         table
         columnInfos
         (Just affectedRows)
@@ -167,11 +168,11 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
         objRelDeterminedCols = HashMap.fromList $ concatMap snd objInsRes
         finalInsCols = presetValues <> columns <> objRelDeterminedCols <> additionalColumns
 
-    let cte = mkInsertQ table onConflict finalInsCols checkCond
+    cte <- mkInsertQ userInfo table onConflict finalInsCols checkCond
 
     PGE.MutateResp affRows colVals <-
       liftTx
-        $ PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
+        $ PGE.mutateAndFetchCols @pgKind userInfo table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
     colValM <- asSingleObject colVals
 
     arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
@@ -350,15 +351,18 @@ validateInsert insCols objRels addCols = do
     insConflictCols = insCols `intersect` addCols
 
 mkInsertQ ::
-  (Backend ('Postgres pgKind)) =>
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
+  UserInfo ->
   QualifiedTable ->
   Maybe (IR.OnConflictClause ('Postgres pgKind) Postgres.SQLExp) ->
   HashMap.HashMap PGCol Postgres.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
-  Postgres.TopLevelCTE
-mkInsertQ table onConflictM insertRow (insCheck, updCheck) =
-  let sqlConflict = PGT.toSQLConflict table <$> onConflictM
-      sqlExps = HashMap.elems insertRow
+  m Postgres.TopLevelCTE
+mkInsertQ userInfo table onConflictM insertRow (insCheck, updCheck) = do
+  insCheckBoolExp <- PGT.toSQLBoolExp userInfo (Postgres.QualTable table) insCheck
+  updateCheckBoolExp <- traverse (PGT.toSQLBoolExp userInfo (Postgres.QualTable table)) updCheck
+  sqlConflict <- traverse (PGT.toSQLConflict userInfo table) onConflictM
+  let sqlExps = HashMap.elems insertRow
       valueExp = Postgres.ValuesExp [Postgres.TupleExp sqlExps]
       tableCols = HashMap.keys insertRow
       sqlInsert =
@@ -369,10 +373,10 @@ mkInsertQ table onConflictM insertRow (insCheck, updCheck) =
               PGT.insertOrUpdateCheckExpr
                 table
                 onConflictM
-                (PGT.toSQLBoolExp (Postgres.QualTable table) insCheck)
-                (fmap (PGT.toSQLBoolExp (Postgres.QualTable table)) updCheck)
+                insCheckBoolExp
+                updateCheckBoolExp
             ]
-   in Postgres.CTEInsert sqlInsert
+  pure $ Postgres.CTEInsert sqlInsert
 
 fetchFromColVals ::
   (MonadError QErr m) =>

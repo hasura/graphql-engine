@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | Postgres Execute Types
 --
 -- Execution context and source configuration for Postgres databases.
@@ -26,6 +28,7 @@ module Hasura.Backends.Postgres.Execute.Types
     resolvePostgresConnectionTemplate,
     sourceConfigNumReadReplicas,
     sourceConfigConnectonTemplateEnabled,
+    getPGColValues,
   )
 where
 
@@ -36,18 +39,25 @@ import Data.CaseInsensitive qualified as CI
 import Data.Has
 import Data.HashMap.Internal.Strict qualified as Map
 import Data.List.NonEmpty qualified as List.NonEmpty
+import Data.Text.Extended (toTxt)
 import Database.PG.Query qualified as PG
+import Database.PG.Query.Class ()
 import Database.PG.Query.Connection qualified as PG
 import Hasura.Backends.Postgres.Connection.Settings (ConnectionTemplate (..), PostgresConnectionSetMemberName)
 import Hasura.Backends.Postgres.Execute.ConnectionTemplate
+import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Error
+import Hasura.Backends.Postgres.SQL.Types (Identifier (..), PGCol, PGScalarType, QualifiedTable, getPGColTxt)
 import Hasura.Base.Error
 import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.Roles (adminRoleName)
-import Hasura.SQL.Types (ExtensionsSchema)
-import Hasura.Session (SessionVariables, UserInfo (_uiRole, _uiSession), maybeRoleFromSessionVariables)
+import Hasura.RQL.Types.Session (SessionVariables (..))
+import Hasura.SQL.Types (ExtensionsSchema, toSQL)
+import Hasura.Session (UserInfo (_uiRole, _uiSession), getSessionVariableValue, maybeRoleFromSessionVariables)
 import Kriti.Error qualified as Kriti
 import Network.HTTP.Types qualified as HTTP
 
@@ -335,3 +345,79 @@ sourceConfigConnectonTemplateEnabled pgSourceConfig =
     ConnTemplate_NotApplicable -> False
     ConnTemplate_NotConfigured -> False
     ConnTemplate_Resolver _ -> True
+
+getPGColValues ::
+  (MonadIO m, MonadError QErr m) =>
+  SessionVariables ->
+  SourceName ->
+  PGSourceConfig ->
+  QualifiedTable ->
+  (PGScalarType, PGCol) ->
+  (PGCol, [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]) ->
+  m [Text]
+getPGColValues sessionVariables _sourceName sourceConfig table col (field, val) = do
+  queryTx <- mkGetPGColValuesQuery sessionVariables table col field val
+  res <- liftIO $ runPgSourceReadTx sourceConfig queryTx
+  onLeft ((fmap runIdentity) <$> res) throwError
+
+mkGetPGColValuesQuery :: (PG.FromCol a, MonadError QErr m) => SessionVariables -> QualifiedTable -> (PGScalarType, PGCol) -> PGCol -> [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue] -> m (PG.TxET QErr IO [(Identity a)])
+mkGetPGColValuesQuery sessionVariables table (_colType, col) fieldName boolExps = do
+  let columnName = getPGColTxt col
+  boolExp <- traverse getBoolExp boolExps
+  let whereExpFrag = S.WhereFrag $ S.BEBin S.AndOp (S.BELit True) (foldl' (S.BEBin S.AndOp) (S.BELit True) boolExp)
+  pure
+    $ PG.withQE
+      defaultTxErrorHandler
+      ( PG.fromBuilder
+          ( toSQL
+              ( S.mkSelect
+                  { S.selExtr = [S.Extractor (S.SETyAnn (S.SEIdentifier (Identifier columnName)) (S.textTypeAnn)) Nothing],
+                    S.selFrom = Just $ S.mkSimpleFromExp table,
+                    S.selWhere = Just whereExpFrag
+                  }
+              )
+          )
+      )
+      ()
+      True
+  where
+    getSessionVariableValueM :: (MonadError QErr m) => RemoteRelSessionVariableORLiteralValue -> m Text
+    getSessionVariableValueM (RemoteRelSessionVariable sessionVariable) = onNothing (getSessionVariableValue sessionVariable sessionVariables) (throw400 NotFound $ "Session variable " <> toTxt sessionVariable <> " not found")
+    getSessionVariableValueM (RemoteRelLiteralValue value) = pure value
+
+    getBoolExp :: (MonadError QErr m) => RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue -> m S.BoolExp
+    getBoolExp = \case
+      RemoteRelEqOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SEQ (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelNeqOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SNE (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelGtOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SGT (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelLtOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SLT (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelGteOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SGTE (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelLteOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SLTE (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelInOp lst -> do
+        actualValues <- traverse getSessionVariableValueM lst
+        pure $ S.BEIN (S.SEIdentifier (Identifier fieldNameText)) (map S.SELit actualValues)
+      RemoteRelNinOp lst -> do
+        actualValues <- traverse getSessionVariableValueM lst
+        pure $ S.BENot $ S.BEIN (S.SEIdentifier (Identifier fieldNameText)) (map S.SELit actualValues)
+      RemoteRelLikeOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SLIKE (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelNlikeOp sessionVariableOrLiteralValue -> do
+        actualValue <- getSessionVariableValueM sessionVariableOrLiteralValue
+        pure $ S.BECompare S.SNLIKE (S.SEIdentifier (Identifier fieldNameText)) (S.SELit actualValue)
+      RemoteRelIsNullOp True -> pure $ S.BENull (S.SEIdentifier (Identifier fieldNameText))
+      RemoteRelIsNullOp False -> pure $ S.BENotNull (S.SEIdentifier (Identifier fieldNameText))
+      where
+        fieldNameText = getPGColTxt fieldName

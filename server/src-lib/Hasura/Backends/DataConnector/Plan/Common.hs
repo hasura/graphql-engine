@@ -56,17 +56,20 @@ import Data.Tuple (swap)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
+import Hasura.Backends.Postgres.Instances.API ()
 import Hasura.Base.Error
 import Hasura.NativeQuery.IR
 import Hasura.NativeQuery.InterpolatedQuery as IQ
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate
 import Hasura.RQL.IR.Value
-import Hasura.RQL.Types.Backend (SessionVarType)
+import Hasura.RQL.Types.Backend (Backend, SessionVarType, getColVals)
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..), RelTarget (..))
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
 import Numeric (showIntAtBase)
@@ -207,7 +210,8 @@ recordRedactionExpression ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   AnnRedactionExp 'DataConnector (UnpreparedValue 'DataConnector) ->
@@ -355,7 +359,8 @@ translateBoolExpToExpression ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
@@ -371,7 +376,8 @@ translateBoolExp ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   ColumnStack ->
@@ -394,6 +400,17 @@ translateBoolExp sourceName columnStack = \case
     (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceName relationshipInfo
     -- TODO: How does this function keep track of the root table?
     API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp (targetToTargetName _rTarget) emptyColumnStack (BoolAnd [rfTargetTablePermissions, rfFilter])
+  BoolField (AVRemoteRelationship (RemoteRelPermBoolExp _rawRelBoolExp (lhsCol, lhsColType) rhsFetchInfo)) -> do
+    let colFld = fromCol @('DataConnector) $ lhsCol
+    lookupLst <-
+      AB.dispatchAnyBackend @Backend rhsFetchInfo \((RemoteRelRHSFetchInfo (colType, col) tableName filterExp remoteSourceName sourceConfig) :: RemoteRelRHSFetchInfo f b) -> do
+        let colFieldName = rrrfweColumnFieldName filterExp
+            colFieldBoolExp = rrrfweBoolExp filterExp
+        sessionVariables <- asks getter
+        result <- getColVals @b sessionVariables remoteSourceName sourceConfig tableName (colType, col) (colFieldName, colFieldBoolExp)
+        pure (fmap (J.String) result)
+    pure
+      $ API.ApplyBinaryArrayComparisonOperator API.In (API.ComparisonColumn API.CurrentTable (API.mkColumnSelector (API.ColumnName (toTxt colFld))) (API.ScalarType (toTxt lhsColType)) Nothing) lookupLst (API.ScalarType (toTxt lhsColType))
   BoolExists GExists {..} ->
     let tableName = Witch.from _geTable
      in API.Exists (API.UnrelatedTable tableName) <$> translateBoolExp (API.TNTable tableName) emptyColumnStack _geWhere

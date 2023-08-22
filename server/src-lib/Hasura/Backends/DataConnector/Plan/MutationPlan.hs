@@ -76,7 +76,8 @@ mkMutationPlan ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m (Plan API.MutationRequest API.MutationResponse)
@@ -88,7 +89,8 @@ translateMutationDB ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   MutationDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.MutationRequest
@@ -167,7 +169,8 @@ translateInsert ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   AnnotatedInsert 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m API.InsertMutationOperation
@@ -264,7 +267,8 @@ translateUpdate ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m [API.UpdateMutationOperation]
@@ -281,6 +285,7 @@ translateUpdateBatch ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   AnnotatedUpdateG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -337,6 +342,7 @@ translateDelete ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   AnnDelG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -362,7 +368,8 @@ translateMutationOutputToReturningFields ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TableName ->
   MutationOutputG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -381,7 +388,8 @@ translateMutField ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TableName ->
   FieldName ->

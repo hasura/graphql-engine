@@ -11,6 +11,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Extractor
   )
 where
 
+import Control.Monad.Extra (concatMapM)
 import Control.Monad.Writer.Strict
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -20,6 +21,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers (fromTableRowArgs)
 import Hasura.Backends.Postgres.Translate.Types (PermissionLimitSubQuery (..))
 import Hasura.Backends.Postgres.Types.Aggregates
+import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select
@@ -27,55 +29,57 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Session (UserInfo)
 
 -- | Creates node extractors for all of the columns and computed fields used in aggregated fields.
 -- The ColumnAliases for all the extractors are namespaced aliases using the 'contextualize*` functions
 -- so that none of the extractors names will conflict with one another (for example, if a column name
 -- is the same as a field name (eg 'nodes'))
 aggregateFieldsToExtractorExps ::
-  forall pgKind.
-  (Backend ('Postgres pgKind)) =>
+  forall pgKind m.
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
   TableIdentifier ->
+  UserInfo ->
   AggregateFields ('Postgres pgKind) S.SQLExp ->
-  [(S.ColumnAlias, S.SQLExp)]
-aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
-  flip concatMap aggregateFields $ \(aggregateFieldName, field) ->
+  m [(S.ColumnAlias, S.SQLExp)]
+aggregateFieldsToExtractorExps sourcePrefix userInfo aggregateFields =
+  flip concatMapM aggregateFields $ \(aggregateFieldName, field) ->
     case field of
       AFCount cty -> case getCountType cty of
-        S.CTStar -> []
+        S.CTStar -> pure []
         S.CTSimple cols -> colsToExps cols
         S.CTDistinct cols -> colsToExps cols
-      AFOp aggOp -> mapMaybe (colToMaybeExp aggregateFieldName) $ _aoFields aggOp
-      AFExp _ -> []
+      AFOp aggOp -> catMaybes <$> traverse (colToMaybeExp aggregateFieldName) (_aoFields aggOp)
+      AFExp _ -> pure []
   where
-    colsToExps :: [(PGCol, AnnRedactionExp ('Postgres pgKind) S.SQLExp)] -> [(S.ColumnAlias, S.SQLExp)]
-    colsToExps = fmap (\(col, redactionExp) -> mkColumnExp redactionExp col)
+    colsToExps :: [(PGCol, AnnRedactionExp ('Postgres pgKind) S.SQLExp)] -> m [(S.ColumnAlias, S.SQLExp)]
+    colsToExps = traverse (\(col, redactionExp) -> mkColumnExp redactionExp col)
 
     -- Extract the columns and computed fields we need
     colToMaybeExp ::
       FieldName ->
       (FieldName, SelectionField ('Postgres pgKind) S.SQLExp) ->
-      Maybe (S.ColumnAlias, S.SQLExp)
+      m (Maybe (S.ColumnAlias, S.SQLExp))
     colToMaybeExp aggregateFieldName = \case
-      (_fieldName, SFCol col _ redactionExp) -> Just $ mkColumnExp redactionExp col
-      (fieldName, SFComputedField _name cfss) -> Just $ mkComputedFieldExp aggregateFieldName fieldName cfss
-      (_fieldName, SFExp _text) -> Nothing
+      (_fieldName, SFCol col _ redactionExp) -> Just <$> mkColumnExp redactionExp col
+      (fieldName, SFComputedField _name cfss) -> Just <$> mkComputedFieldExp aggregateFieldName fieldName cfss
+      (_fieldName, SFExp _text) -> pure $ Nothing
 
     -- Generate an alias for each column we extract.
     mkColumnExp ::
       AnnRedactionExp ('Postgres pgKind) S.SQLExp ->
       PGCol ->
-      (S.ColumnAlias, S.SQLExp)
-    mkColumnExp redactionExp column =
+      m (S.ColumnAlias, S.SQLExp)
+    mkColumnExp redactionExp column = do
       let baseTableIdentifier = mkBaseTableIdentifier sourcePrefix
           baseTableQual = S.QualifiedIdentifier baseTableIdentifier Nothing
-          qualifiedColumn = withRedactionExp baseTableQual redactionExp $ S.mkQIdenExp baseTableIdentifier (toIdentifier column)
-          columnAlias = contextualizeBaseTableColumn sourcePrefix column
-       in (S.toColumnAlias columnAlias, qualifiedColumn)
+      qualifiedColumn <- withRedactionExp baseTableQual redactionExp userInfo $ S.mkQIdenExp baseTableIdentifier (toIdentifier column)
+      let columnAlias = contextualizeBaseTableColumn sourcePrefix column
+      pure (S.toColumnAlias columnAlias, qualifiedColumn)
 
-    mkComputedFieldExp :: FieldName -> FieldName -> ComputedFieldScalarSelect ('Postgres pgKind) S.SQLExp -> (S.ColumnAlias, S.SQLExp)
+    mkComputedFieldExp :: FieldName -> FieldName -> ComputedFieldScalarSelect ('Postgres pgKind) S.SQLExp -> m (S.ColumnAlias, S.SQLExp)
     mkComputedFieldExp aggregateFieldName computedFieldFieldName computedFieldScalarSelect =
-      (contextualizeAggregateInput sourcePrefix aggregateFieldName computedFieldFieldName, mkRawComputedFieldExpression sourcePrefix computedFieldScalarSelect)
+      (contextualizeAggregateInput sourcePrefix aggregateFieldName computedFieldFieldName,) <$> mkRawComputedFieldExpression sourcePrefix userInfo computedFieldScalarSelect
 
 mkAggregateOrderByExtractorAndFields ::
   forall pgKind.
@@ -114,17 +118,18 @@ mkAggregateOrderByExtractorAndFields sourcePrefix annAggOrderBy =
 -- 'toJSONableExp' over the top. This allows the output of this expression to be consumed by
 -- other processing functions such as aggregates
 mkRawComputedFieldExpression ::
-  forall pgKind.
-  (Backend ('Postgres pgKind)) =>
+  forall pgKind m.
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
   TableIdentifier ->
+  UserInfo ->
   ComputedFieldScalarSelect ('Postgres pgKind) S.SQLExp ->
-  S.SQLExp
-mkRawComputedFieldExpression sourcePrefix (ComputedFieldScalarSelect fn args _ colOpM redactionExp) =
+  m S.SQLExp
+mkRawComputedFieldExpression sourcePrefix userInfo (ComputedFieldScalarSelect fn args _ colOpM redactionExp) =
   -- The computed field is conditionally outputted depending
   -- on the value of `redactionExp`. `redactionExp` will only specify
   -- redaction in the case of an inherited role.
   -- See [SQL generation for inherited role]
-  withRedactionExp (S.QualifiedIdentifier (mkBaseTableIdentifier sourcePrefix) Nothing) redactionExp
+  withRedactionExp (S.QualifiedIdentifier (mkBaseTableIdentifier sourcePrefix) Nothing) redactionExp userInfo
     $ withColumnOp colOpM
     $ S.SEFunction
     $ S.FunctionExp fn (fromTableRowArgs sourcePrefix args) Nothing

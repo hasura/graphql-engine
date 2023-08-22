@@ -29,11 +29,13 @@ import Hasura.Base.Error
 import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelSessionVariableORLiteralValue, RemoteRelSupportedOp)
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.RQL.Types.ResizePool (ServerReplicas, SourceResizePoolSummary)
+import Hasura.RQL.Types.Session (SessionVariables)
 import Hasura.RQL.Types.SourceConfiguration
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -424,6 +426,21 @@ class
   -- Setting this to @Nothing@ will disable event trigger configuration in the
   -- metadata.
   defaultTriggerOnReplication :: Maybe (XEventTriggers b, TriggerOnReplication)
+
+  -- | Get values from a column in a table with some filters. This function is used in evaluating remote relationship
+  --   predicate in permissions
+  --
+  -- TODO (paritosh): This function should return a JSON array of column values. We shouldn't have to parse the column
+  -- values as Text. The database's JSON serialize/deserialize can take care of correct casting of values (GS-642).
+  getColVals ::
+    (MonadIO m, MonadError QErr m) =>
+    SessionVariables ->
+    SourceName ->
+    SourceConfig b ->
+    TableName b ->
+    (ScalarType b, Column b) ->
+    (Column b, [RemoteRelSupportedOp RemoteRelSessionVariableORLiteralValue]) ->
+    m [Text]
 
   backendSupportsNestedObjects :: Either QErr (XNestedObjects b)
   default backendSupportsNestedObjects :: (XNestedObjects b ~ XDisable) => Either QErr (XNestedObjects b)

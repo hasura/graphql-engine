@@ -85,6 +85,7 @@ fromAnnBoolExpFld =
       -- TODO(redactionExp): Deal with the redaction expression
       expressions <- traverse (fromOpExpG columnInfo) opExpGs
       potentiallyRedacted redactionExp (AndExpression expressions)
+    IR.AVRemoteRelationship _ -> error "fromAnnBoolExpFld RemoteRelationship"
     IR.AVRelationship IR.RelInfo {riMapping = mapping, riTarget = target} (IR.RelationshipFilters tablePerm annBoolExp) -> do
       case target of
         IR.RelTargetNativeQuery _ -> error "fromAnnBoolExpFld RelTargetNativeQuery"

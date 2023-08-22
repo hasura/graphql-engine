@@ -316,6 +316,7 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         let finalBoolExp = andAnnBoolExps modBoolExp resolvedFltr
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
   AVAggregationPredicates {} -> throw400 NotExists "Aggregation Predicates cannot appear in permission checks"
+  AVRemoteRelationship {} -> throw400 NotExists "Remote relationships permission checks not implemented yet"
 
 convAnnBoolExpPartialSQL ::
   (Applicative f) =>

@@ -70,7 +70,8 @@ class
     forall m.
     ( MonadError QErr m,
       MonadQueryTags m,
-      MonadReader QueryTagsComment m
+      MonadReader QueryTagsComment m,
+      MonadIO m
     ) =>
     UserInfo ->
     SourceName ->
@@ -130,7 +131,8 @@ class
     m (SubscriptionQueryPlan b (MultiplexedQuery b))
   mkDBQueryExplain ::
     forall m.
-    ( MonadError QErr m
+    ( MonadError QErr m,
+      MonadIO m
     ) =>
     RootFieldAlias ->
     UserInfo ->
@@ -151,7 +153,8 @@ class
   mkDBRemoteRelationshipPlan ::
     forall m.
     ( MonadError QErr m,
-      MonadQueryTags m
+      MonadQueryTags m,
+      MonadIO m
     ) =>
     UserInfo ->
     SourceName ->

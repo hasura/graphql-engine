@@ -131,6 +131,7 @@ import Hasura.LogicalModel.Fields (LogicalModelFieldsLookupRT)
 import Hasura.LogicalModel.Types (LogicalModelLocation (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (rrrfweColumnFieldName)
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.ApiLimit
@@ -822,6 +823,7 @@ getLogicalModelColExpDeps source logicalModelLocation = \case
         colDep = mkLogicalModelColDep @b colDepReason source logicalModelLocation columnName
 
     colDep : getLogicalModelOpExpDeps source logicalModelLocation opExps
+  AVRemoteRelationship {} -> []
 
 -- | Discover the schema dependencies of an @AnnBoolExpPartialSQL@.
 getBoolExpDeps ::
@@ -910,6 +912,16 @@ getColExpDeps bexp = do
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
     AVAggregationPredicates aggPreds -> getAggregationPredicateDeps aggPreds
+    AVRemoteRelationship remoteRelPermBoolExp -> do
+      sourceName <- AB.dispatchAnyBackend @Backend (rhsFetchInfo remoteRelPermBoolExp) \(RemoteRelRHSFetchInfo {..}) -> pure rrrfiSource
+      let sourceColumnObject =
+            AB.mapBackend
+              (rhsFetchInfo remoteRelPermBoolExp)
+              ( \RemoteRelRHSFetchInfo {..} ->
+                  SOITableObj rrrfiTable (TOCol (rrrfweColumnFieldName rrrfiWhere))
+              )
+      pure
+        $ [SchemaDependency (SOSourceObj sourceName sourceColumnObject) DRRemoteRelationship]
 
 getOpExpDeps ::
   forall b.
