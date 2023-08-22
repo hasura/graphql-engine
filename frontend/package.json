@@ -40,6 +40,7 @@
     "@graphql-codegen/typescript": "^1.17.10",
     "@hasura/dc-api-types": "^0.32.0",
     "@hookform/resolvers": "2.8.10",
+    "@jsonhero/schema-infer": "^0.1.5",
     "@radix-ui/colors": "^0.1.8",
     "@radix-ui/react-alert-dialog": "^1.0.3",
     "@radix-ui/react-checkbox": "1.0.1",

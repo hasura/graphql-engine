@@ -24,6 +24,7 @@ interface TableListProps {
   onMultipleTablesTrack?: () => void;
   defaultFilter?: string;
   onSingleTableTrack?: (table: TrackableTable) => void;
+  isMultipleRowsTrackingEnabled: boolean;
 }
 
 // const getDefaultSelectedTableType = (availableTableTypes: string[]) => {
@@ -50,9 +51,8 @@ export const TableList = ({
   defaultFilter,
   onMultipleTablesTrack,
   onSingleTableTrack,
+  isMultipleRowsTrackingEnabled,
 }: TableListProps) => {
-  //const availableTableTypes = getUniqueTableTypes(tables);
-
   const typeCounts = React.useMemo(() => countByType(tables), [tables]);
 
   const availableTableTypes = React.useMemo(
@@ -185,7 +185,7 @@ export const TableList = ({
         handleTrackButton={() => {
           handleCheckAction();
         }}
-        showButton
+        showButton={isMultipleRowsTrackingEnabled}
         isLoading={isLoading}
         searchChildren={
           <DropDown.Root
@@ -234,9 +234,11 @@ export const TableList = ({
         <CardedTable.Table>
           <CardedTable.TableHead>
             <CardedTable.TableHeadRow>
-              <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                {checkAllElement()}
-              </th>
+              {isMultipleRowsTrackingEnabled && (
+                <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
+                  {checkAllElement()}
+                </th>
+              )}
               <CardedTable.TableHeadCell>Table</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Type</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Actions</CardedTable.TableHeadCell>
@@ -254,6 +256,7 @@ export const TableList = ({
                 onChange={() => onCheck(table.id)}
                 onTableTrack={onTableRowTableTrack}
                 onTableNameClick={onTableRowTableNameClick(table)}
+                isRowSelectionEnabled={isMultipleRowsTrackingEnabled}
               />
             ))}
           </CardedTable.TableBody>

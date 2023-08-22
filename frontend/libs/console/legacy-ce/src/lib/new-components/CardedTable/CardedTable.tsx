@@ -81,7 +81,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
   return (
     <td
       // style={{ maxWidth: '20ch' }}
-      className="px-sm py-xs whitespace-nowrap text-muted overflow-hidden text-ellipsis"
+      className="px-sm py-xs text-muted overflow-hidden text-ellipsis"
       {...cellAttributes}
     >
       {children}
@@ -90,11 +90,7 @@ const TableBodyCell = ({ children, ...cellAttributes }: ChildrenProps) => {
 };
 
 const TableBodyActionCell = ({ children }: ChildrenProps) => {
-  return (
-    <td className="px-sm py-xs whitespace-nowrap text-right font-semibold">
-      {children}
-    </td>
-  );
+  return <td className="px-sm py-xs text-right font-semibold">{children}</td>;
 };
 
 interface BodyProps {
