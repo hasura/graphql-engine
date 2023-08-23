@@ -63,22 +63,37 @@ const getLogicalModelsFromProperties = (
     }
 
     if (fieldSchema.type === 'array') {
-      const newLogicalModels = getLogicalModelsFromProperties(
-        fieldName,
-        fieldSchema.items.properties,
-        fieldSchema.items.required
-      );
-      logicalModels.push(...newLogicalModels);
-
-      fields.push({
-        name: fieldName,
-        type: {
-          array: {
-            logical_model: fieldName,
-            nullable,
+      if (fieldSchema.items.type === 'object') {
+        // new logical model needed
+        fields.push({
+          name: fieldName,
+          type: {
+            array: {
+              logical_model: fieldName,
+              nullable,
+            },
           },
-        },
-      });
+        });
+
+        const newLogicalModels = getLogicalModelsFromProperties(
+          fieldName,
+          fieldSchema.items.properties,
+          fieldSchema.items?.required || []
+        );
+
+        logicalModels.push(...newLogicalModels);
+      } else {
+        // scalar array
+        fields.push({
+          name: fieldName,
+          type: {
+            array: {
+              scalar: fieldSchema.items.type,
+              nullable,
+            },
+          },
+        });
+      }
     }
 
     if (fieldSchema.type === 'string') {
@@ -135,9 +150,10 @@ const getLogicalModels = (
   name: string,
   schema: ObjectSchema | ArraySchema
 ): LogicalModel[] => {
+  const sanitizedModelName = sanitizeGraphQLFieldNames(name);
   if (schema.type === 'object') {
     return getLogicalModelsFromProperties(
-      name,
+      sanitizedModelName,
       schema.properties,
       schema.required
     );
@@ -145,7 +161,7 @@ const getLogicalModels = (
 
   if (schema.type === 'array') {
     return getLogicalModelsFromProperties(
-      name,
+      sanitizedModelName,
       schema.items.properties,
       schema.items.required
     );
