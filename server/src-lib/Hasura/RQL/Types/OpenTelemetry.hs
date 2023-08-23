@@ -26,9 +26,6 @@ module Hasura.RQL.Types.OpenTelemetry
     otiBatchSpanProcessorInfo,
     OtelExporterInfo (..),
     emptyOtelExporterInfo,
-    getOtelExporterTracesBaseRequest,
-    getOtelExporterMetricsBaseRequest,
-    getOtelExporterResourceAttributes,
     OtelBatchSpanProcessorInfo (..),
     getMaxExportBatchSize,
     getMaxQueueSize,
@@ -387,17 +384,6 @@ data OtelExporterInfo = OtelExporterInfo
 
 emptyOtelExporterInfo :: OtelExporterInfo
 emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing mempty
-
--- | @Nothing@ means this exporter is disabled
-getOtelExporterTracesBaseRequest :: OtelExporterInfo -> Maybe Request
-getOtelExporterTracesBaseRequest = _oteleiTracesBaseRequest
-
--- | @Nothing@ means this exporter is disabled
-getOtelExporterMetricsBaseRequest :: OtelExporterInfo -> Maybe Request
-getOtelExporterMetricsBaseRequest = _oteleiMetricsBaseRequest
-
-getOtelExporterResourceAttributes :: OtelExporterInfo -> Map Text Text
-getOtelExporterResourceAttributes = _oteleiResourceAttributes
 
 -- | Batch processor configuration for trace export.
 --
