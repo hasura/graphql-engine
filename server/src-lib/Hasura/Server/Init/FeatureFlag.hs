@@ -55,6 +55,13 @@ data CheckFeatureFlag = CheckFeatureFlag
     listKnownFeatureFlags :: [(FeatureFlag, Text)]
   }
 
+instance Semigroup CheckFeatureFlag where
+  cff1 <> cff2 =
+    CheckFeatureFlag
+      { runCheckFeatureFlag = \ff -> (||) <$> runCheckFeatureFlag cff1 ff <*> runCheckFeatureFlag cff2 ff,
+        listKnownFeatureFlags = listKnownFeatureFlags cff1 ++ listKnownFeatureFlags cff2
+      }
+
 --------------------------------------------------------------------------------
 
 -- | This is the list of feature flags that exist in the CE version
