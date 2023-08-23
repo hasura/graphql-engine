@@ -18,7 +18,7 @@ export const typesContext = createContext<TypesContext>({
 });
 
 // Provides types for permissions
-// This is used to determine if a permission is a column or relationship
+// This is used to determine if a permission is a column or relationship or nested object
 export const TypesProvider = ({ children }: { children: React.ReactNode }) => {
   const [types, setTypes] = useState<Record<string, { type: PermissionType }>>(
     {}

@@ -5,6 +5,8 @@ import { RowPermissionsInput } from './components';
 import { usePermissionTables } from './hooks/usePermissionTables';
 import { usePermissionComparators } from './hooks/usePermissionComparators';
 import Skeleton from 'react-loading-skeleton';
+import { useState } from 'react';
+import { getNewTablesToLoad } from './utils/relationships';
 
 interface Props {
   permissionsKey: 'check' | 'filter';
@@ -23,22 +25,38 @@ export const RowPermissionBuilder = ({
   // this value will always be 'filter' or 'check' depending on the query type
 
   const value = watch(permissionsKey);
+  const [tablesToLoad, setTablesToLoad] = useState<Table[]>([table]);
 
   const { tables, isLoading } = usePermissionTables({
     dataSourceName,
+    tablesToLoad,
   });
 
   const comparators = usePermissionComparators();
 
-  if (isLoading || !tables) return <Skeleton />;
+  if (!tables) return <Skeleton />;
   return (
     <div
       data-testid="row-permission-builder"
       data-state={JSON.stringify(value)}
     >
       <RowPermissionsInput
+        isLoading={isLoading}
         onPermissionsChange={permissions => {
           setValue(permissionsKey, permissions);
+        }}
+        onLoadRelationships={relationships => {
+          const tablesToAdd = getNewTablesToLoad({
+            relationships,
+            tablesToLoad,
+          });
+
+          if (tablesToAdd.length > 0) {
+            setTablesToLoad(previousTablesToLoad => [
+              ...previousTablesToLoad,
+              ...tablesToAdd,
+            ]);
+          }
         }}
         table={table}
         tables={tables}

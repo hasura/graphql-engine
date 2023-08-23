@@ -1,13 +1,10 @@
 import { PermissionsInput } from '../PermissionsInput';
 import { EmptyEntry } from '../EmptyEntry';
-import { Wrapper } from './utils';
-import { useContext } from 'react';
+import { ConditionalTableProvider } from './ConditionalTableProvider';
 import { isComparator } from '../utils';
 import { Token } from '../Token';
 import isEmpty from 'lodash/isEmpty';
 import isPlainObject from 'lodash/isPlainObject';
-import { typesContext } from '../TypesProvider';
-import { tableContext } from '../TableProvider';
 
 export function ObjectOrArrayEntry({
   k,
@@ -18,11 +15,8 @@ export function ObjectOrArrayEntry({
   v: any;
   path: string[];
 }) {
-  const { types } = useContext(typesContext);
-  const { relationships } = useContext(tableContext);
-
   return (
-    <Wrapper types={types} path={path} relationships={relationships}>
+    <ConditionalTableProvider path={path}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
@@ -40,6 +34,6 @@ export function ObjectOrArrayEntry({
           <EmptyEntry path={path} />
         ) : null}
       </div>
-    </Wrapper>
+    </ConditionalTableProvider>
   );
 }

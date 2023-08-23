@@ -32,7 +32,6 @@ const getKeyPath = ({
     // Replacing an `_and` comparator that's empty (as opposed to the default `{}`) with a column key
     isEmptyArray(value, previousKey) ||
     !isEmpty(value) ||
-    type === 'relationship' ||
     isNestedComparator
   ) {
     path = replacePath(keyPath, permissionsState);

@@ -19,7 +19,16 @@ export const RowPermissionsProvider = ({
   permissions,
   comparators,
   onPermissionsChange,
-}: Pick<RowPermissionsState, 'permissions' | 'operators' | 'comparators'> & {
+  loadRelationships,
+  isLoading,
+}: Pick<
+  RowPermissionsState,
+  | 'permissions'
+  | 'operators'
+  | 'comparators'
+  | 'loadRelationships'
+  | 'isLoading'
+> & {
   children?: React.ReactNode | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
 }) => {
@@ -78,6 +87,8 @@ export const RowPermissionsProvider = ({
         setKey,
         setPermissions,
         comparators,
+        loadRelationships,
+        isLoading,
       }}
     >
       {children}

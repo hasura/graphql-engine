@@ -1,24 +1,22 @@
-import { Fragment, ReactNode } from 'react';
+import { Fragment, ReactNode, useContext } from 'react';
 import get from 'lodash/get';
-import { TableProvider } from '../TableProvider';
-import { PermissionType, Relationships } from '../types';
+import { TableProvider, tableContext } from '../TableProvider';
+import { typesContext } from '../TypesProvider';
 
-export function Wrapper({
+/**
+ * Conditionally wraps children with TableProvider, based on the type of the field
+ * - For relationships, it wraps the children with the table of the relationship
+ * - For MongoDB nested objects, it wraps the children with the object's fields
+ */
+export function ConditionalTableProvider({
   children,
-  types,
   path,
-  relationships,
 }: {
   children?: ReactNode;
-  types: Record<
-    string,
-    {
-      type: PermissionType;
-    }
-  >;
   path: string[];
-  relationships: Relationships;
 }) {
+  const { types } = useContext(typesContext);
+  const { relationships } = useContext(tableContext);
   const type = get(types, path)?.type;
 
   // MongoDB's nested objects behave like relationships

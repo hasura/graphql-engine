@@ -41,8 +41,8 @@ export const ValueInputType = ({
   comparatorName: string;
   value: any;
 }) => {
+  const { setValue, isLoading } = useContext(rowPermissionsContext);
   const { tables } = useContext(rootTableContext);
-  const { setValue } = useContext(rowPermissionsContext);
   const { table } = useContext(tableContext);
   const operators = useOperators({ path });
   const operator = operators.find(o => o.name === comparatorName);
@@ -70,8 +70,10 @@ export const ValueInputType = ({
   return (
     <input
       data-testid={componentLevelId}
-      disabled={comparatorName === '_where' && isEmpty(table)}
-      className="border border-gray-200 rounded-md p-2 !mr-4"
+      disabled={isLoading || (comparatorName === '_where' && isEmpty(table))}
+      className={`border border-gray-200 rounded-md p-2 !mr-4 ${
+        isLoading ? 'bg-gray-100' : ''
+      }`}
       type="text"
       value={value}
       onChange={e => {

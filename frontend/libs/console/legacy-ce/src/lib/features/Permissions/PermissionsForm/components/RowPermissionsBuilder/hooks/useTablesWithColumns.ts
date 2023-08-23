@@ -4,8 +4,9 @@ import {
   exportMetadata,
   TableColumn,
 } from '../../../../../DataSource';
-import { MetadataTable } from '../../../../../hasura-metadata-types';
+import { MetadataTable, Table } from '../../../../../hasura-metadata-types';
 import { useHttpClient } from '../../../../../Network';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 const tablesQueryKey = (dataSourceName: string) => [
   'tables-with-columns',
@@ -19,12 +20,14 @@ export type TableWithColumns = {
 
 export const useTablesWithColumns = ({
   dataSourceName,
+  tablesToLoad,
 }: {
   dataSourceName: string;
+  tablesToLoad: Table[];
 }) => {
   const httpClient = useHttpClient();
   return useQuery<TableWithColumns[], Error>({
-    queryKey: tablesQueryKey(dataSourceName),
+    queryKey: [...tablesQueryKey(dataSourceName), tablesToLoad],
     queryFn: async () => {
       const { metadata } = await exportMetadata({
         httpClient,
@@ -42,11 +45,15 @@ export const useTablesWithColumns = ({
       const result: TableWithColumns[] = [];
 
       for (const metadataTable of currentMetadataSource.tables) {
-        const columns = await DataSource(httpClient).getTableColumns({
-          dataSourceName,
-          table: metadataTable.table,
-        });
-        result.push({ metadataTable, columns });
+        if (tablesToLoad.find(t => areTablesEqual(metadataTable.table, t))) {
+          const columns = await DataSource(httpClient).getTableColumns({
+            dataSourceName,
+            table: metadataTable.table,
+          });
+          result.push({ metadataTable, columns });
+        } else {
+          result.push({ metadataTable, columns: [] });
+        }
       }
 
       return result;

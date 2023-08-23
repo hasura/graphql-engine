@@ -11,10 +11,11 @@ export function BooleanValueInput({
   componentLevelId: string;
   path: string[];
 }) {
-  const { setValue } = useContext(rowPermissionsContext);
+  const { setValue, isLoading } = useContext(rowPermissionsContext);
   return (
     <div className="flex">
       <select
+        disabled={isLoading}
         data-testid={componentLevelId}
         className="border border-gray-200 rounded-md"
         value={JSON.stringify(value)}
