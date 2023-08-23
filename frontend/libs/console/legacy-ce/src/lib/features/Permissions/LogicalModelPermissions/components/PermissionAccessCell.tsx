@@ -14,7 +14,7 @@ export const PermissionAccessCell: React.FC<PermissionAccessCellProps> = ({
 }) => {
   if (!isEditable) {
     return (
-      <td className="p-md whitespace-nowrap text-center cursor-not-allowed opacity-30">
+      <td className="p-md whitespace-nowrap text-center cursor-not-allowed opacity-50">
         <PermissionsIcon type={access} selected={isCurrentEdit} />
       </td>
     );
@@ -25,7 +25,7 @@ export const PermissionAccessCell: React.FC<PermissionAccessCellProps> = ({
       <button
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
-          isCurrentEdit ? 'bg-amber-300' : 'hover:bg-indigo-50'
+          isCurrentEdit ? 'bg-blue-100' : 'hover:bg-gray-100'
         }`}
         {...rest}
       >

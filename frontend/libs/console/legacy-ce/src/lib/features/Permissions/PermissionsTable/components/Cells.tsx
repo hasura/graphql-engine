@@ -95,7 +95,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         data-testid={testId}
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
-          isCurrentEdit ? 'bg-amber-300' : 'hover:bg-indigo-50'
+          isCurrentEdit ? 'bg-blue-100' : 'hover:bg-gray-100'
         }`}
         {...rest}
       >

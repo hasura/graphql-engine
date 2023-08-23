@@ -13,7 +13,7 @@ import {
 import { DatabaseIcon } from '../../constants';
 import { styles } from '../../styles';
 import { DataSourceNode } from '../types';
-import { GetHighlightedText } from './GetHighlightedText';
+import { HighlightText } from './HighlightText';
 
 const StatusReport = ({
   node,
@@ -127,10 +127,10 @@ export const DataSourceTreeNode = (
           />
         </Tooltip>
       </div>
-      <GetHighlightedText
+      <HighlightText
         className="text-[1.25rem]"
         text={node.data.name}
-        highlight={tree.searchTerm}
+        highlightedText={tree.searchTerm}
       />
       {hasChildren ? (
         <Badge color={'green'} className="rounded-md px-2 font-normal">

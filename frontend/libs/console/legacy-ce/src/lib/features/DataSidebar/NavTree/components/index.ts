@@ -1,4 +1,4 @@
 export { DatabaseItemTreeNode } from './DatabaseItemTreeNode';
 export { DataSourceTreeNode } from './DataSourceTreeNode';
-export { GetHighlightedText } from './GetHighlightedText';
+export { HighlightText } from './HighlightText';
 export { useTreeHeight } from './useTreeHeight';

@@ -41,7 +41,7 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     title: 'Enable new Table Tracking UI for Postgres & SQL Server',
     description: 'Try out the new UI experience for tracking tables',
     section: 'data',
-    status: 'experimental',
+    status: 'alpha',
     defaultValue: false,
     discussionUrl: 'https://github.com/hasura/graphql-engine/discussions/9727',
   },
@@ -51,7 +51,7 @@ export const availableFeatureFlags: FeatureFlagDefinition[] = [
     description:
       'Enables high performance components in the Data tab. Some database features are not available.',
     section: 'data',
-    status: 'experimental',
+    status: 'alpha',
     defaultValue: false,
     discussionUrl: '',
   },

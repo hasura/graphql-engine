@@ -63,7 +63,8 @@ export const SidebarUI = ({
   onRetryMetadata: () => void;
   sources: Source[];
 }) => {
-  const isLoading = status === 'loading' || isRefetching;
+  const isLoading =
+    status === 'loading' || (status === 'error' && isRefetching);
 
   // these may not have a use case anymore since we aren't calling legacy loading
   // but these can be used to flip a loading state on any tree item
