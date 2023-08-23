@@ -499,21 +499,17 @@ initialiseAppContext ::
   ServeOptions Hasura ->
   AppInit ->
   m (AppStateRef Hasura)
-initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
+initialiseAppContext env serveOptions AppInit {..} = do
   appEnv@AppEnv {..} <- askAppEnv
   let cacheStaticConfig = buildCacheStaticConfig appEnv
       Loggers _ logger pgLogger = appEnvLoggers
-      sqlGenCtx = initSQLGenCtx soExperimentalFeatures soStringifyNum soDangerousBooleanCollapse soRemoteNullForwardingPolicy
-      cacheDynamicConfig =
-        CacheDynamicConfig
-          soInferFunctionPermissions
-          soEnableRemoteSchemaPermissions
-          sqlGenCtx
-          soExperimentalFeatures
-          soDefaultNamingConvention
-          soMetadataDefaults
-          soApolloFederationStatus
-          soCloseWebsocketsOnMetadataChangeStatus
+
+  -- Build the RebuildableAppContext.
+  -- (See note [Hasura Application State].)
+  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, appEnvManager) serveOptions env)
+  !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
+
+  let cacheDynamicConfig = buildCacheDynamicConfig (lastBuiltAppContext rebuildableAppCtx)
 
   -- Create the schema cache
   rebuildableSchemaCache <-
@@ -527,12 +523,6 @@ initialiseAppContext env serveOptions@ServeOptions {..} AppInit {..} = do
       cacheDynamicConfig
       appEnvManager
       Nothing
-
-  -- Build the RebuildableAppContext.
-  -- (See note [Hasura Application State].)
-  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, appEnvManager) serveOptions env)
-  !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
-
   -- Initialise the 'AppStateRef' from 'RebuildableSchemaCacheRef' and 'RebuildableAppContext'.
   initialiseAppStateRef aiTLSAllowListRef Nothing appEnvServerMetrics rebuildableSchemaCache rebuildableAppCtx
 
