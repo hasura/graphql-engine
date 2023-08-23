@@ -6,6 +6,9 @@ import {
   useMetadata,
 } from '../../hasura-metadata-api';
 import { LogicalModel } from '../../hasura-metadata-types';
+import { COLLECTION_TRACK_TRACK_ERROR } from '../LogicalModels/constants';
+import { DisplayToastErrorMessage } from '../components/DisplayErrorMessage';
+import { transformErrorResponse } from '../errorUtils';
 import { useTrackLogicalModel } from '../hooks/useTrackLogicalModel';
 import { useTrackTables } from '../hooks/useTrackTables';
 import { MongoTrackCollectionModal, Schema } from './MongoTrackCollectionModal';
@@ -56,9 +59,11 @@ export const MongoTrackCollectionModalWrapper = ({
     onError: err => {
       hasuraToast({
         type: 'error',
-        title: err?.message ? err.message : 'An error occurred',
+        title: COLLECTION_TRACK_TRACK_ERROR,
+        children: <DisplayToastErrorMessage message={err.message} />,
       });
     },
+    errorTransform: transformErrorResponse,
   });
 
   const onSubmit = async (data: Schema, logicalModels: LogicalModel[]) => {

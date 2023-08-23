@@ -208,4 +208,60 @@ describe('inferLogicalModels', () => {
       },
     ]);
   });
+
+  it('sanitizes the logical model name', () => {
+    const document = {
+      _id: {
+        $oid: '64df83ef6561310e38a0985e',
+      },
+    };
+
+    const logicalModels = inferLogicalModels(
+      'new-documents',
+      JSON.stringify(document)
+    );
+
+    expect(logicalModels).toEqual([
+      {
+        fields: [
+          { name: '_id', type: { nullable: false, scalar: 'objectId' } },
+        ],
+        name: 'newdocuments',
+      },
+    ]);
+  });
+
+  it('manages documents with scalar arrays', () => {
+    const document = {
+      _id: {
+        $oid: '5ed3d12427017764d14e3284',
+      },
+      images: [
+        'img-1590939937048-1T2A9759.jpeg',
+        'img-1590939938094-1T2A9700.jpeg',
+        'img-1590939939011-1T2A9656.jpeg',
+        'img-1590939939889-1T2A9651.jpeg',
+      ],
+      __v: 0,
+    };
+
+    const logicalModels = inferLogicalModels(
+      'new-documents',
+      JSON.stringify(document)
+    );
+
+    expect(logicalModels).toEqual([
+      {
+        fields: [
+          { name: '_id', type: { nullable: false, scalar: 'objectId' } },
+          {
+            name: 'images',
+            type: { array: { nullable: false, scalar: 'string' } },
+          },
+          { name: '__v', type: { nullable: false, scalar: 'int' } },
+        ],
+        name: 'newdocuments',
+      },
+    ]);
+  });
 });

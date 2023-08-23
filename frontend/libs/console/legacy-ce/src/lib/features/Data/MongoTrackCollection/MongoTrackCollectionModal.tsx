@@ -388,12 +388,14 @@ export const MongoTrackCollectionModal = ({
                               const type =
                                 'scalar' in field.type
                                   ? field.type.scalar
+                                  : 'array' in field.type &&
+                                    'scalar' in field.type.array
+                                  ? field.type.array.scalar
                                   : 'Logical Model';
 
                               const nullable =
                                 'nullable' in field.type && field.type.nullable;
-                              const array =
-                                'array' in field.type && field.type.array;
+                              const array = 'array' in field.type;
 
                               return [
                                 field.name,
