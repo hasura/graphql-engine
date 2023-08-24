@@ -34,7 +34,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Use with admin secret:
   hasura metadata export --admin-secret "<admin-secret>"
 
-  # Export metadata to another instance specified by the flag:
+  # Export metadata from another instance specified by the flag:
   hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
