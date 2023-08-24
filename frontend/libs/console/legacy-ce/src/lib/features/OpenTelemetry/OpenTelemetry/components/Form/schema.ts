@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { requestHeadersSelectorSchema } from '../../../../../new-components/RequestHeadersSelector';
 
-const endPointSchema = z.string().url({ message: 'Invalid URL' });
+const endPointSchema = z.string();
 
 // --------------------------------------------------
 // SCHEMA

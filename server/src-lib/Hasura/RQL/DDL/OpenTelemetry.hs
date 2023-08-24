@@ -12,7 +12,8 @@ import Data.Environment (Environment)
 import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
 import Data.Text qualified as Text
-import Hasura.Base.Error (Code (InvalidParams), QErr, err400)
+import Data.URL.Template (parseTemplate, renderTemplate)
+import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Metadata.Class ()
 import Hasura.Prelude hiding (first)
@@ -66,13 +67,11 @@ parseOtelExporterConfig ::
 parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
   -- First validate everything but the trace endpoint
   headers <- makeHeadersFromConf env _oecHeaders
-  let mkExportReq rawEndpoint = do
-        uri <-
-          maybeToEither (err400 InvalidParams "Invalid URL")
-            $ parseURI
-            $ Text.unpack rawEndpoint
-        uriRequest <-
-          first (err400 InvalidParams . tshow) $ requestFromURI uri
+  let mkExportReq rawEndpoint = mapLeft (err400 InvalidParams) $ do
+        rawTemplateEndpoint <- mapLeft Text.pack $ parseTemplate rawEndpoint
+        rawUri <- renderTemplate env rawTemplateEndpoint
+        uri <- maybeToEither "Invalid URL" $ parseURI (Text.unpack rawUri)
+        uriRequest <- first tshow $ requestFromURI uri
         pure
           $ Just
           $ uriRequest
@@ -91,9 +90,9 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
     Nothing
       | OtelMetrics `Set.member` enabledDataTypes ->
           Left (err400 InvalidParams "Metrics export is enabled but metrics endpoint missing")
-    Just rawTracesEndpoint
+    Just rawMetricsEndpoint
       | OtelMetrics `Set.member` enabledDataTypes ->
-          mkExportReq rawTracesEndpoint
+          mkExportReq rawMetricsEndpoint
     _ -> pure Nothing -- disabled
   pure
     $ OtelExporterInfo

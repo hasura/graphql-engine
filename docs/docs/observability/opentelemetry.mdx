@@ -27,8 +27,8 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 ## Introduction
 
-[Distributed traces](/observability/cloud-monitoring/tracing.mdx) track and map journeys of user requests across various services or
-components which can then be analyzed via observability tools.
+[Distributed traces](/observability/cloud-monitoring/tracing.mdx) track and map journeys of user requests across various
+services or components which can then be analyzed via observability tools.
 
 Traces are typically used to diagnose or debug which part of your application could potentially be responsible for a
 failure or error state and to monitor the performance of end-user interactions with your application.
@@ -40,8 +40,7 @@ be configured in the `Settings` section of the Hasura Console.
 
 :::info Support for metrics and logs
 
-Currently, the OpenTelemetry Integration exports traces and metrics. The support for logs will be added in the
-future.
+Currently, the OpenTelemetry Integration exports traces and metrics. The support for logs will be added in the future.
 
 :::
 
@@ -49,9 +48,12 @@ future.
 
 :::info Supported from
 
-OpenTelemetry traces are supported for Hasura GraphQL Engine versions `v2.18.0` and above on Self-Hosted Enterprise, with support for metrics export added in `v2.31.0` and made available to all cloud tiers.
+OpenTelemetry traces are supported for Hasura GraphQL Engine versions `v2.18.0` and above on Self-Hosted Enterprise,
+with support for metrics export added in `v2.31.0` and made available to all cloud tiers.
 
-We have deprecated the previous Open Telemetry exporter integration on Hasura Cloud in favor of this native feature, and you can now configure this directly via the Hasura Console's `Settings` page under the `Monitoring & Observability` section. 
+We have deprecated the previous Open Telemetry exporter integration on Hasura Cloud in favor of this native feature, and
+you can now configure this directly via the Hasura Console's `Settings` page under the `Monitoring & Observability`
+section.
 
 All users are encouraged to migrate to this new integration.
 
@@ -124,8 +126,9 @@ supported yet), so ensure that you use the appropriate endpoint for your chosen 
 
 #### Endpoint Notes
 
-- You may have to append `/v1/traces` to the end of the receiver endpoint URL if the provided URL does not contain this
-  already. This depends on the observability vendor.
+- Environment variable templating is available for the endpoint URL, e.g. `https://{{ENV_VAR}}/v1/traces`
+- You may need to append `/v1/traces` or `/v1/metrics` to the end of the receiver endpoint URL if the provided URL does
+  not contain this already. This depends on the observability vendor.
 - If you are running Hasura as a Docker container without host networking enabled, and want to connect to a local
   [OpenTelemetry Collector](#opentelemetry-collector), you may want to use this as the endpoint:
   `http://host.docker.internal:4318/v1/traces`.
@@ -146,8 +149,8 @@ OpenTelemetry Protocol over HTTP (OTLP/HTTP with binary-encoded Protobuf payload
 
 ### Data Type
 
-Selects the type of observability data points to be exported. `Traces` and `Metrics` are the only data types that are currently
-supported.
+Selects the type of observability data points to be exported. `Traces` and `Metrics` are the only data types that are
+currently supported.
 
 ### Batch Size
 

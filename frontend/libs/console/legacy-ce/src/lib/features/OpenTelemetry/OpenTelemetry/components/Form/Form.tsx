@@ -65,7 +65,7 @@ export function Form(props: FormProps) {
           name="tracesEndpoint"
           label="Traces Endpoint"
           placeholder="Your OpenTelemetry traces endpoint"
-          tooltip="OpenTelemetry-compliant traces receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/traces"
+          tooltip="OpenTelemetry-compliant traces receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/traces. Environment variable templating is available using the {{VARIABLE}} tag"
           learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
@@ -89,7 +89,7 @@ export function Form(props: FormProps) {
           name="metricsEndpoint"
           label="Metrics Endpoint"
           placeholder="Your OpenTelemetry metrics endpoint"
-          tooltip="OpenTelemetry-compliant metrics receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/metrics. Metrics will be sampled and exported every 15 seconds."
+          tooltip="OpenTelemetry-compliant metrics receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/metrics. Metrics will be sampled and exported every 15 seconds. Environment variable templating is available using the {{VARIABLE}} tag"
           learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
