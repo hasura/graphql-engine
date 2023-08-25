@@ -1157,6 +1157,13 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement);
 
+      await waitFor(
+        async () => {
+          await canvas.findByTestId('RootInputReady');
+        },
+        { timeout: 1000 }
+      );
+
       await canvas.findAllByRole('option', {
         name: 'address',
       });

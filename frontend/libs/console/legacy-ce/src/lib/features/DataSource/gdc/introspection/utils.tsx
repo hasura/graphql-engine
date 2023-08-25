@@ -1,4 +1,3 @@
-import { getEntries } from '../../../../components/Services/Data/Common/tsUtils';
 import { DataNode } from 'antd/lib/tree';
 import React from 'react';
 import { FaTable, FaFolder } from 'react-icons/fa';
@@ -71,26 +70,7 @@ export function convertToTreeData(
 export function adaptAgentDataType(
   sqlDataType: TableColumn['dataType']
 ): TableColumn['dataType'] {
-  const DataTypeToSQLTypeMap: Record<string, string[]> = {
-    bool: ['bool'],
-    string: ['string'],
-    number: ['number', 'integer', 'float'],
-    datetime: ['datetime'],
-    timestamp: ['timestamp'],
-    xml: ['xml'],
-    json: ['json', 'jsonb'],
-  };
-
-  const [dataType] = getEntries(DataTypeToSQLTypeMap).find(([, value]) =>
-    value.includes(
-      typeof sqlDataType === 'string'
-        ? sqlDataType.toLowerCase()
-        : sqlDataType.type.toLowerCase()
-    )
-  ) ?? [
-    typeof sqlDataType === 'string' ? 'string' : sqlDataType.type.toLowerCase(),
-    [],
-  ];
-
-  return dataType;
+  return typeof sqlDataType === 'string'
+    ? sqlDataType.toLowerCase()
+    : sqlDataType.type.toLowerCase();
 }
