@@ -286,6 +286,7 @@ export const MongoTrackCollectionModal = ({
                       <AceEditor
                         name="json-editor"
                         mode="json"
+                        placeholder="Your sample document here"
                         value={sampleDocument}
                         onChange={value => setValue('sampleDocument', value)}
                         fontSize="12px"
