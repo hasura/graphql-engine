@@ -54,7 +54,7 @@ export function convertToTreeData(
       {
         icon: <FaFolder />,
         selectable: false,
-        key: JSON.stringify([...key, levelValue[0]]),
+        key: JSON.stringify([...key, levelValue]),
         title: levelValue,
         children: convertToTreeData(
           _childTables,
