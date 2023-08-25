@@ -15,7 +15,7 @@
       "id": "grafana",
       "name": "Grafana",
       "type": "grafana",
-      "version": "9.5.2"
+      "version": "9.0.0"
     },
     {
       "id": "prometheus",
@@ -84,7 +84,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Number of GraphQL Query requests",
+      "description": "Total number of exported trace spans",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -103,11 +103,36 @@
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Dropped"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 1
       },
@@ -133,10 +158,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",instance=~\"$instance\",job=~\"$job\",response_status=\"success\"}[$__range]))",
+          "expr": "SUM(increase(hasura_otel_sent_spans{instance=~\"$instance\",job=~\"$job\"}[$__range]))",
           "legendFormat": "Success",
           "range": true,
-          "refId": "A"
+          "refId": "Success"
         },
         {
           "datasource": {
@@ -144,14 +169,14 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",job=~\"$job\",instance=~\"$instance\"}[$__range]))",
+          "expr": "SUM(increase(hasura_otel_dropped_spans{instance=~\"$instance\",job=~\"$job\"}[$__range]))",
           "hide": false,
-          "legendFormat": "Total",
+          "legendFormat": "Dropped",
           "range": true,
-          "refId": "B"
+          "refId": "Dropped"
         }
       ],
-      "title": "Total Queries",
+      "title": "Total Sent Trace Spans",
       "type": "stat"
     },
     {
@@ -159,83 +184,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "P95 latency of GraphQL Query requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "NaN": {
-                  "index": 0,
-                  "text": "0"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 4,
-        "x": 8,
-        "y": 1
-      },
-      "id": 18,
-      "interval": "1m",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.5.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\"}[$__range])) by (le))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Query Latency (P95)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "Number of GraphQL Mutation requests",
+      "description": "Total number of exported log lines",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -254,11 +203,36 @@
           },
           "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Dropped"
+            },
+            "properties": [
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 12,
         "x": 12,
         "y": 1
       },
@@ -284,10 +258,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"mutation\",job=~\"$job\",instance=~\"$instance\", response_status=\"success\"}[$__range]))",
+          "expr": "SUM(increase(hasura_otel_sent_logs{job=~\"$job\",instance=~\"$instance\"}[$__range]))",
           "legendFormat": "Success",
           "range": true,
-          "refId": "A"
+          "refId": "Success"
         },
         {
           "datasource": {
@@ -295,90 +269,14 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "SUM(increase(hasura_graphql_requests_total{operation_type=\"query\",job=~\"$job\",instance=~\"$instance\"}[$__range]))",
+          "expr": "SUM(increase(hasura_otel_dropped_logs{job=~\"$job\",instance=~\"$instance\"}[$__range]))",
           "hide": false,
-          "legendFormat": "Total",
+          "legendFormat": "Dropped",
           "range": true,
-          "refId": "B"
+          "refId": "Dropped"
         }
       ],
-      "title": "Total Mutations",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "P95 latency of GraphQL Mutation requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "NaN": {
-                  "index": 0,
-                  "text": "0 ms"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 4,
-        "x": 20,
-        "y": 1
-      },
-      "id": 21,
-      "interval": "1m",
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.5.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\"}[$__range])) by (le))",
-          "format": "time_series",
-          "instant": false,
-          "interval": "",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Mutation Latency (P95)",
+      "title": "Total Sent Logs",
       "type": "stat"
     },
     {
@@ -391,7 +289,7 @@
       },
       "id": 26,
       "panels": [],
-      "title": "GraphQL Metrics",
+      "title": "Sent Trace Metrics",
       "type": "row"
     },
     {
@@ -399,7 +297,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "The request rate of GraphQL Query requests",
+      "description": "The rate of successfully exported trace spans",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -474,13 +372,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\"}[$__rate_interval]))",
+          "expr": "sum by (job,instance) (rate(hasura_otel_sent_spans{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Query Request Rate",
+      "title": "Success Sent Spans",
       "type": "timeseries"
     },
     {
@@ -488,7 +386,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "The request rate of GraphQL Mutation requests",
+      "description": "Total number of trace spans dropped due to sent failure",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -563,13 +461,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\"}[$__rate_interval]))",
+          "expr": "sum by (job,instance) (rate(hasura_otel_dropped_spans{job=~\"$job\",instance=~\"$instance\",reason=\"send_failed\"}[$__rate_interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Mutation Request Rate",
+      "title": "Failed Sent Spans",
       "type": "timeseries"
     },
     {
@@ -577,7 +475,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "The error rate of GraphQL Query requests",
+      "description": "Total number of trace spans dropped due to high trace volume",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -620,99 +518,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "semi-dark-red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 18
-      },
-      "id": 41,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\",response_status=\"failed\"}[$__rate_interval]))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Query Error Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "The Error rate of GraphQL Query requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 4,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
               }
             ]
           }
@@ -725,7 +530,7 @@
         "x": 12,
         "y": 18
       },
-      "id": 40,
+      "id": 48,
       "options": {
         "legend": {
           "calcs": [],
@@ -745,201 +550,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (rate(hasura_graphql_requests_total{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\",response_status=\"failed\"}[$__rate_interval]))",
+          "expr": "sum by (job,instance) (rate(hasura_otel_dropped_spans{job=~\"$job\",instance=~\"$instance\",reason=\"buffer_full\"}[$__rate_interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Mutation Error Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "P95 latency of GraphQL Query requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 4,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "semi-dark-red",
-                "value": 60
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 26
-      },
-      "id": 37,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\",operation_type=\"query\"}[$__rate_interval])) by (job,instance,le))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Query Latency (P95)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "P95 latency of GraphQL Mutation requests",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineWidth": 1,
-            "pointSize": 4,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "semi-dark-red",
-                "value": 60
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 26
-      },
-      "id": 42,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(hasura_graphql_execution_time_seconds_bucket{job=~\"$job\",instance=~\"$instance\",operation_type=\"mutation\"}[$__rate_interval])) by (job,instance,le))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Mutation Latency (P95)",
+      "title": "Dropped High Volume Spans",
       "type": "timeseries"
     },
     {
@@ -948,11 +565,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 26
       },
       "id": 45,
       "panels": [],
-      "title": "General Metrics",
+      "title": "Sent Log Metrics",
       "type": "row"
     },
     {
@@ -960,205 +577,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Current number of active HTTP connections (excluding WebSocket connections)",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 1,
-            "pointSize": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 35
-      },
-      "id": 46,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (job,instance) (hasura_http_connections{job=~\"$job\",instance=~\"$instance\"})",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "Total"
-        }
-      ],
-      "title": "HTTP Connections",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "Total number of incoming requests for cache lookup",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "smooth",
-            "lineStyle": {
-              "fill": "solid"
-            },
-            "lineWidth": 1,
-            "pointSize": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 35
-      },
-      "id": 47,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\",status=\"hit\"}[$__rate_interval]))",
-          "legendFormat": "Cache Hit",
-          "range": true,
-          "refId": "Hit"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "sum(rate(hasura_cache_request_count{job=~\"$job\"}[$__rate_interval]))",
-          "hide": false,
-          "legendFormat": "Total",
-          "range": true,
-          "refId": "Total"
-        }
-      ],
-      "title": "Cache Request Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "description": "Data Transfer of HTTP Requests ",
+      "description": "Total number of successfully exported log lines",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1199,12 +618,10 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          },
-          "unit": "bytes"
+          }
         },
         "overrides": []
       },
@@ -1212,9 +629,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 27
       },
-      "id": 43,
+      "id": 49,
       "options": {
         "legend": {
           "calcs": [],
@@ -1234,13 +651,13 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (increase(hasura_http_request_bytes_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]) + increase(hasura_http_response_bytes_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))",
+          "expr": "sum by (job,instance) (rate(hasura_otel_sent_logs{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "HTTP Data Transfer",
+      "title": "Success Sent Logs",
       "type": "timeseries"
     },
     {
@@ -1248,7 +665,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Data Transfer of external action webhook requests ",
+      "description": "Total number of log lines dropped due to sent failure",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1289,12 +706,10 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
-          },
-          "unit": "bytes"
+          }
         },
         "overrides": []
       },
@@ -1302,9 +717,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 27
       },
-      "id": 44,
+      "id": 50,
       "options": {
         "legend": {
           "calcs": [],
@@ -1324,13 +739,101 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (job,instance) (increase(hasura_action_request_bytes_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]) + increase(hasura_action_response_bytes_total{job=~\"$job\",instance=~\"$instance\"}[$__rate_interval])) ",
+          "expr": "sum by (job,instance) (rate(hasura_otel_dropped_logs{job=~\"$job\",instance=~\"$instance\",reason=\"send_failed\"}[$__rate_interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Action Data Transfer",
+      "title": "Failed Sent Logs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "description": "Total number of log lines dropped due to high trace volume",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 51,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (job,instance) (rate(hasura_otel_dropped_logs{job=~\"$job\",instance=~\"$instance\",reason=\"buffer_full\"}[$__rate_interval]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Dropped High Volume Logs",
       "type": "timeseries"
     }
   ],
@@ -1414,8 +917,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Hasura HTTP GraphQL",
-  "uid": "a6091fcc-d3f7-4094-8b54-54f3126a6790",
-  "version": 2,
+  "title": "Hasura OpenTelemetry",
+  "uid": "hasura-opentelemetry",
+  "version": 1,
   "weekStart": ""
 }
