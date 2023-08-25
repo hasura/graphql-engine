@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Schema.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Common.hs#L181).
+This note is in [Hasura.GraphQL.Schema.Common](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Common.hs#L229).
 It is referenced at:
   - line 49 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L49)
   - line 58 of [Hasura.GraphQL.Schema.RemoteRelationship](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/RemoteRelationship.hs#L58)
