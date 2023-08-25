@@ -96,6 +96,14 @@ the [metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-apply
 
 :::
 
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
 ### Step 3: Track existing tables
 
 To query your Snowflake service using Hasura, you'll need to have existing tables to select. Those tables will appear

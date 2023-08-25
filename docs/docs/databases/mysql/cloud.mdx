@@ -87,6 +87,14 @@ For more information see
 
 Click `Connect Database`.
 
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
 ### Step 3: Track tables and run GraphQL API queries
 
 Now that you have successfully connected your MySQL database to Hasura, you can track tables and use Hasura to
