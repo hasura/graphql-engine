@@ -22,7 +22,7 @@ import Hasura.Prelude
 newtype FeatureFlag = FeatureFlag
   { ffIdentifier :: Text
   }
-  deriving stock (Eq, Generic)
+  deriving stock (Eq, Generic, Show)
   deriving anyclass (Hashable, FromJSON, ToJSON)
 
 -- | In OSS we _may_ look for a environment variable or fall back to the default
@@ -48,10 +48,9 @@ data CheckFeatureFlag = CheckFeatureFlag
     -- Cloud product will want to use LaunchDarkly whereas the OSS and non-cloud
     -- EE products will want to sample environment variables.
     runCheckFeatureFlag :: FeatureFlag -> IO Bool,
-    -- | A registry of flags that are 'known' by the system. This is only used
-    -- to inform of feature flag values via the '/v1alpha/config' endpoint.
-    -- Ideally, the console should have a dedicated endpoint to sample feature
-    -- flags so we don't _have_ to centralise that knowledge here.
+    -- | A registry of flags that are 'known' by the system. This is used to
+    -- inform of feature flag values via the '/v1alpha/config' endpoint, as well
+    -- as sampling feature flag values for use in schema code.
     listKnownFeatureFlags :: [(FeatureFlag, Text)]
   }
 

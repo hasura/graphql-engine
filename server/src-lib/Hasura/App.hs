@@ -506,7 +506,15 @@ initialiseAppContext env serveOptions AppInit {..} = do
 
   -- Build the RebuildableAppContext.
   -- (See note [Hasura Application State].)
-  rebuildableAppCtxE <- liftIO $ runExceptT (buildRebuildableAppContext (logger, appEnvManager) serveOptions env)
+  rebuildableAppCtxE <-
+    liftIO
+      $ runExceptT
+        ( buildRebuildableAppContext
+            (logger, appEnvManager)
+            serveOptions
+            appEnvCheckFeatureFlag
+            env
+        )
   !rebuildableAppCtx <- onLeft rebuildableAppCtxE $ \e -> throwErrExit InvalidEnvironmentVariableOptionsError $ T.unpack $ qeError e
 
   let cacheDynamicConfig = buildCacheDynamicConfig (lastBuiltAppContext rebuildableAppCtx)
@@ -894,7 +902,6 @@ runHGEServer ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,
@@ -991,7 +998,6 @@ mkHGEServer ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     ConsoleRenderer m,
     MonadVersionAPIWithExtraData m,
     MonadMetadataApiAuthorization m,

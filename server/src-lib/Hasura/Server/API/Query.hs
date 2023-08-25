@@ -17,6 +17,7 @@ import Hasura.Backends.Postgres.DDL.RunSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Function.API qualified as Functions
+import Hasura.GraphQL.Schema.Common (SchemaSampledFeatureFlags)
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -207,7 +208,7 @@ runQuery appContext sc query = do
 
   MetadataWithResourceVersion metadata currentResourceVersion <- liftEitherM fetchMetadata
   ((result, updatedMetadata), modSchemaCache, invalidations, sourcesIntrospection, schemaRegistryAction) <-
-    runQueryM (acEnvironment appContext) (acSQLGenCtx appContext) query
+    runQueryM (acEnvironment appContext) (acSchemaSampledFeatureFlags appContext) (acSQLGenCtx appContext) query
       -- TODO: remove this straight runReaderT that provides no actual new info
       & flip runReaderT logger
       & runMetadataT metadata metadataDefaults
@@ -412,10 +413,11 @@ runQueryM ::
     MonadGetPolicies m
   ) =>
   Env.Environment ->
+  SchemaSampledFeatureFlags ->
   SQLGenCtx ->
   RQLQuery ->
   m EncJSON
-runQueryM env sqlGen rq = withPathK "args" $ case rq of
+runQueryM env schemaSampledFeatureFlags sqlGen rq = withPathK "args" $ case rq of
   RQV1 q -> runQueryV1M q
   RQV2 q -> runQueryV2M q
   where
@@ -450,8 +452,8 @@ runQueryM env sqlGen rq = withPathK "args" $ case rq of
       RQUpdate q -> runUpdate sqlGen q
       RQDelete q -> runDelete sqlGen q
       RQCount q -> runCount q
-      RQAddRemoteSchema q -> runAddRemoteSchema env q
-      RQUpdateRemoteSchema q -> runUpdateRemoteSchema env q
+      RQAddRemoteSchema q -> runAddRemoteSchema env schemaSampledFeatureFlags q
+      RQUpdateRemoteSchema q -> runUpdateRemoteSchema env schemaSampledFeatureFlags q
       RQRemoveRemoteSchema q -> runRemoveRemoteSchema q
       RQReloadRemoteSchema q -> runReloadRemoteSchema q
       RQIntrospectRemoteSchema q -> runIntrospectRemoteSchema q
@@ -486,7 +488,7 @@ runQueryM env sqlGen rq = withPathK "args" $ case rq of
       RQDumpInternalState q -> runDumpInternalState q
       RQRunSql q -> runRunSQL @'Vanilla sqlGen q
       RQSetCustomTypes q -> runSetCustomTypes q
-      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env sqlGen) qs
+      RQBulk qs -> encJFromList <$> indexedMapM (runQueryM env schemaSampledFeatureFlags sqlGen) qs
 
     runQueryV2M = \case
       RQV2TrackTable q -> runTrackTableV2Q q

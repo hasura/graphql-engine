@@ -46,6 +46,7 @@ import Hasura.Function.API
 import Hasura.Function.Cache
 import Hasura.Function.Metadata (FunctionMetadata (..))
 import Hasura.GraphQL.Schema (buildGQLContext)
+import Hasura.GraphQL.Schema.Common
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.LogicalModel.Cache (LogicalModelCache, LogicalModelInfo (..))
@@ -193,10 +194,17 @@ newtype CacheRWT m a
       Tracing.MonadTraceContext,
       MonadBase b,
       MonadBaseControl b,
-      ProvidesNetwork,
-      FF.HasFeatureFlagChecker
+      ProvidesNetwork
     )
   deriving anyclass (MonadQueryTags)
+
+-- | Since 'CacheRWT' runs in a context where we have sampled the feature flags
+-- we intentionally use those for 'HasFeatureFlagChecker', so that we always give
+-- coherent results consistent with the 'CacheDynamicConfig'.
+instance (Monad m) => FF.HasFeatureFlagChecker (CacheRWT m) where
+  checkFlag ff = do
+    ffs <- CacheRWT $ asks _cdcSchemaSampledFeatureFlags
+    withSchemaSampledFeatureFlags ffs (FF.checkFlag ff)
 
 instance (MonadReader r m) => MonadReader r (CacheRWT m) where
   ask = lift ask
@@ -435,7 +443,8 @@ buildSchemaCacheRule ::
   Logger Hasura ->
   Env.Environment ->
   Maybe SchemaRegistryContext ->
-  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection) `arr` (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
+  (MetadataWithResourceVersion, CacheDynamicConfig, InvalidationKeys, Maybe StoredIntrospection)
+    `arr` (SchemaCache, (SourcesIntrospectionStatus, SchemaRegistryAction))
 buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResourceVersion metadataNoDefaults interimMetadataResourceVersion, dynamicConfig, invalidationKeys, storedIntrospection) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
   let metadataDefaults = _cdcMetadataDefaults dynamicConfig
@@ -569,6 +578,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
         bindA
           -< do
             buildGQLContext
+              (_cdcSchemaSampledFeatureFlags dynamicConfig)
               (_cdcFunctionPermsCtx dynamicConfig)
               (_cdcRemoteSchemaPermsCtx dynamicConfig)
               (_cdcExperimentalFeatures dynamicConfig)
@@ -668,41 +678,50 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
         Maybe LBS.ByteString,
-        BackendInfoAndSourceMetadata b
+        BackendInfoAndSourceMetadata b,
+        SchemaSampledFeatureFlags
       )
         `arr` Maybe (SourceConfig b, DBObjectsIntrospection b)
-    tryResolveSource = Inc.cache proc (invalidationKeys, sourceIntrospection, BackendInfoAndSourceMetadata {..}) -> do
-      let sourceName = _smName _bcasmSourceMetadata
-          metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+    tryResolveSource =
+      Inc.cache
+        proc
+          ( invalidationKeys,
+            sourceIntrospection,
+            BackendInfoAndSourceMetadata {..},
+            schemaSampledFeatureFlags
+            )
+        -> do
+          let sourceName = _smName _bcasmSourceMetadata
+              metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
 
-      maybeSourceConfig <- tryGetSourceConfig @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
-      case maybeSourceConfig of
-        Nothing -> returnA -< Nothing
-        Just sourceConfig -> do
-          databaseResponse <- bindA -< resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig
-          case databaseResponse of
-            Right databaseMetadata -> do
-              -- Collect database introspection to persist in the storage
-              tellA -< pure (CollectStoredIntrospection $ SourceIntrospectionItem sourceName $ encJFromJValue databaseMetadata)
-              returnA -< Just (sourceConfig, databaseMetadata)
-            Left databaseError ->
-              -- If database exception occurs, try to lookup from stored introspection
-              case sourceIntrospection >>= decode' of
-                Nothing ->
-                  -- If no stored introspection exist, re-throw the database exception
-                  (| withRecordInconsistency (throwA -< databaseError) |) metadataObj
-                Just storedMetadata -> do
-                  let inconsistencyMessage =
-                        T.unwords
-                          [ "source " <>> sourceName,
-                            " is inconsistent because of stale database introspection is used.",
-                            "The source couldn't be reached for a fresh introspection",
-                            "because we got error: " <> qeError databaseError
-                          ]
-                  -- Still record inconsistency to notify the user obout the usage of stored stale data
-                  recordInconsistencies -< ((Just $ toJSON (qeInternal databaseError), [metadataObj]), inconsistencyMessage)
-                  bindA -< unLogger logger $ StoredIntrospectionLog ("Using stored introspection for database source " <>> sourceName) databaseError
-                  returnA -< Just (sourceConfig, storedMetadata)
+          maybeSourceConfig <- tryGetSourceConfig @b -< (invalidationKeys, sourceName, _smConfiguration _bcasmSourceMetadata, _smKind _bcasmSourceMetadata, _bcasmBackendInfo)
+          case maybeSourceConfig of
+            Nothing -> returnA -< Nothing
+            Just sourceConfig -> do
+              databaseResponse <- bindA -< withSchemaSampledFeatureFlags schemaSampledFeatureFlags (resolveDatabaseMetadata logger _bcasmSourceMetadata sourceConfig)
+              case databaseResponse of
+                Right databaseMetadata -> do
+                  -- Collect database introspection to persist in the storage
+                  tellA -< pure (CollectStoredIntrospection $ SourceIntrospectionItem sourceName $ encJFromJValue databaseMetadata)
+                  returnA -< Just (sourceConfig, databaseMetadata)
+                Left databaseError ->
+                  -- If database exception occurs, try to lookup from stored introspection
+                  case sourceIntrospection >>= decode' of
+                    Nothing ->
+                      -- If no stored introspection exist, re-throw the database exception
+                      (| withRecordInconsistency (throwA -< databaseError) |) metadataObj
+                    Just storedMetadata -> do
+                      let inconsistencyMessage =
+                            T.unwords
+                              [ "source " <>> sourceName,
+                                " is inconsistent because of stale database introspection is used.",
+                                "The source couldn't be reached for a fresh introspection",
+                                "because we got error: " <> qeError databaseError
+                              ]
+                      -- Still record inconsistency to notify the user obout the usage of stored stale data
+                      recordInconsistencies -< ((Just $ toJSON (qeInternal databaseError), [metadataObj]), inconsistencyMessage)
+                      bindA -< unLogger logger $ StoredIntrospectionLog ("Using stored introspection for database source " <>> sourceName) databaseError
+                      returnA -< Just (sourceConfig, storedMetadata)
 
     -- impl notes (swann):
     --
@@ -1200,7 +1219,10 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas logger env -< ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection), InsOrdHashMap.elems remoteSchemas)
+      remoteSchemaMap <-
+        buildRemoteSchemas logger env
+          -<
+            ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection, _cdcSchemaSampledFeatureFlags dynamicConfig), InsOrdHashMap.elems remoteSchemas)
       let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
           !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
@@ -1222,7 +1244,14 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
                           sourceIntrospection = HashMap.lookup sourceName =<< siBackendIntrospection <$> storedIntrospection
-                      maybeResolvedSource <- tryResolveSource -< (sourceInvalidationsKeys, encJToLBS <$> sourceIntrospection, backendInfoAndSourceMetadata)
+                      maybeResolvedSource <-
+                        tryResolveSource
+                          -<
+                            ( sourceInvalidationsKeys,
+                              encJToLBS <$> sourceIntrospection,
+                              backendInfoAndSourceMetadata,
+                              _cdcSchemaSampledFeatureFlags dynamicConfig
+                            )
                       case maybeResolvedSource of
                         Nothing -> returnA -< Nothing
                         Just (sourceConfig, source) -> do
