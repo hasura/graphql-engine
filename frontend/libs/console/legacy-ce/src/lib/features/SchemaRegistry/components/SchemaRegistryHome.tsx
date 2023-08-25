@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Dispatch } from 'redux';
 import { useGetSchemaChangeList } from '../hooks/useGetSchemaChangeList';
 import { Role, SchemaChangeCard, SchemaRegistryTag } from '../types';
 import globals from '../../../Globals';
@@ -20,23 +21,36 @@ import { AddSchemaRegistryTagDialog } from './AddSchemaRegistryTagDialog';
 import { SchemaTag } from './SchemaTag';
 import { Analytics } from '../../Analytics';
 import { SchemaChangeDetails } from './SchemaChangeDetails';
-import { ADMIN_ROLE, SCHEMA_LIST_FETCH_BATCH_SIZE } from '../constants';
+import {
+  ADMIN_ROLE,
+  EMPTY_UUID_STRING,
+  SCHEMA_LIST_FETCH_BATCH_SIZE,
+} from '../constants';
 import { IconTooltip } from '../../../new-components/Tooltip';
-export const SchemaRegistryHome = () => {
+import _push from '../../../components/Services/Data/push';
+import { useAppDispatch } from '../../../storeHooks';
+interface SchemaRegistryHomeProps {
+  schemaId: string | undefined;
+}
+export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
+  const { schemaId } = props;
   const projectID = globals.hasuraCloudProjectId || '';
-
+  const dispatch = useAppDispatch();
   const [pageNo, setPageno] = useState(
     parseInt(getSearchParam(window.location.search, 'page') || '0')
   );
+  const schemaRoleID = schemaId ? schemaId : EMPTY_UUID_STRING;
   const fetchSchemaResponse = useGetSchemaChangeList(
     projectID,
     SCHEMA_LIST_FETCH_BATCH_SIZE,
-    pageNo * SCHEMA_LIST_FETCH_BATCH_SIZE
+    pageNo * SCHEMA_LIST_FETCH_BATCH_SIZE,
+    schemaRoleID
   );
 
   const { kind } = fetchSchemaResponse;
 
   //to check if fetchSchemaResponse changed
+
   let latestAdminRoleID: string | null = null;
   if (kind === 'success') {
     const schemaList = schemaChangeListTransformFn(
@@ -45,7 +59,6 @@ export const SchemaRegistryHome = () => {
     latestAdminRoleID =
       schemaList[0]?.roles?.find(item => item.role === ADMIN_ROLE)?.id || null;
   }
-
   //selectedRole ID determines what should render in SchemaChangeDetails
   const [selectedRoleID, setSelectedRoleID] = useState<string | null>(null);
   const handleNext = (i: number) => {
@@ -54,18 +67,24 @@ export const SchemaRegistryHome = () => {
   const handlePrev = () => {
     setPageno(pageNo - 1);
   };
-  function handleSelectedRoleID(id: string | null) {
-    setSelectedRoleID(id);
-  }
   //setting the selected role ID as admin role ID by default
+  useEffect(() => {
+    if (schemaRoleID === EMPTY_UUID_STRING) {
+      if (latestAdminRoleID) {
+        setSelectedRoleID(latestAdminRoleID);
+        dispatch(_push(`/settings/schema-registry/${latestAdminRoleID}`));
+      }
+    } else {
+      setSelectedRoleID(schemaRoleID);
+    }
+  }, [schemaRoleID]);
   useEffect(() => {
     if (latestAdminRoleID) {
       setSelectedRoleID(latestAdminRoleID);
+      dispatch(_push(`/settings/schema-registry/${latestAdminRoleID}`));
     }
-
     setSearchParam(pageNo);
   }, [latestAdminRoleID, pageNo]);
-
   switch (kind) {
     case 'loading':
       return <p>Loading...</p>;
@@ -83,7 +102,7 @@ export const SchemaRegistryHome = () => {
               pageNumber={pageNo}
               totalCount={fetchSchemaResponse.totalCount}
               selectedRoleID={selectedRoleID}
-              handleSelectedRoleID={handleSelectedRoleID}
+              dispatch={dispatch}
               handlePrev={handlePrev}
               handleNext={handleNext}
             />
@@ -104,7 +123,7 @@ export const SchemaChangeList: React.VFC<{
   pageNumber: number;
   totalCount: number;
   selectedRoleID: string | null;
-  handleSelectedRoleID: (id: string | null) => void;
+  dispatch: Dispatch;
   handlePrev: () => void;
   handleNext: (i: number) => void;
 }> = props => {
@@ -113,14 +132,14 @@ export const SchemaChangeList: React.VFC<{
     pageNumber,
     totalCount,
     selectedRoleID,
-    handleSelectedRoleID,
     handlePrev,
     handleNext,
+    dispatch,
   } = props;
   const [openSchemaCardIndex, setIsOpenSchemaCardIndex] =
     useState<React.Key>(0);
   const isLastPage =
-    totalCount === pageNumber * SCHEMA_LIST_FETCH_BATCH_SIZE + schemas.length;
+    totalCount <= (pageNumber + 1) * SCHEMA_LIST_FETCH_BATCH_SIZE;
   const isSecondLastPage =
     totalCount <= (pageNumber + 2) * SCHEMA_LIST_FETCH_BATCH_SIZE;
   return (
@@ -142,7 +161,7 @@ export const SchemaChangeList: React.VFC<{
                 roles={schema.roles}
                 entryHash={schema.entry_hash}
                 tags={schema.tags}
-                handleSelectedRoleID={handleSelectedRoleID}
+                dispatch={dispatch}
                 handleClick={() => setIsOpenSchemaCardIndex(index)}
               />
             ))}
@@ -220,8 +239,8 @@ const SchemaCard: React.VFC<{
   tags: SchemaRegistryTag[];
   openSchemaCardIndex: React.Key;
   selectedRoleID: string | null;
+  dispatch: Dispatch;
   handleClick: () => void;
-  handleSelectedRoleID: (id: string | null) => void;
 }> = props => {
   const {
     cardKey,
@@ -231,8 +250,8 @@ const SchemaCard: React.VFC<{
     tags,
     openSchemaCardIndex,
     selectedRoleID,
+    dispatch,
     handleClick,
-    handleSelectedRoleID,
   } = props;
   const [isTagModalOpen, setIsTagModalOpen] = React.useState(false);
   const [isRolesMenuOpen, setIsRolesMenuOpen] = useState(false);
@@ -249,6 +268,9 @@ const SchemaCard: React.VFC<{
   React.useEffect(() => {
     setIsRolesMenuOpen(cardKey === openSchemaCardIndex);
   }, [cardKey, openSchemaCardIndex]);
+  const handleRoleClick = (roleBasedChange: Role) => {
+    dispatch(_push(`/settings/schema-registry/${roleBasedChange.id}`));
+  };
   return (
     <div
       className="w-full flex flex-col px-4 bg-white rounded"
@@ -277,7 +299,9 @@ const SchemaCard: React.VFC<{
               className={`flex w-full p-2 ${
                 roleBasedChange.id === selectedRoleID ? 'bg-gray-100' : ''
               } rounded hover:bg-gray-200`}
-              onClick={() => handleSelectedRoleID(roleBasedChange.id)}
+              onClick={() => {
+                handleRoleClick(roleBasedChange);
+              }}
               key={index}
             >
               <div className="flex items-center justify-between w-full rounded">

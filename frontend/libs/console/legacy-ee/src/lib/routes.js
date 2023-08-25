@@ -52,7 +52,6 @@ import {
   MultipleJWTSecretsPage,
   SingleSignOnPage,
   SchemaRegistryContainer,
-  SchemaDetailsView,
   RestEndpointDetailsPage,
 } from '@hasura/console-legacy-ce';
 
@@ -386,7 +385,10 @@ const routes = store => {
           <Route path="settings" component={metadataContainer(connect)}>
             <IndexRedirect to="metadata-actions" />
             <Route path="schema-registry" component={SchemaRegistryContainer} />
-            <Route path="schema-registry/:id" component={SchemaDetailsView} />
+            <Route
+              path="schema-registry/:id"
+              component={SchemaRegistryContainer}
+            />
             <Route
               path="metadata-actions"
               component={metadataOptionsContainer(connect)}
