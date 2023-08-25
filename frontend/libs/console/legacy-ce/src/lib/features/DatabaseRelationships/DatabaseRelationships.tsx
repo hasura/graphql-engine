@@ -8,6 +8,7 @@ import {
 } from '../hasura-metadata-api';
 import {
   BulkAtomicResponse,
+  BulkKeepGoingResponse,
   Table,
   isBulkAtomicResponseError,
 } from '../hasura-metadata-types';
@@ -83,9 +84,15 @@ export const DatabaseRelationships = ({
     }
   };
 
-  const onSuccess = (data: BulkAtomicResponse) => {
+  const onSuccess = (data: BulkAtomicResponse | BulkKeepGoingResponse) => {
     if (mode) {
-      const errors = data.filter(isBulkAtomicResponseError);
+      /**
+       * Errors for BulkAtomic are reported with a 500/400 response from the server. We aleady handle this
+       * with onError callback
+       */
+      const errors = Array.isArray(data)
+        ? data.filter(isBulkAtomicResponseError)
+        : [];
 
       if (errors.length) {
         hasuraToast({

@@ -3,7 +3,11 @@ import {
   isDatasetTable,
   isGDCTable,
 } from '../../../DataSource/utils';
-import { BulkAtomicResponse, Table } from '../../../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+  Table,
+} from '../../../hasura-metadata-types';
 import { useCallback } from 'react';
 import { MODE } from '../../types';
 import { generateLhsFields } from './parts/MapRemoteSchemaFields/utils';
@@ -42,7 +46,7 @@ export const useHandleSubmit = ({
   dataSourceName: string;
   table: Table;
   mode: MODE;
-  onSuccess?: (data: BulkAtomicResponse) => void;
+  onSuccess?: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
   onError?: (err: Error) => void;
 }) => {
   const { createTableRelationships, ...rest } = useCreateTableRelationships(

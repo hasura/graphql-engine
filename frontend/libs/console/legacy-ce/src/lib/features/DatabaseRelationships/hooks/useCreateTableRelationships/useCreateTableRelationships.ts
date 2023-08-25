@@ -6,7 +6,11 @@ import { Feature } from '../../../DataSource';
 import { useMetadataMigration } from '../../../MetadataAPI';
 import { MetadataMigrationOptions } from '../../../MetadataAPI/hooks/useMetadataMigration';
 import { areTablesEqual, useMetadata } from '../../../hasura-metadata-api';
-import { BulkAtomicResponse, Table } from '../../../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+  Table,
+} from '../../../hasura-metadata-types';
 import {
   DeleteRelationshipProps,
   LocalTableRelationshipDefinition,
@@ -70,7 +74,11 @@ const getTargetName = (target: AllowedRelationshipDefinitions['target']) => {
 export const useCreateTableRelationships = (
   dataSourceName: string,
   globalMutateOptions?: Omit<MetadataMigrationOptions, 'onSuccess'> & {
-    onSuccess?: (data: BulkAtomicResponse, variable?: any, ctx?: any) => void;
+    onSuccess?: (
+      data: BulkAtomicResponse | BulkKeepGoingResponse,
+      variable?: any,
+      ctx?: any
+    ) => void;
   }
 ) => {
   // get these capabilities
@@ -132,7 +140,9 @@ export const useCreateTableRelationships = (
     [metadataSources]
   );
 
-  const { mutate, ...rest } = useMetadataMigration<BulkAtomicResponse>({
+  const { mutate, ...rest } = useMetadataMigration<
+    BulkAtomicResponse | BulkKeepGoingResponse
+  >({
     ...globalMutateOptions,
     errorTransform: transformErrorResponse,
     onSuccess: (data, variable, ctx) => {
