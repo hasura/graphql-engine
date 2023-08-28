@@ -55,11 +55,12 @@ services:
       HASURA_GRAPHQL_REDIS_URL: redis://redis:6379
       HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL: "redis://redis:6379"
       HASURA_GRAPHQL_MAX_CACHE_SIZE: "200"
+      HASURA_GRAPHQL_METADATA_DEFAULTS: '{"backend_configs":{"dataconnector":{"Mongo":{"uri":"http://mongo-data-connector:3000"}}}}'
     depends_on:
       postgres:
         condition: service_healthy
   mongo-data-connector:
-    image: hasura/mongo-data-connector:v2.27.0
+    image: hasura/mongo-data-connector:v2.32.0
     ports:
       - 3000:3000
 volumes:

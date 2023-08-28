@@ -1,0 +1,659 @@
+---
+description: Customize the Hasura GraphQL schema with MongoDB and Logical Models
+keywords:
+  - hasura
+  - docs
+  - mongodb
+  - schema
+  - Logical Models
+  - Native Queries
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Logical Models
+
+## Introduction
+
+:::tip Supported from
+
+Full support for Logical Models on MongoDB are supported from `v2.31.0` onwards.
+
+:::
+
+Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
+
+Logical Models are currently used by MongoDB as the primary method for defining a Collection or View's schema which will be used to generate the GraphQL API.
+Since NoSQL databases don't inherently have a schema present for the Documents present, we need to define one for our Collections as they are added in Hasura.
+
+You can find examples of how to use Logical Models in the
+[Cloud](/databases/mongodb/cloud.mdx) or [Docker](/databases/mongodb/docker.mdx) Getting Started guides for MongoDB. For a more detailed explanation
+of Logical Models themselves, read on.
+
+## Tracking a Collection with a Logical Model
+
+Each Collection needs to have a Logical Model in order to specify its GraphQL schema.<br />
+A Logical model if optional if a Collection has a database [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) present, it will be used as the default.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/databases/mongodb/track-1-select.png" alt="Tracking a Collection - Select Collection" width="1000px" />
+<Thumbnail src="/img/databases/mongodb/track-2-sample.png" alt="Tracking a Collection - Sample Documents" width="1000px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases > databases.yaml` file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<MongoDB field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+And the track the Collection with its associated logical model by adding the definition to `metadata > databases > tables > <collection_name>.yaml`.
+
+```yaml
+table:
+  - <collection_name>
+logical_model: <logical_model_name>
+```
+
+There will also be an associated `includes` statement in the `metadata > databases > tables > tables.yaml` file.
+
+```yaml
+- "!include <table_name>.yaml"
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You create a logical model through the metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+    "type": "mongo_track_tables",
+    "resource_version": 1,
+    "args": {
+        "allow_warnings": true,
+        "tables": [
+            {
+                "source": "default",
+                "table": [
+                    "<collection_name>"
+                ],
+                "logical_model": "<logical_model_name>"
+            }
+        ]
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
+## Tracking a Logical Model
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate model definition, under the database in the `metadata > databases > databases.yaml` file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<MongoDB field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You create a logical model through the metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<MongoDB field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+and then track an associated Collection, referencing the associated logical model using:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_track_tables",
+  "args": {
+      "allow_warnings": true,
+      "tables": [
+        {
+          "table": [ <collection_name> ],
+          "source": <database_name>,
+          "logical_model": <logical_model_name>
+        }
+      ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+The type of each field can be either a MongoDB data type or references to other Logical Models, and each field can be
+marked as nullable or not, see [LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
+
+For example, we could track a representation of an article as follows:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the `default` database definition in the `metadata > databases > databases.yaml` file:
+
+```yaml
+logical_models:
+  - name: article
+    fields:
+      id:
+        type: integer
+        nullable: false
+      title:
+        type: text
+        nullable: false
+      contents:
+        type: text
+        nullable: false
+      published_date:
+        type: date
+        nullable: true
+      is_published:
+        type: bit
+        nullable: false
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "fields": [
+      {
+        "name": "id",
+        "type":
+          {
+            "scalar": "int"
+          }
+      },
+      {
+        "name": "title",
+        "type":
+          {
+            "scalar": "text"
+          }
+      },
+      {
+        "name": "contents",
+        "type":
+          {
+            "scalar": "text"
+          }
+      },
+      {
+        "name": "published_date",
+        "type":
+          {
+            "scalar": "date",
+            "nullable": true
+          },
+      },
+      {
+        "name": "is_published",
+        "type":
+          {
+            "scalar": "bit"
+          }
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Untracking a Logical Model
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can remove a Logical Model by removing it from the `metadata > databases > databases.yaml` file.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You can remove a Logical Model the same way:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Removing a Logical Model
+
+Note that you can only remove an **unused** Logical Model; if the model is attached to a Native Query, this operation
+will fail. You must remove the Native Query first.
+
+:::
+
+To untrack the above `article` Logical Model, we would run the following:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the above metadata from the `metadata > databases > databases.yaml` file.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Referencing other Logical Models {#referencing-other-logical-models}
+
+Logical Model fields are allowed to refer to other Logical Models, even recursively, allowing nested data types.
+
+Object or array relationships between Native Queries are an example use of this.
+
+To elaborate on the `article` example above, we can include authors in the data model:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk_atomic",
+  "args":
+  [
+    {
+      "type": "mongo_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "article",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "title",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "contents",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "author_id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "author",
+            "type":
+              {
+                "logical_model": "author",
+              },
+          }
+        ]
+      }
+    },
+    {
+      "type": "mongo_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "author",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "name",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "articles",
+            "type":
+              {
+                "array":
+                  {
+                    "logical_model": "article"
+                  }
+              }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+:::info Wrap calls in `bulk_atomic`
+
+Tracking the Logical Models one-by-one would fail, since `article` refers to `author`, which is not yet defined.
+
+Tracking the Logical Models in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
+
+:::
+
+</TabItem>
+</Tabs>
+
+## Permissions
+
+By default, a model has no permissions, and only the admin account will be able to use it. You can enable the model by
+adding permissions for a given role.
+
+As Logical Models are currently only used for read-only purposes, you can only add select permissions.
+
+The permissions consist of a list of columns that the role can access, and a filter that specifies which rows the role
+can receive.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/create-permissions.png" alt="Create Logical Model Permissions" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+all rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        ...
+      select_permissions:
+        - role: "<role name>"
+          permission:
+            columns: "*" | [
+              "column 1",
+              "column 2",
+              ...
+            ]
+            filter: "<boolean expression>"
+        - ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+all rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+For example, to allow access to the `article` Logical Model for the `reader` role, but only for published articles, we
+could use the following permission to limit the accessible rows to those where `is_published` is `true`, and then hide
+that column from the list (by specifying all other columns).
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/permissions-with-check.png" alt="Permissions with check" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
+
+```yaml
+logical_models:
+  - name: '<name>'
+    fields: ...
+    select_permissions:
+      - role: reader
+        permission:
+          columns:
+            - id
+            - title
+            - contents
+            - date
+          filter:
+            is_published:
+              _eq: true
+      - ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "role": "reader",
+    "permission": {
+      "columns": [
+        "id",
+        "title",
+        "contents",
+        "date"
+      ],
+      "filter": {
+        "is_published": {"_eq": true}
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+You can also drop permissions:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the relevant permission from `metadata > databases > databases.yaml`.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "mongo_drop_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>

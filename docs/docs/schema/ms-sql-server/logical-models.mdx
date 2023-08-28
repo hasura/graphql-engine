@@ -51,7 +51,7 @@ of Logical Models themselves, read on.
 
 <TabItem value="cli" label="CLI">
 
-You can create a logical model by adding it to the appropriate database definition in the `metadata > databases.yaml`
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases > databases.yaml`
 file:
 
 ```yaml
@@ -115,7 +115,7 @@ For example, we could track a representation of an article as follows:
 
 <TabItem value="cli" label="CLI">
 
-Add the following to the `default` database definition in the `metadata > databases.yaml` file:
+Add the following to the `default` database definition in the `metadata > databases > databases.yaml` file:
 
 ```yaml
 logical_models:
@@ -208,7 +208,7 @@ X-Hasura-Role: admin
 
 <TabItem value="cli" label="CLI">
 
-You can remove a Logical Model by removing it from the `metadata > databases.yaml` file.
+You can remove a Logical Model by removing it from the `metadata > databases > databases.yaml` file.
 
 </TabItem>
 
@@ -251,7 +251,7 @@ To untrack the above `article` Logical Model, we would run the following:
 
 <TabItem value="cli" label="CLI">
 
-Remove the above metadata from the `metadata > databases.yaml` file.
+Remove the above metadata from the `metadata > databases > databases.yaml` file.
 
 </TabItem>
 
@@ -411,7 +411,7 @@ Columns must be specified, though you can use `"*"` to specify that you want to 
 The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
 all rows to be passed through to the response, you can specify an empty filter, `{}`.
 
-Add the required permissions to the relevant logical model in `metadata > databases.yaml`:
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
 
 ```yaml
   logical_models:
@@ -478,7 +478,7 @@ that column from the list (by specifying all other columns).
 
 <TabItem value="cli" label="CLI">
 
-Add the required permissions to the relevant logical model in `metadata > databases.yaml`:
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
 
 ```yaml
 logical_models:
@@ -542,7 +542,7 @@ You can also drop permissions:
 
 <TabItem value="cli" label="CLI">
 
-Remove the relevant permission from `metadata > databases.yaml`.
+Remove the relevant permission from `metadata > databases > databases.yaml`.
 
 </TabItem>
 
