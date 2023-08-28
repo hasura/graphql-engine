@@ -27,7 +27,7 @@ const dbLogos: Record<string, string> = {
   sqlite: sqliteLogo,
   mariadb: mariadbLogo,
   oracle: oracleLogo,
-  Mongo: mongodbLogo,
+  mongo: mongodbLogo,
 };
 
 export default dbLogos;

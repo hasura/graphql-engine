@@ -108,16 +108,21 @@ export type MetadataError = {
   error: string;
   path: string;
 };
-export type BulkKeepGoingResponse = [
+export type BulkKeepGoingResponse = (
   | {
       message: 'success';
     }
   | MetadataError
-];
+)[];
 
-export type BulkAtomicResponse = BulkKeepGoingResponse;
+export type BulkAtomicResponse =
+  | {
+      message: 'success';
+    }
+  | MetadataError;
+
 export const isBulkAtomicResponseError = (
-  response: BulkAtomicResponse[number]
+  response: BulkAtomicResponse
 ): response is MetadataError => {
   return 'error' in response;
 };
