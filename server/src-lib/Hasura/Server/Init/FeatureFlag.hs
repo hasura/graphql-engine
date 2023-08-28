@@ -6,6 +6,8 @@ module Hasura.Server.Init.FeatureFlag
     CheckFeatureFlag (..),
     ceCheckFeatureFlag,
     HasFeatureFlagChecker (..),
+    -- Feature flags
+    namingConventionSep2023,
   )
 where
 
@@ -66,7 +68,8 @@ instance Semigroup CheckFeatureFlag where
 -- | This is the list of feature flags that exist in the CE version
 ceFeatureFlags :: [(FeatureFlag, Text)]
 ceFeatureFlags =
-  [ (testFlag, "Testing feature flag integration")
+  [ (testFlag, "Testing feature flag integration"),
+    (namingConventionSep2023, "The changes to the naming-convention feature that were added in September 2023")
   ]
 
 --------------------------------------------------------------------------------
@@ -88,3 +91,7 @@ instance (HasFeatureFlagChecker m) => HasFeatureFlagChecker (StateT s m) where
 -- | Testing feature flag integration
 testFlag :: FeatureFlag
 testFlag = FeatureFlag {ffIdentifier = "test-flag"}
+
+-- | Feature flag enabling the changes to the naming-convention feature that were added in September 2023.
+namingConventionSep2023 :: FeatureFlag
+namingConventionSep2023 = FeatureFlag {ffIdentifier = "naming-convention-sep-2023"}
