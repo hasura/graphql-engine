@@ -102,7 +102,7 @@
 </span><span id="line-102"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-103"></span><span class="hs-comment">-- Serve Command</span><span>
 </span><span id="line-104"></span><span>
-</span><span id="line-105"></span><span id="local-6989586621687607728"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607728"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">Config.ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607728"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-105"></span><span id="local-6989586621687608460"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608460"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">Config.ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608460"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-106"></span><span id="serveCommandParser"><span class="annot"><span class="annottext">serveCommandParser :: forall impl. EnabledLogTypes impl =&gt; Parser (ServeOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var hs-var">serveCommandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">Maybe Port
@@ -3133,7 +3133,7 @@ forall def. Option def -&gt; String
       -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608410"><span class="hs-identifier hs-var">pgStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621687609142"><span class="hs-identifier hs-var">pgStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe (Refined NonNegative Int)
    -&gt; Maybe (Refined NonNegative Int)
    -&gt; Maybe (Refined NonNegative NominalDiffTime)
@@ -3150,7 +3150,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608411"><span class="hs-identifier hs-var">pgConns</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621687609143"><span class="hs-identifier hs-var">pgConns</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe (Refined NonNegative Int)
    -&gt; Maybe (Refined NonNegative NominalDiffTime)
    -&gt; Maybe Bool
@@ -3165,7 +3165,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608412"><span class="hs-identifier hs-var">pgIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621687609144"><span class="hs-identifier hs-var">pgIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe (Refined NonNegative NominalDiffTime)
    -&gt; Maybe Bool
    -&gt; Maybe (Refined NonNegative NominalDiffTime)
@@ -3177,7 +3177,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Refined NonNegative NominalDiffTime))
-</span><a href="#local-6989586621687608413"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621687609145"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe Bool
    -&gt; Maybe (Refined NonNegative NominalDiffTime) -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe Bool)
@@ -3186,18 +3186,18 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
-</span><a href="#local-6989586621687608414"><span class="hs-identifier hs-var">pgUsePreparedStatements</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621687609146"><span class="hs-identifier hs-var">pgUsePreparedStatements</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe (Refined NonNegative NominalDiffTime) -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe (Refined NonNegative NominalDiffTime))
 -&gt; Parser ConnParamsRaw
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe (Refined NonNegative NominalDiffTime))
-</span><a href="#local-6989586621687608415"><span class="hs-identifier hs-var">pgPoolTimeout</span></a></span><span>
+</span><a href="#local-6989586621687609147"><span class="hs-identifier hs-var">pgPoolTimeout</span></a></span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-200"></span><span>    </span><span class="annot"><a href="#local-6989586621687608410"><span class="hs-identifier hs-type">pgStripes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-201"></span><span>    </span><span id="local-6989586621687608410"><span class="annot"><span class="annottext">pgStripes :: Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608410"><span class="hs-identifier hs-var hs-var">pgStripes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-200"></span><span>    </span><span class="annot"><a href="#local-6989586621687609142"><span class="hs-identifier hs-type">pgStripes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-201"></span><span>    </span><span id="local-6989586621687609142"><span class="annot"><span class="annottext">pgStripes :: Parser (Maybe (Refined NonNegative Int))
+</span><a href="#local-6989586621687609142"><span class="hs-identifier hs-var hs-var">pgStripes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-202"></span><span>      </span><span class="annot"><span class="annottext">Parser (Refined NonNegative Int)
 -&gt; Parser (Maybe (Refined NonNegative Int))
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -3250,9 +3250,9 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgStripesOption"><span class="hs-identifier hs-var">pgStripesOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-209"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-210"></span><span>
-</span><span id="line-211"></span><span>    </span><span class="annot"><a href="#local-6989586621687608411"><span class="hs-identifier hs-type">pgConns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-212"></span><span>    </span><span id="local-6989586621687608411"><span class="annot"><span class="annottext">pgConns :: Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608411"><span class="hs-identifier hs-var hs-var">pgConns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-211"></span><span>    </span><span class="annot"><a href="#local-6989586621687609143"><span class="hs-identifier hs-type">pgConns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-212"></span><span>    </span><span id="local-6989586621687609143"><span class="annot"><span class="annottext">pgConns :: Parser (Maybe (Refined NonNegative Int))
+</span><a href="#local-6989586621687609143"><span class="hs-identifier hs-var hs-var">pgConns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-213"></span><span>      </span><span class="annot"><span class="annottext">Parser (Refined NonNegative Int)
 -&gt; Parser (Maybe (Refined NonNegative Int))
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -3305,9 +3305,9 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgConnsOption"><span class="hs-identifier hs-var">pgConnsOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-220"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span><span>
-</span><span id="line-222"></span><span>    </span><span class="annot"><a href="#local-6989586621687608412"><span class="hs-identifier hs-type">pgIdleTimeout</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-223"></span><span>    </span><span id="local-6989586621687608412"><span class="annot"><span class="annottext">pgIdleTimeout :: Parser (Maybe (Refined NonNegative Int))
-</span><a href="#local-6989586621687608412"><span class="hs-identifier hs-var hs-var">pgIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-222"></span><span>    </span><span class="annot"><a href="#local-6989586621687609144"><span class="hs-identifier hs-type">pgIdleTimeout</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-223"></span><span>    </span><span id="local-6989586621687609144"><span class="annot"><span class="annottext">pgIdleTimeout :: Parser (Maybe (Refined NonNegative Int))
+</span><a href="#local-6989586621687609144"><span class="hs-identifier hs-var hs-var">pgIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-224"></span><span>      </span><span class="annot"><span class="annottext">Parser (Refined NonNegative Int)
 -&gt; Parser (Maybe (Refined NonNegative Int))
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -3352,9 +3352,9 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgTimeoutOption"><span class="hs-identifier hs-var">pgTimeoutOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-230"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-231"></span><span>
-</span><span id="line-232"></span><span>    </span><span class="annot"><a href="#local-6989586621687608413"><span class="hs-identifier hs-type">pgConnLifetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time.NominalDiffTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-233"></span><span>    </span><span id="local-6989586621687608413"><span class="annot"><span class="annottext">pgConnLifetime :: Parser (Maybe (Refined NonNegative NominalDiffTime))
-</span><a href="#local-6989586621687608413"><span class="hs-identifier hs-var hs-var">pgConnLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><a href="#local-6989586621687609145"><span class="hs-identifier hs-type">pgConnLifetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time.NominalDiffTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-233"></span><span>    </span><span id="local-6989586621687609145"><span class="annot"><span class="annottext">pgConnLifetime :: Parser (Maybe (Refined NonNegative NominalDiffTime))
+</span><a href="#local-6989586621687609145"><span class="hs-identifier hs-var hs-var">pgConnLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-234"></span><span>      </span><span class="annot"><span class="annottext">Parser (Refined NonNegative NominalDiffTime)
 -&gt; Parser (Maybe (Refined NonNegative NominalDiffTime))
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -3399,9 +3399,9 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgConnLifetimeOption"><span class="hs-identifier hs-var">pgConnLifetimeOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-240"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-241"></span><span>
-</span><span id="line-242"></span><span>    </span><span class="annot"><a href="#local-6989586621687608414"><span class="hs-identifier hs-type">pgUsePreparedStatements</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span>
-</span><span id="line-243"></span><span>    </span><span id="local-6989586621687608414"><span class="annot"><span class="annottext">pgUsePreparedStatements :: Parser (Maybe Bool)
-</span><a href="#local-6989586621687608414"><span class="hs-identifier hs-var hs-var">pgUsePreparedStatements</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-242"></span><span>    </span><span class="annot"><a href="#local-6989586621687609146"><span class="hs-identifier hs-type">pgUsePreparedStatements</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-243"></span><span>    </span><span id="local-6989586621687609146"><span class="annot"><span class="annottext">pgUsePreparedStatements :: Parser (Maybe Bool)
+</span><a href="#local-6989586621687609146"><span class="hs-identifier hs-var hs-var">pgUsePreparedStatements</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-244"></span><span>      </span><span class="annot"><span class="annottext">Parser Bool -&gt; Parser (Maybe Bool)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span>
@@ -3438,9 +3438,9 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgUsePreparedStatementsOption"><span class="hs-identifier hs-var">pgUsePreparedStatementsOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-250"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-251"></span><span>
-</span><span id="line-252"></span><span>    </span><span class="annot"><a href="#local-6989586621687608415"><span class="hs-identifier hs-type">pgPoolTimeout</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time.NominalDiffTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-253"></span><span>    </span><span id="local-6989586621687608415"><span class="annot"><span class="annottext">pgPoolTimeout :: Parser (Maybe (Refined NonNegative NominalDiffTime))
-</span><a href="#local-6989586621687608415"><span class="hs-identifier hs-var hs-var">pgPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-252"></span><span>    </span><span class="annot"><a href="#local-6989586621687609147"><span class="hs-identifier hs-type">pgPoolTimeout</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Time.NominalDiffTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-253"></span><span>    </span><span id="local-6989586621687609147"><span class="annot"><span class="annottext">pgPoolTimeout :: Parser (Maybe (Refined NonNegative NominalDiffTime))
+</span><a href="#local-6989586621687609147"><span class="hs-identifier hs-var hs-var">pgPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-254"></span><span>      </span><span class="annot"><span class="annottext">Parser (Refined NonNegative NominalDiffTime)
 -&gt; Parser (Maybe (Refined NonNegative NominalDiffTime))
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -3768,21 +3768,21 @@ forall def. Option def -&gt; String
 -&gt; Parser (Maybe AuthHookType -&gt; Maybe Bool -&gt; AuthHookRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text)
-</span><a href="#local-6989586621687608426"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; Maybe Bool -&gt; AuthHookRaw)
+</span><a href="#local-6989586621687609158"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; Maybe Bool -&gt; AuthHookRaw)
 -&gt; Parser (Maybe AuthHookType)
 -&gt; Parser (Maybe Bool -&gt; AuthHookRaw)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType)
-</span><a href="#local-6989586621687608427"><span class="hs-identifier hs-var">urlType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; AuthHookRaw)
+</span><a href="#local-6989586621687609159"><span class="hs-identifier hs-var">urlType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; AuthHookRaw)
 -&gt; Parser (Maybe Bool) -&gt; Parser AuthHookRaw
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
-</span><a href="#local-6989586621687608428"><span class="hs-identifier hs-var">sendRequestBody</span></a></span><span>
+</span><a href="#local-6989586621687609160"><span class="hs-identifier hs-var">sendRequestBody</span></a></span><span>
 </span><span id="line-376"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-377"></span><span>    </span><span id="local-6989586621687608426"><span class="annot"><span class="annottext">url :: Parser (Maybe Text)
-</span><a href="#local-6989586621687608426"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-377"></span><span>    </span><span id="local-6989586621687609158"><span class="annot"><span class="annottext">url :: Parser (Maybe Text)
+</span><a href="#local-6989586621687609158"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-378"></span><span>      </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser (Maybe Text)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span>
@@ -3813,8 +3813,8 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#authHookOption"><span class="hs-identifier hs-var">authHookOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-383"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-384"></span><span>    </span><span id="local-6989586621687608427"><span class="annot"><span class="annottext">urlType :: Parser (Maybe AuthHookType)
-</span><a href="#local-6989586621687608427"><span class="hs-identifier hs-var hs-var">urlType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-384"></span><span>    </span><span id="local-6989586621687609159"><span class="annot"><span class="annottext">urlType :: Parser (Maybe AuthHookType)
+</span><a href="#local-6989586621687609159"><span class="hs-identifier hs-var hs-var">urlType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-385"></span><span>      </span><span class="annot"><span class="annottext">Parser AuthHookType -&gt; Parser (Maybe AuthHookType)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span>
@@ -3851,8 +3851,8 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Option AuthHookType
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#authHookModeOption"><span class="hs-identifier hs-var">authHookModeOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-391"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-392"></span><span>    </span><span id="local-6989586621687608428"><span class="annot"><span class="annottext">Parser (Maybe Bool)
-</span><a href="#local-6989586621687608428"><span class="hs-identifier hs-var">sendRequestBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-392"></span><span>    </span><span id="local-6989586621687609160"><span class="annot"><span class="annottext">Parser (Maybe Bool)
+</span><a href="#local-6989586621687609160"><span class="hs-identifier hs-var">sendRequestBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-393"></span><span>      </span><span class="annot"><span class="annottext">Parser Bool -&gt; Parser (Maybe Bool)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span>
@@ -4003,7 +4003,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a b. (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe RoleName
-</span><a href="#local-6989586621687608449"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span>
+</span><a href="#local-6989586621687609181"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span>
 </span><span id="line-449"></span><span>    </span><span class="annot"><span class="annottext">(Parser (Maybe Text) -&gt; Parser (Maybe RoleName))
 -&gt; Parser (Maybe Text) -&gt; Parser (Maybe RoleName)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -4038,10 +4038,10 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#unAuthRoleOption"><span class="hs-identifier hs-var">unAuthRoleOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-454"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-455"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-456"></span><span>    </span><span id="local-6989586621687608449"><span class="annot"><span class="annottext">mkRoleName :: Maybe Text -&gt; Maybe RoleName
-</span><a href="#local-6989586621687608449"><span class="hs-identifier hs-var hs-var">mkRoleName</span></a></span></span><span> </span><span id="local-6989586621687608452"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687608452"><span class="hs-identifier hs-var">mText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621687608452"><span class="hs-identifier hs-var">mText</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
+</span><span id="line-456"></span><span>    </span><span id="local-6989586621687609181"><span class="annot"><span class="annottext">mkRoleName :: Maybe Text -&gt; Maybe RoleName
+</span><a href="#local-6989586621687609181"><span class="hs-identifier hs-var hs-var">mkRoleName</span></a></span></span><span> </span><span id="local-6989586621687609184"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687609184"><span class="hs-identifier hs-var">mText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687609184"><span class="hs-identifier hs-var">mText</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
 forall a b. Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe RoleName
@@ -4069,19 +4069,19 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span id="line-468"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseCorsConfig"><span class="hs-identifier hs-type">parseCorsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">Cors.CorsConfig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-469"></span><span id="parseCorsConfig"><span class="annot"><span class="annottext">parseCorsConfig :: Parser (Maybe CorsConfig)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseCorsConfig"><span class="hs-identifier hs-var hs-var">parseCorsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
-</span><a href="#local-6989586621687608454"><span class="hs-identifier hs-var">mapCC</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig)
+</span><a href="#local-6989586621687609186"><span class="hs-identifier hs-var">mapCC</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig)
 -&gt; Parser Bool -&gt; Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
-</span><a href="#local-6989586621687608455"><span class="hs-identifier hs-var">disableCors</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
+</span><a href="#local-6989586621687609187"><span class="hs-identifier hs-var">disableCors</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
 -&gt; Parser (Maybe CorsConfig) -&gt; Parser (Maybe CorsConfig)
 forall a b. Parser (a -&gt; b) -&gt; Parser a -&gt; Parser b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig)
-</span><a href="#local-6989586621687608456"><span class="hs-identifier hs-var">corsDomain</span></a></span><span>
+</span><a href="#local-6989586621687609188"><span class="hs-identifier hs-var">corsDomain</span></a></span><span>
 </span><span id="line-470"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-471"></span><span>    </span><span id="local-6989586621687608456"><span class="annot"><span class="annottext">corsDomain :: Parser (Maybe CorsConfig)
-</span><a href="#local-6989586621687608456"><span class="hs-identifier hs-var hs-var">corsDomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-471"></span><span>    </span><span id="local-6989586621687609188"><span class="annot"><span class="annottext">corsDomain :: Parser (Maybe CorsConfig)
+</span><a href="#local-6989586621687609188"><span class="hs-identifier hs-var hs-var">corsDomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-472"></span><span>      </span><span class="annot"><span class="annottext">Parser CorsConfig -&gt; Parser (Maybe CorsConfig)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span>
@@ -4119,8 +4119,8 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#corsDomainOption"><span class="hs-identifier hs-var">corsDomainOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-478"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-479"></span><span>
-</span><span id="line-480"></span><span>    </span><span id="local-6989586621687608455"><span class="annot"><span class="annottext">disableCors :: Parser Bool
-</span><a href="#local-6989586621687608455"><span class="hs-identifier hs-var hs-var">disableCors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-480"></span><span>    </span><span id="local-6989586621687609187"><span class="annot"><span class="annottext">disableCors :: Parser Bool
+</span><a href="#local-6989586621687609187"><span class="hs-identifier hs-var hs-var">disableCors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-481"></span><span>      </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Builder.html#switch"><span class="hs-identifier hs-var">Opt.switch</span></a></span><span>
 </span><span id="line-482"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
@@ -4137,21 +4137,21 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#disableCorsOption"><span class="hs-identifier hs-var">disableCorsOption</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-484"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-485"></span><span>
-</span><span id="line-486"></span><span>    </span><span id="local-6989586621687608454"><span class="annot"><span class="annottext">mapCC :: Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
-</span><a href="#local-6989586621687608454"><span class="hs-identifier hs-var hs-var">mapCC</span></a></span></span><span> </span><span id="local-6989586621687608467"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687608467"><span class="hs-identifier hs-var">isDisabled</span></a></span></span><span> </span><span id="local-6989586621687608468"><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621687608468"><span class="hs-identifier hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-486"></span><span>    </span><span id="local-6989586621687609186"><span class="annot"><span class="annottext">mapCC :: Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
+</span><a href="#local-6989586621687609186"><span class="hs-identifier hs-var hs-var">mapCC</span></a></span></span><span> </span><span id="local-6989586621687609199"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687609199"><span class="hs-identifier hs-var">isDisabled</span></a></span></span><span> </span><span id="local-6989586621687609200"><span class="annot"><span class="annottext">Maybe CorsConfig
+</span><a href="#local-6989586621687609200"><span class="hs-identifier hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-487"></span><span>      </span><span class="annot"><span class="annottext">Maybe CorsConfig -&gt; Maybe CorsConfig -&gt; Bool -&gt; Maybe CorsConfig
 forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621687608468"><span class="hs-identifier hs-var">domains</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Maybe CorsConfig
+</span><a href="#local-6989586621687609200"><span class="hs-identifier hs-var">domains</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Maybe CorsConfig
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(CorsConfig -&gt; Maybe CorsConfig) -&gt; CorsConfig -&gt; Maybe CorsConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">Cors.CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621687608467"><span class="hs-identifier hs-var">isDisabled</span></a></span><span>
+</span><a href="#local-6989586621687609199"><span class="hs-identifier hs-var">isDisabled</span></a></span><span>
 </span><span id="line-488"></span><span>
 </span><span id="line-489"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#corsDomainOption"><span class="hs-identifier hs-type">corsDomainOption</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier hs-type">Config.Option</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">Cors.CorsConfig</span></a></span><span>
 </span><span id="line-490"></span><span id="corsDomainOption"><span class="annot"><span class="annottext">corsDomainOption :: Option CorsConfig
@@ -4939,7 +4939,7 @@ forall def. Option def -&gt; String
 </span><span class="hs-string">&quot;Only accept allowed GraphQL queries&quot;</span></span><span>
 </span><span id="line-764"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-765"></span><span>
-</span><span id="line-766"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-type">parseEnabledLogs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687607760"><span class="annot"><a href="#local-6989586621687607760"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607760"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">Logging.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607760"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-766"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-type">parseEnabledLogs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687608492"><span class="annot"><a href="#local-6989586621687608492"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608492"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/optparse-applicative-0.16.1.0-c70368d3d3f12eb8bd3d5460df0e30cb0e623940f9ba06a474d4f5f4feb4621b/share/doc/html/src/Options.Applicative.Types.html#Parser"><span class="hs-identifier hs-type">Opt.Parser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">Logging.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608492"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-767"></span><span id="parseEnabledLogs"><span class="annot"><span class="annottext">parseEnabledLogs :: forall impl.
 EnabledLogTypes impl =&gt;
 Parser (Maybe (HashSet (EngineLogType impl)))
@@ -4979,10 +4979,10 @@ forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_helpMessage"><span class="hs-identifier hs-var">Config._helpMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall impl.
 EnabledLogTypes impl =&gt;
 Option (HashSet (EngineLogType impl))
-</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-var">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687607760"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-var">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687608492"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-773"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-774"></span><span>
-</span><span id="line-775"></span><span id="local-6989586621687607805"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-type">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607805"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier hs-type">Config.Option</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">Logging.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687607805"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-775"></span><span id="local-6989586621687608537"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-type">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608537"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Option"><span class="hs-identifier hs-type">Config.Option</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">Logging.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687608537"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-776"></span><span id="enabledLogsOption"><span class="annot"><span class="annottext">enabledLogsOption :: forall impl.
 EnabledLogTypes impl =&gt;
 Option (HashSet (EngineLogType impl))
@@ -5006,7 +5006,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-783"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687608515"><span class="hs-identifier hs-var">defaultLogTypes</span></a></span><span>
+</span><a href="#local-6989586621687609247"><span class="hs-identifier hs-var">defaultLogTypes</span></a></span><span>
 </span><span id="line-784"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -5018,15 +5018,15 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-786"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687608516"><span class="hs-identifier hs-var">allAllowedLogTypes</span></a></span><span>
+</span><a href="#local-6989586621687609248"><span class="hs-identifier hs-var">allAllowedLogTypes</span></a></span><span>
 </span><span id="line-787"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
 </span><span id="line-788"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-789"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-790"></span><span>    </span><span id="local-6989586621687608515"><span class="annot"><span class="annottext">defaultLogTypes :: String
-</span><a href="#local-6989586621687608515"><span class="hs-identifier hs-var hs-var">defaultLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-790"></span><span>    </span><span id="local-6989586621687609247"><span class="annot"><span class="annottext">defaultLogTypes :: String
+</span><a href="#local-6989586621687609247"><span class="hs-identifier hs-var hs-var">defaultLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">Text.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; ([Text] -&gt; Text) -&gt; [Text] -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
@@ -5040,8 +5040,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. HashSet a -&gt; [a]
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashSet.Internal.html#toList"><span class="hs-identifier hs-var">HashSet.toList</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (EngineLogType Hasura)
 </span><a href="Hasura.Logging.html#defaultEnabledEngineLogTypes"><span class="hs-identifier hs-var">Logging.defaultEnabledEngineLogTypes</span></a></span><span>
-</span><span id="line-791"></span><span>    </span><span id="local-6989586621687608516"><span class="annot"><span class="annottext">allAllowedLogTypes :: String
-</span><a href="#local-6989586621687608516"><span class="hs-identifier hs-var hs-var">allAllowedLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-791"></span><span>    </span><span id="local-6989586621687609248"><span class="annot"><span class="annottext">allAllowedLogTypes :: String
+</span><a href="#local-6989586621687609248"><span class="hs-identifier hs-var hs-var">allAllowedLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">Text.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; ([Text] -&gt; Text) -&gt; [Text] -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
@@ -6419,19 +6419,19 @@ forall def. Option def -&gt; String
 </span><span id="line-1240"></span><span id="serveCmdFooter"><span class="annot"><span class="annottext">serveCmdFooter :: Doc
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCmdFooter"><span class="hs-identifier hs-var hs-var">serveCmdFooter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1241"></span><span>  </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621687608562"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><a href="#local-6989586621687609294"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-d82f04ee6b61bfe1747b4b0eea186dc7ec6d8989fb7b1e5b03229bc350b98cd6/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-d82f04ee6b61bfe1747b4b0eea186dc7ec6d8989fb7b1e5b03229bc350b98cd6/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#text"><span class="hs-identifier hs-var">PP.text</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/ansi-wl-pprint-0.6.9-d82f04ee6b61bfe1747b4b0eea186dc7ec6d8989fb7b1e5b03229bc350b98cd6/share/doc/html/src/Text.PrettyPrint.ANSI.Leijen.Internal.html#%3C%24%3E"><span class="hs-operator hs-var">PP.&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621687608565"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
+</span><a href="#local-6989586621687609297"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
 </span><span id="line-1242"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1243"></span><span>    </span><span id="local-6989586621687608562"><span class="annot"><span class="annottext">examplesDoc :: Doc
-</span><a href="#local-6989586621687608562"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
+</span><span id="line-1243"></span><span>    </span><span id="local-6989586621687609294"><span class="annot"><span class="annottext">examplesDoc :: Doc
+</span><a href="#local-6989586621687609294"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var">PP.mkExamplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">[[String]]
-</span><a href="#local-6989586621687608567"><span class="hs-identifier hs-var">examples</span></a></span><span>
-</span><span id="line-1244"></span><span>    </span><span id="local-6989586621687608567"><span class="annot"><span class="annottext">examples :: [[String]]
-</span><a href="#local-6989586621687608567"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687609299"><span class="hs-identifier hs-var">examples</span></a></span><span>
+</span><span id="line-1244"></span><span>    </span><span id="local-6989586621687609299"><span class="annot"><span class="annottext">examples :: [[String]]
+</span><a href="#local-6989586621687609299"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1245"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;# Start GraphQL Engine on default port (8080) with console enabled&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-1246"></span><span>          </span><span class="annot"><span class="annottext">String
@@ -6497,17 +6497,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-1279"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-1280"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-1281"></span><span>
-</span><span id="line-1282"></span><span>    </span><span id="local-6989586621687608565"><span class="annot"><span class="annottext">envVarDoc :: Doc
-</span><a href="#local-6989586621687608565"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
+</span><span id="line-1282"></span><span>    </span><span id="local-6989586621687609297"><span class="annot"><span class="annottext">envVarDoc :: Doc
+</span><a href="#local-6989586621687609297"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var">PP.mkEnvVarDoc</span></a></span><span> </span><span class="annot"><span class="annottext">([(String, String)] -&gt; Doc) -&gt; [(String, String)] -&gt; Doc
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621687608596"><span class="hs-identifier hs-var">envVars</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; [(String, String)] -&gt; [(String, String)]
+</span><a href="#local-6989586621687609328"><span class="hs-identifier hs-var">envVars</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; [(String, String)] -&gt; [(String, String)]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621687608597"><span class="hs-identifier hs-var">eventEnvs</span></a></span><span>
-</span><span id="line-1283"></span><span>    </span><span id="local-6989586621687608596"><span class="annot"><span class="annottext">envVars :: [(String, String)]
-</span><a href="#local-6989586621687608596"><span class="hs-identifier hs-var hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621687609329"><span class="hs-identifier hs-var">eventEnvs</span></a></span><span>
+</span><span id="line-1283"></span><span>    </span><span id="local-6989586621687609328"><span class="annot"><span class="annottext">envVars :: [(String, String)]
+</span><a href="#local-6989586621687609328"><span class="hs-identifier hs-var hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1284"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Option Port -&gt; (String, String)
 forall a. Option a -&gt; (String, String)
 </span><a href="Hasura.Server.Init.Config.html#optionPP"><span class="hs-identifier hs-var">Config.optionPP</span></a></span><span> </span><span class="annot"><span class="annottext">Option Port
@@ -6731,8 +6731,8 @@ forall a. Option a -&gt; (String, String)
 </span><a href="Hasura.Server.Init.Config.html#optionPP"><span class="hs-identifier hs-var">Config.optionPP</span></a></span><span> </span><span class="annot"><span class="annottext">Option TriggersErrorLogLevelStatus
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#triggersErrorLogLevelStatusOption"><span class="hs-identifier hs-var">triggersErrorLogLevelStatusOption</span></a></span><span>
 </span><span id="line-1339"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-1340"></span><span>    </span><span id="local-6989586621687608597"><span class="annot"><span class="annottext">eventEnvs :: [(String, String)]
-</span><a href="#local-6989586621687608597"><span class="hs-identifier hs-var hs-var">eventEnvs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Option (Refined Positive Int) -&gt; (String, String)
+</span><span id="line-1340"></span><span>    </span><span id="local-6989586621687609329"><span class="annot"><span class="annottext">eventEnvs :: [(String, String)]
+</span><a href="#local-6989586621687609329"><span class="hs-identifier hs-var hs-var">eventEnvs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Option (Refined Positive Int) -&gt; (String, String)
 forall a. Option a -&gt; (String, String)
 </span><a href="Hasura.Server.Init.Config.html#optionPP"><span class="hs-identifier hs-var">Config.optionPP</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined Positive Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlEventsHttpPoolSizeOption"><span class="hs-identifier hs-var">graphqlEventsHttpPoolSizeOption</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Milliseconds) -&gt; (String, String)
