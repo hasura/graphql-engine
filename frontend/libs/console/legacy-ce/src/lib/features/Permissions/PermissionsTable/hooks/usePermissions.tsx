@@ -8,7 +8,7 @@ import { Metadata, Table } from '../../../hasura-metadata-types';
 import { keyToPermission, metadataPermissionKeys } from '../../utils';
 import { MetadataSelectors } from '../../../hasura-metadata-api';
 
-interface RolePermission {
+export interface RolePermission {
   roleName: string;
   isNewRole: boolean;
   permissionTypes: {
