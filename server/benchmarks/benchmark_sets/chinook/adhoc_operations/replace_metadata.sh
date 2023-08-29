@@ -7,6 +7,7 @@ function adhoc_operation() {
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
+    --header 'x-hasura-admin-secret: my-secret' \
     --data "@$scriptDir/../replace_metadata.json" \
     "$HASURA_URL/v1/query"
 }

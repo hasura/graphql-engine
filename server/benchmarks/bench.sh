@@ -229,6 +229,16 @@ export HASURA_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 # Maybe launch the hasura instance we'll benchmark
 function maybe_launch_hasura_container() {
   if [ -n "$REQUESTED_HASURA_DOCKER_IMAGE" ]; then
+    # NOTE!: presence of HASURA_GRAPHQL_EE_LICENSE_KEY will determine if we run
+    # in EE mode or not, and this will happen silently! version doesn't indicate
+    # the mode we're in.
+    if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY}" ]; then
+        echo_pretty "Running in OSS mode"
+    else
+        echo_pretty "Running in EE mode"
+        # consistent across scripts/dev.sh and server/benchmarks:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+    fi
     HASURA_CONTAINER_NAME="graphql-engine-to-benchmark"
     # `TASKSET_HASURA`, `$DOCKER_NETWORK_HOST_MODE`, and `HASURA_RTS` depend on
     # word-splitting.
@@ -243,6 +253,8 @@ function maybe_launch_hasura_container() {
       --env HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       --env HASURA_GRAPHQL_ENABLE_CONSOLE=true \
       --env HASURA_GRAPHQL_SERVER_PORT="$HASURA_GRAPHQL_SERVER_PORT" \
+      --env HASURA_GRAPHQL_ADMIN_SECRET \
+      --env HASURA_GRAPHQL_EE_LICENSE_KEY \
       $DOCKER_NETWORK_HOST_MODE \
       "$REQUESTED_HASURA_DOCKER_IMAGE" \
       graphql-engine serve \

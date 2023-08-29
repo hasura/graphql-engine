@@ -7,11 +7,13 @@ function adhoc_operation() {
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
+    --header 'x-hasura-admin-secret: my-secret' \
     --data "@$scriptDir/untrack_table.json" \
     "$HASURA_URL/v1/query"
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
+    --header 'x-hasura-admin-secret: my-secret' \
     --data "@$scriptDir/track_table.json" \
     "$HASURA_URL/v1/query"
 }
