@@ -23,3 +23,23 @@ export const GDCSelect: StoryObj<PermissionsFormProps> = {
     handleClose: () => {},
   },
 };
+
+export const GDCInsert: StoryObj<PermissionsFormProps> = {
+  args: {
+    dataSourceName: 'Lite',
+    queryType: 'insert',
+    table: ['Artist'],
+    roleName,
+    handleClose: () => {},
+  },
+};
+
+export const GDCUpdate: StoryObj<PermissionsFormProps> = {
+  args: {
+    dataSourceName: 'Lite',
+    queryType: 'update',
+    table: ['Artist'],
+    roleName,
+    handleClose: () => {},
+  },
+};

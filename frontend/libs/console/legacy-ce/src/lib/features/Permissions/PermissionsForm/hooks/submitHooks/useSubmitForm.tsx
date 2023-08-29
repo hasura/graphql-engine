@@ -13,6 +13,8 @@ import { permissionsFormKey } from '../dataFetchingHooks';
 import { transformErrorResponse } from '../../../../Data/errorUtils';
 import { hasuraToast } from '../../../../../new-components/Toasts';
 import { DisplayToastErrorMessage } from '../../../../Data/components/DisplayErrorMessage';
+import { inputValidationSchema } from '../../../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+import { z } from 'zod';
 
 export interface UseSubmitFormArgs {
   dataSourceName: string;
@@ -21,6 +23,7 @@ export interface UseSubmitFormArgs {
   roleName: string;
   queryType: QueryType;
   accessType: AccessType;
+  validateInput?: z.infer<typeof inputValidationSchema>;
 }
 
 interface ExistingPermissions {
