@@ -19,8 +19,9 @@ import ProductBadge from '@site/src/components/ProductBadge';
 <ProductBadge ee />
 
 Your Dedicated VPC can be peered with other networks that you own on AWS, or with managed services like Aiven or
-Timescale Cloud that run on AWS. It will enable private connectivity to your databases and other APIs from Hasura Cloud,
-and you will not have to expose them publicly.
+Timescale Cloud that run on AWS. 
+
+VPC peering lets you connect to your databases and other APIs from Hasura Cloud without exposing them to the public internet. When you route traffic through a VPC peering, you can significantly reduce latency for queries to the database and gain other security and performance improvements. Further, utilizing a VPC with peering can result in substantial cost reductions instead of routing traffic using traditional, publicly exposed means.
 
 You can view all the requests and active peerings in the **Peering** tab.
 
@@ -48,10 +49,13 @@ Fill in the form with the following details:
 | Field          | Description                                                                                                    |
 | -------------- | -------------------------------------------------------------------------------------------------------------- |
 | Display Name   | The name you'll see in the Hasura Cloud dashboard.                                                             |
-| AWS Account ID | Account ID for your AWS account which contains the VPC (typically a 12 digit number)                           |
+| AWS Account ID | Account ID of your AWS account which contains the VPC (typically a 12 digit number)                           |
 | AWS VPC ID     | ID of your AWS VPC that you want to peer with (starts with `vpc-`)                                             |
-| AWS VPC CIDR   | CIDR of your AWS VPC (if you have more than one CIDR for the VPC please [contact us](https://hasura.io/help/)) |
+| AWS VPC CIDR   | CIDR of your AWS VPC (if you have more than one CIDR for the VPC please mention the secondary ranges in `AWS Additional VPC CIDR`) |
+| AWS Additional VPC CIDR   | Additional CIDR of your AWS VPC, keep it blank if there is only 1 CIDR associated with VPC |
 | Region         | AWS region where your VPC is provisioned                                                                       |
+
+<Thumbnail src="/img/deployment/dedicated-vpc/mulitple-CIDRs.png" alt="multiple CIDRs" width="1000px" />
 
 Once you fill in these details and initiate the peering request, it will appear as `Request Pending`. Hasura Cloud will
 now provision the resources and send a peering request; the status will change to `Action Required`.
@@ -61,22 +65,53 @@ now provision the resources and send a peering request; the status will change t
 Accept the request on your AWS account to activate the peering connection. Once you do this, the status will turn to
 `Active`. Note that it might take a few minutes for the status to update on the dashboard.
 
+1. Login to AWS account
+2. Select the region and VPC service
+3. Go to VPC peering. Select the peering request and accept the request.
+
+In the screenshot below, the sample VPC peering request is in pending acceptance state.
+<Thumbnail src="/img/deployment/dedicated-vpc/accept-peering.png" alt="accept peering" width="1000px" />
+
 ### Step 3: Start using the private network
 
 After accepting the peering request, you need to follow these steps to start using the private network:
 
-- Access the subnet associated with the resource that you want to connect to Hasura Cloud
-  - Access the route table for this subnet
-  - Add a new entry for the Dedicated VPC CIDR with target as the VPC peering connection ID
+- Access the subnets associated with the resource(s) that you want to connect to Hasura Cloud. i.e. database, read replicas, Action Endpoint
+  - Access the route table for this subnet(s)
+  - Add a new entry for the Dedicated VPC CIDR(can be found on Hasura cloud Dashboard -> VPCs -> VPC) with target as the VPC peering connection ID from Step 2
+
+  In the example below, we are whitelisting the peering established in step 2 for the Hasura Cloud VPC Created before.
+  <Thumbnail src="/img/deployment/dedicated-vpc/route-table-entry.png" alt="route table entries" width="1000px" />
+
 - Access the security group associated with the resource
   - Add an inbound rule to allow required traffic (say port `5432`) from your Dedicated VPC CIDR
 
-Once complete, you should be able to use private IP addresses and private DNS names as database URLs or webhook URLs.
+  In the example below, we are whitelisting port `5432` for the Hasura Cloud VPC CIDR for connecting to the RDS from the Hasura Project.
+  <Thumbnail src="/img/deployment/dedicated-vpc/security-group-updates.png" alt="security group updates" width="1000px" />
+
+Until this step, traffic is not yet routed if the database is publicly accessible.
+- Access the VPC and check if the DNS hostnames and DNS resolution are enabled for the VPC
+  <Thumbnail src="/img/deployment/dedicated-vpc/vpc-dns-settings.png" alt="VPC dns settings" width="1000px" />
+
+- Enable DNS resolution over VPC peering.
+  1. Access the VPC peering
+  2. Go to DNS tab, Edit DNS settings
+  3. Modify the settings to resolve DNS of the accepter VPC.
+  With this, projects within your Hasura VPC will start resolving the RDS endpoint or any other endpoint part of the VPC and will begin resolving to private IP addresses.
+  <Thumbnail src="/img/deployment/dedicated-vpc/enable-dns-resolution-1.png" alt="Enable dns resolution 1" width="1000px" />
+  <Thumbnail src="/img/deployment/dedicated-vpc/enable-dns-resolution-2.png" alt="Enable dns resolution 2" width="1000px" />
+
+Once complete, database URLs and webhook URLs will start resolving to private IP addresses, and the project can connect to them over a private AWS network via VPC peering.
 
 [Reach out to support](https://hasura.io/help/) if you face any issues.
 
 If the provisioning failed, you'll see the status as `Failed`. [Reach out to support](https://hasura.io/help/) to
 resolve this.
+
+### Step 4: [Optional] Remove extra settings
+This step is optional and for users who already have peering set up but didn't enable DNS resolution under peering before.
+- Remove the `Hasura Cloud IP` (mentioned under project created under VPC) accessibility from security group
+- Change the RDS setting to `Publicly accessible false` if Hasura is the only one connecting to RDS over a public network
 
 #### Customer to Hasura
 
