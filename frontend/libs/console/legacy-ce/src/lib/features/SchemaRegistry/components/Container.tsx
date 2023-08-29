@@ -50,16 +50,27 @@ const Header: React.VFC = () => {
   );
 };
 
-const Body: React.VFC<{ hasFeatureAccess: boolean }> = props => {
-  const { hasFeatureAccess } = props;
+const Body: React.VFC<{
+  hasFeatureAccess: boolean;
+  schemaId: string | undefined;
+}> = props => {
+  const { hasFeatureAccess, schemaId } = props;
   if (!hasFeatureAccess) {
     return <FeatureRequest />;
   }
 
-  return <SchemaRegistryHome />;
+  return <SchemaRegistryHome schemaId={schemaId} />;
+};
+type SchemaDetailsViewProps = {
+  params: {
+    id?: string;
+  };
 };
 
-export const SchemaRegistryContainer: React.VFC = () => {
+export const SchemaRegistryContainer: React.VFC<
+  SchemaDetailsViewProps
+> = props => {
+  const { id: schemaId } = props.params;
   const hasFeatureAccess = globals.allowedLuxFeatures.includes(
     SCHEMA_REGISTRY_FEATURE_NAME
   );
@@ -67,7 +78,7 @@ export const SchemaRegistryContainer: React.VFC = () => {
   return (
     <div className="p-4 flex flex-col w-full">
       <Header />
-      <Body hasFeatureAccess={hasFeatureAccess} />
+      <Body hasFeatureAccess={hasFeatureAccess} schemaId={schemaId} />
     </div>
   );
 };

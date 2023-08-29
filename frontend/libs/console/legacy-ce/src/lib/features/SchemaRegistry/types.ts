@@ -3,11 +3,13 @@ import { GraphQLError } from 'graphql';
 export type SafeSchemaChange = 'NON_BREAKING';
 export type DangerousSchemaChange = 'DANGEROUS';
 export type BreakingSchemaChange = 'BREAKING';
+export type TotalSchemaChanges = 'TOTAL';
 
 export type ChangeLevel =
   | DangerousSchemaChange
   | BreakingSchemaChange
-  | SafeSchemaChange;
+  | SafeSchemaChange
+  | TotalSchemaChanges;
 
 export type SchemaChange = {
   criticality: {
@@ -58,7 +60,15 @@ export type GetSchemaListResponseWithError = {
   data?: GetSchemaListQueryResponse;
   errors?: GraphQLError[];
 };
-
+export type GetSchemaChangeListResponseWithError = {
+  data?: GetSchemaChangeListQueryResponse;
+  errors?: GraphQLError[];
+};
+export type GetSchemaChangeListQueryResponse = {
+  schema_change_list: SchemaRegistryDumpWithSiblingSchema[];
+  current_schema_card: SchemaRegistryDumpWithSiblingSchema[];
+  schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
+};
 export type GetSchemaListQueryResponse = {
   schema_registry_dumps: SchemaRegistryDumpWithSiblingSchema[];
   schema_registry_dumps_aggregate: SchemaRegistryDumpsAggregate;
