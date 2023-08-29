@@ -1,0 +1,569 @@
+---
+sidebar_label: Logical Models
+sidebar_position: 4
+description: Customize the Hasura GraphQL schema with Logical Models
+keywords:
+  - hasura
+  - docs
+  - snowflake
+  - schema
+  - Logical Models
+  - Native Queries
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Snowflake: Logical Models
+
+## Introduction
+
+:::tip Supported from
+
+Logical Models are supported from `v2.33.0`.
+
+:::
+
+Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
+
+Logical Models are a new approach from Hasura and are currently used by the
+[Native Queries](/schema/snowflake/native-queries.mdx) and the
+GraphQL API for a native database query.
+
+You can find examples of how to use Logical Models in the
+[Native Queries](/schema/snowflake/native-queries.mdx) documentation. For a more detailed explanation
+of Logical Models themselves, read on.
+
+## Tracking a Logical Model
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+
+You can create a Logical Model from the "Data" tab of the Console, by clicking on `Native Queries` in the sidebar, then
+`Add Logical Model`:
+
+<Thumbnail src="/img/native-queries/logical-model-add.png" alt="Create Logical Model" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can create a logical model by adding it to the appropriate database definition in the `metadata > databases > databases.yaml`
+file:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        "<field name>":
+          type: "<Snowflake field type>"
+          nullable: false | true
+          description: "<optional field description>"
+        ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You create a logical model through the metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>",
+    "fields": [
+      {
+        "name": "<field name>",
+        "type": "<Snowflake field type>",
+        "nullable": false | true,
+        "description": "<optional field description>"
+      },
+      ...
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+The type of each field can be either a [Snowflake data type](https://docs.snowflake.com/en/sql-reference/intro-summary-data-types) 
+or references to other Logical Models, and each field can be marked as nullable or not, 
+see [LogicalModelType](/api-reference/syntax-defs.mdx#logicalmodeltype).
+
+For example, we could track a representation of an article as follows:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail
+  src="/img/native-queries/create-logical-model-excerpt-example.png"
+  alt="Create Logical Model"
+  width="800px"
+/>
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the following to the `default` database definition in the `metadata > databases > databases.yaml` file:
+
+```yaml
+logical_models:
+  - name: article
+    fields:
+      id:
+        type: integer
+        nullable: false
+      title:
+        type: text
+        nullable: false
+      contents:
+        type: text
+        nullable: false
+      published_date:
+        type: date
+        nullable: true
+      is_published:
+        type: bit
+        nullable: false
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_track_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "fields": [
+      {
+        "name": "id",
+        "type":
+          {
+            "scalar": "int"
+          }
+      },
+      {
+        "name": "title",
+        "type":
+          {
+            "scalar": "text"
+          }
+      },
+      {
+        "name": "contents",
+        "type":
+          {
+            "scalar": "text"
+          }
+      },
+      {
+        "name": "published_date",
+        "type":
+          {
+            "scalar": "date",
+            "nullable": true
+          },
+      },
+      {
+        "name": "is_published",
+        "type":
+          {
+            "scalar": "bit"
+          }
+      }
+    ]
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Untracking a Logical Model
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+To untrack a Logical Model, click `Remove` next to the Logical Model:
+
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+You can remove a Logical Model by removing it from the `metadata > databases > databases.yaml` file.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+You can remove a Logical Model the same way:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "<name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info Removing a Logical Model
+
+Note that you can only remove an **unused** Logical Model; if the model is attached to a Native Query, this operation
+will fail. You must remove the Native Query first.
+
+:::
+
+To untrack the above `article` Logical Model, we would run the following:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/delete-logical-model.png" alt="Delete Logical Model" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the above metadata from the `metadata > databases > databases.yaml` file.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_untrack_logical_model",
+  "args": {
+    "source": "default",
+    "name": "article"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Referencing other Logical Models {#referencing-other-logical-models}
+
+Logical Model fields are allowed to refer to other Logical Models, even recursively, allowing nested data types.
+
+Object or array relationships between Native Queries are an example use of this.
+
+To elaborate on the `article` example above, we can include authors in the data model:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk_atomic",
+  "args":
+  [
+    {
+      "type": "snowflake_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "article",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "title",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "contents",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "author_id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "author",
+            "type":
+              {
+                "logical_model": "author",
+              },
+          }
+        ]
+      }
+    },
+    {
+      "type": "snowflake_track_logical_model",
+      "args": {
+        "source": "default",
+        "name": "author",
+        "fields": [
+          {
+            "name": "id",
+            "type":
+              {
+                "scalar": "integer"
+              }
+          },
+          {
+            "name": "name",
+            "type":
+              {
+                "scalar": "text"
+              }
+          },
+          {
+            "name": "articles",
+            "type":
+              {
+                "array":
+                  {
+                    "logical_model": "article"
+                  }
+              }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+:::info Wrap calls in `bulk_atomic`
+
+Tracking the Logical Models one-by-one would fail, since `article` refers to `author`, which is not yet defined.
+
+Tracking the Logical Models in one atomic operation postpones coherency checks until all models are tracked, which
+allows for mutual references.
+
+:::
+
+</TabItem>
+</Tabs>
+
+## Permissions
+
+By default, a model has no permissions, and only the admin account will be able to use it. You can enable the model by
+adding permissions for a given role.
+
+As Logical Models are currently only used for read-only purposes, you can only add select permissions.
+
+The permissions consist of a list of columns that the role can access, and a filter that specifies which rows the role
+can receive.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/create-permissions.png" alt="Create Logical Model Permissions" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+all rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
+
+```yaml
+  logical_models:
+    - name: "<name>"
+      fields:
+        ...
+      select_permissions:
+        - role: "<role name>"
+          permission:
+            columns: "*" | [
+              "column 1",
+              "column 2",
+              ...
+            ]
+            filter: "<boolean expression>"
+        - ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
+
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+all rows to be passed through to the response, you can specify an empty filter, `{}`.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>",
+    "permission": {
+      "columns": "*" | [
+        "column 1",
+        "column 2",
+        ...
+      ],
+      "filter": <boolean expression>
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+For example, to allow access to the `article` Logical Model for the `reader` role, but only for published articles, we
+could use the following permission to limit the accessible rows to those where `is_published` is `true`, and then hide
+that column from the list (by specifying all other columns).
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/permissions-with-check.png" alt="Permissions with check" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
+
+```yaml
+logical_models:
+  - name: '<name>'
+    fields: ...
+    select_permissions:
+      - role: reader
+        permission:
+          columns:
+            - id
+            - title
+            - contents
+            - date
+          filter:
+            is_published:
+              _eq: true
+      - ...
+```
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_create_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "article",
+    "role": "reader",
+    "permission": {
+      "columns": [
+        "id",
+        "title",
+        "contents",
+        "date"
+      ],
+      "filter": {
+        "is_published": {"_eq": true}
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+You can also drop permissions:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="console" label="Console">
+
+<Thumbnail src="/img/native-queries/delete-permissions.png" alt="Delete Permissions" width="800px" />
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
+
+Remove the relevant permission from `metadata > databases > databases.yaml`.
+
+</TabItem>
+
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_drop_logical_model_select_permission",
+  "args": {
+    "source": "default",
+    "name": "<logical model name>",
+    "role": "<role name>"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
