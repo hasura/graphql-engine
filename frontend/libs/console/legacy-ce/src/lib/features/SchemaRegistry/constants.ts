@@ -15,5 +15,6 @@ export const SCHEMA_REGISTRY_REF_URL =
   'https://github.com/hasura/graphql-engine/issues/9574';
 
 export const SCHEMA_LIST_FETCH_BATCH_SIZE = 10;
+export const EMPTY_UUID_STRING = '00000000-0000-0000-0000-000000000000';
 
 export const DEFAULT_TAG_COLOR = '#000000';

@@ -39,6 +39,11 @@ export const CountLabel: React.VFC<{
       backgroundColor = 'bg-green-100';
       break;
     }
+    case 'TOTAL': {
+      textColor = 'text-black';
+      backgroundColor = '';
+      break;
+    }
     default:
       break;
   }

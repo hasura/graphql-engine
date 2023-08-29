@@ -18,6 +18,10 @@ export const SchemaRow: React.VFC<{
   const countSafeChanges = changes?.filter(
     c => c.criticality.level === 'NON_BREAKING'
   )?.length;
+  const totalCount =
+    (countBreakingChanges || 0) +
+    (countDangerousChanges || 0) +
+    (countSafeChanges || 0);
   return (
     <div className="flex mt-8 px-4 py-2 w-full">
       <div className="flex text-base  justify-between w-[15%]">
@@ -39,6 +43,9 @@ export const SchemaRow: React.VFC<{
             <CountLabel count={countSafeChanges} type="NON_BREAKING" />
           </>
         )}
+      </div>
+      <div className="flex text-base items-center justify-around w-[55%]">
+        <div className="font-bold text-xl mx-2">{totalCount}</div>
       </div>
     </div>
   );

@@ -37,9 +37,42 @@ query fetchRegistrySchemas($projectId: uuid!, $cursor: timestamptz!, $limit: Int
 }
 `);
 export const FETCH_SCHEMA_CHANGE_LIST_QUERY = gql(`
-query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!) {
-  schema_registry_dumps(
+query fetchRegistrySchemas($projectId: uuid!, $limit: Int!, $offset: Int!,$schemaId:uuid!) {
+  schema_change_list :schema_registry_dumps(
     where: {_and: [{project_id: {_eq: $projectId}, hasura_schema_role: {_eq: "admin"}}]},
+    order_by: {change_recorded_at: desc}
+    limit: $limit
+    offset: $offset
+  ) {
+    change_recorded_at
+    schema_hash
+    entry_hash
+    id
+    metadata_resource_version
+    sibling_schemas {
+      id
+      entry_hash
+      change_recorded_at
+      created_at
+      hasura_schema_role
+      schema_sdl
+      diff_with_previous_schema {
+        current_schema_hash
+        former_schema_hash
+        former_schema_id
+        current_schema_id
+        schema_diff_data
+      }
+    }
+    schema_tags {
+      id
+      name
+      entry_hash
+      color
+    }
+  }
+  current_schema_card :schema_registry_dumps(
+    where: {id:{_eq :$schemaId }},
     order_by: {change_recorded_at: desc}
     limit: $limit
     offset: $offset
