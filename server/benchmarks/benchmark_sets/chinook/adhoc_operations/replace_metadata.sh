@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export iterations=30
+export pause_after_seconds=10
 
 function adhoc_operation() {
   # This is the same replace_metadata command we run during setup (i.e. a noop)

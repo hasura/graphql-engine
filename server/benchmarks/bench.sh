@@ -359,6 +359,10 @@ function run_adhoc_operation_benchmarks() (
       if ! [[ "$iterations" =~ ^[0-9]+$ ]] ; then
           echo "Error: $script must define 'iterations'" >&2; exit 1
       fi
+      # shellcheck disable=SC2154
+      if ! [[ "$pause_after_seconds" =~ ^[0-9]+$ ]] ; then
+          echo "Error: $script must define 'pause_after_seconds'" >&2; exit 1
+      fi
 
       # TODO I was relying on being able to also get 'mutator_cpu_ns' to get a
       # stable metric of CPU usage (like counting instructions with 'perf').
@@ -396,6 +400,9 @@ function run_adhoc_operation_benchmarks() (
          latencies_ns+=" $((time_ns_after-time_ns_before))"
       done
       echo
+
+      # Allowing any asynchronous activity to settle:
+      sleep "$pause_after_seconds"
 
       allocated_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.allocated_bytes')
       mem_in_use_bytes_after=$(curl "$HASURA_URL/dev/rts_stats" 2>/dev/null | jq '.gc.gcdetails_mem_in_use_bytes')
