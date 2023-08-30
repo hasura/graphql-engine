@@ -1,0 +1,803 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="annot"><span class="hs-comment">-- | Metadata API Actions relating to Source Kinds</span></span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.DDL.SourceKinds</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * List Source Kinds</span></span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier">ListSourceKinds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#runListSourceKinds"><span class="hs-identifier">runListSourceKinds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#agentSourceKinds"><span class="hs-identifier">agentSourceKinds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Source Kind Info</span></span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier">SourceKindInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier">SourceType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier">SourceKinds</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * List Capabilities</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier">GetSourceKindCapabilities</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities"><span class="hs-identifier">runGetSourceKindCapabilities</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator">(.:)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator">(.:?)</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator">(.=)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Strict.html"><span class="hs-identifier">Data.HashMap.Strict</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier">ToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text.E</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier">NonEmptyText</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE.Text</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html"><span class="hs-identifier">Hasura.Backends.DataConnector.Adapter.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DC.Types</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Error</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier">EncJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EncJSON</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Backend</span></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Metadata</span></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">SchemaCache</span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.BackendMap.html"><span class="hs-identifier">Hasura.SQL.BackendMap</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BackendMap</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GQL</span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">data</span><span> </span><span id="ListSourceKinds"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ListSourceKinds"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657173"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-type">ListSourceKinds</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621687657179"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ListSourceKinds
+</span><a href="#local-6989586621687657179"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser ListSourceKinds)
+-&gt; Value
+-&gt; Parser ListSourceKinds
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;ListSourceKinds&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser ListSourceKinds -&gt; Object -&gt; Parser ListSourceKinds
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">(Parser ListSourceKinds -&gt; Object -&gt; Parser ListSourceKinds)
+-&gt; Parser ListSourceKinds -&gt; Object -&gt; Parser ListSourceKinds
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ListSourceKinds -&gt; Parser ListSourceKinds
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ListSourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657185"><span id="local-6989586621687657189"><span id="local-6989586621687657192"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-type">ListSourceKinds</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621687657195"><span class="annot"><span class="annottext">toJSON :: ListSourceKinds -&gt; Value
+</span><a href="#local-6989586621687657195"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">ListSourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">data</span><span> </span><span id="SourceKindInfo"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-var">SourceKindInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceKindInfo"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-var">SourceKindInfo</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_skiSourceKind"><span class="annot"><span class="annottext">SourceKindInfo -&gt; Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-identifier hs-var hs-var">_skiSourceKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span id="_skiDisplayName"><span class="annot"><span class="annottext">SourceKindInfo -&gt; Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiDisplayName"><span class="hs-identifier hs-var hs-var">_skiDisplayName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span id="_skiReleaseName"><span class="annot"><span class="annottext">SourceKindInfo -&gt; Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiReleaseName"><span class="hs-identifier hs-var hs-var">_skiReleaseName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span id="_skiBuiltin"><span class="annot"><span class="annottext">SourceKindInfo -&gt; SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiBuiltin"><span class="hs-identifier hs-var hs-var">_skiBuiltin</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier hs-type">SourceType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span id="_skiAvailable"><span class="annot"><span class="annottext">SourceKindInfo -&gt; Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiAvailable"><span class="hs-identifier hs-var hs-var">_skiAvailable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657206"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621687657230"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceKindInfo
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser SourceKindInfo)
+-&gt; Value
+-&gt; Parser SourceKindInfo
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;SourceKindInfo&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687657231"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621687657232"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687657232"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;kind&quot;</span></span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621687657233"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657233"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;display_name&quot;</span></span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621687657234"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657234"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Text)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;release_name&quot;</span></span><span>
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621687657235"><span class="annot"><span class="annottext">SourceType
+</span><a href="#local-6989586621687657235"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser SourceType
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;builtin&quot;</span></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621687657236"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687657236"><span class="hs-identifier hs-var">_skiAvailable</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657231"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Bool
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;available&quot;</span></span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; Parser SourceKindInfo
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Bool
+Maybe Text
+Text
+SourceType
+_skiSourceKind :: Text
+_skiDisplayName :: Maybe Text
+_skiReleaseName :: Maybe Text
+_skiBuiltin :: SourceType
+_skiAvailable :: Bool
+_skiSourceKind :: Text
+_skiDisplayName :: Maybe Text
+_skiReleaseName :: Maybe Text
+_skiBuiltin :: SourceType
+_skiAvailable :: Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657239"><span id="local-6989586621687657243"><span id="local-6989586621687657246"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687657276"><span class="annot"><span class="annottext">toJSON :: SourceKindInfo -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657277"><span id="local-6989586621687657278"><span id="local-6989586621687657279"><span id="local-6989586621687657280"><span id="local-6989586621687657281"><span class="annot"><span class="annottext">Bool
+Maybe Text
+Text
+SourceType
+_skiSourceKind :: SourceKindInfo -&gt; Text
+_skiDisplayName :: SourceKindInfo -&gt; Maybe Text
+_skiReleaseName :: SourceKindInfo -&gt; Maybe Text
+_skiBuiltin :: SourceKindInfo -&gt; SourceType
+_skiAvailable :: SourceKindInfo -&gt; Bool
+_skiSourceKind :: Text
+_skiDisplayName :: Maybe Text
+_skiReleaseName :: Maybe Text
+_skiBuiltin :: SourceType
+_skiAvailable :: Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687657277"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;builtin&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; SourceType -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="#local-6989586621687657280"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;available&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Bool -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621687657281"><span class="hs-identifier hs-var">_skiAvailable</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;display_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657278"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
+</span><a href="#local-6989586621687657282"><span class="hs-identifier hs-var">has</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657278"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;release_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657279"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
+</span><a href="#local-6989586621687657282"><span class="hs-identifier hs-var">has</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657279"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><a href="#local-6989586621687657282"><span class="hs-identifier hs-type">has</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621687657282"><span class="annot"><span class="annottext">has :: Maybe Text -&gt; Bool
+</span><a href="#local-6989586621687657282"><span class="hs-identifier hs-var hs-var">has</span></a></span></span><span> </span><span id="local-6989586621687657283"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657283"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Bool
+forall a. Maybe a -&gt; Bool
+</span><span class="hs-identifier hs-var">isNothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657283"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657283"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">data</span><span> </span><span id="SourceType"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier hs-var">SourceType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Builtin"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Agent"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657291"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier hs-type">SourceType</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621687657295"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SourceType
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Bool -&gt; Parser SourceType) -&gt; Value -&gt; Parser SourceType
+forall a. String -&gt; (Bool -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withBool"><span class="hs-identifier hs-var">J.withBool</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;source type&quot;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SourceType -&gt; Parser SourceType
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SourceType -&gt; Parser SourceType
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657299"><span id="local-6989586621687657302"><span id="local-6989586621687657305"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceType"><span class="hs-identifier hs-type">SourceType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621687657307"><span class="annot"><span class="annottext">toJSON :: SourceType -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Bool"><span class="hs-identifier hs-var">J.Bool</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var">toJSON</span></a></span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Bool"><span class="hs-identifier hs-var">J.Bool</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">newtype</span><span> </span><span id="SourceKinds"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-var">SourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceKinds"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-var">SourceKinds</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unSourceKinds"><span class="annot"><span class="annottext">SourceKinds -&gt; [SourceKindInfo]
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#unSourceKinds"><span class="hs-identifier hs-var hs-var">unSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687657312"><span id="local-6989586621687657317"><span id="local-6989586621687657323"><span class="annot"><span class="annottext">NonEmpty SourceKinds -&gt; SourceKinds
+SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+(SourceKinds -&gt; SourceKinds -&gt; SourceKinds)
+-&gt; (NonEmpty SourceKinds -&gt; SourceKinds)
+-&gt; (forall b. Integral b =&gt; b -&gt; SourceKinds -&gt; SourceKinds)
+-&gt; Semigroup SourceKinds
+forall b. Integral b =&gt; b -&gt; SourceKinds -&gt; SourceKinds
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+$c&lt;&gt; :: SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+&lt;&gt; :: SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+$csconcat :: NonEmpty SourceKinds -&gt; SourceKinds
+sconcat :: NonEmpty SourceKinds -&gt; SourceKinds
+$cstimes :: forall b. Integral b =&gt; b -&gt; SourceKinds -&gt; SourceKinds
+stimes :: forall b. Integral b =&gt; b -&gt; SourceKinds -&gt; SourceKinds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687657333"><span id="local-6989586621687657338"><span id="local-6989586621687657342"><span class="annot"><span class="annottext">Semigroup SourceKinds
+SourceKinds
+Semigroup SourceKinds
+-&gt; SourceKinds
+-&gt; (SourceKinds -&gt; SourceKinds -&gt; SourceKinds)
+-&gt; ([SourceKinds] -&gt; SourceKinds)
+-&gt; Monoid SourceKinds
+[SourceKinds] -&gt; SourceKinds
+SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+$cmempty :: SourceKinds
+mempty :: SourceKinds
+$cmappend :: SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+mappend :: SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+$cmconcat :: [SourceKinds] -&gt; SourceKinds
+mconcat :: [SourceKinds] -&gt; SourceKinds
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657349"><span id="local-6989586621687657353"><span id="local-6989586621687657356"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621687657365"><span class="annot"><span class="annottext">toJSON :: SourceKinds -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657366"><span class="annot"><span class="annottext">[SourceKindInfo]
+unSourceKinds :: SourceKinds -&gt; [SourceKindInfo]
+unSourceKinds :: [SourceKindInfo]
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#unSourceKinds"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#object"><span class="hs-identifier hs-var">J.object</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;sources&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; [SourceKindInfo] -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+forall v. ToJSON v =&gt; Key -&gt; v -&gt; Pair
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#.%3D"><span class="hs-operator hs-var">.=</span></a></span><span> </span><span class="annot"><span class="annottext">[SourceKindInfo]
+</span><a href="#local-6989586621687657366"><span class="hs-identifier hs-var">unSourceKinds</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span id="local-6989586621687657068"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#agentSourceKinds"><span class="hs-identifier hs-type">agentSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657068"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687657068"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span></span><span>
+</span><span id="line-103"></span><span id="agentSourceKinds"><span class="annot"><span class="annottext">agentSourceKinds :: forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#agentSourceKinds"><span class="hs-identifier hs-var hs-var">agentSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621687657384"><span class="annot"><span class="annottext">Maybe (BackendConfigWrapper 'DataConnector)
+</span><a href="#local-6989586621687657384"><span class="hs-identifier hs-var">agentsM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+BackendMap i -&gt; Maybe (i b)
+</span><a href="Hasura.SQL.BackendMap.html#lookup"><span class="hs-identifier hs-var">BackendMap.lookup</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">Backend.DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendMap BackendConfigWrapper
+ -&gt; Maybe (BackendConfigWrapper 'DataConnector))
+-&gt; (Metadata -&gt; BackendMap BackendConfigWrapper)
+-&gt; Metadata
+-&gt; Maybe (BackendConfigWrapper 'DataConnector)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; BackendMap BackendConfigWrapper
+</span><a href="Hasura.RQL.Types.Metadata.html#_metaBackendConfigs"><span class="hs-identifier hs-var">Metadata._metaBackendConfigs</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Maybe (BackendConfigWrapper 'DataConnector))
+-&gt; m Metadata -&gt; m (Maybe (BackendConfigWrapper 'DataConnector))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Metadata
+forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
+</span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">Metadata.getMetadata</span></a></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (BackendConfigWrapper 'DataConnector)
+</span><a href="#local-6989586621687657384"><span class="hs-identifier hs-var">agentsM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">Maybe (BackendConfigWrapper 'DataConnector)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SourceKinds -&gt; m SourceKinds
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SourceKinds
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#BackendConfigWrapper"><span class="hs-identifier hs-type">Metadata.BackendConfigWrapper</span></a></span><span> </span><span id="local-6989586621687657391"><span class="annot"><span class="annottext">BackendConfig 'DataConnector
+</span><a href="#local-6989586621687657391"><span class="hs-identifier hs-var">agents</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">SourceKinds -&gt; m SourceKinds
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SourceKinds -&gt; m SourceKinds) -&gt; SourceKinds -&gt; m SourceKinds
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SourceKindInfo] -&gt; SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-var">SourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">([SourceKindInfo] -&gt; SourceKinds)
+-&gt; [SourceKindInfo] -&gt; SourceKinds
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((DataConnectorName, DataConnectorOptions) -&gt; SourceKindInfo)
+-&gt; [(DataConnectorName, DataConnectorOptions)] -&gt; [SourceKindInfo]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(DataConnectorName, DataConnectorOptions) -&gt; SourceKindInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#mkAgentSource"><span class="hs-identifier hs-var">mkAgentSource</span></a></span><span> </span><span class="annot"><span class="annottext">([(DataConnectorName, DataConnectorOptions)] -&gt; [SourceKindInfo])
+-&gt; [(DataConnectorName, DataConnectorOptions)] -&gt; [SourceKindInfo]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map DataConnectorName DataConnectorOptions
+-&gt; [(DataConnectorName, DataConnectorOptions)]
+forall k a. Map k a -&gt; [(k, a)]
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">Map DataConnectorName DataConnectorOptions
+BackendConfig 'DataConnector
+</span><a href="#local-6989586621687657391"><span class="hs-identifier hs-var">agents</span></a></span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#mkAgentSource"><span class="hs-identifier hs-type">mkAgentSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.DataConnector.html#DataConnectorName"><span class="hs-identifier hs-type">DC.Types.DataConnectorName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DC.Types.DataConnectorOptions</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span>
+</span><span id="line-111"></span><span id="mkAgentSource"><span class="annot"><span class="annottext">mkAgentSource :: (DataConnectorName, DataConnectorOptions) -&gt; SourceKindInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#mkAgentSource"><span class="hs-identifier hs-var hs-var">mkAgentSource</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687657394"><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687657394"><span class="hs-identifier hs-var">dcName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorOptions"><span class="hs-identifier hs-type">DC.Types.DataConnectorOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657396"><span class="annot"><span class="annottext">Maybe Text
+_dcoDisplayName :: Maybe Text
+_dcoDisplayName :: DataConnectorOptions -&gt; Maybe Text
+</span><a href="#local-6989586621687657396"><span class="hs-identifier hs-var hs-var">_dcoDisplayName</span></a></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span>
+</span><span id="line-113"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_skiSourceKind :: Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687657398"><span class="hs-identifier hs-var">skiKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">_skiDisplayName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiDisplayName"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657396"><span class="hs-identifier hs-var">_dcoDisplayName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>      </span><span class="annot"><span class="annottext">_skiReleaseName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiReleaseName"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">_skiBuiltin :: SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiBuiltin"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-117"></span><span>      </span><span class="annot"><span class="annottext">_skiAvailable :: Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiAvailable"><span class="hs-identifier hs-var">_skiAvailable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-118"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621687657398"><span class="annot"><span class="annottext">skiKind :: Text
+</span><a href="#local-6989586621687657398"><span class="hs-identifier hs-var hs-var">skiKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#unName"><span class="hs-identifier hs-var">GQL.unName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorName -&gt; Name
+</span><a href="Hasura.RQL.Types.DataConnector.html#unDataConnectorName"><span class="hs-identifier hs-var">DC.Types.unDataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687657394"><span class="hs-identifier hs-var">dcName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#mkNativeSource"><span class="hs-identifier hs-type">mkNativeSource</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">Backend.BackendType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span>
+</span><span id="line-123"></span><span id="mkNativeSource"><span class="annot"><span class="annottext">mkNativeSource :: BackendType -&gt; Maybe SourceKindInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#mkNativeSource"><span class="hs-identifier hs-var hs-var">mkNativeSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-var">Backend.DataConnector</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe SourceKindInfo
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621687657402"><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687657402"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; Maybe SourceKindInfo
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span>
+</span><span id="line-127"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span>
+</span><span id="line-128"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_skiSourceKind :: Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text -&gt; Text
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendType -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687657402"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendType -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.BackendType.html#backendShortName"><span class="hs-identifier hs-var">Backend.backendShortName</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621687657402"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>          </span><span class="annot"><span class="annottext">_skiBuiltin :: SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiBuiltin"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>          </span><span class="annot"><span class="annottext">_skiDisplayName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiDisplayName"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>          </span><span class="annot"><span class="annottext">_skiReleaseName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiReleaseName"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>          </span><span class="annot"><span class="annottext">_skiAvailable :: Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiAvailable"><span class="hs-identifier hs-var">_skiAvailable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-133"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#builtinSourceKinds"><span class="hs-identifier hs-type">builtinSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span><span>
+</span><span id="line-136"></span><span id="builtinSourceKinds"><span class="annot"><span class="annottext">builtinSourceKinds :: SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#builtinSourceKinds"><span class="hs-identifier hs-var hs-var">builtinSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><span class="annottext">[SourceKindInfo] -&gt; SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-var">SourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">([SourceKindInfo] -&gt; SourceKinds)
+-&gt; [SourceKindInfo] -&gt; SourceKinds
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(BackendType -&gt; Maybe SourceKindInfo)
+-&gt; [BackendType] -&gt; [SourceKindInfo]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b.
+Filterable f =&gt;
+(a -&gt; Maybe b) -&gt; f a -&gt; f b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-c348fd1be527fbb040281c624d4766fb2c04c7e7f3be298bbe123b3357fb1136/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType -&gt; Maybe SourceKindInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#mkNativeSource"><span class="hs-identifier hs-var">mkNativeSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(BackendType -&gt; Bool) -&gt; [BackendType] -&gt; [BackendType]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendType -&gt; BackendType -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-var">Backend.DataConnector</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[BackendType]
+</span><a href="Hasura.RQL.Types.BackendType.html#supportedBackends"><span class="hs-identifier hs-var">Backend.supportedBackends</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-138"></span><span>
+</span><span id="line-139"></span><span class="annot"><span class="hs-comment">-- | Collect 'SourceKindInfo' from Native and GDC backend types.</span></span><span>
+</span><span id="line-140"></span><span id="local-6989586621687657410"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-type">collectSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657410"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687657410"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-type">SourceKinds</span></a></span></span><span>
+</span><span id="line-141"></span><span id="collectSourceKinds"><span class="annot"><span class="annottext">collectSourceKinds :: forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-var hs-var">collectSourceKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SourceKinds -&gt; SourceKinds) -&gt; m SourceKinds -&gt; m SourceKinds
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#builtinSourceKinds"><span class="hs-identifier hs-var">builtinSourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">SourceKinds -&gt; SourceKinds -&gt; SourceKinds
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m SourceKinds
+forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#agentSourceKinds"><span class="hs-identifier hs-var">agentSourceKinds</span></a></span><span>
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#runListSourceKinds"><span class="hs-identifier hs-type">runListSourceKinds</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-144"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687657103"><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">Metadata.MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">Error.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">SchemaCache.CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-type">ListSourceKinds</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-150"></span><span>  </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-151"></span><span id="runListSourceKinds"><span class="annot"><span class="annottext">runListSourceKinds :: forall (m :: * -&gt; *).
+(MetadataM m, MonadError QErr m, CacheRM m) =&gt;
+ListSourceKinds -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#runListSourceKinds"><span class="hs-identifier hs-var hs-var">runListSourceKinds</span></a></span></span><span> </span><span class="annot"><span class="annottext">ListSourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#ListSourceKinds"><span class="hs-identifier hs-var">ListSourceKinds</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SourceKinds -&gt; EncJSON) -&gt; m SourceKinds -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">SourceKinds -&gt; EncJSON
+forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(m SourceKinds -&gt; m EncJSON) -&gt; m SourceKinds -&gt; m EncJSON
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621687657450"><span class="annot"><span class="annottext">SourceKinds
+</span><a href="#local-6989586621687657450"><span class="hs-identifier hs-var">sks</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m SourceKinds
+forall (m :: * -&gt; *). MetadataM m =&gt; m SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#collectSourceKinds"><span class="hs-identifier hs-var">collectSourceKinds</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span class="annot"><span class="annottext">([SourceKindInfo] -&gt; SourceKinds)
+-&gt; m [SourceKindInfo] -&gt; m SourceKinds
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">[SourceKindInfo] -&gt; SourceKinds
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKinds"><span class="hs-identifier hs-var">SourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">(m [SourceKindInfo] -&gt; m SourceKinds)
+-&gt; m [SourceKindInfo] -&gt; m SourceKinds
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(SourceKindInfo -&gt; m SourceKindInfo)
+-&gt; [SourceKindInfo] -&gt; m [SourceKindInfo]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; [a] -&gt; f [b]
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; m SourceKindInfo
+</span><a href="#local-6989586621687657452"><span class="hs-identifier hs-var">setNames</span></a></span><span> </span><span class="annot"><span class="annottext">([SourceKindInfo] -&gt; m [SourceKindInfo])
+-&gt; [SourceKindInfo] -&gt; m [SourceKindInfo]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceKinds -&gt; [SourceKindInfo]
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#unSourceKinds"><span class="hs-identifier hs-var">unSourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">SourceKinds
+</span><a href="#local-6989586621687657450"><span class="hs-identifier hs-var">sks</span></a></span><span>
+</span><span id="line-154"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-155"></span><span>    </span><span class="annot"><a href="#local-6989586621687657452"><span class="hs-identifier hs-type">setNames</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621687657452"><span class="annot"><span class="annottext">setNames :: SourceKindInfo -&gt; m SourceKindInfo
+</span><a href="#local-6989586621687657452"><span class="hs-identifier hs-var hs-var">setNames</span></a></span></span><span> </span><span id="local-6989586621687657453"><span class="annot"><span class="annottext">ski :: SourceKindInfo
+</span><a href="#local-6989586621687657453"><span class="hs-identifier hs-var">ski</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657454"><span class="annot"><span class="annottext">Text
+_skiSourceKind :: SourceKindInfo -&gt; Text
+_skiSourceKind :: Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-identifier hs-var hs-var">_skiSourceKind</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687657455"><span class="annot"><span class="annottext">Maybe Text
+_skiDisplayName :: SourceKindInfo -&gt; Maybe Text
+_skiDisplayName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiDisplayName"><span class="hs-identifier hs-var hs-var">_skiDisplayName</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-157"></span><span>      </span><span class="hs-comment">-- If there are issues fetching the capabilities for an agent, then list it as unavailable.</span><span>
+</span><span id="line-158"></span><span>      </span><span class="annot"><span class="annottext">(m SourceKindInfo
+ -&gt; (QErr -&gt; m SourceKindInfo) -&gt; m SourceKindInfo)
+-&gt; (QErr -&gt; m SourceKindInfo)
+-&gt; m SourceKindInfo
+-&gt; m SourceKindInfo
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">m SourceKindInfo -&gt; (QErr -&gt; m SourceKindInfo) -&gt; m SourceKindInfo
+forall a. m a -&gt; (QErr -&gt; m a) -&gt; m a
+forall e (m :: * -&gt; *) a.
+MonadError e m =&gt;
+m a -&gt; (e -&gt; m a) -&gt; m a
+</span><span class="hs-identifier hs-var">catchError</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m SourceKindInfo -&gt; QErr -&gt; m SourceKindInfo
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">(m SourceKindInfo -&gt; QErr -&gt; m SourceKindInfo)
+-&gt; m SourceKindInfo -&gt; QErr -&gt; m SourceKindInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; m SourceKindInfo
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SourceKindInfo -&gt; m SourceKindInfo)
+-&gt; SourceKindInfo -&gt; m SourceKindInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceKindInfo
+</span><a href="#local-6989586621687657453"><span class="hs-identifier hs-var">ski</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_skiAvailable :: Bool
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiAvailable"><span class="hs-identifier hs-var">_skiAvailable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-159"></span><span>        </span><span id="local-6989586621687657458"><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+</span><a href="#local-6989586621687657458"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; m (Maybe DataConnectorInfo)
+</span><a href="#local-6989586621687657459"><span class="hs-identifier hs-var">getSourceKindCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">SourceKindInfo
+</span><a href="#local-6989586621687657453"><span class="hs-identifier hs-var">ski</span></a></span><span>
+</span><span id="line-160"></span><span>        </span><span class="hs-comment">-- Prefer metadata, then capabilities, then source-kind key</span><span>
+</span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">SourceKindInfo -&gt; m SourceKindInfo
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span>
+</span><span id="line-162"></span><span>          </span><span class="annot"><span class="annottext">SourceKindInfo
+</span><a href="#local-6989586621687657453"><span class="hs-identifier hs-var">ski</span></a></span><span>
+</span><span id="line-163"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_skiReleaseName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiReleaseName"><span class="hs-identifier hs-var">_skiReleaseName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Maybe Text
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciReleaseName"><span class="hs-identifier hs-var">DC.Types._dciReleaseName</span></a></span><span> </span><span class="annot"><span class="annottext">(DataConnectorInfo -&gt; Maybe Text)
+-&gt; Maybe DataConnectorInfo -&gt; Maybe Text
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+</span><a href="#local-6989586621687657458"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-164"></span><span>              </span><span class="annot"><span class="annottext">_skiDisplayName :: Maybe Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiDisplayName"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Maybe Text] -&gt; Maybe Text
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t (f a) -&gt; f a
+</span><span class="hs-identifier hs-var">asum</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621687657455"><span class="hs-identifier hs-var">_skiDisplayName</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Maybe Text
+</span><a href="Hasura.Backends.DataConnector.Adapter.Types.html#_dciDisplayName"><span class="hs-identifier hs-var">DC.Types._dciDisplayName</span></a></span><span> </span><span class="annot"><span class="annottext">(DataConnectorInfo -&gt; Maybe Text)
+-&gt; Maybe DataConnectorInfo -&gt; Maybe Text
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+</span><a href="#local-6989586621687657458"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687657454"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-165"></span><span>            </span><span class="hs-special">}</span><span>
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span>    </span><span class="annot"><a href="#local-6989586621687657459"><span class="hs-identifier hs-type">getSourceKindCapabilities</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687657103"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DC.Types.DataConnectorInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-168"></span><span>    </span><span id="local-6989586621687657459"><span class="annot"><span class="annottext">getSourceKindCapabilities :: SourceKindInfo -&gt; m (Maybe DataConnectorInfo)
+</span><a href="#local-6989586621687657459"><span class="hs-identifier hs-var hs-var">getSourceKindCapabilities</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#SourceKindInfo"><span class="hs-identifier hs-type">SourceKindInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657464"><span class="annot"><span class="annottext">Text
+_skiSourceKind :: SourceKindInfo -&gt; Text
+_skiSourceKind :: Text
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiSourceKind"><span class="hs-identifier hs-var hs-var">_skiSourceKind</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687657465"><span class="annot"><span class="annottext">SourceType
+_skiBuiltin :: SourceKindInfo -&gt; SourceType
+_skiBuiltin :: SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_skiBuiltin"><span class="hs-identifier hs-var hs-var">_skiBuiltin</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceType
+</span><a href="#local-6989586621687657465"><span class="hs-identifier hs-var">_skiBuiltin</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">NE.Text.mkNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687657464"><span class="hs-identifier hs-var">_skiSourceKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-169"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Builtin"><span class="hs-identifier hs-var">Builtin</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe NonEmptyText
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo -&gt; m (Maybe DataConnectorInfo)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-170"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe NonEmptyText
+</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo -&gt; m (Maybe DataConnectorInfo)
+forall a. a -&gt; m a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-171"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceType
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#Agent"><span class="hs-identifier hs-var">Agent</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687657467"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657467"><span class="hs-identifier hs-var">nesk</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; Maybe DataConnectorInfo
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(DataConnectorInfo -&gt; Maybe DataConnectorInfo)
+-&gt; m DataConnectorInfo -&gt; m (Maybe DataConnectorInfo)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">GetSourceKindCapabilities -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *).
+(MonadError QErr m, CacheRM m) =&gt;
+GetSourceKindCapabilities -&gt; m DataConnectorInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities%27"><span class="hs-identifier hs-var">runGetSourceKindCapabilities'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmptyText -&gt; GetSourceKindCapabilities
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-var">GetSourceKindCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657467"><span class="hs-identifier hs-var">nesk</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-174"></span><span>
+</span><span id="line-175"></span><span class="hs-keyword">newtype</span><span> </span><span id="GetSourceKindCapabilities"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-var">GetSourceKindCapabilities</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GetSourceKindCapabilities"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-var">GetSourceKindCapabilities</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_gskcKind"><span class="annot"><span class="annottext">GetSourceKindCapabilities -&gt; NonEmptyText
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_gskcKind"><span class="hs-identifier hs-var hs-var">_gskcKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687657473"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621687657481"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser GetSourceKindCapabilities
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser GetSourceKindCapabilities)
+-&gt; Value
+-&gt; Parser GetSourceKindCapabilities
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">J.withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;GetSourceKindCapabilities&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687657482"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657482"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-179"></span><span>    </span><span id="local-6989586621687657483"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657483"><span class="hs-identifier hs-var">_gskcKind</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687657482"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser NonEmptyText
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-180"></span><span>    </span><span class="annot"><span class="annottext">GetSourceKindCapabilities -&gt; Parser GetSourceKindCapabilities
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(GetSourceKindCapabilities -&gt; Parser GetSourceKindCapabilities)
+-&gt; GetSourceKindCapabilities -&gt; Parser GetSourceKindCapabilities
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">NonEmptyText
+_gskcKind :: NonEmptyText
+_gskcKind :: NonEmptyText
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_gskcKind"><span class="hs-glyph hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-181"></span><span>
+</span><span id="line-182"></span><span class="annot"><span class="hs-comment">-- | List Backend Capabilities. Currently this only supports Data Connector Backends.</span></span><span>
+</span><span id="line-183"></span><span id="local-6989586621687657131"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities"><span class="hs-identifier hs-type">runGetSourceKindCapabilities</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">Error.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657131"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-185"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">SchemaCache.CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657131"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><a href="#local-6989586621687657131"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-189"></span><span id="runGetSourceKindCapabilities"><span class="annot"><span class="annottext">runGetSourceKindCapabilities :: forall (m :: * -&gt; *).
+(MonadError QErr m, CacheRM m) =&gt;
+GetSourceKindCapabilities -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities"><span class="hs-identifier hs-var hs-var">runGetSourceKindCapabilities</span></a></span></span><span> </span><span id="local-6989586621687657495"><span class="annot"><span class="annottext">GetSourceKindCapabilities
+</span><a href="#local-6989586621687657495"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DataConnectorInfo -&gt; EncJSON
+forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">EncJSON.encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(DataConnectorInfo -&gt; EncJSON) -&gt; m DataConnectorInfo -&gt; m EncJSON
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">GetSourceKindCapabilities -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *).
+(MonadError QErr m, CacheRM m) =&gt;
+GetSourceKindCapabilities -&gt; m DataConnectorInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities%27"><span class="hs-identifier hs-var">runGetSourceKindCapabilities'</span></a></span><span> </span><span class="annot"><span class="annottext">GetSourceKindCapabilities
+</span><a href="#local-6989586621687657495"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="hs-comment">-- | Main implementation of runGetSourceKindCapabilities that actually returns the DataConnectorInfo</span><span>
+</span><span id="line-192"></span><span class="hs-comment">-- and defers json encoding to `runGetSourceKindCapabilities`. This allows reuse and ensures a</span><span>
+</span><span id="line-193"></span><span class="hs-comment">-- correct assembly of DataConnectorInfo</span><span>
+</span><span id="line-194"></span><span id="local-6989586621687657130"><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities%27"><span class="hs-identifier hs-type">runGetSourceKindCapabilities'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-195"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">Error.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657130"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-196"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">SchemaCache.CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687657130"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-199"></span><span>  </span><span class="annot"><a href="#local-6989586621687657130"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorInfo"><span class="hs-identifier hs-type">DC.Types.DataConnectorInfo</span></a></span></span><span>
+</span><span id="line-200"></span><span id="runGetSourceKindCapabilities%27"><span class="annot"><span class="annottext">runGetSourceKindCapabilities' :: forall (m :: * -&gt; *).
+(MonadError QErr m, CacheRM m) =&gt;
+GetSourceKindCapabilities -&gt; m DataConnectorInfo
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#runGetSourceKindCapabilities%27"><span class="hs-identifier hs-var hs-var">runGetSourceKindCapabilities'</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.SourceKinds.html#GetSourceKindCapabilities"><span class="hs-identifier hs-type">GetSourceKindCapabilities</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687657514"><span class="annot"><span class="annottext">NonEmptyText
+_gskcKind :: GetSourceKindCapabilities -&gt; NonEmptyText
+_gskcKind :: NonEmptyText
+</span><a href="Hasura.RQL.DDL.SourceKinds.html#_gskcKind"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe (AnyBackend BackendSourceKind)
+</span><a href="Hasura.SQL.AnyBackend.html#backendSourceKindFromText"><span class="hs-identifier hs-var">AB.backendSourceKindFromText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe (AnyBackend BackendSourceKind))
+-&gt; Text -&gt; Maybe (AnyBackend BackendSourceKind)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.NonEmpty.html#unNonEmptyText"><span class="hs-identifier hs-var">NE.Text.unNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657514"><span class="hs-identifier hs-var">_gskcKind</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-202"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687657517"><span class="annot"><span class="annottext">AnyBackend BackendSourceKind
+</span><a href="#local-6989586621687657517"><span class="hs-identifier hs-var">backendSourceKind</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-203"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+AnyBackend i -&gt; Maybe (i b)
+</span><a href="Hasura.SQL.AnyBackend.html#unpackAnyBackend"><span class="hs-identifier hs-var">AB.unpackAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">Backend.DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend BackendSourceKind
+</span><a href="#local-6989586621687657517"><span class="hs-identifier hs-var">backendSourceKind</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-204"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnectorKind"><span class="hs-identifier hs-type">Backend.DataConnectorKind</span></a></span><span> </span><span id="local-6989586621687657541"><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687657541"><span class="hs-identifier hs-var">dataConnectorName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-205"></span><span>          </span><span id="local-6989586621687657542"><span class="annot"><span class="annottext">BackendCache
+</span><a href="#local-6989586621687657542"><span class="hs-identifier hs-var">backendCache</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; BackendCache) -&gt; m SchemaCache -&gt; m BackendCache
+forall a b. (a -&gt; b) -&gt; m a -&gt; m b
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; BackendCache
+</span><a href="Hasura.RQL.Types.SchemaCache.html#scBackendCache"><span class="hs-identifier hs-var">SchemaCache.scBackendCache</span></a></span><span> </span><span class="annot"><span class="annottext">(m SchemaCache -&gt; m BackendCache)
+-&gt; m SchemaCache -&gt; m BackendCache
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m SchemaCache
+forall (m :: * -&gt; *). CacheRM m =&gt; m SchemaCache
+</span><a href="Hasura.RQL.Types.SchemaCache.html#askSchemaCache"><span class="hs-identifier hs-var">SchemaCache.askSchemaCache</span></a></span><span>
+</span><span id="line-206"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687657545"><span class="annot"><span class="annottext">capabilitiesMap :: HashMap DataConnectorName DataConnectorInfo
+</span><a href="#local-6989586621687657545"><span class="hs-identifier hs-var hs-var">capabilitiesMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap DataConnectorName DataConnectorInfo
+-&gt; (BackendInfoWrapper 'DataConnector
+    -&gt; HashMap DataConnectorName DataConnectorInfo)
+-&gt; Maybe (BackendInfoWrapper 'DataConnector)
+-&gt; HashMap DataConnectorName DataConnectorInfo
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">HashMap DataConnectorName DataConnectorInfo
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">BackendInfoWrapper 'DataConnector
+-&gt; HashMap DataConnectorName DataConnectorInfo
+BackendInfoWrapper 'DataConnector -&gt; BackendInfo 'DataConnector
+forall (b :: BackendType). BackendInfoWrapper b -&gt; BackendInfo b
+</span><a href="Hasura.RQL.Types.SchemaCache.html#unBackendInfoWrapper"><span class="hs-identifier hs-var">SchemaCache.unBackendInfoWrapper</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (BackendInfoWrapper 'DataConnector)
+ -&gt; HashMap DataConnectorName DataConnectorInfo)
+-&gt; Maybe (BackendInfoWrapper 'DataConnector)
+-&gt; HashMap DataConnectorName DataConnectorInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
+HasTag b =&gt;
+BackendMap i -&gt; Maybe (i b)
+</span><a href="Hasura.SQL.BackendMap.html#lookup"><span class="hs-identifier hs-var">BackendMap.lookup</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#DataConnector"><span class="hs-identifier hs-type">Backend.DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">BackendCache
+</span><a href="#local-6989586621687657542"><span class="hs-identifier hs-var">backendCache</span></a></span><span>
+</span><span id="line-207"></span><span>          </span><span class="annot"><span class="annottext">DataConnectorName
+-&gt; HashMap DataConnectorName DataConnectorInfo
+-&gt; Maybe DataConnectorInfo
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#lookup"><span class="hs-identifier hs-var">HashMap.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687657541"><span class="hs-identifier hs-var">dataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap DataConnectorName DataConnectorInfo
+</span><a href="#local-6989586621687657545"><span class="hs-identifier hs-var">capabilitiesMap</span></a></span><span>
+</span><span id="line-208"></span><span>            </span><span class="annot"><span class="annottext">Maybe DataConnectorInfo
+-&gt; m DataConnectorInfo -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">Error.throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#DataConnectorError"><span class="hs-identifier hs-var">Error.DataConnectorError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Source Kind &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">Text.E.toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621687657541"><span class="hs-identifier hs-var">dataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; was not found&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-209"></span><span>        </span><span class="annot"><span class="annottext">Maybe (BackendSourceKind 'DataConnector)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-210"></span><span>          </span><span class="hs-comment">-- Must be a native backend</span><span>
+</span><span id="line-211"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">Error.throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#DataConnectorError"><span class="hs-identifier hs-var">Error.DataConnectorError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">Text.E.toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657514"><span class="hs-identifier hs-var">_gskcKind</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; does not support Capabilities&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-212"></span><span>    </span><span class="annot"><span class="annottext">Maybe (AnyBackend BackendSourceKind)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-213"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m DataConnectorInfo
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">Error.throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#DataConnectorError"><span class="hs-identifier hs-var">Error.DataConnectorError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Source Kind &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">Text.E.toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621687657514"><span class="hs-identifier hs-var">_gskcKind</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; was not found&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span></pre></body></html>

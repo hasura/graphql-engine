@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Tracing.Sampling</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * SamplingState</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier">SamplingState</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier">samplingStateToHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#samplingStateFromHeader"><span class="hs-identifier">samplingStateFromHeader</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- * SamplingDecision</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier">SamplingDecision</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><span class="hs-comment">-- * SamplingPolicy</span></span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier">SamplingPolicy</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleNever"><span class="hs-identifier">sampleNever</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleAlways"><span class="hs-identifier">sampleAlways</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleRandomly"><span class="hs-identifier">sampleRandomly</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleOneInN"><span class="hs-identifier">sampleOneInN</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html"><span class="hs-identifier">Refined</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#Positive"><span class="hs-identifier">Positive</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier">Refined</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier">unrefine</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/random-1.2.1.1-1b5d94c4a3852ca1c5c7f66c108a0837848b52f4839a1923dfdc61fe040e7f1e/share/doc/html/src/System.Random.Stateful.html"><span class="hs-identifier">System.Random.Stateful</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Random</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- SamplingState</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- | B3 propagation sampling state.</span><span>
+</span><span id="line-27"></span><span class="hs-comment">--</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- Debug sampling state not represented.</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">data</span><span> </span><span id="SamplingState"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-var">SamplingState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SamplingDefer"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="SamplingDeny"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="SamplingAccept"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- | Convert a sampling state to a value for the X-B3-Sampled header. A return</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- value of Nothing indicates that the header should not be set.</span><span>
+</span><span id="line-33"></span><span id="local-6989586621687512120"><span class="annot"><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier hs-type">samplingStateToHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687512120"><span class="hs-identifier hs-type">s</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687512120"><span class="hs-identifier hs-type">s</span></a></span></span><span>
+</span><span id="line-34"></span><span id="samplingStateToHeader"><span class="annot"><span class="annottext">samplingStateToHeader :: forall s. IsString s =&gt; SamplingState -&gt; Maybe s
+</span><a href="Hasura.Tracing.Sampling.html#samplingStateToHeader"><span class="hs-identifier hs-var hs-var">samplingStateToHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe s
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">s -&gt; Maybe s
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">s
+</span><span class="hs-string">&quot;0&quot;</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">s -&gt; Maybe s
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">s
+</span><span class="hs-string">&quot;1&quot;</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Convert a X-B3-Sampled header value to a sampling state. An input of</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- Nothing indicates that the header was not set.</span><span>
+</span><span id="line-41"></span><span id="local-6989586621687512124"><span class="annot"><a href="Hasura.Tracing.Sampling.html#samplingStateFromHeader"><span class="hs-identifier hs-type">samplingStateFromHeader</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621687512124"><span class="hs-identifier hs-type">s</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621687512124"><span class="hs-identifier hs-type">s</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621687512124"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingState"><span class="hs-identifier hs-type">SamplingState</span></a></span></span><span>
+</span><span id="line-42"></span><span id="samplingStateFromHeader"><span class="annot"><span class="annottext">samplingStateFromHeader :: forall s. (IsString s, Eq s) =&gt; Maybe s -&gt; SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#samplingStateFromHeader"><span class="hs-identifier hs-var hs-var">samplingStateFromHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Maybe s
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">s
+</span><span class="hs-string">&quot;0&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDeny"><span class="hs-identifier hs-var">SamplingDeny</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">s
+</span><span class="hs-string">&quot;1&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingAccept"><span class="hs-identifier hs-var">SamplingAccept</span></a></span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">s
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SamplingState
+</span><a href="Hasura.Tracing.Sampling.html#SamplingDefer"><span class="hs-identifier hs-var">SamplingDefer</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- SamplingDecision</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="annot"><span class="hs-comment">-- | A local decision about whether or not to sample spans.</span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">data</span><span> </span><span id="SamplingDecision"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier hs-var">SamplingDecision</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SampleNever"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="SampleAlways"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- SamplingPolicy</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | An IO action for deciding whether or not to sample a trace.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- Currently restricted to deny access to the B3 sampling state, but we may</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- want to be more flexible in the future.</span><span>
+</span><span id="line-61"></span><span class="hs-keyword">type</span><span> </span><span id="SamplingPolicy"><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-var">SamplingPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingDecision"><span class="hs-identifier hs-type">SamplingDecision</span></a></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleNever"><span class="hs-identifier hs-type">sampleNever</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span>
+</span><span id="line-64"></span><span id="sampleNever"><span class="annot"><span class="annottext">sampleNever :: SamplingPolicy
+</span><a href="Hasura.Tracing.Sampling.html#sampleNever"><span class="hs-identifier hs-var hs-var">sampleNever</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleAlways"><span class="hs-identifier hs-type">sampleAlways</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span>
+</span><span id="line-67"></span><span id="sampleAlways"><span class="annot"><span class="annottext">sampleAlways :: SamplingPolicy
+</span><a href="Hasura.Tracing.Sampling.html#sampleAlways"><span class="hs-identifier hs-var hs-var">sampleAlways</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- @sampleRandomly p@ returns `SampleAlways` with probability @p@ and</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- `SampleNever` with probability @1 - p@.</span><span>
+</span><span id="line-71"></span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleRandomly"><span class="hs-identifier hs-type">sampleRandomly</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span>
+</span><span id="line-72"></span><span id="sampleRandomly"><span class="annot"><span class="annottext">sampleRandomly :: Double -&gt; SamplingPolicy
+</span><a href="Hasura.Tracing.Sampling.html#sampleRandomly"><span class="hs-identifier hs-var hs-var">sampleRandomly</span></a></span></span><span> </span><span id="local-6989586621687512205"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512205"><span class="hs-identifier hs-var">samplingProbability</span></a></span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512205"><span class="hs-identifier hs-var">samplingProbability</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512205"><span class="hs-identifier hs-var">samplingProbability</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621687512207"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512207"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Double, Double) -&gt; AtomicGenM StdGen -&gt; IO Double
+forall a g (m :: * -&gt; *).
+(UniformRange a, StatefulGen g m) =&gt;
+(a, a) -&gt; g -&gt; m a
+forall g (m :: * -&gt; *).
+StatefulGen g m =&gt;
+(Double, Double) -&gt; g -&gt; m Double
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/random-1.2.1.1-1b5d94c4a3852ca1c5c7f66c108a0837848b52f4839a1923dfdc61fe040e7f1e/share/doc/html/src/System.Random.Internal.html#uniformRM"><span class="hs-identifier hs-var">Random.uniformRM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Double
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AtomicGenM StdGen
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/random-1.2.1.1-1b5d94c4a3852ca1c5c7f66c108a0837848b52f4839a1923dfdc61fe040e7f1e/share/doc/html/src/System.Random.Stateful.html#globalStdGen"><span class="hs-identifier hs-var">Random.globalStdGen</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SamplingDecision -&gt; SamplingPolicy)
+-&gt; SamplingDecision -&gt; SamplingPolicy
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512207"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Double -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621687512205"><span class="hs-identifier hs-var">samplingProbability</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- Like @sampleRandomly@, but with the probability expressed as the denominator</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- N of the fraction 1/N.</span><span>
+</span><span id="line-81"></span><span class="annot"><a href="Hasura.Tracing.Sampling.html#sampleOneInN"><span class="hs-identifier hs-type">sampleOneInN</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.Unsafe.Type.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#Positive"><span class="hs-identifier hs-type">Positive</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Tracing.Sampling.html#SamplingPolicy"><span class="hs-identifier hs-type">SamplingPolicy</span></a></span><span>
+</span><span id="line-82"></span><span id="sampleOneInN"><span class="annot"><span class="annottext">sampleOneInN :: Refined Positive Int -&gt; SamplingPolicy
+</span><a href="Hasura.Tracing.Sampling.html#sampleOneInN"><span class="hs-identifier hs-var hs-var">sampleOneInN</span></a></span></span><span> </span><span id="local-6989586621687512211"><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621687512211"><span class="hs-identifier hs-var">denominator</span></a></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687512212"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>      </span><span id="local-6989586621687512213"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687512213"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; AtomicGenM StdGen -&gt; IO Int
+forall a g (m :: * -&gt; *).
+(UniformRange a, StatefulGen g m) =&gt;
+(a, a) -&gt; g -&gt; m a
+forall g (m :: * -&gt; *). StatefulGen g m =&gt; (Int, Int) -&gt; g -&gt; m Int
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/random-1.2.1.1-1b5d94c4a3852ca1c5c7f66c108a0837848b52f4839a1923dfdc61fe040e7f1e/share/doc/html/src/System.Random.Internal.html#uniformRM"><span class="hs-identifier hs-var">Random.uniformRM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687512212"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">AtomicGenM StdGen
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/random-1.2.1.1-1b5d94c4a3852ca1c5c7f66c108a0837848b52f4839a1923dfdc61fe040e7f1e/share/doc/html/src/System.Random.Stateful.html#globalStdGen"><span class="hs-identifier hs-var">Random.globalStdGen</span></a></span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">SamplingDecision -&gt; SamplingPolicy
+forall a. a -&gt; IO a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SamplingDecision -&gt; SamplingPolicy)
+-&gt; SamplingDecision -&gt; SamplingPolicy
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621687512213"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleAlways"><span class="hs-identifier hs-var">SampleAlways</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">SamplingDecision
+</span><a href="Hasura.Tracing.Sampling.html#SampleNever"><span class="hs-identifier hs-var">SampleNever</span></a></span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621687512212"><span class="annot"><span class="annottext">n :: Int
+</span><a href="#local-6989586621687512212"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined Positive Int -&gt; Int
+forall {k} (p :: k) x. Refined p x -&gt; x
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/refined-0.8-b40efcc9b0260e802a32460f94ca38ced336d3f5163ccc01fe8e32d7f56bcb6d/share/doc/html/src/Refined.html#unrefine"><span class="hs-identifier hs-var">unrefine</span></a></span><span> </span><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621687512211"><span class="hs-identifier hs-var">denominator</span></a></span><span>
+</span><span id="line-89"></span></pre></body></html>

@@ -1,0 +1,799 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE ViewPatterns #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-orphans #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | `FromJSON` instances for API.Metadata. Kept separately to discourage</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- becoming a dumping ground for orphan instances</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.API.Metadata.Instances</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-b431cb4fd508c2c7c8eea06c2daf1bc02689c2bdfe6a8b3643725df6582a1541/share/doc/html/src/Data.Aeson.Casing.html"><span class="hs-identifier">Data.Aeson.Casing</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.html"><span class="hs-identifier">Data.Aeson.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">first</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html"><span class="hs-identifier">Hasura.Server.API.Backend</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Instances.html"><span class="hs-identifier">Hasura.Server.API.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html"><span class="hs-identifier">Hasura.Server.API.Metadata.Types</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Utils.html#APIVersion"><span class="hs-identifier">APIVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- | Note! You're seeing some orphan instances for `FromJSON` for types in</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- `Metadata.Types`. This is because we need to use `dispatchAnyBackend`.</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- Keeping these here avoids us needing an hs-boot file and a load of cyclical</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- hell.</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687778595"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV1"><span class="hs-identifier hs-type">RQLMetadataV1</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621687778956"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RQLMetadataV1
+</span><a href="#local-6989586621687778956"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser RQLMetadataV1)
+-&gt; Value
+-&gt; Parser RQLMetadataV1
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;RQLMetadataV1&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687778959"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687778959"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-27"></span><span>    </span><span id="local-6989586621687778960"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778960"><span class="hs-identifier hs-var">queryType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687778959"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;type&quot;</span></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621687778962"><span class="hs-identifier hs-type">args</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621687778453"><span class="annot"><a href="#local-6989586621687778453"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778453"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Parser"><span class="hs-identifier hs-type">A.Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687778453"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-29"></span><span>        </span><span id="local-6989586621687778962"><span class="annot"><span class="annottext">args :: forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687778959"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser a
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A"><span class="hs-operator hs-var">.:</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;args&quot;</span></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778960"><span class="hs-identifier hs-var">queryType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-31"></span><span>      </span><span class="hs-comment">-- backend agnostic</span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;rename_source&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RenameSource -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMRenameSource"><span class="hs-identifier hs-var">RMRenameSource</span></a></span><span> </span><span class="annot"><span class="annottext">(RenameSource -&gt; RQLMetadataV1)
+-&gt; Parser RenameSource -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RenameSource
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_remote_schema&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AddRemoteSchemaQuery -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddRemoteSchema"><span class="hs-identifier hs-var">RMAddRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(AddRemoteSchemaQuery -&gt; RQLMetadataV1)
+-&gt; Parser AddRemoteSchemaQuery -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AddRemoteSchemaQuery
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;update_remote_schema&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AddRemoteSchemaQuery -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMUpdateRemoteSchema"><span class="hs-identifier hs-var">RMUpdateRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(AddRemoteSchemaQuery -&gt; RQLMetadataV1)
+-&gt; Parser AddRemoteSchemaQuery -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AddRemoteSchemaQuery
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remove_remote_schema&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaNameQuery -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMRemoveRemoteSchema"><span class="hs-identifier hs-var">RMRemoveRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaNameQuery -&gt; RQLMetadataV1)
+-&gt; Parser RemoteSchemaNameQuery -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RemoteSchemaNameQuery
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;reload_remote_schema&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaNameQuery -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMReloadRemoteSchema"><span class="hs-identifier hs-var">RMReloadRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaNameQuery -&gt; RQLMetadataV1)
+-&gt; Parser RemoteSchemaNameQuery -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RemoteSchemaNameQuery
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;introspect_remote_schema&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaNameQuery -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMIntrospectRemoteSchema"><span class="hs-identifier hs-var">RMIntrospectRemoteSchema</span></a></span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaNameQuery -&gt; RQLMetadataV1)
+-&gt; Parser RemoteSchemaNameQuery -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RemoteSchemaNameQuery
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_remote_schema_permissions&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AddRemoteSchemaPermission -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddRemoteSchemaPermissions"><span class="hs-identifier hs-var">RMAddRemoteSchemaPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">(AddRemoteSchemaPermission -&gt; RQLMetadataV1)
+-&gt; Parser AddRemoteSchemaPermission -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AddRemoteSchemaPermission
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_remote_schema_permissions&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropRemoteSchemaPermissions -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropRemoteSchemaPermissions"><span class="hs-identifier hs-var">RMDropRemoteSchemaPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">(DropRemoteSchemaPermissions -&gt; RQLMetadataV1)
+-&gt; Parser DropRemoteSchemaPermissions -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropRemoteSchemaPermissions
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_remote_schema_remote_relationship&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateRemoteSchemaRemoteRelationship"><span class="hs-identifier hs-var">RMCreateRemoteSchemaRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1)
+-&gt; Parser CreateRemoteSchemaRemoteRelationship
+-&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateRemoteSchemaRemoteRelationship
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;update_remote_schema_remote_relationship&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMUpdateRemoteSchemaRemoteRelationship"><span class="hs-identifier hs-var">RMUpdateRemoteSchemaRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1)
+-&gt; Parser CreateRemoteSchemaRemoteRelationship
+-&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateRemoteSchemaRemoteRelationship
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;delete_remote_schema_remote_relationship&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeleteRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDeleteRemoteSchemaRemoteRelationship"><span class="hs-identifier hs-var">RMDeleteRemoteSchemaRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">(DeleteRemoteSchemaRemoteRelationship -&gt; RQLMetadataV1)
+-&gt; Parser DeleteRemoteSchemaRemoteRelationship
+-&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DeleteRemoteSchemaRemoteRelationship
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cleanup_event_trigger_logs&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCleanupEventTriggerLog"><span class="hs-identifier hs-var">RMCleanupEventTriggerLog</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerLogCleanupConfig -&gt; RQLMetadataV1)
+-&gt; Parser TriggerLogCleanupConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser TriggerLogCleanupConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;resume_event_trigger_cleanups&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupToggleConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMResumeEventTriggerCleanup"><span class="hs-identifier hs-var">RMResumeEventTriggerCleanup</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerLogCleanupToggleConfig -&gt; RQLMetadataV1)
+-&gt; Parser TriggerLogCleanupToggleConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser TriggerLogCleanupToggleConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;pause_event_trigger_cleanups&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupToggleConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMPauseEventTriggerCleanup"><span class="hs-identifier hs-var">RMPauseEventTriggerCleanup</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerLogCleanupToggleConfig -&gt; RQLMetadataV1)
+-&gt; Parser TriggerLogCleanupToggleConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser TriggerLogCleanupToggleConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_cron_trigger&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Unvalidated CreateCronTrigger -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateCronTrigger"><span class="hs-identifier hs-var">RMCreateCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">(Unvalidated CreateCronTrigger -&gt; RQLMetadataV1)
+-&gt; Parser (Unvalidated CreateCronTrigger) -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Unvalidated CreateCronTrigger)
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;delete_cron_trigger&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScheduledTriggerName -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDeleteCronTrigger"><span class="hs-identifier hs-var">RMDeleteCronTrigger</span></a></span><span> </span><span class="annot"><span class="annottext">(ScheduledTriggerName -&gt; RQLMetadataV1)
+-&gt; Parser ScheduledTriggerName -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ScheduledTriggerName
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_scheduled_event&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateScheduledEvent -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateScheduledEvent"><span class="hs-identifier hs-var">RMCreateScheduledEvent</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateScheduledEvent -&gt; RQLMetadataV1)
+-&gt; Parser CreateScheduledEvent -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateScheduledEvent
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;delete_scheduled_event&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DeleteScheduledEvent -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDeleteScheduledEvent"><span class="hs-identifier hs-var">RMDeleteScheduledEvent</span></a></span><span> </span><span class="annot"><span class="annottext">(DeleteScheduledEvent -&gt; RQLMetadataV1)
+-&gt; Parser DeleteScheduledEvent -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DeleteScheduledEvent
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_scheduled_events&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetScheduledEvents -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetScheduledEvents"><span class="hs-identifier hs-var">RMGetScheduledEvents</span></a></span><span> </span><span class="annot"><span class="annottext">(GetScheduledEvents -&gt; RQLMetadataV1)
+-&gt; Parser GetScheduledEvents -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetScheduledEvents
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_scheduled_event_invocations&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetScheduledEventInvocations"><span class="hs-identifier hs-var">RMGetScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">(GetScheduledEventInvocations -&gt; RQLMetadataV1)
+-&gt; Parser GetScheduledEventInvocations -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetScheduledEventInvocations
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_cron_triggers&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1 -&gt; Parser RQLMetadataV1
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetCronTriggers"><span class="hs-identifier hs-var">RMGetCronTriggers</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_action&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Unvalidated CreateAction -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateAction"><span class="hs-identifier hs-var">RMCreateAction</span></a></span><span> </span><span class="annot"><span class="annottext">(Unvalidated CreateAction -&gt; RQLMetadataV1)
+-&gt; Parser (Unvalidated CreateAction) -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Unvalidated CreateAction)
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_action&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropAction -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropAction"><span class="hs-identifier hs-var">RMDropAction</span></a></span><span> </span><span class="annot"><span class="annottext">(DropAction -&gt; RQLMetadataV1)
+-&gt; Parser DropAction -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropAction
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;update_action&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Unvalidated UpdateAction -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMUpdateAction"><span class="hs-identifier hs-var">RMUpdateAction</span></a></span><span> </span><span class="annot"><span class="annottext">(Unvalidated UpdateAction -&gt; RQLMetadataV1)
+-&gt; Parser (Unvalidated UpdateAction) -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Unvalidated UpdateAction)
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_action_permission&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateActionPermission -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateActionPermission"><span class="hs-identifier hs-var">RMCreateActionPermission</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateActionPermission -&gt; RQLMetadataV1)
+-&gt; Parser CreateActionPermission -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateActionPermission
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_action_permission&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropActionPermission -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropActionPermission"><span class="hs-identifier hs-var">RMDropActionPermission</span></a></span><span> </span><span class="annot"><span class="annottext">(DropActionPermission -&gt; RQLMetadataV1)
+-&gt; Parser DropActionPermission -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropActionPermission
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_query_collection&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateCollection -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateQueryCollection"><span class="hs-identifier hs-var">RMCreateQueryCollection</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateCollection -&gt; RQLMetadataV1)
+-&gt; Parser CreateCollection -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateCollection
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;rename_query_collection&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RenameCollection -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMRenameQueryCollection"><span class="hs-identifier hs-var">RMRenameQueryCollection</span></a></span><span> </span><span class="annot"><span class="annottext">(RenameCollection -&gt; RQLMetadataV1)
+-&gt; Parser RenameCollection -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RenameCollection
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_query_collection&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropCollection -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropQueryCollection"><span class="hs-identifier hs-var">RMDropQueryCollection</span></a></span><span> </span><span class="annot"><span class="annottext">(DropCollection -&gt; RQLMetadataV1)
+-&gt; Parser DropCollection -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropCollection
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_query_to_collection&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AddQueryToCollection -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddQueryToCollection"><span class="hs-identifier hs-var">RMAddQueryToCollection</span></a></span><span> </span><span class="annot"><span class="annottext">(AddQueryToCollection -&gt; RQLMetadataV1)
+-&gt; Parser AddQueryToCollection -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AddQueryToCollection
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_query_from_collection&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropQueryFromCollection -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropQueryFromCollection"><span class="hs-identifier hs-var">RMDropQueryFromCollection</span></a></span><span> </span><span class="annot"><span class="annottext">(DropQueryFromCollection -&gt; RQLMetadataV1)
+-&gt; Parser DropQueryFromCollection -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropQueryFromCollection
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_collection_to_allowlist&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AllowlistEntry -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddCollectionToAllowlist"><span class="hs-identifier hs-var">RMAddCollectionToAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(AllowlistEntry -&gt; RQLMetadataV1)
+-&gt; Parser AllowlistEntry -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AllowlistEntry
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_collection_from_allowlist&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropCollectionFromAllowlist -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropCollectionFromAllowlist"><span class="hs-identifier hs-var">RMDropCollectionFromAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(DropCollectionFromAllowlist -&gt; RQLMetadataV1)
+-&gt; Parser DropCollectionFromAllowlist -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropCollectionFromAllowlist
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;update_scope_of_collection_in_allowlist&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UpdateScopeOfCollectionInAllowlist -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMUpdateScopeOfCollectionInAllowlist"><span class="hs-identifier hs-var">RMUpdateScopeOfCollectionInAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(UpdateScopeOfCollectionInAllowlist -&gt; RQLMetadataV1)
+-&gt; Parser UpdateScopeOfCollectionInAllowlist
+-&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser UpdateScopeOfCollectionInAllowlist
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;create_rest_endpoint&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CreateEndpoint -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMCreateRestEndpoint"><span class="hs-identifier hs-var">RMCreateRestEndpoint</span></a></span><span> </span><span class="annot"><span class="annottext">(CreateEndpoint -&gt; RQLMetadataV1)
+-&gt; Parser CreateEndpoint -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CreateEndpoint
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_rest_endpoint&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropEndpoint -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropRestEndpoint"><span class="hs-identifier hs-var">RMDropRestEndpoint</span></a></span><span> </span><span class="annot"><span class="annottext">(DropEndpoint -&gt; RQLMetadataV1)
+-&gt; Parser DropEndpoint -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropEndpoint
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dc_add_agent&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DCAddAgent -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDCAddAgent"><span class="hs-identifier hs-var">RMDCAddAgent</span></a></span><span> </span><span class="annot"><span class="annottext">(DCAddAgent -&gt; RQLMetadataV1)
+-&gt; Parser DCAddAgent -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DCAddAgent
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dc_delete_agent&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DCDeleteAgent -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDCDeleteAgent"><span class="hs-identifier hs-var">RMDCDeleteAgent</span></a></span><span> </span><span class="annot"><span class="annottext">(DCDeleteAgent -&gt; RQLMetadataV1)
+-&gt; Parser DCDeleteAgent -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DCDeleteAgent
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;list_source_kinds&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ListSourceKinds -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMListSourceKinds"><span class="hs-identifier hs-var">RMListSourceKinds</span></a></span><span> </span><span class="annot"><span class="annottext">(ListSourceKinds -&gt; RQLMetadataV1)
+-&gt; Parser ListSourceKinds -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ListSourceKinds
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_source_kind_capabilities&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetSourceKindCapabilities -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetSourceKindCapabilities"><span class="hs-identifier hs-var">RMGetSourceKindCapabilities</span></a></span><span> </span><span class="annot"><span class="annottext">(GetSourceKindCapabilities -&gt; RQLMetadataV1)
+-&gt; Parser GetSourceKindCapabilities -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetSourceKindCapabilities
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_table_info&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetTableInfo_ -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetTableInfo_"><span class="hs-identifier hs-var">RMGetTableInfo_</span></a></span><span> </span><span class="annot"><span class="annottext">(GetTableInfo_ -&gt; RQLMetadataV1)
+-&gt; Parser GetTableInfo_ -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetTableInfo_
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_custom_types&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CustomTypes -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetCustomTypes"><span class="hs-identifier hs-var">RMSetCustomTypes</span></a></span><span> </span><span class="annot"><span class="annottext">(CustomTypes -&gt; RQLMetadataV1)
+-&gt; Parser CustomTypes -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser CustomTypes
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_api_limits&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ApiLimit -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetApiLimits"><span class="hs-identifier hs-var">RMSetApiLimits</span></a></span><span> </span><span class="annot"><span class="annottext">(ApiLimit -&gt; RQLMetadataV1)
+-&gt; Parser ApiLimit -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ApiLimit
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remove_api_limits&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1 -&gt; Parser RQLMetadataV1
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMRemoveApiLimits"><span class="hs-identifier hs-var">RMRemoveApiLimits</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_metrics_config&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetricsConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetMetricsConfig"><span class="hs-identifier hs-var">RMSetMetricsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(MetricsConfig -&gt; RQLMetadataV1)
+-&gt; Parser MetricsConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser MetricsConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;remove_metrics_config&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1 -&gt; Parser RQLMetadataV1
+forall a. a -&gt; Parser a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMRemoveMetricsConfig"><span class="hs-identifier hs-var">RMRemoveMetricsConfig</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_inherited_role&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InheritedRole -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddInheritedRole"><span class="hs-identifier hs-var">RMAddInheritedRole</span></a></span><span> </span><span class="annot"><span class="annottext">(InheritedRole -&gt; RQLMetadataV1)
+-&gt; Parser InheritedRole -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser InheritedRole
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_inherited_role&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropInheritedRole -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropInheritedRole"><span class="hs-identifier hs-var">RMDropInheritedRole</span></a></span><span> </span><span class="annot"><span class="annottext">(DropInheritedRole -&gt; RQLMetadataV1)
+-&gt; Parser DropInheritedRole -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropInheritedRole
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;replace_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReplaceMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMReplaceMetadata"><span class="hs-identifier hs-var">RMReplaceMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(ReplaceMetadata -&gt; RQLMetadataV1)
+-&gt; Parser ReplaceMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ReplaceMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;export_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ExportMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMExportMetadata"><span class="hs-identifier hs-var">RMExportMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(ExportMetadata -&gt; RQLMetadataV1)
+-&gt; Parser ExportMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ExportMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-82"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;clear_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ClearMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMClearMetadata"><span class="hs-identifier hs-var">RMClearMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(ClearMetadata -&gt; RQLMetadataV1)
+-&gt; Parser ClearMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ClearMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;reload_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReloadMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMReloadMetadata"><span class="hs-identifier hs-var">RMReloadMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(ReloadMetadata -&gt; RQLMetadataV1)
+-&gt; Parser ReloadMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ReloadMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_inconsistent_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetInconsistentMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetInconsistentMetadata"><span class="hs-identifier hs-var">RMGetInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(GetInconsistentMetadata -&gt; RQLMetadataV1)
+-&gt; Parser GetInconsistentMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetInconsistentMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_inconsistent_metadata&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropInconsistentMetadata -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropInconsistentMetadata"><span class="hs-identifier hs-var">RMDropInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">(DropInconsistentMetadata -&gt; RQLMetadataV1)
+-&gt; Parser DropInconsistentMetadata -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropInconsistentMetadata
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;add_host_to_tls_allowlist&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AddHostToTLSAllowlist -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMAddHostToTLSAllowlist"><span class="hs-identifier hs-var">RMAddHostToTLSAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(AddHostToTLSAllowlist -&gt; RQLMetadataV1)
+-&gt; Parser AddHostToTLSAllowlist -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AddHostToTLSAllowlist
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;drop_host_from_tls_allowlist&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DropHostFromTLSAllowlist -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDropHostFromTLSAllowlist"><span class="hs-identifier hs-var">RMDropHostFromTLSAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">(DropHostFromTLSAllowlist -&gt; RQLMetadataV1)
+-&gt; Parser DropHostFromTLSAllowlist -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DropHostFromTLSAllowlist
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;dump_internal_state&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DumpInternalState -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMDumpInternalState"><span class="hs-identifier hs-var">RMDumpInternalState</span></a></span><span> </span><span class="annot"><span class="annottext">(DumpInternalState -&gt; RQLMetadataV1)
+-&gt; Parser DumpInternalState -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DumpInternalState
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;get_catalog_state&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GetCatalogState -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMGetCatalogState"><span class="hs-identifier hs-var">RMGetCatalogState</span></a></span><span> </span><span class="annot"><span class="annottext">(GetCatalogState -&gt; RQLMetadataV1)
+-&gt; Parser GetCatalogState -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser GetCatalogState
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_catalog_state&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SetCatalogState -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetCatalogState"><span class="hs-identifier hs-var">RMSetCatalogState</span></a></span><span> </span><span class="annot"><span class="annottext">(SetCatalogState -&gt; RQLMetadataV1)
+-&gt; Parser SetCatalogState -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser SetCatalogState
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_graphql_schema_introspection_options&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SetGraphqlIntrospectionOptions -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetGraphqlSchemaIntrospectionOptions"><span class="hs-identifier hs-var">RMSetGraphqlSchemaIntrospectionOptions</span></a></span><span> </span><span class="annot"><span class="annottext">(SetGraphqlIntrospectionOptions -&gt; RQLMetadataV1)
+-&gt; Parser SetGraphqlIntrospectionOptions -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser SetGraphqlIntrospectionOptions
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;test_webhook_transform&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Unvalidated TestWebhookTransform -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMTestWebhookTransform"><span class="hs-identifier hs-var">RMTestWebhookTransform</span></a></span><span> </span><span class="annot"><span class="annottext">(Unvalidated TestWebhookTransform -&gt; RQLMetadataV1)
+-&gt; Parser (Unvalidated TestWebhookTransform)
+-&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Unvalidated TestWebhookTransform)
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-93"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_query_tags&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SetQueryTagsConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetQueryTagsConfig"><span class="hs-identifier hs-var">RMSetQueryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(SetQueryTagsConfig -&gt; RQLMetadataV1)
+-&gt; Parser SetQueryTagsConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser SetQueryTagsConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_opentelemetry_config&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpenTelemetryConfig -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetOpenTelemetryConfig"><span class="hs-identifier hs-var">RMSetOpenTelemetryConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(OpenTelemetryConfig -&gt; RQLMetadataV1)
+-&gt; Parser OpenTelemetryConfig -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser OpenTelemetryConfig
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;set_opentelemetry_status&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OtelStatus -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMSetOpenTelemetryStatus"><span class="hs-identifier hs-var">RMSetOpenTelemetryStatus</span></a></span><span> </span><span class="annot"><span class="annottext">(OtelStatus -&gt; RQLMetadataV1)
+-&gt; Parser OtelStatus -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser OtelStatus
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;bulk&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[RQLMetadataRequest] -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMBulk"><span class="hs-identifier hs-var">RMBulk</span></a></span><span> </span><span class="annot"><span class="annottext">([RQLMetadataRequest] -&gt; RQLMetadataV1)
+-&gt; Parser [RQLMetadataRequest] -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser [RQLMetadataRequest]
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-97"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;bulk_keep_going&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[RQLMetadataRequest] -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMBulkKeepGoing"><span class="hs-identifier hs-var">RMBulkKeepGoing</span></a></span><span> </span><span class="annot"><span class="annottext">([RQLMetadataRequest] -&gt; RQLMetadataV1)
+-&gt; Parser [RQLMetadataRequest] -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser [RQLMetadataRequest]
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;bulk_atomic&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[RQLMetadataRequest] -&gt; RQLMetadataV1
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMBulkAtomic"><span class="hs-identifier hs-var">RMBulkAtomic</span></a></span><span> </span><span class="annot"><span class="annottext">([RQLMetadataRequest] -&gt; RQLMetadataV1)
+-&gt; Parser [RQLMetadataRequest] -&gt; Parser RQLMetadataV1
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser [RQLMetadataRequest]
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-comment">-- Backend prefixed metadata actions:</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>        </span><span class="hs-comment">-- 1) Parse the backend source kind and metadata command:</span><span>
+</span><span id="line-102"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621687779034"><span class="annot"><span class="annottext">AnyBackend BackendSourceKind
+</span><a href="#local-6989586621687779034"><span class="hs-identifier hs-var">backendSourceKind</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687779035"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779035"><span class="hs-identifier hs-var">cmd</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (AnyBackend BackendSourceKind, Text)
+forall (m :: * -&gt; *).
+MonadFail m =&gt;
+Text -&gt; m (AnyBackend BackendSourceKind, Text)
+</span><a href="Hasura.Server.API.Metadata.Instances.html#parseQueryType"><span class="hs-identifier hs-var">parseQueryType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687778960"><span class="hs-identifier hs-var">queryType</span></a></span><span>
+</span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
+AllBackendsSatisfy c =&gt;
+AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
+</span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend BackendSourceKind
+</span><a href="#local-6989586621687779034"><span class="hs-identifier hs-var">backendSourceKind</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621687779061"><span id="local-6989586621687779062"><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621687779062"><span class="hs-identifier hs-var">backendSourceKind'</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687779061"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-104"></span><span>          </span><span class="hs-comment">-- 2) Parse the args field:</span><span>
+</span><span id="line-105"></span><span>          </span><span id="local-6989586621687779063"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687779063"><span class="hs-identifier hs-var">argValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Value
+forall a. FromJSON a =&gt; Parser a
+</span><a href="#local-6989586621687778962"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><span id="line-106"></span><span>          </span><span class="hs-comment">-- 2) Attempt to run all the backend specific command parsers against the source kind, cmd, and arg:</span><span>
+</span><span id="line-107"></span><span>          </span><span class="hs-comment">-- NOTE: If parsers succeed then this will pick out the first successful one.</span><span>
+</span><span id="line-108"></span><span>          </span><span id="local-6989586621687779064"><span class="annot"><span class="annottext">Maybe RQLMetadataV1
+</span><a href="#local-6989586621687779064"><span class="hs-identifier hs-var">command</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Maybe RQLMetadataV1] -&gt; Maybe RQLMetadataV1
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span> </span><span class="annot"><span class="annottext">([Maybe RQLMetadataV1] -&gt; Maybe RQLMetadataV1)
+-&gt; Parser [Maybe RQLMetadataV1] -&gt; Parser (Maybe RQLMetadataV1)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Parser (Maybe RQLMetadataV1)] -&gt; Parser [Maybe RQLMetadataV1]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Traversable t, Applicative f) =&gt;
+t (f a) -&gt; f (t a)
+forall (f :: * -&gt; *) a. Applicative f =&gt; [f a] -&gt; f [a]
+</span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">CommandParser b
+</span><a href="#local-6989586621687779067"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621687779062"><span class="hs-identifier hs-var">backendSourceKind'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779035"><span class="hs-identifier hs-var">cmd</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687779063"><span class="hs-identifier hs-var">argValue</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621687779067"><span class="annot"><span class="annottext">CommandParser b
+</span><a href="#local-6989586621687779067"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). BackendAPI b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-var">metadataV1CommandParsers</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687779061"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">Maybe RQLMetadataV1 -&gt; Parser RQLMetadataV1 -&gt; Parser RQLMetadataV1
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RQLMetadataV1
+</span><a href="#local-6989586621687779064"><span class="hs-identifier hs-var">command</span></a></span><span>
+</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">(Parser RQLMetadataV1 -&gt; Parser RQLMetadataV1)
+-&gt; Parser RQLMetadataV1 -&gt; Parser RQLMetadataV1
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser RQLMetadataV1
+forall a. String -&gt; Parser a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">(String -&gt; Parser RQLMetadataV1) -&gt; String -&gt; Parser RQLMetadataV1
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unknown metadata command \&quot;&quot;</span></span><span>
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779035"><span class="hs-identifier hs-var">cmd</span></a></span><span>
+</span><span id="line-113"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\&quot; for backend &quot;</span></span><span>
+</span><span id="line-114"></span><span>            </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendSourceKind b -&gt; Text
+forall a. ToTxt a =&gt; a -&gt; Text
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">T.toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceKind b
+</span><a href="#local-6989586621687779062"><span class="hs-identifier hs-var">backendSourceKind'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687779074"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataV2"><span class="hs-identifier hs-type">RQLMetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621687779152"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RQLMetadataV2
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-118"></span><span>    </span><span class="annot"><span class="annottext">Options -&gt; Value -&gt; Parser RQLMetadataV2
+forall a.
+(Generic a, GFromJSON Zero (Rep a)) =&gt;
+Options -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#genericParseJSON"><span class="hs-identifier hs-var">genericParseJSON</span></a></span><span>
+</span><span id="line-119"></span><span>      </span><span class="annot"><span class="annottext">(Options -&gt; Value -&gt; Parser RQLMetadataV2)
+-&gt; Options -&gt; Value -&gt; Parser RQLMetadataV2
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#defaultOptions"><span class="hs-identifier hs-var">defaultOptions</span></a></span><span>
+</span><span id="line-120"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">constructorTagModifier :: String -&gt; String
+</span><a href="#local-6989586621687779155"><span class="hs-identifier hs-var">constructorTagModifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-casing-0.2.0.0-b431cb4fd508c2c7c8eea06c2daf1bc02689c2bdfe6a8b3643725df6582a1541/share/doc/html/src/Data.Aeson.Casing.Internal.html#snakeCase"><span class="hs-identifier hs-var">snakeCase</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; (String -&gt; String) -&gt; String -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String -&gt; String
+forall a. Int -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">4</span></span><span class="hs-special">,</span><span>
+</span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">sumEncoding :: SumEncoding
+</span><a href="#local-6989586621687779159"><span class="hs-identifier hs-var">sumEncoding</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; SumEncoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#TaggedObject"><span class="hs-identifier hs-var">TaggedObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;args&quot;</span></span><span>
+</span><span id="line-122"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687779163"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.API.Metadata.Types.html#RQLMetadataRequest"><span class="hs-identifier hs-type">RQLMetadataRequest</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621687779173"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RQLMetadataRequest
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; (Object -&gt; Parser RQLMetadataRequest)
+-&gt; Value
+-&gt; Parser RQLMetadataRequest
+forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#withObject"><span class="hs-identifier hs-var">withObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;RQLMetadataRequest&quot;</span></span><span> </span><span class="annot"><span class="annottext">((Object -&gt; Parser RQLMetadataRequest)
+ -&gt; Value -&gt; Parser RQLMetadataRequest)
+-&gt; (Object -&gt; Parser RQLMetadataRequest)
+-&gt; Value
+-&gt; Parser RQLMetadataRequest
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687779174"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687779174"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-126"></span><span>    </span><span id="local-6989586621687779175"><span class="annot"><span class="annottext">APIVersion
+</span><a href="#local-6989586621687779175"><span class="hs-identifier hs-var">version</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687779174"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe APIVersion)
+forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%3A%3F"><span class="hs-operator hs-var">.:?</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe APIVersion) -&gt; APIVersion -&gt; Parser APIVersion
+forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#.%21%3D"><span class="hs-operator hs-var">.!=</span></a></span><span> </span><span class="annot"><span class="annottext">APIVersion
+</span><a href="Hasura.Server.Utils.html#VIVersion1"><span class="hs-identifier hs-var">VIVersion1</span></a></span><span>
+</span><span id="line-127"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687779179"><span class="annot"><span class="annottext">val :: Value
+</span><a href="#local-6989586621687779179"><span class="hs-identifier hs-var hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.Internal.html#Object"><span class="hs-identifier hs-var">Object</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621687779174"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-128"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">APIVersion
+</span><a href="#local-6989586621687779175"><span class="hs-identifier hs-var">version</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">APIVersion
+</span><a href="Hasura.Server.Utils.html#VIVersion1"><span class="hs-identifier hs-var">VIVersion1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RQLMetadataV1 -&gt; RQLMetadataRequest
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMV1"><span class="hs-identifier hs-var">RMV1</span></a></span><span> </span><span class="annot"><span class="annottext">(RQLMetadataV1 -&gt; RQLMetadataRequest)
+-&gt; Parser RQLMetadataV1 -&gt; Parser RQLMetadataRequest
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser RQLMetadataV1
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687779179"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">APIVersion
+</span><a href="Hasura.Server.Utils.html#VIVersion2"><span class="hs-identifier hs-var">VIVersion2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RQLMetadataV2 -&gt; RQLMetadataRequest
+</span><a href="Hasura.Server.API.Metadata.Types.html#RMV2"><span class="hs-identifier hs-var">RMV2</span></a></span><span> </span><span class="annot"><span class="annottext">(RQLMetadataV2 -&gt; RQLMetadataRequest)
+-&gt; Parser RQLMetadataV2 -&gt; Parser RQLMetadataRequest
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser RQLMetadataV2
+forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#parseJSON"><span class="hs-identifier hs-var">parseJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621687779179"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="annot"><span class="hs-comment">-- | end of orphan instances</span></span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- | Parse the Metadata API action type returning a tuple of the</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- 'BackendSourceKind' and the action suffix.</span><span>
+</span><span id="line-136"></span><span class="hs-comment">--</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- For example: @&quot;pg_add_source&quot;@ parses as @(PostgresVanillaValue, &quot;add_source&quot;)@</span><span>
+</span><span id="line-138"></span><span id="local-6989586621687778462"><span class="annot"><a href="Hasura.Server.API.Metadata.Instances.html#parseQueryType"><span class="hs-identifier hs-type">parseQueryType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621687778462"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687778462"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-139"></span><span id="parseQueryType"><span class="annot"><span class="annottext">parseQueryType :: forall (m :: * -&gt; *).
+MonadFail m =&gt;
+Text -&gt; m (AnyBackend BackendSourceKind, Text)
+</span><a href="Hasura.Server.API.Metadata.Instances.html#parseQueryType"><span class="hs-identifier hs-var hs-var">parseQueryType</span></a></span></span><span> </span><span id="local-6989586621687779205"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779205"><span class="hs-identifier hs-var">queryType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687779206"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779206"><span class="hs-identifier hs-var">prefix</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#drop"><span class="hs-identifier hs-var">T.drop</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621687779208"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779208"><span class="hs-identifier hs-var">cmd</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HasCallStack =&gt; Text -&gt; Text -&gt; (Text, Text)
+Text -&gt; Text -&gt; (Text, Text)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#breakOn"><span class="hs-identifier hs-var">T.breakOn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779205"><span class="hs-identifier hs-var">queryType</span></a></span><span>
+</span><span id="line-141"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779208"><span class="hs-identifier hs-var">cmd</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>        </span><span class="annot"><span class="annottext">(AnyBackend BackendSourceKind
+ -&gt; (AnyBackend BackendSourceKind, Text))
+-&gt; m (AnyBackend BackendSourceKind)
+-&gt; m (AnyBackend BackendSourceKind, Text)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe (AnyBackend BackendSourceKind)
+</span><a href="Hasura.SQL.AnyBackend.html#backendSourceKindFromText"><span class="hs-identifier hs-var">backendSourceKindFromText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779206"><span class="hs-identifier hs-var">prefix</span></a></span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">Maybe (AnyBackend BackendSourceKind)
+-&gt; m (AnyBackend BackendSourceKind)
+-&gt; m (AnyBackend BackendSourceKind)
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; m (AnyBackend BackendSourceKind)
+forall a. String -&gt; m a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span>
+</span><span id="line-144"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;unknown metadata command \&quot;&quot;</span></span><span>
+</span><span id="line-145"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779205"><span class="hs-identifier hs-var">queryType</span></a></span><span>
+</span><span id="line-146"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\&quot;; \&quot;&quot;</span></span><span>
+</span><span id="line-147"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687779206"><span class="hs-identifier hs-var">prefix</span></a></span><span>
+</span><span id="line-148"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;\&quot; was not recognized as a valid backend name&quot;</span></span><span>
+</span><span id="line-149"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span></pre></body></html>
