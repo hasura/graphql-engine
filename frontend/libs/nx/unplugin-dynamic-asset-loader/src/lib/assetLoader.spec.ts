@@ -28,7 +28,7 @@ const exampleHtml = `
     }
   </style>
     <script
-      src="https://graphql-engine-cdn.hasura.io/pro-console/wasm_exec.js"
+      src="https://graphql-engine-cdn.hasura.io/cloud-console/assets/common/wasm/go1.16/wasm_exec.js"
       charset="UTF-8"
     ></script>
   <script src="runtime.esm.js" type="module"></script><script src="polyfills.esm.js" type="module"></script><script src="vendor.esm.js" type="module"></script><script src="main.esm.js" type="module"></script></body>
