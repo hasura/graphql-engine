@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export iterations=4
+export pause_after_seconds=5
 
 # There are some incremental Metadata API methods that have no good
 # justification for taking so much time to complete. Allowlist management is one

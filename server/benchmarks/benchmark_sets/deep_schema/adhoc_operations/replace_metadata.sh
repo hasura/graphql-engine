@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export iterations=200
+export pause_after_seconds=10
 
 function adhoc_operation() {
   scriptDir=$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")
