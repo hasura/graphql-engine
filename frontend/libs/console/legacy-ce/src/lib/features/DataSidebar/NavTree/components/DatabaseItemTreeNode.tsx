@@ -9,7 +9,7 @@ import {
 } from '../../SidebarContext';
 import { styles } from '../../styles';
 import { DatabaseItemNode } from '../types';
-import { GetHighlightedText } from './GetHighlightedText';
+import { HighlightText } from './HighlightText';
 
 export const DatabaseItemTreeNode = ({
   node,
@@ -44,10 +44,10 @@ export const DatabaseItemTreeNode = ({
       ) : (
         <TbMathFunction className="text-gray-600" />
       )}
-      <GetHighlightedText
-        className="text-lg"
+      <HighlightText
+        className="text-lg whitespace-nowrap overflow-hidden text-ellipsis"
         text={node.data.name}
-        highlight={tree.searchTerm}
+        highlightedText={tree.searchTerm}
       />
       {loading && <CgSpinner className="animate-spin" size={20} />}
     </button>

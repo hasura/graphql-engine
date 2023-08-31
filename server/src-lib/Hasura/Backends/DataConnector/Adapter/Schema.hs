@@ -131,20 +131,14 @@ dataConnectorLogicalModelArgs ::
 dataConnectorLogicalModelArgs logicalModel = do
   whereParser <- Schema.logicalModelWhereArg logicalModel
   orderByParser <- Schema.logicalModelOrderByArg logicalModel
-  distinctParser <- pure $ pure Nothing
+  let distinctParser = pure Nothing
   GS.S.defaultArgsParser whereParser orderByParser distinctParser
 
 --------------------------------------------------------------------------------
 
 buildFunctionQueryFields' ::
   forall r m n.
-  ( MonadError QErr m,
-    P.MonadMemoize m,
-    MonadParse n,
-    Has (RQL.SourceInfo 'DataConnector) r,
-    Has GS.C.SchemaContext r,
-    Has Options.SchemaOptions r
-  ) =>
+  (MonadBuildSchema 'DataConnector r m n) =>
   RQL.MkRootFieldName ->
   DC.FunctionName ->
   RQL.FunctionInfo 'DataConnector ->

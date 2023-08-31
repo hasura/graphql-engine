@@ -401,7 +401,6 @@ createTableToNativeQueryRelationship testEnvironment localSchema tableName ref@N
       tableField = mkTableField backendTypeMetadata localSchema tableName
       source = BackendType.backendSourceName backendTypeMetadata
       backendType = BackendType.backendTypeString backendTypeMetadata
-      requestType = backendType <> "_create_object_relationship"
       relationshipName = mkNativeQueryRelationshipName ref
    in case nqRelationshipType of
         ArrayRelationship ->
@@ -413,6 +412,7 @@ createTableToNativeQueryRelationship testEnvironment localSchema tableName ref@N
                       .= J.object [K.fromText nqRelationshipLocalColumn .= nqRelationshipTargetColumn],
                     "insertion_order" .= J.Null
                   ]
+              requestType = backendType <> "_create_array_relationship"
            in [yaml|
                 type: *requestType
                 args:
@@ -431,6 +431,8 @@ createTableToNativeQueryRelationship testEnvironment localSchema tableName ref@N
                       .= J.object [K.fromText nqRelationshipLocalColumn .= nqRelationshipTargetColumn],
                     "insertion_order" .= J.Null
                   ]
+
+              requestType = backendType <> "_create_object_relationship"
            in [yaml|
                 type: *requestType
                 args:

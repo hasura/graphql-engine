@@ -6,15 +6,19 @@ import { CardedTable } from '../../../../new-components/CardedTable';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { hasuraToast } from '../../../../new-components/Toasts';
 import { usePushRoute } from '../../../ConnectDBRedesign/hooks';
+import { manageTableUrl } from '../../../DataSidebar/navigation-utils';
 import { PostgresTable } from '../../../DataSource';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '../../../FeatureFlags';
 import { TrackableListMenu } from '../../TrackResources/components/TrackableListMenu';
 import { usePaginatedSearchableList } from '../../TrackResources/hooks';
+import { filterByTableType, filterByText } from '../../TrackResources/utils';
 import { DisplayToastErrorMessage } from '../../components/DisplayErrorMessage';
 import { useTrackTables } from '../../hooks/useTrackTables';
 import { TrackableTable } from '../types';
-
 import { TableRow } from './TableRow';
-import { filterByTableType, filterByText } from '../../TrackResources/utils';
 
 interface TableListProps {
   dataSourceName: string;
@@ -24,6 +28,7 @@ interface TableListProps {
   onMultipleTablesTrack?: () => void;
   defaultFilter?: string;
   onSingleTableTrack?: (table: TrackableTable) => void;
+  trackMultipleEnabled: boolean;
 }
 
 // const getDefaultSelectedTableType = (availableTableTypes: string[]) => {
@@ -50,9 +55,8 @@ export const TableList = ({
   defaultFilter,
   onMultipleTablesTrack,
   onSingleTableTrack,
+  trackMultipleEnabled,
 }: TableListProps) => {
-  //const availableTableTypes = getUniqueTableTypes(tables);
-
   const typeCounts = React.useMemo(() => countByType(tables), [tables]);
 
   const availableTableTypes = React.useMemo(
@@ -148,21 +152,21 @@ export const TableList = ({
     onChange?.();
   };
 
+  const { enabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.performanceMode
+  );
+
   const onTableRowTableNameClick = (table: TrackableTable) =>
     viewingTablesThatAre === 'tracked'
       ? () => {
-          if ('schema' in (table.table as any)) {
+          if (!enabled && 'schema' in (table.table as any)) {
             const { name, schema } = table.table as PostgresTable;
 
             pushRoute(
               `/data/${dataSourceName}/schema/${schema}/tables/${name}/modify`
             );
           } else
-            pushRoute(
-              `data/v2/manage/table/browse?database=${dataSourceName}&table=${encodeURIComponent(
-                JSON.stringify(table.table)
-              )}`
-            );
+            pushRoute(manageTableUrl({ dataSourceName, table: table.table }));
         }
       : undefined;
 
@@ -185,7 +189,7 @@ export const TableList = ({
         handleTrackButton={() => {
           handleCheckAction();
         }}
-        showButton
+        showButton={trackMultipleEnabled}
         isLoading={isLoading}
         searchChildren={
           <DropDown.Root
@@ -234,9 +238,11 @@ export const TableList = ({
         <CardedTable.Table>
           <CardedTable.TableHead>
             <CardedTable.TableHeadRow>
-              <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
-                {checkAllElement()}
-              </th>
+              {trackMultipleEnabled && (
+                <th className="w-0 bg-gray-50 px-sm text-sm font-semibold text-muted uppercase tracking-wider border-r">
+                  {checkAllElement()}
+                </th>
+              )}
               <CardedTable.TableHeadCell>Table</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Type</CardedTable.TableHeadCell>
               <CardedTable.TableHeadCell>Actions</CardedTable.TableHeadCell>
@@ -254,6 +260,7 @@ export const TableList = ({
                 onChange={() => onCheck(table.id)}
                 onTableTrack={onTableRowTableTrack}
                 onTableNameClick={onTableRowTableNameClick(table)}
+                isRowSelectionEnabled={trackMultipleEnabled}
               />
             ))}
           </CardedTable.TableBody>

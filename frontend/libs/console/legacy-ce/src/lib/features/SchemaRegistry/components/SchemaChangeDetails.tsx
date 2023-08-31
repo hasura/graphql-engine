@@ -49,6 +49,7 @@ export const SchemaChangeDetails: React.FC<
 > = props => {
   const { schemaId } = props;
   const fetchSchemaResponse = useGetSchema(schemaId);
+  console.log('fetchSchemaResponse', fetchSchemaResponse);
   const { kind } = fetchSchemaResponse;
 
   switch (kind) {
@@ -102,6 +103,9 @@ const SchemasDetails: React.VFC<{
           <span className="text-sm font-bold mx-2">BREAKING</span>
           <span className="text-sm font-bold mx-2">DANGEROUS</span>
           <span className="text-sm font-bold mr-4">SAFE</span>
+        </div>
+        <div className="flex text-base items-center justify-around w-[55%]">
+          <span className="text-sm font-bold mx-2">TOTAL</span>
         </div>
       </div>
       <SchemaRow

@@ -397,6 +397,127 @@ access to the product_."
 
 :::
 
+## Permission with remote relationships {#remote-relationships-in-permission}
+
+Just like in-source relationships, you can also use remote source relationships to define permission rules with fields
+from the remote source.
+
+:::tip Supported from
+
+Hasura GraphQL Engine `v2.33.0` and onwards.
+
+:::
+
+For example, let's say you have a Snowflake database for storing product reviews and a Postgres database for products.
+
+You have a remote source relationship defined **from** the `reviews` table in Snowflake **to** the `products` table in
+Postgres. The `products` table has a column of `owner_id`.
+
+We can use this remote relationship to define a permission on the `products` table to make sure that the user can only
+fetch the reviews that belong to them (i.e., for which the corresponding `owner_id` is equal to the `x-hasura-user-id`).
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+You can use a nested object to build rules on the Hasura Console in **Data -> [table] -> Permissions -> insert /
+select / update / delete** as follows:
+
+<Thumbnail
+  src='/img/auth/row-level-permission-remote-source-relationship_2.33.png'
+  alt='Using a remote source relationship to build rules'
+  width='600px'
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+You can add permissions using relationships or nested objects in the `metadata -> databases -> [database-name] -> tables
+-> [table-name].yaml` eg:
+
+```yaml {8-11}
+- table:
+    schema: public
+    name: reviews
+  select_permissions:
+    - role: user
+      permission:
+        columns: *
+        filter:
+          review_product:
+            owner_id:
+              _eq: X-Hasura-User-Id
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can add permissions using relationships or nested objects when using the
+[permissions Metadata API](/api-reference/metadata-api/permission.mdx). Example using a Snowflake db:
+
+```http {13-19}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "snowflake_create_select_permission",
+  "args": {
+    "source": "<db_name>",
+    "table": "reviews",
+    "role": "user",
+    "permission": {
+      "columns": "*",
+      "filter": {
+        "review_product": {
+          "owner_id": {
+            "_eq": "X-Hasura-User-Id"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info What does this permission rule do?
+
+This permission rule reads as "_If the user's id corresponds to the user who owns the product, then allow
+access to the review_."
+
+:::
+
+### Limitations with remote relationship predicates
+
+The remote relationship predicate must follow this template:
+```json
+{
+  "<rel name>": {
+    "<remote column name>": {
+      "<op>": "<some session variable name or some literal text>"
+    }
+  }
+}
+  ```
+- The remote relationship predicate can only be one level deep. However, the predicate can be nested in an `_and`,
+  `_or`, `_not` or `_exists` node.
+- Only `_eq`, `_neq`, `_gt`, `_lt`, `_gte`, `_lte`, `_in`, `_nin`, `_like`, `_nlike` and `_is_null` operators are
+  supported for comparing fields.
+- Only columns from the remote source can be compared with session variables or literal text only.
+
+- The remote source relationship permission can only be defined for Postgres and [data
+connector](/databases/data-connectors/index.mdx) backends.
+
+- The remote source relationship backend (on the right-hand side) can be **Postgres only**.
+
 ## Permissions with unrelated tables or views {#unrelated-tables-in-permissions}
 
 You can use the `_exists` operator to set a permission rule based on tables or views that are not related to our table.

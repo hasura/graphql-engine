@@ -37,6 +37,7 @@ export function useDeleteDatabaseSchema({
         );
       } else {
         queryClient.invalidateQueries([dataSourceName, 'schemas']);
+        queryClient.invalidateQueries([dataSourceName, 'untracked_tables']);
         return result;
       }
     },

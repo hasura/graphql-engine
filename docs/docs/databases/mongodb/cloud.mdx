@@ -1,0 +1,134 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: A comprehensive guide to setting up MongoDB with Hasura Cloud. Learn how to connect your MongoDB database, track collections, and execute GraphQL queries seamlessly using Hasura Cloud's intuitive interface.
+keywords:
+  - hasura cloud mongodb
+  - mongodb integration
+  - graphql data connector
+  - connect mongodb to hasura
+  - track mongodb collections
+  - graphql api with mongodb
+  - hasura graphql engine
+  - mongodb graphql query
+  - hasura cloud project
+  - mongodb database connection
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import ProductBadge from '@site/src/components/ProductBadge';
+
+# Get Started with MongoDB in Hasura Cloud
+
+<ProductBadge free standard pro ee />
+
+## Introduction
+
+This guide will help you get set up with [Hasura Cloud](/hasura-cloud/overview.mdx) and our MongoDB integration. This is
+the easiest way to set up Hasura Engine and the MongoDB GraphQL Data Connector.
+
+:::tip Supported versions:
+
+Hasura GraphQL Engine `v2.27.0` onwards
+
+:::
+
+:::tip Supported features
+
+Hasura currently supports queries, table relationships, remote relationships and permissions on MongoDB databases.
+
+A [logical model](/schema/mongodb/logical-models.mdx) or database
+[validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+is required for generating your GraphQL schema.
+
+:::
+
+## Try it out
+
+### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+
+Navigate to your [Hasura Cloud account](https://cloud.hasura.io/) or [create a new one](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default&skip_onboarding=true) if you do not have one.
+
+Create a project on Hasura Cloud and hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail
+  src="/img/databases/data-connector/create-project.png"
+  alt="Connect new or existing database"
+  width="1000px"
+/>
+
+### Step 2: Connect to MongoDB
+
+From the Console, visit `Data` > `Manage` to connect your MongoDB database.
+
+Then click, `Connect Database`.
+
+Connect your database using the following details:
+
+- Database Name: (visual name of the database in Hasura)
+- Connection: (in the format of `mongodb://[username]:[password]@[host]:[port]`)
+- db: (name of the MongoDB database being connected to)
+
+<Thumbnail src="/img/databases/mongodb/connection-1-mongodb-select.png" alt="Connecting to MongoDB - Selecting MongoDB" width="1000px" />
+<Thumbnail src="/img/databases/mongodb/connection-2-mongodb-connect-database.png" alt="Connecting to MongoDB - Connecting your database" width="1000px" />
+
+### Step 3: Tracking Collections
+
+Once your database has been connected, select the database name from the left-hand sidebar.
+
+You should see your `users` Collection listed here. Select it, and select `Track Selected`.
+
+:::info How do we generate your Collection's schema?
+
+Since MongoDB is a NoSQL database, Documents can be variable within each of the Collections.
+Hasura supports and recommends defining a [logical model](/schema/mongodb/logical-models.mdx) for each Collection
+which will define the Document schema.
+
+We also support optionally generating a schema automatically from your database's
+[validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+if one is available.
+
+:::
+
+<Thumbnail src="/img/databases/mongodb/track-1-select.png" alt="Tracking a Collection - Select Collection" width="1000px" />
+
+You will now see a modal with a few options for setting up your Collection's schema.
+
+- **Infer Schema from Document** allows you to take a single Document from your Collection and infer the  
+- **Use Existing Logical Model** allows you to select a previously created [logical model](/schema/mongodb/logical-models.mdx).
+- **Use Database Schema** allows you to use your database's
+  [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json)
+  if one is present in your database (a GraphQL schema will be automatically generated for you).
+  
+<Thumbnail src="/img/databases/mongodb/track-2-sample.png" alt="Tracking a Collection - Sample Documents" width="1000px" />
+
+Your Collection has now added to your GraphQL API! 🎉
+
+:::info Make your Collection available to other roles
+
+By default, this Collection is only available to `admin` users. To make it available for more user groups, select the
+Collection name from the left-hand sidebar, and select `Permissions` to setup permission rules for the Collection. You
+can read more about permissions [here](/auth/authorization/index.mdx).
+
+:::
+
+### Step 4: Running your first query
+
+Click on the API tab in the Console navigation which will take you to GraphiQL, our API testing tool.
+
+Utilize the explorer located on the left-hand sidebar to assist you in composing your query (the resulting query will
+be populated in the body area). When you’re ready, click on the play button to execute your GraphQL query.
+Your query’s result will be populated in the right-hand column of the interface.
+
+<Thumbnail
+  src="/img/databases/mongodb/gql-query.png"
+  alt="Connecting to MongoDB - Making a GraphQL query."
+  width="1000px"
+/>
+
+## Keep up to date
+
+If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our Discord!
+
+- [Hasura Newsletter](https://hasura.io/newsletter/)
+- [Hasura Discord](https://discord.com/invite/hasura)

@@ -22,7 +22,7 @@ export type TrackedFunctionsProps = {
     qualifiedFunction: unknown;
     name: string;
   }[];
-  isLoading: boolean;
+  isLoading?: boolean;
 };
 
 export const TrackedFunctions = (props: TrackedFunctionsProps) => {

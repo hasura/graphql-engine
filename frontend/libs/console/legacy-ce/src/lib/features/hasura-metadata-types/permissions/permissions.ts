@@ -1,3 +1,6 @@
+import { z } from 'zod';
+import { inputValidationSchema } from '../../../components/Services/Data/TablePermissions/InputValidation/InputValidation';
+
 export type Permission =
   | InsertPermission
   | SelectPermission
@@ -19,6 +22,7 @@ export interface InsertPermissionDefinition {
   columns?: string[];
   backend_only?: boolean;
   comment?: string;
+  validate_input?: z.infer<typeof inputValidationSchema>;
 }
 
 export interface SelectPermission extends BasePermission {
@@ -45,6 +49,7 @@ export interface UpdatePermissionDefinition {
   set?: Record<string, unknown>;
   backend_only?: boolean;
   comment?: string;
+  validate_input?: z.infer<typeof inputValidationSchema>;
 }
 
 export interface DeletePermission extends BasePermission {
@@ -53,4 +58,5 @@ export interface DeletePermission extends BasePermission {
 export interface DeletePermissionDefinition {
   filter?: Record<string, unknown>;
   backend_only?: boolean;
+  validate_input?: z.infer<typeof inputValidationSchema>;
 }

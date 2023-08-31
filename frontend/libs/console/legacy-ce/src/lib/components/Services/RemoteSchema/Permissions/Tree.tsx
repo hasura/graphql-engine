@@ -2,29 +2,35 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FieldType, ExpandedItems, PermissionEdit } from './types';
 import { Field } from './Field';
 import { addDepFields, getExpandedItems } from './utils';
-import { focusYellowRing } from '../constants';
+import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import { Checkbox } from '../../../../new-components/Form';
+import { CheckedState } from '@radix-ui/react-checkbox';
 
 type RSPTreeComponentProps = {
   list: FieldType[];
+  filteredTypes: Set<string> | null;
   depth?: number;
   permissionEdit?: PermissionEdit;
   setState: (d: FieldType[], t?: FieldType) => void;
   onExpand?: () => void;
+  onToggleAll?: () => void;
 };
 
 const Tree: React.FC<RSPTreeComponentProps> = ({
+  filteredTypes,
   list,
   setState,
   depth = 1,
   permissionEdit,
+  onToggleAll,
 }) => {
   const [expandedItems, setExpandedItems] = useState<ExpandedItems>({});
   const prevIsNewRole = useRef(false);
+
   const onCheck = useCallback(
-    ix => (e: React.FormEvent<HTMLInputElement>) => {
+    ix => (event: CheckedState) => {
       const newList = [...list] as FieldType[];
-      const target = e.target as HTMLInputElement;
-      newList[ix] = { ...list[ix], checked: target.checked };
+      newList[ix] = { ...list[ix], checked: event as boolean };
       setState([...newList], newList[ix]);
     },
     [setState, list]
@@ -38,13 +44,33 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
     },
     [setState, list]
   );
+
   const setValue = useCallback(
     ix => (newState: FieldType[], field?: FieldType) => {
       let newList = [...list];
       newList[ix] = { ...list[ix], children: [...newState] };
 
       if (field && field.checked) newList = addDepFields(newList, field);
+      setState([...newList]);
+    },
+    [setState, list]
+  );
 
+  const toggleAll = useCallback(
+    ix => () => {
+      let newList = [...list];
+      const children = newList[ix].children;
+
+      if (!children) {
+        return;
+      }
+      const allChecked = children.every(i => i.checked);
+      list[ix].children?.forEach((i, ix2) => {
+        children[ix2] = { ...i, checked: !allChecked };
+        if (!allChecked) {
+          newList = addDepFields(newList, children[ix2]);
+        }
+      });
       setState([...newList]);
     },
     [setState, list]
@@ -82,44 +108,65 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
         depth === 1 ? '' : 'border-l-2'
       }`}
     >
-      {list.map(
-        (i: FieldType, ix) =>
+      {depth > 1 && (
+        <div className="pt-2 pb-1">
+          <span className="text-gray-400">Fields</span>
+          <button className="ml-8 text-[#337ab7]" onClick={onToggleAll}>
+            {list.every(i => i.checked) ? 'Unselect All' : 'Select All'}
+          </button>
+        </div>
+      )}
+      {list.map((i: FieldType, ix) => {
+        if (filteredTypes && !filteredTypes.has(i.name)) {
+          return null;
+        }
+        return (
           !i.name.startsWith('enum') &&
           !i.name.startsWith('scalar') && (
-            <li key={i.name}>
-              {i.checked !== undefined && (
-                <input
-                  type="checkbox"
-                  id={i.name}
-                  name={i.name}
-                  checked={i.checked}
-                  data-test={`checkbox-${i.name}`}
-                  onChange={onCheck(ix)}
-                  className={`${focusYellowRing} m-0 !mr-xs`}
-                />
-              )}
-              {i.children && (
-                <button onClick={toggleExpand(ix)}>
-                  {expandedItems[ix] ? '-' : '+'}
-                </button>
-              )}
-              <Field
-                i={i}
-                setItem={setItem(ix)}
-                key={i.name}
-                onExpand={toggleExpand(ix)}
-                expanded={expandedItems[ix]}
-              />
+            <li className="my-1" key={i.name}>
+              <div className="flex items-start">
+                {i.checked !== undefined && (
+                  <Checkbox
+                    name={i.name}
+                    checked={i.checked}
+                    data-test={`checkbox-${i.name}`}
+                    onCheckedChange={onCheck(ix)}
+                    className="inline-flex"
+                  />
+                )}
+                {i.children && (
+                  <button onClick={toggleExpand(ix)}>
+                    {expandedItems[ix] ? (
+                      <FaChevronDown size={10} />
+                    ) : (
+                      <FaChevronRight size={10} />
+                    )}
+                  </button>
+                )}
+                <div>
+                  <Field
+                    i={i}
+                    setItem={setItem(ix)}
+                    key={i.name}
+                    onExpand={toggleExpand(ix)}
+                    expanded={expandedItems[ix]}
+                    items={i.children}
+                  />
+                </div>
+              </div>
               {i.children && expandedItems[ix] && (
                 <MemoizedTree
+                  filteredTypes={null}
                   list={i.children}
                   depth={depth + 1}
                   setState={setValue(ix)}
+                  onToggleAll={toggleAll(ix)}
                 />
               )}
             </li>
           )
-      )}
+        );
+      })}
     </ul>
   );
 };

@@ -129,7 +129,8 @@ pgDBQueryPlan ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m
   ) =>
   UserInfo ->
   SourceName ->
@@ -151,14 +152,15 @@ pgDBQueryPlan userInfo sourceName sourceConfig qrf reqHeaders operationName = do
             $ QueryContext operationName
             $ QueryOperationType G.OperationTypeQuery
      in applyConnectionTemplateResolverNonAdmin connectionTemplateResolver userInfo reqHeaders queryContext
-  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
+  rootFieldPlan <- irToRootFieldPlan userInfo planVals preparedQuery
+  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
 
   pure $ DBStepInfo @('Postgres pgKind) sourceName sourceConfig preparedSQL (fmap withNoStatistics action) resolvedConnectionTemplate
 
 -- | Used by the @dc-postgres-agent to compile a query.
 pgDBQueryPlanSimple ::
-  (MonadError QErr m) =>
+  (MonadError QErr m, MonadIO m) =>
   UserInfo ->
   QueryTagsComment ->
   QueryDB ('Postgres 'Vanilla) Void (UnpreparedValue ('Postgres 'Vanilla)) ->
@@ -166,8 +168,9 @@ pgDBQueryPlanSimple ::
 pgDBQueryPlanSimple userInfo queryTagsComment query = do
   (preparedQuery, PlanningSt {_psPrepped = planVals}) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) query
+  rootFieldPlan <- irToRootFieldPlan userInfo planVals preparedQuery
   let preparedSQLWithQueryTags =
-        appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals preparedQuery) queryTagsComment
+        appendPreparedSQLWithQueryTags rootFieldPlan queryTagsComment
   let (action, preparedSQL) = mkCurPlanTx userInfo preparedSQLWithQueryTags
   pure (action, preparedSQL)
 
@@ -175,7 +178,8 @@ pgDBQueryExplain ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind
+    PostgresTranslateSelect pgKind,
+    MonadIO m
   ) =>
   RootFieldAlias ->
   UserInfo ->
@@ -187,8 +191,8 @@ pgDBQueryExplain ::
   m (AB.AnyBackend DBStepInfo)
 pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection reqHeaders operationName = do
   preparedQuery <- traverse (prepareWithoutPlan userInfo) rootSelection
-  let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
-      textSQL = PG.getQueryText querySQL
+  PreparedSql querySQL _ <- irToRootFieldPlan userInfo mempty preparedQuery
+  let textSQL = PG.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
       withExplain = "EXPLAIN " <> textSQL
@@ -328,7 +332,8 @@ convertFunction ::
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
     PostgresTranslateSelect pgKind,
-    MonadReader QueryTagsComment m
+    MonadReader QueryTagsComment m,
+    MonadIO m
   ) =>
   UserInfo ->
   JsonAggSelect ->
@@ -345,7 +350,8 @@ convertFunction userInfo jsonAggSelect unpreparedQuery = do
         case jsonAggSelect of
           JASMultipleRows -> QDBMultipleRows
           JASSingleObject -> QDBSingleRow
-  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags (irToRootFieldPlan planVals $ queryResultFn preparedQuery) queryTags
+  rootFieldPlan <- irToRootFieldPlan userInfo planVals $ queryResultFn preparedQuery
+  let preparedSQLWithQueryTags = appendPreparedSQLWithQueryTags rootFieldPlan queryTags
   pure
     $! fst
     $ mkCurPlanTx userInfo preparedSQLWithQueryTags -- forget (Maybe PreparedSql)
@@ -419,8 +425,8 @@ pgDBLiveQuerySubscriptionPlan userInfo _sourceName sourceConfig namespace unprep
       $ for unpreparedAST
       $ traverse (PGL.resolveMultiplexedValue (_uiSession userInfo))
   subscriptionQueryTagsComment <- ask
-  let multiplexedQuery = PGL.mkMultiplexedQuery $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
-      multiplexedQueryWithQueryTags =
+  multiplexedQuery <- PGL.mkMultiplexedQuery userInfo $ InsOrdHashMap.mapKeys _rfaAlias preparedAST
+  let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
@@ -480,8 +486,8 @@ pgDBStreamingSubscriptionPlan userInfo _sourceName sourceConfig (rootFieldAlias,
     flip runStateT mempty
       $ traverse (PGL.resolveMultiplexedValue (_uiSession userInfo)) unpreparedAST
   subscriptionQueryTagsComment <- ask
-  let multiplexedQuery = PGL.mkStreamingMultiplexedQuery (G._rfaAlias rootFieldAlias, preparedAST)
-      multiplexedQueryWithQueryTags =
+  multiplexedQuery <- PGL.mkStreamingMultiplexedQuery userInfo (G._rfaAlias rootFieldAlias, preparedAST)
+  let multiplexedQueryWithQueryTags =
         multiplexedQuery {PGL.unMultiplexedQuery = appendSQLWithQueryTags (PGL.unMultiplexedQuery multiplexedQuery) subscriptionQueryTagsComment}
       roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedSubscriptionQueryPlan roleName multiplexedQueryWithQueryTags
@@ -573,21 +579,25 @@ mkCurPlanTx userInfo ps@(PreparedSql q prepMap) =
 -- convert a query from an intermediate representation to... another
 irToRootFieldPlan ::
   ( Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind
+    PostgresTranslateSelect pgKind,
+    MonadIO m,
+    MonadError QErr m
   ) =>
+  UserInfo ->
   PrepArgMap ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
-  PreparedSql
-irToRootFieldPlan prepped = \case
-  QDBMultipleRows s -> mkPreparedSql (DS.selectQuerySQL JASMultipleRows) s
-  QDBSingleRow s -> mkPreparedSql (DS.selectQuerySQL JASSingleObject) s
-  QDBAggregation s -> mkPreparedSql DS.selectAggregateQuerySQL s
-  QDBConnection s -> mkPreparedSql DS.connectionSelectQuerySQL s
-  QDBStreamMultipleRows s -> mkPreparedSql DS.selectStreamQuerySQL s
+  m PreparedSql
+irToRootFieldPlan userInfo prepped = \case
+  QDBMultipleRows s -> mkPreparedSql (DS.selectQuerySQL userInfo JASMultipleRows) s
+  QDBSingleRow s -> mkPreparedSql (DS.selectQuerySQL userInfo JASSingleObject) s
+  QDBAggregation s -> mkPreparedSql (DS.selectAggregateQuerySQL userInfo) s
+  QDBConnection s -> mkPreparedSql (DS.connectionSelectQuerySQL userInfo) s
+  QDBStreamMultipleRows s -> mkPreparedSql (DS.selectStreamQuerySQL userInfo) s
   where
-    mkPreparedSql :: (t -> PG.Query) -> t -> PreparedSql
-    mkPreparedSql f simpleSel =
-      PreparedSql (f simpleSel) prepped
+    mkPreparedSql :: (Monad m) => (t -> m PG.Query) -> t -> m PreparedSql
+    mkPreparedSql f simpleSel = do
+      query <- f simpleSel
+      pure $ PreparedSql query prepped
 
 -- Append Query Tags to the Prepared SQL
 appendPreparedSQLWithQueryTags :: PreparedSql -> QueryTagsComment -> PreparedSql
@@ -611,7 +621,8 @@ pgDBRemoteRelationshipPlan ::
   forall pgKind m.
   ( MonadError QErr m,
     Backend ('Postgres pgKind),
-    PostgresTranslateSelect pgKind
+    PostgresTranslateSelect pgKind,
+    MonadIO m
   ) =>
   UserInfo ->
   SourceName ->

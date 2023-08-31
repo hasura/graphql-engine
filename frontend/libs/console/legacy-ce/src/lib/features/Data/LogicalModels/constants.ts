@@ -10,6 +10,7 @@ export const STORED_PROCEDURE_UNTRACK_SUCCESS =
   'Successfully untracked Stored Procedure';
 export const STORED_PROCEDURE_UNTRACK_ERROR =
   'Unable to untrack Stored Procedure';
+export const COLLECTION_TRACK_TRACK_ERROR = 'Unable to track Collection';
 
 export const Routes = {
   NativeQueries: '/data/native-queries',

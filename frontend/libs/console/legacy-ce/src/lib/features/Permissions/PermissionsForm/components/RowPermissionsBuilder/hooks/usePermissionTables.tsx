@@ -3,15 +3,19 @@ import { useTablesWithColumns } from './useTablesWithColumns';
 import { useSources } from '../../../../../MetadataAPI';
 import { Tables } from '../components';
 import { useAllSuggestedRelationships } from '../../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
+import { Table } from '../../../../../hasura-metadata-types';
 
 export const usePermissionTables = ({
   dataSourceName,
+  tablesToLoad,
 }: {
   dataSourceName: string;
+  tablesToLoad: Table[];
 }): { isLoading: boolean; tables: Tables | null } => {
   const { data: sources, isLoading: isLoadingSources } = useSources();
   const { data: tables, isLoading: isLoadingTables } = useTablesWithColumns({
     dataSourceName,
+    tablesToLoad,
   });
 
   const { suggestedRelationships, isLoadingSuggestedRelationships } =
@@ -22,7 +26,7 @@ export const usePermissionTables = ({
     });
 
   if (isLoadingTables || isLoadingSuggestedRelationships || isLoadingSources)
-    return { isLoading: true, tables: null };
+    return { isLoading: true, tables: [] };
 
   return {
     isLoading: false,

@@ -92,7 +92,11 @@ import logo from './images/white-logo.svg';
 import logoutIcon from './images/log-out.svg';
 import EELogo from './images/hasura-ee-mono-light.svg';
 import { isHasuraCollaboratorUser } from '../Login/utils';
-import { ConsoleDevTools } from '@hasura/console-legacy-ce';
+import {
+  ConsoleDevTools,
+  isFeatureFlagEnabled,
+  availableFeatureFlagIds,
+} from '@hasura/console-legacy-ce';
 
 const { Plan, Project_Entitlement_Types_Enum } = ControlPlane;
 class Main extends React.Component {
@@ -440,6 +444,12 @@ class Main extends React.Component {
     };
 
     const getDataPath = () => {
+      const perfMode = isFeatureFlagEnabled(
+        availableFeatureFlagIds.performanceMode
+      );
+
+      if (perfMode) return 'data/';
+
       if (currentSource && currentSchema) {
         return `data/${currentSource}/schema/${currentSchema}`;
       }

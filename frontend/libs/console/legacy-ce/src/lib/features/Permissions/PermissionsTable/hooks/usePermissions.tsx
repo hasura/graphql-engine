@@ -6,9 +6,9 @@ import { useQuery } from 'react-query';
 import { useHttpClient } from '../../../Network';
 import { Metadata, Table } from '../../../hasura-metadata-types';
 import { keyToPermission, metadataPermissionKeys } from '../../utils';
-import { MetadataSelectors, useMetadata } from '../../../hasura-metadata-api';
+import { MetadataSelectors } from '../../../hasura-metadata-api';
 
-interface RolePermission {
+export interface RolePermission {
   roleName: string;
   isNewRole: boolean;
   permissionTypes: {
@@ -262,7 +262,6 @@ export const useRolePermissions = ({
   table,
 }: UseRolePermissionsArgs) => {
   const httpClient = useHttpClient();
-  const { data: roles = [] } = useMetadata(MetadataSelectors.getRoles);
 
   return useQuery<
     { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
@@ -279,6 +278,7 @@ export const useRolePermissions = ({
         dataSourceName,
         table,
       });
+      const roles = MetadataSelectors.getRoles(metadata);
 
       // find the specific metadata table
       const metadataTable = getMetadataTable({

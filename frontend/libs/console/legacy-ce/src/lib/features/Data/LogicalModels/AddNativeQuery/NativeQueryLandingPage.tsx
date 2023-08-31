@@ -11,6 +11,7 @@ import { injectRouteDetails } from '../components/route-wrapper-utils';
 import { Routes } from '../constants';
 import { NativeQueryTabs } from '../types';
 import { AddNativeQuery } from './AddNativeQuery';
+import { Badge } from '../../../../new-components/Badge';
 
 export const NativeQueryRoute = withRouter<{
   params: { source: string; name: string; tabName?: NativeQueryTabs };
@@ -103,11 +104,14 @@ const NativeQueryLandingPage = ({
               />
             ),
             label: (
-              <div className="flex items-center" data-testid="untracked-tab">
+              <div
+                className="flex items-center gap-2"
+                data-testid="untracked-tab"
+              >
                 Relationships
-                <span className="bg-gray-300 ml-1 px-1.5 py-0.5 rounded text-xs">
+                <Badge className={`px-xs`} color="dark-gray">
                   {relationshipsCount}
-                </span>
+                </Badge>
               </div>
             ),
             value: 'relationships',

@@ -29,7 +29,7 @@ import { useInvalidateIntrospectedFunction } from '../../../hooks/useTrackableFu
 
 export type UntrackedFunctionsProps = {
   dataSourceName: string;
-  isLoading: boolean;
+  isLoading?: boolean;
   untrackedFunctions: IntrospectedFunction[];
 };
 
@@ -157,7 +157,7 @@ export const UntrackedFunctions = (props: UntrackedFunctionsProps) => {
       <div className="space-y-4">
         <TrackableListMenu
           checkActionText={`Track Selected (${checkedIds.length})`}
-          isLoading={isLoading}
+          isLoading={isLoading ?? false}
           {...listProps}
         />
 

@@ -164,6 +164,8 @@ instance
 
   resolveConnectionTemplate = Postgres.pgResolveConnectionTemplate
 
+  getColVals = Postgres.getPGColValues
+
 instance
   ( HasTag ('Postgres pgKind)
   ) =>

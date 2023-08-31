@@ -5,6 +5,8 @@ import { tableContext } from './TableProvider';
 import { PermissionType } from './types';
 import { logicalModelContext } from './RootLogicalModelProvider';
 import { useForbiddenFeatures } from './ForbiddenFeaturesProvider';
+import { rootTableContext } from './RootTableProvider';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 export const Operator = ({
   operator,
@@ -15,7 +17,10 @@ export const Operator = ({
   path: string[];
   v: any;
 }) => {
-  const { operators, setKey } = useContext(rowPermissionsContext);
+  const { operators, setKey, loadRelationships, isLoading } = useContext(
+    rowPermissionsContext
+  );
+  const { tables } = useContext(rootTableContext);
   const { columns, table, relationships } = useContext(tableContext);
   const { rootLogicalModel } = useContext(logicalModelContext);
   const parent = path[path.length - 1];
@@ -29,9 +34,15 @@ export const Operator = ({
       data-testid={operatorLevelId}
       className="border border-gray-200 rounded-md p-2 pr-4"
       value={operator}
-      disabled={parent === '_where' && isEmpty(table)}
+      disabled={isLoading || (parent === '_where' && isEmpty(table))}
       onChange={e => {
         const type = e.target.selectedOptions[0].dataset.type as PermissionType;
+        if (type === 'relationship') {
+          const foundTable = tables.find(t => areTablesEqual(t.table, table));
+          if (foundTable) {
+            loadRelationships?.(foundTable.relationships);
+          }
+        }
         setKey({ path, key: e.target.value, type });
       }}
     >

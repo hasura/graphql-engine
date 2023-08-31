@@ -13,6 +13,7 @@ keywords:
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # MS SQL Server: Rename Relationships
 
@@ -21,9 +22,21 @@ An existing relationship can be renamed as follows:
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
+**Renaming Local Relationships**
+
 - Head to `Data -> [table-name] -> Relationships` in the Console
-- Drop the existing relationship
-- Recreate the relationship with the new name
+- Click on the `Rename` option for the relationship in question.
+
+<Thumbnail src="/img/schema/rename-local-rel-step-1.png" alt="Fill the relationship details" width="700px" />
+
+- This will open up a pop-up widget which will allow you to rename and save the relationship
+
+<Thumbnail src="/img/schema/rename-local-rel-step-2.png" alt="Fill the relationship details" width="700px" />
+
+
+**Renaming Remote Relationships**
+
+Remote relationships cannot be renamed. They have to dropped and created again with the new name.
 
 </TabItem>
 <TabItem value="cli" label="CLI">

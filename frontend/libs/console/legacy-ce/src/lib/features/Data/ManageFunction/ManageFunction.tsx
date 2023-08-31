@@ -5,9 +5,13 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import _push from '../../../components/Services/Data/push';
 import { useURLParameters } from './hooks/useUrlParameters';
-import { Breadcrumbs } from './components/Breadcrumbs';
+
 import { Heading } from './components/Heading';
 import { Modify } from './components/Modify';
+import { Breadcrumbs } from '../../../new-components/Breadcrumbs';
+import { FaDatabase } from 'react-icons/fa';
+import { functionDisplayName } from '../TrackResources/TrackFunctions/utils';
+import { TbMathFunction } from 'react-icons/tb';
 
 type AllowedTabs = 'modify';
 export interface ManageFunctionProps {
@@ -58,8 +62,14 @@ export const ManageFunction: React.VFC<ManageFunctionProps> = (
     <div className="w-full bg-gray-50">
       <div className="px-md pt-md mb-xs">
         <Breadcrumbs
-          dataSourceName={dataSourceName}
-          qualifiedFunction={qualifiedFunction}
+          items={[
+            { title: dataSourceName, icon: <FaDatabase /> },
+            {
+              title: functionDisplayName({ dataSourceName, qualifiedFunction }),
+              icon: <TbMathFunction className="text-muted mr-xs" />,
+            },
+            'Manage',
+          ]}
         />
         <Heading
           dataSourceName={dataSourceName}

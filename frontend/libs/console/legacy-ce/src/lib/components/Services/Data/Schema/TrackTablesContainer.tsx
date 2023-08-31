@@ -94,6 +94,7 @@ export const TrackTablesContainer = ({
                   dataSourceName={dataSourceName}
                   tables={untrackedTables}
                   onChange={onChange}
+                  trackMultipleEnabled
                   onSingleTableTrack={table => {
                     dispatch(
                       _push(
@@ -117,6 +118,7 @@ export const TrackTablesContainer = ({
                   dataSourceName={dataSourceName}
                   tables={trackedTables}
                   onChange={onChange}
+                  trackMultipleEnabled
                 />
               ),
             },

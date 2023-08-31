@@ -4957,6 +4957,43 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jsonhero/json-infer-types@npm:1.2.x":
+  version: 1.2.11
+  resolution: "@jsonhero/json-infer-types@npm:1.2.11"
+  dependencies:
+    ip-address: ^8.1.0
+    json5: ^2.2.0
+    jwt-decode: ^3.1.2
+    uuid: ^8.3.2
+  checksum: a0460a842fa181a33164d490c343ec35af37c045db956b90830fb8c58ba405705528e43818bcd00f8cdcafd8868e8a67271a31fe7d60cb935ac9ac4b3bbb0da5
+  languageName: node
+  linkType: hard
+
+"@jsonhero/json-schema-fns@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@jsonhero/json-schema-fns@npm:0.0.1"
+  dependencies:
+    deepmerge: ^4.2.2
+    lodash.omit: ^4.5.0
+    ts-pattern: ^3.3.4
+  checksum: 808790dc24c10a0f304a0583a063744bf281616094c3bfed891aa05914f521d411d3d75fc79458adb134c9c81aa498360eebd122391b36650e02211df2b8ef3f
+  languageName: node
+  linkType: hard
+
+"@jsonhero/schema-infer@npm:^0.1.5":
+  version: 0.1.5
+  resolution: "@jsonhero/schema-infer@npm:0.1.5"
+  dependencies:
+    "@jsonhero/json-infer-types": 1.2.x
+    "@jsonhero/json-schema-fns": ^0.0.1
+    lodash.omit: ^4.5.0
+    ts-pattern: ^3.3.4
+  bin:
+    schema-infer: cli/schema-infer.js
+  checksum: f42573e80109519bac63d264f66b5a8d89be909bb8fa49a05711a24cc366730dd11d6f80b370d415239712fac9de44253037252334a401021684fc80cc12a019
+  languageName: node
+  linkType: hard
+
 "@juggle/resize-observer@npm:^3.3.1":
   version: 3.4.0
   resolution: "@juggle/resize-observer@npm:3.4.0"
@@ -19325,6 +19362,7 @@ __metadata:
     "@hasura/dc-api-types": ^0.40.0
     "@hookform/devtools": 4.0.1
     "@hookform/resolvers": 2.8.10
+    "@jsonhero/schema-infer": ^0.1.5
     "@nrwl/cli": 15.8.1
     "@nrwl/cypress": 15.8.1
     "@nrwl/devkit": 15.8.1
@@ -21708,6 +21746,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ip-address@npm:^8.1.0":
+  version: 8.1.0
+  resolution: "ip-address@npm:8.1.0"
+  dependencies:
+    jsbn: 1.1.0
+    sprintf-js: 1.1.2
+  checksum: abea52788176040b45d35548b369157c11b31a331f5e36517b2e8192068cce78fdca567ecdfab0690ee8b4ad9df55cd2940ac3f20871eeb3687e4447208c4803
+  languageName: node
+  linkType: hard
+
 "ip@npm:^2.0.0":
   version: 2.0.0
   resolution: "ip@npm:2.0.0"
@@ -23906,6 +23954,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsbn@npm:1.1.0":
+  version: 1.1.0
+  resolution: "jsbn@npm:1.1.0"
+  checksum: 944f924f2bd67ad533b3850eee47603eed0f6ae425fd1ee8c760f477e8c34a05f144c1bd4f5a5dd1963141dc79a2c55f89ccc5ab77d039e7077f3ad196b64965
+  languageName: node
+  linkType: hard
+
 "jsbn@npm:~0.1.0":
   version: 0.1.1
   resolution: "jsbn@npm:0.1.1"
@@ -24113,7 +24168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json5@npm:^2.1.2, json5@npm:^2.2.2, json5@npm:^2.2.3":
+"json5@npm:^2.1.2, json5@npm:^2.2.0, json5@npm:^2.2.2, json5@npm:^2.2.3":
   version: 2.2.3
   resolution: "json5@npm:2.2.3"
   bin:
@@ -24343,7 +24398,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jwt-decode@npm:^3.0.0":
+"jwt-decode@npm:^3.0.0, jwt-decode@npm:^3.1.2":
   version: 3.1.2
   resolution: "jwt-decode@npm:3.1.2"
   checksum: 20a4b072d44ce3479f42d0d2c8d3dabeb353081ba4982e40b83a779f2459a70be26441be6c160bfc8c3c6eadf9f6380a036fbb06ac5406b5674e35d8c4205eeb
@@ -25002,6 +25057,13 @@ __metadata:
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005
+  languageName: node
+  linkType: hard
+
+"lodash.omit@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.omit@npm:4.5.0"
+  checksum: 434645e49fe84ab315719bd5a9a3a585a0f624aa4160bc09157dd041a414bcc287c15840365c1379476a3f3eda41fbe838976c3f7bdecbbf4c5478e86c471a30
   languageName: node
   linkType: hard
 
@@ -33133,6 +33195,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sprintf-js@npm:1.1.2":
+  version: 1.1.2
+  resolution: "sprintf-js@npm:1.1.2"
+  checksum: d4bb46464632b335e5faed381bd331157e0af64915a98ede833452663bc672823db49d7531c32d58798e85236581fb7342fd0270531ffc8f914e186187bf1c90
+  languageName: node
+  linkType: hard
+
 "sprintf-js@npm:~1.0.2":
   version: 1.0.3
   resolution: "sprintf-js@npm:1.0.3"
@@ -34571,6 +34640,13 @@ __metadata:
     ts-node-transpile-only: dist/bin-transpile.js
     ts-script: dist/bin-script-deprecated.js
   checksum: 090adff1302ab20bd3486e6b4799e90f97726ed39e02b39e566f8ab674fd5bd5f727f43615debbfc580d33c6d9d1c6b1b3ce7d8e3cca3e20530a145ffa232c35
+  languageName: node
+  linkType: hard
+
+"ts-pattern@npm:^3.3.4":
+  version: 3.3.5
+  resolution: "ts-pattern@npm:3.3.5"
+  checksum: c6f7b9b9014b3f1a7c896267c1b227c7bea46bdc323dd66ac990e3b81f385aeb8abe5de2e694351fe13ae03c2dccb0e0a6869e43007cbe8516762700b309f43d
   languageName: node
   linkType: hard
 

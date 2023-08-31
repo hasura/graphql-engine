@@ -1,22 +1,32 @@
 import { BiCodeBlock, BiCodeCurly, BiData } from 'react-icons/bi';
 import { TbDatabaseExport } from 'react-icons/tb';
 import { SidebarLinkType } from './types';
+import { ManageTableTabs } from '../Data/ManageTable/ManageTable';
 
 export const DatabaseIcon = BiData;
 
+export const DEFAULT_MANAGE_TABLE_TAB: ManageTableTabs = 'modify';
+
+export const NAV_BAR_HEIGHT = 56;
+
 export const Links: readonly SidebarLinkType[] = [
-  { to: '/data/manage', name: 'Manage Data', icon: <DatabaseIcon /> },
   {
     to: '/data/sql',
     name: 'SQL',
     icon: <BiCodeBlock />,
     hideIfNoSources: true,
+    isLinkActive: function () {
+      return document.location.pathname.includes(this.to);
+    },
   },
   {
     to: '/data/native-queries',
     name: 'Native Queries',
     icon: <BiCodeCurly />,
     hideIfNoSources: true,
+    isLinkActive: function () {
+      return document.location.pathname.includes(this.to);
+    },
   },
   {
     to: '/data/migrations',
@@ -24,6 +34,9 @@ export const Links: readonly SidebarLinkType[] = [
     icon: <TbDatabaseExport />,
     hideIfNoSources: true,
     cliOnly: true,
+    isLinkActive: function () {
+      return document.location.pathname.includes(this.to);
+    },
   },
 ] as const;
 

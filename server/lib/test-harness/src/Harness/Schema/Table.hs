@@ -8,6 +8,7 @@ module Harness.Schema.Table
     RelationshipType (..),
     NativeQueryRelationship (..),
     reference,
+    nativeQueryArrayRelationship,
     nativeQueryObjectRelationship,
     InsertOrder (..),
     Column (..),
@@ -139,6 +140,15 @@ nativeQueryObjectRelationship localColumn targetNativeQuery targetColumn =
       nqRelationshipTarget = targetNativeQuery,
       nqRelationshipTargetColumn = targetColumn,
       nqRelationshipType = ObjectRelationship
+    }
+
+nativeQueryArrayRelationship :: Text -> Text -> Text -> NativeQueryRelationship
+nativeQueryArrayRelationship localColumn targetNativeQuery targetColumn =
+  NativeQueryRelationship
+    { nqRelationshipLocalColumn = localColumn,
+      nqRelationshipTarget = targetNativeQuery,
+      nqRelationshipTargetColumn = targetColumn,
+      nqRelationshipType = ArrayRelationship
     }
 
 -- | Generic type to construct columns for all backends

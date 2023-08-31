@@ -53,7 +53,8 @@ JDBC URL. We'll create this in the next step and then come back here.
 
 :::info Already have an existing database?
 
-If you have an existing MySQL database on Google Cloud SQL, you can skip this step and move on to [step 4](#allow-connections).
+If you have an existing MySQL database on Google Cloud SQL, you can skip this step and move on to
+[step 4](#allow-connections).
 
 :::
 
@@ -71,9 +72,14 @@ Select MySQL:
 
 <Thumbnail src="/img/cloud-dbs/gcp/mysql/select-MySQL.png" alt="Select MySQL database instance in GCP" width="1000px" />
 
-Select an instance ID, as well as a default user password. Choose a preset, and, if required, a specific region and zone.
+Select an instance ID, as well as a default user password. Choose a preset, and, if required, a specific region and
+zone.
 
-<Thumbnail src="/img/cloud-dbs/gcp/mysql/configure-instance.png" alt="Configure database instance in GCP" width="1000px" />
+<Thumbnail
+  src="/img/cloud-dbs/gcp/mysql/configure-instance.png"
+  alt="Configure database instance in GCP"
+  width="1000px"
+/>
 
 Then click `Create Instance`.
 
@@ -108,6 +114,7 @@ The structure of the database connection URL looks as follows:
 ```text
 jdbc:mysql://<hostname>:<port>/<database_name>?user=<username>&password=<password>
 ```
+
 - `port`: The default port for MySQL is `3306` if not specified otherwise.
 - `database_name`: The name is `mysql` by default unless otherwise specified.
 - `username`: If you have a separate database user, the username will be theirs. If you didn't specify a user, the
@@ -117,7 +124,7 @@ jdbc:mysql://<hostname>:<port>/<database_name>?user=<username>&password=<passwor
 - `hostname`: The public IP can be obtained by clicking on `Overview` on the left-side navigation and then scrolling
   down to `Connect to this instance`:
 
-<Thumbnail src="/img/cloud-dbs/gcp/mysql/public-ip.png" alt="Find the public IP for a GCP MySQL database"  />
+<Thumbnail src="/img/cloud-dbs/gcp/mysql/public-ip.png" alt="Find the public IP for a GCP MySQL database" />
 
 :::info About Cloud SQL connections
 
@@ -142,10 +149,17 @@ security risk.
 
 :::
 
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
 Track the tables on which you want to create your API, and voilà: you're ready to start developing.
 
 <Thumbnail src="/img/cloud-dbs/gcp/mysql/hasura-console.png" alt="Hasura Console" />
-
 
 ## Next steps
 
@@ -160,7 +174,8 @@ Track the tables on which you want to create your API, and voilà: you're ready 
 
 :::info MySQL feature support
 
-For more information on which MySQL features we support, check out [this page](/databases/mysql/index.mdx#feature-support).
+For more information on which MySQL features we support, check out
+[this page](/databases/mysql/index.mdx#feature-support).
 
 :::
 
@@ -170,4 +185,5 @@ Google Cloud SQL offers a [Cloud SQL Auth proxy](https://cloud.google.com/sql/do
 connect to your database. This is useful if you want to connect to your database from a local machine or a server that
 doesn't have a public IP address.
 
-To use the Cloud SQL Auth proxy, follow the instructions in the [Cloud SQL Auth proxy docs](https://cloud.google.com/sql/docs/mysql/sql-proxy#install).
+To use the Cloud SQL Auth proxy, follow the instructions in the
+[Cloud SQL Auth proxy docs](https://cloud.google.com/sql/docs/mysql/sql-proxy#install).

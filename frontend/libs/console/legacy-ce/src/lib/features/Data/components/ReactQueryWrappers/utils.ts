@@ -2,7 +2,6 @@
 
 import { UseQueryResult } from 'react-query';
 import { ReactQueryStatusUIProps } from './ReactQueryStatusUI';
-import { ErrorType } from './types';
 
 // written in a slightly verbose manner for clarity
 export const nonSuccessRenderChildren = ({
@@ -23,7 +22,7 @@ export const nonSuccessRenderChildren = ({
   return false;
 };
 
-type MultipleQueryResults = UseQueryResult<unknown, ErrorType>[];
+type MultipleQueryResults = UseQueryResult<unknown, unknown>[];
 
 export const multipleQueryUtils = {
   status: (results: MultipleQueryResults): UseQueryResult['status'] => {
@@ -40,10 +39,10 @@ export const multipleQueryUtils = {
     // if we got here, then all statuses are success!
     return 'success';
   },
-  firstError: (results: MultipleQueryResults): ErrorType => {
+  firstError: (results: MultipleQueryResults): unknown => {
     return results.find(r => r.isError)?.error ?? null;
   },
-  allErrors: (results: MultipleQueryResults): ErrorType[] => {
+  allErrors: (results: MultipleQueryResults): unknown[] => {
     return results.filter(r => r.isError).map(r => r.error);
   },
 };

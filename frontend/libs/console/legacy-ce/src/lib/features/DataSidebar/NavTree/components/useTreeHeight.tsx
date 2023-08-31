@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { SIDEBAR_ID, NON_TREE_CONTENT_IDS } from '../../constants';
 
 const getTreeHeight = () => {
+  if (process.env.STORYBOOK)
+    return window.document.documentElement.scrollHeight - 250;
+
   const sidebarHeight = document.getElementById(SIDEBAR_ID)?.offsetHeight ?? 0;
 
   const otherContentHeight = NON_TREE_CONTENT_IDS.reduce((sum, val) => {

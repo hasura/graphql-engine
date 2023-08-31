@@ -5,7 +5,6 @@ import { Collapse } from '../../../new-components/deprecated';
 import { Dialog } from '../../../new-components/Dialog';
 import {
   GraphQLSanitizedInputField,
-  ReactSelect,
   Select,
 } from '../../../new-components/Form';
 import { SanitizeTips } from '../../../utils/sanitizeGraphQLFieldNames';

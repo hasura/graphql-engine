@@ -58,13 +58,19 @@ Once connected to the database, use the following command from inside `psql` to 
 
 Your data would have been successfully copied into the Postgres database.
 
-:::info Values not explicitly provided in the CSV file
+### Values not explicitly provided in the CSV file
 
 If a column's value is auto-generated, you can exclude it from the CSV file and allow the database to populate it
 automatically. However, you must make sure that the auto-generated column is defined as such in the table schema.
 
-If a column is not present in the CSV file, you can either set a default value for it in the table schema or exclude it
-from the INSERT statement. If the column is not nullable and has no default value, you must provide a value for it in
-the INSERT statement.
+If a column is not present in the CSV file, you can call out the specific columns that you want to import from the CSV
+into the database. Imagine our CSV from earlier doesn't contain the `email` column. We can import the data from the CSV
+into the database by specifying only the columns we want to import:
 
-:::
+```bash
+# \copy <table_name> (<column1>, <column2>, ...) from '</path/to/file/filename.csv>' delimiter ',' CSV HEADER;
+
+\copy profile (firstName, lastName) from '/Users/sarahlewis/documents/profile.csv' delimiter ',' CSV HEADER;
+```
+
+These columns' headers correspond to the appropriate column names in the table's schema.

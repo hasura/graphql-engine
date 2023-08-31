@@ -14,6 +14,7 @@ import Hasura.Backends.Postgres.Translate.BoolExp
 import Hasura.Backends.Postgres.Translate.Insert
 import Hasura.Backends.Postgres.Translate.Returning
 import Hasura.Backends.Postgres.Types.Update
+import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Update
@@ -21,6 +22,7 @@ import Hasura.RQL.IR.Update.Batch
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Session (UserInfo)
 import Hasura.SQL.Types
 
 data UpdateCTE
@@ -32,47 +34,55 @@ data UpdateCTE
 
 -- | Create the update CTE.
 mkUpdateCTE ::
-  forall pgKind.
-  (Backend ('Postgres pgKind)) =>
+  forall pgKind m.
+  (Backend ('Postgres pgKind), MonadIO m, MonadError QErr m) =>
+  UserInfo ->
   AnnotatedUpdate ('Postgres pgKind) ->
-  UpdateCTE
-mkUpdateCTE (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase _validateInput) =
+  m UpdateCTE
+mkUpdateCTE userInfo (AnnotatedUpdateG tn permFltr chk updateVariant _ columnsInfo _tCase _validateInput) =
   case updateVariant of
-    SingleBatch update ->
-      Update $ translateUpdate update
-    MultipleBatches updates ->
-      MultiUpdate $ translateUpdate <$> updates
+    SingleBatch update -> do
+      updateExp <- translateUpdate update
+      pure $ Update updateExp
+    MultipleBatches updates -> do
+      updateExps <- traverse translateUpdate updates
+      pure $ MultiUpdate updateExps
   where
-    mkWhere :: AnnBoolExp ('Postgres pgKind) S.SQLExp -> Maybe S.WhereFrag
-    mkWhere =
-      Just
+    mkWhere :: AnnBoolExp ('Postgres pgKind) S.SQLExp -> m (Maybe S.WhereFrag)
+    mkWhere annBoolExp = do
+      boolExp <- toSQLBoolExp userInfo (S.QualTable tn) $ andAnnBoolExps permFltr $ annBoolExp
+      pure
+        $ Just
         . S.WhereFrag
         . S.simplifyBoolExp
-        . toSQLBoolExp (S.QualTable tn)
-        . andAnnBoolExps permFltr
+        $ boolExp
 
-    checkConstraint :: Maybe S.RetExp
-    checkConstraint =
-      Just
+    checkConstraint :: m (Maybe S.RetExp)
+    checkConstraint = do
+      boolExp <- toSQLBoolExp userInfo (S.QualTable tn) chk
+      pure
+        $ Just
         $ S.RetExp
           [ S.selectStar,
             asCheckErrorExtractor
               . insertCheckConstraint
-              . toSQLBoolExp (S.QualTable tn)
-              $ chk
+              $ boolExp
           ]
 
-    translateUpdate :: UpdateBatch ('Postgres pgKind) UpdateOpExpression S.SQLExp -> S.TopLevelCTE
-    translateUpdate UpdateBatch {..} =
-      S.CTEUpdate
-        S.SQLUpdate
-          { upTable = tn,
-            upSet =
-              S.SetExp $ map (expandOperator columnsInfo) (HashMap.toList _ubOperations),
-            upFrom = Nothing,
-            upWhere = mkWhere _ubWhere,
-            upRet = checkConstraint
-          }
+    translateUpdate :: UpdateBatch ('Postgres pgKind) UpdateOpExpression S.SQLExp -> m S.TopLevelCTE
+    translateUpdate UpdateBatch {..} = do
+      whereExp <- mkWhere _ubWhere
+      checkExp <- checkConstraint
+      pure
+        $ S.CTEUpdate
+          S.SQLUpdate
+            { upTable = tn,
+              upSet =
+                S.SetExp $ map (expandOperator columnsInfo) (HashMap.toList _ubOperations),
+              upFrom = Nothing,
+              upWhere = whereExp,
+              upRet = checkExp
+            }
 
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem

@@ -2,6 +2,7 @@ import set from 'lodash/set';
 import { useCallback, useEffect, useState, createContext } from 'react';
 import { Permissions, RowPermissionsState } from './types';
 import { updateKey } from './utils/helpers';
+import cloneDeep from 'lodash/cloneDeep';
 
 export const rowPermissionsContext = createContext<RowPermissionsState>({
   comparators: {},
@@ -18,7 +19,16 @@ export const RowPermissionsProvider = ({
   permissions,
   comparators,
   onPermissionsChange,
-}: Pick<RowPermissionsState, 'permissions' | 'operators' | 'comparators'> & {
+  loadRelationships,
+  isLoading,
+}: Pick<
+  RowPermissionsState,
+  | 'permissions'
+  | 'operators'
+  | 'comparators'
+  | 'loadRelationships'
+  | 'isLoading'
+> & {
   children?: React.ReactNode | undefined;
   onPermissionsChange?: (permissions: Permissions) => void;
 }) => {
@@ -30,7 +40,10 @@ export const RowPermissionsProvider = ({
 
   const setValue = useCallback<RowPermissionsState['setValue']>(
     (path, value) => {
-      const clone = { ...permissionsState };
+      // Clone deep so we don't run into issues with immutability
+      // The issue happens when cloning with spread operator, after submitting and getting an error
+      // Using cloneDeep we don't run into this issue
+      const clone = cloneDeep(permissionsState);
       const newPermissions = set(clone, ['permissions', ...path], value);
       setPermissionsState(newPermissions);
       onPermissionsChange?.(newPermissions.permissions);
@@ -74,6 +87,8 @@ export const RowPermissionsProvider = ({
         setKey,
         setPermissions,
         comparators,
+        loadRelationships,
+        isLoading,
       }}
     >
       {children}

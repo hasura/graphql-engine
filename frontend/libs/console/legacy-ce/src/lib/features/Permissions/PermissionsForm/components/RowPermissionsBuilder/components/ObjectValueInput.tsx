@@ -11,9 +11,10 @@ export function ObjectValueInput({
   componentLevelId: string;
   path: string[];
 }) {
-  const { setValue } = useContext(rowPermissionsContext);
+  const { setValue, isLoading } = useContext(rowPermissionsContext);
   return (
     <input
+      disabled={isLoading}
       data-testid={componentLevelId}
       className="border border-gray-200 rounded-md p-2 !mr-4"
       type="text"

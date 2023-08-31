@@ -6,6 +6,8 @@ import { useOperators } from './utils/comparatorsFromSchema';
 import { ObjectValueInput } from './ObjectValueInput';
 import { BooleanValueInput } from './BooleanValueInput';
 import { Operator } from './types';
+import { rootTableContext } from './RootTableProvider';
+import { areTablesEqual } from '../../../../../hasura-metadata-api';
 
 export const checkUseObjectInput = (
   comparatorName: string,
@@ -39,7 +41,8 @@ export const ValueInputType = ({
   comparatorName: string;
   value: any;
 }) => {
-  const { setValue } = useContext(rowPermissionsContext);
+  const { setValue, isLoading } = useContext(rowPermissionsContext);
+  const { tables } = useContext(rootTableContext);
   const { table } = useContext(tableContext);
   const operators = useOperators({ path });
   const operator = operators.find(o => o.name === comparatorName);
@@ -67,14 +70,31 @@ export const ValueInputType = ({
   return (
     <input
       data-testid={componentLevelId}
-      disabled={comparatorName === '_where' && isEmpty(table)}
-      className="border border-gray-200 rounded-md p-2 !mr-4"
+      disabled={isLoading || (comparatorName === '_where' && isEmpty(table))}
+      className={`border border-gray-200 rounded-md p-2 !mr-4 ${
+        isLoading ? 'bg-gray-100' : ''
+      }`}
       type="text"
       value={value}
       onChange={e => {
         let value = e.target.value as any;
+        const foundTable = tables.find(t => areTablesEqual(t.table, table));
+        const column = foundTable?.columns.find(
+          c => c.name === path[path.length - 2]
+        );
         if (!isNaN(value) && value !== '') {
-          value = parseInt(value);
+          try {
+            if (column?.graphQLProperties?.scalarType === 'Int') {
+              value = parseInt(value);
+            } else if (column?.graphQLProperties?.scalarType === 'Float') {
+              value = parseFloat(value);
+            }
+          } catch (e) {
+            console.error(e);
+            // If there is an error it means it's a string
+            // This can happen, users can set values like X-Hasura-User-Id
+            // We catch so we use the value as is
+          }
         }
         setValue(
           path,

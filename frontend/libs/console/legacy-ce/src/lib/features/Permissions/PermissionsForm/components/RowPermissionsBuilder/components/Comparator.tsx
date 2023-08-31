@@ -14,12 +14,13 @@ export const Comparator = ({
   v: any;
   path: string[];
 }) => {
-  const { setKey } = useContext(rowPermissionsContext);
+  const { setKey, isLoading } = useContext(rowPermissionsContext);
   const comparatorLevelId = `${path?.join('.')}-comparator`;
   const operators = useOperators({ path });
 
   return (
     <Select
+      isDisabled={isLoading}
       inputId={`${comparatorLevelId}-select-value`}
       isSearchable
       aria-label={comparatorLevelId}

@@ -42,20 +42,25 @@ module Hasura.RQL.IR.BoolExp
     PreSetColsPartial,
     RootOrCurrentColumn (..),
     RootOrCurrent (..),
+    RemoteRelPermBoolExp (..),
+    RemoteRelRHSFetchInfo (..),
   )
 where
 
 import Autodocodec (Codec (CommentCodec), HasCodec (codec), JSONCodec, bimapCodec, dimapCodec, named, valueCodec)
+import Control.DeepSeq (rnf)
 import Control.Lens.Plated
 import Data.Aeson.Extended
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (hashWithSalt)
 import Data.Monoid
 import Data.Text.Extended
 import Hasura.Function.Cache
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelRHSFetchWhereExp)
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendPrefix)
@@ -64,6 +69,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session
 
 ----------------------------------------------------------------------------------------------------
@@ -489,6 +495,39 @@ instance
   ) =>
   Hashable (AnnComputedFieldBoolExp b a)
 
+data RemoteRelPermBoolExp b field = RemoteRelPermBoolExp
+  { rawBoolExp :: (RelName, Value),
+    lhsCol :: (Column b, ColumnType b),
+    rhsFetchInfo :: AB.AnyBackend (RemoteRelRHSFetchInfo field)
+  }
+  deriving (Generic)
+
+deriving instance (Backend b) => Functor (RemoteRelPermBoolExp b)
+
+deriving instance (Backend b) => Foldable (RemoteRelPermBoolExp b)
+
+deriving instance (Backend b) => Traversable (RemoteRelPermBoolExp b)
+
+instance Eq (RemoteRelPermBoolExp b f) where
+  (RemoteRelPermBoolExp rawBoolExp1 _ _) == (RemoteRelPermBoolExp rawBoolExp2 _ _) = rawBoolExp1 == rawBoolExp2
+
+instance Hashable (RemoteRelPermBoolExp b a) where
+  hashWithSalt salt (RemoteRelPermBoolExp rawBoolExp _ _) = hashWithSalt salt rawBoolExp
+
+instance NFData (RemoteRelPermBoolExp b a) where
+  rnf (RemoteRelPermBoolExp rawBoolExp _ _) = rnf rawBoolExp
+
+instance (Show (RemoteRelPermBoolExp b f)) where
+  show (RemoteRelPermBoolExp boolExp _ _) = show (boolExp)
+
+data RemoteRelRHSFetchInfo field b = RemoteRelRHSFetchInfo
+  { rrrfiColumn :: (ScalarType b, Column b),
+    rrrfiTable :: TableName b,
+    rrrfiWhere :: RemoteRelRHSFetchWhereExp (Column b),
+    rrrfiSource :: SourceName,
+    rrrfiSourceConfig :: SourceConfig b
+  }
+
 -- | This type is used for boolean terms in GBoolExp in the schema; there are four kinds boolean
 -- terms:
 --   - operators on a column of the current table, using the 'OpExpG' kind of operators
@@ -505,6 +544,7 @@ data AnnBoolExpFld (backend :: BackendType) leaf
       (RelationshipFilters backend leaf)
   | AVComputedField (AnnComputedFieldBoolExp backend leaf)
   | AVAggregationPredicates (AggregationPredicates backend leaf)
+  | AVRemoteRelationship (RemoteRelPermBoolExp backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance
@@ -512,7 +552,8 @@ deriving instance
     Eq (AggregationPredicates b a),
     Eq (AnnBoolExp b a),
     Eq (AnnComputedFieldBoolExp b a),
-    Eq (OpExpG b a)
+    Eq (OpExpG b a),
+    Eq (RemoteRelPermBoolExp b a)
   ) =>
   Eq (AnnBoolExpFld b a)
 
@@ -521,7 +562,8 @@ deriving instance
     Show (AggregationPredicates b a),
     Show (AnnBoolExp b a),
     Show (AnnComputedFieldBoolExp b a),
-    Show (OpExpG b a)
+    Show (OpExpG b a),
+    Show (RemoteRelPermBoolExp b a)
   ) =>
   Show (AnnBoolExpFld b a)
 
@@ -530,7 +572,8 @@ instance
     NFData (AggregationPredicates b a),
     NFData (AnnBoolExp b a),
     NFData (AnnComputedFieldBoolExp b a),
-    NFData (OpExpG b a)
+    NFData (OpExpG b a),
+    NFData (RemoteRelPermBoolExp b a)
   ) =>
   NFData (AnnBoolExpFld b a)
 
@@ -539,7 +582,8 @@ instance
     Hashable (AggregationPredicates b a),
     Hashable (AnnBoolExp b a),
     Hashable (AnnComputedFieldBoolExp b a),
-    Hashable (OpExpG b a)
+    Hashable (OpExpG b a),
+    Hashable (RemoteRelPermBoolExp b a)
   ) =>
   Hashable (AnnBoolExpFld b a)
 
@@ -572,6 +616,8 @@ instance
               CFBETable _ boolExp -> toJSON (function, toJSON boolExp)
       )
     AVAggregationPredicates avAggregationPredicates -> toJSONKeyValue avAggregationPredicates
+    AVRemoteRelationship (RemoteRelPermBoolExp (relName, fieldValue) _ _) ->
+      (K.fromText (relNameToTxt relName), fieldValue)
 
 -- | This type represents a boolean expression over a relationship. In addition
 -- to the actual user-specified predicate, we need to also consider the

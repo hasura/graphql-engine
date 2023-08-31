@@ -19,6 +19,9 @@ import {
   getUntrackTableQuery,
 } from '../../../../metadata/queryUtils';
 import { setSidebarLoading } from '../DataSubSidebar';
+import { isFeatureFlagEnabled } from '../../../../features/FeatureFlags/hooks/useFeatureFlags';
+import { availableFeatureFlagIds } from '../../../../features/FeatureFlags';
+import { manageTableUrl } from '../../../../features/DataSidebar/navigation-utils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -176,10 +179,28 @@ export const trackTable = payload => (dispatch, getState) => {
   const successMsg = 'Table created successfully';
   const errorMsg = 'Tracking a created table failed';
 
+  const isPerformanceModeActive = isFeatureFlagEnabled(
+    availableFeatureFlagIds.performanceMode
+  );
+  // console.log('!!', ff);
+
   const customOnSuccess = () => {
+    if (isPerformanceModeActive) {
+      dispatch(
+        _push(
+          manageTableUrl({
+            table: { schema: payload.schema, name: payload.name },
+            dataSourceName: currentDataSource,
+          })
+        )
+      );
+      return;
+    }
+
     dispatch({ type: REQUEST_SUCCESS });
     dispatch({ type: SET_DEFAULTS });
     dispatch(setTable(payload.name));
+
     dispatch(updateSchemaInfo()).then(() => {
       dispatch(
         _push(

@@ -1,9 +1,8 @@
 import { useContext, useEffect } from 'react';
 import { isComparator } from '../utils/helpers';
 import { tableContext } from '../TableProvider';
-import { typesContext } from '../TypesProvider';
 import { rowPermissionsContext } from '../RowPermissionsProvider';
-import { Wrapper } from './utils';
+import { ConditionalTableProvider } from './ConditionalTableProvider';
 import { rootTableContext } from '../RootTableProvider';
 
 export function ColumnComparatorEntry({
@@ -16,8 +15,6 @@ export function ColumnComparatorEntry({
   path: string[];
 }) {
   const { setValue } = useContext(rowPermissionsContext);
-  const { types } = useContext(typesContext);
-  const { relationships } = useContext(tableContext);
   const showRootColumns = v.includes('$');
   const stringifiedValue = JSON.stringify(v);
   useEffect(() => {
@@ -26,7 +23,7 @@ export function ColumnComparatorEntry({
     }
   }, [stringifiedValue, setValue]);
   return (
-    <Wrapper types={types} path={path} relationships={relationships}>
+    <ConditionalTableProvider path={path}>
       <div
         className={
           !isComparator(k) ? `border-dashed border-l border-gray-200` : ''
@@ -41,7 +38,7 @@ export function ColumnComparatorEntry({
           </div>
         </div>
       </div>
-    </Wrapper>
+    </ConditionalTableProvider>
   );
 }
 

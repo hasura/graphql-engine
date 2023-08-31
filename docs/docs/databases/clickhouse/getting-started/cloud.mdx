@@ -71,11 +71,7 @@ In your Cloud project, navigate to the `Data` tab and click `Manage` in the left
 
 At the bottom of the screen, you'll see an expandable section titled `Data Connector Agents`.
 
-<Thumbnail
-  src="/img/databases/clickhouse/add-agent.png"
-  alt="Add the agent for a ClickHouse database"
-  width="1000px"
-/>
+<Thumbnail src="/img/databases/clickhouse/add-agent.png" alt="Add the agent for a ClickHouse database" width="1000px" />
 
 Click this and scroll down to `Add Agent`.
 
@@ -118,8 +114,8 @@ Head to the `Data > Manage databases` section on the Console to add your ClickHo
   width="1000px"
 />
 
-You can get create your connection URL by logging in to ClickHouse and selecting `Connect -> View connection string` for the
-database to which you want to connect.
+You can get create your connection URL by logging in to ClickHouse and selecting `Connect -> View connection string` for
+the database to which you want to connect.
 
 Once you add the ClickHouse service, you will find it listed as an available database on the sidebar.
 
@@ -145,6 +141,14 @@ the [metadata API](api-reference/metadata-api/manage-metadata.mdx#metadata-apply
 
 :::
 
+:::info Ensure your password escapes special characters
+
+Due to the potential variations in drivers, it's crucial to escape special characters used in the password of the
+connection string. These include `{ } % & #`. To escape a character, use the appropriate escape sequence based on your
+database's driver's documentation.
+
+:::
+
 ### Step 5: Track existing tables
 
 To query your ClickHouse service using Hasura, you'll need to have existing tables to select. Those tables will appear
@@ -159,8 +163,8 @@ the corresponding GraphQL schema.
 
 ### Step 6: Try out a GraphQL query
 
-Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphiQL to get help in
-creating a GraphQL query.
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphiQL to get help
+in creating a GraphQL query.
 
 <Thumbnail src="/img/databases/clickhouse/query.png" alt="Try a GraphQL query" width="1000px" />
 

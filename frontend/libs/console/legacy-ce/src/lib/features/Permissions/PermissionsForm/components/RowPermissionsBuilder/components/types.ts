@@ -53,6 +53,8 @@ export type RowPermissionsState = {
   setValue: (path: string[], value: any) => void;
   setKey: (props: { path: string[]; key: any; type: PermissionType }) => void;
   setPermissions: (permissions: Permissions) => void;
+  loadRelationships?: (relationships: Relationships) => void;
+  isLoading?: boolean;
 };
 
 export type TypesContext = {

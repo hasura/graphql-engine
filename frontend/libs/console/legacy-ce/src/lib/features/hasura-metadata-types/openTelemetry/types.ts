@@ -3,7 +3,7 @@ import { z } from 'zod';
 // --------------------------------------------------
 // UTILS
 // --------------------------------------------------
-const validUrlSchema = z.string().url({ message: 'Invalid URL' });
+const validUrlSchema = z.string();
 
 // --------------------------------------------------
 // ATTRIBUTES

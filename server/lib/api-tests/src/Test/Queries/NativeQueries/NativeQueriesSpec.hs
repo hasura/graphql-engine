@@ -176,10 +176,11 @@ trackLogicalModels testEnvironment = SetupAction.noTeardown do
             [ (Schema.logicalModelScalar "divided" Schema.TInt)
                 { Schema.logicalModelColumnDescription = Just "A divided thing"
                 },
-              (Schema.logicalModelScalar "something_nullable" Schema.TStr)
-                { Schema.logicalModelColumnDescription = Just "Something nullable",
-                  Schema.logicalModelColumnNullable = True
-                }
+              ( Schema.makeNullable
+                  (Schema.logicalModelScalar "something_nullable" Schema.TStr)
+                    { Schema.logicalModelColumnDescription = Just "Something nullable"
+                    }
+              )
             ],
           Schema.logicalModelDescription = Just "Return type description"
         }

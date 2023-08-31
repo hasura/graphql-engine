@@ -5,13 +5,16 @@ import { InputField, SimpleForm } from '../../../../new-components/Form';
 import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { Relationship } from '../../types';
 import { useCreateTableRelationships } from '../../hooks/useCreateTableRelationships/useCreateTableRelationships';
-import { BulkAtomicResponse } from '../../../hasura-metadata-types';
+import {
+  BulkAtomicResponse,
+  BulkKeepGoingResponse,
+} from '../../../hasura-metadata-types';
 
 interface RenameRelationshipProps {
   relationship: Relationship;
   onCancel: () => void;
   onError?: (err: Error) => void;
-  onSuccess?: (data: BulkAtomicResponse) => void;
+  onSuccess?: (data: BulkAtomicResponse | BulkKeepGoingResponse) => void;
 }
 
 export const RenameRelationship = (props: RenameRelationshipProps) => {

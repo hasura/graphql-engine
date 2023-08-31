@@ -833,6 +833,8 @@ fromAnnBoolExpFld =
       pure (AndExpression expressions)
     Ir.AVRelationship Rql.RelInfo {riTarget = Rql.RelTargetNativeQuery _} _ ->
       error "fromAnnBoolExpFld RelTargetNativeQuery"
+    Ir.AVRemoteRelationship _ ->
+      error "fromAnnBoolExpFld RemoteRelationship"
     Ir.AVRelationship Rql.RelInfo {riMapping = mapping, riTarget = Rql.RelTargetTable table} (Ir.RelationshipFilters tablePerms annBoolExp) -> do
       selectFrom <- lift (fromQualifiedTable table)
       foreignKeyConditions <- fromMapping selectFrom mapping

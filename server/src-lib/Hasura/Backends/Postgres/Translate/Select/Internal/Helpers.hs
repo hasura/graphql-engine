@@ -21,6 +21,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     customSQLToInnerCTEs,
     nativeQueryNameToAlias,
     toQuery,
+    selectToSelectWithM,
   )
 where
 
@@ -158,3 +159,8 @@ customSQLToInnerCTEs =
 
 toQuery :: S.SelectWithG S.TopLevelCTE -> Query
 toQuery = fromBuilder . toSQL . renameIdentifiersSelectWithTopLevelCTE
+
+selectToSelectWithM :: (MonadIO m) => WriterT CustomSQLCTEs m S.Select -> m S.SelectWith
+selectToSelectWithM action = do
+  (selectSQL, customSQLCTEs) <- runWriterT action
+  pure $ S.SelectWith (customSQLToTopLevelCTEs customSQLCTEs) selectSQL

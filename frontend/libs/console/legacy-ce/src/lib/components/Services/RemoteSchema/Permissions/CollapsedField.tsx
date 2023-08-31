@@ -25,7 +25,8 @@ export const CollapsedField: React.FC<CollapsedFieldProps> = ({
     )}
     {i.return && (
       <>
-        :
+        {' '}
+        :{' '}
         <a
           onClick={onClick}
           id={`${i.return.replace(/[^\w\s]/gi, '')}`}

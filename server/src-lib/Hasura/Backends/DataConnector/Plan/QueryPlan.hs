@@ -67,6 +67,7 @@ mkQueryPlan ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -89,6 +90,7 @@ translateAnnSimpleSelectToQueryRequest ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -101,6 +103,7 @@ translateAnnAggregateSelectToQueryRequest ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   AnnAggregateSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -113,6 +116,7 @@ translateAnnSelectToQueryRequest ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   ( forall state m2.
@@ -123,7 +127,8 @@ translateAnnSelectToQueryRequest ::
       MonadReader r m2,
       Has API.InterpolatedQueries state,
       Has API.ScalarTypesCapabilities r,
-      Has SessionVariables r
+      Has SessionVariables r,
+      MonadIO m2
     ) =>
     API.TargetName ->
     Fields (fieldType (UnpreparedValue 'DataConnector)) ->
@@ -190,7 +195,8 @@ fromNativeQueryArray ::
     Has SessionVariables r,
     Has API.InterpolatedQueries state,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    MonadIO m
   ) =>
   AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
   (API.TargetName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> m FieldsAndAggregates) ->
@@ -227,7 +233,8 @@ fromNativeQueryObject ::
     Has SessionVariables r,
     Has API.InterpolatedQueries state,
     MonadReader r m,
-    Has API.ScalarTypesCapabilities r
+    Has API.ScalarTypesCapabilities r,
+    MonadIO m
   ) =>
   ObjectRelationSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   API.TargetName ->
@@ -300,7 +307,8 @@ translateAnnSelect ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   (API.TargetName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> m FieldsAndAggregates) ->
   API.TargetName ->
@@ -339,7 +347,8 @@ translateOrderBy ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector)) ->
@@ -363,7 +372,8 @@ translateOrderByElement ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   API.OrderDirection ->
@@ -441,7 +451,8 @@ translateAnnFieldsWithNoAggregates ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   FieldPrefix ->
   API.TargetName ->
@@ -458,7 +469,8 @@ translateAnnFields ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   FieldPrefix ->
   API.TargetName ->
@@ -476,7 +488,8 @@ translateAnnField ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -550,7 +563,8 @@ translateArrayRelationSelect ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   (API.TargetName -> Fields (fieldType (UnpreparedValue 'DataConnector)) -> m FieldsAndAggregates) ->
@@ -589,7 +603,8 @@ translateTableAggregateFields ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -605,7 +620,8 @@ translateTableAggregateField ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   FieldName ->
@@ -635,7 +651,8 @@ translateAggregateField ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   FieldPrefix ->
@@ -690,7 +707,8 @@ translateNestedObjectSelect ::
     MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
-    Has SessionVariables r
+    Has SessionVariables r,
+    MonadIO m
   ) =>
   API.TargetName ->
   AnnNestedObjectSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->

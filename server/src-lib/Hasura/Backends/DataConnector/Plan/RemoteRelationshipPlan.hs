@@ -36,6 +36,7 @@ mkRemoteRelationshipPlan ::
   ( MonadError QErr m,
     MonadReader r m,
     Has API.ScalarTypesCapabilities r,
+    MonadIO m,
     Has SessionVariables r
   ) =>
   SourceConfig ->

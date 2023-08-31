@@ -1,12 +1,14 @@
 import React from 'react';
 import { TableMachine } from '../hooks';
 import { PermissionsIcon } from './PermissionsIcons';
+import { Checkbox } from '../../../../new-components/Form';
 
 export interface InputCellProps extends React.ComponentProps<'input'> {
   roleName: string;
   isNewRole: boolean;
   isSelectable: boolean;
   isSelected: boolean;
+  disabled?: boolean;
   machine: ReturnType<TableMachine>;
 }
 
@@ -15,6 +17,7 @@ export const InputCell: React.FC<InputCellProps> = ({
   isNewRole,
   isSelectable,
   isSelected,
+  disabled,
   machine,
 }) => {
   const [state, send] = machine;
@@ -44,24 +47,20 @@ export const InputCell: React.FC<InputCellProps> = ({
   }
 
   return (
-    <td className="w-0 bg-gray-50 p-md font-semibold text-muted">
+    <td className="w-0 bg-gray-50 p-md">
       <div className="flex items-center">
-        <input
+        <Checkbox
           id={roleName}
-          type="checkbox"
-          value={roleName}
           checked={isSelected}
-          className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 m-0 ${
-            !isSelectable && 'cursor-not-allowed'
-          }`}
-          disabled={!isSelectable}
-          onChange={() => {
+          onCheckedChange={() => {
             send({ type: 'BULK_OPEN', roleName });
           }}
-        />
-        <label className="flex items-center ml-sm" htmlFor={roleName}>
-          {roleName}
-        </label>
+          disabled={!isSelectable || !!disabled}
+        >
+          <label className="font-semibold text-muted" htmlFor={roleName}>
+            {roleName}
+          </label>
+        </Checkbox>
       </div>
     </td>
   );
@@ -95,7 +94,7 @@ export const EditableCell: React.FC<EditableCellProps> = ({
         data-testid={testId}
         type="submit"
         className={`cursor-pointer h-20 border-none w-full whitespace-nowrap text-center ${
-          isCurrentEdit ? 'bg-amber-300' : 'hover:bg-indigo-50'
+          isCurrentEdit ? 'bg-blue-100' : 'hover:bg-gray-100'
         }`}
         {...rest}
       >

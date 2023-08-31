@@ -2,7 +2,7 @@ import { StoryObj, Meta } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 
 import { RowPermissionsInput } from './RowPermissionsInput';
-import { within } from '@storybook/testing-library';
+import { waitFor, within } from '@storybook/testing-library';
 import {
   fireEvent,
   userEvent,
@@ -721,6 +721,12 @@ export const JsonbColumns: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
+      tablesToLoad: [
+        {
+          name: 'Stuff',
+          schema: 'public',
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -767,6 +773,12 @@ export const JsonbColumnsHasKeys: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
+      tablesToLoad: [
+        {
+          name: 'Stuff',
+          schema: 'public',
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -797,6 +809,12 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
     });
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
+      tablesToLoad: [
+        {
+          name: 'Stuff',
+          schema: 'public',
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -830,7 +848,7 @@ export const StringColumns: StoryObj<typeof RowPermissionsInput> = {
 
     expect(args.onPermissionsChange).toHaveBeenCalledWith({
       name: {
-        _eq: 1337,
+        _eq: '1337',
       },
     });
   },
@@ -847,6 +865,12 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
     });
     const { tables } = usePermissionTables({
       dataSourceName: 'default',
+      tablesToLoad: [
+        {
+          name: 'Stuff',
+          schema: 'public',
+        },
+      ],
     });
 
     const comparators = usePermissionComparators();
@@ -875,13 +899,30 @@ export const NumberColumns: StoryObj<typeof RowPermissionsInput> = {
       timeout: 5000,
     });
 
-    // // Write a number in the input
+    // Wait until it loads
+    // This happens when id-operator-root selector has value id
+    await waitFor(() => {
+      expect(canvas.getByTestId('id-operator-root')).toHaveValue('id');
+    });
+
+    // Write a number in the input
     await userEvent.type(canvas.getByTestId('id._eq-value-input'), '1337');
 
-    expect(args.onPermissionsChange).toHaveBeenCalledWith({
-      id: {
-        _eq: 12341337,
-      },
+    await waitFor(async () => {
+      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+        id: {
+          _eq: 12341337,
+        },
+      });
+    });
+
+    await waitFor(async () => {
+      await userEvent.click(canvas.getByText('[x-hasura-user-id]'));
+      expect(args.onPermissionsChange).toHaveBeenCalledWith({
+        id: {
+          _eq: 'X-Hasura-User-Id',
+        },
+      });
     });
   },
 
@@ -1008,6 +1049,7 @@ export const RemoteRelationships: StoryObj<typeof RowPermissionsInput> = {
     const [permissions, setPermissions] = useState<Permissions>({});
     const { tables } = usePermissionTables({
       dataSourceName: 'OhMy',
+      tablesToLoad: [['Chinook', 'Artist']],
     });
 
     const comparators = usePermissionComparators();
@@ -1051,6 +1093,7 @@ export const NestedObjects: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
+      tablesToLoad: [['students']],
     });
 
     const comparators = usePermissionComparators();
@@ -1088,6 +1131,7 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
     render: args => {
       const { tables } = usePermissionTables({
         dataSourceName: 'M',
+        tablesToLoad: [['students']],
       });
 
       const comparators = usePermissionComparators();
@@ -1112,6 +1156,13 @@ export const NestedObjectsInitiallyEmpty: StoryObj<typeof RowPermissionsInput> =
 
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement);
+
+      await waitFor(
+        async () => {
+          await canvas.findByTestId('RootInputReady');
+        },
+        { timeout: 1000 }
+      );
 
       await canvas.findAllByRole('option', {
         name: 'address',
@@ -1139,6 +1190,7 @@ export const NestedObjectsAnd: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
+      tablesToLoad: [['students']],
     });
 
     const comparators = usePermissionComparators();
@@ -1175,6 +1227,7 @@ export const NestedObjectsOr: StoryObj<typeof RowPermissionsInput> = {
   render: args => {
     const { tables } = usePermissionTables({
       dataSourceName: 'M',
+      tablesToLoad: [['students']],
     });
 
     const comparators = usePermissionComparators();

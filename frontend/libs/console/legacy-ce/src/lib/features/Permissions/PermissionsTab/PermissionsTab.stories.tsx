@@ -4,7 +4,7 @@ import { ReactQueryDecorator } from '../../../storybook/decorators/react-query';
 
 import { PermissionsTab, PermissionsTabProps } from './PermissionsTab';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';
-import { within } from '@storybook/testing-library';
+import { waitFor, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { userEvent } from '@storybook/testing-library';
 
@@ -42,6 +42,13 @@ export const UpdatePermissions: StoryObj<PermissionsTabProps> = {
       await canvas.findByLabelText('create-new-role'),
       'viewer'
     );
+    // Wait until permission-table-button-newRole-select loads
+    await waitFor(async () => {
+      return await canvas.findByTestId(
+        'permission-table-button-newRole-select'
+      );
+    });
+
     // Click permission-table-button-newRole-select
     await userEvent.click(
       await canvas.findByTestId('permission-table-button-newRole-select')
@@ -50,14 +57,28 @@ export const UpdatePermissions: StoryObj<PermissionsTabProps> = {
     // Click custom-check
     await userEvent.click(await canvas.findByTestId('custom-check'));
 
+    await waitFor(
+      async () => {
+        await canvas.findByTestId('RootInputReady');
+      },
+      { timeout: 1000 }
+    );
+
     await userEvent.selectOptions(
       await canvas.findByTestId('root-operator'),
       '_and'
     );
 
-    await userEvent.selectOptions(
-      await canvas.findByTestId('_and.1-operator'),
-      'ArtistId'
+    await waitFor(
+      async () => {
+        return userEvent.selectOptions(
+          await canvas.findByTestId('_and.1-operator'),
+          'ArtistId'
+        );
+      },
+      {
+        timeout: 10000,
+      }
     );
 
     // click _and.1.ArtistId._eq-value-input-x-hasura-user-id

@@ -121,6 +121,8 @@ instance Backend 'MSSQL where
 
   defaultTriggerOnReplication = Just ((), TOREnableTrigger)
 
+  getColVals _ _ _ _ _ _ = throw500 "getColVals: not implemented for the MSSQL backend"
+
 instance HasSourceConfiguration 'MSSQL where
   type SourceConfig 'MSSQL = MSSQL.MSSQLSourceConfig
   type SourceConnConfiguration 'MSSQL = MSSQL.MSSQLConnConfiguration

@@ -4,6 +4,7 @@ import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { isNumberString } from '../../../Common/utils/jsUtils';
 import { ArgTreeType } from './types';
+import { FaTimes } from 'react-icons/fa';
 
 interface RSPInputProps {
   k: string;
@@ -89,6 +90,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
               border: 0,
               borderBottom: '2px dotted black',
               borderRadius: 0,
+              marginLeft: '8px',
             }}
             onChange={e => setLocalValue(e.target.value)}
           />
@@ -96,14 +98,28 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
             <button
               value="X-Hasura-User-Id"
               onClick={toggleSessionVariable}
-              className="text-green-600 cursor-pointer text-xs font-bold"
+              className="text-green-600 cursor-pointer text-xs font-bold ml-2"
             >
               [X-Hasura-User-Id]
             </button>
           )}
+          <button
+            className="ml-2"
+            data-test={`close-${k}`}
+            onClick={() => {
+              setLocalValue('');
+              setEditMode(false);
+            }}
+          >
+            <FaTimes />
+          </button>
         </>
       ) : (
-        <button data-test={`pen-${k}`} onClick={() => setEditMode(true)}>
+        <button
+          className="ml-2"
+          data-test={`pen-${k}`}
+          onClick={() => setEditMode(true)}
+        >
           <Pen />
         </button>
       )}

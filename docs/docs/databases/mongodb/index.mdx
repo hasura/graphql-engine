@@ -11,47 +11,44 @@ keywords:
   - oltp
 ---
 
+import ProductBadge from '@site/src/components/ProductBadge';
+
 # MongoDB
 
-:::tip MongoDB Beta Availability
-
-The Hasura MongoDB connector is currently in `beta` for Hasura Enterprise Edition customers and is available
-from Hasura GraphQL Engine `v2.27.0` onwards.
-
-Hasura Cloud support for MongoDB will be coming soon. Once the MongoDB connector is generally available (GA), it will be
-available **only** for Hasura Cloud Enterprise and Enterprise Edition customers.
-
-:::
+<ProductBadge free standard pro ee self />
 
 ## Introduction
 
-Hasura supports connecting to a [MongoDB](https://www.mongodb.com/) service to automatically build a GraphQL API based
-on its validation schema.
+:::tip Supported versions:
+
+Hasura GraphQL Engine `v2.27.0` onwards
+
+:::
+
+:::tip Supported features
+
+Hasura currently supports queries, table relationships, remote relationships and permissions on MongoDB databases.
+
+A [logical model](/schema/mongodb/logical-models.mdx) or database [validation schema](https://www.mongodb.com/docs/upcoming/core/schema-validation/specify-json-schema/#std-label-schema-validation-json) is required for generating your GraphQL schema.
+
+:::
 
 ## Get Started
 
 To try Hasura with MongoDB, you'll need a new or existing MongoDB instance (either self-hosted, or available through
-MongoDB Atlas).
+[MongoDB Atlas](https://www.mongodb.com/atlas/database)).
 
-You can currently get started with Hasura and MongoDB using [Docker](/databases/mongodb/docker.mdx).
+To get started with MongoDB:
+
+- In Hasura Cloud, check out our [Getting Started with MongoDB in Hasura Cloud](/databases/mongodb/cloud.mdx) guide
+- In a Docker environment, check out our [Getting Started with Docker](/databases/mongodb/docker.mdx) guide
 
 ## Keep up to date
 
-:::info Note
+If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our Discord!
 
-Currently, Hasura supports read-only queries on MongoDB.<br/> Other limitations which are actively on the roadmap and
-will be supported soon include:
-
-- Embedded document queries and permissions.
-- Cross-Collection relationships (executed within the database).
-- Logical models to support schema customization and bespoke query execution.
-
-:::
-
-If you'd like to stay informed about the status of MongoDB support, subscribe to our newsletter and join our discord!
-
-- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
-- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
+- [Hasura Newsletter](https://hasura.io/newsletter/)
+- [Hasura Discord](https://discord.com/invite/hasura)
 
 ## Know more
 

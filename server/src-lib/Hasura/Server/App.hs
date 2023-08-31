@@ -490,7 +490,6 @@ v1MetadataHandler ::
     MonadEventLogCleanup m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     ProvidesNetwork m,
     MonadGetPolicies m,
     UserInfoM m
@@ -778,7 +777,6 @@ mkWaiApp ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -828,7 +826,6 @@ httpApp ::
     HttpLog m,
     HasAppEnv m,
     HasCacheStaticConfig m,
-    HasFeatureFlagChecker m,
     UserAuthentication m,
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
