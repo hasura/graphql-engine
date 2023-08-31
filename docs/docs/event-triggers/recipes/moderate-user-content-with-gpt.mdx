@@ -1,0 +1,359 @@
+---
+title: Using Event Triggers to moderate user-generated content with ChatGPT
+description: Succinct, tested, and reusable code recipes for common use cases in Hasura.
+sidebar_label: Moderate content with ChatGPT
+keywords:
+  - hasura
+  - docs
+  - recipes
+  - event triggers
+  - moderate
+  - chatgpt
+  - openai
+sidebar_position: 1
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import SampleAppBlock from '@site/src/components/SampleAppBlock';
+
+# Moderate User-Generated Content with ChatGPT
+
+## Introduction
+
+Using Event Triggers allows you to call a webhook with a contextual payload whenever a specific event occurs in your database. In this recipe,
+we'll create an Event Trigger that will fire whenever a new review is inserted into our `reviews` table. We'll then send
+it to [ChatGPT](https://openai.com/blog/openai-api/) to determine if the review contains inappropriate content. If it
+does, we'll mark the review as unavailable and send a notification to the user.
+
+<SampleAppBlock dependent />
+
+## Prerequisites
+
+Before getting started, ensure that you have the following in place:
+
+- The docs e-commerce sample app deployed to Hasura Cloud.
+- An [OpenAI API key](https://openai.com/blog/openai-api).
+
+:::info Tunneling your webhook endpoint from your local machine
+
+If you plan on using a webhook endpoint hosted on your own machine, ensure that you have a tunneling service such as
+[ngrok](https://ngrok.com/) set up so that your Cloud Project can communicate with your local machine.
+
+:::
+
+## Our model
+
+Event Triggers are designed to run when specific operations occur on a table, such as insertions, updates, and
+deletions. When architecting your own Event Trigger, you need to consider the following:
+
+- Which table's changes will initiate the Event Trigger?
+- Which operation(s) on that table will initiate the Event Trigger?
+- What should my webhook do with the data it receives?
+
+## Step 1: Create the Event Trigger
+
+Head to the `Events` tab of the Hasura Console and click `Create`:
+
+<Thumbnail
+  src="/img/event-triggers/recipes/review-moderation/click-create-event-trigger.png"
+  alt="Click Create"
+  width="1000px"
+/>
+
+## Step 2: Configure the Event Trigger
+
+First, provide a name for your trigger, e.g., `moderate_product_review`. Then, enter a webhook URL that will be called
+when the event is triggered. This webhook will be responsible for sending the new review to ChatGPT and determining
+whether or not its content is appropriate; it can be hosted anywhere, and written in any language you like.
+
+The route on our webhook we'll use is `/check-review`. Below, we'll see what this looks like with a service like
+[ngrok](https://ngrok.com/), but the format will follow this template:
+
+```text
+https://<your-webhook-url>/check-review
+```
+
+:::info Tunneling your webhook endpoint
+
+Since our project is running on Hasura Cloud, and our handler will run on our local machine, we'll use ngrok to expose
+the webhook endpoint to the internet. This will allow us to expose a public URL that will forward requests to our local
+machine and the server we'll configure below.
+
+You'll need to modify your webhook URL to use the public URL provided by ngrok.
+
+After installing ngrok and
+[authenticating](https://ngrok.com/docs/secure-tunnels/ngrok-agent/tunnel-authtokens/#:~:text=Once%20you've%20signed%20up,make%20installing%20the%20authtoken%20simple.),
+you can do this by running:
+
+```bash
+ngrok http 4000
+```
+
+Then, copy the `Forwarding` value for use in our webhook 🎉
+
+:::
+
+Under `Advanced Settings`, we can configure the headers that will be sent with the request. We'll add an
+`authentication` header to prevent abuse of the endpoint and ensure that only Hasura can trigger the event. Set the
+`Key` as `secret-authorization-string` and the `Value` as `super_secret_string_123`:
+
+<Thumbnail
+  src="/img/event-triggers/recipes/review-moderation/event-trigger-secret-header.png"
+  alt="Add the secret header"
+  width="1000px"
+/>
+
+Before exiting, open the `Add Request Options Transform` section and check `POST`. Then, click `Create Event Trigger`.
+
+## Step 3: Create a webhook to handle the request
+
+Whenever new data is inserted into our `reviews` table, the Event Trigger fires. Hasura will send a request to the
+webhook URL you provided. In this example, we're simply going to send a `POST` request. Our webhook will parse the
+request, ensure the header is correct, and then pass our data to ChatGPT. Depending on the response from ChatGPT, we'll
+either allow the review to be visible, or we'll mark it as flagged and send a notification to the user.
+
+:::info Our prompt for ChatGPT
+
+A large part of creating accurate and useful machine learning models is providing them with the right data. Much of that
+comes down to how you engineer your prompt. This can take some experimentation, but this is the prompt that we use in
+the webhook's code below:
+
+```text
+You are a content moderator for SuperStore.com. A customer has left a review for a product they purchased. Your response should only be a JSON object with two properties: "feedback" and "is_appropriate". The "feedback" property should be a string containing your response to the customer only if the review "is_appropriate" value is false. The feedback should be on why their review was flagged as inappropriate, not a response to their review. The "is_appropriate" property should be a boolean indicating whether or not the review contains inappropriate content. The review is as follows:
+```
+
+:::
+
+Event Triggers sent by Hasura to your webhook as a request include a [payload](/event-triggers/payload.mdx) with `event`
+data nested inside the `body` object of the request. This `event` object can then be parsed and values extracted from it
+to be used in your webhook.
+
+Below, we've written an example of webhook in JavaScript that uses `body-parser` to parse the request. As we established
+earlier, this runs on port `4000`. If you're attempting to run this locally, follow the instructions below. If you're
+running this in a hosted environment, use this code as a guide to write your own webhook.
+
+Init a new project with `npm init` and install the following dependencies:
+
+```bash
+npm install express body-parser openai
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.js</code>, add the following code, and update the <code>config</code> values:
+</summary>
+
+```javascript
+const express = require('express');
+const bodyParser = require('body-parser');
+const openai = require('openai');
+
+// Hasura and OpenAI config
+const config = {
+  url: '<YOUR_PROJECT_ENDPOINT>',
+  secret: '<YOUR_ADMIN_SECRET>',
+  openAIKey: '<YOUR_OPENAI_KEY>',
+};
+
+// OpenAI API config and client
+const newOpenAI = new openai.OpenAI({
+  apiKey: config.openAIKey,
+});
+
+const prompt = `You are a content moderator for SuperStore.com. A customer has left a review for a product they purchased. Your response should only be a JSON object with two properties: "feedback" and "is_appropriate". The "feedback" property should be a string containing your response to the customer only if the review "is_appropriate" value is false. The feedback should be on why their review was flagged as inappropriate, not a response to their review. The "is_appropriate" property should be a boolean indicating whether or not the review contains inappropriate content. The review is as follows:`;
+
+// Send a request to ChatGPT to see if the review contains inappropriate content
+async function checkReviewWithChatGPT(reviewText) {
+  try {
+    const moderationReport = await newOpenAI.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'user',
+          content: `${prompt} ${reviewText}}`,
+        },
+      ],
+    });
+    return JSON.parse(moderationReport.choices[0].message.content);
+  } catch (err) {
+    return err;
+  }
+}
+
+// Mark their review as visible if there's no feedback
+async function markReviewAsVisible(userReview, reviewId) {
+  const response = await fetch(config.url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-hasura-admin-secret': config.secret,
+    },
+    body: JSON.stringify({
+      query: `
+      mutation UpdateReviewToVisible($review_id: uuid!) {
+        update_reviews_by_pk(pk_columns: {id: $review_id}, _set: {is_visible: true}) {
+          id
+        }
+      }      
+      `,
+      variables: {
+        review_id: reviewId,
+      },
+    }),
+  });
+  console.log(`🎉 Review approved: ${userReview}`);
+  const { data } = await response.json();
+  return data.update_reviews_by_pk;
+}
+
+// Send a notification to the user if their review is flagged
+async function sendNotification(userReview, userId, reviewFeedback) {
+  const response = await fetch(config.url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-hasura-admin-secret': config.secret,
+    },
+    body: JSON.stringify({
+      query: `
+      mutation InsertNotification($user_id: uuid!, $review_feedback: String!) {
+        insert_notifications_one(object: {user_id: $user_id, message: $review_feedback}) {
+          id
+        }
+      }      
+      `,
+      variables: {
+        user_id: userId,
+        review_feedback: reviewFeedback,
+      },
+    }),
+  });
+  console.log(
+    `🚩 Review flagged. This is not visible to users: ${userReview}\n🔔 The user has received the following notification: ${reviewFeedback}`
+  );
+  const { data } = await response.json();
+  return data.insert_notifications_one;
+}
+
+const app = express();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Our route for the webhook
+app.post('/check-review', async (req, res) => {
+  // confirm the auth header is correct — ideally, you'd keep the secret in an environment variable
+  const authHeader = req.headers['secret-authorization-string'];
+  if (authHeader !== 'super_secret_string_123') {
+    return res.status(401).json({
+      message: 'Unauthorized',
+    });
+  }
+
+  // we'll parse the review from the event payload
+  const userReview = req.body.event.data.new.text;
+  const userId = req.body.event.data.new.user_id;
+
+  // Then check the review with ChatGPT
+  const moderationReport = await checkReviewWithChatGPT(userReview);
+
+  // if the review is appropriate, mark it as visible; if not, send a notification to the user
+  if (moderationReport.is_appropriate) {
+    await markReviewAsVisible(userReview, req.body.event.data.new.id);
+  } else {
+    await sendNotification(userReview, userId, moderationReport.feedback);
+  }
+
+  // Return a JSON response to the client
+  res.json({
+    GPTResponse: moderationReport,
+  });
+});
+
+// Start the server
+app.listen(4000, () => {
+  console.log('Server started on port 4000');
+});
+```
+
+</details>
+
+You can run the server by running `node index.js` in your terminal. If you see the message
+`Webhook server is running on port 4000`, you're good to go!
+
+## Step 4: Test the setup
+
+### Testing with appropriate content
+
+With your server running, Hasura should be able to hit the endpoint. We can test this by inserting a new row into our
+`reviews` table. Let's do this with the following mutation from the `API` tab of the Console:
+
+```graphql
+mutation InsertReview {
+  insert_reviews_one(
+    object: {
+      product_id: "7992fdfa-65b5-11ed-8612-6a8b11ef7372"
+      user_id: "7cf0a66c-65b7-11ed-b904-fb49f034fbbb"
+      text: "I love this shirt! It's so comfortable and easy to wear."
+      rating: 5
+    }
+  ) {
+    id
+  }
+}
+```
+
+As this review doesn't contain any questionable content, it should be marked as visible. We should see output similar to
+this in our terminal:
+
+```text
+🎉 Review approved: I love this shirt! It's so comfortable and easy to wear.
+```
+
+### Testing with inappropriate content
+
+Now, let's try inserting a review that contains inappropriate content. We'll do this by running the following mutation
+in our Hasura Console:
+
+```graphql
+mutation InsertReview {
+  insert_reviews_one(
+    object: {
+      product_id: "7992fdfa-65b5-11ed-8612-6a8b11ef7372"
+      user_id: "7cf0a66c-65b7-11ed-b904-fb49f034fbbb"
+      text: "<Something you would expect to be flagged>"
+      rating: 1
+    }
+  ) {
+    id
+  }
+}
+```
+
+While this mutation will succeed and insert the review into our database, it will not be marked as visible. Our terminal
+will return something like this:
+
+```text
+🚩 Review flagged. This is not visible to users: <INAPPROPRIATE REVIEW>
+🔔 The user has received the following notification: Your review has been flagged as inappropriate due to <CHATGPT'S RHETORIC>.
+```
+
+And we can head to the `Events` tab and see the response from this newest mutation:
+
+<Thumbnail
+  src="/img/event-triggers/recipes/review-moderation/event-trigger-gpt-response.png"
+  alt="Response from our webhook"
+  width="1000px"
+/>
+
+:::info Don't forget about the new notification!
+
+Additionally, Hasura created a new notification for the user, alerting them to the status of their review based on the
+response from ChatGPT. You can find this by heading to the `Data` tab and clicking on the `notifications` table.
+
+:::
+
+Feel free to customize the webhook implementation based on your specific requirements and identified need for a bot.
+Remember to handle error scenarios, implement necessary validations, and add appropriate security measures to your
+webhook endpoint.
