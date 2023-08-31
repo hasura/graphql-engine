@@ -125,7 +125,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
               if (!userChangedName) {
                 setValue('name', operation.name?.value);
               }
-              if (!userChangedUrl) {
+              if (!userChangedUrl && mode === 'create') {
                 setValue(
                   'url',
                   operation.name?.value
