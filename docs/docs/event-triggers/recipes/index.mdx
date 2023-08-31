@@ -22,6 +22,16 @@ can use them as a starting point to build your own custom logic.
 ### Moderate user content with ChatGPT
 
 A common use case for integrating AI-powered bots into applications is to take care of mundane tasks like moderating
-user content. This can be done with specialized sentiment analysis tool or a general large language model like [ChatGPT](https://platform.openai.com/docs/guides/gpt).  This recipe shows how to use ChatGPT to moderate reviews
+user content. This can be done with specialized sentiment analysis tool or a general large language model like
+[ChatGPT](https://platform.openai.com/docs/guides/gpt).  This recipe shows how to use ChatGPT to moderate reviews
 submitted by users. We'll build a webhook that parses Event Trigger data, sends it to ChatGPT, and then performs
 operations on our data based on the results. [Check it out](/event-triggers/recipes/moderate-user-content-with-gpt.mdx)!
+
+### Optimize a product's description for SEO
+
+Enhancing the SEO quality of product descriptions is important for e-commerce platforms. This guide illustrates how to
+employ Hasura's Event Triggers to automatically invoke a webhook whenever a new product is added. The webhook interacts
+with the [OpenAI ChatGPT API](https://platform.openai.com/docs/guides/gpt) to improve the product's description for
+better SEO performance. By using this technique to optimize or check human entered content in this way, you can
+improve the quality of your content and reduce the amount of time spent on manual review. Check out this
+[recipe here](/event-triggers/recipes/product-description-chatgpt-seo.mdx).
