@@ -88,7 +88,6 @@ import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
-import Hasura.RQL.Types.NamingCase
 import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
@@ -865,13 +864,10 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
       -- not forcing the evaluation here results in a measurable negative impact
       -- on memory residency as measured by our benchmark
       let !defaultNC = _cdcDefaultNamingConvention dynamicConfig
-          !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
       !namingConv <-
         bindA
           -<
-            if isNamingConventionEnabled
-              then getNamingCase sourceCustomization (namingConventionSupport @b) defaultNC
-              else pure HasuraCase
+            getNamingCase sourceCustomization (namingConventionSupport @b) defaultNC
       let resolvedCustomization = mkResolvedSourceCustomization sourceCustomization namingConv
 
       -- sql functions
@@ -1225,7 +1221,6 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
             ((remoteSchemaInvalidationKeys, orderedRoles, fmap encJToLBS . siRemotes <$> storedIntrospection, _cdcSchemaSampledFeatureFlags dynamicConfig), InsOrdHashMap.elems remoteSchemas)
       let remoteSchemaCtxMap = HashMap.map fst remoteSchemaMap
           !defaultNC = _cdcDefaultNamingConvention dynamicConfig
-          !isNamingConventionEnabled = EFNamingConventions `elem` (_cdcExperimentalFeatures dynamicConfig)
 
       let backendInvalidationKeys = Inc.selectD #_ikBackends invalidationKeys
       backendCache <- resolveBackendCache -< (backendInvalidationKeys, BackendMap.elems backendConfigs)
@@ -1239,7 +1234,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           Inc.keyed
             ( \_ exists ->
                 AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
-                  ( proc (backendInfoAndSourceMetadata :: BackendInfoAndSourceMetadata b, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled)) -> do
+                  ( proc (backendInfoAndSourceMetadata :: BackendInfoAndSourceMetadata b, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendInfoAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
@@ -1258,7 +1253,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
                               (tableInputs, _, _) = unzip3 $ map mkTableInputs $ InsOrdHashMap.elems $ _smTables sourceMetadata
                               scNamingConvention = _scNamingConvention $ _smCustomization sourceMetadata
-                              !namingConv = if isNamingConventionEnabled then fromMaybe defaultNC scNamingConvention else HasuraCase
+                              !namingConv = fromMaybe defaultNC scNamingConvention
                           tablesCoreInfo <-
                             buildTableCache
                               -<
@@ -1297,7 +1292,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                                 $ PartiallyResolvedSource sourceMetadata sourceConfig source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
-                    (exists, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC, isNamingConventionEnabled))
+                    (exists, (dynamicConfig, invalidationKeys, storedIntrospection, defaultNC))
             )
           |)
           (HashMap.fromList $ InsOrdHashMap.toList backendInfoAndSourceMetadata)

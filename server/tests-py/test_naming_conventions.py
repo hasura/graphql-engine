@@ -2,7 +2,6 @@ import pytest
 
 from validate import check_query_f
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventions:
 
     @classmethod
@@ -19,7 +18,6 @@ class TestNamingConventions:
     def test_enum_value_convention(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/enum_value_convention.yaml')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventionsTypeAndFieldNamesGraphqlDefault:
 
     @classmethod
@@ -33,7 +31,6 @@ class TestNamingConventionsTypeAndFieldNamesGraphqlDefault:
     def test_type_and_field_names(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/type_and_field_names_graphql_default.yaml')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventionsTypeAndFieldNamesHasuraDefault:
 
     @classmethod
@@ -47,7 +44,6 @@ class TestNamingConventionsTypeAndFieldNamesHasuraDefault:
     def test_type_and_field_names(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/type_and_field_names_hasura_default.yaml')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventionsTypeAndFieldNamesGraphqlDefaultWithPrefixAndSuffix:
 
     @classmethod
@@ -67,7 +63,6 @@ class TestNamingConventionsTypeAndFieldNamesGraphqlDefaultWithPrefixAndSuffix:
     def test_type_and_field_names_with_prefix_and_suffix(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/type_and_field_names_graphql_default_with_prefix_and_suffix.yaml')
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventionsTypeAndFieldNamesHasuraDefaultWithPrefixAndSuffix:
 
     @classmethod
@@ -88,7 +83,6 @@ class TestNamingConventionsTypeAndFieldNamesHasuraDefaultWithPrefixAndSuffix:
         check_query_f(hge_ctx, self.dir() + '/type_and_field_names_hasura_default_with_prefix_and_suffix.yaml')
 
 @pytest.mark.backend('mssql')
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 class TestNamingConventionsFailure:
     @classmethod
     def dir(cls):
@@ -120,7 +114,6 @@ class TestNamingConventionsFailure:
             "error": "sources other than postgres do not support graphql-default as naming convention yet",
         }
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention')
 @pytest.mark.hge_env('HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION', 'graphql-default')
 class TestDefaultNamingConvention:
 
@@ -134,17 +127,3 @@ class TestDefaultNamingConvention:
 
     def test_default_global_naming_convention(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/default_global_naming_convention.yaml')
-
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', None)  # must be unset
-class TestNamingConventionWithoutExperimentalFeature:
-
-    @classmethod
-    def dir(cls):
-        return "queries/naming_conventions"
-
-    @pytest.fixture(scope='class', autouse=True)
-    def add_customized_source(self, add_source):
-        add_source('pg1', customization={'naming_convention': 'graphql-default'})
-
-    def test_naming_convention_without_feature_turned_on(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/naming_convention_without_feature_turned_on.yaml')

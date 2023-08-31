@@ -125,20 +125,7 @@ understand which fields are available and how they can be used.
 Not to worry. Hasura can help us simplify this by allowing us to customize the root-level fields of our sources. This
 means that we can add a namespace to each database, keeping each set of fields organized.
 
-To do this, we first need to set an environment variable for our project. In Hasura Cloud, your environment variables
-are controlled via the project's settings. You can reach these by clicking on the name of your project in the top-right
-corner of the Console.
-
-Then, click on the `Env vars` in the project's sidebar and `+ New Env Var` before entering
-`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` and setting its value to `naming_convention`:
-
-<Thumbnail
-  src="/img/resources/use-case/access-layer/add-env-var.png"
-  alt="Adding an environment variable to Hasura"
-  width="1000px"
-/>
-
-Finally, head back to the `Data` tab of the Console and choose `Data Manager` in the side bar. Click `Edit` for our
+To do this, head to the `Data` tab of the Console and choose `Data Manager` in the side bar. Click `Edit` for our
 `Banking` source:
 
 <Thumbnail
