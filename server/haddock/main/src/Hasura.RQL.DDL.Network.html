@@ -17,15 +17,15 @@
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html"><span class="hs-identifier">Network.Types.Extended</span></a></span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span id="local-6989586621687679531"><span class="annot"><a href="Hasura.RQL.DDL.Network.html#runAddHostToTLSAllowlist"><span class="hs-identifier hs-type">runAddHostToTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679531"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679531"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679531"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-20"></span><span id="local-6989586621687679108"><span class="annot"><a href="Hasura.RQL.DDL.Network.html#runAddHostToTLSAllowlist"><span class="hs-identifier hs-type">runAddHostToTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679108"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679108"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679108"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-22"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-23"></span><span>  </span><span class="annot"><a href="#local-6989586621687679531"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><a href="#local-6989586621687679108"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-24"></span><span id="runAddHostToTLSAllowlist"><span class="annot"><span class="annottext">runAddHostToTLSAllowlist :: forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 TlsAllow -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Network.html#runAddHostToTLSAllowlist"><span class="hs-identifier hs-var hs-var">runAddHostToTLSAllowlist</span></a></span></span><span> </span><span id="local-6989586621687679640"><span class="annot"><span class="annottext">tlsAllowListEntry :: TlsAllow
-</span><a href="#local-6989586621687679640"><span class="hs-identifier hs-var">tlsAllowListEntry</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687679642"><span id="local-6989586621687679643"><span id="local-6989586621687679644"><span class="annot"><span class="annottext">String
+</span><a href="Hasura.RQL.DDL.Network.html#runAddHostToTLSAllowlist"><span class="hs-identifier hs-var hs-var">runAddHostToTLSAllowlist</span></a></span></span><span> </span><span id="local-6989586621687679217"><span class="annot"><span class="annottext">tlsAllowListEntry :: TlsAllow
+</span><a href="#local-6989586621687679217"><span class="hs-identifier hs-var">tlsAllowListEntry</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687679219"><span id="local-6989586621687679220"><span id="local-6989586621687679221"><span class="annot"><span class="annottext">String
 Maybe String
 Maybe [TlsPermission]
 taHost :: String
@@ -34,9 +34,9 @@ taPermit :: Maybe [TlsPermission]
 taHost :: TlsAllow -&gt; String
 taSuffix :: TlsAllow -&gt; Maybe String
 taPermit :: TlsAllow -&gt; Maybe [TlsPermission]
-</span><a href="#local-6989586621687679642"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621687679648"><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679648"><span class="hs-identifier hs-var">networkMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Network
+</span><a href="#local-6989586621687679219"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621687679225"><span class="annot"><span class="annottext">Network
+</span><a href="#local-6989586621687679225"><span class="hs-identifier hs-var">networkMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Network) -&gt; m Metadata -&gt; m Network
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Metadata
@@ -49,7 +49,7 @@ forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 forall a. [a] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679642"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621687679219"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -64,14 +64,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; [TlsAllow] -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Network.html#checkForHostWithSuffixInTLSAllowlist"><span class="hs-identifier hs-var">checkForHostWithSuffixInTLSAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679642"><span class="hs-identifier hs-var">taHost</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679643"><span class="hs-identifier hs-var">taSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679657"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679648"><span class="hs-identifier hs-var">networkMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621687679219"><span class="hs-identifier hs-var">taHost</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679220"><span class="hs-identifier hs-var">taSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679234"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Network
+</span><a href="#local-6989586621687679225"><span class="hs-identifier hs-var">networkMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-31"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679643"><span class="hs-identifier hs-var">taSuffix</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687679220"><span class="hs-identifier hs-var">taSuffix</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">Maybe String
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -88,13 +88,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679642"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679219"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; already exists in the allowlist&quot;</span></span><span>
-</span><span id="line-37"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687679660"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679660"><span class="hs-identifier hs-var">suffix</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-37"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687679237"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679237"><span class="hs-identifier hs-var">suffix</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -109,7 +109,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679642"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679219"><span class="hs-identifier hs-var">taHost</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -120,7 +120,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679660"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679237"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -140,7 +140,7 @@ MetadataModifier -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TlsAllow -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.Network.html#addHostToTLSAllowList"><span class="hs-identifier hs-var">addHostToTLSAllowList</span></a></span><span> </span><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679640"><span class="hs-identifier hs-var">tlsAllowListEntry</span></a></span><span>
+</span><a href="#local-6989586621687679217"><span class="hs-identifier hs-var">tlsAllowListEntry</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
@@ -148,24 +148,24 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621687679657"><span class="annot"><span class="annottext">tlsList :: Network -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679657"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679665"><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679665"><span class="hs-identifier hs-var">nm</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621687679234"><span class="annot"><span class="annottext">tlsList :: Network -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679234"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679242"><span class="annot"><span class="annottext">Network
+</span><a href="#local-6989586621687679242"><span class="hs-identifier hs-var">nm</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#networkTlsAllowlist"><span class="hs-identifier hs-var">networkTlsAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679665"><span class="hs-identifier hs-var">nm</span></a></span><span>
+</span><a href="#local-6989586621687679242"><span class="hs-identifier hs-var">nm</span></a></span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span id="local-6989586621687679570"><span class="annot"><a href="Hasura.RQL.DDL.Network.html#runDropHostFromTLSAllowlist"><span class="hs-identifier hs-type">runDropHostFromTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679570"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679570"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679570"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-53"></span><span id="local-6989586621687679147"><span class="annot"><a href="Hasura.RQL.DDL.Network.html#runDropHostFromTLSAllowlist"><span class="hs-identifier hs-type">runDropHostFromTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679147"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679147"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687679147"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-56"></span><span>  </span><span class="annot"><a href="#local-6989586621687679570"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="#local-6989586621687679147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-json-encoding-1.0.0/opt/doc/html/hasura-json-encoding/src/Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-57"></span><span id="runDropHostFromTLSAllowlist"><span class="annot"><span class="annottext">runDropHostFromTLSAllowlist :: forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 DropHostFromTLSAllowlist -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Network.html#runDropHostFromTLSAllowlist"><span class="hs-identifier hs-var hs-var">runDropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span><span> </span><span id="local-6989586621687679707"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span></span><span> </span><span id="local-6989586621687679708"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679708"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621687679709"><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679709"><span class="hs-identifier hs-var">networkMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Network
+</span><a href="Hasura.RQL.DDL.Network.html#runDropHostFromTLSAllowlist"><span class="hs-identifier hs-var hs-var">runDropHostFromTLSAllowlist</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#DropHostFromTLSAllowlist"><span class="hs-identifier hs-type">DropHostFromTLSAllowlist</span></a></span><span> </span><span id="local-6989586621687679284"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span></span><span> </span><span id="local-6989586621687679285"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679285"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621687679286"><span class="annot"><span class="annottext">Network
+</span><a href="#local-6989586621687679286"><span class="hs-identifier hs-var">networkMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Network) -&gt; m Metadata -&gt; m Network
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Metadata
@@ -178,7 +178,7 @@ forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 forall a. [a] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -193,14 +193,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; [TlsAllow] -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Network.html#checkForHostWithSuffixInTLSAllowlist"><span class="hs-identifier hs-var">checkForHostWithSuffixInTLSAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679708"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679285"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#networkTlsAllowlist"><span class="hs-identifier hs-var">networkTlsAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">Network
-</span><a href="#local-6989586621687679709"><span class="hs-identifier hs-var">networkMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621687679286"><span class="hs-identifier hs-var">networkMetadata</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679708"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621687679285"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">Maybe String
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -217,13 +217,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; isn't present in the allowlist&quot;</span></span><span>
-</span><span id="line-70"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687679712"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679712"><span class="hs-identifier hs-var">suffix</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621687679289"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679289"><span class="hs-identifier hs-var">suffix</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-base-1.0.0/opt/doc/html/hasura-base/src/Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -238,7 +238,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -249,7 +249,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall t. ToTxt t =&gt; t -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#pack"><span class="hs-identifier hs-var">pack</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679712"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679289"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -269,8 +269,8 @@ MetadataModifier -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.Network.html#dropHostFromAllowList"><span class="hs-identifier hs-var">dropHostFromAllowList</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679707"><span class="hs-identifier hs-var">hostname</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679708"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span>
+</span><a href="#local-6989586621687679284"><span class="hs-identifier hs-var">hostname</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679285"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall a. a -&gt; m a
@@ -280,101 +280,101 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span class="annot"><a href="Hasura.RQL.DDL.Network.html#addHostToTLSAllowList"><span class="hs-identifier hs-type">addHostToTLSAllowList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-85"></span><span id="addHostToTLSAllowList"><span class="annot"><span class="annottext">addHostToTLSAllowList :: TlsAllow -&gt; MetadataModifier
-</span><a href="Hasura.RQL.DDL.Network.html#addHostToTLSAllowList"><span class="hs-identifier hs-var hs-var">addHostToTLSAllowList</span></a></span></span><span> </span><span id="local-6989586621687679713"><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679713"><span class="hs-identifier hs-var">tlsaObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.DDL.Network.html#addHostToTLSAllowList"><span class="hs-identifier hs-var hs-var">addHostToTLSAllowList</span></a></span></span><span> </span><span id="local-6989586621687679290"><span class="annot"><span class="annottext">TlsAllow
+</span><a href="#local-6989586621687679290"><span class="hs-identifier hs-var">tlsaObj</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687679715"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679715"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687679292"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679292"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-86"></span><span>  </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679715"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_metaNetwork :: Network
+</span><a href="#local-6989586621687679292"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_metaNetwork :: Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#Network"><span class="hs-identifier hs-var">Network</span></a></span><span> </span><span class="annot"><span class="annottext">([TlsAllow] -&gt; Network) -&gt; [TlsAllow] -&gt; Network
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679717"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679715"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; [TlsAllow] -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679294"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679292"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; [TlsAllow] -&gt; [TlsAllow]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679713"><span class="hs-identifier hs-var">tlsaObj</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621687679290"><span class="hs-identifier hs-var">tlsaObj</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
 </span><span id="line-87"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621687679717"><span class="annot"><span class="annottext">tlsList :: Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679717"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679718"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679718"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621687679294"><span class="annot"><span class="annottext">tlsList :: Metadata -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679294"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679295"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679295"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#networkTlsAllowlist"><span class="hs-identifier hs-var">networkTlsAllowlist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679718"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679295"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span class="annot"><a href="Hasura.RQL.DDL.Network.html#dropHostFromAllowList"><span class="hs-identifier hs-type">dropHostFromAllowList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-91"></span><span id="dropHostFromAllowList"><span class="annot"><span class="annottext">dropHostFromAllowList :: String -&gt; Maybe String -&gt; MetadataModifier
-</span><a href="Hasura.RQL.DDL.Network.html#dropHostFromAllowList"><span class="hs-identifier hs-var hs-var">dropHostFromAllowList</span></a></span></span><span> </span><span id="local-6989586621687679719"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679719"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679720"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679720"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
+</span><a href="Hasura.RQL.DDL.Network.html#dropHostFromAllowList"><span class="hs-identifier hs-var hs-var">dropHostFromAllowList</span></a></span></span><span> </span><span id="local-6989586621687679296"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679296"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679297"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679297"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687679721"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679721"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687679298"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679298"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679721"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_metaNetwork :: Network
+</span><a href="#local-6989586621687679298"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_metaNetwork :: Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TlsAllow] -&gt; Network
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#Network"><span class="hs-identifier hs-var">Network</span></a></span><span> </span><span class="annot"><span class="annottext">([TlsAllow] -&gt; Network) -&gt; [TlsAllow] -&gt; Network
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679722"><span class="hs-identifier hs-var">filteredList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679721"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621687679299"><span class="hs-identifier hs-var">filteredList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679298"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621687679723"><span class="annot"><span class="annottext">tlsList :: Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679723"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679724"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679724"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621687679300"><span class="annot"><span class="annottext">tlsList :: Metadata -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679300"><span class="hs-identifier hs-var hs-var">tlsList</span></a></span></span><span> </span><span id="local-6989586621687679301"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679301"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Network -&gt; [TlsAllow]
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#networkTlsAllowlist"><span class="hs-identifier hs-var">networkTlsAllowlist</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; Network
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaNetwork"><span class="hs-identifier hs-var">_metaNetwork</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679724"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679301"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span>    </span><span id="local-6989586621687679722"><span class="annot"><span class="annottext">filteredList :: Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679722"><span class="hs-identifier hs-var hs-var">filteredList</span></a></span></span><span> </span><span id="local-6989586621687679725"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679725"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TlsAllow -&gt; Bool) -&gt; [TlsAllow] -&gt; [TlsAllow]
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621687679299"><span class="annot"><span class="annottext">filteredList :: Metadata -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679299"><span class="hs-identifier hs-var hs-var">filteredList</span></a></span></span><span> </span><span id="local-6989586621687679302"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679302"><span class="hs-identifier hs-var">md</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TlsAllow -&gt; Bool) -&gt; [TlsAllow] -&gt; [TlsAllow]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (TlsAllow -&gt; Bool) -&gt; TlsAllow -&gt; Bool
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; TlsAllow -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Network.html#checkForHostnameWithSuffixInAllowlistObject"><span class="hs-identifier hs-var">checkForHostnameWithSuffixInAllowlistObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679719"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679720"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; [TlsAllow]
-</span><a href="#local-6989586621687679723"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621687679725"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679296"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679297"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; [TlsAllow]
+</span><a href="#local-6989586621687679300"><span class="hs-identifier hs-var">tlsList</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621687679302"><span class="hs-identifier hs-var">md</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="annot"><a href="Hasura.RQL.DDL.Network.html#checkForHostnameWithSuffixInAllowlistObject"><span class="hs-identifier hs-type">checkForHostnameWithSuffixInAllowlistObject</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-99"></span><span id="checkForHostnameWithSuffixInAllowlistObject"><span class="annot"><span class="annottext">checkForHostnameWithSuffixInAllowlistObject :: String -&gt; Maybe String -&gt; TlsAllow -&gt; Bool
-</span><a href="Hasura.RQL.DDL.Network.html#checkForHostnameWithSuffixInAllowlistObject"><span class="hs-identifier hs-var hs-var">checkForHostnameWithSuffixInAllowlistObject</span></a></span></span><span> </span><span id="local-6989586621687679728"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679728"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679729"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679729"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span id="local-6989586621687679730"><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679730"><span class="hs-identifier hs-var">tlsa</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679728"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
+</span><a href="Hasura.RQL.DDL.Network.html#checkForHostnameWithSuffixInAllowlistObject"><span class="hs-identifier hs-var hs-var">checkForHostnameWithSuffixInAllowlistObject</span></a></span></span><span> </span><span id="local-6989586621687679305"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679305"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679306"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679306"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span id="local-6989586621687679307"><span class="annot"><span class="annottext">TlsAllow
+</span><a href="#local-6989586621687679307"><span class="hs-identifier hs-var">tlsa</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679305"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TlsAllow -&gt; String
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#taHost"><span class="hs-identifier hs-var">taHost</span></a></span><span> </span><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679730"><span class="hs-identifier hs-var">tlsa</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621687679307"><span class="hs-identifier hs-var">tlsa</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679729"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Maybe String -&gt; Bool
+</span><a href="#local-6989586621687679306"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Maybe String -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TlsAllow -&gt; Maybe String
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#taSuffix"><span class="hs-identifier hs-var">taSuffix</span></a></span><span> </span><span class="annot"><span class="annottext">TlsAllow
-</span><a href="#local-6989586621687679730"><span class="hs-identifier hs-var">tlsa</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621687679307"><span class="hs-identifier hs-var">tlsa</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span class="annot"><a href="Hasura.RQL.DDL.Network.html#checkForHostWithSuffixInTLSAllowlist"><span class="hs-identifier hs-type">checkForHostWithSuffixInTLSAllowlist</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Network.Types.Extended.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-102"></span><span id="checkForHostWithSuffixInTLSAllowlist"><span class="annot"><span class="annottext">checkForHostWithSuffixInTLSAllowlist :: String -&gt; Maybe String -&gt; [TlsAllow] -&gt; Bool
-</span><a href="Hasura.RQL.DDL.Network.html#checkForHostWithSuffixInTLSAllowlist"><span class="hs-identifier hs-var hs-var">checkForHostWithSuffixInTLSAllowlist</span></a></span></span><span> </span><span id="local-6989586621687679732"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679732"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679733"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679733"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span id="local-6989586621687679734"><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621687679734"><span class="hs-identifier hs-var">tlsAllowList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.Network.html#checkForHostWithSuffixInTLSAllowlist"><span class="hs-identifier hs-var hs-var">checkForHostWithSuffixInTLSAllowlist</span></a></span></span><span> </span><span id="local-6989586621687679309"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621687679309"><span class="hs-identifier hs-var">host</span></a></span></span><span> </span><span id="local-6989586621687679310"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679310"><span class="hs-identifier hs-var">maybeSuffix</span></a></span></span><span> </span><span id="local-6989586621687679311"><span class="annot"><span class="annottext">[TlsAllow]
+</span><a href="#local-6989586621687679311"><span class="hs-identifier hs-var">tlsAllowList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-103"></span><span>  </span><span class="annot"><span class="annottext">(TlsAllow -&gt; Bool) -&gt; [TlsAllow] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; TlsAllow -&gt; Bool
 </span><a href="Hasura.RQL.DDL.Network.html#checkForHostnameWithSuffixInAllowlistObject"><span class="hs-identifier hs-var">checkForHostnameWithSuffixInAllowlistObject</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621687679732"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621687679733"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow]
-</span><a href="#local-6989586621687679734"><span class="hs-identifier hs-var">tlsAllowList</span></a></span><span>
+</span><a href="#local-6989586621687679309"><span class="hs-identifier hs-var">host</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621687679310"><span class="hs-identifier hs-var">maybeSuffix</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TlsAllow]
+</span><a href="#local-6989586621687679311"><span class="hs-identifier hs-var">tlsAllowList</span></a></span><span>
 </span><span id="line-104"></span></pre></body></html>
