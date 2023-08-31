@@ -20,12 +20,12 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-A relationship from one table/view to another can be created by defining a link between a column of the table/view to a
-column of the other table/view.
+A relationship from one table/view/Native Query to another can be created by defining a link between a column of the
+table/view/Native Query to a column of the other table/view/Native Query.
 
-Typically, relationships are defined using foreign-key constraints. But in some cases, it might not be possible to use
-foreign-key constraints to create the relation. For example, while trying to create a relationship involving a view as
-foreign-keys can't be created on views.
+Typically, relationships between tables are defined using foreign-key constraints. But in some cases, it might not be
+possible to use foreign-key constraints to create the relationship. For example, while trying to create a relationship
+involving a view or Native Query since foreign-keys cannot be created on them.
 
 ## Using foreign keys {#pg-relationships-using-fkey}
 
@@ -579,6 +579,47 @@ X-Hasura-Role: admin
           "foreign_key_constraint_on" : {
             "table" : "articles",
             "column" : "author_id"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Tracking relationships between tables and Native Queries
+
+As mentioned in the Introduction section above, a relationship from a table to a Native Query can only be set up manually.
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+Given a table named `articles` and an existing Native Query named `get_author`,
+we can set up a relationship between the two.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk",
+  "args": [
+    {
+      "type": "pg_create_object_relationship",
+      "args": {
+        "source": "<db_name>",
+        "table": "articles",
+        "name": "author",
+        "using": {
+          "manual_configuration": {
+            "remote_native_query": "get_author",
+            "column_mapping": {
+              "id": "author_id"
+            }
           }
         }
       }

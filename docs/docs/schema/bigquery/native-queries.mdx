@@ -531,7 +531,7 @@ Unlike tables, relationships for a Native Query have to be given as part of trac
 Native Query is defined by its Logical Model, and the Native Query needs to implement all the fields of the Logical
 Model in order to be tracked successfully.
 
-Currently relationships are only supported between Native Queries residing in the same source.
+Currently relationships are only supported between Native Queries and tables residing in the same source.
 
 As an example, consider the following Native Queries which implement the data model of articles and authors given in the
 section on [Logical Model references](/schema/bigquery/logical-models.mdx#referencing-other-logical-models):
@@ -566,13 +566,6 @@ X-Hasura-Role: admin
             "name": "author_id",
             "nullable": false,
             "type": "INT64"
-          },
-          {
-            "name": "author",
-            "type": {
-              "logical_model": "author",
-              "nullable": false
-            }
           }
         ],
         "name": "article",
@@ -593,15 +586,6 @@ X-Hasura-Role: admin
             "name": "name",
             "nullable": false,
             "type": "VARCHAR"
-          },
-          {
-            "name": "articles",
-            "type": {
-              "array": {
-                "logical_model": "article"
-              },
-              "nullable": false
-            }
           }
         ],
         "name": "author",
@@ -687,6 +671,97 @@ query {
     long_excerpt: articles(args: { length: 100 }) {
       title
       contents
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
+## Relationships with tables
+
+Relationships can be defined between tables and Native Queries residing in the same source.
+
+As an example, given a table `authors`, consider the following definition of Logical Models and Native Queries:
+
+<Tabs groupId="user-preference" className="api-tabs">
+<TabItem value="api" label="API">
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bulk_atomic",
+  "args": [
+    {
+      "type": "bigquery_track_logical_model",
+      "args": {
+        "description": "",
+        "fields": [
+          {
+            "name": "id",
+            "nullable": false,
+            "type": "integer"
+          },
+          {
+            "name": "title",
+            "nullable": false,
+            "type": "text"
+          },
+          {
+            "name": "author_id",
+            "nullable": false,
+            "type": "integer"
+          }
+        ],
+        "name": "article",
+        "source": "default"
+      }
+    }
+    {
+      "type": "bigquery_track_native_query",
+      "args": {
+        "arguments": {},
+        "array_relationships": [],
+        "code": "SELECT * FROM (VALUES (1, 'Logical Models', 1), (2, 'Native Queries', 2), (3, 'Relationships', 3), (4, 'Graph Relationships', 4), (5, 'Permissions', 5)) as t(\"id\", \"title\", \"author_id\")",
+        "object_relationships": [
+          {
+            "name": "author",
+            "using": {
+              "column_mapping": {
+                "author_id": "id"
+              },
+              "insertion_order": null,
+              "remote_table": "authors"
+            }
+          }
+        ],
+        "returns": "article",
+        "root_field_name": "get_articles",
+        "source": "default",
+        "type": "query"
+      }
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem value="query" label="Query">
+
+The Native Queries in this example enable queries like:
+
+```graphql
+query {
+  get_articles {
+    title
+
+    author {
+      name
     }
   }
 }
