@@ -317,6 +317,8 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
+  # Add 'developer' to the default list, for more visiblility:
+  export HASURA_GRAPHQL_ENABLED_APIS=metadata,graphql,pgdump,config,developer,metrics
 
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
