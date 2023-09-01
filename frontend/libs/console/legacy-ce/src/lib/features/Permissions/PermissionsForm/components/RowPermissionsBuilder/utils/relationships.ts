@@ -1,6 +1,5 @@
-import { isNotRemoteRelationship } from '../../../../../DatabaseRelationships/utils/helpers';
-import { Table } from '../../../../../hasura-metadata-types';
-import { Relationships } from '../components';
+import { isNotRemoteSchemaRelationship } from '../../../../../DatabaseRelationships/utils/helpers';
+import { Relationships, TableToLoad } from '../components';
 
 /**
  * Get the relationship tables that are not already in the tablesToLoad array
@@ -10,9 +9,9 @@ export function getNewTablesToLoad({
   tablesToLoad,
 }: {
   relationships: Relationships;
-  tablesToLoad: Table[];
-}): Table[] {
-  const relatedTables = relationships.filter(isNotRemoteRelationship);
+  tablesToLoad: TableToLoad;
+}): TableToLoad {
+  const relatedTables = relationships.filter(isNotRemoteSchemaRelationship);
 
   // Create a Set of existing tables for faster lookups
   const existingTablesSet = new Set<string>(
@@ -23,11 +22,24 @@ export function getNewTablesToLoad({
   const tablesToAddSet = new Set<string>();
 
   relatedTables.forEach(relationship => {
-    const toTableString = JSON.stringify(relationship.definition.toTable);
-
+    let tableObject = undefined;
+    if (
+      'toSource' in relationship.definition &&
+      typeof relationship.definition.toTable === 'object'
+    ) {
+      tableObject = JSON.stringify({
+        source: relationship.definition.toSource,
+        table: relationship.definition.toTable,
+      });
+    } else {
+      tableObject = JSON.stringify({
+        table: relationship.definition.toTable,
+        source: relationship.fromSource,
+      });
+    }
     // Check if the toTable is not in the existing tables
-    if (!existingTablesSet.has(toTableString)) {
-      tablesToAddSet.add(toTableString);
+    if (!existingTablesSet.has(tableObject)) {
+      tablesToAddSet.add(tableObject);
     }
   });
 

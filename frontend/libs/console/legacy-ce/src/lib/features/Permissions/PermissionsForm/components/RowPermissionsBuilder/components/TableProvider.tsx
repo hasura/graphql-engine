@@ -30,23 +30,35 @@ export const TableProvider = ({
   const [comparator, setComparator] = useState<string | undefined>();
   const [columns, setColumns] = useState<Columns>([]);
   const [relationships, setRelationships] = useState<Relationships>([]);
-  const { tables } = useContext(rootTableContext);
+  const { tables, rootTable } = useContext(rootTableContext);
   const { loadRelationships } = useContext(rowPermissionsContext);
   const { table: closestTableName } = useContext(tableContext);
   const closestTable = tables.find(t =>
     areTablesEqual(t.table, closestTableName)
   );
+
+  const supportedSources = tables
+    .map(i => i.dataSource)
+    .filter(s => s?.kind === 'postgres')
+    .map(s => s?.name);
+
   //  Stringify values to get a stable value for useEffect
   const stringifiedTable = JSON.stringify(table);
   const stringifiedTables = JSON.stringify(tables);
+
   useEffect(() => {
     const foundTable = tables.find(t => areTablesEqual(t.table, table));
     if (foundTable) {
       setColumns(foundTable.columns);
+      if (foundTable?.dataSource?.name !== rootTable?.dataSource?.name) return;
       setRelationships(
-        foundTable.relationships.filter(
-          relationship => relationship.type === 'localRelationship'
-        )
+        foundTable.relationships.filter(rel => {
+          return (
+            rel.type === 'localRelationship' ||
+            (rel.type !== 'remoteSchemaRelationship' &&
+              supportedSources?.includes(rel.definition.toSource))
+          );
+        })
       );
       // Load initial related tables' columns
       loadRelationships?.(foundTable.relationships);

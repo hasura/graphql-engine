@@ -80,3 +80,5 @@ export type TableContext = {
   relationships: Relationships;
   setRelationships: (relationships: Relationships) => void;
 };
+
+export type TableToLoad = { source: string; table: Table }[];

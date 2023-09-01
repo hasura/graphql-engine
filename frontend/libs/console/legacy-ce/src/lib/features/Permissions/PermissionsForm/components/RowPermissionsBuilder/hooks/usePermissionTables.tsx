@@ -1,20 +1,18 @@
 import { getAllTableRelationships } from '../../../../../DatabaseRelationships/utils/tableRelationships';
 import { useTablesWithColumns } from './useTablesWithColumns';
 import { useSources } from '../../../../../MetadataAPI';
-import { Tables } from '../components';
+import { TableToLoad, Tables } from '../components';
 import { useAllSuggestedRelationships } from '../../../../../DatabaseRelationships/components/SuggestedRelationships/hooks/useAllSuggestedRelationships';
-import { Table } from '../../../../../hasura-metadata-types';
 
 export const usePermissionTables = ({
   dataSourceName,
   tablesToLoad,
 }: {
   dataSourceName: string;
-  tablesToLoad: Table[];
+  tablesToLoad: TableToLoad;
 }): { isLoading: boolean; tables: Tables | null } => {
   const { data: sources, isLoading: isLoadingSources } = useSources();
   const { data: tables, isLoading: isLoadingTables } = useTablesWithColumns({
-    dataSourceName,
     tablesToLoad,
   });
 
@@ -31,10 +29,10 @@ export const usePermissionTables = ({
   return {
     isLoading: false,
     tables:
-      tables?.map(({ metadataTable, columns }) => {
+      tables?.map(({ metadataTable, columns, sourceName }) => {
         return {
           table: metadataTable.table,
-          dataSource: sources?.find(source => source.name === dataSourceName),
+          dataSource: sources?.find(source => source.name === sourceName),
           relationships: getAllTableRelationships(
             metadataTable,
             dataSourceName,
