@@ -19,7 +19,7 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 # API Limits
 
-<ProductBadge standard pro ee self />
+<ProductBadge pro ee self />
 
 ## Introduction
 
@@ -53,8 +53,8 @@ be used to rate-limit requests.
 
 To enable rate limiting on Hasura Enterprise, you must set the
 [`HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) environment
-variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server flag
-with the appropriate Redis connection string.
+variable or the [`--rate-limit-redis-url`](/deployment/graphql-engine-flags/reference.mdx#rate-limit-redis-url) server
+flag with the appropriate Redis connection string.
 
 :::
 
@@ -153,8 +153,8 @@ sources.
 
 :::info Time limits on Hasura Cloud projects
 
-All Free tier and Standard tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit, the
-error contains the code `tenant-time-limit-exceeded` in the error message.
+All Free tier and Professional tier Hasura Cloud projects get a time limit of 60 seconds. When the cloud limit is hit,
+the error contains the code `tenant-time-limit-exceeded` in the error message.
 
 :::
 

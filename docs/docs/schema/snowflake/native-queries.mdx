@@ -19,7 +19,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 # Snowflake: Native Queries
 
 <div className="badge-container">
-  <ProductBadge standard pro ee self />
+  <ProductBadge pro ee self />
 </div>
 
 ## What are Native Queries?
@@ -208,8 +208,8 @@ native_queries:
       max_length:
         type: integer
     code:
-      SELECT id as "id", title as "title", (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN ''
-      else '...' END)) AS "excerpt", date as "date" FROM article
+      SELECT id as "id", title as "title", (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) <
+      {{max_length}} THEN '' else '...' END)) AS "excerpt", date as "date" FROM article
     returns: article_excerpt
 ```
 
@@ -289,11 +289,14 @@ When we run this GraphQL query, we get the following results:
 
 :::info All fields in Snowflake are required to use `as "field"` syntax in your native query SQL
 
-When writing your queries for Snowflake you must use `as "field"` syntax for all returning fields. From the `article` example above:
+When writing your queries for Snowflake you must use `as "field"` syntax for all returning fields. From the `article`
+example above:
+
 ```sql
 SELECT id as "id", title as "title", (substring(content, 1, {{max_length}}) || (CASE WHEN length(content) < {{max_length}} THEN ''
 else '...' END)) AS "excerpt", date as "date" FROM article
 ```
+
 Notice that each field that we are returning we provide the `as "field"`.
 
 :::
@@ -336,8 +339,8 @@ Finally, add any optional fields that you would like to be included in the Logic
 
 <TabItem value="cli" label="CLI">
 
-You can create a logical model by adding it to the appropriate database definition in the `metadata > databases > databases.yaml`
-file:
+You can create a logical model by adding it to the appropriate database definition in the
+`metadata > databases > databases.yaml` file:
 
 ```yaml
   logical_models:
