@@ -9,4 +9,5 @@ COPY rootfs/srv/ /srv/
 
 HEALTHCHECK --start-period=10s CMD curl -f http://localhost:8080/healthz || exit 1
 
-CMD "${HGE_BINARY}" serve
+ENTRYPOINT [ "${HGE_BINARY}" ]
+CMD [ "serve" ]
