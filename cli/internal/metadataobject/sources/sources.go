@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
@@ -241,7 +242,17 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 				if err != nil {
 					return nil, errors.E(op, t.error(err))
 				}
-				if functionNode.Function.Kind == yaml.DocumentNode { // PG functions
+
+				switch source.Kind {
+				case string(hasura.SourceKindSnowflake):
+					var function []string
+					if err := yaml.Unmarshal(functionbs, &function); err != nil {
+						return nil, errors.E(op, t.error(err))
+					}
+					functionFileName = fmt.Sprintf("%s.yaml", strings.Join(function[:], "_"))
+				case string(hasura.SourceKindPG):
+					fallthrough
+				default:
 					var function struct {
 						Name   string `yaml:"name"`
 						Schema string `yaml:"schema"`
@@ -250,12 +261,6 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 						return nil, errors.E(op, t.error(err))
 					}
 					functionFileName = fmt.Sprintf("%s_%s.yaml", function.Schema, function.Name)
-				} else { // Snowflake functions
-					var function []string
-					if err := yaml.Unmarshal(functionbs, &function); err != nil {
-						return nil, errors.E(op, t.error(err))
-					}
-					functionFileName = fmt.Sprintf("%s.yaml", strings.Join(function[:], "_"))
 				}
 
 				includeTag := yaml.Node{

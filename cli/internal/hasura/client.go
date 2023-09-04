@@ -44,6 +44,7 @@ const (
 	SourceKindCitus     SourceKind = "citus"
 	SourceKindCockroach SourceKind = "cockroach"
 	SourceKindBigQuery  SourceKind = "bigquery"
+	SourceKindSnowflake SourceKind = "snowflake"
 )
 
 type V2Query interface {
