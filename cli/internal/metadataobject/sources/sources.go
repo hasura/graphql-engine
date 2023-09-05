@@ -241,7 +241,7 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 				if err != nil {
 					return nil, errors.E(op, t.error(err))
 				}
-				if functionNode.Function.Kind == yaml.DocumentNode { // PG functions
+				if functionNode.Function.Kind == yaml.MappingNode { // Native DB functions
 					var function struct {
 						Name   string `yaml:"name"`
 						Schema string `yaml:"schema"`
@@ -250,7 +250,7 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 						return nil, errors.E(op, t.error(err))
 					}
 					functionFileName = fmt.Sprintf("%s_%s.yaml", function.Schema, function.Name)
-				} else { // Snowflake functions
+				} else { // Data Connector functions
 					var function []string
 					if err := yaml.Unmarshal(functionbs, &function); err != nil {
 						return nil, errors.E(op, t.error(err))
