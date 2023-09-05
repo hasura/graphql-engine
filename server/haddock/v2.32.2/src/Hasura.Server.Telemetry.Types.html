@@ -1,0 +1,832 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Telemetry types</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Define anonymized metrics regarding usage of various features of Hasura.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.Telemetry.Types</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Metrics</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier">RelationshipMetric</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier">PermissionMetric</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier">ActionMetric</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier">NativeQueriesMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier">StoredProceduresMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier">LogicalModelsMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier">Metrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier">HasuraTelemetry</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier">TelemetryPayload</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier">Topic</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Counters</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Local metric recording</span></span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier">RequestDimensions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier">RequestTimings</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><span class="hs-comment">-- *** Dimensions</span></span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier">QueryType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier">Locality</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier">Transport</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="hs-comment">-- ** Metric upload</span></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier">ServiceTimingMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier">ServiceTimingMetric</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier">RunningTimeBucket</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier">RequestTimingsCount</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ci-info-0.1.0.0/opt/doc/html/ci-info/src/CI.html"><span class="hs-identifier">CI</span></a></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Sum</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Instances.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html"><span class="hs-identifier">Hasura.Server.Telemetry.Counters</span></a></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html"><span class="hs-identifier">Hasura.Server.Version</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="RelationshipMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier hs-var">RelationshipMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RelationshipMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier hs-var">RelationshipMetric</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rmManual"><span class="annot"><span class="annottext">RelationshipMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_rmManual"><span class="hs-identifier hs-var hs-var">_rmManual</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="_rmAuto"><span class="annot"><span class="annottext">RelationshipMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_rmAuto"><span class="hs-identifier hs-var hs-var">_rmAuto</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687643416"><span id="local-6989586621687643423"><span id="local-6989586621687643427"><span class="annot"><span class="annottext">Int -&gt; RelationshipMetric -&gt; ShowS
+[RelationshipMetric] -&gt; ShowS
+RelationshipMetric -&gt; String
+(Int -&gt; RelationshipMetric -&gt; ShowS)
+-&gt; (RelationshipMetric -&gt; String)
+-&gt; ([RelationshipMetric] -&gt; ShowS)
+-&gt; Show RelationshipMetric
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; RelationshipMetric -&gt; ShowS
+showsPrec :: Int -&gt; RelationshipMetric -&gt; ShowS
+$cshow :: RelationshipMetric -&gt; String
+show :: RelationshipMetric -&gt; String
+$cshowList :: [RelationshipMetric] -&gt; ShowS
+showList :: [RelationshipMetric] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643431"><span id="local-6989586621687643436"><span class="annot"><span class="annottext">RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+(RelationshipMetric -&gt; RelationshipMetric -&gt; Bool)
+-&gt; (RelationshipMetric -&gt; RelationshipMetric -&gt; Bool)
+-&gt; Eq RelationshipMetric
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+== :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+$c/= :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+/= :: RelationshipMetric -&gt; RelationshipMetric -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643441"><span id="local-6989586621687643443"><span class="annot"><span class="annottext">(forall x. RelationshipMetric -&gt; Rep RelationshipMetric x)
+-&gt; (forall x. Rep RelationshipMetric x -&gt; RelationshipMetric)
+-&gt; Generic RelationshipMetric
+forall x. Rep RelationshipMetric x -&gt; RelationshipMetric
+forall x. RelationshipMetric -&gt; Rep RelationshipMetric x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. RelationshipMetric -&gt; Rep RelationshipMetric x
+from :: forall x. RelationshipMetric -&gt; Rep RelationshipMetric x
+$cto :: forall x. Rep RelationshipMetric x -&gt; RelationshipMetric
+to :: forall x. Rep RelationshipMetric x -&gt; RelationshipMetric
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687643449"><span id="local-6989586621687643453"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier hs-type">RelationshipMetric</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621687643551"><span class="annot"><span class="annottext">toJSON :: RelationshipMetric -&gt; Value
+</span><a href="#local-6989586621687643551"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelationshipMetric -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621687643622"><span class="annot"><span class="annottext">toEncoding :: RelationshipMetric -&gt; Encoding
+</span><a href="#local-6989586621687643622"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelationshipMetric -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">data</span><span> </span><span id="PermissionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-var">PermissionMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PermissionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-var">PermissionMetric</span></a></span></span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pmSelect"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_pmSelect"><span class="hs-identifier hs-var hs-var">_pmSelect</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>    </span><span id="_pmInsert"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_pmInsert"><span class="hs-identifier hs-var hs-var">_pmInsert</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span id="_pmUpdate"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_pmUpdate"><span class="hs-identifier hs-var hs-var">_pmUpdate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span id="_pmDelete"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_pmDelete"><span class="hs-identifier hs-var hs-var">_pmDelete</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>    </span><span id="_pmRoles"><span class="annot"><span class="annottext">PermissionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_pmRoles"><span class="hs-identifier hs-var hs-var">_pmRoles</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687643632"><span id="local-6989586621687643640"><span id="local-6989586621687643644"><span class="annot"><span class="annottext">Int -&gt; PermissionMetric -&gt; ShowS
+[PermissionMetric] -&gt; ShowS
+PermissionMetric -&gt; String
+(Int -&gt; PermissionMetric -&gt; ShowS)
+-&gt; (PermissionMetric -&gt; String)
+-&gt; ([PermissionMetric] -&gt; ShowS)
+-&gt; Show PermissionMetric
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; PermissionMetric -&gt; ShowS
+showsPrec :: Int -&gt; PermissionMetric -&gt; ShowS
+$cshow :: PermissionMetric -&gt; String
+show :: PermissionMetric -&gt; String
+$cshowList :: [PermissionMetric] -&gt; ShowS
+showList :: [PermissionMetric] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643647"><span id="local-6989586621687643654"><span class="annot"><span class="annottext">PermissionMetric -&gt; PermissionMetric -&gt; Bool
+(PermissionMetric -&gt; PermissionMetric -&gt; Bool)
+-&gt; (PermissionMetric -&gt; PermissionMetric -&gt; Bool)
+-&gt; Eq PermissionMetric
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
+== :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
+$c/= :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
+/= :: PermissionMetric -&gt; PermissionMetric -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643658"><span id="local-6989586621687643660"><span class="annot"><span class="annottext">(forall x. PermissionMetric -&gt; Rep PermissionMetric x)
+-&gt; (forall x. Rep PermissionMetric x -&gt; PermissionMetric)
+-&gt; Generic PermissionMetric
+forall x. Rep PermissionMetric x -&gt; PermissionMetric
+forall x. PermissionMetric -&gt; Rep PermissionMetric x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. PermissionMetric -&gt; Rep PermissionMetric x
+from :: forall x. PermissionMetric -&gt; Rep PermissionMetric x
+$cto :: forall x. Rep PermissionMetric x -&gt; PermissionMetric
+to :: forall x. Rep PermissionMetric x -&gt; PermissionMetric
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687643665"><span id="local-6989586621687643669"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-type">PermissionMetric</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621687643774"><span class="annot"><span class="annottext">toJSON :: PermissionMetric -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; PermissionMetric -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621687643870"><span class="annot"><span class="annottext">toEncoding :: PermissionMetric -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; PermissionMetric -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">data</span><span> </span><span id="ActionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-var">ActionMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-var">ActionMetric</span></a></span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_amSynchronous"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_amSynchronous"><span class="hs-identifier hs-var hs-var">_amSynchronous</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>    </span><span id="_amAsynchronous"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_amAsynchronous"><span class="hs-identifier hs-var hs-var">_amAsynchronous</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>    </span><span id="_amQueryActions"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_amQueryActions"><span class="hs-identifier hs-var hs-var">_amQueryActions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>    </span><span id="_amTypeRelationships"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_amTypeRelationships"><span class="hs-identifier hs-var hs-var">_amTypeRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>    </span><span id="_amCustomTypes"><span class="annot"><span class="annottext">ActionMetric -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_amCustomTypes"><span class="hs-identifier hs-var hs-var">_amCustomTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687643878"><span id="local-6989586621687643886"><span id="local-6989586621687643890"><span class="annot"><span class="annottext">Int -&gt; ActionMetric -&gt; ShowS
+[ActionMetric] -&gt; ShowS
+ActionMetric -&gt; String
+(Int -&gt; ActionMetric -&gt; ShowS)
+-&gt; (ActionMetric -&gt; String)
+-&gt; ([ActionMetric] -&gt; ShowS)
+-&gt; Show ActionMetric
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; ActionMetric -&gt; ShowS
+showsPrec :: Int -&gt; ActionMetric -&gt; ShowS
+$cshow :: ActionMetric -&gt; String
+show :: ActionMetric -&gt; String
+$cshowList :: [ActionMetric] -&gt; ShowS
+showList :: [ActionMetric] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643893"><span id="local-6989586621687643900"><span class="annot"><span class="annottext">ActionMetric -&gt; ActionMetric -&gt; Bool
+(ActionMetric -&gt; ActionMetric -&gt; Bool)
+-&gt; (ActionMetric -&gt; ActionMetric -&gt; Bool) -&gt; Eq ActionMetric
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: ActionMetric -&gt; ActionMetric -&gt; Bool
+== :: ActionMetric -&gt; ActionMetric -&gt; Bool
+$c/= :: ActionMetric -&gt; ActionMetric -&gt; Bool
+/= :: ActionMetric -&gt; ActionMetric -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687643904"><span id="local-6989586621687643906"><span class="annot"><span class="annottext">(forall x. ActionMetric -&gt; Rep ActionMetric x)
+-&gt; (forall x. Rep ActionMetric x -&gt; ActionMetric)
+-&gt; Generic ActionMetric
+forall x. Rep ActionMetric x -&gt; ActionMetric
+forall x. ActionMetric -&gt; Rep ActionMetric x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. ActionMetric -&gt; Rep ActionMetric x
+from :: forall x. ActionMetric -&gt; Rep ActionMetric x
+$cto :: forall x. Rep ActionMetric x -&gt; ActionMetric
+to :: forall x. Rep ActionMetric x -&gt; ActionMetric
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687643911"><span id="local-6989586621687643915"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-type">ActionMetric</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621687644018"><span class="annot"><span class="annottext">toJSON :: ActionMetric -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ActionMetric -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621687644113"><span class="annot"><span class="annottext">toEncoding :: ActionMetric -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ActionMetric -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">data</span><span> </span><span id="NativeQueriesMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-var">NativeQueriesMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueriesMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-var">NativeQueriesMetrics</span></a></span></span><span>
+</span><span id="line-86"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_nqmWithParameters"><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithParameters"><span class="hs-identifier hs-var hs-var">_nqmWithParameters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span id="_nqmWithoutParameters"><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithoutParameters"><span class="hs-identifier hs-var hs-var">_nqmWithoutParameters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687644118"><span id="local-6989586621687644123"><span id="local-6989586621687644127"><span class="annot"><span class="annottext">Int -&gt; NativeQueriesMetrics -&gt; ShowS
+[NativeQueriesMetrics] -&gt; ShowS
+NativeQueriesMetrics -&gt; String
+(Int -&gt; NativeQueriesMetrics -&gt; ShowS)
+-&gt; (NativeQueriesMetrics -&gt; String)
+-&gt; ([NativeQueriesMetrics] -&gt; ShowS)
+-&gt; Show NativeQueriesMetrics
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; NativeQueriesMetrics -&gt; ShowS
+showsPrec :: Int -&gt; NativeQueriesMetrics -&gt; ShowS
+$cshow :: NativeQueriesMetrics -&gt; String
+show :: NativeQueriesMetrics -&gt; String
+$cshowList :: [NativeQueriesMetrics] -&gt; ShowS
+showList :: [NativeQueriesMetrics] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644130"><span id="local-6989586621687644134"><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool
+(NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool)
+-&gt; (NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool)
+-&gt; Eq NativeQueriesMetrics
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool
+== :: NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool
+$c/= :: NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool
+/= :: NativeQueriesMetrics -&gt; NativeQueriesMetrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644138"><span id="local-6989586621687644140"><span class="annot"><span class="annottext">(forall x. NativeQueriesMetrics -&gt; Rep NativeQueriesMetrics x)
+-&gt; (forall x. Rep NativeQueriesMetrics x -&gt; NativeQueriesMetrics)
+-&gt; Generic NativeQueriesMetrics
+forall x. Rep NativeQueriesMetrics x -&gt; NativeQueriesMetrics
+forall x. NativeQueriesMetrics -&gt; Rep NativeQueriesMetrics x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. NativeQueriesMetrics -&gt; Rep NativeQueriesMetrics x
+from :: forall x. NativeQueriesMetrics -&gt; Rep NativeQueriesMetrics x
+$cto :: forall x. Rep NativeQueriesMetrics x -&gt; NativeQueriesMetrics
+to :: forall x. Rep NativeQueriesMetrics x -&gt; NativeQueriesMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644144"><span id="local-6989586621687644148"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-type">NativeQueriesMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621687644156"><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644156"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621687644157"><span class="annot"><span class="annottext">&lt;&gt; :: NativeQueriesMetrics
+-&gt; NativeQueriesMetrics -&gt; NativeQueriesMetrics
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621687644158"><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644158"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; NativeQueriesMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-var">NativeQueriesMetrics</span></a></span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithParameters"><span class="hs-identifier hs-var">_nqmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644156"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithParameters"><span class="hs-identifier hs-var">_nqmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644158"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithoutParameters"><span class="hs-identifier hs-var">_nqmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644156"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_nqmWithoutParameters"><span class="hs-identifier hs-var">_nqmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">NativeQueriesMetrics
+</span><a href="#local-6989586621687644158"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644164"><span id="local-6989586621687644168"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-type">NativeQueriesMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621687644171"><span class="annot"><span class="annottext">mempty :: NativeQueriesMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; NativeQueriesMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-var">NativeQueriesMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644175"><span id="local-6989586621687644179"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-type">NativeQueriesMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621687644241"><span class="annot"><span class="annottext">toJSON :: NativeQueriesMetrics -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; NativeQueriesMetrics -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621687644301"><span class="annot"><span class="annottext">toEncoding :: NativeQueriesMetrics -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; NativeQueriesMetrics -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">data</span><span> </span><span id="StoredProceduresMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-var">StoredProceduresMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StoredProceduresMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-var">StoredProceduresMetrics</span></a></span></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_spmWithParameters"><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithParameters"><span class="hs-identifier hs-var hs-var">_spmWithParameters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="_spmWithoutParameters"><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithoutParameters"><span class="hs-identifier hs-var hs-var">_spmWithoutParameters</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687644306"><span id="local-6989586621687644311"><span id="local-6989586621687644315"><span class="annot"><span class="annottext">Int -&gt; StoredProceduresMetrics -&gt; ShowS
+[StoredProceduresMetrics] -&gt; ShowS
+StoredProceduresMetrics -&gt; String
+(Int -&gt; StoredProceduresMetrics -&gt; ShowS)
+-&gt; (StoredProceduresMetrics -&gt; String)
+-&gt; ([StoredProceduresMetrics] -&gt; ShowS)
+-&gt; Show StoredProceduresMetrics
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; StoredProceduresMetrics -&gt; ShowS
+showsPrec :: Int -&gt; StoredProceduresMetrics -&gt; ShowS
+$cshow :: StoredProceduresMetrics -&gt; String
+show :: StoredProceduresMetrics -&gt; String
+$cshowList :: [StoredProceduresMetrics] -&gt; ShowS
+showList :: [StoredProceduresMetrics] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644318"><span id="local-6989586621687644322"><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool
+(StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool)
+-&gt; (StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool)
+-&gt; Eq StoredProceduresMetrics
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool
+== :: StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool
+$c/= :: StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool
+/= :: StoredProceduresMetrics -&gt; StoredProceduresMetrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644326"><span id="local-6989586621687644328"><span class="annot"><span class="annottext">(forall x.
+ StoredProceduresMetrics -&gt; Rep StoredProceduresMetrics x)
+-&gt; (forall x.
+    Rep StoredProceduresMetrics x -&gt; StoredProceduresMetrics)
+-&gt; Generic StoredProceduresMetrics
+forall x. Rep StoredProceduresMetrics x -&gt; StoredProceduresMetrics
+forall x. StoredProceduresMetrics -&gt; Rep StoredProceduresMetrics x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. StoredProceduresMetrics -&gt; Rep StoredProceduresMetrics x
+from :: forall x. StoredProceduresMetrics -&gt; Rep StoredProceduresMetrics x
+$cto :: forall x. Rep StoredProceduresMetrics x -&gt; StoredProceduresMetrics
+to :: forall x. Rep StoredProceduresMetrics x -&gt; StoredProceduresMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644332"><span id="local-6989586621687644336"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-type">StoredProceduresMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621687644342"><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644342"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621687644343"><span class="annot"><span class="annottext">&lt;&gt; :: StoredProceduresMetrics
+-&gt; StoredProceduresMetrics -&gt; StoredProceduresMetrics
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621687644344"><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644344"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; StoredProceduresMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-var">StoredProceduresMetrics</span></a></span><span>
+</span><span id="line-113"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithParameters"><span class="hs-identifier hs-var">_spmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644342"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithParameters"><span class="hs-identifier hs-var">_spmWithParameters</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644344"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithoutParameters"><span class="hs-identifier hs-var">_spmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644342"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_spmWithoutParameters"><span class="hs-identifier hs-var">_spmWithoutParameters</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProceduresMetrics
+</span><a href="#local-6989586621687644344"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644349"><span id="local-6989586621687644353"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-type">StoredProceduresMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621687644355"><span class="annot"><span class="annottext">mempty :: StoredProceduresMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; StoredProceduresMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-var">StoredProceduresMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">0</span></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644359"><span id="local-6989586621687644363"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-type">StoredProceduresMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621687644425"><span class="annot"><span class="annottext">toJSON :: StoredProceduresMetrics -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProceduresMetrics -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621687644485"><span class="annot"><span class="annottext">toEncoding :: StoredProceduresMetrics -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; StoredProceduresMetrics -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-122"></span><span>
+</span><span id="line-123"></span><span class="hs-keyword">newtype</span><span> </span><span id="LogicalModelsMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LogicalModelsMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-var">LogicalModelsMetrics</span></a></span></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_lmmCount"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_lmmCount"><span class="hs-identifier hs-var hs-var">_lmmCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687644489"><span id="local-6989586621687644493"><span id="local-6989586621687644497"><span class="annot"><span class="annottext">Int -&gt; LogicalModelsMetrics -&gt; ShowS
+[LogicalModelsMetrics] -&gt; ShowS
+LogicalModelsMetrics -&gt; String
+(Int -&gt; LogicalModelsMetrics -&gt; ShowS)
+-&gt; (LogicalModelsMetrics -&gt; String)
+-&gt; ([LogicalModelsMetrics] -&gt; ShowS)
+-&gt; Show LogicalModelsMetrics
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; LogicalModelsMetrics -&gt; ShowS
+showsPrec :: Int -&gt; LogicalModelsMetrics -&gt; ShowS
+$cshow :: LogicalModelsMetrics -&gt; String
+show :: LogicalModelsMetrics -&gt; String
+$cshowList :: [LogicalModelsMetrics] -&gt; ShowS
+showList :: [LogicalModelsMetrics] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644500"><span id="local-6989586621687644504"><span class="annot"><span class="annottext">LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+(LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool)
+-&gt; (LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool)
+-&gt; Eq LogicalModelsMetrics
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+== :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+$c/= :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+/= :: LogicalModelsMetrics -&gt; LogicalModelsMetrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644509"><span id="local-6989586621687644511"><span class="annot"><span class="annottext">(forall x. LogicalModelsMetrics -&gt; Rep LogicalModelsMetrics x)
+-&gt; (forall x. Rep LogicalModelsMetrics x -&gt; LogicalModelsMetrics)
+-&gt; Generic LogicalModelsMetrics
+forall x. Rep LogicalModelsMetrics x -&gt; LogicalModelsMetrics
+forall x. LogicalModelsMetrics -&gt; Rep LogicalModelsMetrics x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. LogicalModelsMetrics -&gt; Rep LogicalModelsMetrics x
+from :: forall x. LogicalModelsMetrics -&gt; Rep LogicalModelsMetrics x
+$cto :: forall x. Rep LogicalModelsMetrics x -&gt; LogicalModelsMetrics
+to :: forall x. Rep LogicalModelsMetrics x -&gt; LogicalModelsMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687644514"><span id="local-6989586621687644520"><span id="local-6989586621687644527"><span class="annot"><span class="annottext">NonEmpty LogicalModelsMetrics -&gt; LogicalModelsMetrics
+LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+(LogicalModelsMetrics
+ -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics)
+-&gt; (NonEmpty LogicalModelsMetrics -&gt; LogicalModelsMetrics)
+-&gt; (forall b.
+    Integral b =&gt;
+    b -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics)
+-&gt; Semigroup LogicalModelsMetrics
+forall b.
+Integral b =&gt;
+b -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (NonEmpty a -&gt; a)
+-&gt; (forall b. Integral b =&gt; b -&gt; a -&gt; a)
+-&gt; Semigroup a
+$c&lt;&gt; :: LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+&lt;&gt; :: LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+$csconcat :: NonEmpty LogicalModelsMetrics -&gt; LogicalModelsMetrics
+sconcat :: NonEmpty LogicalModelsMetrics -&gt; LogicalModelsMetrics
+$cstimes :: forall b.
+Integral b =&gt;
+b -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+stimes :: forall b.
+Integral b =&gt;
+b -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644537"><span id="local-6989586621687644543"><span id="local-6989586621687644548"><span class="annot"><span class="annottext">Semigroup LogicalModelsMetrics
+LogicalModelsMetrics
+Semigroup LogicalModelsMetrics
+-&gt; LogicalModelsMetrics
+-&gt; (LogicalModelsMetrics
+    -&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics)
+-&gt; ([LogicalModelsMetrics] -&gt; LogicalModelsMetrics)
+-&gt; Monoid LogicalModelsMetrics
+[LogicalModelsMetrics] -&gt; LogicalModelsMetrics
+LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+forall a.
+Semigroup a -&gt; a -&gt; (a -&gt; a -&gt; a) -&gt; ([a] -&gt; a) -&gt; Monoid a
+$cmempty :: LogicalModelsMetrics
+mempty :: LogicalModelsMetrics
+$cmappend :: LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+mappend :: LogicalModelsMetrics
+-&gt; LogicalModelsMetrics -&gt; LogicalModelsMetrics
+$cmconcat :: [LogicalModelsMetrics] -&gt; LogicalModelsMetrics
+mconcat :: [LogicalModelsMetrics] -&gt; LogicalModelsMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Sum</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644556"><span id="local-6989586621687644560"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621687644609"><span class="annot"><span class="annottext">toJSON :: LogicalModelsMetrics -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; LogicalModelsMetrics -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621687644655"><span class="annot"><span class="annottext">toEncoding :: LogicalModelsMetrics -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; LogicalModelsMetrics -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span class="hs-keyword">data</span><span> </span><span id="Metrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-var">Metrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Metrics"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-var">Metrics</span></a></span></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_mtTables"><span class="annot"><span class="annottext">Metrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtTables"><span class="hs-identifier hs-var hs-var">_mtTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>    </span><span id="_mtViews"><span class="annot"><span class="annottext">Metrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtViews"><span class="hs-identifier hs-var hs-var">_mtViews</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-136"></span><span>    </span><span id="_mtEnumTables"><span class="annot"><span class="annottext">Metrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtEnumTables"><span class="hs-identifier hs-var hs-var">_mtEnumTables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-137"></span><span>    </span><span id="_mtRelationships"><span class="annot"><span class="annottext">Metrics -&gt; RelationshipMetric
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtRelationships"><span class="hs-identifier hs-var hs-var">_mtRelationships</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#RelationshipMetric"><span class="hs-identifier hs-type">RelationshipMetric</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-138"></span><span>    </span><span id="_mtPermissions"><span class="annot"><span class="annottext">Metrics -&gt; PermissionMetric
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtPermissions"><span class="hs-identifier hs-var hs-var">_mtPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#PermissionMetric"><span class="hs-identifier hs-type">PermissionMetric</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-139"></span><span>    </span><span id="_mtEventTriggers"><span class="annot"><span class="annottext">Metrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtEventTriggers"><span class="hs-identifier hs-var hs-var">_mtEventTriggers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-140"></span><span>    </span><span id="_mtFunctions"><span class="annot"><span class="annottext">Metrics -&gt; Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtFunctions"><span class="hs-identifier hs-var hs-var">_mtFunctions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>    </span><span id="_mtRemoteSchemas"><span class="annot"><span class="annottext">Metrics -&gt; Maybe Int
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtRemoteSchemas"><span class="hs-identifier hs-var hs-var">_mtRemoteSchemas</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>    </span><span id="_mtServiceTimings"><span class="annot"><span class="annottext">Metrics -&gt; Maybe ServiceTimingMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtServiceTimings"><span class="hs-identifier hs-var hs-var">_mtServiceTimings</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span id="_mtActions"><span class="annot"><span class="annottext">Metrics -&gt; Maybe ActionMetric
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtActions"><span class="hs-identifier hs-var hs-var">_mtActions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#ActionMetric"><span class="hs-identifier hs-type">ActionMetric</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span id="_mtNativeQueries"><span class="annot"><span class="annottext">Metrics -&gt; NativeQueriesMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtNativeQueries"><span class="hs-identifier hs-var hs-var">_mtNativeQueries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#NativeQueriesMetrics"><span class="hs-identifier hs-type">NativeQueriesMetrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>    </span><span id="_mtStoredProcedures"><span class="annot"><span class="annottext">Metrics -&gt; StoredProceduresMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtStoredProcedures"><span class="hs-identifier hs-var hs-var">_mtStoredProcedures</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#StoredProceduresMetrics"><span class="hs-identifier hs-type">StoredProceduresMetrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span id="_mtLogicalModels"><span class="annot"><span class="annottext">Metrics -&gt; LogicalModelsMetrics
+</span><a href="Hasura.Server.Telemetry.Types.html#_mtLogicalModels"><span class="hs-identifier hs-var hs-var">_mtLogicalModels</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#LogicalModelsMetrics"><span class="hs-identifier hs-type">LogicalModelsMetrics</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687644671"><span id="local-6989586621687644690"><span id="local-6989586621687644694"><span class="annot"><span class="annottext">Int -&gt; Metrics -&gt; ShowS
+[Metrics] -&gt; ShowS
+Metrics -&gt; String
+(Int -&gt; Metrics -&gt; ShowS)
+-&gt; (Metrics -&gt; String) -&gt; ([Metrics] -&gt; ShowS) -&gt; Show Metrics
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Metrics -&gt; ShowS
+showsPrec :: Int -&gt; Metrics -&gt; ShowS
+$cshow :: Metrics -&gt; String
+show :: Metrics -&gt; String
+$cshowList :: [Metrics] -&gt; ShowS
+showList :: [Metrics] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644698"><span id="local-6989586621687644716"><span class="annot"><span class="annottext">Metrics -&gt; Metrics -&gt; Bool
+(Metrics -&gt; Metrics -&gt; Bool)
+-&gt; (Metrics -&gt; Metrics -&gt; Bool) -&gt; Eq Metrics
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Metrics -&gt; Metrics -&gt; Bool
+== :: Metrics -&gt; Metrics -&gt; Bool
+$c/= :: Metrics -&gt; Metrics -&gt; Bool
+/= :: Metrics -&gt; Metrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687644721"><span id="local-6989586621687644723"><span class="annot"><span class="annottext">(forall x. Metrics -&gt; Rep Metrics x)
+-&gt; (forall x. Rep Metrics x -&gt; Metrics) -&gt; Generic Metrics
+forall x. Rep Metrics x -&gt; Metrics
+forall x. Metrics -&gt; Rep Metrics x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. Metrics -&gt; Rep Metrics x
+from :: forall x. Metrics -&gt; Rep Metrics x
+$cto :: forall x. Rep Metrics x -&gt; Metrics
+to :: forall x. Rep Metrics x -&gt; Metrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687644728"><span id="local-6989586621687644732"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-type">Metrics</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621687644962"><span class="annot"><span class="annottext">toJSON :: Metrics -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Metrics -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621687645165"><span class="annot"><span class="annottext">toEncoding :: Metrics -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Metrics -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="hs-keyword">data</span><span> </span><span id="SourceMetadata"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-var">SourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SourceMetadata"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-var">SourceMetadata</span></a></span></span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_smDbUid"><span class="annot"><span class="annottext">SourceMetadata -&gt; Maybe DbUid
+</span><a href="Hasura.Server.Telemetry.Types.html#_smDbUid"><span class="hs-identifier hs-var hs-var">_smDbUid</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#DbUid"><span class="hs-identifier hs-type">DbUid</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-156"></span><span>    </span><span id="_smBackendType"><span class="annot"><span class="annottext">SourceMetadata -&gt; BackendType
+</span><a href="Hasura.Server.Telemetry.Types.html#_smBackendType"><span class="hs-identifier hs-var hs-var">_smBackendType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-157"></span><span>    </span><span id="_smDbKind"><span class="annot"><span class="annottext">SourceMetadata -&gt; Text
+</span><a href="Hasura.Server.Telemetry.Types.html#_smDbKind"><span class="hs-identifier hs-var hs-var">_smDbKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-158"></span><span>    </span><span id="_smDbVersion"><span class="annot"><span class="annottext">SourceMetadata -&gt; Maybe DbVersion
+</span><a href="Hasura.Server.Telemetry.Types.html#_smDbVersion"><span class="hs-identifier hs-var hs-var">_smDbVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#DbVersion"><span class="hs-identifier hs-type">DbVersion</span></a></span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687645172"><span id="local-6989586621687645183"><span id="local-6989586621687645187"><span class="annot"><span class="annottext">Int -&gt; SourceMetadata -&gt; ShowS
+[SourceMetadata] -&gt; ShowS
+SourceMetadata -&gt; String
+(Int -&gt; SourceMetadata -&gt; ShowS)
+-&gt; (SourceMetadata -&gt; String)
+-&gt; ([SourceMetadata] -&gt; ShowS)
+-&gt; Show SourceMetadata
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; SourceMetadata -&gt; ShowS
+showsPrec :: Int -&gt; SourceMetadata -&gt; ShowS
+$cshow :: SourceMetadata -&gt; String
+show :: SourceMetadata -&gt; String
+$cshowList :: [SourceMetadata] -&gt; ShowS
+showList :: [SourceMetadata] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645192"><span id="local-6989586621687645202"><span class="annot"><span class="annottext">SourceMetadata -&gt; SourceMetadata -&gt; Bool
+(SourceMetadata -&gt; SourceMetadata -&gt; Bool)
+-&gt; (SourceMetadata -&gt; SourceMetadata -&gt; Bool) -&gt; Eq SourceMetadata
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
+== :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
+$c/= :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
+/= :: SourceMetadata -&gt; SourceMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645208"><span id="local-6989586621687645210"><span class="annot"><span class="annottext">(forall x. SourceMetadata -&gt; Rep SourceMetadata x)
+-&gt; (forall x. Rep SourceMetadata x -&gt; SourceMetadata)
+-&gt; Generic SourceMetadata
+forall x. Rep SourceMetadata x -&gt; SourceMetadata
+forall x. SourceMetadata -&gt; Rep SourceMetadata x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. SourceMetadata -&gt; Rep SourceMetadata x
+from :: forall x. SourceMetadata -&gt; Rep SourceMetadata x
+$cto :: forall x. Rep SourceMetadata x -&gt; SourceMetadata
+to :: forall x. Rep SourceMetadata x -&gt; SourceMetadata
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687645215"><span id="local-6989586621687645219"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621687645321"><span class="annot"><span class="annottext">toJSON :: SourceMetadata -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SourceMetadata -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span id="local-6989586621687645413"><span class="annot"><span class="annottext">toEncoding :: SourceMetadata -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SourceMetadata -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="hs-keyword">data</span><span> </span><span id="HasuraTelemetry"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-var">HasuraTelemetry</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasuraTelemetry"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-var">HasuraTelemetry</span></a></span></span><span>
+</span><span id="line-167"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_htMetadataDbUid"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; MetadataDbId
+</span><a href="Hasura.Server.Telemetry.Types.html#_htMetadataDbUid"><span class="hs-identifier hs-var hs-var">_htMetadataDbUid</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#MetadataDbId"><span class="hs-identifier hs-type">MetadataDbId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-168"></span><span>    </span><span id="_htInstanceUid"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; InstanceId
+</span><a href="Hasura.Server.Telemetry.Types.html#_htInstanceUid"><span class="hs-identifier hs-var hs-var">_htInstanceUid</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#InstanceId"><span class="hs-identifier hs-type">InstanceId</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-169"></span><span>    </span><span id="_htHasuraVersion"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; Version
+</span><a href="Hasura.Server.Telemetry.Types.html#_htHasuraVersion"><span class="hs-identifier hs-var hs-var">_htHasuraVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-170"></span><span>    </span><span id="_htCi"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; Maybe CI
+</span><a href="Hasura.Server.Telemetry.Types.html#_htCi"><span class="hs-identifier hs-var hs-var">_htCi</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/ci-info-0.1.0.0/opt/doc/html/ci-info/src/CI.Types.html#CI"><span class="hs-identifier hs-type">CI.CI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-171"></span><span>    </span><span id="_htSourceMetadata"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; SourceMetadata
+</span><a href="Hasura.Server.Telemetry.Types.html#_htSourceMetadata"><span class="hs-identifier hs-var hs-var">_htSourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-172"></span><span>    </span><span id="_htMetrics"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; Metrics
+</span><a href="Hasura.Server.Telemetry.Types.html#_htMetrics"><span class="hs-identifier hs-var hs-var">_htMetrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Metrics"><span class="hs-identifier hs-type">Metrics</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>    </span><span id="_htExperimentalFeatures"><span class="annot"><span class="annottext">HasuraTelemetry -&gt; HashSet ExperimentalFeature
+</span><a href="Hasura.Server.Telemetry.Types.html#_htExperimentalFeatures"><span class="hs-identifier hs-var hs-var">_htExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-8335dfa2c360fbc99338d79b59c29f0e55b38395ab008163a5f9c1bb67e3a4b4/share/doc/html/src/Data.HashSet.Internal.html#HashSet"><span class="hs-identifier hs-type">HashSet</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687645423"><span id="local-6989586621687645439"><span id="local-6989586621687645443"><span class="annot"><span class="annottext">Int -&gt; HasuraTelemetry -&gt; ShowS
+[HasuraTelemetry] -&gt; ShowS
+HasuraTelemetry -&gt; String
+(Int -&gt; HasuraTelemetry -&gt; ShowS)
+-&gt; (HasuraTelemetry -&gt; String)
+-&gt; ([HasuraTelemetry] -&gt; ShowS)
+-&gt; Show HasuraTelemetry
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; HasuraTelemetry -&gt; ShowS
+showsPrec :: Int -&gt; HasuraTelemetry -&gt; ShowS
+$cshow :: HasuraTelemetry -&gt; String
+show :: HasuraTelemetry -&gt; String
+$cshowList :: [HasuraTelemetry] -&gt; ShowS
+showList :: [HasuraTelemetry] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645448"><span id="local-6989586621687645450"><span class="annot"><span class="annottext">(forall x. HasuraTelemetry -&gt; Rep HasuraTelemetry x)
+-&gt; (forall x. Rep HasuraTelemetry x -&gt; HasuraTelemetry)
+-&gt; Generic HasuraTelemetry
+forall x. Rep HasuraTelemetry x -&gt; HasuraTelemetry
+forall x. HasuraTelemetry -&gt; Rep HasuraTelemetry x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. HasuraTelemetry -&gt; Rep HasuraTelemetry x
+from :: forall x. HasuraTelemetry -&gt; Rep HasuraTelemetry x
+$cto :: forall x. Rep HasuraTelemetry x -&gt; HasuraTelemetry
+to :: forall x. Rep HasuraTelemetry x -&gt; HasuraTelemetry
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687645455"><span id="local-6989586621687645459"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-type">HasuraTelemetry</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621687645608"><span class="annot"><span class="annottext">toJSON :: HasuraTelemetry -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; HasuraTelemetry -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-179"></span><span>  </span><span id="local-6989586621687645739"><span class="annot"><span class="annottext">toEncoding :: HasuraTelemetry -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; HasuraTelemetry -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="annot"><span class="hs-comment">-- | The telemetry table to which we'll add telemetry.</span></span><span>
+</span><span id="line-182"></span><span class="hs-keyword">newtype</span><span> </span><span id="Topic"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-var">Topic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Topic"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-var">Topic</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getTopic"><span class="annot"><span class="annottext">Topic -&gt; Text
+</span><a href="Hasura.Server.Telemetry.Types.html#getTopic"><span class="hs-identifier hs-var hs-var">getTopic</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-c1b0bc5939db4f075c6a7688c6244ff9a6bf720cfcf4ace60cc230967ee3783b/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687645743"><span id="local-6989586621687645747"><span id="local-6989586621687645751"><span class="annot"><span class="annottext">Int -&gt; Topic -&gt; ShowS
+[Topic] -&gt; ShowS
+Topic -&gt; String
+(Int -&gt; Topic -&gt; ShowS)
+-&gt; (Topic -&gt; String) -&gt; ([Topic] -&gt; ShowS) -&gt; Show Topic
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; Topic -&gt; ShowS
+showsPrec :: Int -&gt; Topic -&gt; ShowS
+$cshow :: Topic -&gt; String
+show :: Topic -&gt; String
+$cshowList :: [Topic] -&gt; ShowS
+showList :: [Topic] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645754"><span id="local-6989586621687645758"><span class="annot"><span class="annottext">Topic -&gt; Topic -&gt; Bool
+(Topic -&gt; Topic -&gt; Bool) -&gt; (Topic -&gt; Topic -&gt; Bool) -&gt; Eq Topic
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: Topic -&gt; Topic -&gt; Bool
+== :: Topic -&gt; Topic -&gt; Bool
+$c/= :: Topic -&gt; Topic -&gt; Bool
+/= :: Topic -&gt; Topic -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645763"><span id="local-6989586621687645767"><span id="local-6989586621687645771"><span id="local-6989586621687645775"><span class="annot"><span class="annottext">[Topic] -&gt; Value
+[Topic] -&gt; Encoding
+Topic -&gt; Value
+Topic -&gt; Encoding
+(Topic -&gt; Value)
+-&gt; (Topic -&gt; Encoding)
+-&gt; ([Topic] -&gt; Value)
+-&gt; ([Topic] -&gt; Encoding)
+-&gt; ToJSON Topic
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: Topic -&gt; Value
+toJSON :: Topic -&gt; Value
+$ctoEncoding :: Topic -&gt; Encoding
+toEncoding :: Topic -&gt; Encoding
+$ctoJSONList :: [Topic] -&gt; Value
+toJSONList :: [Topic] -&gt; Value
+$ctoEncodingList :: [Topic] -&gt; Encoding
+toEncodingList :: [Topic] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645780"><span id="local-6989586621687645785"><span class="annot"><span class="annottext">Value -&gt; Parser [Topic]
+Value -&gt; Parser Topic
+(Value -&gt; Parser Topic)
+-&gt; (Value -&gt; Parser [Topic]) -&gt; FromJSON Topic
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser Topic
+parseJSON :: Value -&gt; Parser Topic
+$cparseJSONList :: Value -&gt; Parser [Topic]
+parseJSONList :: Value -&gt; Parser [Topic]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span class="hs-keyword">data</span><span> </span><span id="TelemetryPayload"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-var">TelemetryPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TelemetryPayload"><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-var">TelemetryPayload</span></a></span></span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_tpTopic"><span class="annot"><span class="annottext">TelemetryPayload -&gt; Topic
+</span><a href="Hasura.Server.Telemetry.Types.html#_tpTopic"><span class="hs-identifier hs-var hs-var">_tpTopic</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#Topic"><span class="hs-identifier hs-type">Topic</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-187"></span><span>    </span><span id="_tpData"><span class="annot"><span class="annottext">TelemetryPayload -&gt; HasuraTelemetry
+</span><a href="Hasura.Server.Telemetry.Types.html#_tpData"><span class="hs-identifier hs-var hs-var">_tpData</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#HasuraTelemetry"><span class="hs-identifier hs-type">HasuraTelemetry</span></a></span><span>
+</span><span id="line-188"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-189"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687645794"><span id="local-6989586621687645799"><span id="local-6989586621687645803"><span class="annot"><span class="annottext">Int -&gt; TelemetryPayload -&gt; ShowS
+[TelemetryPayload] -&gt; ShowS
+TelemetryPayload -&gt; String
+(Int -&gt; TelemetryPayload -&gt; ShowS)
+-&gt; (TelemetryPayload -&gt; String)
+-&gt; ([TelemetryPayload] -&gt; ShowS)
+-&gt; Show TelemetryPayload
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; TelemetryPayload -&gt; ShowS
+showsPrec :: Int -&gt; TelemetryPayload -&gt; ShowS
+$cshow :: TelemetryPayload -&gt; String
+show :: TelemetryPayload -&gt; String
+$cshowList :: [TelemetryPayload] -&gt; ShowS
+showList :: [TelemetryPayload] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687645806"><span id="local-6989586621687645808"><span class="annot"><span class="annottext">(forall x. TelemetryPayload -&gt; Rep TelemetryPayload x)
+-&gt; (forall x. Rep TelemetryPayload x -&gt; TelemetryPayload)
+-&gt; Generic TelemetryPayload
+forall x. Rep TelemetryPayload x -&gt; TelemetryPayload
+forall x. TelemetryPayload -&gt; Rep TelemetryPayload x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. TelemetryPayload -&gt; Rep TelemetryPayload x
+from :: forall x. TelemetryPayload -&gt; Rep TelemetryPayload x
+$cto :: forall x. Rep TelemetryPayload x -&gt; TelemetryPayload
+to :: forall x. Rep TelemetryPayload x -&gt; TelemetryPayload
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687645813"><span id="local-6989586621687645817"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">J.ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Types.html#TelemetryPayload"><span class="hs-identifier hs-type">TelemetryPayload</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621687645881"><span class="annot"><span class="annottext">toJSON :: TelemetryPayload -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; TelemetryPayload -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToJSON"><span class="hs-identifier hs-var">J.genericToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-193"></span><span>  </span><span id="local-6989586621687645943"><span class="annot"><span class="annottext">toEncoding :: TelemetryPayload -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#toEncoding"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEncoding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; TelemetryPayload -&gt; Encoding
+forall a.
+(Generic a, GToJSON' Encoding Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-eb2865ffe23f31228547a6f32a9edc574ee6a6324e10506583c4975c7f9d4b7b/share/doc/html/src/Data.Aeson.Types.ToJSON.html#genericToEncoding"><span class="hs-identifier hs-var">J.genericToEncoding</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span><span>
+</span><span id="line-194"></span></pre></body></html>
