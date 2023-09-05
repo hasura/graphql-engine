@@ -137,6 +137,11 @@ func TestSourceConfig_Export(t *testing.T) {
 					assert.NoError(t, err)
 					return bs
 				}(),
+				"testdata/export_test/t1/want/databases/default/functions/test1_test2.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/default/functions/test1_test2.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 				"testdata/export_test/t1/want/databases/bg/tables/tables.yaml": func() []byte {
 					bs, err := ioutil.ReadFile("testdata/export_test/t1/want/databases/bg/tables/tables.yaml")
 					assert.NoError(t, err)
@@ -166,6 +171,7 @@ func TestSourceConfig_Export(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
+				assert.NoError(t, err)
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
 					// uncomment to update golden files
