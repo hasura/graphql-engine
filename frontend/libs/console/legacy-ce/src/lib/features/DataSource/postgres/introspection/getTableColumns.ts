@@ -15,6 +15,15 @@ const adaptPkResult = (runSQLResult: RunSQLResponse) => {
   return runSQLResult.result?.slice(1).map(row => row[0]);
 };
 
+const adaptSequencesResult = (
+  runSQLResult: RunSQLResponse,
+  table: PostgresTable
+) => {
+  console.log(runSQLResult.result?.slice(1));
+
+  return runSQLResult.result?.slice(1).map(row => row[0]);
+};
+
 const adaptTableColumns = (result: RunSQLResponse['result']): TableColumn[] => {
   if (!result) return [];
 
@@ -119,6 +128,25 @@ WHERE a.attnum > 0
 
   const primaryKeys = adaptPkResult(primaryKeysSQLResult) ?? [];
 
+  const sequencesSQL = `
+  SELECT column_name FROM information_schema.columns WHERE column_default LIKE 'nextval%' and table_schema = '${schema}' and table_name = '${name}';
+  `;
+
+  const sequencesSQLResult = await runSQL({
+    source: {
+      name: dataSourceName,
+      kind: 'postgres',
+    },
+    sql: sequencesSQL,
+    readOnly: true,
+    httpClient,
+  });
+
+  const serialColumns =
+    adaptSequencesResult(sequencesSQLResult, { schema, name }) ?? [];
+
+  console.log(serialColumns);
+
   const result = sqlResult.map<TableColumn>(column => {
     const graphqlFieldName =
       metadataTable.configuration?.column_config?.[column.name]?.custom_name ??
@@ -139,6 +167,11 @@ WHERE a.attnum > 0
         name: graphqlFieldName,
         scalarType: scalarType?.type ?? null,
       },
+      ...(serialColumns.includes(column.name) && {
+        value_generated: {
+          type: 'auto_increment',
+        },
+      }),
     };
   });
 

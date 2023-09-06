@@ -39,8 +39,9 @@ type Tab = {
   content: JSX.Element;
 };
 
-const isTabValidator: TypedObjectValidator = _item =>
-  'value' in _item && 'label' in _item && 'content' in _item;
+const isTabValidator: TypedObjectValidator = _item => {
+  return 'value' in _item && 'label' in _item && 'content' in _item;
+};
 
 const availableTabs = (
   dataSourceName: string,
@@ -62,10 +63,9 @@ const availableTabs = (
         />
       ),
     },
-    // NOTE: uncomment this part to enable the new Insert Row tab
-    areMutationsSupported
+    areMutationsSupported && enabledTabs.insert
       ? {
-          value: 'insert-row',
+          value: 'insert',
           label: 'Insert Row',
           content: (
             <InsertRowFormContainer
@@ -126,6 +126,8 @@ export const ManageTable: React.VFC<ManageTableProps> = (
   const urlData = useTableDefinition(window.location);
   const dispatch = useDispatch();
 
+  console.log('>>> urlData', urlData);
+
   if (urlData.querystringParseResult === 'error')
     throw Error('Unable to render');
 
@@ -162,6 +164,14 @@ export const ManageTable: React.VFC<ManageTableProps> = (
 
   if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
 
+  const tabItems = availableTabs(
+    dataSourceName,
+    table,
+    tableName,
+    areInsertMutationsSupported,
+    enabledTabs
+  );
+
   return (
     <div className="w-full bg-gray-50">
       <div className="px-md pt-md mb-xs">
@@ -184,13 +194,7 @@ export const ManageTable: React.VFC<ManageTableProps> = (
               _operation as ManageTableTabs
             );
           }}
-          items={availableTabs(
-            dataSourceName,
-            table,
-            tableName,
-            areInsertMutationsSupported,
-            enabledTabs
-          )}
+          items={tabItems}
         />
       </div>
     </div>

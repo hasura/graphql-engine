@@ -6,7 +6,11 @@ import { Table } from '../hasura-metadata-types/source/table';
 import { InsertRowForm, InsertRowFormProps } from './InsertRowForm';
 import { useTableInfo } from '../Data/hooks/useTableInfo';
 import { useMetadata } from '../hasura-metadata-api';
-import { SupportedDrivers } from '../hasura-metadata-types';
+import {
+  NATIVE_DRIVERS,
+  NativeDrivers,
+  SupportedDrivers,
+} from '../hasura-metadata-types';
 import { columnDataType } from '../DataSource/utils';
 
 type InsertRowFormContainerProps = {
@@ -21,14 +25,17 @@ export const InsertRowFormContainer = ({
   const { columns: tableColumns, isLoading: isLoadingColumns } =
     useListAllTableColumns(dataSourceName, table);
 
-  const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableInfo({
-    dataSourceName,
-    table,
-  });
-
   const { data: driver, isLoading: isLoadingMetadata } = useMetadata(
     m => m.metadata.sources.find(source => source.name === dataSourceName)?.kind
   );
+
+  const isGdc = !NATIVE_DRIVERS.includes((driver || '') as NativeDrivers);
+
+  const { data: tableInfo, isLoading: isLoadingTableInfo } = useTableInfo({
+    dataSourceName,
+    table,
+    isEnabled: isGdc,
+  });
 
   const isLoading = isLoadingColumns || isLoadingTableInfo || isLoadingMetadata;
 

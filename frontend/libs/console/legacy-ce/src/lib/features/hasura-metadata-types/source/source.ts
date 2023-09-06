@@ -10,6 +10,16 @@ import { NativeQuery } from './nativeQuery';
 import { StoredProcedure } from './storedProcedure';
 import { MetadataTable, Table } from './table';
 
+export const NATIVE_DRIVERS: NativeDrivers[] = [
+  'postgres',
+  'alloy',
+  'mssql',
+  'mysql',
+  'bigquery',
+  'citus',
+  'cockroach',
+];
+
 export type NativeDrivers =
   | 'postgres'
   | 'alloy'
