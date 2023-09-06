@@ -7,6 +7,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Text.Extended
+import Hasura.Backends.BigQuery.Types (ScalarType (StringScalarType))
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -41,10 +42,6 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         "$eq" -> parseEq
         "_neq" -> parseNeq
         "$neq" -> parseNeq
-        "$in" -> parseIn
-        "_in" -> parseIn
-        "$nin" -> parseNin
-        "_nin" -> parseNin
         "_gt" -> parseGt
         "$gt" -> parseGt
         "_lt" -> parseLt
@@ -53,6 +50,16 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
         "$gte" -> parseGte
         "_lte" -> parseLte
         "$lte" -> parseLte
+        "_like" -> parseLike
+        "$like" -> parseLike
+        "_nlike" -> parseNlike
+        "$nlike" -> parseNlike
+        "_in" -> parseIn
+        "$in" -> parseIn
+        "_nin" -> parseNin
+        "$nin" -> parseNin
+        "_is_null" -> parseIsNull
+        "$is_null" -> parseIsNull
         -- TODO: support column operators
 
         x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
@@ -63,9 +70,21 @@ parseBoolExpOperations rhsParser _rootTableFieldInfoMap _fields columnRef value 
 
         parseEq = AEQ NullableComparison <$> parseOne
         parseNeq = ANE NullableComparison <$> parseOne
-        parseIn = AIN <$> parseManyWithType colTy
-        parseNin = ANIN <$> parseManyWithType colTy
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne
         parseLte = ALTE <$> parseOne
+        parseLike = guardType StringScalarType >> ALIKE <$> parseOne
+        parseNlike = guardType StringScalarType >> ANLIKE <$> parseOne
+        parseIn = AIN <$> parseManyWithType colTy
+        parseNin = ANIN <$> parseManyWithType colTy
+        parseIsNull = bool ANISNOTNULL ANISNULL <$> decodeValue val
+
+        guardType validType =
+          unless (isScalarColumnWhere (== validType) colTy)
+            $ throwError
+            $ err400 UnexpectedPayload
+            $ " is of type "
+            <> columnReferenceType columnRef
+            <<> "; this operator works only on columns of type "
+            <>> validType
