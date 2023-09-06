@@ -62,7 +62,7 @@ describe('inferLogicalModels', () => {
             name: 'addresses',
             type: {
               array: {
-                logical_model: 'addresses',
+                logical_model: 'documents_addresses',
                 nullable: false,
               },
             },
@@ -101,7 +101,7 @@ describe('inferLogicalModels', () => {
             },
           },
         ],
-        name: 'addresses',
+        name: 'documents_addresses',
       },
     ]);
   });
@@ -132,7 +132,7 @@ describe('inferLogicalModels', () => {
           {
             name: 'address',
             type: {
-              logical_model: 'address',
+              logical_model: 'documents_address',
               nullable: false,
             },
           },
@@ -156,7 +156,7 @@ describe('inferLogicalModels', () => {
             },
           },
         ],
-        name: 'address',
+        name: 'documents_address',
       },
     ]);
   });

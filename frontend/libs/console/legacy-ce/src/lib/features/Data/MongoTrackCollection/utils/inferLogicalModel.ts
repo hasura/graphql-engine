@@ -24,10 +24,11 @@ type ArraySchema = {
 };
 
 const getLogicalModelsFromProperties = (
+  collectionName: string,
   name: string,
   properties: ObjectSchema['properties'],
   requiredProperties: string[]
-) => {
+): LogicalModel[] => {
   const logicalModels: LogicalModel[] = [];
   const fields: LogicalModelField[] = [];
 
@@ -47,16 +48,18 @@ const getLogicalModelsFromProperties = (
     const nullable = !requiredProperties.includes(fieldName);
     if (fieldSchema.type === 'object') {
       const newLogicalModels = getLogicalModelsFromProperties(
-        fieldName,
+        collectionName,
+        `${collectionName}_${fieldName}`,
         fieldSchema.properties,
         fieldSchema.required
       );
+
       logicalModels.push(...newLogicalModels);
 
       fields.push({
         name: fieldName,
         type: {
-          logical_model: fieldName,
+          logical_model: `${collectionName}_${fieldName}`,
           nullable,
         },
       });
@@ -69,14 +72,15 @@ const getLogicalModelsFromProperties = (
           name: fieldName,
           type: {
             array: {
-              logical_model: fieldName,
+              logical_model: `${collectionName}_${fieldName}`,
               nullable,
             },
           },
         });
 
         const newLogicalModels = getLogicalModelsFromProperties(
-          fieldName,
+          collectionName,
+          `${collectionName}_${fieldName}`,
           fieldSchema.items.properties,
           fieldSchema.items?.required || []
         );
@@ -147,12 +151,14 @@ const getLogicalModelsFromProperties = (
 };
 
 const getLogicalModels = (
+  collectionName: string,
   name: string,
   schema: ObjectSchema | ArraySchema
 ): LogicalModel[] => {
   const sanitizedModelName = sanitizeGraphQLFieldNames(name);
   if (schema.type === 'object') {
     return getLogicalModelsFromProperties(
+      collectionName,
       sanitizedModelName,
       schema.properties,
       schema.required
@@ -161,6 +167,7 @@ const getLogicalModels = (
 
   if (schema.type === 'array') {
     return getLogicalModelsFromProperties(
+      collectionName,
       sanitizedModelName,
       schema.items.properties,
       schema.items.required
@@ -178,6 +185,7 @@ export const inferLogicalModels = (
   const schema = inferSchema(document).toJSONSchema();
 
   const logicalModels: LogicalModel[] = getLogicalModels(
+    collectionName,
     collectionName,
     schema as unknown as ObjectSchema | ArraySchema
   );
