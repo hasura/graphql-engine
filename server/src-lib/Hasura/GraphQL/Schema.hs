@@ -199,6 +199,8 @@ buildGQLContext
 
     writeToSchemaRegistryAction <-
       forM mSchemaRegistryContext $ \schemaRegistryCtx -> do
+        -- NOTE!: Where this code path is reached it's absolutely crucial that
+        -- we have a thread reading, otherwise we have an unbounded space leak
         res <- liftIO $ runExceptT $ PG.runTx' (_srpaMetadataDbPoolRef schemaRegistryCtx) selectNowQuery
         case res of
           Left err ->
@@ -218,6 +220,9 @@ buildGQLContext
               $ \metadataResourceVersion inconsistentMetadata metadata ->
                 STM.atomically
                   $ STM.writeTQueue (_srpaSchemaRegistryTQueueRef schemaRegistryCtx)
+                  -- NOTE!: this is a rare case where we'd like this to be a thunk
+                  -- because it is significant work we can avoid entirely in
+                  -- EE, where this queue is just drained and items discarded
                   $ projectSchemaInfo metadataResourceVersion inconsistentMetadata metadata
 
     pure
