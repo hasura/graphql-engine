@@ -182,7 +182,6 @@ library
     Test.Mutations.Update.PrimaryKeySpec
     Test.Mutations.Update.ValidationSpec
     Test.Mutations.Upsert.OnConflictSpec
-    Test.NamingConventionsSpec
     Test.PortedFromPytest.TestGraphQLQueryBasicCitus
     Test.PortedFromPytest.TestGraphQLQueryFunctions
     Test.Queries.AggregationSpec
