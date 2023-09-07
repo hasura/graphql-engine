@@ -10,6 +10,7 @@
 module Hasura.Backends.DataConnector.API.V0.Capabilities
   ( Capabilities (..),
     cDataSchema,
+    cPostSchema,
     cQueries,
     cLicensing,
     cMutations,
@@ -30,7 +31,9 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     dscColumnNullability,
     dscSupportsSchemalessTables,
     defaultDataSchemaCapabilities,
+    defaultPostSchemaCapabilities,
     ColumnNullability (..),
+    PostSchemaCapabilities (..),
     QueryCapabilities (..),
     qcForeach,
     qcRedaction,
@@ -98,6 +101,7 @@ import Prelude
 -- which involve relationships.
 data Capabilities = Capabilities
   { _cDataSchema :: DataSchemaCapabilities,
+    _cPostSchema :: Maybe PostSchemaCapabilities,
     _cQueries :: Maybe QueryCapabilities,
     _cMutations :: Maybe MutationCapabilities,
     _cSubscriptions :: Maybe SubscriptionCapabilities,
@@ -117,13 +121,14 @@ data Capabilities = Capabilities
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 defaultCapabilities :: Capabilities
-defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing Nothing mempty Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
       Capabilities
         <$> optionalFieldWithOmittedDefault "data_schema" defaultDataSchemaCapabilities "The agent's data schema capabilities" .= _cDataSchema
+        <*> optionalField "post_schema" "The agent's capabilities to accept schema as a `POST` request" .= _cPostSchema
         <*> optionalField "queries" "The agent's query capabilities" .= _cQueries
         <*> optionalField "mutations" "The agent's mutation capabilities" .= _cMutations
         <*> optionalField "subscriptions" "The agent's subscription capabilities" .= _cSubscriptions
@@ -177,6 +182,18 @@ instance HasCodec ColumnNullability where
         [ (OnlyNullableColumns, "only_nullable"),
           (NullableAndNonNullableColumns, "nullable_and_non_nullable")
         ]
+
+data PostSchemaCapabilities = PostSchemaCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec PostSchemaCapabilities
+
+defaultPostSchemaCapabilities :: PostSchemaCapabilities
+defaultPostSchemaCapabilities = PostSchemaCapabilities
+
+instance HasCodec PostSchemaCapabilities where
+  codec =
+    object "PostSchemaCapabilities" $ pure PostSchemaCapabilities
 
 data QueryCapabilities = QueryCapabilities
   { _qcForeach :: Maybe ForeachCapabilities,
