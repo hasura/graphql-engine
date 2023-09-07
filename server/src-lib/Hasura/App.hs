@@ -1244,40 +1244,43 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
       schemaCache <- liftIO $ getSchemaCache appStateRef
       let allSources = HashMap.elems $ scSources schemaCache
       activeEventProcessingThreads <- liftIO $ newTVarIO 0
+      appCtx <- liftIO $ getAppContext appStateRef
+      let fetchInterval = _eeCtxFetchInterval $ acEventEngineCtx appCtx
+          fetchBatchSize = _eeCtxFetchSize $ acEventEngineCtx appCtx
+      unless (unrefine fetchBatchSize == 0 || fetchInterval == 0) $ do
+        -- Initialise the event processing thread
+        let eventsGracefulShutdownAction =
+              waitForProcessingAction
+                logger
+                "event_triggers"
+                (length <$> readTVarIO (leEvents lockedEventsCtx))
+                (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
+                (unrefine appEnvGracefulShutdownTimeout)
 
-      -- Initialise the event processing thread
-      let eventsGracefulShutdownAction =
-            waitForProcessingAction
-              logger
-              "event_triggers"
-              (length <$> readTVarIO (leEvents lockedEventsCtx))
-              (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
-              (unrefine appEnvGracefulShutdownTimeout)
+        -- Create logger for logging the statistics of events fetched
+        fetchedEventsStatsLogger <-
+          allocate
+            (createFetchedEventsStatsLogger logger)
+            (closeFetchedEventsStatsLogger logger)
 
-      -- Create logger for logging the statistics of events fetched
-      fetchedEventsStatsLogger <-
-        allocate
-          (createFetchedEventsStatsLogger logger)
-          (closeFetchedEventsStatsLogger logger)
-
-      unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
-      void
-        $ C.forkManagedTWithGracefulShutdown
-          "processEventQueue"
-          logger
-          (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
-        $ processEventQueue
-          logger
-          fetchedEventsStatsLogger
-          appEnvManager
-          (getSchemaCache appStateRef)
-          (acEventEngineCtx <$> getAppContext appStateRef)
-          activeEventProcessingThreads
-          lockedEventsCtx
-          appEnvServerMetrics
-          (pmEventTriggerMetrics appEnvPrometheusMetrics)
-          appEnvEnableMaintenanceMode
-          appEnvTriggersErrorLogLevelStatus
+        unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
+        void
+          $ C.forkManagedTWithGracefulShutdown
+            "processEventQueue"
+            logger
+            (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
+          $ processEventQueue
+            logger
+            fetchedEventsStatsLogger
+            appEnvManager
+            (getSchemaCache appStateRef)
+            (acEventEngineCtx <$> getAppContext appStateRef)
+            activeEventProcessingThreads
+            lockedEventsCtx
+            appEnvServerMetrics
+            (pmEventTriggerMetrics appEnvPrometheusMetrics)
+            appEnvEnableMaintenanceMode
+            appEnvTriggersErrorLogLevelStatus
 
     startAsyncActionsPollerThread logger lockedEventsCtx actionSubState = do
       AppEnv {..} <- lift askAppEnv
