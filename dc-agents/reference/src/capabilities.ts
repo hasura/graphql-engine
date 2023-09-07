@@ -55,6 +55,7 @@ const capabilities: Capabilities = {
     supports_foreign_keys: true,
     column_nullability: "nullable_and_non_nullable",
   },
+  post_schema: {},
   queries: {
     foreach: {},
     redaction: {},

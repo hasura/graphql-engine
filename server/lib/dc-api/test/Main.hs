@@ -59,13 +59,13 @@ getCloneSchema mergeConfig datasetTemplate (AgentIOClient agentClient) =
     (createClone agentClient datasetTemplate)
     (deleteClone agentClient)
     ( \DatasetCloneInfo {..} ->
-        (agentClient // API._schema) testSourceName (mergeAgentConfig _dciAgentConfig mergeConfig) (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
+        (agentClient // API._schemaPost) testSourceName (mergeAgentConfig _dciAgentConfig mergeConfig) (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
     )
 
 getChinookSchema :: API.Capabilities -> AgentConfig -> AgentIOClient -> IO API.SchemaResponse
 getChinookSchema API.Capabilities {..} agentConfig agentIOClient@(AgentIOClient agentClient) = do
   case agentConfig of
-    ManualConfig config -> (agentClient // API._schema) testSourceName config (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
+    ManualConfig config -> (agentClient // API._schemaPost) testSourceName config (API.SchemaRequest mempty API.Everything) >>= guardSchemaResponse
     DatasetConfig mergeConfig ->
       if isJust _cDatasets
         then getCloneSchema mergeConfig chinookTemplate agentIOClient
