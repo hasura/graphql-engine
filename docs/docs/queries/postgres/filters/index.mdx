@@ -1,0 +1,299 @@
+---
+description: Filter query results on Postgres with Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+slug: index
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter Query Results / Search Queries
+
+## Introduction
+
+Hasura provides a powerful yet simple syntax to filter query results on Postgres. This is useful for building search
+queries or filtering data based on some criteria. You can utilize arguments and operators to filter results based on
+equality, comparison, pattern matching, etc.
+
+## The **where** argument
+
+You can use the `where` argument in your queries to filter results based on some field’s values (even nested objects'
+fields). You can even use multiple filters in the same `where` clause using the `_and` or the `_or` operators.
+
+For example, to fetch data for an author whose name is "Sidney":
+
+```graphql {3}
+query {
+  authors(where: { name: { _eq: "Sidney" } }) {
+    id
+    name
+  }
+}
+```
+
+You can also use nested objects' fields to filter rows from a table and also filter the nested objects as well.
+
+For example, to fetch a list of authors who have articles with a rating greater than 4 along with those articles:
+
+```graphql {2,5}
+query {
+  authors(where: { articles: { rating: { _gt: 4 } } }) {
+    id
+    name
+    articles(where: { rating: { _gt: 4 } }) {
+      id
+      title
+      rating
+    }
+  }
+}
+```
+
+Here `_eq` and `_gt` are examples of comparison operators that can be used in the `where` argument to filter on
+equality.
+
+You can see the complete specification of the `where` argument in the
+[API reference](/api-reference/graphql-api/query.mdx#whereexp).
+
+## Filter nested objects {#pg-nested-filter}
+
+The `where` argument can be used in **array relationships** as well to filter the nested objects. **Object
+relationships** have only one nested object and hence they do not expose the `where` argument.
+
+**Example:**
+
+Fetch all authors with only their 5 rated articles:
+
+<GraphiQLIDE
+  query={`{
+  authors {
+    id
+    name
+    articles(where: {rating: {_eq: 5}}) {
+      title
+      rating
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin",
+        "articles": []
+      },
+      {
+        "id": 2,
+        "name": "Beltran",
+        "articles": []
+      },
+      {
+        "id": 5,
+        "name": "Amii",
+        "articles": [
+          {
+            "title": "montes nascetur ridiculus",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "name": "Corny",
+        "articles": []
+      }
+    ]
+  }
+}`}
+/>
+
+## Supported operators
+
+| Operator                                                                          | Use case                                                                                                   |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [Simple Comparison Operators](/queries/postgres/filters/comparison-operators.mdx) | Utilize comparison operators to selectively filter results by evaluating a field against a specific value. |
+| [Boolean Operators](/queries/postgres/filters/boolean-operators.mdx)              | Employ boolean operators to refine result filters based on logical expressions.                            |
+| [Text Search Operators](/queries/postgres/filters/text-search-operators.mdx)      | Apply text search operators to narrow down results according to the presence of text in a field.           |
+| [JSONB Operators](/queries/postgres/filters/jsonb-operators.mdx)                  | Utilize JSONB operators to fine-tune result filters using JSONB fields and navigating nested objects.      |
+| [PostGIS Operators](/queries/postgres/filters/postgis-operators.mdx)              | Leverage PostGIS operators to narrow results based on geographical location data.                          |
+| [ltree Operators](/queries/postgres/filters/ltree-operators.mdx)                  | Utilize ltree operators to filter results using hierarchical ltree data.                                   |
+| [Nested Objects](/queries/postgres/filters/using-nested-objects.mdx)              | Navigate and filter results using nested object structures for advanced filtering.                         |
+| [Computed Fields](/queries/postgres/filters/using-computed-fields.mdx)            | Filter results based on dynamically computed fields that derive from existing data.                        |
+
+## Cast a field to a different type before filtering (\_cast)
+
+The `_cast` operator can be used to cast a field to a different type, which allows type-specific operators to be used on
+fields that otherwise would not support them.
+
+Currently, only the following type casts are supported:
+
+- between PostGIS `geometry` and `geography` types
+- from Postgres `jsonb` type to `string` type.
+
+Casting using `_cast` corresponds directly to
+[SQL type casts](https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS).
+
+**Example: cast jsonb to string**
+
+Columns of type `jsonb` can be cast to `String` to use
+[text operators](/api-reference/graphql-api/query.mdx#text-operators) on a `jsonb` field:
+
+<GraphiQLIDE
+  query={`query get_authors_in_bengaluru {
+  authors(
+    where: {
+      address: {_cast: {String: {_ilike: "%bengaluru%"}}}
+    }
+  ) {
+    id
+    name
+    address
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Ash",
+        "address": {
+          "street_address": "161, 19th Main Road, Koramangala 6th Block",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "pincode": 560095,
+          "phone": "9090909090"
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example: cast geometry to geography**
+
+Filtering using `_st_d_within` over large distances can be inaccurate for location data stored in `geometry` columns.
+For accurate queries, cast the field to `geography` before comparing:
+
+<GraphiQLIDE
+  query={`query cities_near($point: geography!, $distance: Float!) {
+  cities(
+    where: {location: {
+      _cast: {geography: {
+        _st_d_within: {from: $point, distance: $distance}
+      }}
+    }}
+  ) {
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "cities": [
+      {
+        "name": "London"
+      },
+      {
+        "name": "Paris"
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "point": {
+    "type": "Point",
+    "coordinates": [1, 50]
+  },
+  "distance": 1000000
+}`}
+/>
+
+**Example: cast geography to geometry**
+
+Columns of type `geography` are more accurate, but they don’t support as many operations as `geometry`. Cast to
+`geometry` to use those operations in a filter:
+
+<GraphiQLIDE
+  query={`query cities_inside($polygon: geometry) {
+  cities(
+    where: {location: {
+      _cast: {geometry: {
+        _st_within: $polygon
+      }}
+    }}
+  ) {
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "cities": [
+      {
+        "name": "New York"
+      }
+    ]
+  }
+}`}
+  variables={`{
+  "polygon": {
+    "type": "Polygon",
+    "crs": {
+      "type": "name",
+      "properties": { "name": "EPSG:4326" }
+    },
+    "coordinates": [
+      [
+        [-75, 40],
+        [-74, 40],
+        [-74, 41],
+        [-75, 41],
+        [-75, 40]
+      ]
+    ]
+  }
+}`}
+/>
+
+:::info Note
+
+For performant queries that filter on casted fields, create an
+[expression index](https://www.postgresql.org/docs/current/indexes-expressional.html) on the casted column. For example,
+if you frequently perform queries on a field `location` of type `geometry` casted to type `geography`, you should create
+an index like the following:
+
+```sql
+CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
+```
+
+:::
+
+## The TRUE expression ( **{ }** ) {#pg-true-expression}
+
+The expression `{}` evaluates to `true` if an object exists (even if it's `null`).
+
+**For example**:
+
+- any query with the condition `{ where: {} }` will return all objects without applying any filter.
+- any query with the condition `{ where: { nested_object: {} } }` will return all objects for which atleast one
+  `nested_object` exists.
+
+## Evaluation of **null** values in comparison expressions {#pg-null-value-evaluation}
+
+In **versions v2.0.0 and above**, if in any comparison expression a `null` value is passed, a type mismatch error will
+be thrown.
+
+For example, the expression `{ where: {id: { _eq: null }}}` will throw an error.
+
+In **versions v1.3.3 and below**, if in any comparison expression a `null` value is passed, the expression gets reduced
+to `{}`, the [TRUE expression](#pg-true-expression).
+
+For example, the expression `{ where: { id: {_eq: null }}}` will be reduced to `{ where: {id: {}} }` which will return
+all objects for which an `id` is set, i.e. all objects will be returned.
+
+This behavior can be preserved in versions v2.0.0 and above by setting the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env
+var to `true`.

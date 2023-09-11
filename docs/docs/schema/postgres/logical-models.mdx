@@ -30,12 +30,11 @@ import Thumbnail from '@site/src/components/Thumbnail';
 Logical Models are a GraphQL representation of database data. They provide an abstraction over the underlying database.
 
 Logical Models are a new approach from Hasura and are currently used by the
-[Native Queries](/schema/postgres/native-queries.mdx) feature to automatically create a GraphQL API for a
-native database query.
+[Native Queries](/schema/postgres/native-queries.mdx) feature to automatically create a GraphQL API for a native
+database query.
 
-You can find examples of how to use Logical Models in the
-[Native Queries](/schema/postgres/native-queries.mdx) documentation. For a more detailed explanation of
-Logical Models themselves, read on.
+You can find examples of how to use Logical Models in the [Native Queries](/schema/postgres/native-queries.mdx)
+documentation. For a more detailed explanation of Logical Models themselves, read on.
 
 ## Tracking a Logical Model
 
@@ -413,7 +412,7 @@ can receive.
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/query-filters.mdx). To allow
+The filter is the same boolean expression syntax as [query filters](/queries/ms-sql-server/filters/index.mdx). To allow
 all rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 Add the required permissions to the relevant logical model in `metadata > databases > databases.yaml`:
@@ -441,7 +440,7 @@ Add the required permissions to the relevant logical model in `metadata > databa
 
 Columns must be specified, though you can use `"*"` to specify that you want to allow all columns.
 
-The filter is the same boolean expression syntax as [query filters](/queries/postgres/query-filters.mdx). To allow all
+The filter is the same boolean expression syntax as [query filters](/queries/postgres/filters/index.mdx). To allow all
 rows to be passed through to the response, you can specify an empty filter, `{}`.
 
 ```http

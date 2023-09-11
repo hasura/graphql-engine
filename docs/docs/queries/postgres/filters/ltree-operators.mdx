@@ -1,0 +1,294 @@
+---
+sidebar_label: Filter by hierarchical ltree data
+sidebar_position: 6
+description: Filter query results and search queries on Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter ltree operators
+
+## Introduction
+
+Comparison operators on columns with `ltree`, `lquery` or `ltxtquery` types are supported.
+
+Please submit a feature request via [GitHub](https://github.com/hasura/graphql-engine) if you want support for more
+functions.
+
+For more details on `ltree` operators and Postgres equivalents, refer to the
+[API reference](/api-reference/graphql-api/query.mdx#ltree-operators).
+
+## \_ancestor
+
+Select ancestors of an <em>ltree</em> argument
+
+<GraphiQLIDE
+  query={`query {
+  tree (
+    where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"}}
+  ) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "tree": [
+      {
+        "path": "Tree"
+      },
+      {
+        "path": "Tree.Collections"
+      },
+      {
+        "path": "Tree.Collections.Pictures"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_ancestor_any
+
+<GraphiQLIDE
+  query={`query {
+  test(
+    where: {
+      path: {
+        _ancestor_any: [
+          "Top.Collections.Pictures.Astronomy"
+          "Top.Science.Astronomy"
+        ]
+      }
+    }
+  ) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top"
+      },
+      {
+        "path": "Top.Science"
+      },
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Collections"
+      },
+      {
+        "path": "Top.Collections.Pictures"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      }
+    ]
+  }
+}
+`}
+/>
+
+## \_matches
+
+Match any label path containing the node `Astronomy`.
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _matches: "*.Astronomy.*" } }) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_matches_any
+
+Select <em>ltree</em> paths matching any <em>lquery</em> regex in an array
+
+<GraphiQLIDE
+  query={`query {
+  tree (
+    where: {path: {_matches_any: ["*.Pictures.*", "*.Hobbies.*"]}}
+  ) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "tree": [
+      {
+        "path": "Tree.Hobbies"
+      },
+      {
+        "path": "Tree.Hobbies.Amateurs_Astronomy"
+      },
+      {
+        "path": "Tree.Collections.Pictures"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Tree.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}`}
+/>
+
+## \_descendant
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _descendant: "Top.Collections.Pictures.Astronomy" } }) {
+    path
+  }
+}
+`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}
+`}
+/>
+
+## \_descendant_any
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _descendant_any: ["Top.Collections.Pictures.Astronomy", "Top.Science.Astronomy"] } }) {
+    path
+  }
+  `}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }`}
+/>
+
+## \_matches_fulltext
+
+Match any label path containing a node containing the substring `Astro`.
+
+<GraphiQLIDE
+  query={`query {
+  test(where: { path: { _matches_fulltext: "Astro*%" } }) {
+    path
+  }
+}`}
+  response={`{
+  "data": {
+    "test": [
+      {
+        "path": "Top.Science.Astronomy"
+      },
+      {
+        "path": "Top.Science.Astronomy.Astrophysics"
+      },
+      {
+        "path": "Top.Science.Astronomy.Cosmology"
+      },
+      {
+        "path": "Top.Hobbies.Amateurs_Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Stars"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Galaxies"
+      },
+      {
+        "path": "Top.Collections.Pictures.Astronomy.Astronauts"
+      }
+    ]
+  }
+}
+`}
+/>

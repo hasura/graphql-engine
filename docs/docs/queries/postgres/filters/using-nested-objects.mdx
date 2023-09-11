@@ -1,0 +1,521 @@
+---
+sidebar_label: Filter based on fields of nested objects
+sidebar_position: 7
+description: Filter query results and search queries on Postgres in Hasura
+keywords:
+  - hasura
+  - docs
+  - postgres
+  - query
+  - filter
+  - search
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# Postgres: Filter based on Nested objects' fields
+
+## Introduction
+
+You can use the fields of nested objects as well to filter your query results.
+
+For example:
+
+```graphql {2}
+query {
+  articles(where: { author: { name: { _eq: "Sidney" } } }) {
+    id
+    title
+  }
+}
+```
+
+The behavior of the comparison operators depends on whether the nested objects are a single object related via an object
+relationship or an array of objects related via an array relationship.
+
+- In case of an **object relationship**, a row will be returned if the single nested object satisfies the defined
+  condition.
+- In case of an **array relationship**, a row will be returned if **any of the nested objects** satisfy the defined
+  condition.
+
+:::caution Limitations
+
+**This is only supported for local relationships**, such as relationships between two local database tables. **This is
+not supported for remote relationships**, such as remote database relationships or Remote Schema relationships.
+
+:::
+
+Let's look at a few use cases based on the above:
+
+## Fetch if the single nested object defined via an object relationship satisfies a condition
+
+**Example:**
+
+Fetch all articles whose author's name starts with "A":
+
+<GraphiQLIDE
+  query={`{
+  articles (
+    where: {
+      author: {
+        name: { _similar: "A%"}
+      }
+    }
+  ) {
+    id
+    title
+    author {
+      name
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "author": {
+          "name": "Anjela"
+        }
+      },
+      {
+        "id": 3,
+        "title": "amet justo morbi",
+        "author": {
+          "name": "Anjela"
+        }
+      },
+      {
+        "id": 4,
+        "title": "vestibulum ac est",
+        "author": {
+          "name": "Amii"
+        }
+      },
+      {
+        "id": 12,
+        "title": "volutpat quam pede",
+        "author": {
+          "name": "Amii"
+        }
+      },
+      {
+        "id": 13,
+        "title": "vulputate elementum",
+        "author": {
+          "name": "April"
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+## Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
+
+**Example:**
+
+Fetch all authors which have written at least one article which is rated 1:
+
+<GraphiQLIDE
+  query={`{
+  authors(
+    where: {
+      articles: {rating: {_eq: 1}}
+    }
+  ) {
+    id
+    name
+    articles {
+      title
+      rating
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin",
+        "articles": [
+          {
+            "title": "sem duis aliquam",
+            "rating": 1
+          },
+          {
+            "title": "vel dapibus at",
+            "rating": 4
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Anjela",
+        "articles": [
+          {
+            "title": "sit amet",
+            "rating": 1
+          },
+          {
+            "title": "amet justo morbi",
+            "rating": 4
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "name": "Sidney",
+        "articles": [
+          {
+            "title": "sapien ut",
+            "rating": 1
+          },
+          {
+            "title": "turpis eget",
+            "rating": 3
+          },
+          {
+            "title": "congue etiam justo",
+            "rating": 4
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Fetch if **all** of the nested objects defined via an array relationship satisfy a condition
+
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+the `where` expression as `{_not: {inverse-of-condition}}`. This reads as: fetch if not (any of the nested objects
+satisfy the inverted condition) i.e. all of the nested objects satisfy the condition.
+
+For example:
+
+| condition                           | where expression                            |
+| ----------------------------------- | ------------------------------------------- |
+| `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_neq: "value"}}}` |
+| `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_lte: "value"}}}` |
+
+**Example:**
+
+Fetch all authors which have all of their articles published i.e. have `{is_published {_eq: true}`.
+
+<GraphiQLIDE
+  query={`{
+  authors (
+    where: {
+      _not: {
+        articles: {is_published: {_neq: true}}
+      }
+    }
+  ) {
+    id
+    name
+    articles {
+      title
+      is_published
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin",
+        "articles": [
+          {
+            "title": "vel dapibus at",
+            "is_published": true
+          },
+          {
+            "title": "sem duis aliquam",
+            "is_published": true
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "Beltran",
+        "articles": [
+          {
+            "title": "a nibh",
+            "is_published": true
+          },
+          {
+            "title": "sit amet",
+            "is_published": true
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "name": "Anjela",
+        "articles": [
+          {
+            "title": "sit amet",
+            "is_published": true
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "name": "April",
+        "articles": [
+          {
+            "title": "vulputate elementum",
+            "is_published": true
+          },
+          {
+            "title": "eu nibh",
+            "is_published": true
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Fetch if **none** of the nested objects defined via an array relationship satisfy a condition
+
+By default a row is returned if any of the nested objects satisfy a condition. To achieve the above, we need to frame
+the `where` expression as `{_not: {condition}}`. This reads as: fetch if not (any of the nested objects satisfy the
+condition) i.e. none of the nested objects satisfy the condition.
+
+For example,
+
+| condition                           | where expression                           |
+| ----------------------------------- | ------------------------------------------ |
+| `{object: {field: {_eq: "value"}}}` | `{_not: {object: {field: {_eq: "value"}}}` |
+| `{object: {field: {_gt: "value"}}}` | `{_not: {object: {field: {_gt: "value"}}}` |
+
+**Example:**
+
+Fetch all authors which have none of their articles published i.e. have `{is_published {_eq: true}`:
+
+<GraphiQLIDE
+  query={`{
+  authors(
+    where: {
+      _not: {
+        articles: {is_published: {_eq: true}}
+      }
+    }
+  ) {
+    id
+    name
+    articles {
+      title
+      is_published
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 7,
+        "name": "Berti",
+        "articles": [
+          {
+            "title": "ipsum primis in",
+            "is_published": false
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "name": "Lyndsay",
+        "articles": [
+          {
+            "title": "dui proin leo",
+            "is_published": false
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Fetch if nested object(s) exist/do not exist
+
+You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
+achieved by using the expression `{}` which evaluates to `true` if any object exists.
+
+**Example where nested object(s) exist:**
+
+Fetch all authors which have at least one article written by them:
+
+<GraphiQLIDE
+  query={`{
+  authors (
+    where: {
+      articles: {}
+    }
+  ) {
+    id
+    name
+    articles_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 1,
+        "name": "Justin",
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 2
+          }
+        }
+      },
+      {
+        "id": 4,
+        "name": "Anjela",
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 1
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+**Example where nested object(s) do not exist:**
+
+Fetch all authors which have not written any articles:
+
+<GraphiQLIDE
+  query={`{
+  authors (
+    where: {
+      _not: {
+        articles: {}
+      }
+    }
+  ) {
+    id
+    name
+    articles_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+}`}
+  response={`{
+  "data": {
+    "authors": [
+      {
+        "id": 2,
+        "name": "Beltran",
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 0
+          }
+        }
+      },
+      {
+        "id": 3,
+        "name": "Sidney",
+        "articles_aggregate": {
+          "aggregate": {
+            "count": 0
+          }
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+## Filter based on aggregations of nested array fields
+
+You can filter based on _aggregations_ over the elements of an array relationship field.
+
+The aggregation functions supported are:
+
+- `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
+- `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
+- `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
+- `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
+- `max(number)`: Computes the maximum of the non-null input values.
+- `min(number)`: Computes the minimum of the non-null input values.
+- `sum(number)`: Computes the sum of the non-null input values.
+- `corr(Y number, X number)`: Computes the correlation coefficient.
+- `covar_samp(Y number, X number)`: Computes the sample covariance.
+- `stddev_samp(number)`: Computes the sample standard deviation of the input values.
+- `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
+
+The semantics of the above functions is documented in the
+[PostgreSQL documentation](https://www.postgresql.org/docs/14/functions-aggregate.html).
+
+For the complete specification of the schema of aggregation predicates, see the
+[API reference: AggregationExp](/api-reference/graphql-api/query.mdx#aggregationexp).
+
+**Example:**
+
+Assume we have a dataset of restaurants with user-submitted reviews that contain a rating.
+
+Suppose we want to query only the best restaurants. In that case, we can filter by the average over the ratings a
+restaurant has received and only include restaurants that have at least some number of reviews from distinct users.
+
+<GraphiQLIDE
+  query={`query {
+  restaurant (
+    limit: 3,
+    where: {
+      _and: [
+        {
+          reviews_aggregate: {
+            average: {
+              arguments: "rating",
+              predicate: { _gt: 5 }
+            }
+          }
+        },
+        {
+          reviews_aggregate: {
+            count: {
+              arguments: ["reviewer"],
+              distinct: true,
+              predicate: { _gt: 10 }
+            }
+          }
+        }
+      ]
+    }
+  )
+  {
+    name
+  }
+}`}
+  response={`{
+   "data": {
+     "restaurant": [
+       {
+         "name": "Noma",
+       },
+       {
+         "name": "Le Fouquet’s",
+       },
+       {
+         "name": "Café de Flore "
+       }
+     ]
+   }
+}`}
+/>
