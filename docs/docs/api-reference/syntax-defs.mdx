@@ -109,11 +109,13 @@ keywords:
 
 ## BigQueryConfiguration {#bigqueryconfiguration}
 
-| Key             | Required | Schema                                         | Description                           |
-| --------------- | -------- | ---------------------------------------------- | ------------------------------------- |
-| service_account | true     | `JSON String` \| `JSON` \| [FromEnv](#fromenv) | Service account for BigQuery database |
-| project_id      | true     | `String` \| [FromEnv](#fromenv)                | Project Id for BigQuery database      |
-| datasets        | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets             |
+| Key                 | Required | Schema                                         | Description                                                         |
+| ------------------- | -------- | ---------------------------------------------- | ------------------------------------------------------------------- |
+| service_account     | true     | `JSON String` \| `JSON` \| [FromEnv](#fromenv) | Service account for BigQuery database                               |
+| project_id          | true     | `String` \| [FromEnv](#fromenv)                | Project Id for BigQuery database                                    |
+| datasets            | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets                                           |
+| global_select_limit | false    | `Integer`                                      | The maximum number of rows that can be returned, defaults to `1000` |
+
 
 ## PGSourceConnectionInfo {#pgsourceconnectioninfo}
 
