@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Function.Common</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Function.Common.html#getFunctionAggregateGQLName"><span class="hs-identifier">getFunctionAggregateGQLName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Function.Common.html#getFunctionArgsGQLName"><span class="hs-identifier">getFunctionArgsGQLName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Function.Common.html#getFunctionGQLName"><span class="hs-identifier">getFunctionGQLName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Function.Common.html#getInputArgs"><span class="hs-identifier">getInputArgs</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html"><span class="hs-identifier">Hasura.Function.Cache</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Function.Lenses.html"><span class="hs-identifier">Hasura.Function.Lenses</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.html"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- | Apply function name customization to function arguments, as detailed in</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- 'rfcs/function-root-field-customisation.md'.  We want the different</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- variations of a function (i.e. basic, aggregate) to share the same type name</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- for their arguments.</span><span>
+</span><span id="line-22"></span><span id="local-6989586621687397023"><span class="annot"><a href="Hasura.Function.Common.html#getFunctionArgsGQLName"><span class="hs-identifier hs-type">getFunctionArgsGQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="hs-comment">-- | The GQL version of the DB name of the function</span></span><span>
+</span><span id="line-24"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687397023"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Custom function for setting naming case</span></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-28"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span></span><span>
+</span><span id="line-29"></span><span id="getFunctionArgsGQLName"><span class="annot"><span class="annottext">getFunctionArgsGQLName :: forall (b :: BackendType).
+Name -&gt; FunctionConfig b -&gt; (Name -&gt; Name) -&gt; Name
+</span><a href="Hasura.Function.Common.html#getFunctionArgsGQLName"><span class="hs-identifier hs-var hs-var">getFunctionArgsGQLName</span></a></span></span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621687397086"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397086"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687397088"><span id="local-6989586621687397089"><span id="local-6989586621687397090"><span id="local-6989586621687397091"><span id="local-6989586621687397092"><span class="annot"><span class="annottext">Maybe Name
+Maybe (FunctionReturnType b)
+Maybe FunctionExposedAs
+Maybe FunctionArgName
+FunctionCustomRootFields
+_fcSessionArgument :: Maybe FunctionArgName
+_fcExposedAs :: Maybe FunctionExposedAs
+_fcCustomRootFields :: FunctionCustomRootFields
+_fcCustomName :: Maybe Name
+_fcResponse :: Maybe (FunctionReturnType b)
+_fcSessionArgument :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionArgName
+_fcExposedAs :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionExposedAs
+_fcCustomRootFields :: forall (b :: BackendType).
+FunctionConfig b -&gt; FunctionCustomRootFields
+_fcCustomName :: forall (b :: BackendType). FunctionConfig b -&gt; Maybe Name
+_fcResponse :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe (FunctionReturnType b)
+</span><a href="#local-6989586621687397088"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621687397098"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397098"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397098"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397086"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687397091"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#__args"><span class="hs-identifier hs-var">Name.__args</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | Apply function name customization to the basic function variation, as</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- detailed in 'rfcs/function-root-field-customisation.md'.</span><span>
+</span><span id="line-37"></span><span id="local-6989586621687397101"><span class="annot"><a href="Hasura.Function.Common.html#getFunctionGQLName"><span class="hs-identifier hs-type">getFunctionGQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687397101"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Custom function for setting naming case</span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span></span><span>
+</span><span id="line-43"></span><span id="getFunctionGQLName"><span class="annot"><span class="annottext">getFunctionGQLName :: forall (b :: BackendType).
+Name -&gt; FunctionConfig b -&gt; (Name -&gt; Name) -&gt; Name
+</span><a href="Hasura.Function.Common.html#getFunctionGQLName"><span class="hs-identifier hs-var hs-var">getFunctionGQLName</span></a></span></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621687397104"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397104"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fcCustomRootFields :: forall (b :: BackendType).
+FunctionConfig b -&gt; FunctionCustomRootFields
+</span><a href="Hasura.Function.Cache.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687397106"><span id="local-6989586621687397107"><span class="annot"><span class="annottext">Maybe Name
+_fcrfFunction :: Maybe Name
+_fcrfFunctionAggregate :: Maybe Name
+_fcrfFunction :: FunctionCustomRootFields -&gt; Maybe Name
+_fcrfFunctionAggregate :: FunctionCustomRootFields -&gt; Maybe Name
+</span><a href="#local-6989586621687397106"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621687397110"><span id="local-6989586621687397111"><span id="local-6989586621687397112"><span id="local-6989586621687397113"><span class="annot"><span class="annottext">Maybe Name
+Maybe (FunctionReturnType b)
+Maybe FunctionExposedAs
+Maybe FunctionArgName
+_fcSessionArgument :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionArgName
+_fcExposedAs :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionExposedAs
+_fcCustomName :: forall (b :: BackendType). FunctionConfig b -&gt; Maybe Name
+_fcResponse :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe (FunctionReturnType b)
+_fcSessionArgument :: Maybe FunctionArgName
+_fcExposedAs :: Maybe FunctionExposedAs
+_fcCustomName :: Maybe Name
+_fcResponse :: Maybe (FunctionReturnType b)
+</span><a href="Hasura.Function.Cache.html#_fcSessionArgument"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621687397114"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397114"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">[Maybe Name] -&gt; Maybe Name
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
+</span><span id="line-51"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687397106"><span class="hs-identifier hs-var">_fcrfFunction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687397112"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Maybe Name -&gt; Name) -&gt; Name
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397114"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397104"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- | Apply function name customization to the aggregate function variation, as</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- detailed in 'rfcs/function-root-field-customisation.md'.</span><span>
+</span><span id="line-58"></span><span id="local-6989586621687397117"><span class="annot"><a href="Hasura.Function.Common.html#getFunctionAggregateGQLName"><span class="hs-identifier hs-type">getFunctionAggregateGQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687397117"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Custom function for setting naming case</span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span></span><span>
+</span><span id="line-64"></span><span id="getFunctionAggregateGQLName"><span class="annot"><span class="annottext">getFunctionAggregateGQLName :: forall (b :: BackendType).
+Name -&gt; FunctionConfig b -&gt; (Name -&gt; Name) -&gt; Name
+</span><a href="Hasura.Function.Common.html#getFunctionAggregateGQLName"><span class="hs-identifier hs-var hs-var">getFunctionAggregateGQLName</span></a></span></span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621687397123"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397123"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fcCustomRootFields :: forall (b :: BackendType).
+FunctionConfig b -&gt; FunctionCustomRootFields
+</span><a href="Hasura.Function.Cache.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621687397124"><span id="local-6989586621687397125"><span class="annot"><span class="annottext">Maybe Name
+_fcrfFunction :: FunctionCustomRootFields -&gt; Maybe Name
+_fcrfFunctionAggregate :: FunctionCustomRootFields -&gt; Maybe Name
+_fcrfFunction :: Maybe Name
+_fcrfFunctionAggregate :: Maybe Name
+</span><a href="Hasura.Function.Cache.html#_fcrfFunction"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621687397126"><span id="local-6989586621687397127"><span id="local-6989586621687397128"><span id="local-6989586621687397129"><span class="annot"><span class="annottext">Maybe Name
+Maybe (FunctionReturnType b)
+Maybe FunctionExposedAs
+Maybe FunctionArgName
+_fcSessionArgument :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionArgName
+_fcExposedAs :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe FunctionExposedAs
+_fcCustomName :: forall (b :: BackendType). FunctionConfig b -&gt; Maybe Name
+_fcResponse :: forall (b :: BackendType).
+FunctionConfig b -&gt; Maybe (FunctionReturnType b)
+_fcSessionArgument :: Maybe FunctionArgName
+_fcExposedAs :: Maybe FunctionExposedAs
+_fcCustomName :: Maybe Name
+_fcResponse :: Maybe (FunctionReturnType b)
+</span><a href="Hasura.Function.Cache.html#_fcSessionArgument"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621687397130"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397130"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">[Maybe Name] -&gt; Maybe Name
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
+</span><span id="line-72"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687397125"><span class="hs-identifier hs-var">_fcrfFunctionAggregate</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621687397128"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Name -&gt; Name) -&gt; Maybe Name
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#__aggregate"><span class="hs-identifier hs-var">Name.__aggregate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Maybe Name -&gt; Name) -&gt; Name
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621687397130"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621687397123"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#__aggregate"><span class="hs-identifier hs-var">Name.__aggregate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621687397050"><span class="annot"><a href="Hasura.Function.Common.html#getInputArgs"><span class="hs-identifier hs-type">getInputArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Function.Cache.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687397050"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687397050"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-78"></span><span id="getInputArgs"><span class="annot"><span class="annottext">getInputArgs :: forall (b :: BackendType).
+FunctionInfo b -&gt; Seq (FunctionArgument b)
+</span><a href="Hasura.Function.Common.html#getInputArgs"><span class="hs-identifier hs-var hs-var">getInputArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">[FunctionArgument b] -&gt; Seq (FunctionArgument b)
+forall a. [a] -&gt; Seq a
+</span><span class="hs-identifier hs-var">Seq.fromList</span></span><span> </span><span class="annot"><span class="annottext">([FunctionArgument b] -&gt; Seq (FunctionArgument b))
+-&gt; (FunctionInfo b -&gt; [FunctionArgument b])
+-&gt; FunctionInfo b
+-&gt; Seq (FunctionArgument b)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(InputArgument (FunctionArgument b) -&gt; Maybe (FunctionArgument b))
+-&gt; [InputArgument (FunctionArgument b)] -&gt; [FunctionArgument b]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+forall (f :: * -&gt; *) a b.
+Filterable f =&gt;
+(a -&gt; Maybe b) -&gt; f a -&gt; f b
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/witherable-0.4.2-c348fd1be527fbb040281c624d4766fb2c04c7e7f3be298bbe123b3357fb1136/share/doc/html/src/Witherable.html#mapMaybe"><span class="hs-identifier hs-var">mapMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputArgument (FunctionArgument b)
+-&gt; Getting
+     (First (FunctionArgument b))
+     (InputArgument (FunctionArgument b))
+     (FunctionArgument b)
+-&gt; Maybe (FunctionArgument b)
+forall s a. s -&gt; Getting (First a) s a -&gt; Maybe a
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.Fold.html#%5E%3F"><span class="hs-operator hs-var">^?</span></a></span><span> </span><span class="annot"><span class="annottext">Getting
+  (First (FunctionArgument b))
+  (InputArgument (FunctionArgument b))
+  (FunctionArgument b)
+forall a1 a2 (p :: * -&gt; * -&gt; *) (f :: * -&gt; *).
+(Choice p, Applicative f) =&gt;
+p a1 (f a2) -&gt; p (InputArgument a1) (f (InputArgument a2))
+</span><a href="Hasura.Function.Lenses.html#_IAUserProvided"><span class="hs-identifier hs-var">_IAUserProvided</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([InputArgument (FunctionArgument b)] -&gt; [FunctionArgument b])
+-&gt; (FunctionInfo b -&gt; [InputArgument (FunctionArgument b)])
+-&gt; FunctionInfo b
+-&gt; [FunctionArgument b]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Seq (InputArgument (FunctionArgument b))
+-&gt; [InputArgument (FunctionArgument b)]
+forall a. Seq a -&gt; [a]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">(Seq (InputArgument (FunctionArgument b))
+ -&gt; [InputArgument (FunctionArgument b)])
+-&gt; (FunctionInfo b -&gt; Seq (InputArgument (FunctionArgument b)))
+-&gt; FunctionInfo b
+-&gt; [InputArgument (FunctionArgument b)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FunctionInfo b -&gt; Seq (InputArgument (FunctionArgument b))
+forall (b :: BackendType).
+FunctionInfo b -&gt; Seq (FunctionInputArgument b)
+</span><a href="Hasura.Function.Cache.html#_fiInputArgs"><span class="hs-identifier hs-var">_fiInputArgs</span></a></span><span>
+</span><span id="line-80"></span></pre></body></html>
