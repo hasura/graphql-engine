@@ -49,7 +49,6 @@ export const SchemaChangeDetails: React.FC<
 > = props => {
   const { schemaId } = props;
   const fetchSchemaResponse = useGetSchema(schemaId);
-  console.log('fetchSchemaResponse', fetchSchemaResponse);
   const { kind } = fetchSchemaResponse;
 
   switch (kind) {

@@ -9,8 +9,9 @@ import { AlertsDialog } from './AlertsDialog';
 import { Badge } from '../../../new-components/Badge';
 import { SCHEMA_REGISTRY_REF_URL } from '../constants';
 import { Analytics } from '../../Analytics';
+import { useGetV2Info } from '../hooks/useGetV2Info';
 
-const Header: React.VFC = () => {
+const SchemaRegistryHeader: React.VFC = () => {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
   return (
@@ -50,17 +51,33 @@ const Header: React.VFC = () => {
   );
 };
 
-const Body: React.VFC<{
+const SchemaRegistryBody: React.VFC<{
   hasFeatureAccess: boolean;
   schemaId: string | undefined;
 }> = props => {
   const { hasFeatureAccess, schemaId } = props;
+  const projectID = globals.hasuraCloudProjectId || '';
+  const v2Info = useGetV2Info(projectID);
   if (!hasFeatureAccess) {
     return <FeatureRequest />;
   }
 
-  return <SchemaRegistryHome schemaId={schemaId} />;
+  switch (v2Info.kind) {
+    case 'loading':
+      return <p>Loading...</p>;
+    case 'error':
+      return <p>Error: {v2Info.message}</p>;
+  }
+
+  return (
+    <SchemaRegistryHome
+      schemaId={schemaId}
+      v2Cursor={v2Info.v2Cursor}
+      v2Count={v2Info.v2Count}
+    />
+  );
 };
+
 type SchemaDetailsViewProps = {
   params: {
     id?: string;
@@ -77,8 +94,11 @@ export const SchemaRegistryContainer: React.VFC<
 
   return (
     <div className="p-4 flex flex-col w-full">
-      <Header />
-      <Body hasFeatureAccess={hasFeatureAccess} schemaId={schemaId} />
+      <SchemaRegistryHeader />
+      <SchemaRegistryBody
+        hasFeatureAccess={hasFeatureAccess}
+        schemaId={schemaId}
+      />
     </div>
   );
 };

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
 import { schemaRegsitryControlPlaneClient } from '../utils';
-import { FETCH_REGISTRY_SCHEMA_QUERY } from '../queries';
-import { GetRegistrySchemaResponseWithError } from '../types';
+import { FETCH_URL_REGISTRY_SCHEMA_QUERY } from '../queries';
 import {
-  FETCH_REGISTRY_SCHEMA_QUERY_NAME,
-  SCHEMA_REGISTRY_REFRESH_TIME,
-} from '../constants';
+  GetURLRegistrySchemaResponseWithError,
+  SchemaChangeListDumpWithSiblingSchema,
+} from '../types';
+import { FETCH_URL_REGISTRY_SCHEMA_QUERY_NAME } from '../constants';
 
 type FetchSchemaResponse =
   | {
@@ -18,29 +18,25 @@ type FetchSchemaResponse =
     }
   | {
       kind: 'success';
-      response: NonNullable<GetRegistrySchemaResponseWithError['data']>;
+      response: SchemaChangeListDumpWithSiblingSchema[];
     };
 
-export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
+export const useGetURLSchema = (schemaId: string): FetchSchemaResponse => {
   const fetchRegistrySchemaQueryFn = (schemaId: string) => {
     return schemaRegsitryControlPlaneClient.query<
-      GetRegistrySchemaResponseWithError,
+      GetURLRegistrySchemaResponseWithError,
       { schemaId: string }
-    >(FETCH_REGISTRY_SCHEMA_QUERY, {
+    >(FETCH_URL_REGISTRY_SCHEMA_QUERY, {
       schemaId: schemaId,
     });
   };
 
-  const { data, error, isLoading, refetch } = useQuery({
-    queryKey: FETCH_REGISTRY_SCHEMA_QUERY_NAME,
+  const { data, error, isLoading } = useQuery({
+    queryKey: FETCH_URL_REGISTRY_SCHEMA_QUERY_NAME,
     queryFn: () => fetchRegistrySchemaQueryFn(schemaId),
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    staleTime: SCHEMA_REGISTRY_REFRESH_TIME,
   });
-  React.useEffect(() => {
-    refetch();
-  }, [schemaId]);
   if (isLoading) {
     return {
       kind: 'loading',
@@ -53,8 +49,14 @@ export const useGetSchema = (schemaId: string): FetchSchemaResponse => {
       message: 'error',
     };
   }
+  if (data.data?.schema_registry_dumps_v2.length) {
+    return {
+      kind: 'success',
+      response: data.data.schema_registry_dumps_v2,
+    };
+  }
   return {
     kind: 'success',
-    response: data.data,
+    response: data.data.schema_registry_dumps,
   };
 };
