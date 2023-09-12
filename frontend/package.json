@@ -19,6 +19,7 @@
     "format:write:all": "nx format:write --all",
     "install-git-hooks": "cd .. && husky install frontend/.husky",
     "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml",
+    "generate-schema-registry-gql-types": "graphql-codegen --config schema-registry-graphql-codegen.yml",
     "check-lock-files": "node ./tools/scripts/check-lock-files.js",
     "postinstall": "yarn check-lock-files"
   },
