@@ -42,6 +42,7 @@ import { ManageFunction } from '../../../features/Data/ManageFunction/ManageFunc
 import { AddNativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery';
 import { NativeQueryRoute } from '../../../features/Data/LogicalModels/AddNativeQuery/NativeQueryLandingPage';
 import { LogicalModelRoute } from '../../../features/Data/LogicalModels/LogicalModel/LogicalModelLandingPage';
+import { ModelSummaryContainer } from './ModelSummary/ModelSummaryContainer';
 
 const makeDataRouter = (
   connect,
@@ -79,8 +80,10 @@ const makeDataRouter = (
       </Route>
 
       <Route path="manage" component={ConnectedDatabaseManagePage} />
+      <Route path="model-count-summary" component={ModelSummaryContainer} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path="sql" component={rawSQLConnector(connect)} />
+
       <Route path="native-queries">
         <IndexRoute component={NativeQueries} />
         <Route path="create" component={AddNativeQueryRoute} />

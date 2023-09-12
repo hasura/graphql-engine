@@ -92,6 +92,22 @@ const DataPageContainer = ({ children, location }) => {
                 Native Queries
               </Link>
             </li>
+            <li
+              role="presentation"
+              className={
+                currentLocation.includes('/model-count-summary')
+                  ? styles.active
+                  : ''
+              }
+            >
+              <Link
+                className={styles.linkBorder}
+                to={`/data/model-count-summary`}
+                data-test="model-count-summary"
+              >
+                Model Summary
+              </Link>
+            </li>
           </>
         )}
         {migrationTab}

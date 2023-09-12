@@ -2,6 +2,7 @@ import { BiCodeBlock, BiCodeCurly, BiData } from 'react-icons/bi';
 import { TbDatabaseExport } from 'react-icons/tb';
 import { SidebarLinkType } from './types';
 import { ManageTableTabs } from '../Data/ManageTable/ManageTable';
+import { IoListOutline } from 'react-icons/io5';
 
 export const DatabaseIcon = BiData;
 
@@ -34,6 +35,16 @@ export const Links: readonly SidebarLinkType[] = [
     icon: <TbDatabaseExport />,
     hideIfNoSources: true,
     cliOnly: true,
+    isLinkActive: function () {
+      return document.location.pathname.includes(this.to);
+    },
+  },
+  {
+    to: '/data/model-count-summary',
+    name: 'Model Summary',
+    icon: <IoListOutline />,
+    hideIfNoSources: true,
+    cliOnly: false,
     isLinkActive: function () {
       return document.location.pathname.includes(this.to);
     },
