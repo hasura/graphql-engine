@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dispatch } from 'redux';
-import { useGetSchemaChangeList } from '../hooks/useGetSchemaChangeList';
+import { useGetSchemaRegistryList } from '../hooks/useGetSchemaRegistryList';
 import { Role, SchemaChangeCard, SchemaRegistryTag } from '../types';
 import globals from '../../../Globals';
 import {
@@ -29,32 +29,37 @@ import {
 import { IconTooltip } from '../../../new-components/Tooltip';
 import _push from '../../../components/Services/Data/push';
 import { useAppDispatch } from '../../../storeHooks';
+import { useGetURLSchema } from '../hooks/useGetURLSchema';
+
 interface SchemaRegistryHomeProps {
   schemaId: string | undefined;
+  v2Cursor: string;
+  v2Count: number;
 }
 export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
-  const { schemaId } = props;
+  const { schemaId, v2Cursor, v2Count } = props;
   const projectID = globals.hasuraCloudProjectId || '';
   const dispatch = useAppDispatch();
   const [pageNo, setPageno] = useState(
     parseInt(getSearchParam(window.location.search, 'page') || '0')
   );
   const schemaRoleID = schemaId ? schemaId : EMPTY_UUID_STRING;
-  const fetchSchemaResponse = useGetSchemaChangeList(
+
+  const fetchSchemasResponse = useGetSchemaRegistryList(
     projectID,
-    SCHEMA_LIST_FETCH_BATCH_SIZE,
-    pageNo * SCHEMA_LIST_FETCH_BATCH_SIZE,
-    schemaRoleID
+    pageNo,
+    v2Count,
+    v2Cursor
   );
 
-  const { kind } = fetchSchemaResponse;
+  const fetchURLSchemaResponse = useGetURLSchema(schemaRoleID);
 
-  //to check if fetchSchemaResponse changed
+  const { kind } = fetchSchemasResponse;
 
   let latestAdminRoleID: string | null = null;
   if (kind === 'success') {
     const schemaList = schemaChangeListTransformFn(
-      fetchSchemaResponse.response
+      fetchSchemasResponse.response
     );
     latestAdminRoleID =
       schemaList[0]?.roles?.find(item => item.role === ADMIN_ROLE)?.id || null;
@@ -67,6 +72,7 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
   const handlePrev = () => {
     setPageno(pageNo - 1);
   };
+
   //setting the selected role ID as admin role ID by default
   useEffect(() => {
     if (schemaRoleID === EMPTY_UUID_STRING) {
@@ -78,6 +84,7 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
       setSelectedRoleID(schemaRoleID);
     }
   }, [schemaRoleID]);
+
   useEffect(() => {
     if (latestAdminRoleID) {
       setSelectedRoleID(latestAdminRoleID);
@@ -85,22 +92,39 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
     }
     setSearchParam(pageNo);
   }, [latestAdminRoleID, pageNo]);
+
   switch (kind) {
     case 'loading':
       return <p>Loading...</p>;
     case 'error':
-      return <p>Error: {fetchSchemaResponse.message}</p>;
+      return <p>Error: {fetchSchemasResponse.message}</p>;
     case 'success': {
+      let URLSchemaCard: SchemaChangeCard[] = [];
+      if (
+        fetchURLSchemaResponse.kind === 'success' &&
+        fetchURLSchemaResponse.response[0]
+      ) {
+        const URLAdminRoleID = URLSchemaCard[0]?.roles.find(
+          item => item.role === ADMIN_ROLE
+        )?.id;
+
+        if (URLAdminRoleID !== latestAdminRoleID) {
+          URLSchemaCard = schemaChangeListTransformFn(
+            fetchURLSchemaResponse.response
+          );
+        }
+      }
       const schemaList = schemaChangeListTransformFn(
-        fetchSchemaResponse.response
+        fetchSchemasResponse.response
       );
       return (
         <div className="flex w-full">
           <div className="w-1/4">
             <SchemaChangeList
               schemas={schemaList}
+              urlSchemaCard={URLSchemaCard}
               pageNumber={pageNo}
-              totalCount={fetchSchemaResponse.totalCount}
+              totalCount={fetchSchemasResponse.totalCount}
               selectedRoleID={selectedRoleID}
               dispatch={dispatch}
               handlePrev={handlePrev}
@@ -120,6 +144,7 @@ export const SchemaRegistryHome: React.FC<SchemaRegistryHomeProps> = props => {
 
 export const SchemaChangeList: React.VFC<{
   schemas: SchemaChangeCard[];
+  urlSchemaCard: SchemaChangeCard[];
   pageNumber: number;
   totalCount: number;
   selectedRoleID: string | null;
@@ -129,6 +154,7 @@ export const SchemaChangeList: React.VFC<{
 }> = props => {
   const {
     schemas,
+    urlSchemaCard,
     pageNumber,
     totalCount,
     selectedRoleID,
@@ -142,6 +168,7 @@ export const SchemaChangeList: React.VFC<{
     totalCount <= (pageNumber + 1) * SCHEMA_LIST_FETCH_BATCH_SIZE;
   const isSecondLastPage =
     totalCount <= (pageNumber + 2) * SCHEMA_LIST_FETCH_BATCH_SIZE;
+  const schemaList: SchemaChangeCard[] = [...urlSchemaCard, ...schemas];
   return (
     <div className="overflow-x-auto rounded-md border-neutral-200 bg-white border mr-sm">
       <div className="w-full flex bg-gray-100 px-4 py-2">
@@ -152,7 +179,7 @@ export const SchemaChangeList: React.VFC<{
       <div className="flex flex-col w-full">
         {schemas.length ? (
           <div className="mb-md">
-            {schemas.map((schema, index) => (
+            {schemaList.map((schema, index) => (
               <SchemaCard
                 cardKey={index}
                 openSchemaCardIndex={openSchemaCardIndex}
