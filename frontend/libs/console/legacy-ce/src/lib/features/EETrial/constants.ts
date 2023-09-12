@@ -56,4 +56,5 @@ export const ACTIVATE_EE_TRIALS_MUTATION = gql(`
   }
 `);
 
-export const EE_TRIAL_CONTACT_US_URL = 'https://hasura.io/contact-us-eetrial';
+export const EE_TRIAL_CONTACT_US_URL =
+  'https://hasurahelp.zendesk.com/hc/en-us/requests/new';
