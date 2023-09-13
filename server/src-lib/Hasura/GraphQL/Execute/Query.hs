@@ -71,6 +71,7 @@ convertQuerySelSet ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  Tracing.HttpPropagator ->
   PrometheusMetrics ->
   GQLContext ->
   UserInfo ->
@@ -87,6 +88,7 @@ convertQuerySelSet ::
 convertQuerySelSet
   env
   logger
+  tracingPropagator
   prometheusMetrics
   gqlContext
   userInfo
@@ -141,6 +143,7 @@ convertQuerySelSet
                         httpManager
                         env
                         logger
+                        tracingPropagator
                         prometheusMetrics
                         s
                         (ActionExecContext reqHeaders (_uiSession userInfo))

@@ -9,6 +9,7 @@ where
 import Control.Lens ((.~))
 import Data.Bifunctor (first)
 import Data.Environment (Environment)
+import Data.List.Extended (uniques)
 import Data.Map.Strict qualified as Map
 import Data.Set qualified as Set
 import Data.Text qualified as Text
@@ -102,7 +103,10 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
           Map.fromList
             $ map
               (\NameValue {nv_name, nv_value} -> (nv_name, nv_value))
-              _oecResourceAttributes
+              _oecResourceAttributes,
+        _oteleiTracesPropagator =
+          mkOtelTracesPropagator
+            $ uniques (_oecTracesPropagators <> defaultOtelExporterTracesPropagators)
       }
 
 -- Smart constructor. Consistent with defaults.

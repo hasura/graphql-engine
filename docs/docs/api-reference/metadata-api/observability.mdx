@@ -108,6 +108,7 @@ X-Hasura-Role: admin
             "otlp_traces_endpoint": "http://localhost:4318/v1/traces",
             "otlp_metrics_endpoint": "http://localhost:4318/v1/metrics",
             "protocol": "http/protobuf",
+            "traces_propagators": ["tracecontext"],
             "headers": [
                 {
                     "name": "x-test-header",

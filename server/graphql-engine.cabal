@@ -770,7 +770,11 @@ library
                      , Hasura.Tracing.Reporter
                      , Hasura.Tracing.Sampling
                      , Hasura.Tracing.TraceId
+                     , Hasura.Tracing.TraceState
                      , Hasura.Tracing.Utils
+                     , Hasura.Tracing.Propagator
+                     , Hasura.Tracing.Propagator.B3
+                     , Hasura.Tracing.Propagator.W3CTraceContext
 
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
@@ -1248,6 +1252,7 @@ test-suite graphql-engine-tests
     Hasura.SQL.BackendMapSpec
     Hasura.SQL.WKTSpec
     Hasura.Tracing.TraceIdSpec
+    Hasura.Tracing.PropagatorSpec
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Expectation
     Test.Aeson.Utils

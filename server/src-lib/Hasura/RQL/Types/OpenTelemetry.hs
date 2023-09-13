@@ -19,6 +19,7 @@ module Hasura.RQL.Types.OpenTelemetry
     OtelBatchSpanProcessorConfig (..),
     defaultOtelBatchSpanProcessorConfig,
     NameValue (..),
+    TracePropagator (..),
 
     -- * Parsed configuration (schema cache)
     OpenTelemetryInfo (..),
@@ -30,6 +31,9 @@ module Hasura.RQL.Types.OpenTelemetry
     getMaxExportBatchSize,
     getMaxQueueSize,
     defaultOtelBatchSpanProcessorInfo,
+    defaultOtelExporterTracesPropagators,
+    mkOtelTracesPropagator,
+    getOtelTracesPropagator,
   )
 where
 
@@ -45,8 +49,10 @@ import Data.Set qualified as Set
 import GHC.Generics
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Headers (HeaderConf)
+import Hasura.Tracing qualified as Tracing
 import Language.Haskell.TH.Syntax (Lift)
 import Network.HTTP.Client (Request)
+import Network.HTTP.Types (RequestHeaders, ResponseHeaders)
 
 --------------------------------------------------------------------------------
 
@@ -179,7 +185,9 @@ data OtelExporterConfig = OtelExporterConfig
     _oecHeaders :: [HeaderConf],
     -- | Attributes to send as the resource attributes of an export request,
     -- for all telemetry types.
-    _oecResourceAttributes :: [NameValue]
+    _oecResourceAttributes :: [NameValue],
+    -- | Trace propagator to be used to extract and inject trace headers
+    _oecTracesPropagators :: [TracePropagator]
   }
   deriving stock (Eq, Show)
 
@@ -197,12 +205,15 @@ instance HasCodec OtelExporterConfig where
       AC..= _oecHeaders
         <*> optionalFieldWithDefault "resource_attributes" defaultOtelExporterResourceAttributes attrsDoc
       AC..= _oecResourceAttributes
+        <*> optionalFieldWithDefault "traces_propagators" defaultOtelExporterTracesPropagators propagatorsDocs
+      AC..= _oecTracesPropagators
     where
       tracesEndpointDoc = "Target URL to which the exporter is going to send traces. No default."
       metricsEndpointDoc = "Target URL to which the exporter is going to send metrics. No default."
       protocolDoc = "The transport protocol"
       headersDoc = "Key-value pairs to be used as headers to send with an export request."
       attrsDoc = "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes."
+      propagatorsDocs = "List of propagators to inject and extract traces data from headers."
 
 instance FromJSON OtelExporterConfig where
   parseJSON = J.withObject "OtelExporterConfig" $ \o -> do
@@ -216,17 +227,20 @@ instance FromJSON OtelExporterConfig where
       o .:? "headers" .!= defaultOtelExporterHeaders
     _oecResourceAttributes <-
       o .:? "resource_attributes" .!= defaultOtelExporterResourceAttributes
+    _oecTracesPropagators <-
+      o .:? "traces_propagators" .!= defaultOtelExporterTracesPropagators
     pure OtelExporterConfig {..}
 
 instance ToJSON OtelExporterConfig where
-  toJSON (OtelExporterConfig otlpTracesEndpoint otlpMetricsEndpoint protocol headers resourceAttributes) =
+  toJSON (OtelExporterConfig otlpTracesEndpoint otlpMetricsEndpoint protocol headers resourceAttributes tracesPropagators) =
     J.object
       $ catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
           ("otlp_metrics_endpoint" .=) <$> otlpMetricsEndpoint,
           Just $ "protocol" .= protocol,
           Just $ "headers" .= headers,
-          Just $ "resource_attributes" .= resourceAttributes
+          Just $ "resource_attributes" .= resourceAttributes,
+          Just $ "traces_propagators" .= tracesPropagators
         ]
 
 defaultOtelExporterConfig :: OtelExporterConfig
@@ -236,7 +250,8 @@ defaultOtelExporterConfig =
       _oecMetricsEndpoint = defaultOtelExporterMetricsEndpoint,
       _oecProtocol = defaultOtelExporterProtocol,
       _oecHeaders = defaultOtelExporterHeaders,
-      _oecResourceAttributes = defaultOtelExporterResourceAttributes
+      _oecResourceAttributes = defaultOtelExporterResourceAttributes,
+      _oecTracesPropagators = defaultOtelExporterTracesPropagators
     }
 
 -- | Possible protocol to use with OTLP. Currently, only http/protobuf is
@@ -294,6 +309,31 @@ instance FromJSON NameValue where
     nv_value <- o .: "value"
     pure NameValue {..}
 
+-- Internal helper type for trace propagators
+data TracePropagator
+  = B3
+  | TraceContext
+  deriving stock (Eq, Ord, Show, Bounded, Enum)
+
+instance HasCodec TracePropagator where
+  codec =
+    ( boundedEnumCodec \case
+        B3 -> "b3"
+        TraceContext -> "tracecontext"
+    )
+      <?> "Possible trace propagators to use with OTLP"
+
+instance FromJSON TracePropagator where
+  parseJSON = J.withText "TracePropagator" \case
+    "b3" -> pure B3
+    "tracecontext" -> pure TraceContext
+    x -> fail $ "unexpected string '" <> show x <> "'."
+
+instance ToJSON TracePropagator where
+  toJSON = \case
+    B3 -> J.String "b3"
+    TraceContext -> J.String "tracecontext"
+
 defaultOtelExporterTracesEndpoint :: Maybe Text
 defaultOtelExporterTracesEndpoint = Nothing
 
@@ -308,6 +348,9 @@ defaultOtelExporterHeaders = []
 
 defaultOtelExporterResourceAttributes :: [NameValue]
 defaultOtelExporterResourceAttributes = []
+
+defaultOtelExporterTracesPropagators :: [TracePropagator]
+defaultOtelExporterTracesPropagators = [B3]
 
 -- https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor
 newtype OtelBatchSpanProcessorConfig = OtelBatchSpanProcessorConfig
@@ -379,11 +422,13 @@ data OtelExporterInfo = OtelExporterInfo
     -- only operations on data are (1) folding and (2) union with a small
     -- map of default attributes, and Map should be is faster than HashMap for
     -- the latter.
-    _oteleiResourceAttributes :: Map Text Text
+    _oteleiResourceAttributes :: Map Text Text,
+    -- | Trace propagator to be used to extract and inject trace headers
+    _oteleiTracesPropagator :: Tracing.Propagator RequestHeaders ResponseHeaders
   }
 
 emptyOtelExporterInfo :: OtelExporterInfo
-emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing mempty
+emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing mempty mempty
 
 -- | Batch processor configuration for trace export.
 --
@@ -407,6 +452,16 @@ getMaxExportBatchSize = _obspiMaxExportBatchSize
 
 getMaxQueueSize :: OtelBatchSpanProcessorInfo -> Int
 getMaxQueueSize = _obspiMaxQueueSize
+
+mkOtelTracesPropagator :: [TracePropagator] -> Tracing.HttpPropagator
+mkOtelTracesPropagator tps = foldMap toPropagator tps
+  where
+    toPropagator = \case
+      B3 -> Tracing.b3TraceContextPropagator
+      TraceContext -> Tracing.w3cTraceContextPropagator
+
+getOtelTracesPropagator :: OpenTelemetryInfo -> Tracing.HttpPropagator
+getOtelTracesPropagator = _oteleiTracesPropagator . _otiExporterOtlp
 
 -- | Defaults taken from
 -- https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#batching-processor

@@ -76,6 +76,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
@@ -462,7 +463,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
               Tracing.samplingStateFromHeader
                 $ e
                 ^? JL.key "trace_context" . JL.key "sampling_state" . JL._String
-        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
+        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState Tracing.emptyTraceState
 
     processEvent ::
       forall io r b.
@@ -542,6 +543,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                         $ mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook)
                         >>= \reqDetails -> do
                           let request = extractRequest reqDetails
+                              tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig cache
                               logger' res details = do
                                 logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders triggersErrorLogLevelStatus
                                 liftIO $ do
@@ -571,7 +573,7 @@ processEventQueue logger statsLogger httpMgr getSchemaCache getEventEngineCtx ac
                                   liftIO $ EKG.Gauge.dec $ smNumEventHTTPWorkers serverMetrics
                                   liftIO $ Prometheus.Gauge.dec (eventTriggerHTTPWorkers eventTriggerMetrics)
                               )
-                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger')
+                              (invokeRequest reqDetails responseTransform (_rdSessionVars reqDetails) logger' tracesPropagator)
                           pure (request, resp)
                     case eitherReqRes of
                       Right (req, resp) -> do

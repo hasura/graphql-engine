@@ -58,6 +58,7 @@ export const DisabledWithoutLicense: StoryObj<typeof OpenTelemetry> = {
       attributes: [],
       dataType: ['traces'],
       connectionType: 'http/protobuf',
+      tracesPropagators: [],
     },
 
     withoutLicense: true,
@@ -91,6 +92,7 @@ export const Enabled: StoryObj<typeof OpenTelemetry> = {
       attributes: [],
       dataType: ['traces'],
       connectionType: 'http/protobuf',
+      tracesPropagators: [],
     },
   },
 };
@@ -156,6 +158,7 @@ const metadataLoadedProps: ComponentPropsWithoutRef<typeof OpenTelemetry> = {
     connectionType: 'http/protobuf',
     tracesEndpoint: 'http://localhost:1234',
     metricsEndpoint: 'http://localhost:1234',
+    tracesPropagators: ['tracecontext'],
     headers: [{ name: 'foo', value: 'bar', type: 'from_value' }],
     attributes: [{ name: 'foo', value: 'bar', type: 'from_value' }],
   },

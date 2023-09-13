@@ -55,6 +55,7 @@ import Hasura.RQL.Types.Allowlist
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Subscription
@@ -364,6 +365,7 @@ getResolvedExecPlan
   maybeOperationName
   reqId = do
     let gCtx = makeGQLContext userInfo sc queryType
+        tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
 
     -- Construct the full 'ResolvedExecutionPlan' from the 'queryParts :: SingleOperation'.
     (parameterizedQueryHash, resolvedExecPlan) <-
@@ -373,6 +375,7 @@ getResolvedExecPlan
             EQ.convertQuerySelSet
               env
               logger
+              tracesPropagator
               prometheusMetrics
               gCtx
               userInfo
@@ -393,6 +396,7 @@ getResolvedExecPlan
             EM.convertMutationSelectionSet
               env
               logger
+              tracesPropagator
               prometheusMetrics
               gCtx
               sqlGenCtx

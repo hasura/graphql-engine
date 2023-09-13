@@ -157,6 +157,29 @@ currently supported.
 Batch size is the maximum number of data points (spans in the context of traces) allowed per export request made to the
 observability tool. Default size is 512.
 
+### Trace Propagations
+
+Trace Propagation implements the mechanism that exchanges context between services and processes. It serializes or
+deserializes the context object and provides the relevant trace information to be propagated from one service to
+another. GraphQL Engine supports the following propagation mechanisms:
+
+- [B3 Propagation](https://github.com/openzipkin/b3-propagation)
+- [W3C Trace Context](https://www.w3.org/TR/trace-context)
+
+:::info Trace Propagation support
+
+W3C Trace Context is supported for Hasura GraphQL Engine versions `v2.35.0` and above.
+
+:::
+
+B3 propagation is enabled by default. You can enable other protocols in the `OpenTelemetry Exporter` configuration.
+
+<Thumbnail
+  src="/img/enterprise/open-telemetry-trace-propagation.png"
+  alt="OpenTelemetry Trace Propagation Configuration"
+  width="1000px"
+/>
+
 ### Headers
 
 Headers are _(optionally)_ added to every request made by Hasura to the observability tool. They are generally

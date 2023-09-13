@@ -7,6 +7,8 @@ const endPointSchema = z.string();
 // SCHEMA
 // --------------------------------------------------
 
+export const tracesPropagatorSchema = z.enum(['b3', 'tracecontext']);
+
 export const formSchema = z
   .object({
     // CONNECTION TYPE
@@ -39,6 +41,9 @@ export const formSchema = z
       // the user will only see one error and understand everything at once.
       .min(1, { message: 'The value should be between 1 and 512' })
       .max(512, { message: 'The value should be between 1 and 512' }),
+
+    // Enable extra trace propagators besides b3
+    tracesPropagators: tracesPropagatorSchema.array(),
   })
   // enforce invariant that: when export is enabled globally AND when the
   // corresponding data_type is enabled THEN a valid endpoint url is provided.
@@ -87,4 +92,5 @@ export const defaultValues: FormValues = {
 
   headers: [],
   attributes: [],
+  tracesPropagators: [],
 };

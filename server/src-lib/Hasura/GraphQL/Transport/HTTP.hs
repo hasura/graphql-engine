@@ -73,6 +73,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RemoteSchema.SchemaCache
@@ -371,6 +372,8 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
 
     forWithKey = flip InsOrdHashMap.traverseWithKey
 
+    tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
+
     executePlan ::
       GQLReqParsed ->
       (m AnnotatedResponse -> m AnnotatedResponse) ->
@@ -470,7 +473,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
               runDBQuery @b reqId reqUnparsed fieldName userInfo logger agentLicenseKey sourceConfig (fmap (statsToAnyBackend @b) tx) genSql resolvedConnectionTemplate
         finalResponse <-
-          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed
+          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -480,7 +483,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
         (time, resp) <- doQErr $ do
           (time, (resp, _)) <- EA.runActionExecution userInfo aep
           finalResponse <-
-            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed
+            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
           pure (time, finalResponse)
         pure $ AnnotatedResponsePart time Telem.Empty resp []
       E.ExecStepRaw json -> do
@@ -503,7 +506,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             \(EB.DBStepInfo _ sourceConfig genSql tx resolvedConnectionTemplate :: EB.DBStepInfo b) ->
               runDBMutation @b reqId reqUnparsed fieldName userInfo logger agentLicenseKey sourceConfig (fmap EB.arResult tx) genSql resolvedConnectionTemplate
         finalResponse <-
-          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed
+          RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
         pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse responseHeaders
       E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindRemoteSchema
@@ -513,7 +516,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
         (time, (resp, hdrs)) <- doQErr $ do
           (time, (resp, hdrs)) <- EA.runActionExecution userInfo aep
           finalResponse <-
-            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed
+            RJ.processRemoteJoins reqId logger agentLicenseKey env reqHeaders userInfo resp remoteJoins reqUnparsed tracesPropagator
           pure (time, (finalResponse, hdrs))
         pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
       E.ExecStepRaw json -> do
@@ -526,7 +529,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
 
     runRemoteGQ fieldName rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-
-        doQErr $ E.execRemoteGQ env userInfo reqHeaders (rsDef rsi) gqlReq
+        doQErr $ E.execRemoteGQ env tracesPropagator userInfo reqHeaders (rsDef rsi) gqlReq
       value <- extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
         doQErr
@@ -541,6 +544,7 @@ runGQ env sqlGenCtx sc enableAL readOnlyMode prometheusMetrics logger agentLicen
             (encJFromOrderedValue value)
             remoteJoins
             reqUnparsed
+            tracesPropagator
       let filteredHeaders = filter ((== "Set-Cookie") . fst) remoteResponseHeaders
       pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse filteredHeaders
 

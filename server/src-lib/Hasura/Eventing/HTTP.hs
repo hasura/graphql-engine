@@ -363,13 +363,14 @@ invokeRequest ::
   Maybe Transform.ResponseTransform ->
   Maybe SessionVariables ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
+  HttpPropagator ->
   m (HTTPResp a)
-invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger = do
+invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger tracesPropagator = do
   let finalReq = fromMaybe _rdOriginalRequest _rdTransformedRequest
       reqBody = fromMaybe J.Null $ preview (HTTP.body . HTTP._RequestBodyLBS) finalReq >>= J.decode @J.Value
   manager <- asks getter
   -- Perform the HTTP Request
-  eitherResp <- traceHTTPRequest finalReq $ runHTTP manager
+  eitherResp <- traceHTTPRequest tracesPropagator finalReq $ runHTTP manager
   -- Log the result along with the pre/post transformation Request data
   logger eitherResp reqDetails
   resp <- eitherResp `onLeft` (throwError . HTTPError reqBody)

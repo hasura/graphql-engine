@@ -27,7 +27,7 @@ import Hasura.HTTP qualified
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as RQL
-import Hasura.Tracing (MonadTrace, MonadTraceContext, traceHTTPRequest)
+import Hasura.Tracing (MonadTrace, MonadTraceContext, b3TraceContextPropagator, traceHTTPRequest)
 import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.HTTP.Types.Status (Status)
 import Servant.Client
@@ -73,7 +73,7 @@ runRequestAcceptStatus' acceptStatus req = do
           HTTP.headers
             %= \headers -> maybe headers (\(AgentLicenseKey key) -> ("X-Hasura-License", key) : headers) _accAgentLicenseKey
 
-  (tracedReq, responseOrException) <- traceHTTPRequest transformableReq' \tracedReq ->
+  (tracedReq, responseOrException) <- traceHTTPRequest b3TraceContextPropagator transformableReq' \tracedReq ->
     fmap (tracedReq,) . liftIO . try @HTTP.HttpException $ HTTP.httpLbs tracedReq _accHttpManager
   logAgentRequest _accLogger tracedReq responseOrException
   case responseOrException of

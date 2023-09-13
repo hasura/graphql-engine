@@ -27,6 +27,7 @@ import System.Random.Stateful qualified as Random
 --
 -- Debug sampling state not represented.
 data SamplingState = SamplingDefer | SamplingDeny | SamplingAccept
+  deriving (Show, Eq)
 
 -- | Convert a sampling state to a value for the X-B3-Sampled header. A return
 -- value of Nothing indicates that the header should not be set.

@@ -74,8 +74,9 @@ processRemoteJoins ::
   EncJSON ->
   Maybe RemoteJoins ->
   GQLReqUnparsed ->
+  Tracing.HttpPropagator ->
   m EncJSON
-processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq =
+processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo lhs maybeJoinTree gqlreq tracesPropagator =
   Tracing.newSpan "Process remote joins" $ forRemoteJoins maybeJoinTree lhs \joinTree -> do
     lhsParsed <-
       JO.eitherDecode (encJToLBS lhs)
@@ -123,7 +124,7 @@ processRemoteJoins requestId logger agentLicenseKey env requestHeaders userInfo 
       m BL.ByteString
     callRemoteServer remoteSchemaInfo request =
       fmap (view _3)
-        $ execRemoteGQ env userInfo requestHeaders remoteSchemaInfo request
+        $ execRemoteGQ env tracesPropagator userInfo requestHeaders remoteSchemaInfo request
 
 -- | Fold the join tree.
 --

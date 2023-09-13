@@ -39,7 +39,6 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Builder qualified as BB
 import Data.ByteString.Char8 qualified as B8
-import Data.ByteString.Char8 qualified as Char8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.HashMap.Strict qualified as HashMap
@@ -79,6 +78,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DDL.Schema.Cache.Config
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Endpoint as EP
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.Roles (adminRoleName, roleNameToTxt)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -302,40 +302,19 @@ mkSpockAction ::
 mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
   AppEnv {..} <- lift askAppEnv
   AppContext {..} <- liftIO $ getAppContext appStateRef
+  SchemaCache {..} <- liftIO $ getSchemaCache appStateRef
   req <- Spock.request
   let origHeaders = Wai.requestHeaders req
       ipAddress = Wai.getSourceFromFallback req
       pathInfo = Wai.rawPathInfo req
+      propagators = getOtelTracesPropagator scOpenTelemetryConfig
 
   -- Bytes are actually read from the socket here. Time this.
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO do
-    -- B3 TraceIds can have a length of either 64 bits (16 hex chars) or 128 bits
-    -- (32 hex chars). For 64-bit TraceIds, we pad them with zeros on the left to
-    -- make them 128 bits long.
-    let traceIdMaybe =
-          lookup "X-B3-TraceId" headers >>= \rawTraceId ->
-            if
-              | Char8.length rawTraceId == 32 ->
-                  Tracing.traceIdFromHex rawTraceId
-              | Char8.length rawTraceId == 16 ->
-                  Tracing.traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
-              | otherwise ->
-                  Nothing
 
-    case traceIdMaybe of
-      Just traceId -> do
-        freshSpanId <- Tracing.randomSpanId
-        let parentSpanId = Tracing.spanIdFromHex =<< lookup "X-B3-SpanId" headers
-            samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
-        pure $ Tracing.TraceContext traceId freshSpanId parentSpanId samplingState
-      Nothing -> do
-        freshTraceId <- Tracing.randomTraceId
-        freshSpanId <- Tracing.randomSpanId
-        let samplingState = Tracing.samplingStateFromHeader $ lookup "X-B3-Sampled" headers
-        pure $ Tracing.TraceContext freshTraceId freshSpanId Nothing samplingState
+  tracingCtx <- liftIO $ Tracing.extract propagators headers
 
   let runTrace ::
         forall m1 a1.

@@ -50,17 +50,18 @@ convertMutationAction ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  Tracing.HttpPropagator ->
   PrometheusMetrics ->
   UserInfo ->
   HTTP.RequestHeaders ->
   Maybe GH.GQLQueryText ->
   ActionMutation Void ->
   m ActionExecutionPlan
-convertMutationAction env logger prometheusMetrics userInfo reqHeaders gqlQueryText action = do
+convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders gqlQueryText action = do
   httpManager <- askHTTPManager
   case action of
     AMSync s ->
-      pure $ AEPSync $ resolveActionExecution httpManager env logger prometheusMetrics s actionExecContext gqlQueryText
+      pure $ AEPSync $ resolveActionExecution httpManager env logger tracesPropagator prometheusMetrics s actionExecContext gqlQueryText
     AMAsync s ->
       AEPAsyncMutation <$> resolveActionMutationAsync s reqHeaders userSession
   where
@@ -79,6 +80,7 @@ convertMutationSelectionSet ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
+  Tracing.HttpPropagator ->
   PrometheusMetrics ->
   GQLContext ->
   SQLGenCtx ->
@@ -96,6 +98,7 @@ convertMutationSelectionSet ::
 convertMutationSelectionSet
   env
   logger
+  tracesPropagator
   prometheusMetrics
   gqlContext
   SQLGenCtx {stringifyNum}
@@ -150,7 +153,7 @@ convertMutationSelectionSet
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
-              plan <- convertMutationAction env logger prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
+              plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
               pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations
             RFRaw customFieldVal -> flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles

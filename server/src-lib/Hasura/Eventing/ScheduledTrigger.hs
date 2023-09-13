@@ -156,6 +156,7 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
@@ -247,13 +248,14 @@ processCronEvents ::
   ) =>
   L.Logger L.Hasura ->
   HTTP.Manager ->
+  SchemaCache ->
   ScheduledTriggerMetrics ->
   [CronEvent] ->
   HashMap TriggerName CronTriggerInfo ->
   TVar (Set.Set CronEventId) ->
   TriggersErrorLogLevelStatus ->
   m ()
-processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo lockedCronEvents triggersErrorLogLevelStatus = do
+processCronEvents logger httpMgr sc scheduledTriggerMetrics cronEvents cronTriggersInfo lockedCronEvents triggersErrorLogLevelStatus = do
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
   -- graceful shutdown is initiated in midst of processing these events
@@ -284,6 +286,7 @@ processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggers
               runExceptT
                 $ flip runReaderT (logger, httpMgr)
                 $ processScheduledEvent
+                  sc
                   scheduledTriggerMetrics
                   id'
                   ctiHeaders
@@ -319,6 +322,7 @@ processOneOffScheduledEvents ::
   Env.Environment ->
   L.Logger L.Hasura ->
   HTTP.Manager ->
+  SchemaCache ->
   ScheduledTriggerMetrics ->
   [OneOffScheduledEvent] ->
   TVar (Set.Set OneOffScheduledEventId) ->
@@ -328,6 +332,7 @@ processOneOffScheduledEvents
   env
   logger
   httpMgr
+  schemaCache
   scheduledTriggerMetrics
   oneOffEvents
   lockedOneOffScheduledEvents
@@ -363,7 +368,7 @@ processOneOffScheduledEvents
           Right (webhookEnvRecord, eventHeaderInfo) -> do
             let processScheduledEventAction =
                   flip runReaderT (logger, httpMgr)
-                    $ processScheduledEvent scheduledTriggerMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff triggersErrorLogLevelStatus
+                    $ processScheduledEvent schemaCache scheduledTriggerMetrics _ooseId eventHeaderInfo retryCtx payload webhookEnvRecord OneOff triggersErrorLogLevelStatus
 
                 eventTimeout = unrefine $ strcTimeoutSeconds $ _ooseRetryConf
 
@@ -419,14 +424,15 @@ processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerM
   return
     $ Forever ()
     $ const do
-      cronTriggersInfo <- scCronTriggers <$> liftIO getSC
+      sc <- liftIO getSC
       env <- liftIO getEnvHook
+      let cronTriggersInfo = scCronTriggers sc
       getScheduledEventsForDelivery (HashMap.keys cronTriggersInfo) >>= \case
         Left e -> logInternalError e
         Right (cronEvents, oneOffEvents) -> do
           logFetchedScheduledEventsStats statsLogger (CronEventsCount $ length cronEvents) (OneOffScheduledEventsCount $ length oneOffEvents)
-          processCronEvents logger httpMgr scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents triggersErrorLogLevelStatus
-          processOneOffScheduledEvents env logger httpMgr scheduledTriggerMetrics oneOffEvents leOneOffEvents triggersErrorLogLevelStatus
+          processCronEvents logger httpMgr sc scheduledTriggerMetrics cronEvents cronTriggersInfo leCronEvents triggersErrorLogLevelStatus
+          processOneOffScheduledEvents env logger httpMgr sc scheduledTriggerMetrics oneOffEvents leOneOffEvents triggersErrorLogLevelStatus
       -- NOTE: cron events are scheduled at times with minute resolution (as on
       -- unix), while one-off events can be set for arbitrary times. The sleep
       -- time here determines how overdue a scheduled event (cron or one-off)
@@ -444,6 +450,7 @@ processScheduledEvent ::
     MonadMetadataStorage m,
     MonadError QErr m
   ) =>
+  SchemaCache ->
   ScheduledTriggerMetrics ->
   ScheduledEventId ->
   [EventHeaderInfo] ->
@@ -453,7 +460,7 @@ processScheduledEvent ::
   ScheduledEventType ->
   TriggersErrorLogLevelStatus ->
   m ()
-processScheduledEvent scheduledTriggerMetrics eventId eventHeaders retryCtx payload webhookUrl type' triggersErrorLogLevelStatus =
+processScheduledEvent schemaCache scheduledTriggerMetrics eventId eventHeaders retryCtx payload webhookUrl type' triggersErrorLogLevelStatus =
   Tracing.newTrace Tracing.sampleAlways traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
@@ -476,6 +483,7 @@ processScheduledEvent scheduledTriggerMetrics eventId eventHeaders retryCtx payl
             $ mkRequest headers httpTimeout webhookReqBody requestTransform (_envVarValue webhookUrl)
             >>= \reqDetails -> do
               let request = extractRequest reqDetails
+                  tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig schemaCache
                   logger e d = do
                     logHTTPForST e extraLogCtx d (_envVarName webhookUrl) decodedHeaders triggersErrorLogLevelStatus
                     liftIO $ do
@@ -495,7 +503,7 @@ processScheduledEvent scheduledTriggerMetrics eventId eventHeaders retryCtx payl
                         (OneOff, Left _err) -> Prometheus.Counter.inc (stmOneOffEventsInvocationTotalFailure scheduledTriggerMetrics)
                         (OneOff, Right _) -> Prometheus.Counter.inc (stmOneOffEventsInvocationTotalSuccess scheduledTriggerMetrics)
                   sessionVars = _rdSessionVars reqDetails
-              resp <- invokeRequest reqDetails responseTransform sessionVars logger
+              resp <- invokeRequest reqDetails responseTransform sessionVars logger tracesPropagator
               pure (request, resp)
         case eitherReqRes of
           Right (req, resp) ->

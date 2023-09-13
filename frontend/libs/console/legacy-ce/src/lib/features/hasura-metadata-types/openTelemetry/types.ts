@@ -61,6 +61,11 @@ const exporterSchema = z.object({
   protocol: protocolSchema,
   resource_attributes: z.array(attributeSchema),
 
+  /*
+   * Enable extra trace propagators besides b3
+   */
+  traces_propagators: z.array(z.enum(['b3', 'tracecontext'])),
+
   /**
    * The most important parts of the configuration. If OpenTelemetry export is
    * enabled globally, AND a specific telemetry type is enabled, then a valid

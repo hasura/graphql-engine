@@ -77,6 +77,7 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Server.Utils
 import Hasura.Session
+import Hasura.Tracing (b3TraceContextPropagator)
 import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -512,7 +513,7 @@ validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeade
           & Lens.set HTTP.body (HTTP.RequestBodyLBS $ J.encode requestBody)
           & Lens.set HTTP.timeout (HTTP.responseTimeoutMicro (unTimeout timeout * 1000000)) -- (default: 10 seconds)
   httpResponse <-
-    Tracing.traceHTTPRequest request $ \request' ->
+    Tracing.traceHTTPRequest b3TraceContextPropagator request $ \request' ->
       liftIO . try $ HTTP.httpLbs request' manager
 
   case httpResponse of

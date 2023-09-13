@@ -78,8 +78,9 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.Types.Common (MetricsConfig (_mcAnalyzeQueryVariables))
+import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SchemaCache (scApiLimits, scMetricsConfig)
+import Hasura.RQL.Types.SchemaCache (SchemaCache (scOpenTelemetryConfig), scApiLimits, scMetricsConfig)
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.AppStateRef
@@ -488,6 +489,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
   let gqlOpType = G._todType queryParts
       opName = getOpNameFromParsedReq reqParsed
       maybeOperationName = _unOperationName <$> opName
+      tracesPropagator = getOtelTracesPropagator $ scOpenTelemetryConfig sc
   for_ maybeOperationName $ \nm ->
     -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/instrumentation/graphql/
     Tracing.attachMetadata [("graphql.operation.name", unName nm)]
@@ -549,17 +551,17 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       finalResponse <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
                       pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
+                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                       (time, (resp, _)) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
                         pure (time, (finalResponse, hdrs))
                       pure $ AnnotatedResponsePart time Telem.Empty resp []
                     E.ExecStepRaw json -> do
@@ -628,19 +630,19 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               genSql
                               resolvedConnectionTemplate
                       finalResponse <-
-                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
+                        RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
                       pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
                       (time, (resp, hdrs)) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
                         finalResponse <-
-                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q
+                          RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
                         pure (time, (finalResponse, hdrs))
                       pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
-                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins
+                      runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
                     E.ExecStepRaw json -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
                       buildRaw json
@@ -796,12 +798,13 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       ResultCustomizer ->
       GQLReqOutgoing ->
       Maybe RJ.RemoteJoins ->
+      Tracing.HttpPropagator ->
       ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
-    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
+    runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr
-          $ E.execRemoteGQ env userInfo reqHdrs (rsDef rsi) gqlReq
+          $ E.execRemoteGQ env tracesPropagator userInfo reqHdrs (rsDef rsi) gqlReq
       value <- hoist lift $ extractFieldFromResponse fieldName resultCustomizer resp
       finalResponse <-
         doQErr
@@ -816,6 +819,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             (encJFromOrderedValue value)
             remoteJoins
             reqUnparsed
+            tracesPropagator
       return $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse []
 
     WSServerEnv

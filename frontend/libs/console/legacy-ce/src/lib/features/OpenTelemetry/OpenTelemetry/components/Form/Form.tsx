@@ -2,11 +2,15 @@ import * as React from 'react';
 import clsx from 'clsx';
 
 import { Button } from '../../../../../new-components/Button';
-import { useConsoleForm, InputField } from '../../../../../new-components/Form';
+import {
+  useConsoleForm,
+  InputField,
+  CheckboxesField,
+} from '../../../../../new-components/Form';
 import { RequestHeadersSelector } from '../../../../../new-components/RequestHeadersSelector';
 
 import type { FormValues } from './schema';
-import { formSchema } from './schema';
+import { formSchema, tracesPropagatorSchema } from './schema';
 import { Toggle } from './components/Toggle';
 import { useResetDefaultFormValues } from './hooks/useResetDefaultFormValues';
 import { CollapsibleFieldWrapper } from './components/CollapsibleFieldWrapper';
@@ -119,6 +123,21 @@ export function Form(props: FormProps) {
         clearButton
         loading={skeletonMode}
       />
+      <div>
+        <CheckboxesField
+          name="tracesPropagators"
+          label="Trace Propagations"
+          orientation="horizontal"
+          tooltip="The specification that exchanges trace context propagation data between services and processes. The b3 propagation is enabled by default."
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#trace-propagations"
+          loading={skeletonMode}
+          options={tracesPropagatorSchema.options.map(option => ({
+            label: option,
+            value: option,
+            disabled: option === 'b3',
+          }))}
+        />
+      </div>
       <CollapsibleFieldWrapper
         inputFieldName="headers"
         label="Headers"

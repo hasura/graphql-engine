@@ -6477,6 +6477,21 @@
                             "$ref": "#/components/schemas/OtelNameValue"
                         },
                         "type": "array"
+                    },
+                    "traces_propagators": {
+                        "default": [
+                            "b3"
+                        ],
+                        "description": "List of propagators to inject and extract traces data from headers.",
+                        "items": {
+                            "description": "Possible trace propagators to use with OTLP",
+                            "enum": [
+                                "b3",
+                                "tracecontext"
+                            ],
+                            "type": "string"
+                        },
+                        "type": "array"
                     }
                 },
                 "type": "object"

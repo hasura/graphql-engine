@@ -16,6 +16,7 @@ import Hasura.Prelude
 import Hasura.Tracing.Context
 import Hasura.Tracing.Sampling
 import Hasura.Tracing.TraceId
+import Hasura.Tracing.TraceState qualified as TS
 
 --------------------------------------------------------------------------------
 -- MonadTrace
@@ -105,7 +106,7 @@ newTrace :: (MonadIO m, MonadTrace m) => SamplingPolicy -> Text -> m a -> m a
 newTrace policy name body = do
   traceId <- randomTraceId
   spanId <- randomSpanId
-  let context = TraceContext traceId spanId Nothing SamplingDefer
+  let context = TraceContext traceId spanId Nothing SamplingDefer TS.emptyTraceState
   newTraceWith context policy name body
 
 -- | Create a new span with a randomly-generated id.
