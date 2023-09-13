@@ -18,7 +18,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import ProductBadge from '@site/src/components/ProductBadge';
 
-# Export Traces and Metrics to OpenTelemetry Compliant Receiver from Hasura
+# Export Traces, Metrics and Logs to OpenTelemetry Compliant Receiver from Hasura
 
 <div className="badge-container">
   <ProductBadge free pro ee self />
@@ -38,18 +38,13 @@ subscriptions with the [OpenTelemetry](https://opentelemetry.io/docs/concepts/si
 be exported directly from your Hasura instances to your observability tool that supports OpenTelemetry traces. This can
 be configured in the `Settings` section of the Hasura Console.
 
-:::info Support for metrics and logs
-
-Currently, the OpenTelemetry Integration exports traces and metrics. The support for logs will be added in the future.
-
-:::
-
 ## Configure the OpenTelemetry receiver
 
 :::info Supported from
 
 OpenTelemetry traces are supported for Hasura GraphQL Engine versions `v2.18.0` and above on Self-Hosted Enterprise,
-with support for metrics export added in `v2.31.0` and made available to all cloud tiers.
+with support for metrics export added in `v2.31.0` and for logs export added in `v2.35.0`. Also, available to all cloud
+tiers.
 
 We have deprecated the previous Open Telemetry exporter integration on Hasura Cloud in favor of this native feature, and
 you can now configure this directly via the Hasura Console's `Settings` page under the `Monitoring & Observability`
@@ -94,6 +89,7 @@ exporter_otlp:
       value: us-east
   otlp_traces_endpoint: http://host.docker.internal:4318/v1/traces
   otlp_metrics_endpoint: http://host.docker.internal:4318/v1/metrics
+  otlp_logs_endpoint: http://host.docker.internal:4318/v1/logs
   protocol: http/protobuf
 batch_span_processor:
   max_export_batch_size: 512
@@ -149,8 +145,8 @@ OpenTelemetry Protocol over HTTP (OTLP/HTTP with binary-encoded Protobuf payload
 
 ### Data Type
 
-Selects the type of observability data points to be exported. `Traces` and `Metrics` are the only data types that are
-currently supported.
+Selects the type of observability data points to be exported. `Traces`, `Logs` and `Metrics` are the only data types
+that are currently supported.
 
 ### Batch Size
 

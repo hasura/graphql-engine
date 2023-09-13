@@ -173,6 +173,7 @@ import Text.Builder qualified as TB
 --   have an adequate buffer of cron events.
 runCronEventsGenerator ::
   ( MonadIO m,
+    Tracing.MonadTraceContext m,
     MonadMetadataStorage m
   ) =>
   L.Logger L.Hasura ->
@@ -200,7 +201,7 @@ runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
             <$> mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
         insertCronEventsFor cronTriggersForHydrationWithStats
 
-      onLeft eitherRes $ L.unLogger logger . ScheduledTriggerInternalErr
+      onLeft eitherRes $ L.unLoggerTracing logger . ScheduledTriggerInternalErr
 
     -- See discussion: https://github.com/hasura/graphql-engine-mono/issues/1001
     liftIO $ sleep (minutes 1)
@@ -208,7 +209,7 @@ runCronEventsGenerator logger cronTriggerStatsLogger getSC = do
     withCronTrigger cronTriggerCache cronTriggerStat = do
       case HashMap.lookup (_ctsName cronTriggerStat) cronTriggerCache of
         Nothing -> do
-          L.unLogger logger
+          L.unLoggerTracing logger
             $ ScheduledTriggerInternalErr
             $ err500 Unexpected "could not find scheduled trigger in the schema cache"
           pure Nothing
@@ -307,7 +308,7 @@ processCronEvents logger httpMgr sc scheduledTriggerMetrics cronEvents cronTrigg
           Just finally -> onLeft finally logInternalError
         removeEventFromLockedEvents id' lockedCronEvents
   where
-    logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
+    logInternalError err = L.unLoggerTracing logger $ ScheduledTriggerInternalErr err
 
     mkErrorObject :: Text -> J.Value
     mkErrorObject errorMessage =
@@ -394,7 +395,7 @@ processOneOffScheduledEvents
               (HOther $ T.unpack $ qeError (err400 NotFound (mkInvalidEnvVarErrMsg envVarError)))
               scheduledTriggerMetrics
     where
-      logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
+      logInternalError err = L.unLoggerTracing logger $ ScheduledTriggerInternalErr err
       getTemplateFromUrl url = printTemplate $ unInputWebhook url
       mkInvalidEnvVarErrMsg envVarErrorValues = "The value for environment variables not found: " <> (getInvalidEnvVarText envVarErrorValues)
       mkErrorObject :: Text -> J.Value
@@ -439,7 +440,7 @@ processScheduledTriggers getEnvHook logger statsLogger httpMgr scheduledTriggerM
       -- might be before we begin processing:
       liftIO $ sleep (seconds 10)
   where
-    logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
+    logInternalError err = L.unLoggerTracing logger $ ScheduledTriggerInternalErr err
 
 processScheduledEvent ::
   ( MonadReader r m,
@@ -513,7 +514,7 @@ processScheduledEvent schemaCache scheduledTriggerMetrics eventId eventHeaders r
           Left (TransformationError _ e) -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
-            L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode e)
+            L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode e)
 
             -- Set event state to Error
             liftEitherM $ setScheduledEventOp eventId (SEOpStatus SESError) type'

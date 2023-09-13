@@ -148,23 +148,27 @@ instance ToJSON OtelStatus where
 data OtelDataType
   = OtelTraces
   | OtelMetrics
+  | OtelLogs
   deriving stock (Eq, Ord, Show, Bounded, Enum)
 
 instance HasCodec OtelDataType where
   codec = boundedEnumCodec \case
     OtelTraces -> "traces"
     OtelMetrics -> "metrics"
+    OtelLogs -> "logs"
 
 instance FromJSON OtelDataType where
   parseJSON = J.withText "OtelDataType" \case
     "traces" -> pure OtelTraces
     "metrics" -> pure OtelMetrics
+    "logs" -> pure OtelLogs
     x -> fail $ "unexpected string '" <> show x <> "'."
 
 instance ToJSON OtelDataType where
   toJSON = \case
     OtelTraces -> J.String "traces"
     OtelMetrics -> J.String "metrics"
+    OtelLogs -> J.String "logs"
 
 defaultOtelEnabledDataTypes :: Set OtelDataType
 defaultOtelEnabledDataTypes = Set.empty
@@ -177,6 +181,9 @@ data OtelExporterConfig = OtelExporterConfig
     -- | Target URL to which the exporter is going to send metrics. No default.
     -- Used as-is without modification (e.g. appending /v1/metrics).
     _oecMetricsEndpoint :: Maybe Text,
+    -- | Target URL to which the exporter is going to send logs. No default.
+    -- Used as-is without modification (e.g. appending /v1/logs).
+    _oecLogsEndpoint :: Maybe Text,
     -- | The transport protocol, for all telemetry types.
     _oecProtocol :: OtlpProtocol,
     -- | Key-value pairs to be used as headers to send with an export request,
@@ -199,6 +206,8 @@ instance HasCodec OtelExporterConfig where
       AC..= _oecTracesEndpoint
         <*> optionalField "otlp_metrics_endpoint" metricsEndpointDoc
       AC..= _oecMetricsEndpoint
+        <*> optionalField "otlp_logs_endpoint" logsEndpointDoc
+      AC..= _oecLogsEndpoint
         <*> optionalFieldWithDefault "protocol" defaultOtelExporterProtocol protocolDoc
       AC..= _oecProtocol
         <*> optionalFieldWithDefault "headers" defaultOtelExporterHeaders headersDoc
@@ -210,6 +219,7 @@ instance HasCodec OtelExporterConfig where
     where
       tracesEndpointDoc = "Target URL to which the exporter is going to send traces. No default."
       metricsEndpointDoc = "Target URL to which the exporter is going to send metrics. No default."
+      logsEndpointDoc = "Target URL to which the exporter is going to send logs. No default."
       protocolDoc = "The transport protocol"
       headersDoc = "Key-value pairs to be used as headers to send with an export request."
       attrsDoc = "Attributes to send as the resource attributes of an export request. We currently only support string-valued attributes."
@@ -218,9 +228,11 @@ instance HasCodec OtelExporterConfig where
 instance FromJSON OtelExporterConfig where
   parseJSON = J.withObject "OtelExporterConfig" $ \o -> do
     _oecTracesEndpoint <-
-      o .:? "otlp_traces_endpoint" .!= defaultOtelExporterTracesEndpoint
+      o .:? "otlp_traces_endpoint" .!= Nothing
     _oecMetricsEndpoint <-
-      o .:? "otlp_metrics_endpoint" .!= defaultOtelExporterMetricsEndpoint
+      o .:? "otlp_metrics_endpoint" .!= Nothing
+    _oecLogsEndpoint <-
+      o .:? "otlp_logs_endpoint" .!= Nothing
     _oecProtocol <-
       o .:? "protocol" .!= defaultOtelExporterProtocol
     _oecHeaders <-
@@ -232,11 +244,12 @@ instance FromJSON OtelExporterConfig where
     pure OtelExporterConfig {..}
 
 instance ToJSON OtelExporterConfig where
-  toJSON (OtelExporterConfig otlpTracesEndpoint otlpMetricsEndpoint protocol headers resourceAttributes tracesPropagators) =
+  toJSON (OtelExporterConfig otlpTracesEndpoint otlpMetricsEndpoint otlpLogsEndpoint protocol headers resourceAttributes tracesPropagators) =
     J.object
       $ catMaybes
         [ ("otlp_traces_endpoint" .=) <$> otlpTracesEndpoint,
           ("otlp_metrics_endpoint" .=) <$> otlpMetricsEndpoint,
+          ("otlp_logs_endpoint" .=) <$> otlpLogsEndpoint,
           Just $ "protocol" .= protocol,
           Just $ "headers" .= headers,
           Just $ "resource_attributes" .= resourceAttributes,
@@ -246,8 +259,9 @@ instance ToJSON OtelExporterConfig where
 defaultOtelExporterConfig :: OtelExporterConfig
 defaultOtelExporterConfig =
   OtelExporterConfig
-    { _oecTracesEndpoint = defaultOtelExporterTracesEndpoint,
-      _oecMetricsEndpoint = defaultOtelExporterMetricsEndpoint,
+    { _oecTracesEndpoint = Nothing,
+      _oecMetricsEndpoint = Nothing,
+      _oecLogsEndpoint = Nothing,
       _oecProtocol = defaultOtelExporterProtocol,
       _oecHeaders = defaultOtelExporterHeaders,
       _oecResourceAttributes = defaultOtelExporterResourceAttributes,
@@ -334,12 +348,6 @@ instance ToJSON TracePropagator where
     B3 -> J.String "b3"
     TraceContext -> J.String "tracecontext"
 
-defaultOtelExporterTracesEndpoint :: Maybe Text
-defaultOtelExporterTracesEndpoint = Nothing
-
-defaultOtelExporterMetricsEndpoint :: Maybe Text
-defaultOtelExporterMetricsEndpoint = Nothing
-
 defaultOtelExporterProtocol :: OtlpProtocol
 defaultOtelExporterProtocol = OtlpProtocolHttpProtobuf
 
@@ -415,6 +423,11 @@ data OtelExporterInfo = OtelExporterInfo
     --  A value of 'Nothing' indicates that the export of trace data is
     -- disabled.
     _oteleiMetricsBaseRequest :: Maybe Request,
+    -- | HTTP 'Request' containing (1) the target URL to which the exporter is
+    -- going to send logs, and (2) the user-specified request headers.
+    --  A value of 'Nothing' indicates that the export of trace data is
+    -- disabled.
+    _oteleiLogsBaseRequest :: Maybe Request,
     -- | Attributes to send as the resource attributes of an export request. We
     -- currently only support string-valued attributes.
     --
@@ -428,7 +441,7 @@ data OtelExporterInfo = OtelExporterInfo
   }
 
 emptyOtelExporterInfo :: OtelExporterInfo
-emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing mempty mempty
+emptyOtelExporterInfo = OtelExporterInfo Nothing Nothing Nothing mempty mempty
 
 -- | Batch processor configuration for trace export.
 --

@@ -15,10 +15,11 @@ export const formSchema = z
     connectionType: z.enum(['http/protobuf']),
     enabled: z.boolean(),
 
-    dataType: z.enum(['traces', 'metrics']).array(),
+    dataType: z.enum(['traces', 'metrics', 'logs']).array(),
     // NOTE: We enforce more specific invariants below:
     tracesEndpoint: z.union([endPointSchema, z.literal('')]),
     metricsEndpoint: z.union([endPointSchema, z.literal('')]),
+    logsEndpoint: z.union([endPointSchema, z.literal('')]),
 
     // HEADERS
     // Names should be validated against /^[a-zA-Z0-9]*$/ but we must be sure the server performs the
@@ -68,6 +69,15 @@ export const formSchema = z
         'A valid metrics endpoint must be supplied when metrics export is enabled',
       path: ['metricsEndpoint'],
     }
+  )
+  .refine(
+    obj =>
+      obj.enabled && obj.dataType.includes('logs') ? obj.logsEndpoint : true,
+    {
+      message:
+        'A valid logs endpoint must be supplied when logs export is enabled',
+      path: ['logsEndpoint'],
+    }
   );
 
 // --------------------------------------------------
@@ -82,13 +92,14 @@ export const defaultValues: FormValues = {
   // localhost would not work because HGE is running inside Docker, and the OpenTelemetry host is not.
   tracesEndpoint: '',
   metricsEndpoint: '',
+  logsEndpoint: '',
 
   // At the time of writing, the server sets 512 as the default value.
   batchSize: 512,
 
   connectionType: 'http/protobuf',
 
-  dataType: ['traces', 'metrics'],
+  dataType: ['traces', 'metrics', 'logs'],
 
   headers: [],
   attributes: [],

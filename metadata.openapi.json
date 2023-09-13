@@ -6405,7 +6405,8 @@
                         "items": {
                             "enum": [
                                 "traces",
-                                "metrics"
+                                "metrics",
+                                "logs"
                             ],
                             "type": "string"
                         },
@@ -6453,6 +6454,10 @@
                             ]
                         },
                         "type": "array"
+                    },
+                    "otlp_logs_endpoint": {
+                        "description": "Target URL to which the exporter is going to send logs. No default.",
+                        "type": "string"
                     },
                     "otlp_metrics_endpoint": {
                         "description": "Target URL to which the exporter is going to send metrics. No default.",

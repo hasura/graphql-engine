@@ -46,6 +46,7 @@ export function Form(props: FormProps) {
 
   const traceType = dataType.includes('traces');
   const metricsType = dataType.includes('metrics');
+  const logsType = dataType.includes('logs');
 
   const buttonTexts = firstTimeSetup
     ? { text: 'Connect', loadingText: 'Connecting...' }
@@ -64,7 +65,7 @@ export function Form(props: FormProps) {
         loading={skeletonMode}
       />
       {/* No need to redact the input fields since Heap avoid recording the input field values by default */}
-      <div className="flex">
+      <div>
         <InputField
           name="tracesEndpoint"
           label="Traces Endpoint"
@@ -73,7 +74,6 @@ export function Form(props: FormProps) {
           learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
           clearButton
           loading={skeletonMode}
-          className="pr-4"
           disabled={!traceType}
           prependLabel={
             <Switch
@@ -107,6 +107,29 @@ export function Form(props: FormProps) {
                   checked
                     ? dataType.concat('metrics')
                     : dataType.filter(type => type !== 'metrics')
+                );
+              }}
+            />
+          }
+        />
+        <InputField
+          name="logsEndpoint"
+          label="Logs Endpoint"
+          placeholder="Your OpenTelemetry logs endpoint"
+          tooltip="OpenTelemetry-compliant logs receiver endpoint URL(At the moment, only HTTP is supported). This usually ends in /v1/logs. Environment variable templating is available using the {{VARIABLE}} tag"
+          learnMoreLink="https://hasura.io/docs/latest/observability/opentelemetry/#endpoint"
+          clearButton
+          loading={skeletonMode}
+          disabled={!logsType}
+          prependLabel={
+            <Switch
+              checked={logsType}
+              onCheckedChange={checked => {
+                setValue(
+                  'dataType',
+                  checked
+                    ? dataType.concat('logs')
+                    : dataType.filter(type => type !== 'logs')
                 );
               }}
             />

@@ -116,7 +116,6 @@ keywords:
 | datasets            | true     | `[String]` \| [FromEnv](#fromenv)              | List of BigQuery datasets                                           |
 | global_select_limit | false    | `Integer`                                      | The maximum number of rows that can be returned, defaults to `1000` |
 
-
 ## PGSourceConnectionInfo {#pgsourceconnectioninfo}
 
 | Key                     | Required | Schema                                                                               | Description                                                                                                                                                                                                         |
@@ -1802,6 +1801,7 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | --------------------- | -------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | otlp_traces_endpoint  | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL for traces (usually having path "/v1/traces")          |
 | otlp_metrics_endpoint | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL for metrics (usually having path "/v1/metrics")        |
+| otlp_logs_endpoint    | true     | `String`                                                                    | OpenTelemetry compliant receiver endpoint URL for logs (usually having path "/v1/logs")              |
 | protocol              | false    | `String`                                                                    | Protocol to be used for the communication with the receiver. Currently only supports `http/protobuf` |
 | headers               | false    | \[[HeaderFromValue](#headerfromvalue) \| [HeaderFromEnv](#headerfromenv) \] | List of defined headers to be sent to the receiver                                                   |
 | resource_attributes   | false    | \[[Attribute](#attribute)\]                                                 | List of resource attributes to be sent to the receiver                                               |
@@ -1809,6 +1809,6 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 
 ## OpenTelemetryBatchSpanProcessor {#opentelemetrybatchspanprocessor}
 
-| Key                   | required | Schema    | Description                                                              |
-| --------------------- | -------- | --------- | ------------------------------------------------------------------------ |
-| max_export_batch_size | false    | `Integer` | Maximum number of spans allowed per export request. Default value is 512 |
+| Key                   | required | Schema    | Description                                                                      |
+| --------------------- | -------- | --------- | -------------------------------------------------------------------------------- |
+| max_export_batch_size | false    | `Integer` | Maximum number of spans or logs allowed per export request. Default value is 512 |

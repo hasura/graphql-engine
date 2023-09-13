@@ -227,7 +227,7 @@ export function HeroEnabled() {
                   />
                 </g>
                 <text x="385" y="108" font-size="12" fill="#475569">
-                  Export traces/metrics
+                  Export traces/metrics/logs
                 </text>
               </g>
             </g>
@@ -322,7 +322,7 @@ export function HeroEnabled() {
                           />
                         </g>
                         <text x="342" y="229" font-size="11" fill="#297393">
-                          Available traces/metrics
+                          Available traces/metrics/logs
                         </text>
                       </g>
                       <g id="Icon_11" opacity="0.9">

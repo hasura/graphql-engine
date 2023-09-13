@@ -371,6 +371,8 @@ data AppInit = AppInit
 -- that are not required to create the 'AppEnv', such as starting background
 -- processes and logging startup information. All of those are flagged with a
 -- comment marking them as a side-effect.
+--
+-- NOTE: this is invoked in pro, but only for OSS mode (no license key)
 initialiseAppEnv ::
   (C.ForkableMonadIO m) =>
   Env.Environment ->
@@ -698,12 +700,12 @@ instance HttpLog AppM where
   buildExtraHttpLogMetadata _ _ = ()
 
   logHttpError logger loggingSettings userInfoM reqId waiReq req qErr headers _ =
-    unLogger logger
+    unLoggerTracing logger
       $ mkHttpLog
       $ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
   logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
-    unLogger logger
+    unLoggerTracing logger
       $ mkHttpLog
       $ mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
@@ -759,13 +761,13 @@ instance MonadConfigApiHandler AppM where
   runConfigApiHandler = configApiGetHandler
 
 instance MonadQueryLog AppM where
-  logQueryLog logger = unLogger logger
+  logQueryLog logger = unLoggerTracing logger
 
 instance MonadExecutionLog AppM where
-  logExecutionLog logger = unLogger logger
+  logExecutionLog logger = unLoggerTracing logger
 
 instance WS.MonadWSLog AppM where
-  logWSLog logger = unLogger logger
+  logWSLog logger = unLoggerTracing logger
 
 instance MonadResolveSource AppM where
   getPGSourceResolver = asks (mkPgSourceResolver . _lsPgLogger . appEnvLoggers)
@@ -973,7 +975,8 @@ runHGEServer setupHook appStateRef initTime startupStatusHook consoleType ekgSto
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger
+  lift
+    $ unLoggerTracing logger
     $ mkGenericLog LevelInfo "server"
     $ StartupTimeInfo "starting API server" apiInitTime
 
@@ -1078,7 +1081,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
 
       startScheduledEventsPollerThread logger appEnvLockedEventsCtx
     EventingDisabled ->
-      unLogger logger $ mkGenericLog @Text LevelInfo "server" "starting in eventing disabled mode"
+      lift $ unLoggerTracing logger $ mkGenericLog @Text LevelInfo "server" "starting in eventing disabled mode"
 
   -- start a background thread to check for updates
   _updateThread <-
@@ -1110,7 +1113,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
     liftIO (runExceptT $ PG.runTx appEnvMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
       `onLeftM` throwErrJExit DatabaseMigrationError
 
-  lift . unLogger logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
+  lift . unLoggerTracing logger $ mkGenericLog @Text LevelInfo "telemetry" telemetryNotice
 
   computeResources <- getServerResources
 
@@ -1143,8 +1146,8 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
         (getAppContext appStateRef)
     getSchemaCache' = getSchemaCache appStateRef
 
-    prepareScheduledEvents (Logger logger) = do
-      liftIO $ logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
+    prepareScheduledEvents (LoggerTracing logger) = do
+      logger $ mkGenericLog @Text LevelInfo "scheduled_triggers" "preparing data"
       res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return unlockAllLockedScheduledEvents)
       onLeft res (\err -> logger $ mkGenericLog @String LevelError "scheduled_triggers" (show $ qeError err))
 
@@ -1263,7 +1266,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
             (createFetchedEventsStatsLogger logger)
             (closeFetchedEventsStatsLogger logger)
 
-        unLogger logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
+        lift $ unLoggerTracing logger $ mkGenericLog @Text LevelInfo "event_triggers" "starting workers"
         void
           $ C.forkManagedTWithGracefulShutdown
             "processEventQueue"

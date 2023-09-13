@@ -526,7 +526,7 @@ validateMutation env manager logger userInfo (ResolvedWebhook urlText) confHeade
           responseBody = response Lens.^. Wreq.responseBody
           responseBodyForLogging = fromMaybe (J.String $ lbsToTxt responseBody) $ J.decode' responseBody
       -- Log the details of the HTTP webhook call
-      L.unLogger logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
+      L.unLoggerTracing logger $ VIILHttpHandler $ HttpHandlerLog urlText requestBody confHeaders responseBodyForLogging (HTTP.statusCode responseStatus)
       if
         | HTTP.statusIsSuccessful responseStatus -> pure ()
         | responseStatus == HTTP.status400 -> do

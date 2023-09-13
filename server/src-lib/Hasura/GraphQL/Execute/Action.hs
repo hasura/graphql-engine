@@ -613,7 +613,7 @@ callWebhook
               Left err -> do
                 -- Log The Transformation Error
                 logger :: L.Logger L.Hasura <- asks getter
-                L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                 -- Throw an exception with the Transformation Error
                 throw500WithDetail "Request Transformation Failed" $ J.toJSON err
@@ -656,7 +656,7 @@ callWebhook
              in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
                   -- Log The Response Transformation Error
                   logger :: L.Logger L.Hasura <- asks getter
-                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
+                  L.unLoggerTracing logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                   -- Throw an exception with the Transformation Error
                   throw500WithDetail "Response Transformation Failed" $ J.toJSON err
@@ -670,7 +670,7 @@ callWebhook
             (pmActionBytesReceived prometheusMetrics)
             responseBodySize
         logger :: (L.Logger L.Hasura) <- asks getter
-        L.unLogger logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
+        L.unLoggerTracing logger $ ActionHandlerLog req transformedReq requestBodySize transformedReqSize responseBodySize actionName
 
         case J.eitherDecode transformedResponseBody of
           Left e -> do

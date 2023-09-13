@@ -73,6 +73,7 @@ const exporterSchema = z.object({
    */
   otlp_traces_endpoint: validUrlSchema,
   otlp_metrics_endpoint: validUrlSchema,
+  otlp_logs_endpoint: validUrlSchema,
 });
 
 // --------------------------------------------------
@@ -91,7 +92,7 @@ export const openTelemetrySchema = z
     /**
      * The individually-enabled telemetry export types
      */
-    data_types: z.array(z.enum(['traces', 'metrics'])),
+    data_types: z.array(z.enum(['traces', 'metrics', 'logs'])),
 
     batch_span_processor: z.object({
       // a value between 1 and 512
@@ -104,6 +105,9 @@ export const openTelemetrySchema = z
         .or(z.literal(''))
         .or(z.literal(undefined)),
       otlp_metrics_endpoint: validUrlSchema
+        .or(z.literal(''))
+        .or(z.literal(undefined)),
+      otlp_logs_endpoint: validUrlSchema
         .or(z.literal(''))
         .or(z.literal(undefined)),
     }),
@@ -130,6 +134,17 @@ export const openTelemetrySchema = z
       message:
         'A valid metrics endpoint must be supplied when metrics export is enabled',
       path: ['exporter_otlp', 'otlp_metrics_endpoint'],
+    }
+  )
+  .refine(
+    obj =>
+      obj.status === 'enabled' && obj.data_types.includes('logs')
+        ? obj.exporter_otlp.otlp_logs_endpoint
+        : true,
+    {
+      message:
+        'A valid logs endpoint must be supplied when logs export is enabled',
+      path: ['exporter_otlp', 'otlp_logs_endpoint'],
     }
   );
 

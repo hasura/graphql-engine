@@ -1106,8 +1106,8 @@ onPing :: (MonadIO m) => WSConn -> Maybe PingPongPayload -> m ()
 onPing wsConn mPayload =
   liftIO $ sendMsg wsConn (SMPong mPayload)
 
-onStop :: (MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> IO GranularPrometheusMetricsState -> m ()
-onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = liftIO $ do
+onStop :: (Tracing.MonadTraceContext m, MonadIO m) => WSServerEnv impl -> WSConn -> StopMsg -> IO GranularPrometheusMetricsState -> m ()
+onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = do
   -- When a stop message is received for an operation, it may not be present in OpMap
   -- in these cases:
   -- 1. If the operation is a query/mutation - as we remove the operation from the
@@ -1115,7 +1115,7 @@ onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = liftIO $
   -- 2. A misbehaving client
   -- 3. A bug on our end
   stopOperation serverEnv wsConn opId granularPrometheusMetricsState
-    $ L.unLogger logger
+    $ L.unLoggerTracing logger
     $ L.UnstructuredLog L.LevelDebug
     $ fromString
     $ "Received STOP for an operation that we have no record for: "
@@ -1124,19 +1124,19 @@ onStop serverEnv wsConn (StopMsg opId) granularPrometheusMetricsState = liftIO $
   where
     logger = _wseLogger serverEnv
 
-stopOperation :: WSServerEnv impl -> WSConn -> OperationId -> IO GranularPrometheusMetricsState -> IO () -> IO ()
+stopOperation :: (MonadIO m) => WSServerEnv impl -> WSConn -> OperationId -> IO GranularPrometheusMetricsState -> m () -> m ()
 stopOperation serverEnv wsConn opId granularPrometheusMetricsState logWhenOpNotExist = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (subscriberDetails, operationName) -> do
-      logWSEvent logger wsConn $ EOperation $ opDet operationName
+      liftIO $ logWSEvent logger wsConn $ EOperation $ opDet operationName
       case subscriberDetails of
         LiveQuerySubscriber lqId ->
-          ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState lqId granularPrometheusMetricsState operationName
+          liftIO $ ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState lqId granularPrometheusMetricsState operationName
         StreamingQuerySubscriber streamSubscriberId ->
-          ES.removeStreamingQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState streamSubscriberId granularPrometheusMetricsState operationName
+          liftIO $ ES.removeStreamingQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionState streamSubscriberId granularPrometheusMetricsState operationName
     Nothing -> logWhenOpNotExist
-  STM.atomically $ STMMap.delete opId opMap
+  liftIO $ STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv
     subscriptionState = _wseSubscriptionState serverEnv

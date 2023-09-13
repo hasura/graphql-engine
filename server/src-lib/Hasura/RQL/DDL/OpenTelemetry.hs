@@ -95,10 +95,19 @@ parseOtelExporterConfig env enabledDataTypes OtelExporterConfig {..} = do
       | OtelMetrics `Set.member` enabledDataTypes ->
           mkExportReq rawMetricsEndpoint
     _ -> pure Nothing -- disabled
+  _oteleiLogsBaseRequest <- case _oecLogsEndpoint of
+    Nothing
+      | OtelLogs `Set.member` enabledDataTypes ->
+          Left (err400 InvalidParams "Logs export is enabled but logs endpoint missing")
+    Just rawLogsEndpoint
+      | OtelLogs `Set.member` enabledDataTypes ->
+          mkExportReq rawLogsEndpoint
+    _ -> pure Nothing -- disabled
   pure
     $ OtelExporterInfo
       { _oteleiMetricsBaseRequest,
         _oteleiTracesBaseRequest,
+        _oteleiLogsBaseRequest,
         _oteleiResourceAttributes =
           Map.fromList
             $ map

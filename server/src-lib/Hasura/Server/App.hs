@@ -167,12 +167,12 @@ instance MonadTrans Handler where
 instance (Monad m) => UserInfoM (Handler m) where
   askUserInfo = asks hcUser
 
-runHandler :: (HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
+runHandler :: (MonadIO m, Tracing.MonadTraceContext m, HasResourceLimits m, MonadBaseControl IO m) => L.Logger L.Hasura -> HandlerCtx -> Handler m a -> m (Either QErr a)
 runHandler logger ctx (Handler r) = do
   handlerLimit <- askHTTPHandlerLimit
   runExceptT (runReaderT (runResourceLimits handlerLimit r) ctx)
     `catch` \errorCallWithLoc@(ErrorCallWithLocation txt _) -> do
-      liftBase $ L.unLogger logger $ L.UnhandledInternalErrorLog errorCallWithLoc
+      L.unLoggerTracing logger $ L.UnhandledInternalErrorLog errorCallWithLoc
       pure
         $ throw500WithDetail "Internal Server Error"
         $ object [("error", fromString txt)]

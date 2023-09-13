@@ -243,18 +243,18 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 -- fetching/storing stored introspection) in the critical code path of building
 -- the 'SchemaCache'.
 loadStoredIntrospection ::
-  (MonadMetadataStorage m, MonadIO m) =>
+  (Tracing.MonadTraceContext m, MonadMetadataStorage m, MonadIO m) =>
   Logger Hasura ->
   MetadataResourceVersion ->
   m (Maybe StoredIntrospection)
 loadStoredIntrospection logger metadataVersion = do
   fetchSourceIntrospection metadataVersion `onLeftM` \err -> do
-    unLogger logger
+    unLoggerTracing logger
       $ StoredIntrospectionStorageLog "Could not load stored-introspection. Continuing without it" err
     pure Nothing
 
 saveSourcesIntrospection ::
-  (MonadIO m, MonadMetadataStorage m) =>
+  (Tracing.MonadTraceContext m, MonadIO m, MonadMetadataStorage m) =>
   Logger Hasura ->
   SourcesIntrospectionStatus ->
   MetadataResourceVersion ->
@@ -267,10 +267,11 @@ saveSourcesIntrospection logger sourcesIntrospection metadataVersion = do
     SourcesIntrospectionChangedPartial _ -> pure ()
     SourcesIntrospectionChangedFull introspection ->
       storeSourceIntrospection introspection metadataVersion `onLeftM` \err ->
-        unLogger logger $ StoredIntrospectionStorageLog "Could not save source introspection" err
+        unLoggerTracing logger $ StoredIntrospectionStorageLog "Could not save source introspection" err
 
 instance
-  ( MonadIO m,
+  ( Tracing.MonadTraceContext m,
+    MonadIO m,
     MonadError QErr m,
     ProvidesNetwork m,
     MonadResolveSource m,
