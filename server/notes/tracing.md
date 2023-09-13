@@ -1,4 +1,4 @@
-This note is in [Hasura.Tracing](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Tracing.hs#L11).
+This note is in [Hasura.Tracing](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Tracing.hs#L15).
 
 # Tracing
 

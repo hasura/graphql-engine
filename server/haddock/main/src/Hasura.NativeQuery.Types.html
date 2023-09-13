@@ -16,7 +16,7 @@
 </span><span id="line-16"></span><span class="hs-comment">-- The name of a native query. This appears as a root field name in the graphql schema.</span><span>
 </span><span id="line-17"></span><span class="hs-keyword">newtype</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NativeQueryName"><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-var">NativeQueryName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getNativeQueryName"><span class="annot"><span class="annottext">NativeQueryName -&gt; Name
 </span><a href="Hasura.NativeQuery.Types.html#getNativeQueryName"><span class="hs-identifier hs-var hs-var">getNativeQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src/Language.GraphQL.Draft.Syntax.Name.html#Name"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-18"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687389624"><span id="local-6989586621687389629"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
+</span><span id="line-18"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687401958"><span id="local-6989586621687401963"><span class="annot"><span class="annottext">NativeQueryName -&gt; NativeQueryName -&gt; Bool
 (NativeQueryName -&gt; NativeQueryName -&gt; Bool)
 -&gt; (NativeQueryName -&gt; NativeQueryName -&gt; Bool)
 -&gt; Eq NativeQueryName
@@ -25,7 +25,7 @@ $c== :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 == :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 $c/= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
 /= :: NativeQueryName -&gt; NativeQueryName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389637"><span id="local-6989586621687389642"><span id="local-6989586621687389646"><span id="local-6989586621687389650"><span id="local-6989586621687389654"><span id="local-6989586621687389658"><span id="local-6989586621687389662"><span class="annot"><span class="annottext">Eq NativeQueryName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687401971"><span id="local-6989586621687401976"><span id="local-6989586621687401980"><span id="local-6989586621687401984"><span id="local-6989586621687401988"><span id="local-6989586621687401992"><span id="local-6989586621687401996"><span class="annot"><span class="annottext">Eq NativeQueryName
 Eq NativeQueryName
 -&gt; (NativeQueryName -&gt; NativeQueryName -&gt; Ordering)
 -&gt; (NativeQueryName -&gt; NativeQueryName -&gt; Bool)
@@ -62,7 +62,7 @@ $cmax :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
 max :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
 $cmin :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
 min :: NativeQueryName -&gt; NativeQueryName -&gt; NativeQueryName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389668"><span id="local-6989586621687389673"><span id="local-6989586621687389677"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402002"><span id="local-6989586621687402007"><span id="local-6989586621687402011"><span class="annot"><span class="annottext">Int -&gt; NativeQueryName -&gt; ShowS
 [NativeQueryName] -&gt; ShowS
 NativeQueryName -&gt; String
 (Int -&gt; NativeQueryName -&gt; ShowS)
@@ -77,7 +77,7 @@ $cshow :: NativeQueryName -&gt; String
 show :: NativeQueryName -&gt; String
 $cshowList :: [NativeQueryName] -&gt; ShowS
 showList :: [NativeQueryName] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389685"><span id="local-6989586621687389690"><span class="annot"><span class="annottext">Eq NativeQueryName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402019"><span id="local-6989586621687402024"><span class="annot"><span class="annottext">Eq NativeQueryName
 Eq NativeQueryName
 -&gt; (Int -&gt; NativeQueryName -&gt; Int)
 -&gt; (NativeQueryName -&gt; Int)
@@ -89,12 +89,12 @@ $chashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
 hashWithSalt :: Int -&gt; NativeQueryName -&gt; Int
 $chash :: NativeQueryName -&gt; Int
 hash :: NativeQueryName -&gt; Int
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389696"><span class="annot"><span class="annottext">NativeQueryName -&gt; ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402030"><span class="annot"><span class="annottext">NativeQueryName -&gt; ()
 (NativeQueryName -&gt; ()) -&gt; NFData NativeQueryName
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: NativeQueryName -&gt; ()
 rnf :: NativeQueryName -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389703"><span id="local-6989586621687389708"><span id="local-6989586621687389712"><span id="local-6989586621687389716"><span class="annot"><span class="annottext">[NativeQueryName] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402037"><span id="local-6989586621687402042"><span id="local-6989586621687402046"><span id="local-6989586621687402050"><span class="annot"><span class="annottext">[NativeQueryName] -&gt; Value
 [NativeQueryName] -&gt; Encoding
 NativeQueryName -&gt; Value
 NativeQueryName -&gt; Encoding
@@ -117,7 +117,7 @@ $ctoJSONList :: [NativeQueryName] -&gt; Value
 toJSONList :: [NativeQueryName] -&gt; Value
 $ctoEncodingList :: [NativeQueryName] -&gt; Encoding
 toEncodingList :: [NativeQueryName] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389722"><span id="local-6989586621687389727"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryName]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402056"><span id="local-6989586621687402061"><span class="annot"><span class="annottext">Value -&gt; Parser [NativeQueryName]
 Value -&gt; Parser NativeQueryName
 (Value -&gt; Parser NativeQueryName)
 -&gt; (Value -&gt; Parser [NativeQueryName]) -&gt; FromJSON NativeQueryName
@@ -127,13 +127,13 @@ $cparseJSON :: Value -&gt; Parser NativeQueryName
 parseJSON :: Value -&gt; Parser NativeQueryName
 $cparseJSONList :: Value -&gt; Parser [NativeQueryName]
 parseJSONList :: Value -&gt; Parser [NativeQueryName]
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389733"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402067"><span class="annot"><span class="annottext">NativeQueryName -&gt; Text
 (NativeQueryName -&gt; Text) -&gt; ToTxt NativeQueryName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 $ctoTxt :: NativeQueryName -&gt; Text
 toTxt :: NativeQueryName -&gt; Text
 </span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687389742"><span id="local-6989586621687389746"><span id="local-6989586621687389749"><span id="local-6989586621687389751"><span id="local-6989586621687389753"><span id="local-6989586621687389759"><span id="local-6989586621687389764"><span id="local-6989586621687389767"><span id="local-6989586621687389770"><span id="local-6989586621687389773"><span id="local-6989586621687389776"><span id="local-6989586621687389779"><span id="local-6989586621687389784"><span id="local-6989586621687389789"><span class="annot"><span class="annottext">Typeable NativeQueryName
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687402076"><span id="local-6989586621687402080"><span id="local-6989586621687402083"><span id="local-6989586621687402085"><span id="local-6989586621687402087"><span id="local-6989586621687402093"><span id="local-6989586621687402098"><span id="local-6989586621687402101"><span id="local-6989586621687402104"><span id="local-6989586621687402107"><span id="local-6989586621687402110"><span id="local-6989586621687402113"><span id="local-6989586621687402118"><span id="local-6989586621687402123"><span class="annot"><span class="annottext">Typeable NativeQueryName
 Typeable NativeQueryName
 -&gt; (forall (c :: * -&gt; *).
     (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
@@ -315,7 +315,7 @@ gmapMo :: forall (m :: * -&gt; *).
 MonadPlus m =&gt;
 (forall d. Data d =&gt; d -&gt; m d)
 -&gt; NativeQueryName -&gt; m NativeQueryName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389795"><span id="local-6989586621687389797"><span class="annot"><span class="annottext">(forall x. NativeQueryName -&gt; Rep NativeQueryName x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402129"><span id="local-6989586621687402131"><span class="annot"><span class="annottext">(forall x. NativeQueryName -&gt; Rep NativeQueryName x)
 -&gt; (forall x. Rep NativeQueryName x -&gt; NativeQueryName)
 -&gt; Generic NativeQueryName
 forall x. Rep NativeQueryName x -&gt; NativeQueryName
@@ -326,7 +326,7 @@ $cfrom :: forall x. NativeQueryName -&gt; Rep NativeQueryName x
 from :: forall x. NativeQueryName -&gt; Rep NativeQueryName x
 $cto :: forall x. Rep NativeQueryName x -&gt; NativeQueryName
 to :: forall x. Rep NativeQueryName x -&gt; NativeQueryName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687389801"><span id="local-6989586621687389808"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687402135"><span id="local-6989586621687402142"><span class="annot"><span class="annottext">(forall (m :: * -&gt; *). Quote m =&gt; NativeQueryName -&gt; m Exp)
 -&gt; (forall (m :: * -&gt; *).
     Quote m =&gt;
     NativeQueryName -&gt; Code m NativeQueryName)
@@ -348,8 +348,8 @@ Quote m =&gt;
 NativeQueryName -&gt; Code m NativeQueryName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687389817"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621687389823"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryName
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687402151"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621687402157"><span class="annot"><span class="annottext">codec :: JSONCodec NativeQueryName
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; NativeQueryName)
 -&gt; (NativeQueryName -&gt; Name)
 -&gt; Codec Value Name Name
@@ -365,7 +365,7 @@ forall oldOutput newOutput newInput oldInput context.
 forall value. HasCodec value =&gt; JSONCodec value
 </span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#codec"><span class="hs-identifier hs-var">codec</span></a></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687389825"><span id="local-6989586621687389830"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-type">FromJSONKey</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687402159"><span id="local-6989586621687402164"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSONKey"><span class="hs-identifier hs-type">FromJSONKey</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
 </span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687389835"><span id="local-6989586621687389840"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-type">ToJSONKey</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687402169"><span id="local-6989586621687402174"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSONKey"><span class="hs-identifier hs-type">ToJSONKey</span></a></span><span> </span><span class="annot"><a href="Hasura.NativeQuery.Types.html#NativeQueryName"><span class="hs-identifier hs-type">NativeQueryName</span></a></span></span></span><span>
 </span><span id="line-27"></span></pre></body></html>
