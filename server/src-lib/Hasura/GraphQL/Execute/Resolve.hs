@@ -5,6 +5,7 @@ module Hasura.GraphQL.Execute.Resolve
   )
 where
 
+import Data.Aeson qualified as J
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashSet qualified as HS
 import Data.List qualified as L
@@ -82,7 +83,12 @@ resolveVariables definitions jsonValues directives selSet = do
       let defaultValue = fromMaybe G.VNull _vdDefaultValue
           isOptional = isJust _vdDefaultValue || G.isNullable _vdType
       value <- case Map.lookup _vdName jsonValues of
-        Just jsonValue -> pure $ JSONValue jsonValue
+        Just jsonValue ->
+          if not (G.isNullable _vdType) && jsonValue == J.Null
+            then
+              throw400 ValidationFailed $
+                "null value found for non-nullable type: " <>> G.showGT _vdType
+            else pure $ JSONValue jsonValue
         Nothing
           | isOptional -> pure $ GraphQLValue $ absurd <$> defaultValue
           | otherwise ->
