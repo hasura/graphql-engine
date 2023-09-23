@@ -109,13 +109,13 @@ internal:
     error:
       status: INVALID_ARGUMENT
       code: 400
-      message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+      message: 'Syntax error: Unexpected keyword SOME at [1:1]'
       errors:
       - location: q
         domain: global
         reason: invalidQuery
         locationType: parameter
-        message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
+        message: 'Syntax error: Unexpected keyword SOME at [1:1]'
 path: "$"
 error: BigQuery HTTP request failed with status 400 "Bad Request"
 code: bigquery-error
