@@ -518,5 +518,5 @@ msDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
   pure $ DBStepInfo @'MSSQL sourceName sourceConfig (Just queryString) odbcQuery ()
   where
     runSelectQuery queryPrinter = OnBaseMonad do
-      let queryTx = encJFromText <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
+      let queryTx = encJFromText <$> Tx.forJsonQueryE defaultMSSQLTxErrorHandler (toQueryFlat queryPrinter)
       mssqlRunReadOnly (_mscExecCtx sourceConfig) (fmap withNoStatistics queryTx)

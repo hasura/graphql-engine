@@ -229,6 +229,7 @@ library
     Test.Regression.RemoteRelationshipStringifyNum8387Spec
     Test.Regression.RootExistElementAliasing9457Spec
     Test.Regression.SqlServerIdentifierQuotingSpec
+    Test.Regression.SqlServerRemoteRelationshipRhs8712Spec
     Test.Regression.StreamConflictSpec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
     Test.ScheduledEvents.ScheduledEventsInvalidEnvVarSpec
