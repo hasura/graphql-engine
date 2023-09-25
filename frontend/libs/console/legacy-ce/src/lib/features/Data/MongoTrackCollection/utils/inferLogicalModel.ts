@@ -32,111 +32,168 @@ const getLogicalModelsFromProperties = (
 ): LogicalModel[] => {
   const logicalModels: LogicalModel[] = [];
   const fields: LogicalModelField[] = [];
-
-  type ItemSchemaTypes = {
-    anyOf?: Array<{ type: string }>;
-    type?: string;
-  };
-  const isMixedArray = (itemsSchema: ItemSchemaTypes): boolean => {
-    if (itemsSchema.anyOf) {
-      const types = itemsSchema.anyOf.map(subSchema => subSchema.type);
-      return (
-        types.includes('object') && !types.every(type => type === 'object')
-      );
-    }
-    return false;
-  };
-
   for (const [rawFieldName, fieldSchema] of Object.entries(properties)) {
     const fieldName = sanitizeGraphQLFieldNames(rawFieldName);
-
-    if (fieldName === '_id') {
-      fields.push({
-        name: fieldName,
-        type: {
-          scalar: 'objectId',
-          nullable: false,
-        },
-      });
-      continue;
-    }
-
     const nullable = !requiredProperties.includes(fieldName);
     const logicalModelPath = parentName
       ? `${parentName}_${fieldName}`
       : fieldName;
 
-    if (fieldSchema.type === 'object') {
-      if (fieldSchema.properties) {
-        const newLogicalModels = getLogicalModelsFromProperties(
-          collectionName,
-          `${collectionName}_${logicalModelPath}`,
-          fieldSchema.properties,
-          fieldSchema.required,
-          logicalModelPath
-        );
-
-        logicalModels.push(...newLogicalModels);
-
-        fields.push({
-          name: fieldName,
-          type: {
-            logical_model: `${collectionName}_${logicalModelPath}`,
-            nullable,
-          },
-        });
-      } else {
-        // Empty object just being casted to `string`
-        fields.push({
-          name: fieldName,
-          type: {
-            scalar: 'string',
-            nullable,
-          },
-        });
+    // Get scalars from MongoDB objectid and date objects
+    const handleMongoDBFieldTypes = (
+      properties: ObjectSchema['properties']
+    ): { type: 'objectId' | 'date' | 'string' | 'none'; name?: string } => {
+      if (!properties) {
+        return { type: 'string' };
       }
+      if (Object.prototype.hasOwnProperty.call(properties, '$oid')) {
+        return { type: 'objectId' };
+      }
+      if (Object.prototype.hasOwnProperty.call(properties, '$date')) {
+        return { type: 'date' };
+      }
+      return { type: 'none' };
+    };
+
+    if (fieldSchema.type === 'object') {
+      // Seperate MongoDB objectid and date scalars from logical model objects
+      const mongoDBFieldType = handleMongoDBFieldTypes(fieldSchema.properties);
+      if (mongoDBFieldType.type !== 'none') {
+        fields.push({
+          name: fieldName,
+          type: {
+            scalar: mongoDBFieldType.type,
+            nullable: false,
+          },
+        });
+        continue;
+      }
+      // Make new logical model
+      const newLogicalModels = getLogicalModelsFromProperties(
+        collectionName,
+        `${collectionName}_${logicalModelPath}`,
+        fieldSchema.properties,
+        fieldSchema.required,
+        logicalModelPath
+      );
+      logicalModels.push(...newLogicalModels);
+      fields.push({
+        name: fieldName,
+        type: {
+          logical_model: `${collectionName}_${logicalModelPath}`,
+          nullable,
+        },
+      });
     }
 
     if (fieldSchema.type === 'array') {
-      if (isMixedArray(fieldSchema.items)) {
+      // Throw error for mixed object / scalar array
+      // Schema inferer returns anyOf if there are any type conflicts
+      const hasNestedAnyOf = (function checkNestedAnyOf(obj: any): boolean {
+        if (typeof obj !== 'object' || obj === null) return false;
+        if ('anyOf' in obj) return true;
+        return Object.values(obj).some(
+          val => typeof val === 'object' && checkNestedAnyOf(val)
+        );
+      })(fieldSchema.items);
+      if (hasNestedAnyOf) {
         throw new Error(
-          `The array for field "${fieldName}" contains both objects and scalars (string, int, etc.). Please check and ensure it only contains one for inference. \n Exact key with issue: "${logicalModelPath}"`
+          `The array for field "${fieldName}" contains both multiple types (objects, string, int, etc.). Please check and ensure it only contains one for inference. \n Exact key with issue: "${logicalModelPath}"`
         );
       }
+
+      // Array of objects
       if (fieldSchema.items.type === 'object') {
-        const newLogicalModels = getLogicalModelsFromProperties(
-          collectionName,
-          `${collectionName}_${logicalModelPath}`,
-          fieldSchema.items.properties,
-          fieldSchema.items?.required || [],
-          logicalModelPath
+        // Check for special mongo scalars
+        const mongoDBFieldType = handleMongoDBFieldTypes(
+          fieldSchema.items.properties
         );
-
-        logicalModels.push(...newLogicalModels);
-
-        fields.push({
-          name: fieldName,
-          type: {
-            array: {
-              logical_model: `${collectionName}_${logicalModelPath}`,
-              nullable,
+        if (mongoDBFieldType.type !== 'none') {
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                scalar: mongoDBFieldType.type,
+                nullable,
+              },
             },
-          },
-        });
-      } else {
-        // scalar array
-        fields.push({
-          name: fieldName,
-          type: {
-            array: {
-              scalar: fieldSchema.items.type,
-              nullable,
+          });
+        } else {
+          // Make new logical model for array
+          const newLogicalModels = getLogicalModelsFromProperties(
+            collectionName,
+            `${collectionName}_${logicalModelPath}`,
+            fieldSchema.items.properties,
+            fieldSchema.items?.required || [],
+            logicalModelPath
+          );
+
+          logicalModels.push(...newLogicalModels);
+
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                logical_model: `${collectionName}_${logicalModelPath}`,
+                nullable,
+              },
             },
-          },
-        });
+          });
+        }
+        continue;
+      }
+      // Array of scalars
+      if (fieldSchema.items.type !== 'object') {
+        // Process scalar types in array
+        // TODO: DRY this out with scalar processing below
+        if (fieldSchema.items.type === 'string') {
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                scalar: 'string',
+                nullable,
+              },
+            },
+          });
+        }
+        if (fieldSchema.items.type === 'integer') {
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                scalar: 'int',
+                nullable,
+              },
+            },
+          });
+        }
+        if (fieldSchema.items.type === 'number') {
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                scalar: 'double',
+                nullable,
+              },
+            },
+          });
+        }
+        if (fieldSchema.items.type === 'boolean') {
+          fields.push({
+            name: fieldName,
+            type: {
+              array: {
+                scalar: 'bool',
+                nullable,
+              },
+            },
+          });
+        }
       }
     }
 
+    // Process scalars
     if (fieldSchema.type === 'string') {
       fields.push({
         name: fieldName,
@@ -177,7 +234,6 @@ const getLogicalModelsFromProperties = (
       });
     }
   }
-
   return [
     {
       name,
