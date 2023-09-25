@@ -311,43 +311,9 @@ brew install microsoft/mssql-release/mssql-tools@18
 brew unlink mssql-tools18 && brew link mssql-tools18
 ```
 
-### Microsoft SQL Server failures on Apple aarch64 chips
+### The MS SQL Server container fails to start
 
-This applies to all Apple hardware that uses aarch64 chips, e.g. the MacBook M1
-or M2.
-
-We have a few problems with Microsoft SQL Server on Apple aarch64:
-
-1.  Microsoft has not yet released SQL Server for aarch64. We need to use Azure
-    SQL Edge instead.
-
-    You don't need to do anything if you're using the `make` commands; they
-    will provide the correct image automatically.
-
-    If you run `docker compose` directly, make sure to set the environment
-    variable yourself:
-
-    ```sh
-    export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
-    ```
-
-    You can add this to your _.envrc.local_ file if you like.
-
-2.  Azure SQL Edge for aarch64 does not ship with the `sqlcmd` utility with
-    which we use to setup the SQL Server schema.
-
-    If you need it, you can instead use the `mssql-tools` Docker image, for
-    example:
-
-    ```
-    docker run --rm -it --platform=linux/amd64 --net=host mcr.microsoft.com/mssql-tools \
-      /opt/mssql-tools/bin/sqlcmd -S localhost,65003 -U SA -P <password>
-    ```
-
-    To make this easier, you might want to define an alias:
-
-    ```
-    alias sqlcmd='docker run --rm -it --platform=linux/amd64 --net=host mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd'
-    ```
-
-    You can also install them directly with `brew install microsoft/mssql-release/mssql-tools`.
+The SQL Server image will only work on macOS if you enable the relevant
+settings. Open the Docker Desktop settings, enable "Use Virtualization
+framework" in the "General" tab, and "Use Rosetta for x86/amd64 emulation on
+Apple Silicon" in the "Features in development" tab.

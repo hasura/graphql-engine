@@ -21,7 +21,7 @@ You may also need to flip the [feature flags here](http://localhost:4200/setting
 
 ## MSSQL / SQL Server
 
-In order to initialize and populate a MSSQL demo database automatically, we making use of the `mssql-tools` image. This image runs a few commands against the `mssql` image to create the demo data.
+In order to initialize and populate a MSSQL demo database automatically, we making use of the `mssql-init` container. This image runs a few commands against the `mssql` image to create the demo data.
 
 This scripting is done in `docker/DataSources/mssql/run-initialization.sh`.
 

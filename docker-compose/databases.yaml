@@ -81,12 +81,8 @@ services:
       - /var/lib/postgresql/data
 
   sqlserver:
-    # We cannot use this image on arm64, as it's not available.
-    # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
-    # This uses an environment variable so it can be overridden by scripts to
-    # provide that image instead.
-    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
-    init: true # azure-sql-edge doesn't shut down properly without this
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    platform: linux/amd64
     ports:
       - 1433
     environment:
@@ -95,35 +91,15 @@ services:
       MSSQL_SA_PASSWORD: "Password!"
     volumes:
       - /var/opt/mssql
-
-  # We would prefer to attach the healthcheck directly to the `sqlserver` container.
-  # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
-  # it's not possible when running on macOS, as we don't use that image, but
-  # instead `mcr.microsoft.com/azure-sql-edge`.
-  # The `mcr.microsoft.com/azure-sql-edge` image does not provide `sqlcmd`.
-  # We therefore need to run it in a separate container.
-  # We can reconsider this once the MSSQL Server image can run on arm64.
-  sqlserver-healthcheck:
-    image: mcr.microsoft.com/mssql-tools
-    platform: linux/amd64
-    command:
-      - sleep
-      - inf
-    init: true # handle signals correctly
     healthcheck:
       test:
         - CMD-SHELL
         - |
-          /opt/mssql-tools/bin/sqlcmd -S 'sqlserver,1433' -U SA -P "Password!"
+          /opt/mssql-tools/bin/sqlcmd -U SA -P "$$SA_PASSWORD"
       start_period: 5s
       interval: 5s
       timeout: 10s
       retries: 20
-    # This is commented out because this file can be extended, and dependencies don't work for extensions.
-    # Instead, ensure you also run this one.
-    # depends_on:
-    #   sqlserver:
-    #     condition: service_started
 
   mysql:
     image: mysql
