@@ -487,7 +487,8 @@ initialiseAppEnv env BasicConnectionInfo {..} serveOptions@ServeOptions {..} liv
           appEnvSchemaPollInterval = soSchemaPollInterval,
           appEnvLicenseKeyCache = Nothing,
           appEnvMaxTotalHeaderLength = soMaxTotalHeaderLength,
-          appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus
+          appEnvTriggersErrorLogLevelStatus = soTriggersErrorLogLevelStatus,
+          appEnvAsyncActionsFetchBatchSize = soAsyncActionsFetchBatchSize
         }
     )
 
@@ -817,7 +818,7 @@ instance MonadMetadataStorage AppM where
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
   insertAction a b c d = runInSeparateTx $ insertActionTx a b c d
-  fetchUndeliveredActionEvents = runInSeparateTx fetchUndeliveredActionEventsTx
+  fetchUndeliveredActionEvents a = runInSeparateTx $ fetchUndeliveredActionEventsTx a
   setActionStatus a b = runInSeparateTx $ setActionStatusTx a b
   fetchActionResponse = runInSeparateTx . fetchActionResponseTx
   clearActionData = runInSeparateTx . clearActionDataTx
@@ -1312,6 +1313,7 @@ mkHGEServer setupHook appStateRef consoleType ekgStore = do
           (acAsyncActionsFetchInterval <$> getAppContext appStateRef)
           (leActionEvents lockedEventsCtx)
           Nothing
+          appEnvAsyncActionsFetchBatchSize
 
       -- start a background thread to handle async action live queries
       void

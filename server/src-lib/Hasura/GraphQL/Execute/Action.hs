@@ -460,8 +460,9 @@ asyncActionsProcessor ::
   IO OptionalInterval ->
   STM.TVar (Set LockedActionEventId) ->
   Maybe GH.GQLQueryText ->
+  Int ->
   m (Forever m)
-asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText =
+asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedActionEvents gqlQueryText fetchBatchSize =
   return
     $ Forever ()
     $ const
@@ -482,7 +483,7 @@ asyncActionsProcessor getEnvHook logger getSCFromRef' getFetchInterval lockedAct
           unless (HashMap.null asyncActions) $ do
             -- fetch undelivered action events only when there's at least
             -- one async action present in the schema cache
-            asyncInvocationsE <- fetchUndeliveredActionEvents
+            asyncInvocationsE <- fetchUndeliveredActionEvents fetchBatchSize
             asyncInvocations <- liftIO $ onLeft asyncInvocationsE mempty
             -- save the actions that are currently fetched from the DB to
             -- be processed in a TVar (Set LockedActionEventId) and when
@@ -769,8 +770,8 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
   where
     toHeadersMap = HashMap.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
-fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
-fetchUndeliveredActionEventsTx =
+fetchUndeliveredActionEventsTx :: Int -> PG.TxE QErr [ActionLogItem]
+fetchUndeliveredActionEventsTx fetchBatchSize =
   map mapEvent
     <$> PG.withQE
       defaultTxErrorHandler
@@ -780,12 +781,12 @@ fetchUndeliveredActionEventsTx =
       id in (
         select id from hdb_catalog.hdb_action_log
         where status = 'created'
-        for update skip locked limit 10
+        for update skip locked limit $1
       )
     returning
       id, action_name, request_headers::json, session_variables::json, input_payload::json
   |]
-      ()
+      (Identity batchSize)
       False
   where
     mapEvent
@@ -798,6 +799,8 @@ fetchUndeliveredActionEventsTx =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
     fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . HashMap.toList
+
+    batchSize = fromIntegral fetchBatchSize :: Word64
 
 setActionStatusTx :: ActionId -> AsyncActionStatus -> PG.TxE QErr ()
 setActionStatusTx actionId = \case

@@ -131,6 +131,18 @@ If both Admin Secret and Admin Secrets are set, then only Admin Secrets will be 
 
 :::
 
+### Async Actions Fetch Batch Size
+
+The maximum number of async actions to be processed in a single batch.
+
+|                     |                                                 |
+| ------------------- | ----------------------------------------------- |
+| **Flag**            | `--async-actions-fetch-batch-size <BATCH_SIZE>` |
+| **Env var**         | `HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_BATCH_SIZE` |
+| **Accepted values** | Integer                                         |
+| **Default**         | `10`                                            |
+| **Supported in**    | CE, Enterprise Edition, Cloud                   |
+
 ### Async Actions Fetch Interval
 
 The interval, in milliseconds, to sleep before trying to fetch [async actions](/actions/async-actions.mdx) again after a

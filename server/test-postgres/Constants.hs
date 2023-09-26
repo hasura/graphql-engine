@@ -94,7 +94,8 @@ serveOptions =
       soApolloFederationStatus = ApolloFederationDisabled,
       soCloseWebsocketsOnMetadataChangeStatus = Init._default Init.closeWebsocketsOnMetadataChangeOption,
       soMaxTotalHeaderLength = Init._default Init.maxTotalHeaderLengthOption,
-      soTriggersErrorLogLevelStatus = Init._default Init.triggersErrorLogLevelStatusOption
+      soTriggersErrorLogLevelStatus = Init._default Init.triggersErrorLogLevelStatusOption,
+      soAsyncActionsFetchBatchSize = Init._default Init.asyncActionsFetchBatchSizeOption
     }
 
 -- | What log level should be used by the engine; this is not exported, and

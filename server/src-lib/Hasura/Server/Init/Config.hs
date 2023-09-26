@@ -324,7 +324,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoApolloFederationStatus :: Maybe Server.Types.ApolloFederationStatus,
     rsoCloseWebsocketsOnMetadataChangeStatus :: Maybe Server.Types.CloseWebsocketsOnMetadataChangeStatus,
     rsoMaxTotalHeaderLength :: Maybe Int,
-    rsoTriggersErrorLogLevelStatus :: Maybe Server.Types.TriggersErrorLogLevelStatus
+    rsoTriggersErrorLogLevelStatus :: Maybe Server.Types.TriggersErrorLogLevelStatus,
+    rsoAsyncActionsFetchBatchSize :: Maybe Int
   }
 
 -- | Whether or not to serve Console assets.
@@ -626,7 +627,8 @@ data ServeOptions impl = ServeOptions
     soApolloFederationStatus :: Server.Types.ApolloFederationStatus,
     soCloseWebsocketsOnMetadataChangeStatus :: Server.Types.CloseWebsocketsOnMetadataChangeStatus,
     soMaxTotalHeaderLength :: Int,
-    soTriggersErrorLogLevelStatus :: Server.Types.TriggersErrorLogLevelStatus
+    soTriggersErrorLogLevelStatus :: Server.Types.TriggersErrorLogLevelStatus,
+    soAsyncActionsFetchBatchSize :: Int
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the
