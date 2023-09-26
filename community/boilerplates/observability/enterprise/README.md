@@ -1,11 +1,19 @@
 # Hasura Enterprise Observability Demo
 
-An all-in-one observability demo for Hasura GraphQL Engine Enterprise Edition with Prometheus, Jaeger, Alert-manager, Node Exporter, Loki Logs and Grafana dashboards.
+An all-in-one observability demo for Hasura GraphQL Engine Enterprise Edition with Prometheus, Jaeger, Alert-manager, Node Exporter, Loki Logs, OpenTelemetry and Grafana dashboards.
 
 ## Get Started
 
 - Copy `dotenv` to `.env` and configure secrets and EE License Key.
 - Try `docker-compose` locally with `docker-compose up -d`, or run the Docker Swarm stack with scripts that are in the `util` folder.
+
+The default configuration enables the Native Prometheus exporter. If you want to push metrics to 3rd-party services that support OpenTelemetry, first disable the `metrics` API and configure the OpenTelemetry metrics endpoint to the `otel-collector` service. `Browse the console -> Settings -> OpenTelemetry Exporter` and configure the metrics endpoint.
+
+```ini
+HGE_ENABLED_APIS=metadata,graphql,config
+```
+
+![OpenTelemetry Exporter](./assets/images/opentelemetry-export-config.png)
 
 ## Components
 

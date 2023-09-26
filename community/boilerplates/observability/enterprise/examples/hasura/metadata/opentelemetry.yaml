@@ -3,7 +3,9 @@ data_types:
   - traces
 exporter_otlp:
   headers: []
-  otlp_traces_endpoint: http://jaeger:4318/v1/traces
+  otlp_logs_endpoint: "{{OTEL_COLLECTOR_HOST}}/v1/logs"
+  otlp_metrics_endpoint: "{{OTEL_COLLECTOR_HOST}}/v1/metrics"
+  otlp_traces_endpoint: "{{JAEGER_HOST}}/v1/traces"
   protocol: http/protobuf
   resource_attributes: []
 batch_span_processor:

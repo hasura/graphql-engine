@@ -1,0 +1,102 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+exporters:
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+  # Data sources: traces, metrics, logs
+  logging:
+    verbosity: detailed
+
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+  # datadog:
+  #   api:
+  #     key: ${DD_API_KEY}
+
+  ## deprecated: can push traces directly to http://jaeger:4318/v1/traces
+  ## use this pipeline if you want exporting traces to multi-channels
+  ##
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+
+  ## Honeycomb exporter
+  ## Note: logs are sent to the service.name in trace (hasura), not to x-honeycomb-dataset
+  # otlp:
+  #   endpoint: api.honeycomb.io:443
+  #   headers:
+  #     x-honeycomb-team: ${HONEYCOMB_API_KEY}
+  #     x-honeycomb-dataset: ${HONEYCOMB_DATASET}
+
+  ## Google Cloud
+  ## You need to create a service account with following roles
+  ## - roles/monitoring.metricWriter
+  ## - roles/cloudtrace.agent
+  ## - roles/logging.logWriter
+  ## download and rename to gcp-sa.json so the otel-collector can mount the service account 
+  ##
+  # googlecloud:
+  #   log:
+  #     default_log_name: example-otel.io/hasura-exported-log
+
+processors:
+  batch:
+    send_batch_max_size: 100
+    send_batch_size: 10
+    timeout: 10s
+
+  transform:
+    error_mode: ignore
+    metric_statements:
+      # OpenTelemetry doesn't automatically convert resource.attributes to label,
+      # so we need to assign them to data_point attributes
+      # {
+      #   "resource_metrics": [
+      #     {
+      #       "resource": {
+      #         "attributes": [
+      #           {
+      #             "key": "host.name",
+      #             "value": {
+      #               "string_value": "abc:8080"
+      #             }
+      #           },
+      #         ]
+      #       }
+      #     }
+      #   ]
+      # }
+      - context: datapoint
+        statements:
+          - set(attributes["instance"], resource.attributes["host.name"])
+
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 65
+    spike_limit_percentage: 20
+
+service:
+  pipelines:
+    ## enable traces to DataDogs if require
+    ##
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [jaeger]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, loki]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, transform, batch]
+      exporters: [prometheus]

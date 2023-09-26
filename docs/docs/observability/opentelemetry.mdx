@@ -289,3 +289,75 @@ send the data to it. The list of
 be found in the [OpenTelemetry Collector repository](https://github.com/open-telemetry/opentelemetry-collector-contrib).
 
 :::
+
+## Connect Logs and Traces
+
+Trace and Span ID are included in the root of the log body. GraphQL Engine follows
+[OpenTelemetry's data model](https://opentelemetry.io/docs/specs/otel/logs/data-model/#log-and-event-record-definition)
+so that OpenTelemetry-compliant services can automatically correlate logs with Traces. However, some services need
+extra configurations.
+
+### Jaeger
+
+Grafana can link Jaeger with log data sources such as Loki, Elasticsearch, Splunk, etc... To do that, you need to
+configure `Trace to logs` in Jaeger's data source settings.
+
+<Thumbnail
+  src="/img/enterprise/open-telemetry-jaeger-loki-correlation-config.png"
+  alt="Jaeger traces and Loki logs correlation config"
+  width="1000px"
+/>
+
+In this example, Traces are linked to Loki logs by the `traceid`. You also can copy the below configuration to the data
+source file.
+
+```yaml
+datasources:
+  - name: Jaeger
+    type: jaeger
+    url: http://jaeger:16686/
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'Loki'
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+        filterByTraceID: false
+        filterBySpanID: false
+        customQuery: true
+        query: "{exporter=\"OTLP\"} | json | traceid=`$${__span.traceId}`"
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '-1h'
+```
+
+You will see the `Logs for this span` button enabled when exploring the trace detail.
+
+<Thumbnail
+  src="/img/enterprise/open-telemetry-jaeger-loki-correlation.png"
+  alt="Jaeger traces and Loki logs correlation"
+  width="1200px"
+/>
+
+### Datadog
+
+If Datadog can't correlate between traces and logs, you should verify the Trace ID attributes mapping. 
+Read more at [the troubleshooting section](https://docs.datadoghq.com/tracing/troubleshooting/correlated-logs-not-showing-up-in-the-trace-id-panel/?tab=jsonlogs#trace-id-option) on Datadog. 
+
+<Thumbnail
+  src="/img/enterprise/open-telemetry-datadog-trace-log.png"
+  alt="Datadog traces and logs correlation"
+  width="1000px"
+/>
+
+### Honeycomb
+
+Traces and logs can't correlate together if they are exported to different datasets.
+Note that Honeycomb will use the `service.name` attribute as the dataset where logs are exported. 
+Therefore the `x-honeycomb-dataset` header must be matched with that attribute. 
+
+<Thumbnail
+  src="/img/enterprise/open-telemetry-honeycomb-trace-log.png"
+  alt="Honeycomb traces and logs correlation"
+  width="1000px"
+/>
