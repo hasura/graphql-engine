@@ -19763,7 +19763,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe RemoteNullForwardingPolicy -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> Maybe ApolloFederationStatus -> Maybe CloseWebsocketsOnMetadataChangeStatus -> Maybe Int -> Maybe TriggersErrorLogLevelStatus -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> Maybe TelemetryStatus -> WsReadCookieStatus -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe RemoteNullForwardingPolicy -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> AllowListStatus -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> DevModeStatus -> Maybe AdminInternalErrorsStatus -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> CompressionOptions -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> Maybe MetadataDefaults -> Maybe ApolloFederationStatus -> Maybe CloseWebsocketsOnMetadataChangeStatus -> Maybe Int -> Maybe TriggersErrorLogLevelStatus -> Maybe Int -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -19816,6 +19816,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoCloseWebsocketsOnMetadataChangeStatus] :: ServeOptionsRaw impl -> Maybe CloseWebsocketsOnMetadataChangeStatus
 [rsoMaxTotalHeaderLength] :: ServeOptionsRaw impl -> Maybe Int
 [rsoTriggersErrorLogLevelStatus] :: ServeOptionsRaw impl -> Maybe TriggersErrorLogLevelStatus
+[rsoAsyncActionsFetchBatchSize] :: ServeOptionsRaw impl -> Maybe Int
 
 -- | Whether or not to serve Console assets.
 data ConsoleStatus
@@ -19921,7 +19922,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> RemoteNullForwardingPolicy -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ApolloFederationStatus -> CloseWebsocketsOnMetadataChangeStatus -> Int -> TriggersErrorLogLevelStatus -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> ConsoleStatus -> Maybe Text -> Maybe Text -> TelemetryStatus -> StringifyNumbers -> DangerouslyCollapseBooleans -> RemoteNullForwardingPolicy -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> AllowListStatus -> HashSet (EngineLogType impl) -> LogLevel -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> DevModeStatus -> AdminInternalErrorsStatus -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> NamingCase -> ExtensionsSchema -> MetadataDefaults -> ApolloFederationStatus -> CloseWebsocketsOnMetadataChangeStatus -> Int -> TriggersErrorLogLevelStatus -> Int -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -19973,6 +19974,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soCloseWebsocketsOnMetadataChangeStatus] :: ServeOptions impl -> CloseWebsocketsOnMetadataChangeStatus
 [soMaxTotalHeaderLength] :: ServeOptions impl -> Int
 [soTriggersErrorLogLevelStatus] :: ServeOptions impl -> TriggersErrorLogLevelStatus
+[soAsyncActionsFetchBatchSize] :: ServeOptions impl -> Int
 
 -- | <a>ResponseInternalErrorsConfig</a> represents the encoding of the
 --   internal errors in the response to the client.
@@ -20341,6 +20343,7 @@ apolloFederationStatusOption :: Option (Maybe ApolloFederationStatus)
 closeWebsocketsOnMetadataChangeOption :: Option CloseWebsocketsOnMetadataChangeStatus
 maxTotalHeaderLengthOption :: Option Int
 triggersErrorLogLevelStatusOption :: Option TriggersErrorLogLevelStatus
+asyncActionsFetchBatchSizeOption :: Option Int
 serveCmdFooter :: Doc
 
 module Hasura.Server.Init.Arg
@@ -23697,7 +23700,7 @@ getCronEvents :: MonadMetadataStorage m => TriggerName -> ScheduledEventPaginati
 getScheduledEventInvocations :: MonadMetadataStorage m => GetScheduledEventInvocations -> m (Either QErr (WithOptionalTotalCount [ScheduledEventInvocation]))
 deleteScheduledEvent :: MonadMetadataStorage m => ScheduledEventId -> ScheduledEventType -> m (Either QErr ())
 insertAction :: MonadMetadataStorage m => ActionName -> SessionVariables -> [Header] -> Value -> m (Either QErr ActionId)
-fetchUndeliveredActionEvents :: MonadMetadataStorage m => m (Either QErr [ActionLogItem])
+fetchUndeliveredActionEvents :: MonadMetadataStorage m => Int -> m (Either QErr [ActionLogItem])
 setActionStatus :: MonadMetadataStorage m => ActionId -> AsyncActionStatus -> m (Either QErr ())
 fetchActionResponse :: MonadMetadataStorage m => ActionId -> m (Either QErr ActionLogResponse)
 clearActionData :: MonadMetadataStorage m => ActionName -> m (Either QErr ())
@@ -25126,22 +25129,22 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqTriggerOnReplication :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) TriggerOnReplication
-cteqCleanupConfig :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe Text)
-cetqWebhook :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe InputWebhook)
-cetqUpdate :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe (SubscribeOpSpec b_atck3))
-cetqTable :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (TableName b_atck3)
-cetqSource :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) SourceName
-cetqRetryConf :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe RequestTransform)
-cetqReplace :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) Bool
-cetqName :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) TriggerName
-cetqInsert :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe (SubscribeOpSpec b_atck3))
-cetqHeaders :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe Bool)
-cetqDelete :: forall b_atck3. Lens' (CreateEventTriggerQuery b_atck3) (Maybe (SubscribeOpSpec b_atck3))
+cteqTriggerOnReplication :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) TriggerOnReplication
+cteqCleanupConfig :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe Text)
+cetqWebhook :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe InputWebhook)
+cetqUpdate :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe (SubscribeOpSpec b_atcyl))
+cetqTable :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (TableName b_atcyl)
+cetqSource :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) SourceName
+cetqRetryConf :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe RequestTransform)
+cetqReplace :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) Bool
+cetqName :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) TriggerName
+cetqInsert :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe (SubscribeOpSpec b_atcyl))
+cetqHeaders :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe Bool)
+cetqDelete :: forall b_atcyl. Lens' (CreateEventTriggerQuery b_atcyl) (Maybe (SubscribeOpSpec b_atcyl))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -27778,7 +27781,7 @@ RebuildableAppContext :: AppContext -> InvalidationKeys -> Rule (ReaderT (Logger
 -- | Represents the Read-Only Hasura State, these fields are immutable and
 --   the state cannot be changed during runtime.
 data AppEnv
-AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> ConnParams -> TxIsolation -> Maybe Text -> Maybe Text -> ConnectionOptions -> KeepAliveDelay -> WSConnectionInitTimeout -> Refined NonNegative Seconds -> OptionalInterval -> CheckFeatureFlag -> Maybe (CredentialCache AgentLicenseKey) -> Int -> TriggersErrorLogLevelStatus -> AppEnv
+AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers -> TMVar MetadataResourceVersion -> InstanceId -> MaintenanceMode () -> LoggingSettings -> EventingMode -> ReadOnlyMode -> ServerMetrics -> ShutdownLatch -> TMVar MetadataResourceVersion -> PrometheusMetrics -> SamplingPolicy -> SubscriptionsState -> LockedEventsCtx -> ConnParams -> TxIsolation -> Maybe Text -> Maybe Text -> ConnectionOptions -> KeepAliveDelay -> WSConnectionInitTimeout -> Refined NonNegative Seconds -> OptionalInterval -> CheckFeatureFlag -> Maybe (CredentialCache AgentLicenseKey) -> Int -> TriggersErrorLogLevelStatus -> Int -> AppEnv
 [appEnvPort] :: AppEnv -> Port
 [appEnvHost] :: AppEnv -> HostPreference
 [appEnvMetadataDbPool] :: AppEnv -> PGPool
@@ -27811,6 +27814,7 @@ AppEnv :: Port -> HostPreference -> PGPool -> Maybe PGPool -> Manager -> Loggers
 [appEnvLicenseKeyCache] :: AppEnv -> Maybe (CredentialCache AgentLicenseKey)
 [appEnvMaxTotalHeaderLength] :: AppEnv -> Int
 [appEnvTriggersErrorLogLevelStatus] :: AppEnv -> TriggersErrorLogLevelStatus
+[appEnvAsyncActionsFetchBatchSize] :: AppEnv -> Int
 
 -- | Represents the Dynamic Hasura State, these field are mutable and can
 --   be changed during runtime.
@@ -28081,9 +28085,9 @@ resolveAsyncActionQuery :: UserInfo -> AnnActionAsyncQuery ('Postgres 'Vanilla) 
 -- | Process async actions from hdb_catalog.hdb_action_log table. This
 --   functions is executed in a background thread. See Note [Async action
 --   architecture] above
-asyncActionsProcessor :: forall m. (HasAppEnv m, MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadMetadataStorage m, MonadTrace m) => IO Environment -> Logger Hasura -> IO SchemaCache -> IO OptionalInterval -> TVar (Set LockedActionEventId) -> Maybe GQLQueryText -> m (Forever m)
+asyncActionsProcessor :: forall m. (HasAppEnv m, MonadIO m, MonadBaseControl IO m, Forall (Pure m), MonadMetadataStorage m, MonadTrace m) => IO Environment -> Logger Hasura -> IO SchemaCache -> IO OptionalInterval -> TVar (Set LockedActionEventId) -> Maybe GQLQueryText -> Int -> m (Forever m)
 insertActionTx :: ActionName -> SessionVariables -> [Header] -> Value -> TxE QErr ActionId
-fetchUndeliveredActionEventsTx :: TxE QErr [ActionLogItem]
+fetchUndeliveredActionEventsTx :: Int -> TxE QErr [ActionLogItem]
 setActionStatusTx :: ActionId -> AsyncActionStatus -> TxE QErr ()
 fetchActionResponseTx :: ActionId -> TxE QErr ActionLogResponse
 clearActionDataTx :: ActionName -> TxE QErr ()
