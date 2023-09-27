@@ -2,7 +2,7 @@ This note is in [Hasura.Server.Logging](https://github.com/hasura/graphql-engine
 It is referenced at:
   - line 239 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L239)
   - line 259 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L259)
-  - line 465 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L465)
+  - line 469 of [Hasura.Server.Logging](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Logging.hs#L469)
 
 # Disable query printing for metadata queries
 
