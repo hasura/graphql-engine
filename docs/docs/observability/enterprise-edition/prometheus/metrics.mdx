@@ -471,6 +471,28 @@ Health check status of a particular data source, corresponding to the output of 
 | Type   | Gauge                               |
 | Labels | `source_name`: name of the database |
 
+### HTTP Egress
+
+Total size of HTTP response bodies sent via the HTTP server excluding responses from requests to `/healthz`
+and `/v1/version` endpoints or any other undefined resource/endpoint (for example `/foobar`).
+
+|        |                                    |
+| ------ | ---------------------------------- |
+| Name   | `hasura_http_response_bytes_total` |
+| Type   | Counter                            |
+| Labels | none                               |
+
+### HTTP Ingress
+
+Total size of HTTP request bodies received via the HTTP server excluding requests to `/healthz` and
+`/v1/version` endpoints or any other undefined resource/endpoint (for example `/foobar`).
+
+|        |                                   |
+| ------ | --------------------------------- |
+| Name   | `hasura_http_request_bytes_total` |
+| Type   | Counter                           |
+| Labels | none                              |
+
 ### OpenTelemetry OTLP Export Metrics
 
 These metrics allow for monitoring the reliability and performance of OTLP

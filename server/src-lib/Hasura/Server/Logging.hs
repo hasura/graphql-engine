@@ -307,6 +307,8 @@ class (Monad m) => HttpLog m where
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
+    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
+    Bool ->
     m ()
 
   logHttpSuccess ::
@@ -334,6 +336,8 @@ class (Monad m) => HttpLog m where
     -- | list of request headers
     [HTTP.Header] ->
     HttpLogMetadata m ->
+    -- | flag to indicate if the request/response size should be added to the Prometheus Counter
+    Bool ->
     m ()
 
 instance (HttpLog m) => HttpLog (TraceT m) where
@@ -342,9 +346,9 @@ instance (HttpLog m) => HttpLog (TraceT m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 instance (HttpLog m) => HttpLog (ReaderT r m) where
   type ExtraHttpLogMetadata (ReaderT r m) = ExtraHttpLogMetadata m
@@ -352,9 +356,9 @@ instance (HttpLog m) => HttpLog (ReaderT r m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 instance (HttpLog m) => HttpLog (ExceptT e m) where
   type ExtraHttpLogMetadata (ExceptT e m) = ExtraHttpLogMetadata m
@@ -362,9 +366,9 @@ instance (HttpLog m) => HttpLog (ExceptT e m) where
   buildExtraHttpLogMetadata a = buildExtraHttpLogMetadata @m a
   emptyExtraHttpLogMetadata = emptyExtraHttpLogMetadata @m
 
-  logHttpError a b c d e f g h i = lift $ logHttpError a b c d e f g h i
+  logHttpError a b c d e f g h i j = lift $ logHttpError a b c d e f g h i j
 
-  logHttpSuccess a b c d e f g h i j k l = lift $ logHttpSuccess a b c d e f g h i j k l
+  logHttpSuccess a b c d e f g h i j k l m = lift $ logHttpSuccess a b c d e f g h i j k l m
 
 -- | Log information about the HTTP request
 data HttpInfoLog = HttpInfoLog

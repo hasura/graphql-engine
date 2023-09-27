@@ -402,7 +402,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allHeaders = [contentLength, jsonHeader]
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
-      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata
+      lift $ logHttpError (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req qErr headers httpLogMetadata True
       mapM_ setHeader allHeaders
       Spock.setStatus $ qeStatus qErr
       Spock.lazyBytes jsonResponse
@@ -419,7 +419,7 @@ mkSpockAction appStateRef qErrEncoder qErrModifier apiHandler = do
           allRespHeaders = [reqIdHeader, contentLength] <> encodingHeader <> respHeaders <> authHdrs
       -- https://opentelemetry.io/docs/reference/specification/trace/semantic_conventions/http/#common-attributes
       lift $ Tracing.attachMetadata [("http.response_content_length", bsToTxt $ snd contentLength)]
-      lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata
+      lift $ logHttpSuccess (_lsLogger appEnvLoggers) appEnvLoggingSettings userInfo reqId waiReq req respBytes compressedResp qTime encodingType reqHeaders httpLoggingMetadata True
       mapM_ setHeader allRespHeaders
       Spock.lazyBytes compressedResp
 
@@ -1071,14 +1071,18 @@ httpApp setupHook appStateRef AppEnv {..} consoleType ekgStore closeWebsocketsOn
       let headers = Wai.requestHeaders req
           blMsg = TL.encodeUtf8 msg
       (reqId, _newHeaders) <- getRequestId headers
-      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m)
+      -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+      -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
+      lift $ logHttpSuccess logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) blMsg blMsg Nothing Nothing headers (emptyHttpLogMetadata @m) False
 
     logError err = do
       req <- Spock.request
       reqBody <- liftIO $ Wai.strictRequestBody req
       let headers = Wai.requestHeaders req
       (reqId, _newHeaders) <- getRequestId headers
-      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m)
+      -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+      -- transfer bytes for requests to `/heatlhz` and `/v1/version` endpoints
+      lift $ logHttpError logger appEnvLoggingSettings Nothing reqId req (reqBody, Nothing) err headers (emptyHttpLogMetadata @m) False
 
     spockAction ::
       forall a.
@@ -1148,7 +1152,9 @@ raiseGenericApiError logger loggingSetting headers qErr = do
   req <- Spock.request
   reqBody <- liftIO $ Wai.strictRequestBody req
   (reqId, _newHeaders) <- getRequestId $ Wai.requestHeaders req
-  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr headers (emptyHttpLogMetadata @m)
+  -- setting the bool flag countDataTransferBytes to False here since we don't want to count the data
+  -- transfer bytes for requests to undefined resources
+  lift $ logHttpError logger loggingSetting Nothing reqId req (reqBody, Nothing) qErr headers (emptyHttpLogMetadata @m) False
   setHeader jsonHeader
   Spock.setStatus $ qeStatus qErr
   Spock.lazyBytes $ encode qErr
