@@ -116,3 +116,8 @@ source-repository-package
   location: https://github.com/hasura/text.git
   tag: ba0fd2bf256c996a6c85dbdc8590a6fcde41b8f8
 
+source-repository-package
+  type: git
+  location: https://github.com/hasura/libdeflate-hs.git
+  tag: e6f020a1a24d07516d753fbb6f30758774f76372
+
