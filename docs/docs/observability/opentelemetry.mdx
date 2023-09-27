@@ -54,6 +54,13 @@ All users are encouraged to migrate to this new integration.
 
 :::
 
+:::info Traces on Hasura Cloud
+
+Hasura Cloud implements sampling on traces. That means only one in every `n` traces will be sampled and exported
+(`n` will be automatically configured based on various parameters during runtime. This can't be manually adjusted).
+
+:::
+
 <Tabs groupId="user-preference" className="api-tabs">
 <TabItem value="console" label="Console">
 
@@ -91,6 +98,8 @@ exporter_otlp:
   otlp_metrics_endpoint: http://host.docker.internal:4318/v1/metrics
   otlp_logs_endpoint: http://host.docker.internal:4318/v1/logs
   protocol: http/protobuf
+  traces_propagators: 
+    - tracecontext
 batch_span_processor:
   max_export_batch_size: 512
 ```
