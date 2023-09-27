@@ -175,6 +175,7 @@ common lib-depends
                      , http-types
                      , kan-extensions
                      , kriti-lang
+                     , libdeflate-hs
                      , lifted-base
                      , monad-control
                      , monad-loops
