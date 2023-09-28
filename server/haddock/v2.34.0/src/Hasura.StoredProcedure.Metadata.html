@@ -1,0 +1,341 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- | Metadata representation of a stored procedure in the metadata,</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--   as well as a parser and prettyprinter for the query code.</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.StoredProcedure.Metadata</span><span>
+</span><span id="line-8"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier">StoredProcedureMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#spmStoredProcedure"><span class="hs-identifier">spmStoredProcedure</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#spmConfig"><span class="hs-identifier">spmConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#spmArguments"><span class="hs-identifier">spmArguments</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#spmDescription"><span class="hs-identifier">spmDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#spmReturns"><span class="hs-identifier">spmReturns</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html"><span class="hs-identifier">Hasura.StoredProcedure.Types</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.html"><span class="hs-identifier">Autodocodec</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AC</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.html"><span class="hs-identifier">Control.Lens</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/lens-5.2.2-c288f4ab3533e91c5d241152121e172474cc553aa524e32488a24b727cc130b5/share/doc/html/src/Control.Lens.TH.html#makeLenses"><span class="hs-identifier">makeLenses</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html"><span class="hs-identifier">Hasura.LogicalModel.Types</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html"><span class="hs-identifier">Hasura.LogicalModelResolver.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">first</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html"><span class="hs-identifier">Hasura.RQL.Types.BackendTag</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.BackendTag.html#backendPrefix"><span class="hs-identifier">backendPrefix</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html"><span class="hs-identifier">Hasura.RQL.Types.BackendType</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html"><span class="hs-identifier">Hasura.StoredProcedure.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier">NullableScalarType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier">StoredProcedureConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#nullableScalarTypeMapCodec"><span class="hs-identifier">nullableScalarTypeMapCodec</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-comment">---------------------------------------</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><span class="hs-comment">-- | The representation of stored procedures within the metadata structure.</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="StoredProcedureMetadata"><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-var">StoredProcedureMetadata</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687521528"><span class="annot"><a href="#local-6989586621687521528"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.BackendType.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="StoredProcedureMetadata"><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-var">StoredProcedureMetadata</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_spmStoredProcedure"><span class="annot"><span class="annottext">forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; FunctionName b
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmStoredProcedure"><span class="hs-identifier hs-var hs-var">_spmStoredProcedure</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521528"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span id="_spmConfig"><span class="annot"><span class="annottext">forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; StoredProcedureConfig
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmConfig"><span class="hs-identifier hs-var hs-var">_spmConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.StoredProcedure.Types.html#StoredProcedureConfig"><span class="hs-identifier hs-type">StoredProcedureConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span id="_spmReturns"><span class="annot"><span class="annottext">forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; LogicalModelName
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmReturns"><span class="hs-identifier hs-var hs-var">_spmReturns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.LogicalModel.Types.html#LogicalModelName"><span class="hs-identifier hs-type">LogicalModelName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span id="_spmArguments"><span class="annot"><span class="annottext">forall (b :: BackendType).
+StoredProcedureMetadata b
+-&gt; HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmArguments"><span class="hs-identifier hs-var hs-var">_spmArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/unordered-containers-0.2.19.1-fc2e0f1d37ef28cdf90ef4bc038ad0de1aaee4c64eb6ed4574eefbec08a983d1/share/doc/html/src/Data.HashMap.Internal.html#HashMap"><span class="hs-identifier hs-type">HashMap</span></a></span><span> </span><span class="annot"><a href="Hasura.LogicalModelResolver.Types.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.LogicalModel.NullableScalarType.html#NullableScalarType"><span class="hs-identifier hs-type">NullableScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521528"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span id="_spmDescription"><span class="annot"><span class="annottext">forall (b :: BackendType). StoredProcedureMetadata b -&gt; Maybe Text
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmDescription"><span class="hs-identifier hs-var hs-var">_spmDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687521657"><span id="local-6989586621687521659"><span class="annot"><span class="annottext">(forall x.
+ StoredProcedureMetadata b -&gt; Rep (StoredProcedureMetadata b) x)
+-&gt; (forall x.
+    Rep (StoredProcedureMetadata b) x -&gt; StoredProcedureMetadata b)
+-&gt; Generic (StoredProcedureMetadata b)
+forall x.
+Rep (StoredProcedureMetadata b) x -&gt; StoredProcedureMetadata b
+forall x.
+StoredProcedureMetadata b -&gt; Rep (StoredProcedureMetadata b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (StoredProcedureMetadata b) x -&gt; StoredProcedureMetadata b
+forall (b :: BackendType) x.
+StoredProcedureMetadata b -&gt; Rep (StoredProcedureMetadata b) x
+$cfrom :: forall (b :: BackendType) x.
+StoredProcedureMetadata b -&gt; Rep (StoredProcedureMetadata b) x
+from :: forall x.
+StoredProcedureMetadata b -&gt; Rep (StoredProcedureMetadata b) x
+$cto :: forall (b :: BackendType) x.
+Rep (StoredProcedureMetadata b) x -&gt; StoredProcedureMetadata b
+to :: forall x.
+Rep (StoredProcedureMetadata b) x -&gt; StoredProcedureMetadata b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span id="local-6989586621687521560"><span id="local-6989586621687521664"><span id="local-6989586621687521679"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521560"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521560"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621687521568"><span id="local-6989586621687521690"><span id="local-6989586621687521707"><span id="local-6989586621687521711"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521568"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521568"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687521576"><span id="local-6989586621687521721"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521576"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#HasCodec"><span class="hs-identifier hs-type">HasCodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521576"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621687521769"><span class="annot"><span class="annottext">codec :: JSONCodec (StoredProcedureMetadata b)
+</span><a href="#local-6989586621687521769"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">Text
+-&gt; JSONCodec (StoredProcedureMetadata b)
+-&gt; JSONCodec (StoredProcedureMetadata b)
+forall input output.
+Text -&gt; ValueCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#CommentCodec"><span class="hs-identifier hs-var">CommentCodec</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A stored procedure as represented in metadata.&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">(JSONCodec (StoredProcedureMetadata b)
+ -&gt; JSONCodec (StoredProcedureMetadata b))
+-&gt; JSONCodec (StoredProcedureMetadata b)
+-&gt; JSONCodec (StoredProcedureMetadata b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; ObjectCodec
+     (StoredProcedureMetadata b) (StoredProcedureMetadata b)
+-&gt; JSONCodec (StoredProcedureMetadata b)
+forall input output.
+Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#object"><span class="hs-identifier hs-var">AC.object</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). HasTag b =&gt; Text
+</span><a href="Hasura.RQL.Types.BackendTag.html#backendPrefix"><span class="hs-identifier hs-var">backendPrefix</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621687521576"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;StoredProcedureMetadata&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">(ObjectCodec
+   (StoredProcedureMetadata b) (StoredProcedureMetadata b)
+ -&gt; JSONCodec (StoredProcedureMetadata b))
+-&gt; ObjectCodec
+     (StoredProcedureMetadata b) (StoredProcedureMetadata b)
+-&gt; JSONCodec (StoredProcedureMetadata b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FunctionName b
+-&gt; StoredProcedureConfig
+-&gt; LogicalModelName
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; Maybe Text
+-&gt; StoredProcedureMetadata b
+forall (b :: BackendType).
+FunctionName b
+-&gt; StoredProcedureConfig
+-&gt; LogicalModelName
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; Maybe Text
+-&gt; StoredProcedureMetadata b
+</span><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-var">StoredProcedureMetadata</span></a></span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">(FunctionName b
+ -&gt; StoredProcedureConfig
+ -&gt; LogicalModelName
+ -&gt; HashMap ArgumentName (NullableScalarType b)
+ -&gt; Maybe Text
+ -&gt; StoredProcedureMetadata b)
+-&gt; Codec Object (StoredProcedureMetadata b) (FunctionName b)
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (StoredProcedureConfig
+      -&gt; LogicalModelName
+      -&gt; HashMap ArgumentName (NullableScalarType b)
+      -&gt; Maybe Text
+      -&gt; StoredProcedureMetadata b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec (FunctionName b) (FunctionName b)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">AC.requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;stored_procedure&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687521775"><span class="hs-identifier hs-var">spDoc</span></a></span><span>
+</span><span id="line-54"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (FunctionName b) (FunctionName b)
+-&gt; (StoredProcedureMetadata b -&gt; FunctionName b)
+-&gt; Codec Object (StoredProcedureMetadata b) (FunctionName b)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureMetadata b -&gt; FunctionName b
+forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; FunctionName b
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmStoredProcedure"><span class="hs-identifier hs-var">_spmStoredProcedure</span></a></span><span>
+</span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (StoredProcedureMetadata b)
+  (StoredProcedureConfig
+   -&gt; LogicalModelName
+   -&gt; HashMap ArgumentName (NullableScalarType b)
+   -&gt; Maybe Text
+   -&gt; StoredProcedureMetadata b)
+-&gt; Codec Object (StoredProcedureMetadata b) StoredProcedureConfig
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (LogicalModelName
+      -&gt; HashMap ArgumentName (NullableScalarType b)
+      -&gt; Maybe Text
+      -&gt; StoredProcedureMetadata b)
+forall a b.
+Codec Object (StoredProcedureMetadata b) (a -&gt; b)
+-&gt; Codec Object (StoredProcedureMetadata b) a
+-&gt; Codec Object (StoredProcedureMetadata b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; Text -&gt; ObjectCodec StoredProcedureConfig StoredProcedureConfig
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;configuration&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687521777"><span class="hs-identifier hs-var">configDoc</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec StoredProcedureConfig StoredProcedureConfig
+-&gt; (StoredProcedureMetadata b -&gt; StoredProcedureConfig)
+-&gt; Codec Object (StoredProcedureMetadata b) StoredProcedureConfig
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureMetadata b -&gt; StoredProcedureConfig
+forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; StoredProcedureConfig
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmConfig"><span class="hs-identifier hs-var">_spmConfig</span></a></span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (StoredProcedureMetadata b)
+  (LogicalModelName
+   -&gt; HashMap ArgumentName (NullableScalarType b)
+   -&gt; Maybe Text
+   -&gt; StoredProcedureMetadata b)
+-&gt; Codec Object (StoredProcedureMetadata b) LogicalModelName
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (HashMap ArgumentName (NullableScalarType b)
+      -&gt; Maybe Text -&gt; StoredProcedureMetadata b)
+forall a b.
+Codec Object (StoredProcedureMetadata b) (a -&gt; b)
+-&gt; Codec Object (StoredProcedureMetadata b) a
+-&gt; Codec Object (StoredProcedureMetadata b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec LogicalModelName LogicalModelName
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#requiredField"><span class="hs-identifier hs-var">requiredField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;returns&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687521778"><span class="hs-identifier hs-var">returnsDoc</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec LogicalModelName LogicalModelName
+-&gt; (StoredProcedureMetadata b -&gt; LogicalModelName)
+-&gt; Codec Object (StoredProcedureMetadata b) LogicalModelName
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureMetadata b -&gt; LogicalModelName
+forall (b :: BackendType).
+StoredProcedureMetadata b -&gt; LogicalModelName
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmReturns"><span class="hs-identifier hs-var">_spmReturns</span></a></span><span>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (StoredProcedureMetadata b)
+  (HashMap ArgumentName (NullableScalarType b)
+   -&gt; Maybe Text -&gt; StoredProcedureMetadata b)
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (HashMap ArgumentName (NullableScalarType b))
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (Maybe Text -&gt; StoredProcedureMetadata b)
+forall a b.
+Codec Object (StoredProcedureMetadata b) (a -&gt; b)
+-&gt; Codec Object (StoredProcedureMetadata b) a
+-&gt; Codec Object (StoredProcedureMetadata b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; HashMap ArgumentName (NullableScalarType b)
+-&gt; Text
+-&gt; ObjectCodec
+     (HashMap ArgumentName (NullableScalarType b))
+     (HashMap ArgumentName (NullableScalarType b))
+forall output.
+HasCodec output =&gt;
+Text -&gt; output -&gt; Text -&gt; ObjectCodec output output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalFieldWithDefault"><span class="hs-identifier hs-var">optionalFieldWithDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">HashMap ArgumentName (NullableScalarType b)
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687521780"><span class="hs-identifier hs-var">argumentDoc</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec
+  (HashMap ArgumentName (NullableScalarType b))
+  (HashMap ArgumentName (NullableScalarType b))
+-&gt; (StoredProcedureMetadata b
+    -&gt; HashMap ArgumentName (NullableScalarType b))
+-&gt; Codec
+     Object
+     (StoredProcedureMetadata b)
+     (HashMap ArgumentName (NullableScalarType b))
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureMetadata b
+-&gt; HashMap ArgumentName (NullableScalarType b)
+forall (b :: BackendType).
+StoredProcedureMetadata b
+-&gt; HashMap ArgumentName (NullableScalarType b)
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmArguments"><span class="hs-identifier hs-var">_spmArguments</span></a></span><span>
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Codec
+  Object
+  (StoredProcedureMetadata b)
+  (Maybe Text -&gt; StoredProcedureMetadata b)
+-&gt; Codec Object (StoredProcedureMetadata b) (Maybe Text)
+-&gt; ObjectCodec
+     (StoredProcedureMetadata b) (StoredProcedureMetadata b)
+forall a b.
+Codec Object (StoredProcedureMetadata b) (a -&gt; b)
+-&gt; Codec Object (StoredProcedureMetadata b) a
+-&gt; Codec Object (StoredProcedureMetadata b) b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; ObjectCodec (Maybe Text) (Maybe Text)
+forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Class.html#optionalField"><span class="hs-identifier hs-var">optionalField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687521782"><span class="hs-identifier hs-var">descriptionDoc</span></a></span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Text) (Maybe Text)
+-&gt; (StoredProcedureMetadata b -&gt; Maybe Text)
+-&gt; Codec Object (StoredProcedureMetadata b) (Maybe Text)
+forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.Codec.html#.%3D"><span class="hs-operator hs-var">AC..=</span></a></span><span> </span><span class="annot"><span class="annottext">StoredProcedureMetadata b -&gt; Maybe Text
+forall (b :: BackendType). StoredProcedureMetadata b -&gt; Maybe Text
+</span><a href="Hasura.StoredProcedure.Metadata.html#_spmDescription"><span class="hs-identifier hs-var">_spmDescription</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621687521775"><span class="annot"><span class="annottext">spDoc :: Text
+</span><a href="#local-6989586621687521775"><span class="hs-identifier hs-var hs-var">spDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The name of the SQL stored procedure&quot;</span></span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621687521777"><span class="annot"><span class="annottext">configDoc :: Text
+</span><a href="#local-6989586621687521777"><span class="hs-identifier hs-var hs-var">configDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The configuration for the SQL stored procedure&quot;</span></span><span>
+</span><span id="line-66"></span><span>      </span><span id="local-6989586621687521780"><span class="annot"><span class="annottext">argumentDoc :: Text
+</span><a href="#local-6989586621687521780"><span class="hs-identifier hs-var hs-var">argumentDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Free variables in the expression and their types&quot;</span></span><span>
+</span><span id="line-67"></span><span>      </span><span id="local-6989586621687521778"><span class="annot"><span class="annottext">returnsDoc :: Text
+</span><a href="#local-6989586621687521778"><span class="hs-identifier hs-var hs-var">returnsDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Return type (table) of the expression&quot;</span></span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621687521782"><span class="annot"><span class="annottext">descriptionDoc :: Text
+</span><a href="#local-6989586621687521782"><span class="hs-identifier hs-var hs-var">descriptionDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;A description of the stored procedure which appears in the graphql schema&quot;</span></span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span id="local-6989586621687521790"><span id="local-6989586621687521796"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621687521621"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521621"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521621"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-type">FromJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521621"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621687521804"><span id="local-6989586621687521810"><span id="local-6989586621687521815"><span id="local-6989586621687521820"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">via</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621687521627"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/autodocodec-0.2.0.3-5b31ed6a94c5930c4b171738e22df8e2e72122630c5e28930c53119bef648e9c/share/doc/html/src/Autodocodec.DerivingVia.html#Autodocodec"><span class="hs-identifier hs-type">Autodocodec</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521627"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521627"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.StoredProcedure.Metadata.html#StoredProcedureMetadata"><span class="hs-identifier hs-type">StoredProcedureMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687521627"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span id="local-6989586621687521528"><span id="spmStoredProcedure"><span id="spmConfig"><span id="spmArguments"><span id="spmDescription"><span id="spmReturns"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">StoredProcedureMetadata</span></span></span></span></span></span></span><span>
+</span><span id="line-81"></span></pre></body></html>

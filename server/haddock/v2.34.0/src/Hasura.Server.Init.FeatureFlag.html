@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DeriveAnyClass #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="annot"><span class="hs-comment">-- | Feature Flags are /temporary/ toggles.</span></span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.Init.FeatureFlag</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier">FeatureFlag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier">CheckFeatureFlag</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#ceCheckFeatureFlag"><span class="hs-identifier">ceCheckFeatureFlag</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier">HasFeatureFlagChecker</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="hs-comment">-- Feature flags</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#namingConventionSep2023"><span class="hs-identifier">namingConventionSep2023</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.html"><span class="hs-identifier">Data.Aeson</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier">FromJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier">ToJSON</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Char</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html"><span class="hs-identifier">Data.Text</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src/Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-var">FeatureFlag</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ffIdentifier"><span class="annot"><span class="annottext">FeatureFlag -&gt; Text
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var hs-var">ffIdentifier</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687371438"><span id="local-6989586621687371442"><span class="annot"><span class="annottext">FeatureFlag -&gt; FeatureFlag -&gt; Bool
+(FeatureFlag -&gt; FeatureFlag -&gt; Bool)
+-&gt; (FeatureFlag -&gt; FeatureFlag -&gt; Bool) -&gt; Eq FeatureFlag
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+$c== :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
+== :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
+$c/= :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
+/= :: FeatureFlag -&gt; FeatureFlag -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371446"><span id="local-6989586621687371448"><span class="annot"><span class="annottext">(forall x. FeatureFlag -&gt; Rep FeatureFlag x)
+-&gt; (forall x. Rep FeatureFlag x -&gt; FeatureFlag)
+-&gt; Generic FeatureFlag
+forall x. Rep FeatureFlag x -&gt; FeatureFlag
+forall x. FeatureFlag -&gt; Rep FeatureFlag x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cfrom :: forall x. FeatureFlag -&gt; Rep FeatureFlag x
+from :: forall x. FeatureFlag -&gt; Rep FeatureFlag x
+$cto :: forall x. Rep FeatureFlag x -&gt; FeatureFlag
+to :: forall x. Rep FeatureFlag x -&gt; FeatureFlag
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371452"><span id="local-6989586621687371458"><span id="local-6989586621687371462"><span class="annot"><span class="annottext">Int -&gt; FeatureFlag -&gt; ShowS
+[FeatureFlag] -&gt; ShowS
+FeatureFlag -&gt; [Char]
+(Int -&gt; FeatureFlag -&gt; ShowS)
+-&gt; (FeatureFlag -&gt; [Char])
+-&gt; ([FeatureFlag] -&gt; ShowS)
+-&gt; Show FeatureFlag
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; [Char]) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+$cshowsPrec :: Int -&gt; FeatureFlag -&gt; ShowS
+showsPrec :: Int -&gt; FeatureFlag -&gt; ShowS
+$cshow :: FeatureFlag -&gt; [Char]
+show :: FeatureFlag -&gt; [Char]
+$cshowList :: [FeatureFlag] -&gt; ShowS
+showList :: [FeatureFlag] -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687371468"><span id="local-6989586621687371475"><span class="annot"><span class="annottext">Eq FeatureFlag
+Eq FeatureFlag
+-&gt; (Int -&gt; FeatureFlag -&gt; Int)
+-&gt; (FeatureFlag -&gt; Int)
+-&gt; Hashable FeatureFlag
+Int -&gt; FeatureFlag -&gt; Int
+FeatureFlag -&gt; Int
+forall a. Eq a -&gt; (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+$chashWithSalt :: Int -&gt; FeatureFlag -&gt; Int
+hashWithSalt :: Int -&gt; FeatureFlag -&gt; Int
+$chash :: FeatureFlag -&gt; Int
+hash :: FeatureFlag -&gt; Int
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371486"><span id="local-6989586621687371493"><span class="annot"><span class="annottext">Value -&gt; Parser [FeatureFlag]
+Value -&gt; Parser FeatureFlag
+(Value -&gt; Parser FeatureFlag)
+-&gt; (Value -&gt; Parser [FeatureFlag]) -&gt; FromJSON FeatureFlag
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+$cparseJSON :: Value -&gt; Parser FeatureFlag
+parseJSON :: Value -&gt; Parser FeatureFlag
+$cparseJSONList :: Value -&gt; Parser [FeatureFlag]
+parseJSONList :: Value -&gt; Parser [FeatureFlag]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.FromJSON.html#FromJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687371562"><span id="local-6989586621687371569"><span id="local-6989586621687371572"><span id="local-6989586621687371575"><span class="annot"><span class="annottext">[FeatureFlag] -&gt; Value
+[FeatureFlag] -&gt; Encoding
+FeatureFlag -&gt; Value
+FeatureFlag -&gt; Encoding
+(FeatureFlag -&gt; Value)
+-&gt; (FeatureFlag -&gt; Encoding)
+-&gt; ([FeatureFlag] -&gt; Value)
+-&gt; ([FeatureFlag] -&gt; Encoding)
+-&gt; ToJSON FeatureFlag
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+$ctoJSON :: FeatureFlag -&gt; Value
+toJSON :: FeatureFlag -&gt; Value
+$ctoEncoding :: FeatureFlag -&gt; Encoding
+toEncoding :: FeatureFlag -&gt; Encoding
+$ctoJSONList :: [FeatureFlag] -&gt; Value
+toJSONList :: [FeatureFlag] -&gt; Value
+$ctoEncodingList :: [FeatureFlag] -&gt; Encoding
+toEncodingList :: [FeatureFlag] -&gt; Encoding
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- | In OSS we _may_ look for a environment variable or fall back to the default</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- value.</span><span>
+</span><span id="line-32"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#ceCheckFeatureFlag"><span class="hs-identifier hs-type">ceCheckFeatureFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-type">CheckFeatureFlag</span></a></span><span>
+</span><span id="line-33"></span><span id="ceCheckFeatureFlag"><span class="annot"><span class="annottext">ceCheckFeatureFlag :: Environment -&gt; CheckFeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ceCheckFeatureFlag"><span class="hs-identifier hs-var hs-var">ceCheckFeatureFlag</span></a></span></span><span> </span><span id="local-6989586621687371635"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687371635"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-type">CheckFeatureFlag</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">runCheckFeatureFlag :: FeatureFlag -&gt; IO Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var">runCheckFeatureFlag</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">cases</span><span>
+</span><span id="line-36"></span><span>        </span><span id="local-6989586621687371638"><span class="annot"><span class="annottext">ff :: FeatureFlag
+</span><a href="#local-6989586621687371638"><span class="hs-identifier hs-var">ff</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ffIdentifier :: FeatureFlag -&gt; Text
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621687371639"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687371639"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">}</span><span>
+</span><span id="line-37"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="#local-6989586621687371638"><span class="hs-identifier hs-var">ff</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; [FeatureFlag] -&gt; Bool
+forall a. Eq a =&gt; a -&gt; [a] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">((FeatureFlag, Text) -&gt; FeatureFlag)
+-&gt; [(FeatureFlag, Text)] -&gt; [FeatureFlag]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(FeatureFlag, Text) -&gt; FeatureFlag
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ceFeatureFlags"><span class="hs-identifier hs-var">ceFeatureFlags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-38"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621687371643"><span class="annot"><span class="annottext">envVar :: [Char]
+</span><a href="#local-6989586621687371643"><span class="hs-identifier hs-var hs-var">envVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;HASURA_FF_&quot;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Char]
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Show.html#unpack"><span class="hs-identifier hs-var">T.unpack</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; Text -&gt; Text
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.html#map"><span class="hs-identifier hs-var">T.map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><a href="#local-6989586621687371646"><span class="hs-identifier hs-var">hypenToUnderscore</span></a></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; (Char -&gt; Char) -&gt; Char -&gt; Char
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toUpper</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687371639"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>               </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; IO Bool
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; IO Bool) -&gt; Bool -&gt; IO Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool -&gt; Bool
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(Maybe Bool -&gt; Bool) -&gt; Maybe Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Environment -&gt; [Char] -&gt; Maybe [Char]
+</span><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.4.5/hasura-extras-1.0.0/opt/doc/html/hasura-extras/src/Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621687371635"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621687371643"><span class="hs-identifier hs-var">envVar</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Char] -&gt; ([Char] -&gt; Maybe Bool) -&gt; Maybe Bool
+forall a b. Maybe a -&gt; (a -&gt; Maybe b) -&gt; Maybe b
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Maybe Bool
+forall a. Read a =&gt; [Char] -&gt; Maybe a
+</span><span class="hs-identifier hs-var">readMaybe</span></span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">FeatureFlag
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; IO Bool
+forall a. a -&gt; IO a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">listKnownFeatureFlags :: [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#listKnownFeatureFlags"><span class="hs-identifier hs-var">listKnownFeatureFlags</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ceFeatureFlags"><span class="hs-identifier hs-var">ceFeatureFlags</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621687371646"><span class="annot"><span class="annottext">hypenToUnderscore :: Char -&gt; Char
+</span><a href="#local-6989586621687371646"><span class="hs-identifier hs-var hs-var">hypenToUnderscore</span></a></span></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'-'</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char
+</span><span class="hs-char">'_'</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621687371646"><span class="hs-identifier hs-var">hypenToUnderscore</span></a></span><span> </span><span id="local-6989586621687371653"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687371653"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621687371653"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="CheckFeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-var">CheckFeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CheckFeatureFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-var">CheckFeatureFlag</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Action that samples the value of a feature flag.</span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-comment">-- Different products will want to do different things. For example, the</span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-comment">-- Cloud product will want to use LaunchDarkly whereas the OSS and non-cloud</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">-- EE products will want to sample environment variables.</span><span>
+</span><span id="line-52"></span><span>    </span><span id="runCheckFeatureFlag"><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; FeatureFlag -&gt; IO Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var hs-var">runCheckFeatureFlag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-comment">-- | A registry of flags that are 'known' by the system. This is used to</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-comment">-- inform of feature flag values via the '/v1alpha/config' endpoint, as well</span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-comment">-- as sampling feature flag values for use in schema code.</span><span>
+</span><span id="line-56"></span><span>    </span><span id="listKnownFeatureFlags"><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#listKnownFeatureFlags"><span class="hs-identifier hs-var hs-var">listKnownFeatureFlags</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687371656"><span id="local-6989586621687371660"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-type">CheckFeatureFlag</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621687371669"><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371669"><span class="hs-identifier hs-var">cff1</span></a></span></span><span> </span><span id="local-6989586621687371670"><span class="annot"><span class="annottext">&lt;&gt; :: CheckFeatureFlag -&gt; CheckFeatureFlag -&gt; CheckFeatureFlag
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621687371671"><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371671"><span class="hs-identifier hs-var">cff2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#CheckFeatureFlag"><span class="hs-identifier hs-type">CheckFeatureFlag</span></a></span><span>
+</span><span id="line-62"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">runCheckFeatureFlag :: FeatureFlag -&gt; IO Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var">runCheckFeatureFlag</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621687371672"><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="#local-6989586621687371672"><span class="hs-identifier hs-var">ff</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">(||)</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool -&gt; Bool) -&gt; IO Bool -&gt; IO (Bool -&gt; Bool)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; FeatureFlag -&gt; IO Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var">runCheckFeatureFlag</span></a></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371669"><span class="hs-identifier hs-var">cff1</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="#local-6989586621687371672"><span class="hs-identifier hs-var">ff</span></a></span><span> </span><span class="annot"><span class="annottext">IO (Bool -&gt; Bool) -&gt; IO Bool -&gt; IO Bool
+forall a b. IO (a -&gt; b) -&gt; IO a -&gt; IO b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; FeatureFlag -&gt; IO Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#runCheckFeatureFlag"><span class="hs-identifier hs-var">runCheckFeatureFlag</span></a></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371671"><span class="hs-identifier hs-var">cff2</span></a></span><span> </span><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="#local-6989586621687371672"><span class="hs-identifier hs-var">ff</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">listKnownFeatureFlags :: [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#listKnownFeatureFlags"><span class="hs-identifier hs-var">listKnownFeatureFlags</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#listKnownFeatureFlags"><span class="hs-identifier hs-var">listKnownFeatureFlags</span></a></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371669"><span class="hs-identifier hs-var">cff1</span></a></span><span> </span><span class="annot"><span class="annottext">[(FeatureFlag, Text)]
+-&gt; [(FeatureFlag, Text)] -&gt; [(FeatureFlag, Text)]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag -&gt; [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#listKnownFeatureFlags"><span class="hs-identifier hs-var">listKnownFeatureFlags</span></a></span><span> </span><span class="annot"><span class="annottext">CheckFeatureFlag
+</span><a href="#local-6989586621687371671"><span class="hs-identifier hs-var">cff2</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="annot"><span class="hs-comment">-- | This is the list of feature flags that exist in the CE version</span></span><span>
+</span><span id="line-69"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#ceFeatureFlags"><span class="hs-identifier hs-type">ceFeatureFlags</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span id="ceFeatureFlags"><span class="annot"><span class="annottext">ceFeatureFlags :: [(FeatureFlag, Text)]
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ceFeatureFlags"><span class="hs-identifier hs-var hs-var">ceFeatureFlags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#testFlag"><span class="hs-identifier hs-var">testFlag</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Testing feature flag integration&quot;</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#namingConventionSep2023"><span class="hs-identifier hs-var">namingConventionSep2023</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The changes to the naming-convention feature that were added in September 2023&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">]</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621687371384"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="HasFeatureFlagChecker"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-var">HasFeatureFlagChecker</span></a></span></span><span> </span><span id="local-6989586621687371384"><span class="annot"><a href="#local-6989586621687371384"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-78"></span><span>  </span><span id="checkFlag"><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-type">checkFlag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687371384"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687371391"><span id="local-6989586621687371392"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371391"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621687371392"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371391"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621687371690"><span class="annot"><span class="annottext">checkFlag :: FeatureFlag -&gt; ReaderT r m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m Bool -&gt; ReaderT r m Bool
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ReaderT r m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m Bool -&gt; ReaderT r m Bool)
+-&gt; (FeatureFlag -&gt; m Bool) -&gt; FeatureFlag -&gt; ReaderT r m Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; m Bool
+forall (m :: * -&gt; *).
+HasFeatureFlagChecker m =&gt;
+FeatureFlag -&gt; m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var">checkFlag</span></a></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687371403"><span id="local-6989586621687371404"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371403"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="#local-6989586621687371404"><span class="hs-identifier hs-type">e</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371403"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621687371703"><span class="annot"><span class="annottext">checkFlag :: FeatureFlag -&gt; ExceptT e m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m Bool -&gt; ExceptT e m Bool
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; ExceptT e m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m Bool -&gt; ExceptT e m Bool)
+-&gt; (FeatureFlag -&gt; m Bool) -&gt; FeatureFlag -&gt; ExceptT e m Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; m Bool
+forall (m :: * -&gt; *).
+HasFeatureFlagChecker m =&gt;
+FeatureFlag -&gt; m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var">checkFlag</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687371411"><span id="local-6989586621687371412"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371411"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#HasFeatureFlagChecker"><span class="hs-identifier hs-type">HasFeatureFlagChecker</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="#local-6989586621687371412"><span class="hs-identifier hs-type">s</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687371411"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621687371715"><span class="annot"><span class="annottext">checkFlag :: FeatureFlag -&gt; StateT s m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m Bool -&gt; StateT s m Bool
+forall (m :: * -&gt; *) a. Monad m =&gt; m a -&gt; StateT s m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m Bool -&gt; StateT s m Bool)
+-&gt; (FeatureFlag -&gt; m Bool) -&gt; FeatureFlag -&gt; StateT s m Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FeatureFlag -&gt; m Bool
+forall (m :: * -&gt; *).
+HasFeatureFlagChecker m =&gt;
+FeatureFlag -&gt; m Bool
+</span><a href="Hasura.Server.Init.FeatureFlag.html#checkFlag"><span class="hs-identifier hs-var">checkFlag</span></a></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="annot"><span class="hs-comment">-- | Testing feature flag integration</span></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#testFlag"><span class="hs-identifier hs-type">testFlag</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span>
+</span><span id="line-93"></span><span id="testFlag"><span class="annot"><span class="annottext">testFlag :: FeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#testFlag"><span class="hs-identifier hs-var hs-var">testFlag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ffIdentifier :: Text
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;test-flag&quot;</span></span><span class="hs-special">}</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="annot"><span class="hs-comment">-- | Feature flag enabling the changes to the naming-convention feature that were added in September 2023.</span></span><span>
+</span><span id="line-96"></span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#namingConventionSep2023"><span class="hs-identifier hs-type">namingConventionSep2023</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span>
+</span><span id="line-97"></span><span id="namingConventionSep2023"><span class="annot"><span class="annottext">namingConventionSep2023 :: FeatureFlag
+</span><a href="Hasura.Server.Init.FeatureFlag.html#namingConventionSep2023"><span class="hs-identifier hs-var hs-var">namingConventionSep2023</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Server.Init.FeatureFlag.html#FeatureFlag"><span class="hs-identifier hs-type">FeatureFlag</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">ffIdentifier :: Text
+</span><a href="Hasura.Server.Init.FeatureFlag.html#ffIdentifier"><span class="hs-identifier hs-var">ffIdentifier</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;naming-convention-sep-2023&quot;</span></span><span class="hs-special">}</span><span>
+</span><span id="line-98"></span></pre></body></html>
