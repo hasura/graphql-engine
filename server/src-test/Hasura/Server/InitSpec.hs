@@ -1236,23 +1236,23 @@ mkServeOptionsSpec =
             rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
-            env = [(UUT._envVar UUT.experimentalFeaturesOption, "inherited_roles,optimize_permission_filters")]
+            env = [(UUT._envVar UUT.experimentalFeaturesOption, "inherited_roles,optimize_permission_filters,naming_convention")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (UUT.soExperimentalFeatures) result
-          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters])
+          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters])}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])}
             -- When
             env = [(UUT._envVar UUT.experimentalFeaturesOption, "inherited_roles")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap (UUT.soExperimentalFeatures) result
-          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters])
+          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
 
     Hspec.describe "soEventsFetchBatchSize" $ do
       Hspec.it "Env > Nothing" $ do

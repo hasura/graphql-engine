@@ -60,6 +60,7 @@ import Data.Word (Word16)
 import GHC.AssertNF.CPP
 import GHC.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
+import Hasura.GraphQL.Schema.NamingCase (hasNamingConventionChanged)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
@@ -420,7 +421,7 @@ websocketConnectionReaper getLatestConfig getSchemaCache ws@(WSServer _ userConf
             hasBigqueryStringNumericInputChanged = bigqueryStringNumericInput currSqlGenCtx /= bigqueryStringNumericInput prevSqlGenCtx
             hasHideAggregationPredicatesChanged = (EFHideAggregationPredicates `elem` currExperimentalFeatures) && (EFHideAggregationPredicates `elem` prevExperimentalFeatures)
             hasHideStreamFieldsChanged = (EFHideStreamFields `elem` currExperimentalFeatures) && (EFHideStreamFields `elem` prevExperimentalFeatures)
-            hasDefaultNamingCaseChanged = prevDefaultNamingCase /= currDefaultNamingCase
+            hasDefaultNamingCaseChanged = hasNamingConventionChanged (prevExperimentalFeatures, prevDefaultNamingCase) (currExperimentalFeatures, currDefaultNamingCase)
         if
           -- if CORS policy has changed, close all connections
           | hasCorsPolicyChanged ->

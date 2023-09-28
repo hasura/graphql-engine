@@ -79,8 +79,6 @@ newtype InstanceId = InstanceId {getInstanceId :: Text}
 generateInstanceId :: IO InstanceId
 generateInstanceId = InstanceId <$> generateFingerprint
 
-{-# DEPRECATED EFNamingConventions "The naming-convention experimental feature is now globally enabled" #-}
-
 data ExperimentalFeature
   = EFInheritedRoles
   | EFOptimizePermissionFilters
