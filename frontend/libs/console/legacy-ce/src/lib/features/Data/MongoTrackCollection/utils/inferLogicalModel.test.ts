@@ -3,7 +3,9 @@ import { inferLogicalModels } from './inferLogicalModel';
 describe('inferLogicalModels', () => {
   it('returns a logical model', () => {
     const document = {
-      _id: '11123-123-123',
+      _id: {
+        $oid: '11123-123-123',
+      },
       name: 'John',
       age: 30,
       isActive: true,
@@ -28,7 +30,9 @@ describe('inferLogicalModels', () => {
 
   it('returns multiple logical models with array', () => {
     const document = {
-      _id: '11123-123-123',
+      _id: {
+        $oid: '11123-123-123',
+      },
       name: 'John',
       age: 30,
       isActive: true,
@@ -108,7 +112,9 @@ describe('inferLogicalModels', () => {
 
   it('returns multiple logical models with object', () => {
     const document = {
-      _id: 'asd',
+      _id: {
+        $oid: 'asd',
+      },
       name: 'Stu',
       year: 2018,
       gpa: 3.5,
@@ -259,6 +265,45 @@ describe('inferLogicalModels', () => {
             type: { array: { nullable: false, scalar: 'string' } },
           },
           { name: '__v', type: { nullable: false, scalar: 'int' } },
+        ],
+        name: 'newdocuments',
+      },
+    ]);
+  });
+
+  it('handles documents with object ids with names other than _id', () => {
+    const document = {
+      _id: {
+        $oid: '5a9427648b0beebeb69579cc',
+      },
+      name: 'Andrea Le',
+      email: 'andrea_le@fakegmail.com',
+      movie_id: {
+        $oid: '573a1390f29313caabcd418c',
+      },
+      text: 'Rem officiis eaque repellendus amet eos doloribus. Porro dolor voluptatum voluptates neque culpa molestias. Voluptate unde nulla temporibus ullam.',
+      date: {
+        $date: '2012-03-26T23:20:16.000Z',
+      },
+    };
+
+    const logicalModels = inferLogicalModels(
+      'new-documents',
+      JSON.stringify(document)
+    );
+
+    expect(logicalModels).toEqual([
+      {
+        fields: [
+          { name: '_id', type: { nullable: false, scalar: 'objectId' } },
+          { name: 'name', type: { nullable: false, scalar: 'string' } },
+          { name: 'email', type: { nullable: false, scalar: 'string' } },
+          {
+            name: 'movie_id',
+            type: { nullable: false, scalar: 'objectId' },
+          },
+          { name: 'text', type: { nullable: false, scalar: 'string' } },
+          { name: 'date', type: { nullable: false, scalar: 'date' } },
         ],
         name: 'newdocuments',
       },
