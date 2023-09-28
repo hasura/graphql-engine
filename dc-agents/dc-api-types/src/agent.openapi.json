@@ -63,6 +63,60 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchemaResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": " or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json;charset=utf-8": {
@@ -528,6 +582,9 @@
           "mutations": {
             "$ref": "#/components/schemas/MutationCapabilities"
           },
+          "post_schema": {
+            "$ref": "#/components/schemas/PostSchemaCapabilities"
+          },
           "queries": {
             "$ref": "#/components/schemas/QueryCapabilities"
           },
@@ -579,6 +636,7 @@
         },
         "type": "object"
       },
+      "PostSchemaCapabilities": {},
       "ForeachCapabilities": {},
       "RedactionCapabilities": {},
       "QueryCapabilities": {

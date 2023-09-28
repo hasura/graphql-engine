@@ -1,7 +1,7 @@
 {-# LANGUAGE Arrows #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Metadata (requestDatabaseSchema) where
+module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Control.Arrow.Extended
 import Control.Monad.Trans.Control
@@ -341,8 +341,12 @@ resolveDatabaseMetadata' ::
   DC.SourceConfig ->
   m (Either QErr (DBObjectsIntrospection 'DataConnector))
 resolveDatabaseMetadata' logger sourceMetadata@SourceMetadata {_smName} sourceConfig = runExceptT do
-  let schemaRequest = makeTrackedItemsOnlySchemaRequest sourceMetadata
-  API.SchemaResponse {..} <- requestDatabaseSchema logger _smName sourceConfig schemaRequest
+  API.SchemaResponse {..} <-
+    if supportsSchemaPost' sourceConfig
+      then do
+        let schemaRequest = makeTrackedItemsOnlySchemaRequest sourceMetadata
+        requestDatabaseSchemaPost logger _smName sourceConfig schemaRequest
+      else requestDatabaseSchemaGet logger _smName sourceConfig
   let logicalModels =
         maybe mempty (InsOrdHashMap.fromList . map toLogicalModelMetadata . toList) _srObjectTypes
       tables = HashMap.fromList $ do
@@ -406,18 +410,30 @@ makeTrackedItemsOnlySchemaRequest SourceMetadata {..} =
       _srDetailLevel = API.Everything
     }
 
-requestDatabaseSchema ::
+requestDatabaseSchemaGet ::
+  (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
+  Logger Hasura ->
+  SourceName ->
+  DC.SourceConfig ->
+  m API.SchemaResponse
+requestDatabaseSchemaGet logger sourceName sourceConfig = do
+  transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
+  ignoreTraceT
+    . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
+    $ Client.schemaGet sourceName (DC._scConfig transformedSourceConfig)
+
+requestDatabaseSchemaPost ::
   (MonadIO m, MonadBaseControl IO m, MonadError QErr m) =>
   Logger Hasura ->
   SourceName ->
   DC.SourceConfig ->
   API.SchemaRequest ->
   m API.SchemaResponse
-requestDatabaseSchema logger sourceName sourceConfig schemaRequest = do
+requestDatabaseSchemaPost logger sourceName sourceConfig schemaRequest = do
   transformedSourceConfig <- transformSourceConfig sourceConfig Nothing
   ignoreTraceT
     . flip runAgentClientT (AgentClientContext logger (DC._scEndpoint transformedSourceConfig) (DC._scManager transformedSourceConfig) (DC._scTimeoutMicroseconds transformedSourceConfig) Nothing)
-    $ Client.schema sourceName (DC._scConfig transformedSourceConfig) schemaRequest
+    $ Client.schemaPost sourceName (DC._scConfig transformedSourceConfig) schemaRequest
 
 getFieldType :: Bool -> API.ColumnType -> LogicalModelType 'DataConnector
 getFieldType isNullable = \case
@@ -652,14 +668,20 @@ listAllTables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl
 listAllTables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+  schemaResponse <-
+    if supportsSchemaPost' sourceConfig
+      then requestDatabaseSchemaPost logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+      else requestDatabaseSchemaGet logger sourceName sourceConfig
   pure $ fmap (Witch.from . API._tiName) $ API._srTables schemaResponse
 
 listAllTrackables' :: (CacheRM m, Has (Logger Hasura) r, MonadIO m, MonadBaseControl IO m, MonadReader r m, MonadError QErr m, MetadataM m) => SourceName -> m (TrackableInfo 'DataConnector)
 listAllTrackables' sourceName = do
   (logger :: Logger Hasura) <- asks getter
   sourceConfig <- askSourceConfig @'DataConnector sourceName
-  schemaResponse <- requestDatabaseSchema logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+  schemaResponse <-
+    if supportsSchemaPost' sourceConfig
+      then requestDatabaseSchemaPost logger sourceName sourceConfig (API.SchemaRequest mempty API.BasicInfo)
+      else requestDatabaseSchemaGet logger sourceName sourceConfig
   let functions = fmap (\fi -> TrackableFunctionInfo (Witch.into (API._fiName fi)) (getVolatility (API._fiFunctionType fi))) $ API._srFunctions schemaResponse
   let tables = fmap (TrackableTableInfo . Witch.into . API._tiName) $ API._srTables schemaResponse
   pure
@@ -667,6 +689,10 @@ listAllTrackables' sourceName = do
       { trackableTables = tables,
         trackableFunctions = functions
       }
+
+supportsSchemaPost' :: DC.SourceConfig -> Bool
+supportsSchemaPost' DC.SourceConfig {..} =
+  isJust $ API._cPostSchema _scCapabilities
 
 getVolatility :: API.FunctionType -> FunctionVolatility
 getVolatility API.FRead = FTSTABLE
