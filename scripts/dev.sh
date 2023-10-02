@@ -82,7 +82,28 @@ try_jq() {
 }
 
 case "${1-}" in
-  graphql-engine)
+  graphql-engine?(-pro) )
+    ## The differences between OSS and Enterprise/pro defined here:
+    EDITION_NAME="${1-}"
+    if [ "$EDITION_NAME" = "graphql-engine-pro" ];then
+      EDITION_ABBREV=ee
+      if [ -z "${HASURA_GRAPHQL_EE_LICENSE_KEY-}" ]; then
+          echo_warn "You don't have the HASURA_GRAPHQL_EE_LICENSE_KEY environment variable defined." 
+          echo_warn "Ask a pro developer for the dev key."
+          echo_warn "    Or: Press enter to continue with the pro binary in non-pro mode [will proceed in 15s]"
+          read -r -t15 || true
+      fi
+      # This is required for pro with EE license available:
+      if [ -z "${HASURA_GRAPHQL_ADMIN_SECRET-}" ]; then
+        # This should match benchmarks and other dev utilities:
+        export HASURA_GRAPHQL_ADMIN_SECRET=my-secret
+      fi
+    else
+      EDITION_ABBREV=ce
+    fi
+
+    # pass arguments after '--' directly to engine:
+    GRAPHQL_ENGINE_EXTRA_ARGS=()
     case "${2-}" in
       --no-rebuild)
       echo_error 'The --no-rebuild option is no longer supported.'
