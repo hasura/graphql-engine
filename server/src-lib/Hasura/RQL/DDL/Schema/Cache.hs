@@ -218,6 +218,7 @@ instance (MonadEventLogCleanup m) => MonadEventLogCleanup (CacheRWT m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (CacheRWT m) where
   runGetApiTimeLimit = lift $ runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift $ runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 runCacheRWT ::
   (Monad m) =>

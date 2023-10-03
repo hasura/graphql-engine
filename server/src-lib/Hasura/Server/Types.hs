@@ -19,6 +19,7 @@ module Hasura.Server.Types
     TriggersErrorLogLevelStatus (..),
     isApolloFederationEnabled,
     isTriggersErrorLogLevelEnabled,
+    ModelInfoLogState (..),
     GranularPrometheusMetricsState (..),
     OpenTelemetryExporterState (..),
     CloseWebsocketsOnMetadataChangeStatus (..),
@@ -181,6 +182,21 @@ isTriggersErrorLogLevelEnabled = \case
 instance ToJSON TriggersErrorLogLevelStatus where
   toJSON = toJSON . isTriggersErrorLogLevelEnabled
 
+data ModelInfoLogState
+  = ModelInfoLogOff
+  | ModelInfoLogOn
+  deriving (Eq, Show)
+
+instance FromJSON ModelInfoLogState where
+  parseJSON = withBool "ModelInfoLogState" $ \case
+    False -> pure ModelInfoLogOff
+    True -> pure ModelInfoLogOn
+
+instance ToJSON ModelInfoLogState where
+  toJSON = \case
+    ModelInfoLogOff -> Bool False
+    ModelInfoLogOn -> Bool True
+
 -- | Whether or not to enable granular metrics for Prometheus.
 --
 -- `GranularMetricsOn` will enable the dynamic labels for the metrics.
@@ -252,14 +268,20 @@ class (Monad m) => MonadGetPolicies m where
   runGetPrometheusMetricsGranularity ::
     m (IO GranularPrometheusMetricsState)
 
+  runGetModelInfoLogStatus ::
+    m (IO ModelInfoLogState)
+
 instance (MonadGetPolicies m) => MonadGetPolicies (ReaderT r m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 instance (MonadGetPolicies m) => MonadGetPolicies (ExceptT e m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 instance (MonadGetPolicies m) => MonadGetPolicies (StateT w m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus

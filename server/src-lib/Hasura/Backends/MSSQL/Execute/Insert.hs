@@ -23,7 +23,7 @@ import Hasura.Backends.MSSQL.FromIr.SelectIntoTempTable qualified as TSQL
 import Hasura.Backends.MSSQL.Plan
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Backends.MSSQL.ToQuery as TQ
-import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched)
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched (..))
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -31,9 +31,12 @@ import Hasura.GraphQL.Execute.Backend
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
+import Hasura.RQL.IR.ModelInformation.Types (ModelNameInfo (..))
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common (SourceName (..))
 import Hasura.RQL.Types.Schema.Options qualified as Options
 import Hasura.Session
 
@@ -43,14 +46,31 @@ executeInsert ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
   Options.StringifyNumbers ->
+  SourceName ->
+  ModelSourceType ->
   SourceConfig 'MSSQL ->
   AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
-  m (OnBaseMonad (ExceptT QErr) EncJSON)
-executeInsert userInfo stringifyNum sourceConfig annInsert = do
+  m (OnBaseMonad (ExceptT QErr) EncJSON, [ModelNameInfo])
+executeInsert userInfo stringifyNum sourceName modelSourceType sourceConfig annInsert = do
   queryTags <- ask
   -- Convert the leaf values from @'UnpreparedValue' to sql @'Expression'
   insert <- traverse (prepareValueQuery sessionVariables) annInsert
-  pure $ OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ buildInsertTx tableName withAlias stringifyNum insert queryTags
+  let outputInsertMut = _aiOutput annInsert
+  argModels <- do
+    (_, res') <- flip runStateT [] $ getMutationInsertArgumentModelNamesMSSQL sourceName modelSourceType $ _aiData annInsert
+    return res'
+  let insertPermissionModelNames = do
+        (_, res') <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType $ fst $ _aiCheckCondition $ _aiData annInsert
+        res'
+      postUpdatePermissionModelNames = do
+        let postUpdateCheck = snd $ _aiCheckCondition $ _aiData annInsert
+        case postUpdateCheck of
+          Nothing -> []
+          Just check -> do
+            (_, res') <- flip runStateT [] $ getArgumentModelNamesGen sourceName modelSourceType check
+            res'
+  let modelNames = argModels <> insertPermissionModelNames <> postUpdatePermissionModelNames <> getMutationOutputModelNamesGen sourceName modelSourceType outputInsertMut
+  pure $ (OnBaseMonad $ mssqlRunReadWrite (_mscExecCtx sourceConfig) $ buildInsertTx tableName withAlias stringifyNum insert queryTags, modelNames)
   where
     sessionVariables = _uiSession userInfo
     tableName = _aiTableName $ _aiData annInsert

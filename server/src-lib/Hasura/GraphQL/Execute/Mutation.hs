@@ -7,7 +7,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Tagged qualified as Tagged
-import Data.Text.Extended ((<>>))
+import Data.Text.Extended (toTxt, (<>>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Action
@@ -29,10 +29,12 @@ import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.QueryTags.Types
 import Hasura.RQL.IR
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RemoteSchema.Metadata.Base (RemoteSchemaName (..))
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types
@@ -94,7 +96,7 @@ convertMutationSelectionSet ::
   RequestId ->
   -- | Graphql Operation Name
   Maybe G.Name ->
-  m (ExecutionPlan, ParameterizedQueryHash)
+  m (ExecutionPlan, ParameterizedQueryHash, [ModelInfoPart])
 convertMutationSelectionSet
   env
   logger
@@ -141,29 +143,37 @@ convertMutationSelectionSet
 
                   httpManager <- askHTTPManager
                   let selSetArguments = getSelSetArgsFromRootField resolvedSelSet rootFieldName
-                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
-                  pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
-            RFRemote remoteField -> do
+                  (dbStepInfo, dbModelInfoList) <- flip runReaderT queryTagsComment $ mkDBMutationPlan @b env httpManager logger userInfo stringifyNum sourceName sourceConfig noRelsDBAST reqHeaders maybeOperationName selSetArguments
+                  pure $ (ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins, dbModelInfoList)
+            RFRemote (RemoteSchemaName rName) remoteField -> do
               RemoteSchemaRootField remoteSchemaInfo resultCustomizer resolvedRemoteField <- runVariableCache $ resolveRemoteField userInfo remoteField
               let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField resolvedRemoteField
+                  rsModel = ModelInfoPart (toTxt rName) ModelTypeRemoteSchema Nothing Nothing (ModelOperationType G.OperationTypeMutation)
               pure
-                $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
+                $ (buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeMutation noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed), [rsModel])
             RFAction action -> do
               let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionMutation action
               (actionName, _fch) <- pure $ case noRelsDBAST of
                 AMSync s -> (_aaeName s, _aaeForwardClientHeaders s)
                 AMAsync s -> (_aamaName s, _aamaForwardClientHeaders s)
               plan <- convertMutationAction env logger tracesPropagator prometheusMetrics userInfo reqHeaders (Just (GH._grQuery gqlUnparsed)) noRelsDBAST
-              pure $ ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins -- `_fch` represents the `forward_client_headers` option from the action
+              let actionsModel = ModelInfoPart (toTxt actionName) ModelTypeAction Nothing Nothing (ModelOperationType G.OperationTypeMutation)
+              pure $ (ExecStepAction plan (ActionsInfo actionName _fch) remoteJoins, [actionsModel]) -- `_fch` represents the `forward_client_headers` option from the action
               -- definition which is currently being ignored for actions that are mutations
-            RFRaw customFieldVal -> flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles
+            RFRaw customFieldVal -> fmap (,[]) $ flip onLeft throwError =<< executeIntrospection userInfo customFieldVal introspectionDisabledRoles
             RFMulti lst -> do
               allSteps <- traverse (resolveExecutionSteps rootFieldName) lst
-              pure $ ExecStepMulti allSteps
+              let executionStepsList = map fst allSteps
+                  modelInfoList = map snd allSteps
+              pure $ (ExecStepMulti executionStepsList, concat modelInfoList)
 
     -- Transform the RQL AST into a prepared SQL query
     txs <- flip InsOrdHashMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
-    return (txs, parameterizedQueryHash)
+    let executionPlan = InsOrdHashMap.map fst txs
+        modelInfoHashMap = InsOrdHashMap.map snd txs
+
+    let modelInfoList = concat $ InsOrdHashMap.elems modelInfoHashMap
+    return (executionPlan, parameterizedQueryHash, modelInfoList)
 
 -- | Extract the arguments from the selection set for a root field
 -- This is used to validate the arguments of a mutation.

@@ -173,7 +173,7 @@ execRemoteGQ env tracesPropagator userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
     resp <- onLeft res (throwRemoteSchemaHttp webhookEnvRecord)
     pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
-    ValidatedRemoteSchemaDef webhookEnvRecord hdrConf fwdClientHdrs timeout _mPrefix = rsdef
+    ValidatedRemoteSchemaDef _name webhookEnvRecord hdrConf fwdClientHdrs timeout _mPrefix = rsdef
     url = _envVarValue webhookEnvRecord
     userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo
 

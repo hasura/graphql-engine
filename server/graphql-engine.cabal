@@ -935,6 +935,8 @@ library
                      , Hasura.RQL.IR.Conflict
                      , Hasura.RQL.IR.Delete
                      , Hasura.RQL.IR.Insert
+                     , Hasura.RQL.IR.ModelInformation
+                     , Hasura.RQL.IR.ModelInformation.Types
                      , Hasura.RQL.IR.OrderBy
                      , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Returning

@@ -43,7 +43,7 @@ import Data.Monoid (Endo (..))
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended ((<>>))
+import Data.Text.Extended (toTxt, (<>>))
 import Data.Time.Clock
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
@@ -77,6 +77,7 @@ import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Common (MetricsConfig (_mcAnalyzeQueryVariables))
 import Hasura.RQL.Types.OpenTelemetry (getOtelTracesPropagator)
 import Hasura.RQL.Types.ResultCustomization
@@ -95,13 +96,14 @@ import Hasura.Server.Limits
   ( HasResourceLimits (..),
     ResourceLimits (..),
   )
+import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus
   ( GraphQLRequestMetrics (..),
     PrometheusMetrics (..),
   )
 import Hasura.Server.Telemetry.Counters qualified as Telem
-import Hasura.Server.Types (GranularPrometheusMetricsState (..), MonadGetPolicies (..), RequestId, getRequestId)
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..), MonadGetPolicies (..), RequestId, getRequestId)
 import Hasura.Services.Network
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -445,6 +447,8 @@ onStart ::
   WS.WSActions WSConnData ->
   m ()
 onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables (StartMsg opId q) onMessageActions = catchAndIgnore $ do
+  modelInfoLogStatus' <- runGetModelInfoLogStatus
+  modelInfoLogStatus <- liftIO modelInfoLogStatus'
   timerTot <- startTimer
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
 
@@ -510,7 +514,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
         maybeOperationName
         requestId
 
-  (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
+  (parameterizedQueryHash, execPlan, modelInfoList) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts dirMap -> do
@@ -527,6 +531,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindCached
           let reportedExecutionTime = 0
           liftIO $ recordGQLQuerySuccess reportedExecutionTime gqlOpType
+          modelInfoLogging modelInfoList True modelInfoLogStatus
           sendSuccResp cachedResponseData opName parameterizedQueryHash $ ES.SubscriptionMetadata reportedExecutionTime
         ResponseUncached storeResponseM -> do
           conclusion <- runExceptT
@@ -550,36 +555,41 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               (fmap (statsToAnyBackend @b) tx)
                               genSql
                               resolvedConnectionTemplate
-                      finalResponse <-
+                      (finalResponse, modelInfo) <-
                         RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
-                      pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
+                      pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                       runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-                      (time, (resp, _)) <- doQErr $ do
+                      (time, (resp, _), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
-                        finalResponse <-
+                        (finalResponse, modelInfo) <-
                           RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
-                        pure (time, (finalResponse, hdrs))
-                      pure $ AnnotatedResponsePart time Telem.Empty resp []
+                        pure (time, (finalResponse, hdrs), modelInfo)
+                      pure $ (AnnotatedResponsePart time Telem.Empty resp [], modelInfo)
                     E.ExecStepRaw json -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
-                      buildRaw json
+                      (,[]) <$> buildRaw json
                     E.ExecStepMulti lst -> do
                       allResponses <- traverse getResponse lst
-                      pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) []
+                      let (allResponses', allModelInfo) = unzip allResponses
+                      pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses')) [], concat allModelInfo)
                in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
+          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
           case (storeResponseM, conclusion) of
-            (Just ResponseCacher {..}, Right results) ->
+            (Just ResponseCacher {..}, Right results) -> do
+              let (key, (compositeValue')) = unzip $ InsOrdHashMap.toList results
+                  -- ignoring models from results here as we have already logged it in `sendResultFromFragments`
+                  (annotatedResp, _model) = unzip compositeValue'
+                  results' = InsOrdHashMap.fromList $ zip key annotatedResp
               -- Note: The result of `runStoreResponse` is ignored here since we can't ensure that
               --       the WS client will respond correctly to multiple messages.
               void
                 $ runStoreResponse
-                $ encodeAnnotatedResponseParts results
-            _ -> pure ()
+                $ encodeAnnotatedResponseParts results'
+            _ -> modelInfoLogging modelInfoList False modelInfoLogStatus
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -629,28 +639,29 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                               (fmap EB.arResult tx)
                               genSql
                               resolvedConnectionTemplate
-                      finalResponse <-
+                      (finalResponse, modelInfo) <-
                         RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
-                      pure $ AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse []
+                      pure $ (AnnotatedResponsePart telemTimeIO_DT Telem.Local finalResponse [], modelInfo)
                     E.ExecStepAction actionExecPlan _ remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindAction
-                      (time, (resp, hdrs)) <- doQErr $ do
+                      (time, (resp, hdrs), modelInfo) <- doQErr $ do
                         (time, (resp, hdrs)) <- EA.runActionExecution userInfo actionExecPlan
-                        finalResponse <-
+                        (finalResponse, modelInfo) <-
                           RJ.processRemoteJoins requestId logger agentLicenseKey env reqHdrs userInfo resp remoteJoins q tracesPropagator
-                        pure (time, (finalResponse, hdrs))
-                      pure $ AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs
+                        pure (time, (finalResponse, hdrs), modelInfo)
+                      pure $ (AnnotatedResponsePart time Telem.Empty resp $ fromMaybe [] hdrs, modelInfo)
                     E.ExecStepRemote rsi resultCustomizer gqlReq remoteJoins -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindRemoteSchema
                       runRemoteGQ requestId q fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator
                     E.ExecStepRaw json -> do
                       logQueryLog logger $ QueryLog q Nothing requestId QueryLogKindIntrospection
-                      buildRaw json
+                      (,[]) <$> buildRaw json
                     E.ExecStepMulti lst -> do
                       allResponses <- traverse getResponse lst
-                      pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) []
+                      let (allResponses', allModelInfo) = unzip allResponses
+                      pure $ (AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses')) [], concat allModelInfo)
                in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
+          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType modelInfoList modelInfoLogStatus
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.SubscriptionExecutionPlan (subExec, modifier) -> do
       case subExec of
@@ -704,7 +715,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
           actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-          opMetadataE <- liftIO $ startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
+          modelInfoLogStatus'' <- runGetModelInfoLogStatus
+          opMetadataE <- liftIO $ startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier modelInfoLogStatus''
           lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -718,7 +730,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                 let asyncActionQueryLive =
                       ES.LAAQOnSourceDB
                         $ ES.LiveAsyncActionQueryOnSource lqId actionLogMap
-                        $ restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed) modifier
+                        $ restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState (_grOperationName reqParsed) modifier modelInfoLogStatus''
 
                     onUnexpectedException err = do
                       sendError requestId err
@@ -731,7 +743,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSStreaming rootFieldName streamQueryBuilder) -> do
           granularPrometheusMetricsState <- runGetPrometheusMetricsGranularity
-          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState modifier
+          modelInfoLogStatus'' <- runGetModelInfoLogStatus
+          liftIO $ startStreamingQuery rootFieldName streamQueryBuilder parameterizedQueryHash requestId granularPrometheusMetricsState modifier modelInfoLogStatus''
 
       liftIO $ Prometheus.Counter.inc (gqlRequestsSubscriptionSuccess gqlMetrics)
       liftIO $ logOpEv ODStarted (Just requestId) (Just parameterizedQueryHash)
@@ -740,6 +753,11 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
     closeConnAction = WS._wsaConnectionCloseAction onMessageActions
     postExecErrAction = WS._wsaPostExecErrMessageAction onMessageActions
     fmtErrorMessage = WS._wsaErrorMsgFormat onMessageActions
+
+    modelInfoLogging modelInfoListLog cacheStatus getModelInfoLogStatus =
+      when (getModelInfoLogStatus == ModelInfoLogOn) $ do
+        for_ modelInfoListLog $ \(ModelInfoPart modelName modelType modelSourceName modelSourceType modelQueryType) -> do
+          L.unLogger logger $ ModelInfoLog L.LevelInfo $ ModelInfo modelName (toTxt modelType) modelSourceName (toTxt <$> modelSourceType) (toTxt modelQueryType) cacheStatus
 
     doQErr ::
       (Monad n) =>
@@ -774,19 +792,24 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       Left (Right err) -> postExecErr requestId gqlOpType err
       Right results -> f results
 
-    sendResultFromFragments telemQueryType timerTot requestId r opName pqh gqlOpType =
+    sendResultFromFragments telemQueryType timerTot requestId r opName pqh gqlOpType modelInfoList getModelInfoLogStatus =
       handleResult requestId gqlOpType r \results -> do
-        let telemLocality = foldMap arpLocality results
-            telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results
+        let (key, (compositeValue')) = unzip $ InsOrdHashMap.toList results
+            (annotatedResp, model) = unzip compositeValue'
+            results' = InsOrdHashMap.fromList $ zip key annotatedResp
+            modelInfoList' = concat model
+        let telemLocality = foldMap arpLocality results'
+            telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results'
         totalTime <- timerTot
         let telemTimeTot = Seconds totalTime
-        sendSuccResp (encodeAnnotatedResponseParts results) opName pqh
+        sendSuccResp (encodeAnnotatedResponseParts results') opName pqh
           $ ES.SubscriptionMetadata
           $ sum
-          $ fmap arpTimeIO results
+          $ fmap arpTimeIO results'
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
-        liftIO $ recordGQLQuerySuccess totalTime gqlOpType
+        modelInfoLogging (modelInfoList <> modelInfoList') False getModelInfoLogStatus
+        liftIO $ (recordGQLQuerySuccess totalTime gqlOpType)
 
     runRemoteGQ ::
       RequestId ->
@@ -799,14 +822,14 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       GQLReqOutgoing ->
       Maybe RJ.RemoteJoins ->
       Tracing.HttpPropagator ->
-      ExceptT (Either GQExecError QErr) (ExceptT () m) AnnotatedResponsePart
+      ExceptT (Either GQExecError QErr) (ExceptT () m) (AnnotatedResponsePart, [ModelInfoPart])
     runRemoteGQ requestId reqUnparsed fieldName userInfo reqHdrs rsi resultCustomizer gqlReq remoteJoins tracesPropagator = Tracing.newSpan ("Remote schema query for root field " <>> fieldName) $ do
       env <- liftIO $ acEnvironment <$> getAppContext appStateRef
       (telemTimeIO_DT, _respHdrs, resp) <-
         doQErr
           $ E.execRemoteGQ env tracesPropagator userInfo reqHdrs (rsDef rsi) gqlReq
       value <- hoist lift $ extractFieldFromResponse fieldName resultCustomizer resp
-      finalResponse <-
+      (finalResponse, modelInfo) <-
         doQErr
           $ RJ.processRemoteJoins
             requestId
@@ -820,7 +843,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             remoteJoins
             reqUnparsed
             tracesPropagator
-      return $ AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse []
+      return $ (AnnotatedResponsePart telemTimeIO_DT Telem.Remote finalResponse [], modelInfo)
 
     WSServerEnv
       logger
@@ -921,14 +944,14 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
       liftIO $ sendCompleted Nothing Nothing
       throwError ()
 
-    restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName modifier lqId actionLogMap = do
+    restartLiveQuery opName parameterizedQueryHash requestId liveQueryBuilder granularPrometheusMetricsState maybeOperationName modifier getModelInfoLogStatus lqId actionLogMap = do
       ES.removeLiveQuery logger (_wseServerMetrics serverEnv) (_wsePrometheusMetrics serverEnv) subscriptionsState lqId granularPrometheusMetricsState maybeOperationName
-      either (const Nothing) Just <$> startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier
+      either (const Nothing) Just <$> startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier getModelInfoLogStatus
 
-    startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier = do
+    startLiveQuery opName liveQueryBuilder parameterizedQueryHash requestId actionLogMap granularPrometheusMetricsState modifier modelInfoLogStatus = do
       liveQueryE <- runExceptT $ liveQueryBuilder actionLogMap
 
-      for liveQueryE $ \(sourceName, E.SubscriptionQueryPlan exists) -> do
+      for liveQueryE $ \((sourceName, E.SubscriptionQueryPlan exists), modelInfo) -> do
         let subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
@@ -950,6 +973,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
               granularPrometheusMetricsState
               (onChange opName parameterizedQueryHash $ ES._sqpNamespace liveQueryPlan)
               modifier
+              modelInfo
+              modelInfoLogStatus
 
         liftIO $ $assertNFHere (lqId, opName) -- so we don't write thunks to mutable vars
         STM.atomically
@@ -958,7 +983,7 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
           STMMap.insert (LiveQuerySubscriber lqId, opName) opId opMap
         pure lqId
 
-    startStreamingQuery rootFieldName (sourceName, E.SubscriptionQueryPlan exists) parameterizedQueryHash requestId granularPrometheusMetricsState modifier = do
+    startStreamingQuery rootFieldName ((sourceName, E.SubscriptionQueryPlan exists), modelInfo) parameterizedQueryHash requestId granularPrometheusMetricsState modifier modelInfoLogStatus = do
       let !opName = _grOperationName q
           subscriberMetadata = ES.mkSubscriberMetadata (WS.getWSId wsConn) opId opName requestId
       -- NOTE!: we mask async exceptions higher in the call stack, but it's
@@ -982,6 +1007,8 @@ onStart enabledLogTypes agentLicenseKey serverEnv wsConn shouldCaptureVariables 
             granularPrometheusMetricsState
             (onChange opName parameterizedQueryHash $ ES._sqpNamespace streamQueryPlan)
             modifier
+            modelInfo
+            modelInfoLogStatus
       liftIO $ $assertNFHere (streamSubscriberId, opName) -- so we don't write thunks to mutable vars
       STM.atomically
         $

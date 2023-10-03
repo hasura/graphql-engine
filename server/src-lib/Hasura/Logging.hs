@@ -190,6 +190,7 @@ data InternalLogTypes
   | ILTSourceCatalogMigration
   | ILTStoredIntrospection
   | ILTStoredIntrospectionStorage
+  | ILTModelInfo
   deriving (Show, Eq, Generic)
 
 instance Hashable InternalLogTypes
@@ -211,6 +212,7 @@ instance Witch.From InternalLogTypes Text where
     ILTSourceCatalogMigration -> "source-catalog-migration"
     ILTStoredIntrospection -> "stored-introspection"
     ILTStoredIntrospectionStorage -> "stored-introspection-storage"
+    ILTModelInfo -> "model-info"
 
 instance J.ToJSON InternalLogTypes where
   toJSON = J.String . Witch.into @Text

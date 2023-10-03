@@ -82,7 +82,7 @@ runAddRemoteSchema ::
   m EncJSON
 runAddRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name defn comment) = do
   addRemoteSchemaP1 name
-  void $ addRemoteSchemaP2Setup env schemaSampledFeatureFlags defn
+  void $ addRemoteSchemaP2Setup name env schemaSampledFeatureFlags defn
   buildSchemaCacheFor (MORemoteSchema name)
     $ MetadataModifier
     $ metaRemoteSchemas
@@ -207,7 +207,7 @@ runUpdateRemoteSchema env schemaSampledFeatureFlags (AddRemoteSchemaQuery name d
     <> name
     <<> " doesn't exist"
 
-  rsi <- validateRemoteSchemaDef env defn
+  rsi <- validateRemoteSchemaDef name env defn
 
   -- we only proceed to fetch the remote schema if the url has been updated
   unless

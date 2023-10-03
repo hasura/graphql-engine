@@ -30,6 +30,8 @@ module Hasura.Server.Logging
     SchemaSyncLog (..),
     HttpLogGraphQLInfo,
     emptyHttpLogGraphQLInfo,
+    ModelInfo (..),
+    ModelInfoLog (..),
   )
 where
 
@@ -670,3 +672,26 @@ instance J.ToJSON SchemaSyncLog where
 instance ToEngineLog SchemaSyncLog Hasura where
   toEngineLog threadLog =
     (sslLogLevel threadLog, ELTInternal ILTSchemaSync, J.toJSON threadLog)
+
+data ModelInfo = ModelInfo
+  { miModelName :: !Text,
+    miModelType :: !Text,
+    miSourceName :: !(Maybe Text),
+    miSourceType :: !(Maybe Text),
+    miQueryType :: !Text,
+    miIsCached :: !Bool
+  }
+  deriving stock (Generic)
+
+instance J.ToJSON ModelInfo where
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
+
+data ModelInfoLog = ModelInfoLog
+  { milLogType :: !LogLevel,
+    milModelInfo :: !ModelInfo
+  }
+  deriving stock (Generic)
+
+instance ToEngineLog ModelInfoLog Hasura where
+  toEngineLog (ModelInfoLog level t) =
+    (level, ELTInternal ILTModelInfo, J.toJSON t)

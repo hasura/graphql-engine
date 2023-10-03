@@ -537,7 +537,8 @@ v1Alpha1GQHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   E.GraphQLQueryType ->
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
@@ -566,7 +567,8 @@ v1GQHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)
@@ -586,7 +588,8 @@ v1GQRelayHandler ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   GH.GQLBatchedReqs (GH.GQLReq GH.GQLQueryText) ->
   m (HttpLogGraphQLInfo, HttpResponse EncJSON)

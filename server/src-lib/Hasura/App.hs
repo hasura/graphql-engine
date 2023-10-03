@@ -785,6 +785,7 @@ instance MonadEventLogCleanup AppM where
 instance MonadGetPolicies AppM where
   runGetApiTimeLimit = pure $ Nothing
   runGetPrometheusMetricsGranularity = pure (pure GranularMetricsOff)
+  runGetModelInfoLogStatus = pure (pure ModelInfoLogOff)
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
 instance MonadMetadataStorage AppM where

@@ -30,6 +30,7 @@ import Hasura.Base.ToErrorValue
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp.RemoteRelationshipPredicate (RemoteRelSessionVariableORLiteralValue, RemoteRelSupportedOp)
+import Hasura.RQL.IR.ModelInformation.Types
 import Hasura.RQL.Types.BackendTag
 import Hasura.RQL.Types.BackendType
 import Hasura.RQL.Types.Common
@@ -448,6 +449,9 @@ class
 
   sourceSupportsSchemalessTables :: SourceConfig b -> Bool
   sourceSupportsSchemalessTables = const False
+
+  getAggregationPredicatesModels :: (MonadState [ModelNameInfo] m) => SourceName -> ModelSourceType -> AggregationPredicates b a -> m ()
+  getAggregationPredicatesModels _ _ _ = pure ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

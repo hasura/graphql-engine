@@ -110,7 +110,8 @@ runCustomEndpoint ::
     MonadMetadataStorage m,
     MonadQueryTags m,
     HasResourceLimits m,
-    ProvidesNetwork m
+    ProvidesNetwork m,
+    MonadGetPolicies m
   ) =>
   Env.Environment ->
   SQLGenCtx ->

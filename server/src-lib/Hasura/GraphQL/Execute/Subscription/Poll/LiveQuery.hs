@@ -29,15 +29,18 @@ import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging (LogLevel (..))
+import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.IR.ModelInformation
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.BackendTag (backendTag, reify)
 import Hasura.RQL.Types.BackendType (BackendType (..), PostgresKind (Vanilla))
 import Hasura.RQL.Types.Common (SourceName)
 import Hasura.RQL.Types.Roles (RoleName)
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
+import Hasura.Server.Logging (ModelInfo (..), ModelInfoLog (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..), SubscriptionMetrics (..), liveQuerySubscriptionLabel, recordSubcriptionMetric)
-import Hasura.Server.Types (GranularPrometheusMetricsState (..))
+import Hasura.Server.Types (GranularPrometheusMetricsState (..), ModelInfoLogState (..))
 import Refined (unrefine)
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
 import System.Metrics.Prometheus.HistogramVector qualified as HistogramVector
@@ -95,8 +98,11 @@ pollLiveQuery ::
   TMap.TMap (Maybe OperationName) Int ->
   ResolvedConnectionTemplate b ->
   (Maybe (Endo JO.Value)) ->
+  L.Logger L.Hasura ->
+  [ModelInfoPart] ->
+  IO ModelInfoLogState ->
   IO ()
-pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate modifier = do
+pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) roleName parameterizedQueryHash query cohortMap postPollHook prometheusMetrics granularPrometheusMetricsState operationNamesMap' resolvedConnectionTemplate modifier logger modelInfoList modelInfoLogStatus = do
   operationNamesMap <- STM.atomically $ TMap.getMap operationNamesMap'
   (totalTime, (snapshotTime, (batchesDetails, maybeErrors))) <- withElapsedTime $ do
     -- snapshot the current cohorts and split them into batches
@@ -205,6 +211,10 @@ pollLiveQuery pollerId pollerResponseState lqOpts (sourceName, sourceConfig) rol
             }
   postPollHook pollDetails
   let totalTimeMetric = submTotalTime $ pmSubscriptionMetrics $ prometheusMetrics
+  modelInfoLogStatus' <- modelInfoLogStatus
+  when (modelInfoLogStatus' == ModelInfoLogOn) $ do
+    for_ (modelInfoList) $ \(ModelInfoPart modelName modelType modelSourceName modelSourceType modelQueryType) -> do
+      L.unLogger logger $ ModelInfoLog L.LevelInfo $ ModelInfo modelName (toTxt modelType) (toTxt <$> modelSourceName) (toTxt <$> modelSourceType) (toTxt modelQueryType) False
   recordSubcriptionMetric
     granularPrometheusMetricsState
     True

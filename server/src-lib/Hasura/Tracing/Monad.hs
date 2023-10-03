@@ -120,6 +120,7 @@ instance (UserInfoM m) => UserInfoM (TraceT m) where
 instance (MonadGetPolicies m) => MonadGetPolicies (TraceT m) where
   runGetApiTimeLimit = lift runGetApiTimeLimit
   runGetPrometheusMetricsGranularity = lift runGetPrometheusMetricsGranularity
+  runGetModelInfoLogStatus = lift $ runGetModelInfoLogStatus
 
 --------------------------------------------------------------------------------
 -- Internal

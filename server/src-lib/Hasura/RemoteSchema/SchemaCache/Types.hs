@@ -130,7 +130,8 @@ type PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition =
 
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
-  { _vrsdUrl :: EnvRecord N.URI,
+  { _vrsdName :: RemoteSchemaName,
+    _vrsdUrl :: EnvRecord N.URI,
     _vrsdHeaders :: [HeaderConf],
     _vrsdFwdClientHeaders :: Bool,
     _vrsdTimeoutSeconds :: Int,
@@ -209,10 +210,11 @@ validateRemoteSchemaCustomization (Just RemoteSchemaCustomization {..}) =
 
 validateRemoteSchemaDef ::
   (MonadError QErr m) =>
+  RemoteSchemaName ->
   Env.Environment ->
   RemoteSchemaDef ->
   m ValidatedRemoteSchemaDef
-validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
+validateRemoteSchemaDef name env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout customization) = do
   validateRemoteSchemaCustomization customization
   case (mUrl, mUrlEnv) of
     -- case 1: URL is supplied as a template
@@ -220,11 +222,11 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout 
       resolvedWebhookTxt <- unResolvedWebhook <$> resolveWebhook env url
       case N.parseURI $ T.unpack resolvedWebhookTxt of
         Nothing -> throw400 InvalidParams $ "not a valid URI generated from the template: " <> getTemplateFromUrl url
-        Just uri -> return $ ValidatedRemoteSchemaDef (EnvRecord (getTemplateFromUrl url) uri) hdrs fwdHdrs timeout customization
+        Just uri -> return $ ValidatedRemoteSchemaDef name (EnvRecord (getTemplateFromUrl url) uri) hdrs fwdHdrs timeout customization
     -- case 2: URL is supplied as an environment variable
     (Nothing, Just urlEnv) -> do
       urlEnv' <- getUrlFromEnv env urlEnv
-      return $ ValidatedRemoteSchemaDef urlEnv' hdrs fwdHdrs timeout customization
+      return $ ValidatedRemoteSchemaDef name urlEnv' hdrs fwdHdrs timeout customization
     -- case 3: No url is supplied, throws an error 400
     (Nothing, Nothing) ->
       throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
