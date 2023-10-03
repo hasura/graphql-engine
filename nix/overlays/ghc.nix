@@ -14,11 +14,6 @@ let
       # Without this, we get the following error on macOS:
       #    ghc: loadArchive: Neither an archive, nor a fat archive: `/path/to/clang++'
       ./ghc-9.4-macOS-loadArchive-fix.patch
-      # On macOS + aarch64, there's an issue where the `bin` output depends on 
-      # the `out` output, and vice versa. This patch fixes the problem.
-      # For some reason we don't apply it for GHC 9.4 in nixpkgs, even though
-      # it's needed.
-      "${nixpkgs}/pkgs/development/compilers/ghc/Cabal-3.6-paths-fix-cycle-aarch64-darwin.patch"
     ] else [ ];
 in
 {
