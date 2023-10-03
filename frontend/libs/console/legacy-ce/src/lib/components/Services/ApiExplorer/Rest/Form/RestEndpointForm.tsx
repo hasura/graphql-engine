@@ -122,7 +122,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
           if (parsedQuery?.definitions?.length > 0) {
             const operation = parsedQuery.definitions[0];
             if ('name' in operation) {
-              if (!userChangedName) {
+              if (!userChangedName && mode === 'create') {
                 setValue('name', operation.name?.value);
               }
               if (!userChangedUrl && mode === 'create') {
