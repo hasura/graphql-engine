@@ -14,7 +14,10 @@ export const GraphQLCustomization = ({ name }: { name: string }) => {
       {!isNamingConventionEnabled ? (
         <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-sm mb-sm">
           Naming convention is not enabled. To enable this, restart your Hasura
-          server with environment variable
+          server with the environment variable{' '}
+          <code className="bg-red-100 text-red-800 rounded">
+            HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: &quot;naming_convention&quot;
+          </code>
         </div>
       ) : (
         <Select
