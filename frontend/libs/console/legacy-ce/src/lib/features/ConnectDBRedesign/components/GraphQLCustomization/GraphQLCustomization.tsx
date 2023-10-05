@@ -3,7 +3,6 @@ import {
   GraphQLSanitizedInputField,
   Select,
 } from '../../../../new-components/Form';
-import { IndicatorCard } from '../../../../new-components/IndicatorCard';
 import { IconTooltip } from '../../../../new-components/Tooltip';
 
 export const GraphQLCustomization = ({ name }: { name: string }) => {
@@ -13,27 +12,22 @@ export const GraphQLCustomization = ({ name }: { name: string }) => {
 
   return (
     <div className="my-2">
-      {isNamingConventionEnabled && (
-        <IndicatorCard status="info" showIcon>
-          Looks like you have
-          <code className="mx-2 bg-red-100 text-red-800 rounded">
-            HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: &quot;naming_convention&quot;
-          </code>
-          environment variable enabled in your Hasura instance. The feature is
-          now in available without the flag, and the feature flag be safely
-          removed.
-        </IndicatorCard>
+      {!isNamingConventionEnabled ? (
+        <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden p-sm mb-sm">
+          Naming convention is not enabled. To enable this, restart your Hasura
+          server with environment variable
+        </div>
+      ) : (
+        <Select
+          label="Naming Convention"
+          options={[
+            { label: 'hasura-default', value: 'hasura-default' },
+            { label: 'graphql-default', value: 'graphql-default' },
+          ]}
+          name={`${name}.namingConvention`}
+          tooltip="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)"
+        />
       )}
-
-      <Select
-        label="Naming Convention"
-        options={[
-          { label: 'hasura-default', value: 'hasura-default' },
-          { label: 'graphql-default', value: 'graphql-default' },
-        ]}
-        name={`${name}.namingConvention`}
-        tooltip="Choose a default naming convention for your auto-generated GraphQL schema objects (fields, types, arguments, etc.)"
-      />
 
       <div className="bg-white border border-hasGray-300 rounded-md shadow-sm overflow-hidden">
         <div className="bg-white px-3 py-1.5 font-semibold flex">
