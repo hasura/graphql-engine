@@ -54,7 +54,7 @@ import Hasura.Server.Init
     ServeOptions (..),
   )
 import Hasura.Server.Init qualified as Init
-import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
+import Hasura.Server.Logging (HttpLogQueryOnlyOnError (HttpLogQueryAlways), MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( EventingMode (EventingEnabled),
     ExperimentalFeature (EFStreamingSubscriptions),
@@ -248,6 +248,7 @@ serveOptions =
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
+      soHttpLogQueryOnlyOnError = HttpLogQueryAlways,
       soDefaultNamingConvention = Nothing,
       soExtensionsSchema = ExtensionsSchema "public"
     }

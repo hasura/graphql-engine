@@ -76,7 +76,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (NonNegativeInt, UrlConf)
 import Hasura.Server.Auth (AdminSecretHash, AuthHook, AuthHookType, JWTConfig)
 import Hasura.Server.Cors (CorsConfig)
-import Hasura.Server.Logging (MetadataQueryLoggingMode)
+import Hasura.Server.Logging (HttpLogQueryOnlyOnError, MetadataQueryLoggingMode)
 import Hasura.Server.Types (EventingMode, ExperimentalFeature, MaintenanceMode, ReadOnlyMode)
 import Hasura.Session (RoleName)
 import Hasura.Session qualified as Session
@@ -294,6 +294,7 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoGracefulShutdownTimeout :: Maybe Seconds,
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
     rsoEnableMetadataQueryLoggingEnv :: MetadataQueryLoggingMode,
+    rsoHttpLogQueryOnlyOnError :: HttpLogQueryOnlyOnError,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
     rsoExtensionsSchema :: Maybe ExtensionsSchema
@@ -443,6 +444,7 @@ data ServeOptions impl = ServeOptions
     -- | See note '$readOnlyMode'
     soReadOnlyMode :: ReadOnlyMode,
     soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
+    soHttpLogQueryOnlyOnError :: HttpLogQueryOnlyOnError,
     soDefaultNamingConvention :: Maybe NamingCase,
     soExtensionsSchema :: ExtensionsSchema
   }
