@@ -84,6 +84,7 @@ emptyServeOptionsRaw =
       rsoGracefulShutdownTimeout = Nothing,
       rsoWebSocketConnectionInitTimeout = Nothing,
       rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
+      rsoHttpLogQueryOnlyOnError = Logging.HttpLogQueryAlways,
       rsoDefaultNamingConvention = Nothing,
       rsoExtensionsSchema = Nothing
     }

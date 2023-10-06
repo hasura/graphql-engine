@@ -801,6 +801,8 @@ mkWaiApp ::
   WSConnectionInitTimeout ->
   -- | is metadata query logging in http-log enabled
   MetadataQueryLoggingMode ->
+  -- | is query log enabled only for errors
+  HttpLogQueryOnlyOnError ->
   -- | default naming convention
   Maybe NamingCase ->
   m HasuraApp
@@ -837,6 +839,7 @@ mkWaiApp
   enabledLogTypes
   wsConnInitTimeout
   enableMetadataQueryLogging
+  httpLogQueryOnlyOnError
   defaultNC = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
@@ -877,7 +880,7 @@ mkWaiApp
               scFunctionPermsCtx = functionPermsCtx,
               scEnableMaintenanceMode = maintenanceMode,
               scExperimentalFeatures = experimentalFeatures,
-              scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
+              scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging httpLogQueryOnlyOnError,
               scEventingMode = eventingMode,
               scEnableReadOnlyMode = readOnlyMode,
               scDefaultNamingConvention = defaultNC,

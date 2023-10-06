@@ -727,6 +727,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           _scEnabledLogTypes
           soWebSocketConnectionInitTimeout
           soEnableMetadataQueryLogging
+          soHttpLogQueryOnlyOnError
           soDefaultNamingConvention
 
   let serverConfigCtx =

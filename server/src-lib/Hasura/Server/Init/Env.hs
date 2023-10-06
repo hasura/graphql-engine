@@ -201,6 +201,9 @@ instance FromEnv (MaintenanceMode ()) where
 instance FromEnv Logging.MetadataQueryLoggingMode where
   fromEnv = fmap (bool Logging.MetadataQueryLoggingDisabled Logging.MetadataQueryLoggingEnabled) . fromEnv @Bool
 
+instance FromEnv Logging.HttpLogQueryOnlyOnError where
+  fromEnv = fmap (bool Logging.HttpLogQueryAlways Logging.HttpLogQueryOnlyOnError) . fromEnv @Bool
+
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
 
