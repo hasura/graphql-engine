@@ -51,6 +51,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     gracefulShutdownOption,
     webSocketConnectionInitTimeoutOption,
     enableMetadataQueryLoggingOption,
+    httpLogQueryOnlyOnErrorOption,
     defaultNamingConventionOption,
     metadataDBExtensionsSchemaOption,
 
@@ -132,6 +133,7 @@ serveCommandParser =
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
     <*> parseEnableMetadataQueryLogging
+    <*> parseHttpLogQueryOnlyOnError
     <*> parseDefaultNamingConvention
     <*> parseExtensionsSchema
 
@@ -1056,6 +1058,22 @@ enableMetadataQueryLoggingOption =
       Config._helpMessage = "Enables the query field in http-logs for metadata queries (default: false)"
     }
 
+parseHttpLogQueryOnlyOnError :: Opt.Parser Logging.HttpLogQueryOnlyOnError
+parseHttpLogQueryOnlyOnError =
+  fmap (bool Logging.HttpLogQueryAlways Logging.HttpLogQueryOnlyOnError) $
+    Opt.switch
+      ( Opt.long "http-log-query-only-on-error"
+          <> Opt.help (Config._helpMessage httpLogQueryOnlyOnErrorOption)
+      )
+
+httpLogQueryOnlyOnErrorOption :: Config.Option Logging.HttpLogQueryOnlyOnError
+httpLogQueryOnlyOnErrorOption =
+  Config.Option
+    { Config._default = Logging.HttpLogQueryAlways,
+      Config._envVar = "HASURA_GRAPHQL_HTTP_LOG_QUERY_ONLY_ON_ERROR",
+      Config._helpMessage = "Only add query to http log on error (default: false)"
+    }
+
 -- TODO(SOLOMON): The defaulting behavior for this occurs inside the Engine. In
 -- an isolated PR we should move that defaulting in the parsing stage.
 parseDefaultNamingConvention :: Opt.Parser (Maybe NC.NamingCase)
@@ -1195,6 +1213,7 @@ serveCmdFooter =
         Config.optionPP gracefulShutdownOption,
         Config.optionPP webSocketConnectionInitTimeoutOption,
         Config.optionPP enableMetadataQueryLoggingOption,
+        Config.optionPP httpLogQueryOnlyOnErrorOption,
         Config.optionPP defaultNamingConventionOption
       ]
     eventEnvs = [Config.optionPP graphqlEventsHttpPoolSizeOption, Config.optionPP graphqlEventsFetchIntervalOption]
