@@ -1060,7 +1060,7 @@ enableMetadataQueryLoggingOption =
 
 parseHttpLogQueryOnlyOnError :: Opt.Parser Logging.HttpLogQueryOnlyOnError
 parseHttpLogQueryOnlyOnError =
-  fmap (bool Logging.HttpLogQueryAlways Logging.HttpLogQueryOnlyOnError) $
+  fmap (bool Logging.HttpLogQueryOnlyOnErrorDisabled Logging.HttpLogQueryOnlyOnErrorEnabled) $
     Opt.switch
       ( Opt.long "http-log-query-only-on-error"
           <> Opt.help (Config._helpMessage httpLogQueryOnlyOnErrorOption)
@@ -1069,7 +1069,7 @@ parseHttpLogQueryOnlyOnError =
 httpLogQueryOnlyOnErrorOption :: Config.Option Logging.HttpLogQueryOnlyOnError
 httpLogQueryOnlyOnErrorOption =
   Config.Option
-    { Config._default = Logging.HttpLogQueryAlways,
+    { Config._default = Logging.HttpLogQueryOnlyOnErrorDisabled,
       Config._envVar = "HASURA_GRAPHQL_HTTP_LOG_QUERY_ONLY_ON_ERROR",
       Config._helpMessage = "Only add query to http log on error (default: false)"
     }
