@@ -183,7 +183,7 @@ mkServeOptions ServeOptionsRaw {..} = do
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
   soHttpLogQueryOnlyOnError <- case rsoHttpLogQueryOnlyOnError of
-    Server.Logging.HttpLogQueryAlways -> withOptionDefault Nothing httpLogQueryOnlyOnErrorOption
+    Server.Logging.HttpLogQueryOnlyOnErrorDisabled -> withOptionDefault Nothing httpLogQueryOnlyOnErrorOption
     httpLogQueryOnlyOnError -> pure httpLogQueryOnlyOnError
   soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
