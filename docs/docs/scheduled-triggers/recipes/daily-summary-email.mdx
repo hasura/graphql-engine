@@ -145,109 +145,10 @@ code as a guide to write your own webhook.
 <Tabs
   defaultValue="javascript"
   values={[
-    { label: 'Python', value: 'python' },
     { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
   ]}
 >
-  <TabItem value="python">
-Make sure you have the necessary dependencies installed. You can use pip to install them:
-```bash
-pip install Flask secure-smtplib
-```
-
-<details>
-<summary>
-Then, create a new file called <code>index.py</code> and add the following code:
-</summary>
-
-```python
-from flask import Flask, request, jsonify
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from datetime import datetime, timedelta
-import requests
-
-app = Flask(__name)
-
-# Create an SMTP server connection
-def create_smtp_server():
-    server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
-    server.starttls()
-    server.login('<your-email-username>', '<your-email-password>')
-    return server
-
-@app.route('/daily-summary', methods=['POST'])
-def send_daily_summary():
-    # Confirm the authentication header is correct
-    auth_header = request.headers.get('secret-authorization-string')
-    if auth_header != 'super_secret_string_123':
-        return jsonify({'message': 'Unauthorized'}), 401
-
-    # Get the date for the query
-    today = datetime.now()
-    twenty_four_hours_prior = today - timedelta(days=1)
-
-    # Fetch data from your Hasura instance (replace with actual endpoint and admin secret)
-    endpoint = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
-    admin_secret = '<YOUR_ADMIN_SECRET>'
-    query = {
-        "query": """
-        query DailyNotificationsQuery($start_time: timestamptz!) {
-          notifications(where: {created_at: {_gte: $start_time}}) {
-            id
-            message
-            user {
-              id
-              email
-              name
-            }
-          }
-        }
-        """,
-        "variables": {"start_time": twenty_four_hours_prior.isoformat()}
-    }
-    headers = {
-        'Content-Type': 'application/json',
-        'x-hasura-admin-secret': admin_secret
-    }
-    response = requests.post(endpoint, json=query, headers=headers)
-    data = response.json()
-    notifications = data.get('data', {}).get('notifications', [])
-
-    # Create an email and send it for each notification
-    outcomes = []
-    for notification in notifications:
-        # Create a message
-        msg = MIMEMultipart()
-        msg['From'] = 'sender@SuperStore.com'
-        msg['To'] = f"{notification['user']['name']} <{notification['user']['email']}>"
-        msg['Subject'] = f"You've got new notifications, {notification['user']['name'].split(' ')[0]}!"
-        message_body = f"Hi {notification['user']['name'].split(' ')[0]},\n\nCheck out your recent notifications:\n\n{notification['message']}\n\nThanks,\nSuperStore.com"
-        msg.attach(MIMEText(message_body, 'plain'))
-
-        # Send the email
-        server = create_smtp_server()
-        server.sendmail('sender@SuperStore.com', notification['user']['email'], msg.as_string())
-        server.quit()
-
-        outcomes.append({
-            'messageId': 'N/A',  # Replace with the actual message ID
-            'previewUrl': 'N/A',  # Replace with the actual preview URL
-        })
-
-    return jsonify({'message': 'Notifications sent!', 'outcomes': outcomes})
-
-if __name__ == '__main__':
-    app.run(port=4000)
-
-```
-
-</details>
-
-You can run the server by running `python index.py` in your terminal.
-
-  </TabItem>
   <TabItem value="javascript">
 Init a new project with `npm init` and install the following dependencies:
 
@@ -384,6 +285,111 @@ nodemailer.createTestAccount((err, account) => {
 </details>
 
 You can run the server by running `node index.js` in your terminal.
+  </TabItem>
+    <TabItem value="python">
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+```bash
+pip install Flask secure-smtplib requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from smtplib import SMTPException
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
+import requests
+
+app = Flask(__name__)
+
+# Create an SMTP server connection
+def create_smtp_server():
+    try:
+        server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
+        server.starttls()
+        server.login('example@superstore.com', 'samplePassword123')
+        return server
+    except SMTPException as e:
+        print(f"An error occurred while creating the SMTP server: {e}\n\n🔔We'll print the message to the terminal:\n\n")
+        return None
+
+@app.route('/daily-summary', methods=['POST'])
+def send_daily_summary():
+    # Confirm the authentication header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Get the date for the query
+    today = datetime.now()
+    twenty_four_hours_prior = today - timedelta(days=1)
+
+    # Fetch data from your Hasura instance (replace with actual endpoint and admin secret)
+    endpoint = 'https://sacred-possum-24.hasura.app/v1/graphql'
+    admin_secret = 'bXHmnDChmgM4fpKPcNQQqxvKFc0H7EwDRmCPlvIVN1OHu46YjkNs0w6VZuLkHiXw'
+    query = {
+        "query": """
+        query DailyNotificationsQuery($start_time: timestamptz!) {
+          notifications(where: {created_at: {_gte: $start_time}}) {
+            id
+            message
+            user {
+              id
+              email
+              name
+            }
+          }
+        }
+        """,
+        "variables": {"start_time": twenty_four_hours_prior.isoformat()}
+    }
+    headers = {
+        'Content-Type': 'application/json',
+        'x-hasura-admin-secret': admin_secret
+    }
+    response = requests.post(endpoint, json=query, headers=headers)
+    data = response.json()
+    notifications = data.get('data', {}).get('notifications', [])
+
+    # Create an email and send it for each notification
+    recipients = []
+    for notification in notifications:
+        # Create a message
+        msg = MIMEMultipart()
+        msg['From'] = 'sender@SuperStore.com'
+        msg['To'] = f"{notification['user']['name']} <{notification['user']['email']}>"
+        msg['Subject'] = f"You've got new notifications, {notification['user']['name'].split(' ')[0]}!"
+        message_body = f"Hi {notification['user']['name'].split(' ')[0]},\n\nCheck out your recent notifications:\n\n{notification['message']}\n\nThanks,\nSuperStore.com"
+        msg.attach(MIMEText(message_body, 'plain'))
+
+        server = create_smtp_server()
+        if server is not None:
+            # Send the email if server is running
+            server.sendmail('sender@SuperStore.com', notification['user']['email'], msg.as_string())
+            server.quit()
+        else:
+            # or just print the message to the terminal
+            print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{message_body}")
+        
+        recipients.append(notification['user']['email'])
+	    
+    return jsonify({'message': 'Notifications sent!', 'recipients': recipients})
+
+if __name__ == '__main__':
+    app.run(port=4000)
+
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
   </TabItem>
 </Tabs>
 
