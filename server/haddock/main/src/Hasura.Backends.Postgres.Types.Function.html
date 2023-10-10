@@ -17,7 +17,7 @@
 </span><span id="line-17"></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">newtype</span><span> </span><span id="HasDefault"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#HasDefault"><span class="hs-identifier hs-var">HasDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HasDefault"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#HasDefault"><span class="hs-identifier hs-var">HasDefault</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unHasDefault"><span class="annot"><span class="annottext">HasDefault -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#unHasDefault"><span class="hs-identifier hs-var hs-var">unHasDefault</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">}</span><span>
-</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687480605"><span id="local-6989586621687480611"><span id="local-6989586621687480615"><span class="annot"><span class="annottext">Int -&gt; HasDefault -&gt; ShowS
+</span><span id="line-19"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687480641"><span id="local-6989586621687480647"><span id="local-6989586621687480651"><span class="annot"><span class="annottext">Int -&gt; HasDefault -&gt; ShowS
 [HasDefault] -&gt; ShowS
 HasDefault -&gt; String
 (Int -&gt; HasDefault -&gt; ShowS)
@@ -32,7 +32,7 @@ $cshow :: HasDefault -&gt; String
 show :: HasDefault -&gt; String
 $cshowList :: [HasDefault] -&gt; ShowS
 showList :: [HasDefault] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480619"><span id="local-6989586621687480624"><span class="annot"><span class="annottext">HasDefault -&gt; HasDefault -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480655"><span id="local-6989586621687480660"><span class="annot"><span class="annottext">HasDefault -&gt; HasDefault -&gt; Bool
 (HasDefault -&gt; HasDefault -&gt; Bool)
 -&gt; (HasDefault -&gt; HasDefault -&gt; Bool) -&gt; Eq HasDefault
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -40,7 +40,7 @@ $c== :: HasDefault -&gt; HasDefault -&gt; Bool
 == :: HasDefault -&gt; HasDefault -&gt; Bool
 $c/= :: HasDefault -&gt; HasDefault -&gt; Bool
 /= :: HasDefault -&gt; HasDefault -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480632"><span id="local-6989586621687480637"><span id="local-6989586621687480641"><span id="local-6989586621687480645"><span id="local-6989586621687480649"><span id="local-6989586621687480653"><span id="local-6989586621687480657"><span class="annot"><span class="annottext">Eq HasDefault
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480668"><span id="local-6989586621687480673"><span id="local-6989586621687480677"><span id="local-6989586621687480681"><span id="local-6989586621687480685"><span id="local-6989586621687480689"><span id="local-6989586621687480693"><span class="annot"><span class="annottext">Eq HasDefault
 Eq HasDefault
 -&gt; (HasDefault -&gt; HasDefault -&gt; Ordering)
 -&gt; (HasDefault -&gt; HasDefault -&gt; Bool)
@@ -77,7 +77,7 @@ $cmax :: HasDefault -&gt; HasDefault -&gt; HasDefault
 max :: HasDefault -&gt; HasDefault -&gt; HasDefault
 $cmin :: HasDefault -&gt; HasDefault -&gt; HasDefault
 min :: HasDefault -&gt; HasDefault -&gt; HasDefault
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480663"><span id="local-6989586621687480665"><span class="annot"><span class="annottext">(forall x. HasDefault -&gt; Rep HasDefault x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480699"><span id="local-6989586621687480701"><span class="annot"><span class="annottext">(forall x. HasDefault -&gt; Rep HasDefault x)
 -&gt; (forall x. Rep HasDefault x -&gt; HasDefault) -&gt; Generic HasDefault
 forall x. Rep HasDefault x -&gt; HasDefault
 forall x. HasDefault -&gt; Rep HasDefault x
@@ -87,7 +87,7 @@ $cfrom :: forall x. HasDefault -&gt; Rep HasDefault x
 from :: forall x. HasDefault -&gt; Rep HasDefault x
 $cto :: forall x. Rep HasDefault x -&gt; HasDefault
 to :: forall x. Rep HasDefault x -&gt; HasDefault
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480669"><span id="local-6989586621687480674"><span id="local-6989586621687480678"><span id="local-6989586621687480682"><span class="annot"><span class="annottext">[HasDefault] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480705"><span id="local-6989586621687480710"><span id="local-6989586621687480714"><span id="local-6989586621687480718"><span class="annot"><span class="annottext">[HasDefault] -&gt; Value
 [HasDefault] -&gt; Encoding
 HasDefault -&gt; Value
 HasDefault -&gt; Encoding
@@ -110,12 +110,12 @@ $ctoJSONList :: [HasDefault] -&gt; Value
 toJSONList :: [HasDefault] -&gt; Value
 $ctoEncodingList :: [HasDefault] -&gt; Encoding
 toEncodingList :: [HasDefault] -&gt; Encoding
-</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480688"><span class="annot"><span class="annottext">HasDefault -&gt; ()
+</span><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480724"><span class="annot"><span class="annottext">HasDefault -&gt; ()
 (HasDefault -&gt; ()) -&gt; NFData HasDefault
 forall a. (a -&gt; ()) -&gt; NFData a
 $crnf :: HasDefault -&gt; ()
 rnf :: HasDefault -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480697"><span id="local-6989586621687480702"><span class="annot"><span class="annottext">Eq HasDefault
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480733"><span id="local-6989586621687480738"><span class="annot"><span class="annottext">Eq HasDefault
 Eq HasDefault
 -&gt; (Int -&gt; HasDefault -&gt; Int)
 -&gt; (HasDefault -&gt; Int)
@@ -137,7 +137,7 @@ hash :: HasDefault -&gt; Int
 </span><span id="line-24"></span><span>    </span><span id="faHasDefault"><span class="annot"><span class="annottext">FunctionArg -&gt; HasDefault
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#faHasDefault"><span class="hs-identifier hs-var hs-var">faHasDefault</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#HasDefault"><span class="hs-identifier hs-type">HasDefault</span></a></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687480712"><span id="local-6989586621687480721"><span id="local-6989586621687480725"><span class="annot"><span class="annottext">Int -&gt; FunctionArg -&gt; ShowS
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621687480748"><span id="local-6989586621687480757"><span id="local-6989586621687480761"><span class="annot"><span class="annottext">Int -&gt; FunctionArg -&gt; ShowS
 [FunctionArg] -&gt; ShowS
 FunctionArg -&gt; String
 (Int -&gt; FunctionArg -&gt; ShowS)
@@ -152,7 +152,7 @@ $cshow :: FunctionArg -&gt; String
 show :: FunctionArg -&gt; String
 $cshowList :: [FunctionArg] -&gt; ShowS
 showList :: [FunctionArg] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480729"><span id="local-6989586621687480737"><span class="annot"><span class="annottext">FunctionArg -&gt; FunctionArg -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480765"><span id="local-6989586621687480773"><span class="annot"><span class="annottext">FunctionArg -&gt; FunctionArg -&gt; Bool
 (FunctionArg -&gt; FunctionArg -&gt; Bool)
 -&gt; (FunctionArg -&gt; FunctionArg -&gt; Bool) -&gt; Eq FunctionArg
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -160,7 +160,7 @@ $c== :: FunctionArg -&gt; FunctionArg -&gt; Bool
 == :: FunctionArg -&gt; FunctionArg -&gt; Bool
 $c/= :: FunctionArg -&gt; FunctionArg -&gt; Bool
 /= :: FunctionArg -&gt; FunctionArg -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480744"><span id="local-6989586621687480752"><span id="local-6989586621687480758"><span id="local-6989586621687480762"><span id="local-6989586621687480765"><span id="local-6989586621687480768"><span id="local-6989586621687480771"><span class="annot"><span class="annottext">Eq FunctionArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480780"><span id="local-6989586621687480788"><span id="local-6989586621687480794"><span id="local-6989586621687480798"><span id="local-6989586621687480801"><span id="local-6989586621687480804"><span id="local-6989586621687480807"><span class="annot"><span class="annottext">Eq FunctionArg
 Eq FunctionArg
 -&gt; (FunctionArg -&gt; FunctionArg -&gt; Ordering)
 -&gt; (FunctionArg -&gt; FunctionArg -&gt; Bool)
@@ -197,7 +197,7 @@ $cmax :: FunctionArg -&gt; FunctionArg -&gt; FunctionArg
 max :: FunctionArg -&gt; FunctionArg -&gt; FunctionArg
 $cmin :: FunctionArg -&gt; FunctionArg -&gt; FunctionArg
 min :: FunctionArg -&gt; FunctionArg -&gt; FunctionArg
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480775"><span id="local-6989586621687480777"><span class="annot"><span class="annottext">(forall x. FunctionArg -&gt; Rep FunctionArg x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480811"><span id="local-6989586621687480813"><span class="annot"><span class="annottext">(forall x. FunctionArg -&gt; Rep FunctionArg x)
 -&gt; (forall x. Rep FunctionArg x -&gt; FunctionArg)
 -&gt; Generic FunctionArg
 forall x. Rep FunctionArg x -&gt; FunctionArg
@@ -210,13 +210,13 @@ $cto :: forall x. Rep FunctionArg x -&gt; FunctionArg
 to :: forall x. Rep FunctionArg x -&gt; FunctionArg
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480780"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480816"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480808"><span id="local-6989586621687480815"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480844"><span id="local-6989586621687480851"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span></span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480838"><span id="local-6989586621687480842"><span id="local-6989586621687480845"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621687480965"><span class="annot"><span class="annottext">toJSON :: FunctionArg -&gt; Value
-</span><a href="#local-6989586621687480965"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FunctionArg -&gt; Value
+</span><span id="line-32"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480874"><span id="local-6989586621687480878"><span id="local-6989586621687480881"><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/aeson-2.1.2.1-e70cfd91223b3d0131c9afbae5e81df0c65350557c5511cf0c25a451c1483207/share/doc/html/src/Data.Aeson.Types.ToJSON.html#ToJSON"><span class="hs-identifier hs-type">ToJSON</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621687481001"><span class="annot"><span class="annottext">toJSON :: FunctionArg -&gt; Value
+</span><a href="#local-6989586621687481001"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FunctionArg -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -225,15 +225,15 @@ Options -&gt; a -&gt; Value
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-comment">-- Function arguments</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="ArgumentExp"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-var">ArgumentExp</span></a></span></span><span> </span><span id="local-6989586621687480969"><span class="annot"><a href="#local-6989586621687480969"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="ArgumentExp"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-var">ArgumentExp</span></a></span></span><span> </span><span id="local-6989586621687481005"><span class="annot"><a href="#local-6989586621687481005"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-comment">-- | Table row accessor</span></span><span>
 </span><span id="line-39"></span><span>    </span><span id="AETableRow"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | Hardcoded reference to @hdb_catalog.hdb_action_log.response_payload@</span></span><span>
 </span><span id="line-41"></span><span>    </span><span id="AEActionResponsePayload"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AEActionResponsePayload"><span class="hs-identifier hs-var">AEActionResponsePayload</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-comment">-- | JSON/JSONB hasura session variable object</span></span><span>
-</span><span id="line-43"></span><span>    </span><span id="AESession"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-var">AESession</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687480969"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AEInput"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-var">AEInput</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687480969"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687480976"><span id="local-6989586621687480980"><span class="annot"><span class="annottext">ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
+</span><span id="line-43"></span><span>    </span><span id="AESession"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-var">AESession</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687481005"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AEInput"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-var">AEInput</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621687481005"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621687481012"><span id="local-6989586621687481016"><span class="annot"><span class="annottext">ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
 (ArgumentExp a -&gt; ArgumentExp a -&gt; Bool)
 -&gt; (ArgumentExp a -&gt; ArgumentExp a -&gt; Bool) -&gt; Eq (ArgumentExp a)
 forall a. Eq a =&gt; ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
@@ -242,7 +242,7 @@ $c== :: forall a. Eq a =&gt; ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
 == :: ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
 $c/= :: forall a. Eq a =&gt; ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
 /= :: ArgumentExp a -&gt; ArgumentExp a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480985"><span id="local-6989586621687480991"><span id="local-6989586621687480995"><span class="annot"><span class="annottext">Int -&gt; ArgumentExp a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481021"><span id="local-6989586621687481027"><span id="local-6989586621687481031"><span class="annot"><span class="annottext">Int -&gt; ArgumentExp a -&gt; ShowS
 [ArgumentExp a] -&gt; ShowS
 ArgumentExp a -&gt; String
 (Int -&gt; ArgumentExp a -&gt; ShowS)
@@ -260,7 +260,7 @@ $cshow :: forall a. Show a =&gt; ArgumentExp a -&gt; String
 show :: ArgumentExp a -&gt; String
 $cshowList :: forall a. Show a =&gt; [ArgumentExp a] -&gt; ShowS
 showList :: [ArgumentExp a] -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687480998"><span id="local-6989586621687481000"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; ArgumentExp a -&gt; ArgumentExp b)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481034"><span id="local-6989586621687481036"><span class="annot"><span class="annottext">(forall a b. (a -&gt; b) -&gt; ArgumentExp a -&gt; ArgumentExp b)
 -&gt; (forall a b. a -&gt; ArgumentExp b -&gt; ArgumentExp a)
 -&gt; Functor ArgumentExp
 forall a b. a -&gt; ArgumentExp b -&gt; ArgumentExp a
@@ -272,7 +272,7 @@ $cfmap :: forall a b. (a -&gt; b) -&gt; ArgumentExp a -&gt; ArgumentExp b
 fmap :: forall a b. (a -&gt; b) -&gt; ArgumentExp a -&gt; ArgumentExp b
 $c&lt;$ :: forall a b. a -&gt; ArgumentExp b -&gt; ArgumentExp a
 &lt;$ :: forall a b. a -&gt; ArgumentExp b -&gt; ArgumentExp a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481004"><span id="local-6989586621687481010"><span id="local-6989586621687481015"><span id="local-6989586621687481020"><span id="local-6989586621687481022"><span id="local-6989586621687481025"><span id="local-6989586621687481028"><span id="local-6989586621687481031"><span id="local-6989586621687481034"><span id="local-6989586621687481037"><span id="local-6989586621687481040"><span id="local-6989586621687481042"><span id="local-6989586621687481045"><span id="local-6989586621687481050"><span id="local-6989586621687481055"><span id="local-6989586621687481060"><span id="local-6989586621687481065"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; ArgumentExp m -&gt; m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481040"><span id="local-6989586621687481046"><span id="local-6989586621687481051"><span id="local-6989586621687481056"><span id="local-6989586621687481058"><span id="local-6989586621687481061"><span id="local-6989586621687481064"><span id="local-6989586621687481067"><span id="local-6989586621687481070"><span id="local-6989586621687481073"><span id="local-6989586621687481076"><span id="local-6989586621687481078"><span id="local-6989586621687481081"><span id="local-6989586621687481086"><span id="local-6989586621687481091"><span id="local-6989586621687481096"><span id="local-6989586621687481101"><span class="annot"><span class="annottext">(forall m. Monoid m =&gt; ArgumentExp m -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ArgumentExp a -&gt; m)
 -&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ArgumentExp a -&gt; m)
 -&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ArgumentExp a -&gt; b)
@@ -354,7 +354,7 @@ $csum :: forall a. Num a =&gt; ArgumentExp a -&gt; a
 sum :: forall a. Num a =&gt; ArgumentExp a -&gt; a
 $cproduct :: forall a. Num a =&gt; ArgumentExp a -&gt; a
 product :: forall a. Num a =&gt; ArgumentExp a -&gt; a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481075"><span id="local-6989586621687481083"><span id="local-6989586621687481089"><span id="local-6989586621687481094"><span class="annot"><span class="annottext">Functor ArgumentExp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481111"><span id="local-6989586621687481119"><span id="local-6989586621687481125"><span id="local-6989586621687481130"><span class="annot"><span class="annottext">Functor ArgumentExp
 Foldable ArgumentExp
 Functor ArgumentExp
 -&gt; Foldable ArgumentExp
@@ -419,7 +419,7 @@ ArgumentExp (m a) -&gt; m (ArgumentExp a)
 sequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 ArgumentExp (m a) -&gt; m (ArgumentExp a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481101"><span id="local-6989586621687481103"><span class="annot"><span class="annottext">(forall x. ArgumentExp a -&gt; Rep (ArgumentExp a) x)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621687481137"><span id="local-6989586621687481139"><span class="annot"><span class="annottext">(forall x. ArgumentExp a -&gt; Rep (ArgumentExp a) x)
 -&gt; (forall x. Rep (ArgumentExp a) x -&gt; ArgumentExp a)
 -&gt; Generic (ArgumentExp a)
 forall x. Rep (ArgumentExp a) x -&gt; ArgumentExp a
@@ -434,36 +434,36 @@ $cto :: forall a x. Rep (ArgumentExp a) x -&gt; ArgumentExp a
 to :: forall x. Rep (ArgumentExp a) x -&gt; ArgumentExp a
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Generic</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480595"><span id="local-6989586621687481110"><span id="local-6989586621687481117"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480595"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480595"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621687480631"><span id="local-6989586621687481146"><span id="local-6989586621687481153"><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480631"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/hashable-1.4.1.0-5d522a9dd32d7df788ba08ea4843ce7ebe11e09dd778405045a5f573754ce1ab/share/doc/html/src/Data.Hashable.Class.html#Hashable"><span class="hs-identifier hs-type">Hashable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480631"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- | Eliminate 'ArgumentExp'</span><span>
 </span><span id="line-50"></span><span class="hs-comment">--</span><span>
 </span><span id="line-51"></span><span class="hs-comment">-- Used to ensure that the right column is used for 'AEActionResponsePayload'.</span><span>
-</span><span id="line-52"></span><span id="local-6989586621687480596"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#onArgumentExp"><span class="hs-identifier hs-type">onArgumentExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-52"></span><span id="local-6989586621687480632"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#onArgumentExp"><span class="hs-identifier hs-type">onArgumentExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Value to return for 'AETableRow'</span></span><span>
-</span><span id="line-54"></span><span>  </span><span class="annot"><a href="#local-6989586621687480596"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>  </span><span class="annot"><a href="#local-6989586621687480632"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="hs-comment">-- | Create value to return for 'AEResponsePayload' given column text</span></span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687480596"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621687480632"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-comment">-- | 'ArgumentExp' to eliminate</span></span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480596"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-59"></span><span>  </span><span class="annot"><a href="#local-6989586621687480596"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#ArgumentExp"><span class="hs-identifier hs-type">ArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621687480632"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="#local-6989586621687480632"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-60"></span><span id="onArgumentExp"><span class="annot"><span class="annottext">onArgumentExp :: forall a. a -&gt; (Text -&gt; a) -&gt; ArgumentExp a -&gt; a
-</span><a href="Hasura.Backends.Postgres.Types.Function.html#onArgumentExp"><span class="hs-identifier hs-var hs-var">onArgumentExp</span></a></span></span><span> </span><span id="local-6989586621687481134"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481134"><span class="hs-identifier hs-var">tableRow</span></a></span></span><span> </span><span id="local-6989586621687481135"><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621687481135"><span class="hs-identifier hs-var">fromColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="Hasura.Backends.Postgres.Types.Function.html#onArgumentExp"><span class="hs-identifier hs-var hs-var">onArgumentExp</span></a></span></span><span> </span><span id="local-6989586621687481170"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687481170"><span class="hs-identifier hs-var">tableRow</span></a></span></span><span> </span><span id="local-6989586621687481171"><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621687481171"><span class="hs-identifier hs-var">fromColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AETableRow"><span class="hs-identifier hs-var">AETableRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481134"><span class="hs-identifier hs-var">tableRow</span></a></span><span>
+</span><a href="#local-6989586621687481170"><span class="hs-identifier hs-var">tableRow</span></a></span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">ArgumentExp a
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#AEActionResponsePayload"><span class="hs-identifier hs-var">AEActionResponsePayload</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621687481135"><span class="hs-identifier hs-var">fromColumn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621687481171"><span class="hs-identifier hs-var">fromColumn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#actionResponsePayloadColumn"><span class="hs-identifier hs-var">actionResponsePayloadColumn</span></a></span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-type">AESession</span></a></span><span> </span><span id="local-6989586621687481136"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481136"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481136"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-type">AEInput</span></a></span><span> </span><span id="local-6989586621687481137"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481137"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621687481137"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AESession"><span class="hs-identifier hs-type">AESession</span></a></span><span> </span><span id="local-6989586621687481172"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687481172"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687481172"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-type">AEInput</span></a></span><span> </span><span id="local-6989586621687481173"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687481173"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621687481173"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="annot"><span class="hs-comment">-- | Hardcoded @hdb_catalog.hdb_action_log.response_payload@ column name</span></span><span>
 </span><span id="line-67"></span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#actionResponsePayloadColumn"><span class="hs-identifier hs-type">actionResponsePayloadColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="file:///root/.local/state/cabal/store/ghc-9.4.5/text-2.0.1-d0f6d61f5277bae932134563876cbceb4967915f364959864c72abbc2978d8ed/share/doc/html/src/Data.Text.Internal.html#Text"><span class="hs-identifier hs-type">Text</span></a></span><span>
