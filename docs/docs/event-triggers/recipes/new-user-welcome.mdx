@@ -116,9 +116,18 @@ Event Triggers sent by Hasura to your webhook as a request include a [payload](/
 data nested inside the `body` object of the request. This `event` object can then be parsed and values extracted from it
 to be used in your webhook.
 
-Below, we've written an example of webhook in JavaScript that uses `body-parser` to parse the request. As we established
-earlier, this runs on port `4000`. If you're attempting to run this locally, follow the instructions below. If you're
-running this in a hosted environment, use this code as a guide to write your own webhook.
+Below, we've written an example of webhook. As we established earlier, this runs on port `4000`. If you're attempting to
+run this locally, follow the instructions below. If you're running this in a hosted environment, use this code as a
+guide to write your own webhook.
+
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
 
 Init a new project with `npm init` and install the following dependencies:
 
@@ -205,8 +214,86 @@ nodemailer.createTestAccount((err, account) => {
 
 </details>
 
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Webhook server is running on port 4000`, you're good to go!
+You can run the server by running `node index.js` in your terminal.
+
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask secure-smtplib
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from smtplib import SMTPException
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+app = Flask(__name__)
+
+# Create an SMTP server connection
+def create_smtp_server():
+    try:
+        server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
+        server.starttls()
+        server.login('example@superstore.com', 'samplePassword123')
+        return server
+    except SMTPException as e:
+        print(f"An error occurred while creating the SMTP server: {e}\n\n🔔We'll print the message to the terminal:\n\n")
+        return None
+
+@app.route('/new-user', methods=['POST'])
+def create_new_user():
+    # Confirm the authentication header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Get the user's name and email from the request body
+    data = request.get_json()
+    name = data['event']['data']['new']['name']
+    email = data['event']['data']['new']['email']
+
+    # Create the notification email
+    # Create a message
+    msg = MIMEMultipart()
+    msg['From'] = 'sender@SuperStore.com'
+    msg['To'] = f"{name} <{email}>"
+    msg['Subject'] = f"Welcome, {name.split(' ')[0]}!"
+    message_body = f"Hi {name.split(' ')[0]},\n\nWe're glad to have you as a member!"
+    msg.attach(MIMEText(message_body, 'plain'))
+
+    server = create_smtp_server()
+    if server is not None:
+        # Send the email if server is running
+        server.sendmail('sender@SuperStore.com', email, msg.as_string())
+        server.quit()
+    else:
+        # or just print the message to the terminal
+        print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{message_body}")
+
+    return jsonify({'message': 'Welcome email sent!'})
+
+if __name__ == '__main__':
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
+  </TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
 
 ## Step 4: Test the setup
 
