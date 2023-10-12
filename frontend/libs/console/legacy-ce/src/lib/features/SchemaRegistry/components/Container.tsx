@@ -15,7 +15,7 @@ const Header: React.VFC = () => {
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex mb-sm mt-md w-full">
+      <div className="flex mb-xs mt-md w-full">
         <h1 className="inline-block text-xl font-semibold mr-2 text-slate-900">
           GraphQL Schema Registry
         </h1>
@@ -36,13 +36,16 @@ const Header: React.VFC = () => {
         </Analytics>
       </div>
       <a
-        className="text-muted w-auto mb-md"
+        className="text-muted w-auto mb-xs text-md"
         href={SCHEMA_REGISTRY_REF_URL}
         target="_blank"
         rel="noreferrer noopener"
       >
         What is Schema Registry?
       </a>
+      <span className="text-muted text-md mb-2 italic">
+        GraphQL Schema Registry changes will only be retained for 14 days.
+      </span>
       {isAlertModalOpen && (
         <AlertsDialog onClose={() => setIsAlertModalOpen(false)} />
       )}
