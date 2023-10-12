@@ -102,7 +102,12 @@ export const getFetchTablesListQuery = (options: {
                WHEN nt.nspname = 'pg_catalog' THEN format_type(a.atttypid, null)
                ELSE 'USER-DEFINED' END
         END AS data_type,
-        coalesce(bt.typname, t.typname) AS data_type_name
+        coalesce(bt.typname, t.typname) AS data_type_name,
+      CASE 
+        WHEN a.attidentity = 'd' THEN TRUE
+        WHEN a.attidentity = 'a' THEN TRUE
+        ELSE FALSE
+      END as is_identity
       FROM (pg_attribute a LEFT JOIN pg_attrdef ad ON attrelid = adrelid AND attnum = adnum)
         JOIN (pg_class c JOIN pg_namespace nc ON (c.relnamespace = nc.oid)) ON a.attrelid = c.oid
         JOIN (pg_type t JOIN pg_namespace nt ON (t.typnamespace = nt.oid)) ON a.atttypid = t.oid
