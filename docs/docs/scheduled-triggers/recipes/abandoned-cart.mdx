@@ -146,9 +146,9 @@ language or framework you prefer. The webhook needs to do three main things when
 2. For each user found, generate a reminder email containing the product details.
 3. Send the email.
 
-Below, we've written an example of webhook. As we established earlier, this runs on port 4000. If you're 
-attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this 
-code as a guide to write your own webhook.
+Below, we've written an example of webhook. As we established earlier, this runs on port 4000. If you're attempting to
+run this locally, follow the instructions below. If you're running this in a hosted environment, use this code as a
+guide to write your own webhook.
 
 <Tabs
   defaultValue="javascript"
@@ -158,11 +158,13 @@ code as a guide to write your own webhook.
   ]}
 >
 <TabItem value="javascript">
+
 Init a new project with `npm init` and install the following dependencies:
 
 ```bash
-npm install express body-parser nodemailer
+npm install express nodemailer
 ```
+
 <details>
 <summary>
 Then, create a new file called <code>index.js</code> and add the following code:
@@ -298,11 +300,14 @@ nodemailer.createTestAccount((err, account) => {
 ```
 
 </details>
+
 This script connects to a Postgres database, finds the users who have abandoned their carts, generates a reminder email
 for each user, and sends it. The script uses the [Nodemailer](https://nodemailer.com/about/) package to send emails.
+
 </TabItem>
 
 <TabItem value="python">
+
 Make sure you have the necessary dependencies installed. You can use pip to install them:
 
 ```bash
@@ -416,13 +421,19 @@ def abandoned_cart():
 
 if __name__ == '__main__':
     app.run(port=4000)
+```
 
 </details>
+
+This script connects to a Postgres database, finds the users who have abandoned their carts, generates a reminder email
+for each user, and sends it. The script uses the [Flask](https://flask.palletsprojects.com/en/3.0.x/),
+[Requests](https://pypi.org/project/requests/) and [SMTP](https://docs.python.org/3/library/smtplib.html) packages to
+send emails.
+
 </TabItem>
-<Tabs>
+</Tabs>
 
 If you see the message Webhook server is running on port 4000, you're good to go!
-
 
 ## Step 4: Test your Setup
 
