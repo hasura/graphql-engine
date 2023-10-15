@@ -146,8 +146,23 @@ language or framework you prefer. The webhook needs to do three main things when
 2. For each user found, generate a reminder email containing the product details.
 3. Send the email.
 
-Here's an example implementation using Node.js and Express:
+Below, we've written an example of webhook. As we established earlier, this runs on port 4000. If you're 
+attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this 
+code as a guide to write your own webhook.
 
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
+Init a new project with `npm init` and install the following dependencies:
+
+```bash
+npm install express body-parser nodemailer
+```
 <details>
 <summary>
 Then, create a new file called <code>index.js</code> and add the following code:
@@ -283,9 +298,131 @@ nodemailer.createTestAccount((err, account) => {
 ```
 
 </details>
-
 This script connects to a Postgres database, finds the users who have abandoned their carts, generates a reminder email
 for each user, and sends it. The script uses the [Nodemailer](https://nodemailer.com/about/) package to send emails.
+</TabItem>
+
+<TabItem value="python">
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask requests secure-smtplib
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+import requests
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta
+
+app = Flask(__name__)
+
+# function to send emails
+def send_email(user_email, user_name):
+    # configure your SMTP server
+    smtp_server = 'smtp.ethereal.email'
+    smtp_port = 587
+    smtp_user = '<YOUR_SMTP_USERNAME>'
+    smtp_pass = '<YOUR_SMTP_PASSWORD>'
+
+    # create an SMTP connection
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+
+        # compose the email
+        subject = f"You've left items in your cart, {user_name.split(' ')[0]}!"
+        body = f"Hi {user_name.split(' ')[0]}, it seems you've left some items in your cart. Don't forget to check out!"
+        sender = 'sender@SuperStore.com'
+        recipient = user_email
+
+        msg = MIMEMultipart()
+        msg['From'] = sender
+        msg['To'] = recipient
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        # send the email
+        server.sendmail(sender, recipient, msg.as_string())
+
+# function to fetch data from our Hasura instance
+def get_abandoned_carts():
+    cloud_project_endpoint = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
+    admin_secret = '<YOUR_ADMIN_SECRET>'
+
+    headers = {
+        'Content-Type': 'application/json',
+        'x-hasura-admin-secret': admin_secret
+    }
+
+    query = '''
+    query EmailsOfUsersWithAbandonedCarts($updated_date: timestamptz!) {
+        carts(where: {
+            _and: {
+                is_reminder_sent: {_eq: false},
+                cart_items: {updated_at: {_lt: $updated_date}}
+            }
+        }) {
+            id
+            created_at
+            user_id
+            is_reminder_sent
+            user {
+                id
+                email
+                name
+            }
+        }
+    }
+    '''
+
+    # setup formatted time and date for the query
+    aDayAgo = datetime.now() - timedelta(days = 1)
+    formattedDate = aDayAgo.isoformat()
+    variables = {'updated_date': formattedDate}
+
+    # make the query and process the results
+    response = requests.post(cloud_project_endpoint, json={'query': query, 'variables': variables}, headers=headers)
+    data = response.json()
+    return data.get('data', {}).get('carts', [])
+
+# route for the webhook
+@app.route('/abandoned-cart', methods=['POST'])
+def abandoned_cart():
+    # confirm the auth header is correct — ideally, you'd keep the secret in an environment variable
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # fetch and process abandoned carts
+    carts = get_abandoned_carts()
+
+    # send email for individual abandoned cart
+    for cart in carts:
+        user_email = cart['user']['email']
+        user_name = cart['user']['name']
+        send_email(user_email, user_name)
+
+    return jsonify({'message': 'Abandoned cart reminders sent!'})
+    # Here we would run a query to update the database to mark the carts as having received a reminder but we will
+    # leave this out for ease of demonstration.
+
+if __name__ == '__main__':
+    app.run(port=4000)
+
+</details>
+</TabItem>
+<Tabs>
+
+If you see the message Webhook server is running on port 4000, you're good to go!
+
 
 ## Step 4: Test your Setup
 
