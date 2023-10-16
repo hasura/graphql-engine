@@ -387,7 +387,7 @@ def get_expired_coupons():
     # Check the response status
     if response.status_code == 200:
         res = response.json()
-        return res['data']
+        return res['data']['coupons']
     else:
         return []
 
