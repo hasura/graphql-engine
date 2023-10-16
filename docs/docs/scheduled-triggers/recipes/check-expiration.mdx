@@ -351,16 +351,16 @@ def get_expired_coupons():
     # Prepare the request headers
     headers = {
         'Content-Type': 'application/json',
-        'x-hasura-admin-secret': 'super_secret_string_123',
+        'x-hasura-admin-secret': '<YOUR_ADMIN_SECRET>',
     }
 
     graphql_query = '''
     query GetExpiringCoupons($two_days_from_now: timestamptz!) {
-      coupons_coupon(where: {expiration_date: {_lte: $two_days_from_now}}) {
+      coupons(where: {expiration_date: {_lte: $two_days_from_now}}) {
         id
         expiration_date
         code
-        user_data {
+        user {
           email
           id
           name
@@ -382,11 +382,12 @@ def get_expired_coupons():
 
 
     # Make the POST request to the GraphQL endpoint
-    response = requests.post('http://your-graphql-endpoint', json=payload, headers=headers)
+    response = requests.post('<YOUR_PROJECT_ENDPOINT>', json=payload, headers=headers)
 
     # Check the response status
     if response.status_code == 200:
-        return response.json()
+        res = response.json()
+        return res['data']
     else:
         return []
 
@@ -402,7 +403,7 @@ def expiration_check():
 
     # Send email reminders
     for coupon in expired_coupons:
-        email = coupon['user_data']['email']
+        email = coupon['user']['email']
         # Format the timestamp into a readable format (e.g., "October 15, 2023")
         parsed_date = datetime.fromisoformat(coupon['expiration_date'])
         readable_date = parsed_date.strftime("%B %d, %Y")
@@ -410,9 +411,9 @@ def expiration_check():
         # Create reminder message
         msg = MIMEMultipart()
         msg['From'] = 'SuperStore.com <sender@SuperStore.com>'
-        msg['To'] = f"{coupon['user_data']['name']} <{email}>"
-        msg['Subject'] = f"You've got a coupon expiring soon, {coupon['user_data']['name'].split(' ')[0]}!"
-        message_body = f"Yo {coupon['user_data']['name'].split(' ')[0]},\n\nYour coupon code, {coupon['code']}, is expiring soon! Use it before {readable_date}.\n\nThanks,\nSuperStore.com"
+        msg['To'] = f"{coupon['user']['name']} <{email}>"
+        msg['Subject'] = f"You've got a coupon expiring soon, {coupon['user']['name'].split(' ')[0]}!"
+        message_body = f"Yo {coupon['user']['name'].split(' ')[0]},\n\nYour coupon code, {coupon['code']}, is expiring soon! Use it before {readable_date}.\n\nThanks,\nSuperStore.com"
         msg.attach(MIMEText(message_body, 'plain'))
 
         server = create_smtp_server()
