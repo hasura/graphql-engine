@@ -338,24 +338,30 @@ def send_email(user_email, user_name):
     smtp_pass = '<YOUR_SMTP_PASSWORD>'
 
     # create an SMTP connection
-    with smtplib.SMTP(smtp_server, smtp_port) as server:
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-
-        # compose the email
-        subject = f"You've left items in your cart, {user_name.split(' ')[0]}!"
-        body = f"Hi {user_name.split(' ')[0]}, it seems you've left some items in your cart. Don't forget to check out!"
-        sender = 'sender@SuperStore.com'
-        recipient = user_email
-
-        msg = MIMEMultipart()
-        msg['From'] = sender
-        msg['To'] = recipient
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        # send the email
-        server.sendmail(sender, recipient, msg.as_string())
+     with smtplib.SMTP(smtp_server, smtp_port) as server:
+          try:
+              server.starttls()
+              server.login(smtp_user, smtp_pass)
+          except Exception as e:
+              print(f"An error occurred while creating the SMTP server: {e}\nWe'll print the message to the terminal\n")
+    
+          # compose the email
+          subject = f"You've left items in your cart, {user_name.split(' ')[0]}!"
+          body = f"Hi {user_name.split(' ')[0]}, it seems you've left some items in your cart. Don't forget to check out!"
+          sender = 'sender@SuperStore.com'
+          recipient = user_email
+    
+          msg = MIMEMultipart()
+          msg['From'] = sender
+          msg['To'] = recipient
+          msg['Subject'] = subject
+          msg.attach(MIMEText(body, 'plain'))
+    
+          # send the email
+          try:
+              server.sendmail(sender, recipient, msg.as_string())
+          except Exception as e:
+              print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{body}")
 
 # function to fetch data from our Hasura instance
 def get_abandoned_carts():
