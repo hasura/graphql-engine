@@ -19,7 +19,7 @@ import AceEditor from 'react-ace';
 export const Breadcrumbs = () => (
   <div className="flex items-center space-x-xs mb-4">
     <Link
-      to="/settings/schema-registry"
+      to="/api/schema-registry"
       className="cursor-pointer flex items-center text-muted hover:text-gray-900"
     >
       <FaHome className="mr-1.5" />
