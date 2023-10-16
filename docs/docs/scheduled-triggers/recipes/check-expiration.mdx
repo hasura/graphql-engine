@@ -152,9 +152,18 @@ simply going to send a `POST` request. Our webhook will needs to do three things
 2. Query the database to see which coupons are expiring in two days.
 3. For each coupon returned, send an email to the user.
 
-Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
-attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
-code as a guide to write your own webhook.
+Below, we've written an example of webhook. As we established earlier, this runs on port `4000`. If you're attempting to
+run this locally, follow the instructions below. If you're running this in a hosted environment, use this code as a
+guide to write your own webhook.
+
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
 
 Init a new project with `npm init` and install the following dependencies:
 
@@ -227,7 +236,7 @@ nodemailer.createTestAccount((err, account) => {
         body: JSON.stringify({
           query: `
           query GetExpiringCoupons($two_days_from_now: timestamptz!) {
-            coupons(where: {expiration_date: {_lte: $two_days_from_now}}) {
+            coupons(where: {expiration_date: {_lte: $two_days_from_now, _gte: today}}) {
                 id
                 code
                 expiration_date
@@ -296,8 +305,140 @@ nodemailer.createTestAccount((err, account) => {
 
 </details>
 
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Webhook server is running on port 4000`, you're good to go!
+You can run the server by running `node index.js` in your terminal.
+
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask secure-smtplib requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from smtplib import SMTPException
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import requests
+from datetime import datetime, timedelta
+
+app = Flask(__name__)
+
+# Create an SMTP server connection
+def create_smtp_server():
+    try:
+        server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
+        server.starttls()
+        server.login('example@superstore.com', 'samplePassword123')
+        return server
+    except SMTPException as e:
+        print(f"An error occurred while creating the SMTP server: {e}\nWe'll print the message to the terminal\n")
+        return None
+
+def get_expired_coupons():
+    today = datetime.now()
+    two_days_from_now = today + timedelta(days=2)
+    formatted_date = two_days_from_now.isoformat()
+
+    # Prepare the request headers
+    headers = {
+        'Content-Type': 'application/json',
+        'x-hasura-admin-secret': '<YOUR_ADMIN_SECRET>',
+    }
+
+    graphql_query = '''
+    query GetExpiringCoupons($two_days_from_now: timestamptz!) {
+      coupons(where: {expiration_date: {_lte: $two_days_from_now, _gte: today}}) {
+        id
+        expiration_date
+        code
+        user {
+          email
+          id
+          name
+        }
+      }
+    }
+    '''
+
+    graphql_variables = {
+        'two_days_from_now': formatted_date
+    }
+
+    # Prepare the request payload as a dictionary
+    payload = {
+        'query': graphql_query,
+        'variables': graphql_variables
+    }
+
+
+
+    # Make the POST request to the GraphQL endpoint
+    response = requests.post('<YOUR_PROJECT_ENDPOINT>', json=payload, headers=headers)
+
+    # Check the response status
+    if response.status_code == 200:
+        res = response.json()
+        return res['data']['coupons']
+    else:
+        return []
+
+@app.route('/expiration_check', methods=['POST'])
+def expiration_check():
+    # Confirm the secret header is correct
+    auth_header = request.headers.get('secret-authorization-string')
+    if auth_header != 'super_secret_string_123':
+        return jsonify({'message': 'Unauthorized'}), 401
+
+    # Fetch expired_coupons from your Hasura
+    expired_coupons = get_expired_coupons()
+
+    # Send email reminders
+    for coupon in expired_coupons:
+        email = coupon['user']['email']
+        # Format the timestamp into a readable format (e.g., "October 15, 2023")
+        parsed_date = datetime.fromisoformat(coupon['expiration_date'])
+        readable_date = parsed_date.strftime("%B %d, %Y")
+
+        # Create reminder message
+        msg = MIMEMultipart()
+        msg['From'] = 'SuperStore.com <sender@SuperStore.com>'
+        msg['To'] = f"{coupon['user']['name']} <{email}>"
+        msg['Subject'] = f"You've got a coupon expiring soon, {coupon['user']['name'].split(' ')[0]}!"
+        message_body = f"Yo {coupon['user']['name'].split(' ')[0]},\n\nYour coupon code, {coupon['code']}, is expiring soon! Use it before {readable_date}.\n\nThanks,\nSuperStore.com"
+        msg.attach(MIMEText(message_body, 'plain'))
+
+        server = create_smtp_server()
+        if server is not None:
+            # Send the email if server is running
+            server.sendmail('sender@SuperStore.com', email, msg.as_string())
+            server.quit()
+        else:
+            # or just print the message to the terminal
+            print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{message_body}")
+
+    return jsonify({'message': 'Coupons sent!'})
+
+if __name__ == '__main__':
+    app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
+  </TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
 
 ## Step 4: Test the setup
 
