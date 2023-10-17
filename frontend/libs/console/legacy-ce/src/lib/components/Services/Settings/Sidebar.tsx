@@ -15,7 +15,6 @@ import {
 
 import { useEELiteAccess } from '../../../features/EETrial';
 import { getQueryResponseCachingRoute } from '../../../utils/routeUtils';
-import { isCloudConsole } from '../../../utils/cloudConsole';
 import { isOpenTelemetrySupported } from '../../../utils/proConsole';
 
 export interface Metadata {
@@ -33,8 +32,7 @@ type SectionDataKey =
   | 'security'
   | 'monitoring'
   | 'performance'
-  | 'about'
-  | 'graphql';
+  | 'about';
 
 const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   const eeLiteAccess = useEELiteAccess(globals);
@@ -47,25 +45,6 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     label: 'Metadata',
     items: [],
   };
-
-  if (
-    isCloudConsole(globals) &&
-    (globals.userRole === 'admin' || globals.userRole === 'owner')
-  ) {
-    sectionsData.graphql = {
-      key: 'graphql',
-      label: 'GraphQL',
-      items: [
-        {
-          key: 'schema-registry',
-          label: 'Schema Registry (Beta)',
-          route: '/settings/schema-registry',
-          dataTestVal: 'metadata-schema-registry-link',
-        },
-      ],
-    };
-  }
-
   sectionsData.metadata.items.push({
     key: 'actions',
     label: 'Metadata Actions',
