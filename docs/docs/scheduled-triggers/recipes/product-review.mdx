@@ -143,6 +143,7 @@ the database to determine which customers should receive a review request email.
 Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
 attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
 code as a guide to write your own webhook.
+
 <Tabs
   defaultValue="javascript"
   values={[
@@ -166,7 +167,6 @@ Then, create a new file called <code>index.js</code> and add the following code:
 ```javascript
 const express = require('express');
 const nodemailer = require('nodemailer');
-const fetch = require('node-fetch');
 
 const app = express();
 
@@ -305,114 +305,112 @@ nodemailer.createTestAccount((err, account) => {
   });
 });
 ```
-</details>
-</TabItem>
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Server started on port 4000`, you're good to go!
 
+</details>
+
+You can run the server by running `node index.js` in your terminal. If you see the message
+`Webhook server is running on port 4000`, you're good to go!
+</TabItem>
 <TabItem value="python">
 Make sure you have the necessary dependencies installed. You can use pip to install them:
-
 ```bash
-pip install Flask requests secure-smtplib
+pip install Flask requests
 ```
 
 <details>
 <summary>
 Then, create a new file called <code>index.py</code> and add the following code:
 </summary>
+
 ```python
 from flask import Flask, request, jsonify
 import smtplib
-from email.message import EmailMessage
-import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
 import requests
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-# Your Hasura endpoint and admin secret
-HASURA_ENDPOINT = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
-ADMIN_SECRET = '<YOUR_ADMIN_SECRET>'
-
-# Create an SMTP server connection
-server = smtplib.SMTP('smtp.ethereal.email', 587)
-server.starttls()
-
-# Function to send review requests via email
-def send_review_request(name, email, product_name):
-    msg = EmailMessage()
-    msg.set_content(f"Hi {name.split(' ')[0]}, we hope you're enjoying your {product_name}. Please leave us a review!")
-
-    msg['Subject'] = f'We need your review, {name.split(" ")[0]}!'
-    msg['From'] = 'sender@SuperStore.com'
-    msg['To'] = f'{name} <{email}>'
-
-    server.send_message(msg)
-
 @app.route('/review-request', methods=['POST'])
-def review_request():
+def send_review_requests():
     # confirm the auth header is correct
     auth_header = request.headers.get('secret-authorization-string')
     if auth_header != 'super_secret_string_123':
-        return jsonify(message='Unauthorized'), 401    
-    
-    # get timestamp strings for the query
-    current_utc_date = datetime.datetime.utcnow()
-    seven_days_ago_midnight = (current_utc_date - datetime.timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
-    seven_days_ago_eod = (current_utc_date - datetime.timedelta(days=7)).replace(hour=23, minute=59, second=59, microsecond=999999)
+        return jsonify(message='Unauthorized'), 401
 
-    # Format timestamps to ISO strings
-    seven_days_ago_midnight_str = seven_days_ago_midnight.isoformat()
-    seven_days_ago_eod_str = seven_days_ago_eod.isoformat()
+    # get timestamp strings for the query
+    current_utc_date = datetime.utcnow()
+    seven_days_ago_midnight = (current_utc_date - timedelta(days=7)).replace(hour=0, minute=0, second=0, microsecond=0)
+    seven_days_ago_eod = (current_utc_date - timedelta(days=7)).replace(hour=23, minute=59, second=0, microsecond=0)
 
     # Fetch data from Hasura instance
-    query = """
+    hasura_endpoint = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
+    admin_secret = '<YOUR_ADMIN_SECRET>'
+    query = '''
     query ReviewRequestQuery($after: timestamptz!, $before: timestamptz!) {
-      orders(where: {delivery_date: {_gte: $after, _lte: $before}, is_reviewed: {_eq: false}}) {
-        user {
-          id
-          name
-          email
+        orders(where: {delivery_date: {_gte: $after, _lte: $before}, is_reviewed: {_eq: false}}) {
+            user {
+                id
+                name
+                email
+            }
+            product {
+                id
+                name
+            }
         }
-        product {
-          id
-          name
-        }
-      }
     }
-    """
+    '''
     variables = {
-        "after": seven_days_ago_midnight_str,
-        "before": seven_days_ago_eod_str
+        'after': seven_days_ago_midnight.isoformat(),
+        'before': seven_days_ago_eod.isoformat()
     }
-
-    response = requests.post(
-        HASURA_ENDPOINT,
-        headers={"Content-Type": "application/json", "x-hasura-admin-secret": ADMIN_SECRET},
-        json={"query": query, "variables": variables}
-    )
-    data = response.json()
-    orders = data.get('data', {}).get('orders', [])
+    response = requests.post(hasura_endpoint, json={'query': query, 'variables': variables}, headers={'x-hasura-admin-secret': admin_secret})
+    orders = response.json()['data']['orders']
 
     # Send review requests
     outcomes = []
+    smtp_host = os.getenv('SMTP_HOST', 'smtp.ethereal.email')
+    smtp_port = int(os.getenv('SMTP_PORT', 587))
+    smtp_user = os.getenv('SMTP_USER', '<YOUR_EMAIL>')
+    smtp_password = os.getenv('SMTP_PASSWORD', '<YOUR_PASSWORD>')
     for order in orders:
-        send_review_request(order['user']['name'], order['user']['email'], order['product']['name'])
-        outcomes.append({'message': f'Review request sent to {order["user"]["name"]}'})
-    
-    # Return response
-    return jsonify(message='Review requests sent!', outcomes=outcomes), 200
+        try:
+            # Create message
+            message = MIMEMultipart()
+            message['From'] = 'SuperStore.com <sender@SuperStore.com>'
+            message['To'] = f"{order['user']['name']} <{order['user']['email']}>"
+            message['Subject'] = f"We need your review, {order['user']['name'].split()[0]}!"
+            body = f"Hi {order['user']['name'].split()[0]}, we hope you're enjoying your {order['product']['name']}. Please leave us a review!"
+            message.attach(MIMEText(body, 'plain'))
 
-# Start the server
+            # Send email using SMTP server
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(smtp_user, message['To'], message.as_string())
+
+            # Log the message info
+            outcomes.append({
+                'messageId': 'Successfully sent',  # Replace with the actual message ID if you have it
+                'previewUrl': 'Not available'  # Replace with the actual preview URL if you have it
+            })
+
+        except Exception as e:
+            outcomes.append({'error': str(e)})
+
+    return jsonify(message='Review requests sent!', outcomes=outcomes)
+
 if __name__ == '__main__':
     app.run(port=4000)
 ```
 </details>
+You can run the server by running `python index.py` in your terminal.
 </TabItem>
-You can run the server by running `python index.py` in your terminal. If you see the message  '* Running on http://127.0.0.1:4000/ ', you're good to go.
-<Tabs>
-
-
+</Tabs>
+If you see the message `* Running on http://127.0.0.1:4000/ (Press CTRL+C to quit)`, you're good to go!
 
 ## Step 4: Test the setup
 
