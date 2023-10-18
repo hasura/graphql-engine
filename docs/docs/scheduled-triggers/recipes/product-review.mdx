@@ -140,9 +140,18 @@ Whenever a cron job is triggered, Hasura will send a request to the webhook URL 
 simply going to send a `POST` request. Our webhook will parse the request, ensure the header is correct, and then query
 the database to determine which customers should receive a review request email.
 
-Below, we've written an example of webhook in JavaScript. As we established earlier, this runs on port `4000`. If you're
+Below, we've written an example of webhook. As we established earlier, this runs on port `4000`. If you're
 attempting to run this locally, follow the instructions below. If you're running this in a hosted environment, use this
 code as a guide to write your own webhook.
+
+<Tabs
+  defaultValue="javascript"
+  values={[
+    { label: 'JavaScript', value: 'javascript' },
+    { label: 'Python', value: 'python' },
+  ]}
+>
+<TabItem value="javascript">
 
 Init a new project with `npm init` and install the following dependencies:
 
@@ -239,7 +248,7 @@ nodemailer.createTestAccount((err, account) => {
                 name
               }
             }
-          }          
+          }
           `,
           variables: {
             after: sevenDaysAgoMidnightString,
@@ -299,8 +308,128 @@ nodemailer.createTestAccount((err, account) => {
 
 </details>
 
-You can run the server by running `node index.js` in your terminal. If you see the message
-`Webhook server is running on port 4000`, you're good to go!
+You can run the server by running `node index.js` in your terminal.
+</TabItem>
+<TabItem value="python">
+
+Make sure you have the necessary dependencies installed. You can use pip to install them:
+
+```bash
+pip install Flask secure-smtplib requests
+```
+
+<details>
+<summary>
+Then, create a new file called <code>index.py</code> and add the following code:
+</summary>
+
+```python
+from flask import Flask, request, jsonify
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
+import requests
+
+app = Flask(__name__)
+
+# Create an SMTP server connection
+def create_smtp_server():
+  try:
+    server = smtplib.SMTP(host='smtp.ethereal.email', port=587)
+    server.starttls()
+    server.login('example@superstore.com', 'samplePassword123')
+    return server
+  except Exception as e:
+    print(f"An error occurred while creating the SMTP server: {e}\n\n🔔We'll print the message to the terminal:\n\n")
+    return None
+
+@app.route('/review-request', methods=['POST'])
+def send_review_request():
+  # Confirm the authentication header is correct
+  auth_header = request.headers.get('secret-authorization-string')
+  if auth_header != 'super_secret_string_123':
+    return jsonify({'message': 'Unauthorized'}), 401
+
+  # Get timestamp strings for the query
+  current_utc_date = datetime.utcnow()
+  seven_days_ago_midnight = current_utc_date - timedelta(days=7)
+  seven_days_ago_midnight = seven_days_ago_midnight.replace(hour=0, minute=0, second=0, microsecond=0)
+
+  seven_days_ago_eod = current_utc_date - timedelta(days=7)
+  seven_days_ago_eod = seven_days_ago_eod.replace(hour=23, minute=59, second=0, microsecond=0)
+
+  seven_days_ago_midnight_string = seven_days_ago_midnight.isoformat()
+  seven_days_ago_eod_string = seven_days_ago_eod.isoformat()
+
+  # Fetch data from your Hasura instance (replace with actual endpoint and admin secret)
+  endpoint = '<YOUR_CLOUD_PROJECT_ENDPOINT>'
+  admin_secret = '<YOUR_ADMIN_SECRET>'
+  headers = {
+    'Content-Type': 'application/json',
+    'x-hasura-admin-secret': admin_secret
+  }
+  query = {
+    "query": """
+    query ReviewRequestQuery($after: timestamptz!, $before: timestamptz!) {
+      orders(where: {delivery_date: {_gte: $after, _lte: $before}, is_reviewed: {_eq: false}}) {
+        user {
+          id
+          name
+          email
+        }
+        product {
+          id
+          name
+        }
+      }
+    }
+    """,
+    "variables": {
+      "after": seven_days_ago_midnight_string,
+      "before": seven_days_ago_eod_string
+    }
+  }
+  response = requests.post(endpoint, json=query, headers=headers)
+  data = response.json()
+  orders = data.get('data', {}).get('orders', [])
+
+  # Create an email and send it for each order
+  recipients = []
+  for order in orders:
+    # Create a message
+    msg = MIMEMultipart()
+    msg['From'] = 'sender@SuperStore.com'
+    msg['To'] = f"{order['user']['name']} <{order['user']['email']}>"
+    msg['Subject'] = f"We need your review, {order['user']['name'].split(' ')[0]}!"
+    message_body = f"Hi {order['user']['name'].split(' ')[0]}, we hope you're enjoying your {order['product']['name']}. Please leave us a review!"
+    msg.attach(MIMEText(message_body, 'plain'))
+
+    server = create_smtp_server()
+    if server is not None:
+      # Send the email if the server is running
+      server.sendmail('sender@SuperStore.com', order['user']['email'], msg.as_string())
+      server.quit()
+    else:
+      # Or just print the message to the terminal
+      print(f"From: {msg['From']}\nTo: {msg['To']}\nSubject: {msg['Subject']}\n{message_body}")
+
+    recipients.append(order['user']['email'])
+
+  return jsonify({'message': 'Review requests sent!', 'recipients': recipients})
+
+if __name__ == '__main__':
+  app.run(port=4000)
+```
+
+</details>
+
+You can run the server by running `python index.py` in your terminal.
+
+</TabItem>
+</Tabs>
+
+If you see the message `Webhook server is running on port 4000`, you're good to go!
 
 ## Step 4: Test the setup
 
