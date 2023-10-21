@@ -198,7 +198,7 @@ If the agent only supports table columns that are always nullable, then it shoul
 
 ### Interpolated Queries
 
-Interpolated queries are lists of strings and scalars that represent applied templates of analagous form to [`select * from users where id = `, 5]. 
+Interpolated queries are lists of strings and scalars that represent applied templates of analogous form to [`select * from users where id = `, 5].
 
 By declaring support for the `interpolated_queries` capability the Hasura admin understands that they will be able to define native queries that leverage this cabability through the agent.
 
@@ -515,7 +515,7 @@ and here is the resulting query request payload:
 }
 ```
 
-The implementation of the service is responsible for intepreting this data structure and producing a JSON response body which is compatible with both the query and the schema.
+The implementation of the service is responsible for interpreting this data structure and producing a JSON response body which is compatible with both the query and the schema.
 
 Let's break down the request:
 
@@ -735,7 +735,7 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 
 Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, a `column_type` to denote the scalar type of the column, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
 
-Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
+Here is a simple example, which corresponds to the predicate "`first_name` is John and `last_name` is Smith":
 
 ```json
 {
