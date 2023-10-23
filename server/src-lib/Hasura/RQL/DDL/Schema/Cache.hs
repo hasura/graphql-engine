@@ -1624,6 +1624,16 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- computation will not be done again.
           -- The `buildReason` is passed through the MonadReader because we don't want it to participate
           -- in the caching.
+
+          -- By default, the SQL triggers are not recreated. They can be recreated, under the following conditions:
+          -- 1. There is no existing cache present for the given set of arguments and the build reason is not `CatalogSync`.
+          --      The build reason `CatalogSync` can be due to either Hasura being start up or the metadata is getting
+          --      synced with another Hasura instance that is connected to the same metadata database.
+          --
+          --      This case includes renaming of event trigger, adding/dropping of table columns etc.
+          --
+          -- 2. The SQL triggers of a source can be explicitly recreated by specifying the source name
+          --    in `reload_metadata`'s `recreate_event_triggers`.
           Inc.cache
             proc
               ( dynamicConfig,
@@ -1638,12 +1648,17 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 )
             -> do
               buildReason <- bindA -< ask
-              -- Event triggers are recreated only when explicitly requested for,
-              -- which can be done via the `reload_metadata` API.
+
               let shouldRecreateEventTrigger =
                     case buildReason of
+                      -- Build reason is CatalogSync when Hasura is started or when the metadata is being synced.
+                      -- We don't want to recreate SQL triggers in such case because in both cases, we expect
+                      -- the SQL trigger to already be present.
                       CatalogSync -> False
-                      CatalogUpdate Nothing -> True -- Handles the case of creation of event trigger.
+                      -- Handles the case of a metadata update and `run_sql`
+                      CatalogUpdate Nothing -> True
+                      -- Handles the case of `reload_metadata` with `recreate_event_triggers` containing
+                      -- the current source
                       CatalogUpdate (Just sources) -> sourceName `elem` sources
               bindErrorA
                 -< do
