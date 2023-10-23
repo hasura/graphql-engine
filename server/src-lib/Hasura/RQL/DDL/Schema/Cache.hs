@@ -1557,11 +1557,7 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
               ( do
                   (info, dependencies) <- bindErrorA -< modifyErr (addTableContext @b table . addTriggerContext) $ buildEventTriggerInfo @b env source table eventTriggerConf
                   staticConfig <- bindA -< askCacheStaticConfig
-                  let isCatalogUpdate =
-                        case buildReason of
-                          CatalogUpdate _ -> True
-                          CatalogSync -> False
-                      tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
+                  let tableColumns = HashMap.elems $ _tciFieldInfoMap tableInfo
                   if ( _cscMaintenanceMode staticConfig
                          == MaintenanceModeDisabled
                          && _cscReadOnlyMode staticConfig
@@ -1587,19 +1583,20 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                               triggerOnReplication
                               (etcDefinition eventTriggerConf)
                               (_tciPrimaryKey tableInfo)
-                      if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
+                      recreateTriggerIfNeeded
+                        -<
+                          ( dynamicConfig,
+                            source,
+                            table,
+                            tableColumns,
+                            triggerName,
+                            triggerOnReplication,
+                            etcDefinition eventTriggerConf,
+                            sourceConfig,
+                            (_tciPrimaryKey tableInfo)
+                          )
+                      if migrationRecreateEventTriggers == RETRecreate
                         then do
-                          recreateTriggerIfNeeded
-                            -<
-                              ( dynamicConfig,
-                                table,
-                                tableColumns,
-                                triggerName,
-                                triggerOnReplication,
-                                etcDefinition eventTriggerConf,
-                                sourceConfig,
-                                (_tciPrimaryKey tableInfo)
-                              )
                           -- We check if the SQL triggers for the event triggers
                           -- are present. If any SQL triggers are missing, those are
                           -- created.
@@ -1625,9 +1622,12 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
           -- using `Inc.cache` here means that the response will be cached for the given output and the
           -- next time this arrow recieves the same input, the cached response will be returned and the
           -- computation will not be done again.
+          -- The `buildReason` is passed through the MonadReader because we don't want it to participate
+          -- in the caching.
           Inc.cache
             proc
               ( dynamicConfig,
+                sourceName,
                 tableName,
                 tableColumns,
                 triggerName,
@@ -1637,9 +1637,18 @@ buildSchemaCacheRule logger env mSchemaRegistryContext = proc (MetadataWithResou
                 primaryKey
                 )
             -> do
+              buildReason <- bindA -< ask
+              -- Event triggers are recreated only when explicitly requested for,
+              -- which can be done via the `reload_metadata` API.
+              let shouldRecreateEventTrigger =
+                    case buildReason of
+                      CatalogSync -> False
+                      CatalogUpdate Nothing -> True -- Handles the case of creation of event trigger.
+                      CatalogUpdate (Just sources) -> sourceName `elem` sources
               bindErrorA
                 -< do
-                  liftEitherM
+                  when shouldRecreateEventTrigger
+                    $ liftEitherM
                     $ createTableEventTrigger @b
                       (_cdcSQLGenCtx dynamicConfig)
                       sourceConfig
