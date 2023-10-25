@@ -24,11 +24,11 @@ import ProductBadge from '@site/src/components/ProductBadge';
 
 The Schema Registry, as the name suggests, is a registry which stores all the GraphQL schemas that have existed on your
 Hasura project. It is aimed at making your Hasura GraphQL schema changes more reliable, prevent breaking changes in the
-schema and to make collaboration across large teams, microservices and roles more manageable and predictable. You can
-find the Schema Registry in the settings page of your Hasura Console.
+schema and to make collaboration across large teams, microservices and roles more manageable and predictable. From the
+`API` tab, you can find the Schema Registry option at the top of the screen.
 
 <Thumbnail
-  src="/img/observability/schema-registry/schema-registry-listing.png"
+  src="/img/observability/schema-registry/schema-registry-tab.png"
   alt="Hasura Cloud Schema Registry Listing"
 />
 
@@ -49,24 +49,29 @@ include:
 - Reloading metadata
 - Hasura version update
 
-The registry also shows all the changes that went into each role's schema relative to the previous schema registry entry
-for that role.
+Within the Schema Registry tab, you'll find an organized interface to explore schema changes. The layout consists of a
+list of schema changes on the left side and an information card on the right, providing in-depth details about each
+change.
 
-For example, the Schema Registry entry in the screenshot below has schemas for the roles `admin` and `user`. It shows 5
-breaking changes, 4 dangerous changes and 1 safe change in the `user` schema. This means that the user schema has
-changed in a way which now presents the aforementioned warnings.
+By default, the Schema Registry showcases the alterations associated with the 'admin' role in the context of the latest
+schema change. This default view simplifies the process of staying informed about the most recent schema adjustments for
+this specific role.
+
+For instance, below, you can see the changes displayed for the highlighted card, which contains details for both the
+`admin` and `user` roles.
+
+The right section provides insights into how this specific schema change impacted the `admin` role, which is currently
+selected. It reveals that there are the following changes concerning the `admin` role:
+
+- `0` breaking changes
+- `7` dangerous changes
+- `4` safe changes
+
+These numbers indicate that the schema has been modified in a manner that triggers the warnings and alerts mentioned.
 
 <Thumbnail
-  src="/img/observability/schema-registry/schema-registry-inter-role-changes.png"
+  src="/img/observability/schema-registry/schema-registry-change-details.png"
   alt="Hasura Cloud Schema Registry Role Based Changes"
-/>
-
-If you click to expand a schema, you can see the schema in GraphQL SDL syntax in the `GraphQL` tab. If you click on the
-`Changes` tab, you can see all the changes relative to the previous schema for that role.
-
-<Thumbnail
-  src="/img/observability/schema-registry/schema-registry-schema-details-changes.png"
-  alt="Hasura Cloud Schema Registry Schema Changes"
 />
 
 :::info Note
@@ -117,20 +122,25 @@ changes took place.
 
 ## Alerts
 
-The Schema Registry provides the following options to configure notifications by clicking the bell icon in the Schema Registry page:
+The Schema Registry provides the following options to configure notifications by clicking the bell icon in the Schema
+Registry page:
 
 ### Email
 
-The Schema Registry sends an email to the **owner** of the project whenever there are any changes in the GraphQL schema of the project.
+The Schema Registry sends an email to the **owner** of the project whenever there are any changes in the GraphQL schema
+of the project.
 
-  <Thumbnail
-    src="/img/observability/schema-registry/schema-registry-alert-config.png"
-    alt="Hasura Cloud Schema Registry Alert Config"
-  />
+{' '}
+
+<Thumbnail
+  src="/img/observability/schema-registry/schema-registry-alert-config.png"
+  alt="Hasura Cloud Schema Registry Alert Config"
+/>
 
 ### Slack
 
-The Schema Registry sends an aggregate summary of GraphQL schema changes to the configured Slack channel of the respective workspace. Follow these steps to configure Slack alerts:
+The Schema Registry sends an aggregate summary of GraphQL schema changes to the configured Slack channel of the
+respective workspace. Follow these steps to configure Slack alerts:
 
 1. Click the "Add to Slack" button in the Slack tab.
 
@@ -146,8 +156,9 @@ The Schema Registry sends an aggregate summary of GraphQL schema changes to the 
      alt="Hasura Cloud Schema Registry Select Slack Channel"
    />
 
-3. Slack alerts should be configured for the selected channel in your workspace. You can choose to disable the alerts by clicking on the delete icon.
-   
+3. Slack alerts should be configured for the selected channel in your workspace. You can choose to disable the alerts by
+   clicking on the delete icon.
+
    <Thumbnail
      src="/img/observability/schema-registry/configured-slack-alerts.png"
      alt="Hasura Cloud Schema Registry Configured Slack Alerts"
